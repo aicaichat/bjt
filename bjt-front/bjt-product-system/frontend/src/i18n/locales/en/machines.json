@@ -12,6 +12,35 @@
   "noAccessories": "No accessories available",
   "allPartNumbers": "All Part No.",
   "pageTitle": "Machine Selection",
+  "figma": {
+    "machineAndAccessory": "Machine & Accessory",
+    "modelParamComparison": "Model Parameter Comparison Table",
+    "machineSelection": "Machine Selection",
+    "showOptionalAccessories": "Show Optional Accessories",
+    "stockStatus": "Stock Status",
+    "hostLabel": "Host",
+    "unknownHost": "Unknown host",
+    "unknownAccessory": "Unknown accessory",
+    "levelOneAccessory": "Level 1 accessory",
+    "compareSelectHint": "Select a model from the host list below",
+    "viewDetailedSpecifications": "View detailed specifications",
+    "introductionLink": "Introduction",
+    "filmOptionsLink": "Film options",
+    "introductionModalTitle": "Model introduction",
+    "introductionEmpty": "No introduction available. Open Specifications for the PDF.",
+    "statusSelectMachine": "Select a host model",
+    "statusSelectAccessory": "Select accessories",
+    "statusCurrentLevel": "Current level: {{level}}",
+    "compareColModel": "Model",
+    "compareColPicture": "Picture",
+    "compareColType": "Type",
+    "compareColSpeed": "Speed",
+    "compareColMaterial": "Material",
+    "compareColFilmType": "Film type",
+    "compareColFilmWidth": "Film width",
+    "compareColMaxRoll": "Max roll diameter",
+    "compareDataPending": "—"
+  },
   "addToCart": "Add to Cart",
   "noPermissionAdd": "No permission to add",
   "breadcrumb": {
@@ -29,7 +58,9 @@
     "voltage": "Voltage",
     "model": "Model",
     "allModels": "All Models",
-    "allVoltages": "All Voltages"
+    "allVoltages": "All Voltages",
+    "productType": "Product Type",
+    "allTypes": "All Types"
   },
   "tableHeaders": {
     "index": "No.",
@@ -53,9 +84,12 @@
     "stock": "Inventory",
     "pcsPerBox": "Qty per Carton",
     "pcsPerPallet": "Packs per Pallet",
+    "itemDescription": "Item description",
+    "packagingMethod": "Packaging Method",
     "frequency": "Frequency",
     "voltage": "Voltage",
-    "priceRange": "Price Range"
+    "priceRange": "Price Range",
+    "pnPrefix": "PN"
   },
   "table": {
     "model": "Model",

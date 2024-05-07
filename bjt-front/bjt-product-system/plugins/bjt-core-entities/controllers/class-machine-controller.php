@@ -145,6 +145,11 @@ class BJT_Machine_Controller extends BJT_API_Controller {
                             'type'        => 'string',
                             'enum'        => ['publish', 'draft'],
                         ],
+                        'product_line_id' => [
+                            'description' => 'Filter host models by product line ID (storefront).',
+                            'type'        => 'integer',
+                            'required'    => false,
+                        ],
                     ]
                 ),
             ],
@@ -206,18 +211,26 @@ class BJT_Machine_Controller extends BJT_API_Controller {
         $per_page = $request->get_param('per_page');
         $offset = ($page - 1) * $per_page;
 
-        // 添加状态过滤逻辑 - 支持传递status参数，默认为所有状态（管理后台需要）
+        // 状态 + 可选产品线（前台选型页传 product_line_id）
         $status_filter = $request->get_param('status');
-        $where_clause = '';
+        $product_line_id = $request->get_param('product_line_id');
+
+        $where_parts = [];
         $query_params = [];
-        
+
         if ($status_filter) {
-            $where_clause = "WHERE status = %s";
+            $where_parts[] = 'status = %s';
             $query_params[] = $status_filter;
         } else {
-            // 如果没有指定状态，显示所有非删除状态的记录（包括publish和draft）
-            $where_clause = "WHERE status IN ('publish', 'draft')";
+            $where_parts[] = "status IN ('publish', 'draft')";
         }
+
+        if ($product_line_id !== null && $product_line_id !== '') {
+            $where_parts[] = 'product_line_id = %d';
+            $query_params[] = absint($product_line_id);
+        }
+
+        $where_clause = 'WHERE ' . implode(' AND ', $where_parts);
 
         // Fetch items
         $items_query = $wpdb->prepare(

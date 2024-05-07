@@ -1,9 +1,10 @@
+/* Products 子菜单：选择器限定为「非侧栏」根 .ant-menu，避免与 sidebar-figma 冲突 */
 /* Products Submenu Fix - 修复产品子菜单的层级和样式问题 */
 
 /* ========== Ant Design Menu 重写 ========== */
 
 /* 菜单容器 */
-.ant-menu {
+.ant-menu:not(.sidebar-menu-content) {
   background: transparent !important;
   border: none !important;
   font-size: 14px !important;
@@ -11,11 +12,11 @@
 }
 
 /* ========== 顶级菜单项样式 ========== */
-.ant-menu > .ant-menu-submenu {
+.ant-menu:not(.sidebar-menu-content) > .ant-menu-submenu {
   margin-bottom: 4px !important;
 }
 
-.ant-menu > .ant-menu-submenu > .ant-menu-submenu-title {
+.ant-menu:not(.sidebar-menu-content) > .ant-menu-submenu > .ant-menu-submenu-title {
   padding: 16px 24px !important;
   margin: 0 8px !important;
   border-radius: 12px !important;
@@ -30,49 +31,49 @@
   overflow: hidden !important;
 }
 
-.ant-menu > .ant-menu-submenu > .ant-menu-submenu-title::before {
+.ant-menu:not(.sidebar-menu-content) > .ant-menu-submenu > .ant-menu-submenu-title::before {
   content: '' !important;
   position: absolute !important;
   top: 0 !important;
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  background: linear-gradient(135deg, var(--ff-accent) 0%, var(--ff-accent-mid) 100%) !important;
   opacity: 0 !important;
   transition: opacity 0.3s ease !important;
   z-index: -1 !important;
 }
 
-.ant-menu > .ant-menu-submenu > .ant-menu-submenu-title:hover::before {
+.ant-menu:not(.sidebar-menu-content) > .ant-menu-submenu > .ant-menu-submenu-title:hover::before {
   opacity: 1 !important;
 }
 
-.ant-menu > .ant-menu-submenu > .ant-menu-submenu-title:hover {
+.ant-menu:not(.sidebar-menu-content) > .ant-menu-submenu > .ant-menu-submenu-title:hover {
   color: #ffffff !important;
-  border-color: #3b82f6 !important;
+  border-color: var(--ff-accent) !important;
   transform: translateX(4px) !important;
-  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3) !important;
+  box-shadow: 0 4px 16px rgba(var(--ff-accent-rgb), 0.3) !important;
 }
 
-.ant-menu > .ant-menu-submenu > .ant-menu-submenu-title:hover .ant-menu-submenu-arrow {
+.ant-menu:not(.sidebar-menu-content) > .ant-menu-submenu > .ant-menu-submenu-title:hover .ant-menu-submenu-arrow {
   color: #ffffff !important;
 }
 
 /* ========== 子菜单展开箭头 ========== */
-.ant-menu-submenu-arrow {
+.ant-menu:not(.sidebar-menu-content) .ant-menu-submenu-arrow {
   color: #6b7280 !important;
   font-size: 12px !important;
   transition: all 0.3s ease !important;
   right: 16px !important;
 }
 
-.ant-menu-submenu-open > .ant-menu-submenu-title .ant-menu-submenu-arrow {
+.ant-menu:not(.sidebar-menu-content) .ant-menu-submenu-open > .ant-menu-submenu-title .ant-menu-submenu-arrow {
   transform: rotate(180deg) !important;
-  color: #3b82f6 !important;
+  color: var(--ff-accent, #012583) !important;
 }
 
 /* ========== 子菜单容器 ========== */
-.ant-menu-sub {
+.ant-menu:not(.sidebar-menu-content) .ant-menu-sub {
   background: rgba(248, 250, 252, 0.9) !important;
   border-radius: 0 0 12px 12px !important;
   margin: 0 8px 8px 8px !important;
@@ -87,16 +88,16 @@
 }
 
 /* ========== 产品分组标题样式 ========== */
-.ant-menu-sub > .ant-menu-item-group {
+.ant-menu:not(.sidebar-menu-content) .ant-menu-sub > .ant-menu-item-group {
   margin-bottom: 8px !important;
   padding: 0 !important;
 }
 
-.ant-menu-sub > .ant-menu-item-group:last-child {
+.ant-menu:not(.sidebar-menu-content) .ant-menu-sub > .ant-menu-item-group:last-child {
   margin-bottom: 0 !important;
 }
 
-.ant-menu-item-group-title {
+.ant-menu:not(.sidebar-menu-content) .ant-menu-item-group-title {
   padding: 12px 20px 8px 20px !important;
   font-size: 13px !important;
   font-weight: 600 !important;
@@ -110,18 +111,18 @@
   position: relative !important;
 }
 
-.ant-menu-item-group-title::after {
+.ant-menu:not(.sidebar-menu-content) .ant-menu-item-group-title::after {
   content: '' !important;
   position: absolute !important;
   bottom: 0 !important;
   left: 20px !important;
   right: 20px !important;
   height: 1px !important;
-  background: linear-gradient(90deg, #3b82f6, transparent) !important;
+  background: linear-gradient(90deg, var(--ff-accent), transparent) !important;
 }
 
 /* ========== 子菜单项样式 ========== */
-.ant-menu-sub .ant-menu-item {
+.ant-menu:not(.sidebar-menu-content) .ant-menu-sub .ant-menu-item {
   padding: 0 !important;
   margin: 2px 12px !important;
   border-radius: 8px !important;
@@ -133,7 +134,7 @@
   position: relative !important;
 }
 
-.ant-menu-sub .ant-menu-item a {
+.ant-menu:not(.sidebar-menu-content) .ant-menu-sub .ant-menu-item a {
   display: block !important;
   padding: 12px 20px !important;
   color: #4b5563 !important;
@@ -146,81 +147,81 @@
   transition: all 0.25s ease !important;
 }
 
-.ant-menu-sub .ant-menu-item::before {
+.ant-menu:not(.sidebar-menu-content) .ant-menu-sub .ant-menu-item::before {
   content: '' !important;
   position: absolute !important;
   top: 0 !important;
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%) !important;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--ff-tint-blue) 65%, white) 0%, var(--ff-tint-blue) 100%) !important;
   opacity: 0 !important;
   transition: opacity 0.25s ease !important;
   z-index: 1 !important;
 }
 
-.ant-menu-sub .ant-menu-item:hover::before {
+.ant-menu:not(.sidebar-menu-content) .ant-menu-sub .ant-menu-item:hover::before {
   opacity: 1 !important;
 }
 
-.ant-menu-sub .ant-menu-item:hover {
-  border-color: #bfdbfe !important;
+.ant-menu:not(.sidebar-menu-content) .ant-menu-sub .ant-menu-item:hover {
+  border-color: color-mix(in srgb, var(--ff-accent) 28%, white) !important;
   transform: translateX(4px) !important;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15) !important;
+  box-shadow: 0 2px 8px rgba(var(--ff-accent-rgb), 0.15) !important;
 }
 
-.ant-menu-sub .ant-menu-item:hover a {
-  color: #1e40af !important;
+.ant-menu:not(.sidebar-menu-content) .ant-menu-sub .ant-menu-item:hover a {
+  color: var(--ff-accent-mid) !important;
 }
 
 /* ========== 外部链接图标 ========== */
-.ant-menu-sub .ant-menu-item a span:last-child {
+.ant-menu:not(.sidebar-menu-content) .ant-menu-sub .ant-menu-item a span:last-child {
   font-size: 10px !important;
   opacity: 0.6 !important;
   margin-left: 6px !important;
   transition: all 0.25s ease !important;
 }
 
-.ant-menu-sub .ant-menu-item:hover a span:last-child {
+.ant-menu:not(.sidebar-menu-content) .ant-menu-sub .ant-menu-item:hover a span:last-child {
   opacity: 1 !important;
   transform: scale(1.1) !important;
 }
 
 /* ========== 活跃状态 ========== */
-.ant-menu-sub .ant-menu-item-selected {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%) !important;
-  border-color: #93c5fd !important;
-  color: #1d4ed8 !important;
+.ant-menu:not(.sidebar-menu-content) .ant-menu-sub .ant-menu-item-selected {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--ff-accent) 16%, var(--ff-tint-blue)) 0%, color-mix(in srgb, var(--ff-accent) 28%, white) 100%) !important;
+  border-color: color-mix(in srgb, var(--ff-accent) 38%, white) !important;
+  color: var(--ff-accent-mid) !important;
 }
 
-.ant-menu-sub .ant-menu-item-selected a {
-  color: #1d4ed8 !important;
+.ant-menu:not(.sidebar-menu-content) .ant-menu-sub .ant-menu-item-selected a {
+  color: var(--ff-accent-mid) !important;
   font-weight: 600 !important;
 }
 
-.ant-menu-sub .ant-menu-item-selected::before {
+.ant-menu:not(.sidebar-menu-content) .ant-menu-sub .ant-menu-item-selected::before {
   opacity: 1 !important;
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%) !important;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--ff-accent) 16%, var(--ff-tint-blue)) 0%, color-mix(in srgb, var(--ff-accent) 28%, white) 100%) !important;
 }
 
 /* ========== 确保点击区域可用 ========== */
-.ant-menu-sub,
-.ant-menu-sub *,
-.ant-menu-sub .ant-menu-item,
-.ant-menu-sub .ant-menu-item a,
-.ant-menu-item-group-list,
-.ant-menu-item-group-title {
+.ant-menu:not(.sidebar-menu-content) .ant-menu-sub,
+.ant-menu:not(.sidebar-menu-content) .ant-menu-sub *,
+.ant-menu:not(.sidebar-menu-content) .ant-menu-sub .ant-menu-item,
+.ant-menu:not(.sidebar-menu-content) .ant-menu-sub .ant-menu-item a,
+.ant-menu:not(.sidebar-menu-content) .ant-menu-item-group-list,
+.ant-menu:not(.sidebar-menu-content) .ant-menu-item-group-title {
   pointer-events: auto !important;
   cursor: pointer !important;
 }
 
 /* ========== 分割线样式 ========== */
-.ant-menu-item-group-list {
+.ant-menu:not(.sidebar-menu-content) .ant-menu-item-group-list {
   padding: 0 !important;
   margin: 0 !important;
 }
 
-.ant-menu-item-group + .ant-menu-item-group::before {
+.ant-menu:not(.sidebar-menu-content) .ant-menu-item-group + .ant-menu-item-group::before {
   content: '' !important;
   display: block !important;
   height: 1px !important;
@@ -229,7 +230,7 @@
 }
 
 /* ========== 子菜单动画 ========== */
-.ant-menu-sub.ant-menu-sub-inline {
+.ant-menu:not(.sidebar-menu-content) .ant-menu-sub.ant-menu-sub-inline {
   animation: slideDownIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
 }
 
@@ -248,27 +249,27 @@
 
 /* ========== 响应式设计 ========== */
 @media (max-width: 768px) {
-  .ant-menu > .ant-menu-submenu > .ant-menu-submenu-title {
+  .ant-menu:not(.sidebar-menu-content) > .ant-menu-submenu > .ant-menu-submenu-title {
     padding: 14px 20px !important;
     margin: 0 6px !important;
     font-size: 14px !important;
   }
   
-  .ant-menu-sub {
+  .ant-menu:not(.sidebar-menu-content) .ant-menu-sub {
     margin: 0 6px 6px 6px !important;
   }
   
-  .ant-menu-item-group-title {
+  .ant-menu:not(.sidebar-menu-content) .ant-menu-item-group-title {
     padding: 10px 16px 6px 16px !important;
     font-size: 12px !important;
     margin: 0 8px 6px 8px !important;
   }
   
-  .ant-menu-sub .ant-menu-item {
+  .ant-menu:not(.sidebar-menu-content) .ant-menu-sub .ant-menu-item {
     margin: 2px 8px !important;
   }
   
-  .ant-menu-sub .ant-menu-item a {
+  .ant-menu:not(.sidebar-menu-content) .ant-menu-sub .ant-menu-item a {
     padding: 10px 16px !important;
     font-size: 12px !important;
   }
@@ -289,43 +290,43 @@
 }
 
 /* ========== 菜单展开状态指示 ========== */
-.ant-menu-submenu-open > .ant-menu-submenu-title {
+.ant-menu:not(.sidebar-menu-content) .ant-menu-submenu-open > .ant-menu-submenu-title {
   background: rgba(239, 246, 255, 0.8) !important;
-  border-color: #bfdbfe !important;
-  color: #1e40af !important;
+  border-color: color-mix(in srgb, var(--ff-accent) 28%, white) !important;
+  color: var(--ff-accent-mid) !important;
   font-weight: 600 !important;
 }
 
-.ant-menu-submenu-open > .ant-menu-submenu-title::before {
+.ant-menu:not(.sidebar-menu-content) .ant-menu-submenu-open > .ant-menu-submenu-title::before {
   opacity: 0.1 !important;
 }
 
 /* ========== 图标样式 ========== */
-.ant-menu > .ant-menu-submenu > .ant-menu-submenu-title .anticon {
+.ant-menu:not(.sidebar-menu-content) > .ant-menu-submenu > .ant-menu-submenu-title .anticon {
   margin-right: 12px !important;
   font-size: 16px !important;
   color: #6b7280 !important;
   transition: color 0.3s ease !important;
 }
 
-.ant-menu > .ant-menu-submenu > .ant-menu-submenu-title:hover .anticon {
+.ant-menu:not(.sidebar-menu-content) > .ant-menu-submenu > .ant-menu-submenu-title:hover .anticon {
   color: #ffffff !important;
 }
 
-.ant-menu-submenu-open > .ant-menu-submenu-title .anticon {
-  color: #3b82f6 !important;
+.ant-menu:not(.sidebar-menu-content) .ant-menu-submenu-open > .ant-menu-submenu-title .anticon {
+  color: var(--ff-accent) !important;
 }
 
 /* ========== 修复z-index层级问题 ========== */
-.ant-menu-submenu {
+.ant-menu:not(.sidebar-menu-content) .ant-menu-submenu {
   position: relative !important;
   z-index: 100 !important;
 }
 
-.ant-menu-submenu-open {
+.ant-menu:not(.sidebar-menu-content) .ant-menu-submenu-open {
   z-index: 101 !important;
 }
 
-.ant-menu-submenu-open .ant-menu-sub {
+.ant-menu:not(.sidebar-menu-content) .ant-menu-submenu-open .ant-menu-sub {
   z-index: 102 !important;
 } 

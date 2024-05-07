@@ -1,0 +1,208 @@
+/**
+ * 前台整站壳层（仅挂在 MainLayout 根节点 .figma-front）
+ * Admin 使用 AdminLayout，不引入此文件，保持后台不变。
+ */
+
+.figma-front {
+  /* Figma 桌面验收 Frame 宽度：叠图 / 对比时请将浏览器视口置为此值（或 DevTools 设备栏自定义） */
+  --ff-viewport-design: 1920px;
+  /* 侧面导航栏固定宽（Figma 组件约 303px；顶栏/主区须与此同源，见 sidebar-figma.css、MainLayout） */
+  --bjt-sidebar-width: 303px;
+  /* 收起宽度，与 Tailwind ml-20 / Ant inlineCollapsed 一致 */
+  --bjt-sidebar-collapsed-width: 80px;
+  /* 由 MainLayout 按桌面展开|收起|移动端写入；未写入时等同完整宽度 */
+  --bjt-sidebar-effective-width: var(--bjt-sidebar-width);
+  /* 色值见 figma-design-tokens.css :root */
+  font-family: var(--ff-font);
+}
+
+/* 顶栏：白底 + Figma 下分割线 0.5px rgba(0,0,0,0.25) */
+.figma-front .main-header {
+  background: var(--ff-surface) !important;
+  border-bottom: none !important;
+  box-shadow: 0 0.5px 0 var(--ff-header-divider) !important;
+}
+
+/* 与左侧 Menu 同源：顶栏 left/width 随 --bjt-sidebar-effective-width（覆盖 header-layout-fix 的 300px） */
+.figma-front .main-header.site-header {
+  left: var(--bjt-sidebar-effective-width) !important;
+  width: calc(100% - var(--bjt-sidebar-effective-width)) !important;
+  z-index: 10000;
+}
+
+/* 顶栏左侧：主导航（补全原空白区，与侧栏入口一致） */
+.figma-front .main-header .header-top-nav {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  mask-image: linear-gradient(to right, #000 92%, transparent 100%);
+}
+
+.figma-front .main-header .header-top-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.figma-front .header-top-nav__link {
+  flex-shrink: 0;
+  color: var(--ff-toolbar-text);
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 1.25;
+  padding: 6px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.figma-front .header-top-nav__link:hover {
+  color: var(--ff-accent);
+  background: var(--ff-tint-blue);
+}
+
+.figma-front .header-top-nav__link--active {
+  color: var(--ff-accent);
+  font-weight: 600;
+  background: color-mix(in srgb, var(--ff-tint-blue) 85%, #fff);
+}
+
+/* 顶栏右侧：搜索 → Cart → 语言 → 用户 */
+.figma-front .main-header .header-toolbar-figma {
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.figma-front .main-header .header-toolbar-btn.ant-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center;
+  min-height: 40px;
+  height: auto !important;
+  padding: 0 12px !important;
+  font-weight: 500 !important;
+}
+
+.figma-front .main-header .header-toolbar-login-icon.ant-btn {
+  padding: 0 12px !important;
+}
+
+.figma-front .main-header .language-button.header-toolbar-btn {
+  min-width: auto;
+}
+
+/* 搜索：Figma 高 32、白底、线框 #DEDEDE、圆角 8px、占位符 #DEDEDE */
+.figma-front .search-input-right.ant-input-affix-wrapper {
+  height: 32px !important;
+  min-height: 32px !important;
+  border-radius: 8px !important;
+  border-width: 1px !important;
+  border-color: var(--ff-border-muted) !important;
+  background: var(--ff-surface) !important;
+  box-shadow: none !important;
+}
+
+.figma-front .search-input-right:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: var(--ff-accent) !important;
+}
+
+.figma-front .search-input-right:focus-within,
+.figma-front .search-input-right.search-focused {
+  border-color: var(--ff-accent) !important;
+  box-shadow: 0 0 0 3px var(--ff-focus-ring) !important;
+  transform: none !important;
+}
+
+.figma-front .search-input-right .ant-input {
+  height: 30px !important;
+  padding: 4px 8px 4px 6px !important;
+  font-size: 16px !important;
+  line-height: 19px !important;
+}
+
+.figma-front .search-input-right .ant-input::placeholder {
+  color: var(--ff-border-muted) !important;
+  font-style: normal !important;
+}
+
+.figma-front .search-input-right .ant-input-prefix {
+  color: #000000 !important;
+}
+
+.figma-front .search-input-right:hover .ant-input-prefix,
+.figma-front .search-input-right:focus-within .ant-input-prefix,
+.figma-front .search-input-right.search-focused .ant-input-prefix {
+  color: var(--ff-accent) !important;
+}
+
+.figma-front .action-button {
+  border-color: #b2b2b2 !important;
+  border-radius: 6px !important;
+  color: var(--ff-toolbar-text) !important;
+}
+
+.figma-front .action-button:hover {
+  border-color: var(--ff-accent) !important;
+  color: var(--ff-accent-dark) !important;
+  background: var(--ff-tint-blue) !important;
+}
+
+/* 语言切换：Figma 描边 #BFBCBC */
+.figma-front .language-button.action-button {
+  border-color: #bfbcbc !important;
+}
+
+.figma-front .user-info {
+  border-color: var(--ff-border-muted) !important;
+  border-radius: 18px !important;
+}
+
+.figma-front .user-avatar {
+  background-color: var(--ff-accent-dark) !important;
+}
+
+.figma-front .login-button {
+  background: var(--ff-accent-dark) !important;
+  border-color: var(--ff-accent-dark) !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+}
+
+.figma-front .login-button:hover,
+.figma-front .login-button:focus {
+  background: var(--ff-btn-primary-hover) !important;
+  border-color: var(--ff-btn-primary-hover) !important;
+}
+
+/*
+ * 主内容区 — Figma Frame 529
+ * - 设计宽 1617px = 1920 − 303（侧栏）；实现为 flex:1 占满侧栏右侧列，不写死 px
+ * - Auto layout: column, align-items flex-start, gap 24, padding 0 0 24, bg #F1F5F9, flex-grow 1
+ */
+.figma-front main.figma-front-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  align-self: stretch;
+  flex: 1 1 auto;
+  padding: 0;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+  background-color: var(--ff-content-canvas-bg);
+}
+
+.figma-front main.figma-front-main > .figma-front-main__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ff-main-stack-gap);
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
+  padding: 0 0 var(--ff-main-column-pad-bottom);
+  box-sizing: border-box;
+}
+

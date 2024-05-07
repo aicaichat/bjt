@@ -2,8 +2,21 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
-import { Button, Select, InputNumber, Tabs, Tag, Tooltip, Divider, Row, Col } from 'antd';
-import { ShoppingCartOutlined, InfoCircleOutlined, PlusOutlined, ExclamationCircleOutlined, ReloadOutlined, RightOutlined, MenuOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Button, Select, InputNumber, Tabs, Tag, Tooltip, Divider, Row, Col, Pagination, Modal as AntModal } from 'antd';
+import {
+  ShoppingCartOutlined,
+  InfoCircleOutlined,
+  PlusOutlined,
+  MinusOutlined,
+  ExclamationCircleOutlined,
+  ReloadOutlined,
+  RightOutlined,
+  DeleteOutlined,
+} from '@ant-design/icons';
+import ThumbnailGallery from '../../components/ThumbnailGallery';
+import '../../styles/thumbnail-gallery.css';
+import '../../styles/machine-selection-figma.css';
+import { findHostModelForMachinePart, openMachineSpecificationPdf, type HostModelRow } from './hostModelPdf';
 import { useTranslation } from 'react-i18next';
 import MockServiceStatus from '../../components/MockServiceStatus';
 
@@ -136,6 +149,8 @@ const ProductLine2Page: React.FC = () => {
   
   // 用户交互相关状态
   const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [introductionModalOpen, setIntroductionModalOpen] = useState(false);
+  const [introductionModalText, setIntroductionModalText] = useState('');
   // 删除: const [showNotification, setShowNotification] = useState<boolean>(false);
   // 删除: const [notificationProduct, setNotificationProduct] = useState<string>('');
   // 删除: const [notificationQuantity, setNotificationQuantity] = useState<number>(1);
@@ -1930,482 +1945,291 @@ const ProductLine2Page: React.FC = () => {
     }
   };
 
-  // 渲染机器表格
+  // 渲染机器表格（与 ProductLine1 Figma 卡片一致，纸垫机尺寸见 .ms-figma-machine-card--paper）
   const renderMachinesTable = () => {
+    const machinesToShow = selectedMachine
+      ? filteredMachines.filter((m) => m.id.toString() === selectedMachine)
+      : filteredMachines;
+
     return (
-      <div className="grid grid-cols-1 gap-6">
-        {filteredMachines.map(machine => (
-          <div 
-            key={`machine-${machine.id}-${machine.part_number}`} 
-            className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 overflow-hidden"
+      <div className="ms-figma-machine-grid grid grid-cols-1">
+        {machinesToShow.map((machine) => (
+          <div
+            key={`machine-${machine.id}-${machine.part_number}`}
+            className="ms-figma-machine-card ms-figma-machine-card--paper overflow-hidden"
           >
             <div className="flex flex-col md:flex-row p-6">
-              {/* Column 1: Image & Selection */}
               <div className="w-full md:w-1/5 flex flex-col items-center md:items-start mb-6 md:mb-0 md:pr-6">
-                <div className="relative mb-4">
-                  <img 
-                    src={machine.image_url || DEFAULT_IMAGE} 
-                    alt={machine.part_number}
-                    className="w-32 h-32 object-contain border-2 border-gray-200 rounded-lg bg-gray-50 p-2 shadow-sm hover:shadow-md transition-shadow duration-200"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      console.log('❌ [Image Error] Failed to load image:', {
-                        originalSrc: target.src,
-                        machineId: machine.id,
-                        machinePartNumber: machine.part_number,
-                        originalImageFields: {
-                          image1_url: (machine as any).image1_url,
-                          image_url: machine.image_url,
-                          model_image1_url: machine.model_image1_url
-                        },
-                        willFallback: target.src !== DEFAULT_IMAGE,
-                        defaultImage: DEFAULT_IMAGE
-                      });
-                      if (target.src !== DEFAULT_IMAGE) {
-                        target.src = DEFAULT_IMAGE;
+                <div className="relative">
+                  <ThumbnailGallery
+                    images={(() => {
+                      const fromApi = machine.gallery_image_urls?.filter(
+                        (img): img is string => typeof img === 'string' && img.trim() !== ''
+                      );
+                      if (fromApi && fromApi.length > 0) {
+                        return fromApi;
                       }
-                    }}
-                    onLoad={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      console.log('✅ [Image Loaded] Successfully loaded image:', {
-                        src: target.src,
-                        machineId: machine.id,
-                        machinePartNumber: machine.part_number,
-                        isDefault: target.src === DEFAULT_IMAGE
-                      });
-                    }}
+                      const baseImage = machine.image_url || DEFAULT_IMAGE;
+                      const images: string[] = [];
+                      images.push(baseImage);
+                      if (machine.image_url && machine.image_url.includes('picsum.photos')) {
+                        images.push(
+                          `https://picsum.photos/400/400?random=${machine.id}01`,
+                          `https://picsum.photos/400/400?random=${machine.id}02`
+                        );
+                      } else {
+                        images.push(baseImage, baseImage);
+                      }
+                      if (machine.model_image1_url) images.push(machine.model_image1_url);
+                      if (machine.model_image2_url) images.push(machine.model_image2_url);
+                      if ((machine as any).image2_url) images.push((machine as any).image2_url);
+                      const validImages = images.filter((img) => img && img.trim() !== '');
+                      return validImages.length > 0 ? validImages : [DEFAULT_IMAGE, DEFAULT_IMAGE, DEFAULT_IMAGE];
+                    })()}
+                    altText={(machine as any).code || (machine as any).part_number || `Machine ${machine.id}`}
+                    layout="thumbnails-left"
+                    className="machine-gallery"
                   />
                 </div>
-                <label className="inline-flex items-center cursor-pointer bg-gray-100 px-3 py-2 rounded-lg hover:bg-blue-500 hover:text-white transition-colors duration-200">
-                  <input 
-                    type="radio" 
-                    name="machine" 
-                    className="form-radio text-blue-500 mr-2"
-                    checked={selectedMachine === machine.id.toString()}
-                    onChange={() => handleMachineSelection(machine.id)}
-                    aria-label={`${t('actions.selectMachine')} ${machine.part_number}`}
-                  />
-                  <span className="text-sm font-medium">{t('actions.selectMachine')}</span>
-                </label>
               </div>
-                
-              {/* Column 2: Info & Specs */}
+
               <div className="w-full md:w-3/5 md:px-6">
-                <div className="mb-4">
-                  <span className="inline-block bg-blue-500 text-white px-3 py-1 text-sm font-bold rounded-lg shadow-sm">{machine.part_number}</span>
-                  <h3 className="text-xl font-bold text-gray-900 mt-2 leading-tight">{getMachineName(machine)}</h3>
+                <div className="ms-figma-product-title-row">
+                  <div className="ms-figma-product-title-group">
+                    <h3 className="ms-figma-product-title">{getMachineName(machine)}</h3>
+                    <span className="ms-figma-pn-pill">
+                      {t('tableHeaders.pnPrefix')}: {machine.part_number}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className="ms-figma-link-accessories-inline"
+                    onClick={() => {
+                      handleMachineSelection(machine.id);
+                      window.setTimeout(() => {
+                        document.getElementById('accessory-level-1')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }, 200);
+                    }}
+                  >
+                    {t('figma.showOptionalAccessories')}
+                  </button>
                 </div>
-                
-                <div className="bg-gray-50 rounded-lg p-4 mt-3 shadow-sm">
+
+                <div className="ms-figma-spec-grid">
                   <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="flex items-center">
-                      <strong className="w-24 text-gray-600 font-medium">{t('tableHeaders.model')}:</strong>
-                      <span className="text-gray-800 font-medium">{machine.model}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <strong className="w-24 text-gray-600 font-medium">{getFieldWithUnit('voltage', 'voltage')}:</strong>
-                      <span className="text-gray-800 font-medium">{machine.voltage ? removeUnitFromValue(machine.voltage) : 'N/A'}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <strong className="w-24 text-gray-600 font-medium">{t('tableHeaders.pcsPerBox')}:</strong>
-                      <span className="text-gray-800 font-medium">{machine.pcs_per_box !== null && machine.pcs_per_box !== undefined ? machine.pcs_per_box : 'N/A'}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <strong className="w-24 text-gray-600 font-medium">{t('tableHeaders.pcsPerPallet')}:</strong>
-                      <span className="text-gray-800 font-medium">{machine.pcs_per_pallet !== null && machine.pcs_per_pallet !== undefined ? machine.pcs_per_pallet : 'N/A'}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <strong className="w-24 text-gray-600 font-medium">{getFieldWithUnit('palletSize', 'size')}:</strong>
-                      <span className="text-gray-800 font-medium">
-                        {unitSystem === 'metric' 
-                          ? removeUnitFromValue(machine.pallet_size_cm)
-                          : removeUnitFromValue(machine.pallet_size_inch)
-                        }
+                    <div className="flex items-start col-span-2 sm:col-span-2">
+                      <strong className="w-32 shrink-0 text-gray-600 font-medium">{t('tableHeaders.itemDescription')}:</strong>
+                      <span className="text-gray-800 font-medium break-words">
+                        {(currentLanguage === 'zh'
+                          ? machine.spec
+                          : machine.spec_imperial || machine.spec) ||
+                          getMachineName(machine) ||
+                          '—'}
                       </span>
                     </div>
                     <div className="flex items-center">
-                      <strong className="w-24 text-gray-600 font-medium">{getFieldWithUnit('packageSize', 'size')}:</strong>
+                      <strong className="w-32 text-gray-600 font-medium">{t('tableHeaders.packagingMethod')}:</strong>
+                      <span className="text-gray-800 font-medium">{machine.unit || '—'}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <strong className="w-32 text-gray-600 font-medium">{t('tableHeaders.pcsPerBox')}:</strong>
                       <span className="text-gray-800 font-medium">
-                        {unitSystem === 'metric' 
+                        {machine.pcs_per_box !== null && machine.pcs_per_box !== undefined ? machine.pcs_per_box : 'N/A'}
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <strong className="w-32 text-gray-600 font-medium">{getFieldWithUnit('palletSize', 'size')}:</strong>
+                      <span className="text-gray-800 font-medium">
+                        {unitSystem === 'metric'
+                          ? removeUnitFromValue(machine.pallet_size_cm)
+                          : removeUnitFromValue(machine.pallet_size_inch)}
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <strong className="w-32 text-gray-600 font-medium">{getFieldWithUnit('voltage', 'voltage')}:</strong>
+                      <span className="text-gray-800 font-medium">
+                        {machine.voltage ? removeUnitFromValue(machine.voltage) : 'N/A'}
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <strong className="w-32 text-gray-600 font-medium">{t('tableHeaders.pcsPerPallet')}:</strong>
+                      <span className="text-gray-800 font-medium">
+                        {machine.pcs_per_pallet !== null && machine.pcs_per_pallet !== undefined ? machine.pcs_per_pallet : 'N/A'}
+                      </span>
+                    </div>
+                    <div className="flex items-center col-span-2 sm:col-span-1">
+                      <strong className="w-32 text-gray-600 font-medium">{getFieldWithUnit('packageSize', 'size')}:</strong>
+                      <span className="text-gray-800 font-medium">
+                        {unitSystem === 'metric'
                           ? removeUnitFromValue(machine.package_size_cm)
-                          : removeUnitFromValue(machine.package_size_inch)
-                        }
+                          : removeUnitFromValue(machine.package_size_inch)}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-4 flex gap-3">
-                  {/* 规格说明按钮 - 放在前面，和主机一样 */}
-                  <Button 
-                    size="small"
-                    icon={<InfoCircleOutlined />}
-                    onClick={() => {
-                      // 从主机型号表中查找对应的PDF - 改进匹配逻辑
-                      const hostModel = hostModels.find(model => {
-                        // 清理字符串函数 - 去除多余的引号和空格
-                        const cleanString = (str: string) => {
-                          if (!str) return '';
-                          return str.replace(/^["']+|["']+$/g, '').trim(); // 去除开头和结尾的引号
-                        };
-                        
-                        // 清理机器和主机型号的字符串
-                        const cleanMachineModel = cleanString(machine.model || '');
-                        const cleanMachineName = cleanString(machine.name_zh || '');
-                        const cleanHostModel = cleanString(model.model || '');
-                        const cleanHostCode = cleanString((model as any).code || '');
-                        const cleanHostTitleZh = cleanString(model.title_zh || '');
-                        const cleanHostTitleEn = cleanString(model.title_en || '');
-                        
-                        console.log('🔍 [String Cleaning Debug]:', {
-                          original_machine_model: machine.model,
-                          cleaned_machine_model: cleanMachineModel,
-                          original_host_code: (model as any).code,
-                          cleaned_host_code: cleanHostCode,
-                          model_id: model.id,
-                          exact_code_match: cleanHostCode === cleanMachineModel,
-                          exact_model_match: cleanHostModel === cleanMachineModel
-                        });
-                        
-                        // 优先策略1: ID匹配（如果主机型号表中有对应的机器ID）
-                        if ((model as any).machine_id === machine.id) return true;
-                        if ((model as any).part_number === machine.part_number) return true;
-                        
-                        // 优先策略2: 精确完整匹配 - 最高优先级，包括括号内容
-                        if (cleanHostCode && cleanMachineModel && cleanHostCode === cleanMachineModel) {
-                          console.log('✅ [Exact Match Found] Code匹配成功:', {
-                            cleanHostCode,
-                            cleanMachineModel,
-                            model_id: model.id
-                          });
-                          return true;
-                        }
-                        if (cleanHostModel && cleanMachineModel && cleanHostModel === cleanMachineModel) {
-                          console.log('✅ [Exact Match Found] Model匹配成功:', {
-                            cleanHostModel,
-                            cleanMachineModel,
-                            model_id: model.id
-                          });
-                          return true;
-                        }
-                        if (cleanHostTitleZh && cleanMachineName && cleanHostTitleZh === cleanMachineName) return true;
-                        if (cleanHostTitleEn && cleanMachineName && cleanHostTitleEn === cleanMachineName) return true;
-                        
-                        // 策略3: 去除版本号和测试后缀的匹配 - 但保留括号内容
-                        const cleanVersionMachineModel = cleanMachineModel?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
-                        const cleanVersionHostModel = cleanHostModel?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
-                        const cleanVersionHostCode = cleanHostCode?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
-                        
-                        // 更严格的匹配：只有当清理后的字符串完全相同且长度大于3时才匹配
-                        if (cleanVersionMachineModel && cleanVersionHostModel && cleanVersionMachineModel.length > 3 && cleanVersionMachineModel === cleanVersionHostModel) return true;
-                        if (cleanVersionMachineModel && cleanVersionHostCode && cleanVersionMachineModel.length > 3 && cleanVersionMachineModel === cleanVersionHostCode) return true;
-                        
-                        // 策略4: 基础型号匹配（去除括号内容）- 降低优先级，只有在没有精确匹配时才使用
-                        const getBaseModel = (modelStr: string) => {
-                          if (!modelStr) return '';
-                          // 去除括号及其内容，例如 "LA-E4S(paper)" -> "LA-E4S"
-                          return modelStr.split('(')[0].trim();
-                        };
-                        
-                        const machineBaseModel = getBaseModel(cleanMachineModel);
-                        const hostBaseModel = getBaseModel(cleanHostModel);
-                        const hostBaseCode = getBaseModel(cleanHostCode);
-                        
-                        // 基础型号匹配（降低优先级，且要求更严格的条件）
-                        if (machineBaseModel && hostBaseModel && machineBaseModel.length > 6 && machineBaseModel === hostBaseModel) {
-                          // 额外检查：确保原始字符串没有精确匹配项存在
-                          const hasExactMatch = hostModels.some(m => 
-                            cleanString((m as any).code || '') === cleanMachineModel ||
-                            cleanString(m.model || '') === cleanMachineModel
-                          );
-                          if (!hasExactMatch) {
-                            console.log('🔍 [Base Match] 基础型号匹配:', {
-                              machineBaseModel,
-                              hostBaseModel,
-                              model_id: model.id,
-                              no_exact_match_available: !hasExactMatch
-                            });
-                            return true;
-                          }
-                        }
-                        if (machineBaseModel && hostBaseCode && machineBaseModel.length > 6 && machineBaseModel === hostBaseCode) {
-                          // 额外检查：确保原始字符串没有精确匹配项存在
-                          const hasExactMatch = hostModels.some(m => 
-                            cleanString((m as any).code || '') === cleanMachineModel ||
-                            cleanString(m.model || '') === cleanMachineModel
-                          );
-                          if (!hasExactMatch) {
-                            console.log('🔍 [Base Match] 基础code匹配:', {
-                              machineBaseModel,
-                              hostBaseCode,
-                              model_id: model.id,
-                              no_exact_match_available: !hasExactMatch
-                            });
-                            return true;
-                          }
-                        }
-                        
-                        // 策略5: 分段匹配 (例如 LA-E4S) - 最低优先级
-                        const baseMachineModel = cleanMachineModel?.split(/[\s\(]/)[0]; // 取第一部分
-                        const baseHostModel = cleanHostModel?.split(/[\s\(]/)[0];
-                        const baseHostCode = cleanHostCode?.split(/[\s\(]/)[0];
-                        
-                        // 只有当基础型号长度大于4且完全匹配时才认为匹配，且没有更好的匹配
-                        if (baseMachineModel && baseHostModel && baseMachineModel.length > 4 && baseMachineModel === baseHostModel) {
-                          const hasExactMatch = hostModels.some(m => 
-                            cleanString((m as any).code || '') === cleanMachineModel ||
-                            cleanString(m.model || '') === cleanMachineModel
-                          );
-                          if (!hasExactMatch) return true;
-                        }
-                        if (baseMachineModel && baseHostCode && baseMachineModel.length > 4 && baseMachineModel === baseHostCode) {
-                          const hasExactMatch = hostModels.some(m => 
-                            cleanString((m as any).code || '') === cleanMachineModel ||
-                            cleanString(m.model || '') === cleanMachineModel
-                          );
-                          if (!hasExactMatch) return true;
-                        }
-                        
-                        return false;
-                      });
-                      
-                      console.log('🔍 [Machine PDF Debug] Looking for host model PDF:', {
-                        machine_id: machine.id,
-                        machine_model: machine.model,
-                        machine_name_zh: machine.name_zh,
-                        machine_part_number: machine.part_number,
-                        available_host_models: hostModels.map(h => ({
-                          id: h.id,
-                          model: h.model,
-                          code: (h as any).code, // 添加code字段显示
-                          title_zh: h.title_zh,
-                          title_en: h.title_en,
-                          spec_pdf: (h as any).spec_pdf,
-                          explosion_diagram_pdf: (h as any).explosion_diagram_pdf
-                        })),
-                        found_host_model: hostModel,
-                        host_model_pdf: hostModel ? (hostModel as any).spec_pdf || (hostModel as any).explosion_diagram_pdf : null,
-                        matching_details: {
-                          exact_model_match: hostModels.some(h => h.model === machine.model),
-                          exact_code_match: hostModels.some(h => (h as any).code === machine.model), // 添加code匹配检查
-                          exact_title_zh_match: hostModels.some(h => h.title_zh === machine.name_zh),
-                          clean_model_match: hostModels.some(h => {
-                            const cleanMachineModel = machine.model?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
-                            const cleanHostModel = h.model?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
-                            return cleanMachineModel === cleanHostModel;
-                          }),
-                          clean_code_match: hostModels.some(h => {
-                            const cleanMachineModel = machine.model?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
-                            const cleanHostCode = (h as any).code?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
-                            return cleanMachineModel === cleanHostCode;
-                          }),
-                          base_model_match: hostModels.some(h => {
-                            const baseMachineModel = machine.model?.split(/[\s\(]/)[0];
-                            const baseHostModel = h.model?.split(/[\s\(]/)[0];
-                            return baseMachineModel === baseHostModel;
-                          })
-                        }
-                      });
-                      
-                      // 详细匹配过程调试
-                      console.log('🔍 [Machine PDF Debug] Detailed matching process:', {
-                        machine_model: machine.model,
-                        step_by_step_checks: hostModels.map(h => ({
-                          host_id: h.id,
-                          host_model: h.model,
-                          host_code: (h as any).code,
-                          host_title_zh: h.title_zh,
-                          host_title_en: h.title_en,
-                          host_spec_pdf: (h as any).spec_pdf,
-                          host_explosion_pdf: (h as any).explosion_diagram_pdf,
-                          checks: {
-                            exact_model: h.model === machine.model,
-                            exact_code: (h as any).code === machine.model,
-                            exact_title_zh: h.title_zh === machine.name_zh,
-                            exact_title_en: h.title_en === machine.name_en,
-                            clean_model: (() => {
-                              const cleanMachineModel = machine.model?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
-                              const cleanHostModel = h.model?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
-                              return cleanMachineModel === cleanHostModel;
-                            })(),
-                            clean_code: (() => {
-                              const cleanMachineModel = machine.model?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
-                              const cleanHostCode = (h as any).code?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
-                              return cleanMachineModel === cleanHostCode;
-                            })(),
-                            base_model: (() => {
-                              const baseMachineModel = machine.model?.split(/[\s\(]/)[0];
-                              const baseHostModel = h.model?.split(/[\s\(]/)[0];
-                              return baseMachineModel === baseHostModel;
-                            })()
-                          },
-                          is_match: h === hostModel
-                        }))
-                      });
-                      
-                      const pdfUrl = hostModel ? 
-                        (hostModel as any).spec_pdf || 
-                        (hostModel as any).explosion_diagram_pdf ||
-                        (hostModel as any).model_explosion_diagram_pdf : null;
-                      
-                      console.log('🔍 [Machine PDF Debug] PDF URL processing:', {
-                        hostModel: hostModel ? {
-                          id: hostModel.id,
-                          model: hostModel.model,
-                          spec_pdf: (hostModel as any).spec_pdf,
-                          explosion_diagram_pdf: (hostModel as any).explosion_diagram_pdf,
-                          model_explosion_diagram_pdf: (hostModel as any).model_explosion_diagram_pdf
-                        } : null,
-                        found_pdf_url: pdfUrl,
-                        current_url: window.location.href,
-                        env_vars: {
-                          VITE_API_URL: import.meta.env.VITE_API_URL,
-                          DEV: import.meta.env.DEV,
-                          MODE: import.meta.env.MODE
-                        }
-                      });
-                      
-                      if (pdfUrl && !pdfUrl.includes('placeholder')) {
-                        let finalPdfUrl = pdfUrl;
-                        
-                        // 如果不是绝对URL，则转换为绝对URL
-                        if (!pdfUrl.startsWith('http://') && !pdfUrl.startsWith('https://')) {
-                          // 简化URL构建逻辑
-                          const baseUrl = window.location.origin;  // 使用当前页面的域名
-                          
-                          // 确保路径以/开头
-                          let cleanPath = pdfUrl;
-                          if (!cleanPath.startsWith('/')) {
-                            cleanPath = '/' + cleanPath;
-                          }
-                          
-                          // 移除可能的多余前缀
-                          cleanPath = cleanPath.replace('/frontend/public', '');
-                          
-                          finalPdfUrl = baseUrl + cleanPath;
-                        }
-                        
-                        console.log('✅ [Machine PDF Debug] Opening PDF:', {
-                          original_url: pdfUrl,
-                          final_url: finalPdfUrl,
-                          is_absolute: pdfUrl.startsWith('http'),
-                          base_url: window.location.origin
-                        });
-                        
-                        // 尝试打开PDF
-                        window.open(finalPdfUrl, '_blank');
-                      } else {
-                        showInfoToast(t('noSpecPdf') || '暂无规格说明文档');
-                        console.warn('🔍 [Machine PDF Debug] No valid PDF found:', {
-                          machine_part_number: machine.part_number,
-                          machine_model: machine.model,
-                          host_model_found: !!hostModel,
-                          pdf_url: pdfUrl,
-                          host_model_data: hostModel
-                        });
-                      }
-                    }}
-                    className="bg-gray-100 text-gray-600 hover:bg-gray-600 hover:text-white border-gray-300 transition-colors duration-200"
-                  >
-                    {t('specDetails')}
-                  </Button>
-                  
-                  <Tooltip
-                    title={
-                      <div className="p-3 bg-white rounded-lg shadow-lg border border-gray-200">
-                        <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
-                          <InfoCircleOutlined className="text-blue-500 mr-2" />
-                          <span className="font-bold text-gray-800 text-sm">{t('moreInfo')}</span>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center py-1">
-                            <span className="text-gray-600 font-medium text-xs">
-                              {getFieldWithUnit('packageSize', 'size')}:
-                            </span>
-                            <span className="text-gray-800 font-semibold text-xs bg-blue-50 px-2 py-1 rounded">
-                              {unitSystem === 'metric' ? removeUnitFromValue(machine.package_size_cm) : removeUnitFromValue(machine.package_size_inch)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center py-1">
-                            <span className="text-gray-600 font-medium text-xs">
-                              {getFieldWithUnit('netWeight', 'weight')}:
-                            </span>
-                            <span className="text-gray-800 font-semibold text-xs bg-green-50 px-2 py-1 rounded">
-                              {unitSystem === 'metric' 
-                                ? (machine.net_weight_kg !== null && machine.net_weight_kg !== undefined ? machine.net_weight_kg : t('pending'))
-                                : (machine.net_weight_lbs !== null && machine.net_weight_lbs !== undefined ? machine.net_weight_lbs : t('pending'))
-                              }
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center py-1">
-                            <span className="text-gray-600 font-medium text-xs">
-                              {getFieldWithUnit('palletHeight', 'size')}:
-                            </span>
-                            <span className="text-gray-800 font-semibold text-xs bg-yellow-50 px-2 py-1 rounded">
-                              {unitSystem === 'metric' 
-                                ? (machine.pallet_height_cm !== null && machine.pallet_height_cm !== undefined ? machine.pallet_height_cm : t('pending'))
-                                : (machine.pallet_height_inch !== null && machine.pallet_height_inch !== undefined ? machine.pallet_height_inch : t('pending'))
-                              }
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center py-1">
-                            <span className="text-gray-600 font-medium text-xs">
-                              {getFieldWithUnit('palletGrossWeight', 'weight')}:
-                            </span>
-                            <span className="text-gray-800 font-semibold text-xs bg-purple-50 px-2 py-1 rounded">
-                              {unitSystem === 'metric' 
-                                ? (machine.pallet_gross_weight_kg !== null && machine.pallet_gross_weight_kg !== undefined ? machine.pallet_gross_weight_kg : t('pending'))
-                                : (machine.pallet_gross_weight_lbs !== null && machine.pallet_gross_weight_lbs !== undefined ? machine.pallet_gross_weight_lbs : t('pending'))
-                              }
-                            </span>
-                          </div>
-                        </div>
-                        <div className="mt-3 pt-2 border-t border-gray-100 text-center">
-                          <span className="text-xs text-gray-500">{t('tooltip.hoverInfo') || '💡 悬停查看详细规格信息'}</span>
-                        </div>
-                      </div>
-                    }
-                    placement="topRight"
-                    overlayStyle={{ 
-                      maxWidth: '350px',
-                      zIndex: 1000
-                    }}
-                    color="white"
-                    arrow={true}
-                  >
-                    <Button 
+                <div className="mt-4 flex flex-col gap-2">
+                  <div className="flex flex-wrap gap-3">
+                    <Button
                       size="small"
                       icon={<InfoCircleOutlined />}
-                      className="bg-blue-100 text-blue-600 hover:bg-blue-500 hover:text-white border-blue-300 transition-colors duration-200"
+                      className="ms-figma-outline-btn"
+                      onClick={() =>
+                        openMachineSpecificationPdf(machine, hostModels as HostModelRow[], showInfoToast, t)
+                      }
                     >
-                      {t('moreInfo')}
+                      {t('specDetails')}
                     </Button>
-                  </Tooltip>
+
+                    <Tooltip
+                      title={
+                        <div className="p-3 bg-white rounded-lg shadow-lg border border-gray-200">
+                          <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
+                            <InfoCircleOutlined className="text-blue-500 mr-2" />
+                            <span className="font-bold text-gray-800 text-sm">{t('moreInfo')}</span>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center py-1">
+                              <span className="text-gray-600 font-medium text-xs">{getFieldWithUnit('packageSize', 'size')}:</span>
+                              <span className="text-gray-800 font-semibold text-xs bg-blue-50 px-2 py-1 rounded">
+                                {unitSystem === 'metric'
+                                  ? removeUnitFromValue(machine.package_size_cm)
+                                  : removeUnitFromValue(machine.package_size_inch)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center py-1">
+                              <span className="text-gray-600 font-medium text-xs">{getFieldWithUnit('netWeight', 'weight')}:</span>
+                              <span className="text-gray-800 font-semibold text-xs bg-green-50 px-2 py-1 rounded">
+                                {unitSystem === 'metric'
+                                  ? machine.net_weight_kg !== null && machine.net_weight_kg !== undefined
+                                    ? machine.net_weight_kg
+                                    : t('pending')
+                                  : machine.net_weight_lbs !== null && machine.net_weight_lbs !== undefined
+                                    ? machine.net_weight_lbs
+                                    : t('pending')}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center py-1">
+                              <span className="text-gray-600 font-medium text-xs">{getFieldWithUnit('palletHeight', 'size')}:</span>
+                              <span className="text-gray-800 font-semibold text-xs bg-yellow-50 px-2 py-1 rounded">
+                                {unitSystem === 'metric'
+                                  ? machine.pallet_height_cm !== null && machine.pallet_height_cm !== undefined
+                                    ? machine.pallet_height_cm
+                                    : t('pending')
+                                  : machine.pallet_height_inch !== null && machine.pallet_height_inch !== undefined
+                                    ? machine.pallet_height_inch
+                                    : t('pending')}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center py-1">
+                              <span className="text-gray-600 font-medium text-xs">{getFieldWithUnit('palletGrossWeight', 'weight')}:</span>
+                              <span className="text-gray-800 font-semibold text-xs bg-purple-50 px-2 py-1 rounded">
+                                {unitSystem === 'metric'
+                                  ? machine.pallet_gross_weight_kg !== null && machine.pallet_gross_weight_kg !== undefined
+                                    ? machine.pallet_gross_weight_kg
+                                    : t('pending')
+                                  : machine.pallet_gross_weight_lbs !== null && machine.pallet_gross_weight_lbs !== undefined
+                                    ? machine.pallet_gross_weight_lbs
+                                    : t('pending')}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="mt-3 pt-2 border-t border-gray-100 text-center">
+                            <span className="text-xs text-gray-500">{t('tooltip.hoverInfo') || ''}</span>
+                          </div>
+                        </div>
+                      }
+                      placement="topRight"
+                      overlayStyle={{
+                        maxWidth: '350px',
+                        zIndex: 1000,
+                      }}
+                      color="white"
+                      arrow={true}
+                    >
+                      <Button size="small" icon={<InfoCircleOutlined />} className="ms-figma-outline-btn">
+                        {t('moreInfo')}
+                      </Button>
+                    </Tooltip>
+                  </div>
+                  <div className="ms-figma-spec-action-links">
+                    <button
+                      type="button"
+                      className="ms-figma-link-accessories-inline"
+                      onClick={() =>
+                        openMachineSpecificationPdf(machine, hostModels as HostModelRow[], showInfoToast, t)
+                      }
+                    >
+                      {t('figma.viewDetailedSpecifications')}
+                    </button>
+                    <span className="ms-figma-spec-links-sep" aria-hidden>
+                      |
+                    </span>
+                    <button
+                      type="button"
+                      className="ms-figma-link-accessories-inline"
+                      onClick={() => {
+                        const hostRow = findHostModelForMachinePart(machine, hostModels as HostModelRow[]) as
+                          | Record<string, unknown>
+                          | undefined;
+                        const fromPart =
+                          currentLanguage === 'zh' ? machine.model_description_zh : machine.model_description_en;
+                        const fromHost =
+                          currentLanguage === 'zh'
+                            ? (hostRow?.model_description_zh as string | null | undefined)
+                            : (hostRow?.model_description_en as string | null | undefined);
+                        const body = (fromPart || fromHost || '').trim();
+                        const fallback =
+                          currentLanguage === 'zh' ? machine.spec || '' : machine.spec_imperial || machine.spec || '';
+                        const text = (body || fallback).trim();
+                        if (!text) {
+                          showInfoToast(t('figma.introductionEmpty'));
+                          return;
+                        }
+                        setIntroductionModalText(safeTextContent(text));
+                        setIntroductionModalOpen(true);
+                      }}
+                    >
+                      {t('figma.introductionLink')}
+                    </button>
+                    <span className="ms-figma-spec-links-sep" aria-hidden>
+                      |
+                    </span>
+                    <button
+                      type="button"
+                      className="ms-figma-link-accessories-inline"
+                      onClick={() => navigate('/consumables/product-line-2')}
+                    >
+                      {t('figma.filmOptionsLink')}
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              {/* Column 3: Price, Stock, Actions */}
-              <div className="w-full md:w-1/5 md:pl-6 mt-6 md:mt-0 border-t md:border-t-0 md:border-l border-gray-200 pt-6 md:pt-0">
+              <div className="ms-figma-machine-card__actions w-full md:w-1/5 md:pl-6 mt-6 md:mt-0 border-t md:border-t-0 md:border-l border-gray-200 pt-6 md:pt-0">
                 <div className="mb-4">
-                  <div className="font-medium text-sm text-gray-600 mb-2">
-                    {t('tableHeaders.price') || 'Price'}:
-                  </div>
-                  
-                  <div className="text-2xl font-bold text-blue-600 mb-2">
-                    {getCurrencySymbol(userRegion)}{formatPrice(machine.prices?.[0]?.tiers?.[0]?.base_price || 0)}
+                  <div className="font-medium text-sm text-gray-600 mb-1">{t('tableHeaders.price') || 'Price'}:</div>
+                  <div className="ms-figma-price-value mb-2">
+                    {getCurrencySymbol(userRegion)}
+                    {formatPrice(machine.prices?.[0]?.tiers?.[0]?.base_price || 0)}
                   </div>
                 </div>
-                
+
                 {isSales && (
-                  <div className="mb-4">
-                    <div className="font-medium text-sm text-gray-600 mb-2">
-                      {t('tableHeaders.stock')}:
+                  <div className="mb-4 ms-figma-stock-panel">
+                    <div className="ms-figma-stock-heading">{t('figma.stockStatus')}</div>
+                    <div className="font-semibold text-sm text-gray-800 mb-2">
+                      {t('inventory.total')}:{' '}
+                      {(Object.keys(REGIONS) as Array<keyof typeof REGIONS>).reduce(
+                        (sum, regionKey) => sum + getRegionInventory(machine, regionKey.toString()),
+                        0
+                      )}
                     </div>
-                    <div className="flex flex-wrap gap-1">
+                    <div className="ms-figma-stock-tags">
                       {(Object.keys(REGIONS) as Array<keyof typeof REGIONS>).map((regionKey) => {
                         const stockStatus = getStockStatus(getRegionInventory(machine, regionKey.toString()));
                         return (
-                          <Tag 
+                          <Tag
                             key={`${machine.id}-inventory-${regionKey}`}
                             color={stockStatus.color}
                             className="text-xs"
@@ -2417,15 +2241,18 @@ const ProductLine2Page: React.FC = () => {
                     </div>
                   </div>
                 )}
-                
+
                 <div className="space-y-3">
-                  <div className="flex items-center justify-center gap-2 bg-gray-50 rounded-lg p-2">
-                    <Button 
-                      icon={<MenuOutlined />}
-                      onClick={() => handleQuantityChange(machine.id.toString(), (quantities[machine.id.toString()] || 1) - 1)}
+                  <div className="ms-figma-qty-stepper">
+                    <Button
+                      type="default"
+                      icon={<MinusOutlined />}
+                      onClick={() =>
+                        handleQuantityChange(machine.id.toString(), (quantities[machine.id.toString()] || 1) - 1)
+                      }
                       disabled={(quantities[machine.id.toString()] || 1) <= 1}
                       size="small"
-                      className="hover:border-blue-500 hover:bg-blue-500 hover:text-white transition-colors duration-200"
+                      aria-label="−"
                     />
                     <InputNumber
                       min={1}
@@ -2434,21 +2261,23 @@ const ProductLine2Page: React.FC = () => {
                       className="w-16 text-center"
                       size="small"
                     />
-                    <Button 
+                    <Button
+                      type="default"
                       icon={<PlusOutlined />}
-                      onClick={() => handleQuantityChange(machine.id.toString(), (quantities[machine.id.toString()] || 1) + 1)}
+                      onClick={() =>
+                        handleQuantityChange(machine.id.toString(), (quantities[machine.id.toString()] || 1) + 1)
+                      }
                       size="small"
-                      className="hover:border-blue-500 hover:bg-blue-500 hover:text-white transition-colors duration-200"
+                      aria-label="+"
                     />
                   </div>
-                  
-                  {/* 🎯 智能购物车按钮 - 替换原有按钮 */}
+
                   <SmartAddToCartButton
                     product={machine}
                     productType="machines"
                     onAddToCart={() => handleAddToCart(machine, 'machine')}
                     disabled={!canAddToCart}
-                    className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 h-10 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+                    className="ms-figma-primary-cart w-full py-2 h-10 rounded-lg shadow-md transition-all duration-200"
                   >
                     <ShoppingCartOutlined className="mr-2" />
                     {canAddToCart ? t('addToCart') : t('noPermissionAdd')}
@@ -2458,6 +2287,23 @@ const ProductLine2Page: React.FC = () => {
             </div>
           </div>
         ))}
+        {!selectedMachine && total > 0 && (
+          <div className="flex justify-center ms-figma-pagination-wrap">
+            <Pagination
+              current={currentPage}
+              pageSize={pageSize}
+              total={total}
+              onChange={(page) => setCurrentPage(page)}
+              showSizeChanger
+              pageSizeOptions={['10', '20', '50']}
+              onShowSizeChange={(_page, size) => {
+                setPageSize(size);
+                setCurrentPage(1);
+              }}
+              showTotal={(tot, range) => `${range[0]}-${range[1]} / ${tot}`}
+            />
+          </div>
+        )}
       </div>
     );
   };
@@ -2985,7 +2831,7 @@ const ProductLine2Page: React.FC = () => {
             <div className="space-y-3">
               <div className="flex items-center justify-center gap-2 bg-gray-50 rounded-lg p-2">
                 <Button 
-                  icon={<MenuOutlined />}
+                  icon={<MinusOutlined />}
                   onClick={() => handleQuantityChange(accessory.id.toString(), (quantities[accessory.id.toString()] || 1) - 1)}
                   disabled={(quantities[accessory.id.toString()] || 1) <= 1}
                   size="small"
@@ -3349,7 +3195,21 @@ const ProductLine2Page: React.FC = () => {
 
   // Return the main component JSX
   return (
-    <div className="machines-page min-h-screen bg-gray-50 text-gray-900">
+    <div className="machines-page ms-product-line-layout min-h-screen bg-gray-50 text-gray-900">
+      <AntModal
+        title={t('figma.introductionModalTitle')}
+        open={introductionModalOpen}
+        onOk={() => setIntroductionModalOpen(false)}
+        onCancel={() => setIntroductionModalOpen(false)}
+        width={560}
+        okText={t('close')}
+        cancelButtonProps={{ style: { display: 'none' } }}
+      >
+        <div className="max-h-[60vh] overflow-y-auto whitespace-pre-wrap text-gray-800 text-sm">
+          {introductionModalText}
+        </div>
+      </AntModal>
+
       {/* SQL Mock服务状态组件 */}
       <MockServiceStatus position="top-right" compact={true} hidden={true} />
       

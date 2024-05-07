@@ -67,10 +67,10 @@
 }
 
 .machines-page div[style*="position: relative"][style*="display: inline-block"]:hover::after {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%) !important;
-  border-color: #3b82f6 !important;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--ff-tint-blue) 65%, white) 0%, var(--ff-tint-blue) 100%) !important;
+  border-color: var(--ff-accent) !important;
   transform: translateY(-2px) !important;
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.2) !important;
+  box-shadow: 0 6px 20px rgba(var(--ff-accent-rgb), 0.2) !important;
 }
 
 /* ========== 标题样式优化 ========== */
@@ -78,7 +78,7 @@
   font-size: 20px !important;
   font-weight: 700 !important;
   margin-bottom: 24px !important;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  background: linear-gradient(135deg, var(--ff-accent) 0%, var(--ff-accent-mid) 100%) !important;
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
   background-clip: text !important;
@@ -92,9 +92,9 @@
   margin-top: 16px !important;
   right: auto !important;
   top: auto !important;
-  background: rgba(59, 130, 246, 0.1) !important;
-  color: #1d4ed8 !important;
-  border: 1px solid #bfdbfe !important;
+  background: rgba(var(--ff-accent-rgb), 0.1) !important;
+  color: var(--ff-accent-mid) !important;
+  border: 1px solid color-mix(in srgb, var(--ff-accent) 28%, white) !important;
   padding: 8px 16px !important;
   border-radius: 8px !important;
   font-size: 14px !important;

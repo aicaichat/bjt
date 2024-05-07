@@ -26,7 +26,7 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #3b82f6, #2563eb, #1d4ed8);
+  background: linear-gradient(90deg, var(--ff-accent), var(--ff-btn-primary-hover), var(--ff-accent-mid));
 }
 
 .section-title h2 {
@@ -48,7 +48,7 @@
 
 .filter-container:hover {
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
-  border-color: #bfdbfe !important;
+  border-color: color-mix(in srgb, var(--ff-accent) 28%, white) !important;
 }
 
 .filter-container h3::before {
@@ -77,7 +77,7 @@
 }
 
 .shape-selector .shape-label:hover {
-  border-color: #93c5fd !important;
+  border-color: color-mix(in srgb, var(--ff-accent) 38%, white) !important;
   transform: translateY(-2px);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
 }
@@ -87,9 +87,9 @@
 }
 
 .shape-selector input[type="radio"]:checked + .shape-label {
-  border-color: #3b82f6 !important;
-  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%) !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 0 0 3px #dbeafe !important;
+  border-color: var(--ff-accent) !important;
+  background: linear-gradient(135deg, var(--ff-tint-blue) 0%, #ffffff 100%) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 0 0 3px color-mix(in srgb, var(--ff-accent) 16%, var(--ff-tint-blue)) !important;
 }
 
 /* 材质按钮优化 */
@@ -108,13 +108,13 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, #dbeafe, transparent);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--ff-accent) 16%, var(--ff-tint-blue)), transparent);
   transition: left 0.5s ease;
 }
 
 .material-btn:hover {
-  border-color: #60a5fa !important;
-  color: #1d4ed8 !important;
+  border-color: color-mix(in srgb, var(--ff-accent) 48%, white) !important;
+  color: var(--ff-accent-mid) !important;
   transform: translateY(-1px);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
 }
@@ -124,8 +124,8 @@
 }
 
 .material-btn.active {
-  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
-  border-color: #2563eb !important;
+  background: linear-gradient(135deg, var(--ff-accent), var(--ff-btn-primary-hover)) !important;
+  border-color: var(--ff-btn-primary-hover) !important;
   color: #ffffff !important;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
   transform: translateY(-1px);
@@ -149,13 +149,13 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #60a5fa, #3b82f6, #2563eb);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--ff-accent) 48%, white), var(--ff-accent), var(--ff-btn-primary-hover));
   transform: scaleX(0);
   transition: transform 0.3s ease;
 }
 
 .products-container .bg-card:hover {
-  border-color: #93c5fd !important;
+  border-color: color-mix(in srgb, var(--ff-accent) 38%, white) !important;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
   transform: translateY(-4px);
 }
@@ -178,7 +178,7 @@
 
 /* 产品代码优化 */
 .product-code {
-  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  background: linear-gradient(135deg, var(--ff-accent), var(--ff-btn-primary-hover)) !important;
   color: #ffffff !important;
   border-radius: 8px !important;
   font-weight: 600 !important;
@@ -242,7 +242,7 @@
 /* 购物车按钮优化 */
 .cart-add-button,
 .ant-btn-primary {
-  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  background: linear-gradient(135deg, var(--ff-accent), var(--ff-btn-primary-hover)) !important;
   border: none !important;
   border-radius: 12px !important;
   font-weight: 600 !important;
@@ -267,7 +267,7 @@
 
 .cart-add-button:hover,
 .ant-btn-primary:hover {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  background: linear-gradient(135deg, var(--ff-btn-primary-hover), var(--ff-accent-mid)) !important;
   transform: translateY(-2px) !important;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1) !important;
 }
@@ -286,13 +286,13 @@
 }
 
 .quantity-selector:hover {
-  border-color: #60a5fa !important;
+  border-color: color-mix(in srgb, var(--ff-accent) 48%, white) !important;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
 }
 
 .quantity-selector:focus-within {
-  border-color: #3b82f6 !important;
-  box-shadow: 0 0 0 3px #dbeafe !important;
+  border-color: var(--ff-accent) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ff-accent) 16%, var(--ff-tint-blue)) !important;
 }
 
 .quantity-btn {
@@ -301,7 +301,7 @@
 }
 
 .quantity-btn:hover:not(:disabled) {
-  background: #3b82f6 !important;
+  background: var(--ff-accent) !important;
   color: #ffffff !important;
 }
 
@@ -378,7 +378,7 @@
   
   .cart-add-button,
   .ant-btn-primary {
-    border: 2px solid #1d4ed8 !important;
+    border: 2px solid var(--ff-accent-mid) !important;
   }
 }
 

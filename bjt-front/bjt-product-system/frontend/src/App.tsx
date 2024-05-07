@@ -5,6 +5,7 @@ import './styles/sidebar-functional-fix.css';
 import './styles/page-layout-fix.css';
 import './styles/products-submenu-fix.css';
 import './styles/header-layout-fix.css';
+import './styles/figma-global.css';
 
 // 导入 BJT Tech 主题
 import { ThemeProvider } from './contexts/ThemeContext';

@@ -1,32 +1,28 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { useLanguage } from '../../contexts/LanguageContext';
 import { useTranslation } from 'react-i18next';
-import { Menu, Dropdown, Button, Space, Divider, Badge } from 'antd';
-import { 
-  DownOutlined, 
-  MenuOutlined, 
-  UserOutlined, 
-  ShoppingCartOutlined, 
-  GlobalOutlined,
-  HomeOutlined,
-  AppstoreOutlined,
-  CustomerServiceOutlined,
-  PhoneOutlined,
-  RocketOutlined,
-  FileTextOutlined,
-  SettingOutlined,
-  GiftOutlined
-} from '@ant-design/icons';
+import { Menu } from 'antd';
+import { MenuOutlined, CreditCardOutlined } from '@ant-design/icons';
+import {
+  NavIconHome,
+  NavIconAirCushion,
+  NavIconPaper,
+  NavIconWaterTape,
+  NavIconAirColumn,
+  NavIconSupport,
+  NavIconContact,
+} from './sidebarNavIcons';
 import { safeRender } from '../../utils/renderUtils';
 import classNames from 'classnames';
-import { useCart } from '../../contexts/CartContext';
 import '../../styles/sidebar.css';
+import '../../styles/sidebar-figma.css';
 
 interface NavSubItem {
   label: string;
   url: string;
+  /** Figma 二级行左侧图标（如 Pay by Card 信用卡） */
+  leadingIcon?: React.ReactNode;
 }
 
 interface NavSection {
@@ -40,22 +36,26 @@ interface NavItem {
   icon?: React.ReactNode;
   children?: NavSection[];
   simpleDropdown?: NavSubItem[];
+  /** 无子菜单时打开外部页（图一气柱袋为直达、无折叠箭头） */
+  externalHref?: string;
   requiresAuth?: boolean;
 }
 
 export interface SidebarProps {
   className?: string;
+  /** 桌面端侧栏是否收起（由 MainLayout 持有，与主区/顶栏 --bjt-sidebar-effective-width 联动） */
+  collapsed: boolean;
+  onCollapsedChange: (collapsed: boolean) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
   className = '',
+  collapsed,
+  onCollapsedChange,
 }: SidebarProps) => {
   const { t, i18n } = useTranslation();
   const location = useLocation();
-  const navigate = useNavigate();
   const { user } = useAuth();
-  const { language } = useLanguage();
-  const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openKeys, setOpenKeys] = useState<string[]>([]);
@@ -65,13 +65,13 @@ const Sidebar: React.FC<SidebarProps> = ({
     { 
       label: 'nav.home', 
       path: '/', 
-      icon: <HomeOutlined />,
+      icon: <NavIconHome />,
       requiresAuth: false 
     },
     { 
       label: 'menu.Air Cushioning System',
       path: '/air-cushioning',
-      icon: <RocketOutlined />,
+      icon: <NavIconAirCushion />,
       requiresAuth: false,
       simpleDropdown: [
         { label: 'menu.Air Cushion Machine & Accessory', url: '/machines/product-line-1' },
@@ -82,7 +82,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     { 
       label: 'menu.Paper Cushioning System',
       path: '/paper-cushioning',
-      icon: <FileTextOutlined />,
+      icon: <NavIconPaper />,
       requiresAuth: false,
       simpleDropdown: [
         { label: 'menu.Paper Cushion Machine & Accessory', url: '/machines/product-line-2' },
@@ -93,7 +93,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     { 
       label: 'menu.Water Activated Tape System',
       path: '/water-tape',
-      icon: <SettingOutlined />,
+      icon: <NavIconWaterTape />,
       requiresAuth: false,
       simpleDropdown: [
         { label: 'menu.Water Activated Tape Dispenser & Accessory', url: '/machines/product-line-3' },
@@ -101,30 +101,33 @@ const Sidebar: React.FC<SidebarProps> = ({
         { label: 'menu.Spare parts', url: '/spare-parts?category=3' },
       ]
     },
-    { 
+    {
       label: 'menu.Air Column Bag System',
       path: '/air-column-bag',
-      icon: <GiftOutlined />,
+      icon: <NavIconAirColumn />,
       requiresAuth: false,
-      simpleDropdown: [
-        { label: 'menu.Air Column Bag Products', url: 'https://www.lockedair.com/water-activated-tape-dispenser1/' },
-      ]
+      externalHref: 'https://www.lockedair.com/water-activated-tape-dispenser1/',
     },
     { 
       label: 'nav.support',
       path: '/support',
-      icon: <CustomerServiceOutlined />,
+      icon: <NavIconSupport />,
       requiresAuth: false,
       simpleDropdown: [
         { label: 'menu.After-sales service', url: '/rma' },
         { label: 'menu.Document Download', url: 'https://www.lockedair.com/document-download/' },
         { label: 'menu.FAQ', url: 'https://www.lockedair.com/faq/' },
+        {
+          label: 'menu.Pay by Card',
+          url: '/checkout',
+          leadingIcon: <CreditCardOutlined className="sidebar-sub-leading-anticon" />,
+        },
       ]
     },
     { 
       label: 'nav.contactUs', 
       path: '/contact', 
-      icon: <PhoneOutlined />,
+      icon: <NavIconContact />,
       requiresAuth: false 
     }
   ];
@@ -134,9 +137,6 @@ const Sidebar: React.FC<SidebarProps> = ({
     const checkMobile = () => {
       const mobile = window.innerWidth <= 768;
       setIsMobile(mobile);
-      if (mobile) {
-        setCollapsed(true);
-      }
     };
     
     checkMobile();
@@ -144,14 +144,49 @@ const Sidebar: React.FC<SidebarProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // 根据认证状态筛选导航项
-  const filteredNavItems = navItems.filter(item => 
-    !item.requiresAuth || user
+  const filteredNavItems = useMemo(
+    () => navItems.filter(item => !item.requiresAuth || user),
+    [user]
+  );
+
+  /** 与菜单项 key 一致：含 query，便于二级「_machine & Accessory」等选中态（Figma 深蓝底+白字） */
+  const selectedKeys = useMemo(() => {
+    const full = `${location.pathname}${location.search || ''}`;
+    return [full === '' ? '/' : full];
+  }, [location.pathname, location.search]);
+
+  useEffect(() => {
+    const fullPath = `${location.pathname}${location.search || ''}`;
+    const next: string[] = [];
+    filteredNavItems.forEach(navItem => {
+      if (!navItem.simpleDropdown) return;
+      const hit = navItem.simpleDropdown.some(
+        sub => !sub.url.startsWith('http') && sub.url === fullPath
+      );
+      if (hit) next.push(navItem.path);
+    });
+    setOpenKeys(next);
+  }, [location.pathname, location.search, filteredNavItems]);
+
+  const subMenuItemKey = (parentPath: string, item: NavSubItem, itemIndex: number) =>
+    item.url.startsWith('http') ? `${parentPath}__ext-${itemIndex}` : item.url;
+
+  const wrapSubContent = (item: NavSubItem, content: React.ReactNode) => (
+    <span className="sidebar-sub-link-inner">
+      {item.leadingIcon ? (
+        <span className="sidebar-sub-leading-wrap" aria-hidden>
+          {item.leadingIcon}
+        </span>
+      ) : null}
+      {content}
+    </span>
   );
 
   // 切换侧边栏展开/收起
   const toggleCollapsed = () => {
-    setCollapsed(!collapsed);
+    if (!isMobile) {
+      onCollapsedChange(!collapsed);
+    }
   };
 
   // 切换移动端菜单
@@ -164,83 +199,110 @@ const Sidebar: React.FC<SidebarProps> = ({
     setOpenKeys(keys);
   };
 
-  // 生成菜单项
   const generateMenuItems = () => {
     return filteredNavItems.map((navItem, index) => {
       const navLabel = typeof navItem.label === 'string' ? navItem.label : 'nav.products';
-      const key = `nav-${index}`;
-      
+      const fallbackKey = `nav-${index}`;
+
       if (navItem.children) {
-        // 复杂下拉菜单
         const children = navItem.children.map((section, sectionIndex) => ({
-          key: `${key}-section-${sectionIndex}`,
+          key: `${fallbackKey}-section-${sectionIndex}`,
           label: safeRender(t(section.title)),
           type: 'group' as const,
           children: section.items.map((item, itemIndex) => ({
-            key: `${key}-section-${sectionIndex}-item-${itemIndex}`,
+            key: `${fallbackKey}-section-${sectionIndex}-item-${itemIndex}`,
             label: item.url.startsWith('http') ? (
-              <a 
-                href={item.url} 
-                target="_blank" 
+              <a
+                href={item.url}
+                target="_blank"
                 rel="noopener noreferrer"
-                style={{ textDecoration: 'none' }}
+                className="sidebar-sub-external"
               >
-                {safeRender(t(item.label))}
-                <span style={{ marginLeft: '4px', fontSize: '12px' }}>↗</span>
+                {wrapSubContent(item, (
+                  <>
+                    {safeRender(t(item.label))}
+                    <span className="sidebar-ext-icon">↗</span>
+                  </>
+                ))}
               </a>
             ) : (
-              <Link to={item.url}>
-                {safeRender(t(item.label))}
+              <Link to={item.url} className="sidebar-sub-link">
+                {wrapSubContent(item, safeRender(t(item.label)))}
               </Link>
             ),
           })),
         }));
 
         return {
-          key,
+          key: navItem.path,
           icon: navItem.icon,
           label: safeRender(t(navLabel)),
           children,
         };
-      } else if (navItem.simpleDropdown) {
-        // 简单下拉菜单
+      }
+
+      if (navItem.simpleDropdown) {
+        const parentKey = navItem.path;
         const children = navItem.simpleDropdown.map((item, itemIndex) => ({
-          key: `${key}-simple-${itemIndex}`,
+          key: subMenuItemKey(parentKey, item, itemIndex),
           label: item.url.startsWith('http') ? (
-            <a 
-              href={item.url} 
-              target="_blank" 
+            <a
+              href={item.url}
+              target="_blank"
               rel="noopener noreferrer"
-              style={{ textDecoration: 'none' }}
+              className="sidebar-sub-external"
             >
-              {safeRender(t(item.label))}
-              <span style={{ marginLeft: '4px', fontSize: '12px' }}>↗</span>
+              {wrapSubContent(item, (
+                <>
+                  {safeRender(t(item.label))}
+                  <span className="sidebar-ext-icon">↗</span>
+                </>
+              ))}
             </a>
           ) : (
-            <Link to={item.url}>
-              {safeRender(t(item.label))}
+            <Link to={item.url} className="sidebar-sub-link">
+              {wrapSubContent(item, safeRender(t(item.label)))}
             </Link>
           ),
         }));
 
         return {
-          key,
+          key: parentKey,
           icon: navItem.icon,
           label: safeRender(t(navLabel)),
           children,
         };
-      } else {
-        // 普通菜单项
+      }
+
+      if (navItem.externalHref) {
         return {
-          key,
+          key: navItem.path,
           icon: navItem.icon,
           label: (
-            <Link to={navItem.path}>
+            <a
+              href={navItem.externalHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="sidebar-top-link sidebar-top-link--external"
+            >
               {safeRender(t(navLabel))}
-            </Link>
+              <span className="sidebar-ext-icon" aria-hidden>
+                ↗
+              </span>
+            </a>
           ),
         };
       }
+
+      return {
+        key: navItem.path,
+        icon: navItem.icon,
+        label: (
+          <Link to={navItem.path} className="sidebar-top-link">
+            {safeRender(t(navLabel))}
+          </Link>
+        ),
+      };
     });
   };
 
@@ -265,17 +327,34 @@ const Sidebar: React.FC<SidebarProps> = ({
       )}
 
       {/* 侧边栏 */}
-      <div className={classNames('sidebar', className, {
-        'collapsed': collapsed,
-        'mobile-open': isMobile && mobileMenuOpen
-      })}>
+      <div
+        className={classNames('sidebar', 'sidebar--figma', className, {
+          collapsed: !isMobile && collapsed,
+          'mobile-open': isMobile && mobileMenuOpen,
+        })}
+      >
         {/* 侧边栏头部 */}
-        <div className="sidebar-header">
-          <div className="sidebar-logo">
-            <img src="/images/logo-1.webp" alt="BJT Tech Logo" />
+        <div className="sidebar-header sidebar-header--figma-brand">
+          <div className="sidebar-brand">
+            <div className="sidebar-brand__bjt">
+              <img src="/images/logo-1.webp" alt="BJT" />
+            </div>
+            {!collapsed && !isMobile && (
+              <div className="sidebar-brand__wordmark">
+                <span className="sidebar-brand__line1">Locked Air®</span>
+                <span className="sidebar-brand__rule" aria-hidden />
+                <span className="sidebar-brand__line2">L@CKED PAPER™</span>
+              </div>
+            )}
           </div>
-          {!collapsed && (
-            <button className="sidebar-toggle" onClick={toggleCollapsed}>
+          {!isMobile && (
+            <button
+              type="button"
+              className="sidebar-toggle"
+              onClick={toggleCollapsed}
+              aria-expanded={!collapsed}
+              aria-label={collapsed ? '展开侧栏' : '收起侧栏'}
+            >
               <MenuOutlined />
             </button>
           )}
@@ -285,10 +364,10 @@ const Sidebar: React.FC<SidebarProps> = ({
         <div className="sidebar-menu">
           <Menu
             mode="inline"
-            inlineCollapsed={collapsed}
+            inlineCollapsed={!isMobile && collapsed}
             openKeys={openKeys}
             onOpenChange={handleOpenChange}
-            selectedKeys={[location.pathname]}
+            selectedKeys={selectedKeys}
             items={generateMenuItems()}
             className="sidebar-menu-content"
           />

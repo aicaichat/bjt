@@ -764,7 +764,7 @@
 }
 
 .spec-details-btn:hover .anticon {
-  color: #1e40af;
+  color: var(--ff-accent-mid);
 }
 
 /* 更多信息按钮样式 */
@@ -799,7 +799,7 @@
 }
 
 .more-info-btn:hover .anticon {
-  color: #1e40af;
+  color: var(--ff-accent-mid);
 }
 
 /* 更多信息按钮的Tooltip - 简化版本 */
@@ -859,7 +859,7 @@
 .more-info-btn .tooltip-title {
   font-weight: 600;
   margin-bottom: 12px;
-  color: #1e40af;
+  color: var(--ff-accent-mid);
   font-size: 16px;
   border-bottom: 2px solid #e5e7eb;
   padding-bottom: 6px;
@@ -871,7 +871,7 @@
 
 .more-info-btn .tooltip-section-title {
   font-weight: 600;
-  color: #1e40af;
+  color: var(--ff-accent-mid);
   font-size: 14px;
   margin-bottom: 8px;
   padding-bottom: 4px;
@@ -1118,12 +1118,12 @@
 
 /* 焦点样式 */
 .spec-details-btn:focus-visible {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid var(--ff-accent);
   outline-offset: 2px;
 }
 
 .more-info-btn:focus-visible {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid var(--ff-accent);
   outline-offset: 2px;
 }
 
@@ -1589,7 +1589,7 @@
   left: -10px;
   right: -10px;
   bottom: -10px;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(139, 92, 246, 0.05));
+  background: linear-gradient(135deg, rgba(var(--ff-accent-rgb), 0.05), rgba(139, 92, 246, 0.05));
   border-radius: 24px;
   z-index: -1;
 }
@@ -1604,7 +1604,7 @@
 
 .shape-option input[type="radio"]:checked + label {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 10px 25px rgba(var(--ff-accent-rgb), 0.3);
 }
 
 /* 产品卡片悬停效果 */
@@ -1630,14 +1630,14 @@
 
 /* 按钮渐变动画 */
 .gradient-button {
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(135deg, var(--ff-accent), #8b5cf6);
   transition: all 0.3s ease;
 }
 
 .gradient-button:hover {
-  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  background: linear-gradient(135deg, var(--ff-btn-primary-hover), #7c3aed);
   transform: translateY(-1px);
-  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 8px 25px rgba(var(--ff-accent-rgb), 0.4);
 }
 
 /* 加载状态美化 */
@@ -1656,7 +1656,7 @@
   width: 48px;
   height: 48px;
   border: 4px solid #e2e8f0;
-  border-top: 4px solid #3b82f6;
+  border-top: 4px solid var(--ff-accent);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 1rem;
@@ -1710,8 +1710,8 @@
 }
 
 .ant-select-large.ant-select-focused .ant-select-selector {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  border-color: var(--ff-accent);
+  box-shadow: 0 0 0 4px rgba(var(--ff-accent-rgb), 0.1);
 }
 
 .ant-input-number-large {
@@ -1721,8 +1721,8 @@
 
 .ant-input-number-large:focus,
 .ant-input-number-large.ant-input-number-focused {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  border-color: var(--ff-accent);
+  box-shadow: 0 0 0 4px rgba(var(--ff-accent-rgb), 0.1);
 }
 
 .ant-btn-primary {
@@ -1733,7 +1733,7 @@
 
 .ant-btn-primary:not(:disabled):hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 8px 25px rgba(var(--ff-accent-rgb), 0.4);
 }
 
 /* 工具提示样式 */
@@ -1784,13 +1784,13 @@
 .pagination-button:hover:not(:disabled),
 .pagination-page:hover {
   background: #f3f4f6;
-  color: #3b82f6;
+  color: var(--ff-accent);
 }
 
 .pagination-page.active {
-  background: #3b82f6;
+  background: var(--ff-accent);
   color: white;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 2px 8px rgba(var(--ff-accent-rgb), 0.3);
 }
 
 .pagination-button:disabled {
@@ -1863,11 +1863,11 @@
 
 /* 品牌色彩增强 */
 .bg-brand-gradient {
-  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, var(--ff-accent) 0%, #8b5cf6 100%);
 }
 
 .text-brand-gradient {
-  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, var(--ff-accent) 0%, #8b5cf6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -1912,9 +1912,9 @@
 
 /* 形状选择器样式 */
 .shape-selector input[type="radio"]:checked + label {
-  border-color: #3b82f6 !important;
-  background-color: #eff6ff !important;
-  box-shadow: 0 10px 25px rgba(59, 130, 246, 0.15);
+  border-color: var(--ff-accent) !important;
+  background-color: var(--ff-tint-blue) !important;
+  box-shadow: 0 10px 25px rgba(var(--ff-accent-rgb), 0.15);
   transform: scale(1.02);
 }
 
@@ -1925,7 +1925,7 @@
 
 /* 计数徽章样式 */
 .filter-count {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  background: linear-gradient(135deg, var(--ff-accent), var(--ff-accent-mid));
   color: white;
   border-radius: 12px;
   padding: 2px 8px;
@@ -1933,7 +1933,7 @@
   font-weight: 600;
   min-width: 20px;
   text-align: center;
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 2px 4px rgba(var(--ff-accent-rgb), 0.3);
 }
 
 /* 禁用状态样式 */
@@ -2048,7 +2048,7 @@
 .smart-filter-select .ant-select-focused,
 .material-btn:focus,
 .shape-selector input:focus + label {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid var(--ff-accent);
   outline-offset: 2px;
 }
 
@@ -2088,7 +2088,7 @@
 }
 
 .smart-filter-select .ant-select-focused {
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 2px rgba(var(--ff-accent-rgb), 0.2);
 }
 
 /* 筛选面包屑动画 */
@@ -2122,15 +2122,15 @@
 /* ========= 设计令牌 (Design Tokens) ========= */
 :root {
   /* Primary Colors - Professional Blue */
-  --consumable-primary-50: #eff6ff;
-  --consumable-primary-100: #dbeafe;
-  --consumable-primary-200: #bfdbfe;
-  --consumable-primary-300: #93c5fd;
-  --consumable-primary-400: #60a5fa;
-  --consumable-primary-500: #3b82f6;
-  --consumable-primary-600: #2563eb;
-  --consumable-primary-700: #1d4ed8;
-  --consumable-primary-800: #1e40af;
+  --consumable-primary-50: var(--ff-tint-blue);
+  --consumable-primary-100: color-mix(in srgb, var(--ff-accent) 16%, var(--ff-tint-blue));
+  --consumable-primary-200: color-mix(in srgb, var(--ff-accent) 28%, white);
+  --consumable-primary-300: color-mix(in srgb, var(--ff-accent) 38%, white);
+  --consumable-primary-400: color-mix(in srgb, var(--ff-accent) 48%, white);
+  --consumable-primary-500: var(--ff-accent);
+  --consumable-primary-600: var(--ff-btn-primary-hover);
+  --consumable-primary-700: var(--ff-accent-mid);
+  --consumable-primary-800: var(--ff-accent-mid);
   --consumable-primary-900: #1e3a8a;
 
   /* Secondary Colors - Warm Gray */
@@ -2587,14 +2587,14 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --consumable-primary-50: #1e3a8a;
-    --consumable-primary-100: #1d4ed8;
-    --consumable-primary-200: #2563eb;
-    --consumable-primary-300: #3b82f6;
-    --consumable-primary-400: #60a5fa;
-    --consumable-primary-500: #93c5fd;
-    --consumable-primary-600: #bfdbfe;
-    --consumable-primary-700: #dbeafe;
-    --consumable-primary-800: #eff6ff;
+    --consumable-primary-100: var(--ff-accent-mid);
+    --consumable-primary-200: var(--ff-btn-primary-hover);
+    --consumable-primary-300: var(--ff-accent);
+    --consumable-primary-400: color-mix(in srgb, var(--ff-accent) 48%, white);
+    --consumable-primary-500: color-mix(in srgb, var(--ff-accent) 38%, white);
+    --consumable-primary-600: color-mix(in srgb, var(--ff-accent) 28%, white);
+    --consumable-primary-700: color-mix(in srgb, var(--ff-accent) 16%, var(--ff-tint-blue));
+    --consumable-primary-800: var(--ff-tint-blue);
     --consumable-primary-900: #f8fafc;
 
     --consumable-secondary-50: #1c1917;

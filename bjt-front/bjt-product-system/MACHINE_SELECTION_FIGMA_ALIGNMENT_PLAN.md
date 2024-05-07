@@ -35,7 +35,7 @@
 |------|----------|
 | 路由与产品线 | 固定 `category = '1'`（产品线 1 / 气垫机），不随 URL 变化；与通用 `/machines?category=` 入口页分离。 |
 | 固定面包屑条 | `position: fixed`；「产品线」调用 `history.back()`；当前产品线文案来自 i18n（如 `productLines.airCushion`）；选中主机后出现 Host 标签、可点击清空选型；未选/已选配件时路径与右侧状态文案联动。 |
-| 主机对比区 | **仅当未选中主机**时展示；**示意图 URL** 由 `GET /bjt/v1/machine-model-compare?product_line_id={产品线}` 提供，未配置时前端回退 `DEFAULT_COMPARE_DIAGRAM`（`/static/machine-model-compare.svg`）；仍为**单张图**（SVG/位图均可）。热点仅渲染 **`filteredMachines` 的前 3 条**（`slice(0, 3)`），第 4 台及以后无热点；点击后 `handleImageModelSelection` → 与列表 radio 共用 `handleMachineSelection`；成功/失败有 Toast。 |
+| 主机对比区 | **仅当未选中主机**时展示；**示意图 URL** 由 `GET /bjt/v1/machine-model-compare?product_line_id={产品线}` 提供，未配置时前端回退 `DEFAULT_COMPARE_DIAGRAM`（`/static/machine-model-compare-table.png`）。**单张对比表图，无热点**；选型在下方主机列表完成。 |
 | 筛选（页面上可见） | **电压**（`Select`）、**型号**（`filterType`，选项来自 `modelOptions`，与 `hostModels`/机器数据相关）。 |
 | 筛选（状态存在但无 UI） | `filterRegion` 参与列表缓存 key、列表与配件 API 的 `region` 查询参数，但页面**无地区选择控件**，默认多为空字符串（由后端或用户 `user.region` 间接影响展示/价格货币等）。 |
 | 主机列表呈现 | **`renderMachinesTable` 为卡片栅格**，非 Ant Design `Table`；每台机包含 `ThumbnailGallery`（主图 + 缩略图）、**单选 radio**、规格字段网格、**规格 PDF**（按 `hostModels` 多策略匹配后 `window.open`）、**更多信息**（`Tooltip`）、价格（取 `prices[0].tiers[0].base_price`）、**销售角色**下多区域库存 `Tag`、`InputNumber` 数量、`SmartAddToCartButton`。 |
@@ -50,11 +50,11 @@
 | # | 能力项 | 当前实现 | Figma / PRD（待填） | 差异类型 | 处理建议 |
 |---|--------|----------|---------------------|----------|----------|
 | F1 | 入口与产品线切换 | 本页锁定产品线 1；返回依赖浏览器历史 | | 待确认 | 若设计为「站内产品线切换」需改路由或导航，避免仅用 `back()` |
-| F2 | 未选主机时的选型方式 | 对比图热点（最多 3 台）+ 列表 radio | | 待确认 | 若设计为 4+ 机型图选或纯列表，需改切片与布局 |
+| F2 | 未选主机时的选型方式 | **对比示意图无热点** + 列表选机 | **永不要求热点图** | 一致 | 仅示意图 + 文案提示；选型在列表 / 配件链 |
 | F3 | 对比图与数据一致性 | 热点绑定当前筛选后的列表顺序前 3 条 | | 待确认 | 若设计与「固定 SKU 位」不一致，需按 part number 映射而非 index |
-| F4 | 筛选维度 | 电压 + 型号；无地区筛选 UI | | 待确认 | 设计若有「区域/渠道」筛选，需补控件并与 `filterRegion` 对齐 |
-| F5 | 列表形态 | 大卡片 + 图库 + 多按钮 | | 待确认 | 若设计为紧凑表格/列表，需改组件结构（不仅是 CSS） |
-| F6 | 分页与加载更多 | 后端分页存在，前端无翻页控件 | | **高风险** | 与产品确认是「隐藏式全量」还是「需分页 UI」 |
+| F4 | 筛选维度 | 电压 + 型号 + 产品类型；类型/型号选项来自 **host-models**（`type` / `model`），列表筛选走 **machineparts** `model` / `model_type` / `voltage` | **同左**（2026-04-07 产品确认：选项来自后端 API） | 一致 | `host-models` 已支持 `product_line_id`；`machineparts` 已支持 `model_type`（`hm.type`） |
+| F5 | 列表形态 | 大卡片 + 图库 + 多按钮 | Figma 卡片一行：标题行 + 规格网格 + 库存 + 加购 | 持续对齐 CSS | 标题行：**型号 + PN pill + Show Optional Accessories 同行**；规格顺序对齐 Figma |
+| F6 | 分页与加载更多 | 后端分页 + **Pagination**（每页 10/20/50，条数展示） | **需要 Figma 式分页** | 已落实 | 去掉破坏分页的本地全量缓存；筛选变更重置第 1 页 |
 | F7 | 价格与库存展示 | 单一 tier 基础价；库存仅销售可见 | | 待确认 | 对照 Figma 是否含阶梯价、起订量、各角色可见性 |
 | F8 | 加购流程 | 数量步进 + `SmartAddToCartButton` | | 待确认 | 核对是否需「立即购买」、询价、禁用条件等 |
 | F9 | 规格与文档 | PDF 打开新窗；无则 Toast | | 待确认 | 设计若内嵌预览/下载列表，需改交互 |
@@ -90,7 +90,7 @@
 
 ### Phase 1A — 设计冻结与基准（0.5～1 天）
 
-1. 在 Figma 选定**验收 Frame**（含桌面宽度，如 1440 或 1920）。
+1. 在 Figma 选定**验收 Frame**（桌面基准宽度 **1920px**）。
 2. 导出该 Frame **1x PNG**（或 Dev Mode 量纲截图）作为叠图基准。
 3. 填写本文档 **§9 设计对照表**（节点 ID、Frame 名、基准宽度）。
 
@@ -122,7 +122,7 @@
 
 ## 6. 像素级验收方法（强制执行）
 
-1. **叠图**：Chrome 插件或半透明 PNG 浮层，透明度约 50%，对齐页面左上与内容宽。
+1. **叠图**：Chrome 插件或半透明 PNG 浮层，透明度约 50%，对齐页面左上与内容宽；**视口宽度 1920px**（与 §9 基准一致）。
 2. **关闭动画**：验收时临时关闭 `transform` 微动效，避免误判 1px。
 3. **缩放**：浏览器缩放 100%，系统缩放与 Figma export 倍数一致。
 4. **清单**：按模块勾选 §8 检查表；功能行为勾选 §3.2 差异登记表。
@@ -133,7 +133,7 @@
 
 | 项 | 说明 |
 |----|------|
-| 热点与 SVG 对齐 | 若 Figma 与 `/static/machine-model-compare.svg` 比例不一致，应更新资源或改为按**图片内容矩形**计算热点（需小工具或设计标注坐标）。 |
+| 对比图资源 | 默认使用仓库内 Figma 导出 PNG；`machine-compare-alignment.css` 按 `max-height` + `object-fit: contain` 保留原图比例。 |
 | `machine-compare-vertical-override.css` | 已不全局引入；若产品仍要竖版布局，改为**仅在该路由或 feature flag 下按需 import**，并写清与横版的互斥关系。 |
 | 大文件 `ProductLine1Page.tsx` | 长期建议拆分为 `MachineComparisonSection`、`MachineBreadcrumbBar`、`MachineFilters` 等，利于评审与样式隔离；**首期可在不改结构前提下**先完成视觉对齐。 |
 
@@ -159,12 +159,79 @@
 
 | 字段 | 值 |
 |------|-----|
-| Figma 页面名 | （待填） |
-| 验收 Frame 名 | （待填） |
-| 节点 ID（node-id） | （待填） |
-| 基准宽度（px） | 建议 1440 或 1920 |
-| 导出参考图路径 | （待填，如 repo 内相对路径） |
+| Figma 文件 | [丙甲UI](https://www.figma.com/design/QluTLuKXbauHIiCN8AZUGJ/%E4%B8%99%E7%94%B2UI?m=dev)（fileKey: `QluTLuKXbauHIiCN8AZUGJ`） |
+| Dev Mode / 当前节点 | [node `2679-22612`](https://www.figma.com/design/QluTLuKXbauHIiCN8AZUGJ/%E4%B8%99%E7%94%B2UI?node-id=2679-22612&m=dev) |
+| Figma 页面名 | （在文件中打开上述节点后补全左侧 Page 名） |
+| 验收 Frame 名 | （选中根 Frame 后在右侧面板复制 Frame 名） |
+| 节点 ID（node-id） | `2679-22612`（插件 / REST 中常写作 `2679:22612`） |
+| 基准宽度（px） | **1920**（叠图与验收统一用此视口宽度） |
+| 导出参考图路径 | `docs/screenshots/machine-selection-desktop-1920-full.png`（1920 全页；侧栏 + 顶栏 + 深蓝面包屑 + 机型参数对比表 + Machine Selection + 列表 + 分页） |
 | 与设计负责人确认日期 | （待填） |
+
+### 9.1 单条机器列表行（Figma 局部 — 具体怎么展示）
+
+说明**列表里一行机器**的布局，用于和全页参考图 `machine-selection-desktop-1920-full.png` 对照同一区域。
+
+| 项 | 说明 |
+|----|------|
+| 参考截图 | `docs/screenshots/machine-list-row-figma-1491x280.png` |
+| Figma 选中框尺寸 | **1491 × 280 px**（主内容区单行宽度语境；实现为响应式流式布局，验收时以对齐、间距、字级与 Figma 一致为准） |
+| 左区 | 左侧竖排缩略图 + 右侧主图；浅灰描边与内边距与整卡一致 |
+| 中左区 | **标题行**：机型名（粗体）+ **PN** 圆角浅灰底徽标 + 右上 **Show Optional Accessories**（链接色） |
+| 中左区下方 | **规格网格**（多行键值，小号灰色标签）；常见项：Item / Packaging / Qty per Carton / Pallet / Voltage / Packs per Pallet / 包装尺寸等 |
+| 中左区底栏 | **More Info**（浅蓝底按钮 + 信息图标）+ 蓝字链：**View Detailed Specifications** / **Introduction** / **Film Options** |
+| 右中区 | **Stock Status** 面板：浅蓝 tint 底；**Total Stock**；**2×2** 区域仓库存（有货绿字、无货红字） |
+| 最右 | 数量 **− / +** 与 **Add to Cart**（深蓝底、白字、购物车图标） |
+| 实现映射 | `ProductLine1Page.tsx` → `renderMachinesTable` → `.ms-figma-machine-card`；图库为 `ThumbnailGallery`（`layout="thumbnails-left"`），样式见 `machine-selection-figma.css` 等 |
+
+**验收提示**：该行外框为细浅灰边框；中区在图库与库存/购物车之间**弹性占满**剩余宽度，与 Figma 四段横向分区一致。
+
+### 9.2 侧面导航栏（Figma 局部）
+
+| 项 | 说明 |
+|----|------|
+| 参考截图 | `docs/screenshots/sidebar-figma-303w.png` |
+| Figma 框尺寸 | 约 **303 × 1123 px**（高度随视口滚动；**固定宽 303**） |
+| 背景 | `#FFFFFF`，Logo 区与菜单区之间 **浅灰分割线**（约 `#EEEEEE`） |
+| 一级项 | **海军蓝**粗体主色（设计稿常见 `#002D72` 量级）、左侧图标同色；**Chevron** 表折叠；点击为手风琴展开子项 |
+| 二级项 | **中灰**文案（约 `#666666`），相对一级**明显缩进**（约 40–48px 视觉-indent） |
+| 纵向节奏 | 一级之间约 **32px** 级距感；子项之间约 **16–20px**（实现中为 Ant Design Menu + 自定义 margin/padding，可再微调叠图） |
+| 结构 | Home；Air cushion / Paper / Water tape 等 **可展开分组**；Air Column；Support（多子链）；Contact Us — 与 `Sidebar.tsx` 中 `navItems` + `simpleDropdown` 对应 |
+| 代码宽度 | `.figma-front` 定义 **`--bjt-sidebar-width: 303px`**；侧栏 `sidebar-figma.css`、主区 `MainLayout` `ml-[var(--bjt-sidebar-width)]`、固定顶栏 `header-layout-fix` / `sidebar-functional-fix` 均须使用该变量，避免与 **280px** 混用错位 |
+
+### 9.3 导航栏组件库（一级 / 二级 / 状态）— 如何导出 & MCP
+
+**仓库内参考整图（你提供的组件画板截图）**：`docs/screenshots/figma-nav-components-library.png`（含「导航栏组件」：默认 / Hover / Active、分组展开、二级选中海军底等；标注色常见为 **`#002D88`**，实现时以 Dev Mode 拷贝为准）。
+
+#### 在 Figma 里「比较好」的手动导出（推荐给研发归档）
+
+1. **按 Frame 导出 PNG（叠图 / 验收）**  
+   - 选中根 Frame「导航栏组件」或单个子组件 Frame → 右侧面板 **Export** → 加 **1x**（必要时再加 **2x** 供高清屏）。  
+   - 命名规则示例：`nav-primary-default.png`、`nav-submenu-expanded.png`，与组件名一致，放入仓库 `docs/screenshots/figma-export/nav/`（团队约定即可）。
+
+2. **逐组件导出（完整资产包）**  
+   - 在图层面板多选多个组件 → 右下角 Export 会按层各自导出（或使用插件 **Export Kit** / **Batch export** 类插件批量）。  
+   - SVG：仅适合图标；导航整块一般是 **PNG** 或 **PDF**（给评审），不要强行走 SVG。
+
+3. **Token / 色值 / 间距**  
+   - **Dev Mode** 点选图层 → 复制 CSS 或间距；若文件使用 **Variables**，在菜单 **Variables** 中导出或让设计导出 CSV/JSON（与 `figma-front-shell.css` / `sidebar-figma.css` 中 `--sd-*`、`--ff-*` 对齐）。
+
+4. **给开发的「一条链接」**  
+   - 对每个验收 Frame 复制带 `node-id` 的链接（与 §9 表格一致），便于 MCP 或人工打开同一节点。
+
+#### Cursor 里 Figma MCP 能做什么（自动化「导出」含义）
+
+已配置的官方 **Figma MCP**（`user-Figma`）典型能力包括：
+
+| 能力 | 说明 |
+|------|------|
+| `get_design_context` | **首选**：指定 `fileKey` + `nodeId`（URL 里 `node-id=2679-22612` → `2679:22612`）返回结构/提示，常带截图与实现参考。 |
+| `get_screenshot` | 对**单个节点**生成截图（等同远程导出一张 PNG 用于归档）。 |
+| `get_metadata` | 列出某页/节点下子树 XML，用于先扫 Frame 名再对每个子节点调用上面两项。 |
+
+**限制（本会话实测）**：即使用户在 Figma 内为 **Professional / Full** 等席位，`get_metadata` 仍可能返回 **MCP 工具调用额度**相关错误（文案里甚至可能写「Starter」——以 Figma 当时返回为准）。**MCP 配额与「专业版能否编辑文件」未必同一套计费**，若需大批量 `get_screenshot` / `get_metadata`，请到 [Figma 账户与计费](https://www.figma.com/) 或团队管理员处确认 **MCP / AI 相关额度**，或隔时段重试。
+
+**本次环境**：MCP 账号已连通，但 `get_metadata` 曾触发上述额度提示，**未在对话内做完整板自动导出**；已用你提供的画板截图落入 `docs/screenshots/figma-nav-components-library.png`，并与 §9.2 宽度说明闭环。额度正常时可在 Cursor 中对各 `nodeId` 连续调用 MCP 做导出。
 
 ---
 
@@ -177,10 +244,18 @@
 | `frontend/src/App.tsx` | 全局样式入口（避免再引入冲突覆盖） |
 | `frontend/src/components/layout/MainLayout.tsx` | 侧栏/内容区布局，面包屑 `left` 需与其一致 |
 | `frontend/src/styles/theme.css` | 全站主题与可复用 token |
-| `frontend/public/static/machine-model-compare.svg` | 对比示意图**默认**资源（API 未返回 `diagram_url` 时使用） |
+| `frontend/public/static/machine-model-compare-table.png` | 机型参数对比表**默认**图（Figma 导出；无热点；`machine-model-compare` API 未配置时使用） |
 | `plugins/bjt-core-entities/controllers/class-machine-model-compare-controller.php` | 对比图 REST：`/machine-model-compare` |
 | `plugins/bjt-core-entities/bjt-product-api.php` | 注册 `BJT_Machine_Model_Compare_Controller`（`backend/wp-content/plugins/...` 目录已同步同文件时可并行部署） |
 | `frontend/src/styles/machine-compare-vertical-override.css` | 竖版实验样式，**勿全局 import**，按需使用 |
+| `docs/screenshots/machine-selection-desktop-1920-full.png` | 1920 全页验收 / 叠图基准截图（与 §9 同源） |
+| `docs/screenshots/machine-list-row-figma-1491x280.png` | 单条机器列表行 Figma 局部（§9.1，1491×280） |
+| `frontend/src/components/ThumbnailGallery.tsx` | 列表行左侧缩略图 + 主图 |
+| `docs/screenshots/sidebar-figma-303w.png` | 侧面导航栏 Figma 局部（§9.2，宽 303） |
+| `frontend/src/components/layout/Sidebar.tsx` | 前台侧栏数据与 `Menu`；`sidebar--figma` |
+| `frontend/src/styles/sidebar-figma.css` | Figma 模式侧栏视觉 |
+| `frontend/src/styles/figma-front-shell.css` | `.figma-front` 含 `--bjt-sidebar-width` |
+| `docs/screenshots/figma-nav-components-library.png` | 导航栏组件库画板（§9.3；一级/二级/状态） |
 
 ---
 
@@ -205,7 +280,7 @@
 | 变更 | 说明 |
 |------|------|
 | 顶部对比图可配置 | 新增 **`GET/PUT /wp-json/bjt/v1/machine-model-compare`**。GET 公开，`?product_line_id=` 必填；返回 `data.diagram_url`（可为 `null`）。PUT Body（需 BJT 登录）：`{"product_line_id":1,"diagram_url":"/path/or/https://..."}`，`diagram_url` 为 `""` 表示清除该产品线配置。数据键：`bjt_machine_model_compare_urls`。 |
-| 前端 | `ProductLine1Page.tsx`：`compareDiagramSrc` 随 `category` 请求上述 GET，相对路径拼 API 站点 origin；失败或未配置时使用 `DEFAULT_COMPARE_DIAGRAM`（`/static/machine-model-compare.svg`）。 |
+| 前端 | `ProductLine1Page.tsx`：`compareDiagramSrc` 随 `category` 请求上述 GET，相对路径拼 API 站点 origin；失败或未配置时使用 `DEFAULT_COMPARE_DIAGRAM`（`/static/machine-model-compare-table.png`）。 |
 | 部署 | 插件路径：`plugins/bjt-core-entities/` 与可选 **`backend/wp-content/plugins/bjt-core-entities/`** 均已加入控制器与 `bjt_api_register_routes` 注册；WordPress 侧更新插件或覆盖文件后无需另建表。 |
 | Figma / 列表多图 | 列表卡片 **1 主图 + 3 缩略图** 仍以 `ThumbnailGallery` + 接口字段（`image_url` / `model_image*` 等）为准；若要对齐 Figma **4 张互不重复图**，需在 **`machineparts`（及/或 host-models）响应中保证至少 4 个可用 URL**（见 §3 与后续 backend issue），**不在 v3 自动完成**。 |
 
@@ -233,7 +308,7 @@
 | # | 问题 | 位置/说明 | 建议 |
 |---|------|-----------|------|
 | H1 | **`fetchMachines` + `fetchHostModels` 重复订阅** | `ProductLine1Page.tsx` 中至少**两处** `useEffect(..., [category, currentLanguage, filterRegion, selectedVoltage])` 均调用上述函数（约前段与 ~3181 行附近） | **删除重复块，只保留一处**；否则每次依赖变化会**发双倍请求**，易竞态、浪费带宽、加重后端。 |
-| H2 | **列表无分页 UI** | 请求带 `page` / `per_page`，页面无 `Pagination`；Figma 含页码条（§3.2 F6） | 与产品确认后加 Ant `Pagination` 或与后端改为「首屏全量」并文档化。 |
+| H2 | **列表无分页 UI** | ✅ 已加 `Pagination`（`showSizeChanger`、筛选重置页码）；仍依赖 `machineparts` 返回 `total` / `total_pages` | 联调核对 `per_page` 与总条数。 |
 | H3 | **`machineparts` 未合并主机型号图** | `class-machine-part-controller.php` 仍为 `SELECT * FROM bjt_parts`，响应里通常**没有**前端映射所期望的 `image1_url` / `host` 多图字段 | 对 `bjt_host_models` **LEFT JOIN**（`model` + `product_line_id`）并返回 `image1_url`、`image2_url`（及计划中的第 3、4 张），或统一输出 **`gallery_image_urls`**；否则列表 **1+3 缩略图**often 重复同一张图。 |
 | H4 | **对比图 URL 与热点不同步** | 顶部图改由 API 配置；热点仍为**写死像素**（`left/top/width` + `index*180`） | 换图或比例变化后热点易错位；应用 **百分比/API 元数据** 或设计固定比例资源，并在计划中验收。 |
 

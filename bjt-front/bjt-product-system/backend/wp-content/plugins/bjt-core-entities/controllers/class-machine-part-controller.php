@@ -123,6 +123,7 @@ class BJT_Machine_Part_Controller extends BJT_API_Controller {
         $name_search = $request->get_param('name_search');
         $brand = $request->get_param('brand');
         $voltage = $request->get_param('voltage');
+        $model_type_filter = $request->get_param('model_type');
         $status_filter = $request->get_param('status');
         $orderby = $request->get_param('orderby') ?: 'id';
         $order = $request->get_param('order') ?: 'DESC';
@@ -138,7 +139,8 @@ class BJT_Machine_Part_Controller extends BJT_API_Controller {
 
         $parts_table = $this->table_name;
         $host_table = $wpdb->prefix . 'bjt_host_models';
-        $base_from = "FROM {$parts_table} p";
+        $host_join = " LEFT JOIN {$host_table} hm ON hm.id = (SELECT MIN(h2.id) FROM {$host_table} h2 WHERE h2.product_line_id = p.product_line_id AND h2.model = p.model)";
+        $base_from = "FROM {$parts_table} p{$host_join}";
 
         $where_clauses = ["1=1"];
         $query_params = [];
@@ -150,6 +152,10 @@ class BJT_Machine_Part_Controller extends BJT_API_Controller {
         if (!empty($model)) {
             $where_clauses[] = "p.model = %s";
             $query_params[] = sanitize_text_field($model);
+        }
+        if (!empty($model_type_filter)) {
+            $where_clauses[] = "hm.type = %s";
+            $query_params[] = sanitize_text_field($model_type_filter);
         }
         if (!empty($part_number_filter)) {
             $where_clauses[] = "p.part_number = %s";
@@ -184,7 +190,7 @@ class BJT_Machine_Part_Controller extends BJT_API_Controller {
         }
 
         $order_sql = strtoupper($order) === 'ASC' ? 'ASC' : 'DESC';
-        $items_query = "SELECT p.*, hm.image1_url AS host_image1_url, hm.image2_url AS host_image2_url {$base_from} LEFT JOIN {$host_table} hm ON hm.id = (SELECT MIN(h2.id) FROM {$host_table} h2 WHERE h2.product_line_id = p.product_line_id AND h2.model = p.model) WHERE {$where_sql} ORDER BY p.{$orderby} {$order_sql} LIMIT %d OFFSET %d";
+        $items_query = "SELECT p.*, hm.image1_url AS host_image1_url, hm.image2_url AS host_image2_url, hm.type AS model_type {$base_from} WHERE {$where_sql} ORDER BY p.{$orderby} {$order_sql} LIMIT %d OFFSET %d";
         $full_query_params = array_merge($query_params, [$per_page, $offset]);
         $items_db = $wpdb->get_results($wpdb->prepare($items_query, $full_query_params));
 
@@ -482,7 +488,7 @@ class BJT_Machine_Part_Controller extends BJT_API_Controller {
         }
         $host_table = $wpdb->prefix . 'bjt_host_models';
         return $wpdb->get_row($wpdb->prepare(
-            "SELECT p.*, hm.image1_url AS host_image1_url, hm.image2_url AS host_image2_url
+            "SELECT p.*, hm.image1_url AS host_image1_url, hm.image2_url AS host_image2_url, hm.type AS model_type
              FROM {$this->table_name} p
              LEFT JOIN {$host_table} hm ON hm.id = (SELECT MIN(h2.id) FROM {$host_table} h2 WHERE h2.product_line_id = p.product_line_id AND h2.model = p.model)
              WHERE p.id = %d",
@@ -604,6 +610,12 @@ class BJT_Machine_Part_Controller extends BJT_API_Controller {
             'sanitize_callback' => 'sanitize_text_field',
             'validate_callback' => 'rest_validate_request_arg',
         ];
+        $params['model_type'] = [
+            'description' => __('Filter by host model type (wp_bjt_host_models.type).', 'bjt'),
+            'type' => 'string',
+            'sanitize_callback' => 'sanitize_text_field',
+            'validate_callback' => 'rest_validate_request_arg',
+        ];
         $params['status'] = [
             'description' => __('Filter by Status (e.g., publish, draft).', 'bjt'),
             'type' => 'string',
@@ -653,6 +665,11 @@ class BJT_Machine_Part_Controller extends BJT_API_Controller {
                     'type'        => 'string',
                     'context'     => ['view', 'edit', 'embed'],
                     'required'    => true,
+                ],
+                'model_type' => [
+                    'description' => __('Host model type from linked wp_bjt_host_models.', 'bjt'),
+                    'type'        => ['string', 'null'],
+                    'context'     => ['view', 'edit', 'embed'],
                 ],
                 'voltage' => [
                     'description' => __('Voltage specification.', 'bjt'),

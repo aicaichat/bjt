@@ -25,7 +25,7 @@
   --success-color: #22c55e;
   --error-color: #ef4444;
   --warning-color: #f59e0b;
-  --info-color: #3b82f6;
+  --info-color: var(--ff-accent);
   
   /* 中性色调 - 清爽灰 */
   --gray-50: #f9fafb;
@@ -285,9 +285,9 @@
 }
 
 .theme-simple .notification-info {
-  background-color: #eff6ff;
-  color: #1e40af;
-  border-left: 3px solid #3b82f6;
+  background-color: var(--ff-tint-blue);
+  color: var(--ff-accent-mid);
+  border-left: 3px solid var(--ff-accent);
 }
 
 .theme-simple .notification-success {

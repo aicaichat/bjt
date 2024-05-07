@@ -131,12 +131,12 @@
 
 /* 确认按钮 - 默认 */
 .dialog-button-confirm {
-  background: #3b82f6;
+  background: var(--ff-accent);
   color: white;
 }
 
 .dialog-button-confirm:hover:not(:disabled) {
-  background: #2563eb;
+  background: var(--ff-btn-primary-hover);
 }
 
 /* 确认按钮 - 危险操作 */
@@ -161,12 +161,12 @@
 
 /* 确认按钮 - 信息 */
 .dialog-button-info {
-  background: #3b82f6;
+  background: var(--ff-accent);
   color: white;
 }
 
 .dialog-button-info:hover:not(:disabled) {
-  background: #2563eb;
+  background: var(--ff-btn-primary-hover);
 }
 
 /* 加载动画 */
@@ -187,8 +187,8 @@
 
 /* 不同类型的图标容器样式 */
 .dialog-default .dialog-icon-wrapper {
-  background: #dbeafe;
-  color: #3b82f6;
+  background: color-mix(in srgb, var(--ff-accent) 16%, var(--ff-tint-blue));
+  color: var(--ff-accent);
 }
 
 .dialog-danger .dialog-icon-wrapper {
@@ -202,8 +202,8 @@
 }
 
 .dialog-info .dialog-icon-wrapper {
-  background: #dbeafe;
-  color: #3b82f6;
+  background: color-mix(in srgb, var(--ff-accent) 16%, var(--ff-tint-blue));
+  color: var(--ff-accent);
 }
 
 /* 动画效果 */

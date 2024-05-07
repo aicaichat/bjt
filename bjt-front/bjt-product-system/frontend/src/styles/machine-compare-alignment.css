@@ -1,9 +1,10 @@
 /* Machine Comparison - stable baseline for Figma alignment */
 
 .machines-page {
+  /* 默认；产品线 1 在 machine-selection-figma 内置为 Figma 1440×606 */
   --mc-container-max-width: 1200px;
-  --mc-image-max-width: 900px;
-  --mc-image-height: 300px;
+  --mc-image-max-width: 1200px;
+  --mc-image-max-height: 720px;
   --mc-radius-lg: 16px;
   --mc-radius-md: 12px;
   --mc-radius-sm: 8px;
@@ -20,7 +21,7 @@
   position: relative;
   border-radius: var(--mc-radius-lg);
   border: 1px solid var(--mc-border-color);
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background: linear-gradient(135deg, var(--ff-surface, #ffffff) 0%, var(--ff-page-bg, #f1f5f9) 100%);
   box-shadow: var(--mc-shadow-soft);
   padding: 20px;
   overflow: hidden;
@@ -40,7 +41,7 @@
   line-height: 26px;
   font-weight: 700;
   letter-spacing: 0.2px;
-  color: #1f2937;
+  color: var(--ff-text, #1f2937);
 }
 
 /* image area */
@@ -48,29 +49,33 @@
   position: relative;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   width: 100%;
-  max-width: 1000px;
+  max-width: 100%;
   margin: 0 auto;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .machines-page .machine-comparison-image {
   width: 100%;
   max-width: var(--mc-image-max-width);
-  height: var(--mc-image-height);
+  height: auto;
+  max-height: var(--mc-image-max-height);
   object-fit: contain;
+  object-position: center top;
   display: block;
   border-radius: var(--mc-radius-md);
   border: 2px solid var(--mc-border-color);
-  background: #f9fafb;
+  background: var(--ff-surface-muted, #f9fafb);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   padding: 8px;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .machines-page .machine-comparison-image:hover {
-  border-color: #3b82f6;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  border-color: var(--ff-accent);
+  box-shadow: 0 4px 12px rgba(var(--ff-accent-rgb), 0.15);
   transform: translateY(-1px);
 }
 
@@ -81,10 +86,10 @@
   top: 12px;
   z-index: 3;
   border-radius: var(--mc-radius-sm);
-  border: 1px solid #dbeafe;
+  border: 1px solid color-mix(in srgb, var(--ff-accent) 16%, var(--ff-tint-blue));
   background: rgba(255, 255, 255, 0.95);
-  color: #3b82f6;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+  color: var(--ff-accent);
+  box-shadow: 0 2px 8px rgba(var(--ff-accent-rgb), 0.15);
   font-size: 13px;
   font-weight: 600;
   line-height: 18px;
@@ -99,7 +104,7 @@
 
   .machines-page .machine-comparison-image {
     max-width: 700px;
-    height: 220px;
+    max-height: 420px;
   }
 }
 
@@ -110,8 +115,9 @@
   }
 
   .machines-page .machine-comparison-image {
+    padding: 6px;
     max-width: 100%;
-    height: 180px;
+    max-height: 360px;
   }
 
   .machines-page .machine-comparison-heading {
@@ -122,7 +128,7 @@
 
 @media (max-width: 640px) {
   .machines-page .machine-comparison-image {
-    height: 150px;
+    max-height: 280px;
     border-radius: var(--mc-radius-sm);
   }
 }

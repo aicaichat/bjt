@@ -1,22 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Header, { HeaderProps } from './Header';
 import Sidebar from './Sidebar';
-import Footer, { FooterProps } from './Footer';
 import '../../styles/sidebar.css';
+/** 前台整站 Figma 壳层（Header / 主内容）；Admin 不使用 MainLayout */
+import '../../styles/figma-front-shell.css';
 
 interface MainLayoutProps {
   children: React.ReactNode;
   headerProps?: HeaderProps;
-  footerProps?: FooterProps;
-  showFooter?: boolean;
   className?: string;
 }
 
 const MainLayout: React.FC<MainLayoutProps> = ({
   children,
   headerProps,
-  footerProps,
-  showFooter = true,
   className = '',
 }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -43,8 +40,21 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     // 这里可以添加搜索逻辑
   };
 
+  /** 与左侧 Menu、顶栏 `figma-front-shell`、页面内固定条同源 */
+  const figmaLayoutStyle = useMemo(() => {
+    const w = isMobile
+      ? '0px'
+      : sidebarCollapsed
+        ? 'var(--bjt-sidebar-collapsed-width)'
+        : 'var(--bjt-sidebar-width)';
+    return { '--bjt-sidebar-effective-width': w } as React.CSSProperties;
+  }, [isMobile, sidebarCollapsed]);
+
   return (
-    <div className={`flex flex-col min-h-screen ${className}`}>
+    <div
+      className={`figma-front flex flex-col min-h-screen ${className}`}
+      style={figmaLayoutStyle}
+    >
       {/* Header - 包含搜索、语言切换、购物车、用户信息 */}
       <Header 
         {...headerProps} 
@@ -54,20 +64,17 @@ const MainLayout: React.FC<MainLayoutProps> = ({
       
       <div className="flex flex-1">
         {/* Sidebar - 包含Logo和导航菜单，置顶显示 */}
-        <Sidebar />
+        <Sidebar
+          collapsed={sidebarCollapsed}
+          onCollapsedChange={setSidebarCollapsed}
+        />
         
-        {/* Main Content */}
-        <main className={`flex-1 transition-all duration-300 ${
-          isMobile ? 'ml-0' : sidebarCollapsed ? 'ml-20' : 'ml-70'
-        }`}>
-          <div className="min-h-full flex flex-col">
-            <div className="flex-grow">
+        {/* Main Content：margin 与 --bjt-sidebar-effective-width 一致 */}
+        <main className="figma-front-main flex-1 transition-all duration-300 ml-[var(--bjt-sidebar-effective-width)]">
+          <div className="figma-front-main__inner min-h-full flex flex-col">
+            <div className="flex-grow w-full min-w-0">
               {children}
             </div>
-            
-            {showFooter && (
-              <Footer {...footerProps} />
-            )}
           </div>
         </main>
       </div>

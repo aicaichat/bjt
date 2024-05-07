@@ -2,32 +2,63 @@
  * 机器选型页（ProductLine1）— Figma 对齐层
  * 与 sidebar.css / machine-compare-alignment.css 数值一致时可叠图验收。
  * Figma 文件: QluTLuKXbauHIiCN8AZUGJ（节点以计划文档 §9 为准）
+ *
+ * 对齐注意（避免「顶栏与下方卡片左缘差一截」）：
+ * 1) 固定顶栏用 left = 侧栏宽 + gutter；主内容已在 layout 里让出侧栏，再加一层 padding 时，勿让内层 max-width 区块双边 margin:auto，否则大屏上会居中，视觉上比顶栏更缩进。
+ * 2) Navy 等色请用 Figma Dev Mode 复制 hex 填到 --ms-figma-nav-*，不要用「近似蓝」。
  */
+
+/*
+ * 面包屑/占位条在 TSX 中渲染在 .machines-page 之外，须自带与选型页一致的变量，
+ * 否则 left/right、spacer 高度在计算时缺失。
+ */
+.ms-breadcrumb-bar,
+.ms-breadcrumb-spacer {
+  --ms-page-gutter: 20px;
+  --ms-breadcrumb-top: 80px;
+  --ms-breadcrumb-spacer-h: 120px;
+}
 
 /* ---- 页面根：与侧栏、顶栏留白（桌面基准 ~1440 内容区） ---- */
 .machines-page.ms-product-line-layout {
-  --bjt-sidebar-width: 280px;
-  --ms-page-gutter: 24px;
+  /* 与 Figma 验收 Frame 一致；像素验收时视口宽度请用 1920px */
+  --ms-design-viewport: 1920px;
+  /* --bjt-sidebar-width 继承 MainLayout .figma-front */
+  /* Figma 主内容左内边距 20（与对比表 Frame left:20 同源） */
+  --ms-page-gutter: 20px;
+  /* 与前台壳层 .figma-front 共用海军色；仅改 figma-front-shell 中 --ff-nav-* 即可整站同步 */
+  --ms-figma-nav-bg-top: var(--ff-nav-top, #152d52);
+  --ms-figma-nav-bg-bottom: var(--ff-nav-bottom, #0f2440);
   --ms-breadcrumb-top: 80px;
   --ms-breadcrumb-spacer-h: 120px;
-  --ms-content-max: 1200px;
+  /* 与参数对比表最大宽 1440 一致 */
+  --ms-content-max: 1440px;
+  /* Figma 对比表 Frame：1440×606（状态=选中 auto layout） */
+  --mc-container-max-width: 1440px;
+  --mc-image-max-width: 1440px;
+  --mc-image-max-height: 606px;
   --ms-radius-bar: 8px;
   --ms-shadow-bar: 0 2px 8px rgba(0, 0, 0, 0.08);
   --ms-text-primary: #111827;
   --ms-text-secondary: #6b7280;
   --ms-border: #e5e7eb;
-  --ms-blue: #3b82f6;
-  --ms-blue-hover: #2563eb;
+  --ms-blue: var(--ff-accent);
+  --ms-blue-hover: var(--ff-btn-primary-hover);
   padding-left: var(--ms-page-gutter);
   padding-right: var(--ms-page-gutter);
   padding-bottom: 48px;
   box-sizing: border-box;
+  /* 与主栏 Figma 画布背景一致（覆盖 Tailwind bg-gray-50） */
+  background-color: var(--ff-content-canvas-bg) !important;
 }
 
-/* 内容区与对比卡片同宽 */
+/*
+ * 内容区：左对齐主区内边距，与固定顶栏文字左缘同一纵向线。
+ * 禁止 margin-inline: auto，否则宽屏下 1200px 块会居中，出现「顶栏靠左、白卡片更靠右」的错视。
+ */
 .machines-page.ms-product-line-layout .ms-content-column {
   max-width: var(--ms-content-max);
-  margin-left: auto;
+  margin-left: 0;
   margin-right: auto;
   width: 100%;
 }
@@ -36,7 +67,7 @@
 .ms-breadcrumb-bar {
   position: fixed;
   top: var(--ms-breadcrumb-top);
-  left: calc(var(--bjt-sidebar-width) + var(--ms-page-gutter));
+  left: calc(var(--bjt-sidebar-effective-width, var(--bjt-sidebar-width)) + var(--ms-page-gutter));
   right: var(--ms-page-gutter);
   z-index: 9999;
   display: flex;
@@ -45,8 +76,8 @@
   flex-wrap: wrap;
   gap: 12px;
   min-height: 52px;
-  padding: 12px 16px;
-  font-family: Roboto, Arial, sans-serif;
+  padding: 12px var(--ms-page-gutter);
+  font-family: var(--ff-font);
   background: #ffffff;
   border: 1px solid var(--ms-border);
   border-radius: var(--ms-radius-bar);
@@ -81,7 +112,7 @@
 .ms-breadcrumb-btn--primary {
   background-color: var(--ms-blue);
   color: #ffffff;
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.25);
+  box-shadow: 0 2px 4px rgba(var(--ff-accent-rgb), 0.25);
 }
 
 .ms-breadcrumb-btn--primary:hover {
@@ -119,8 +150,8 @@
 
 .ms-breadcrumb-btn--accessory {
   color: var(--ms-blue);
-  background-color: #eff6ff;
-  border: 1px solid #dbeafe;
+  background-color: var(--ff-tint-blue);
+  border: 1px solid color-mix(in srgb, var(--ff-accent) 16%, var(--ff-tint-blue));
   font-size: 14px;
   padding: 6px 10px;
   max-width: 200px;
@@ -130,7 +161,7 @@
 }
 
 .ms-breadcrumb-btn--accessory:hover {
-  background-color: #dbeafe;
+  background-color: color-mix(in srgb, var(--ff-accent) 16%, var(--ff-tint-blue));
   border-color: var(--ms-blue);
 }
 
@@ -181,18 +212,19 @@
 
 /* ---- 筛选卡片（与 Figma 卡片规范统一命名） ---- */
 .ms-filter-card {
-  background: #ffffff;
+  background: var(--ff-surface);
   border-radius: 12px;
   border: 1px solid var(--ms-border);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 12px var(--ff-header-shadow, rgba(15, 36, 64, 0.06));
   padding: 20px 24px;
-  margin-bottom: 24px;
+  margin-bottom: var(--ff-main-stack-gap);
   color: var(--ms-text-primary);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .ms-filter-card:hover {
-  border-color: #d1d5db;
+  border-color: color-mix(in srgb, var(--ff-accent) 20%, var(--ff-border));
+  box-shadow: 0 4px 14px rgba(15, 36, 64, 0.08);
 }
 
 .ms-filter-card__title {
@@ -200,7 +232,7 @@
   line-height: 28px;
   font-weight: 700;
   margin: 0 0 16px 0;
-  color: #1f2937;
+  color: var(--ff-text, #1f2937);
   letter-spacing: 0.01em;
 }
 
@@ -210,84 +242,713 @@
   gap: 16px;
 }
 
-/* ---- 对比图热点 ---- */
-.ms-compare-hotspot {
-  position: absolute;
-  cursor: pointer;
-  border: 2px solid transparent;
-  border-radius: 8px;
-  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
-  z-index: 2;
+/* ---- Figma 顶栏：深蓝条 Machine & Accessory ---- */
+.ms-breadcrumb-bar.ms-breadcrumb-bar--figma {
+  background: linear-gradient(
+    180deg,
+    var(--ms-figma-nav-bg-top) 0%,
+    var(--ms-figma-nav-bg-bottom) 100%
+  );
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  color: #f8fafc;
+  border-radius: 0;
+}
+
+.ms-breadcrumb-bar.ms-breadcrumb-bar--figma .ms-breadcrumb-chev {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.ms-breadcrumb-bar.ms-breadcrumb-bar--figma .ms-breadcrumb-btn--primary {
+  background: transparent;
+  color: #fff;
+  box-shadow: none;
+  font-weight: 600;
+}
+
+.ms-breadcrumb-bar.ms-breadcrumb-bar--figma .ms-breadcrumb-btn--primary:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.ms-breadcrumb-bar.ms-breadcrumb-bar--figma .ms-breadcrumb-chip {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.ms-breadcrumb-bar.ms-breadcrumb-bar--figma .ms-breadcrumb-chip--host {
+  background: #059669;
+  border-color: transparent;
+}
+
+.ms-breadcrumb-bar.ms-breadcrumb-bar--figma .ms-breadcrumb-btn--ghost {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.ms-breadcrumb-bar.ms-breadcrumb-bar--figma .ms-breadcrumb-btn--ghost:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.ms-breadcrumb-bar.ms-breadcrumb-bar--figma .ms-breadcrumb-btn--accessory {
+  background: rgba(var(--ff-accent-rgb), 0.28);
+  color: #f0f4fc;
+  border-color: color-mix(in srgb, var(--ff-accent) 42%, rgba(255, 255, 255, 0.35));
+}
+
+.ms-breadcrumb-bar.ms-breadcrumb-bar--figma .ms-breadcrumb-pill-warn {
+  background: rgba(217, 119, 6, 0.38);
+  color: #fef9c3;
+}
+
+.ms-breadcrumb-bar.ms-breadcrumb-bar--figma .ms-breadcrumb-status-pill--neutral {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.ms-breadcrumb-bar.ms-breadcrumb-bar--figma .ms-breadcrumb-status-pill--warn {
+  background: rgba(217, 119, 6, 0.32);
+  color: #fef3c7;
+}
+
+.ms-breadcrumb-bar.ms-breadcrumb-bar--figma .ms-breadcrumb-status-pill--ok {
+  background: rgba(16, 185, 129, 0.35);
+  color: #d1fae5;
+}
+
+/* 机型参数对比表（折叠） */
+.ms-compare-collapse.ant-collapse {
+  background: transparent;
+  border: none;
+  margin-bottom: var(--ff-main-stack-gap);
+}
+
+.ms-compare-collapse > .ant-collapse-item {
+  border: 1px solid var(--ms-border) !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.ms-compare-collapse.ant-collapse {
+  border: 1px solid var(--ms-border);
+  border-radius: var(--ms-radius-bar);
+  overflow: hidden;
+  background: #fff;
+}
+
+.ms-compare-collapse .ant-collapse-item {
+  border-bottom: none !important;
+}
+
+.ms-compare-collapse .ant-collapse-header {
+  font-weight: 700 !important;
+  color: var(--ms-text-primary) !important;
+  background: #f3f4f6 !important;
+  padding: 12px 16px !important;
+}
+
+/* Figma 白底标题栏 + 主色折叠箭头（对照 proto 1260-5693） */
+.ms-compare-collapse--figma-frame > .ant-collapse-item {
+  box-shadow: 0 4px 18px rgba(15, 36, 64, 0.09);
+}
+
+.ms-compare-collapse--figma-frame .ant-collapse-header {
+  background: var(--ff-surface) !important;
+  border-bottom: 1px solid var(--ms-border) !important;
+  padding: 14px 18px !important;
+}
+
+.ms-compare-collapse--figma-frame .ant-collapse-expand-icon {
+  color: var(--ff-accent) !important;
+  font-size: 12px !important;
+}
+
+.ms-compare-collapse .ant-collapse-content-box {
+  padding: 12px 16px 16px !important;
+}
+
+.ms-compare-collapse .text-blue-600 {
+  color: var(--ff-accent) !important;
+}
+
+/* 对比表 Frame：内容区无额外 padding，叠图与 Dev Mode 一致 */
+.ms-compare-collapse--figma-frame .ant-collapse-content-box {
+  padding: 0 !important;
+}
+
+/*
+ * Figma 状态=选中：column + align-items flex-start + padding 0；画板 1440×606（非 position:absolute，由流式布局等价实现）
+ */
+.ms-figma-compare-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0;
+  width: 100%;
+  max-width: var(--mc-container-max-width, 1440px);
   box-sizing: border-box;
 }
 
-.ms-compare-hotspot:hover:not(.ms-compare-hotspot--selected) {
-  border-color: #60a5fa;
-  background-color: rgba(96, 165, 250, 0.1);
-}
-
-.ms-compare-hotspot--selected {
-  border-width: 3px;
-  border-color: var(--ms-blue);
-  box-shadow: 0 0 0 4px #dbeafe;
-  background-color: rgba(59, 130, 246, 0.1);
-}
-
-.ms-compare-hotspot-label {
-  position: absolute;
-  bottom: 8px;
-  left: 0;
+.ms-figma-compare-inner .machine-comparison-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0 !important;
+  margin: 0 !important;
   width: 100%;
-  text-align: center;
-  font-weight: 700;
-  font-size: 14px;
-  text-shadow: 0 1px 4px #fff;
-  pointer-events: none;
-  user-select: none;
-  padding: 4px;
-  margin: 0 4px;
-  background-color: rgba(255, 255, 255, 0.92);
-  border-radius: 4px;
-  color: #374151;
+  max-width: var(--mc-container-max-width, 1440px);
+  border: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }
 
-.ms-compare-hotspot--selected .ms-compare-hotspot-label {
-  color: var(--ms-blue-hover);
+/* 灰画布内的白底表区（承托 PNG 表格） */
+.ms-figma-compare-inner .ms-compare-canvas-table-shell.machine-comparison-container {
+  padding: 10px !important;
+  background: var(--ff-surface) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.16) !important;
 }
 
-.ms-compare-hotspot-check {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 20px;
-  height: 20px;
-  background-color: var(--ms-blue);
-  border-radius: 50%;
+.ms-figma-compare-inner .machine-comparison-heading {
+  display: none;
+}
+
+.ms-figma-compare-inner .machine-comparison-image-container {
+  width: 100%;
+  max-width: var(--mc-container-max-width, 1440px);
+  height: var(--mc-image-max-height, 606px);
+  min-height: var(--mc-image-max-height, 606px);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-size: 12px;
-  font-weight: bold;
+  box-sizing: border-box;
+  background: #f1f5f9;
+  border-radius: 8px;
 }
 
-@media (min-width: 1200px) {
-  /* 与 sidebar.css 大屏侧栏 300px 一致，避免固定面包屑与主内容错位 */
-  .machines-page.ms-product-line-layout {
-    --bjt-sidebar-width: 300px;
-  }
+.ms-figma-compare-inner .ms-compare-canvas-table-shell .machine-comparison-image-container {
+  border: 1px solid var(--ms-border);
+}
+
+.ms-figma-compare-inner .machine-comparison-image {
+  max-width: var(--mc-image-max-width, 1440px);
+  max-height: var(--mc-image-max-height, 606px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  object-position: center center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.ms-figma-compare-inner .machine-comparison-image:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: transparent;
+}
+
+/* 数据表模式：替代栅格 PNG，高度随内容伸展 */
+.ms-figma-compare-inner .machine-comparison-image-container.ms-compare-visual--data-table {
+  height: auto !important;
+  min-height: 220px !important;
+  max-height: none !important;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 0;
+}
+
+.ms-compare-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
+}
+
+.ms-compare-data-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 13px;
+  line-height: 1.35;
+  color: #111827;
+}
+
+.ms-compare-data-table th {
+  background: var(--ms-compare-table-header, #2c5282);
+  color: #fff;
+  font-weight: 600;
+  padding: 11px 8px;
+  border: 1px solid #1a365d;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.ms-compare-data-table td {
+  background: #fff;
+  padding: 10px 8px;
+  border: 1px solid #cbd5e1;
+  text-align: center;
+  vertical-align: middle;
+  word-break: break-word;
+}
+
+.ms-compare-data-table td.ms-compare-td--model {
+  font-weight: 700;
+  color: var(--ff-accent, #1d4ed8);
+}
+
+.ms-compare-data-table td.ms-compare-td-img {
+  padding: 8px;
+}
+
+.ms-compare-data-table .ms-compare-td-img img {
+  max-height: 72px;
+  max-width: 100%;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Figma：对比表外层深灰画布 + 顶栏（示意行 + 提示气泡） */
+.ms-compare-canvas {
+  background: linear-gradient(168deg, #7c8490 0%, #6b7280 45%, #5d636d 100%);
+  padding: 16px 20px 20px;
+  box-sizing: border-box;
+}
+
+.ms-compare-canvas-header {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.ms-compare-faux-accordions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  max-width: min(440px, 46%);
+}
+
+.ms-compare-faux-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--ff-surface);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  pointer-events: none;
+  user-select: none;
+}
+
+.ms-compare-faux-row--expanded {
+  border-color: color-mix(in srgb, var(--ff-accent) 40%, #fff);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+}
+
+.ms-compare-faux-row__icon {
+  flex-shrink: 0;
+  color: var(--ff-accent);
+  font-size: 16px;
+}
+
+.ms-compare-faux-row__label {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ms-compare-faux-row__chev {
+  flex-shrink: 0;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.ms-compare-hint-bubble {
+  position: relative;
+  flex-shrink: 0;
+  max-width: min(360px, 52%);
+  padding: 10px 14px 12px;
+  background: var(--ff-surface);
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--ff-accent) 18%, var(--ms-border));
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
+}
+
+.ms-compare-hint-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  right: 28px;
+  width: 9px;
+  height: 9px;
+  background: var(--ff-surface);
+  border-right: 1px solid color-mix(in srgb, var(--ff-accent) 18%, var(--ms-border));
+  border-bottom: 1px solid color-mix(in srgb, var(--ff-accent) 18%, var(--ms-border));
+  transform: rotate(45deg);
+}
+
+.ms-compare-hint-bubble__text {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ff-accent);
+}
+
+.ms-figma-stock-panel {
+  background: linear-gradient(180deg, var(--ff-tint-blue) 0%, color-mix(in srgb, var(--ff-accent) 16%, var(--ff-tint-blue)) 100%);
+  border: 1px solid color-mix(in srgb, var(--ff-accent) 28%, white);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+/* Figma：大区库存标签 2×2 */
+.ms-figma-stock-tags {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 8px;
+  align-items: start;
+}
+
+.ms-figma-stock-tags .ant-tag {
+  margin: 0;
+  justify-self: stretch;
+  text-align: center;
+}
+
+.ms-figma-primary-cart.ant-btn,
+button.ms-figma-primary-cart {
+  background: var(--ff-accent-mid) !important;
+  border-color: var(--ff-nav-bottom) !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+
+.ms-figma-primary-cart.ant-btn:hover,
+button.ms-figma-primary-cart:hover {
+  background: var(--ff-accent-mid) !important;
+  border-color: var(--ff-accent-mid) !important;
+  color: #fff !important;
+}
+
+.ms-figma-link-accessories {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ff-btn-primary-hover);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.ms-figma-link-accessories:hover {
+  color: var(--ff-accent-mid);
+}
+
+.ms-machine-card-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* 列表栅格：与 Frame 529 gap 24 同源 */
+.machines-page.ms-product-line-layout .ms-figma-machine-grid {
+  gap: var(--ff-main-stack-gap);
+}
+
+/* ---- Figma 主机卡片：描边/阴影用令牌（替代 Tailwind shadow-lg） ---- */
+.ms-figma-machine-card {
+  font-family: var(--ff-font);
+  background: var(--ff-surface) !important;
+  border: 1px solid var(--ff-border) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 12px rgba(15, 36, 64, 0.06) !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+/* 纸垫机卡片（设计稿 Frame：max 1491×280，白底） */
+.ms-figma-machine-card.ms-figma-machine-card--paper {
+  position: relative;
+  width: 100%;
+  max-width: 1491px;
+  min-height: 280px;
+  background: #ffffff !important;
+  box-sizing: border-box;
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card.ms-figma-machine-card--paper:hover {
+  background: #ffffff !important;
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card:hover {
+  border-color: color-mix(in srgb, var(--ff-accent) 22%, var(--ff-border)) !important;
+  box-shadow: 0 8px 24px rgba(15, 36, 64, 0.09) !important;
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card__actions {
+  border-color: var(--ff-border) !important;
+}
+
+.ms-figma-product-meta {
+  font-size: 13px;
+  font-weight: 500;
+  color: #111827;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+/* Figma 列表行：左侧 型号 + PN pill，右侧「显示可选配件」 */
+.ms-figma-product-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 16px;
+  margin-bottom: 14px;
+}
+
+.ms-figma-product-title-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  min-width: 0;
+}
+
+.ms-figma-product-title {
+  margin: 0;
+  font-size: 1.375rem;
+  line-height: 1.3;
+  font-weight: 700;
+  color: var(--ff-text, #111827);
+}
+
+.ms-figma-pn-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ff-text-muted, #374151);
+  background: var(--ff-surface-muted, #f3f4f6);
+  border: 1px solid var(--ff-border);
+}
+
+.ms-figma-link-accessories-inline {
+  margin: 0;
+  padding: 4px 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ff-btn-primary-hover);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+
+.ms-figma-link-accessories-inline:hover {
+  color: var(--ff-accent-mid);
+}
+
+.ms-figma-link-accessories-block {
+  display: block;
+  width: fit-content;
+  margin: 0 0 14px 0;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ff-btn-primary-hover);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.ms-figma-link-accessories-block:hover {
+  color: var(--ff-accent-mid);
+}
+
+.ms-figma-spec-grid {
+  background: var(--ff-surface-muted, #f3f4f6);
+  border: 1px solid var(--ff-border);
+  border-radius: 10px;
+  padding: 16px 18px;
+}
+
+/* 分页：Figma 深蓝当前页 + 悬停与选择器描边 */
+.ms-figma-pagination-wrap {
+  margin-top: var(--ff-main-stack-gap);
+}
+
+.ms-figma-pagination-wrap .ant-pagination-item {
+  border-radius: 8px;
+}
+
+.ms-figma-pagination-wrap .ant-pagination-item:hover {
+  border-color: var(--ff-accent) !important;
+}
+
+.ms-figma-pagination-wrap .ant-pagination-item:hover a {
+  color: var(--ff-accent) !important;
+}
+
+.ms-figma-pagination-wrap .ant-pagination-item-active {
+  border-color: var(--ff-accent) !important;
+  background: var(--ff-accent) !important;
+}
+
+.ms-figma-pagination-wrap .ant-pagination-item-active a {
+  color: #fff !important;
+}
+
+.ms-figma-pagination-wrap .ant-pagination-prev:hover .ant-pagination-item-link,
+.ms-figma-pagination-wrap .ant-pagination-next:hover .ant-pagination-item-link {
+  border-color: var(--ff-accent) !important;
+  color: var(--ff-accent) !important;
+}
+
+.ms-figma-pagination-wrap .ant-pagination-options .ant-select-selector {
+  border-radius: 8px !important;
+}
+
+.ms-figma-pagination-wrap .ant-pagination-options .ant-select-focused .ant-select-selector {
+  border-color: var(--ff-accent) !important;
+  box-shadow: 0 0 0 2px var(--ff-focus-ring) !important;
+}
+
+.ms-figma-outline-btn.ant-btn,
+.ms-figma-outline-btn.ant-btn-sm {
+  background: #ffffff !important;
+  border: 1px solid #1f2937 !important;
+  color: #111827 !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  height: auto !important;
+  min-height: 36px;
+  padding: 7px 14px !important;
+  box-shadow: none !important;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+}
+
+.ms-figma-outline-btn.ant-btn:hover,
+.ms-figma-outline-btn.ant-btn-sm:hover {
+  background: #f9fafb !important;
+  border-color: #111827 !important;
+  color: #111827 !important;
+}
+
+/* Figma 文案链：详细规格 / 简介 / 薄膜选项 */
+.ms-figma-spec-action-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font-size: 13px;
+}
+
+.ms-figma-spec-links-sep {
+  color: #d1d5db;
+  font-weight: 400;
+  user-select: none;
+}
+
+.ms-figma-stock-panel .ms-figma-stock-heading {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ff-accent-mid);
+  margin: 0 0 8px 0;
+}
+
+.ms-figma-price-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ff-btn-primary-hover);
+  letter-spacing: -0.02em;
+}
+
+.ms-figma-qty-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--ff-surface-muted);
+  border: 1px solid var(--ff-border);
+  border-radius: 10px;
+}
+
+.ms-figma-qty-stepper .ant-btn {
+  min-width: 32px;
+  padding: 0 8px !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--ff-border) !important;
+  background: var(--ff-surface) !important;
+}
+
+.ms-figma-qty-stepper .ant-btn:hover {
+  border-color: var(--ff-btn-primary-hover) !important;
+  color: var(--ff-btn-primary-hover) !important;
 }
 
 @media (max-width: 1024px) {
   .machines-page.ms-product-line-layout {
     --ms-page-gutter: 16px;
-    --bjt-sidebar-width: 280px;
+    --mc-image-max-height: 480px;
+  }
+
+  .ms-breadcrumb-bar,
+  .ms-breadcrumb-spacer {
+    --ms-page-gutter: 16px;
+  }
+
+  .ms-figma-compare-inner .machine-comparison-image-container {
+    height: var(--mc-image-max-height);
+    min-height: var(--mc-image-max-height);
   }
 }
 
 @media (max-width: 768px) {
   .machines-page.ms-product-line-layout {
-    --bjt-sidebar-width: 0px;
+    --ms-breadcrumb-top: 72px;
+    --ms-breadcrumb-spacer-h: 140px;
+    --mc-image-max-height: 360px;
+  }
+
+  .ms-breadcrumb-bar,
+  .ms-breadcrumb-spacer {
     --ms-breadcrumb-top: 72px;
     --ms-breadcrumb-spacer-h: 140px;
   }
@@ -299,5 +960,27 @@
 
   .ms-filter-card {
     padding: 16px;
+  }
+
+  .ms-figma-compare-inner .machine-comparison-image-container {
+    height: var(--mc-image-max-height);
+    min-height: var(--mc-image-max-height);
+  }
+
+  .ms-compare-canvas-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ms-compare-faux-accordions {
+    max-width: none;
+  }
+
+  .ms-compare-hint-bubble {
+    max-width: none;
+  }
+
+  .ms-compare-hint-bubble::after {
+    right: 20px;
   }
 }

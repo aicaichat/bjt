@@ -6,7 +6,7 @@
 .App {
   width: 100% !important;
   min-height: 100vh !important;
-  background-color: #f8fafc !important;
+  background-color: var(--ff-app-bg, #ffffff) !important;
 }
 
 /* ========== 登录页面特殊处理 ========== */
@@ -86,7 +86,7 @@
   margin-top: 72px !important;
   min-height: calc(100vh - 72px) !important;
   padding: 32px !important;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+  background: var(--ff-page-bg, #f1f5f9) !important;
   width: calc(100% - 300px) !important;
   transition: all 0.3s ease !important;
 }
@@ -126,7 +126,7 @@
 }
 
 .section-header {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  background: linear-gradient(135deg, var(--ff-accent) 0%, var(--ff-accent-mid) 100%) !important;
   color: #ffffff !important;
   padding: 24px 32px !important;
   font-size: 1.5rem !important;
@@ -183,7 +183,7 @@
   display: flex !important;
   align-items: center !important;
   padding: 16px 20px !important;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+  background: var(--ff-page-bg, #f1f5f9) !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 12px !important;
   text-decoration: none !important;
@@ -201,7 +201,7 @@
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  background: linear-gradient(135deg, var(--ff-accent) 0%, var(--ff-accent-mid) 100%) !important;
   opacity: 0 !important;
   transition: opacity 0.3s ease !important;
 }
@@ -214,8 +214,8 @@
   color: #ffffff !important;
   text-decoration: none !important;
   transform: translateX(8px) !important;
-  border-color: #3b82f6 !important;
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3) !important;
+  border-color: var(--ff-accent) !important;
+  box-shadow: 0 6px 20px rgba(var(--ff-accent-rgb), 0.3) !important;
 }
 
 .product-link-text {
@@ -265,7 +265,7 @@
 .divider {
   width: 80px !important;
   height: 4px !important;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6) !important;
+  background: linear-gradient(90deg, var(--ff-accent), #8b5cf6) !important;
   margin: 8px 0 20px 0 !important;
   border-radius: 2px !important;
 }
@@ -273,8 +273,8 @@
 /* ========== 响应式设计 ========== */
 @media (max-width: 1024px) {
   .page-container {
-    margin-left: 280px !important;
-    width: calc(100% - 280px) !important;
+    margin-left: var(--bjt-sidebar-width, 303px) !important;
+    width: calc(100% - var(--bjt-sidebar-width, 303px)) !important;
     padding: 24px !important;
   }
   

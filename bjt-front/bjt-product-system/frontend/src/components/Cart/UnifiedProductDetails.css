@@ -225,7 +225,7 @@
 
 .detail-value[data-field-type="quantity"] {
   font-weight: 600;
-  color: #1d4ed8;
+  color: var(--ff-accent-mid);
 }
 
 .detail-value[data-field-type="status"] {

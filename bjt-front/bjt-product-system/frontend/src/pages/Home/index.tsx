@@ -150,10 +150,10 @@ const Home: React.FC = () => {
   }
 
   return (
-    <div className="home-page">
-      <main className="container">
-        {/* 产品线展示 */}
-        {productLines && productLines.map((line: any, lineIndex: number) => (
+    <div className="home-page home-page--figma">
+      <main className="home-main container">
+        {/* 产品线展示 — 标题仅在顶栏色带展示，与 Figma Home 一致 */}
+        {productLines && productLines.map((line: any) => (
           <div 
             key={line.id} 
             className="product-section"
@@ -164,9 +164,7 @@ const Home: React.FC = () => {
             </div>
             <div className="section-content">
               <div className="section-text">
-                <h3 className="introduction">{getTitle(line)}</h3>
-                <div className="divider"></div>
-                <p>{getDescription(line)}</p>
+                <p className="home-line-description">{getDescription(line)}</p>
                 
                 {/* 革命性的产品链接设计 */}
                 <div className="product-links">

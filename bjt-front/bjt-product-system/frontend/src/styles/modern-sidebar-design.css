@@ -158,8 +158,8 @@ html, body {
 }
 
 .sidebar-menu > .ant-menu > .ant-menu-item-selected {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+  background: linear-gradient(135deg, var(--ff-accent) 0%, var(--ff-accent-mid) 100%) !important;
+  box-shadow: 0 4px 12px rgba(var(--ff-accent-rgb), 0.3) !important;
 }
 
 .sidebar-menu > .ant-menu > .ant-menu-item-selected::before {
@@ -213,7 +213,7 @@ html, body {
 }
 
 .sidebar-menu > .ant-menu > .ant-menu-submenu-open {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%) !important;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--ff-tint-blue) 65%, white) 0%, var(--ff-tint-blue) 100%) !important;
   border: 1px solid #bae6fd !important;
   box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15) !important;
 }
@@ -259,7 +259,7 @@ html, body {
   left: 4px !important;
   width: 3px !important;
   height: 100% !important;
-  background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  background: linear-gradient(180deg, var(--ff-accent) 0%, var(--ff-accent-mid) 100%) !important;
   border-radius: 2px !important;
 }
 
@@ -286,7 +286,7 @@ html, body {
   left: 24px !important;
   width: 40px !important;
   height: 2px !important;
-  background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  background: linear-gradient(90deg, var(--ff-accent) 0%, var(--ff-accent-mid) 100%) !important;
   border-radius: 1px !important;
 }
 
@@ -337,14 +337,14 @@ html, body {
 }
 
 .sidebar-menu .ant-menu-sub .ant-menu-item:hover a::before {
-  color: #3b82f6 !important;
+  color: var(--ff-accent) !important;
   transform: scale(1.2) !important;
 }
 
 .sidebar-menu .ant-menu-sub .ant-menu-item-selected {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
-  box-shadow: 0 3px 10px rgba(59, 130, 246, 0.4) !important;
-  border: 1px solid #2563eb !important;
+  background: linear-gradient(135deg, var(--ff-accent) 0%, var(--ff-accent-mid) 100%) !important;
+  box-shadow: 0 3px 10px rgba(var(--ff-accent-rgb), 0.4) !important;
+  border: 1px solid var(--ff-btn-primary-hover) !important;
 }
 
 .sidebar-menu .ant-menu-sub .ant-menu-item-selected a {

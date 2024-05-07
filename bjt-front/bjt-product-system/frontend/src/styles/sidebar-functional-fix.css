@@ -5,8 +5,8 @@ html, body {
   margin: 0 !important;
   padding: 0 !important;
   overflow-x: hidden !important;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-  background-color: #fafbfc !important;
+  font-family: var(--ff-font, 'Inter', system-ui, sans-serif) !important;
+  background-color: var(--ff-app-bg, #ffffff) !important;
 }
 
 #root {
@@ -21,11 +21,7 @@ html, body {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
-  width: 300px !important;
   height: 100vh !important;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%) !important;
-  border-right: 1px solid #e2e8f0 !important;
-  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08) !important;
   z-index: 1001 !important;
   overflow: hidden !important;
   display: flex !important;
@@ -33,12 +29,28 @@ html, body {
   transition: all 0.3s ease !important;
 }
 
-.sidebar.collapsed {
+/* 非 Figma 侧栏兜底；前台实际使用 .sidebar--figma（见 sidebar-figma.css） */
+.sidebar:not(.sidebar--figma) {
+  width: 300px !important;
+  background: linear-gradient(
+    180deg,
+    var(--ff-surface, #fff) 0%,
+    var(--ff-content-canvas-bg, #f1f5f9) 100%
+  ) !important;
+  border-right: 1px solid var(--ff-border, #e5e7eb) !important;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08) !important;
+}
+
+.sidebar:not(.sidebar--figma).collapsed {
+  width: 80px !important;
+}
+
+.sidebar.sidebar--figma.collapsed {
   width: 80px !important;
 }
 
 /* ========== 侧边栏头部 ========== */
-.sidebar-header {
+.sidebar:not(.sidebar--figma) .sidebar-header {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -71,7 +83,7 @@ html, body {
 }
 
 /* ========== 菜单容器 ========== */
-.sidebar-menu {
+.sidebar:not(.sidebar--figma) .sidebar-menu {
   flex: 1 !important;
   overflow-y: auto !important;
   padding: 20px 0 !important;
@@ -79,7 +91,7 @@ html, body {
 }
 
 /* ========== Ant Design Menu 基础样式 ========== */
-.sidebar-menu .ant-menu {
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu {
   background-color: transparent !important;
   border: none !important;
   font-size: 15px !important;
@@ -87,28 +99,28 @@ html, body {
 }
 
 /* ========== 确保点击事件正常工作 ========== */
-.sidebar-menu .ant-menu-item,
-.sidebar-menu .ant-menu-submenu,
-.sidebar-menu .ant-menu-submenu-title {
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-item,
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-submenu,
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-submenu-title {
   pointer-events: auto !important;
   cursor: pointer !important;
 }
 
-.sidebar-menu .ant-menu-submenu-title {
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-submenu-title {
   position: relative !important;
   z-index: 10 !important;
 }
 
 /* ========== 一级菜单项样式 ========== */
-.sidebar-menu > .ant-menu > .ant-menu-item,
-.sidebar-menu > .ant-menu > .ant-menu-submenu {
+.sidebar:not(.sidebar--figma) .sidebar-menu > .ant-menu > .ant-menu-item,
+.sidebar:not(.sidebar--figma) .sidebar-menu > .ant-menu > .ant-menu-submenu {
   margin: 6px 16px !important;
   border-radius: 12px !important;
   overflow: visible !important;
 }
 
 /* 一级菜单项（无子菜单） */
-.sidebar-menu > .ant-menu > .ant-menu-item {
+.sidebar:not(.sidebar--figma) .sidebar-menu > .ant-menu > .ant-menu-item {
   padding: 0 !important;
   height: auto !important;
   line-height: normal !important;
@@ -116,7 +128,7 @@ html, body {
   border: none !important;
 }
 
-.sidebar-menu > .ant-menu > .ant-menu-item a {
+.sidebar:not(.sidebar--figma) .sidebar-menu > .ant-menu > .ant-menu-item a {
   display: flex !important;
   align-items: center !important;
   padding: 16px 20px !important;
@@ -129,28 +141,28 @@ html, body {
   background-color: transparent !important;
 }
 
-.sidebar-menu > .ant-menu > .ant-menu-item:hover {
+.sidebar:not(.sidebar--figma) .sidebar-menu > .ant-menu > .ant-menu-item:hover {
   background-color: rgba(248, 250, 252, 0.8) !important;
 }
 
-.sidebar-menu > .ant-menu > .ant-menu-item:hover a {
+.sidebar:not(.sidebar--figma) .sidebar-menu > .ant-menu > .ant-menu-item:hover a {
   color: #1e293b !important;
   transform: translateX(2px) !important;
 }
 
-.sidebar-menu > .ant-menu > .ant-menu-item-selected {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+.sidebar:not(.sidebar--figma) .sidebar-menu > .ant-menu > .ant-menu-item-selected {
+  background: linear-gradient(135deg, var(--ff-accent) 0%, var(--ff-accent-mid) 100%) !important;
+  box-shadow: 0 4px 12px rgba(var(--ff-accent-rgb), 0.3) !important;
 }
 
-.sidebar-menu > .ant-menu > .ant-menu-item-selected a {
+.sidebar:not(.sidebar--figma) .sidebar-menu > .ant-menu > .ant-menu-item-selected a {
   color: #ffffff !important;
   font-weight: 600 !important;
   transform: translateX(0) !important;
 }
 
 /* ========== 一级菜单（可展开）样式 ========== */
-.sidebar-menu > .ant-menu > .ant-menu-submenu > .ant-menu-submenu-title {
+.sidebar:not(.sidebar--figma) .sidebar-menu > .ant-menu > .ant-menu-submenu > .ant-menu-submenu-title {
   padding: 16px 20px !important;
   margin: 0 !important;
   color: #334155 !important;
@@ -168,21 +180,21 @@ html, body {
   z-index: 10 !important;
 }
 
-.sidebar-menu > .ant-menu > .ant-menu-submenu:hover > .ant-menu-submenu-title {
+.sidebar:not(.sidebar--figma) .sidebar-menu > .ant-menu > .ant-menu-submenu:hover > .ant-menu-submenu-title {
   background-color: rgba(248, 250, 252, 0.8) !important;
   color: #1e293b !important;
   transform: translateX(2px) !important;
 }
 
-.sidebar-menu > .ant-menu > .ant-menu-submenu-open > .ant-menu-submenu-title {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%) !important;
+.sidebar:not(.sidebar--figma) .sidebar-menu > .ant-menu > .ant-menu-submenu-open > .ant-menu-submenu-title {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--ff-tint-blue) 65%, white) 0%, var(--ff-tint-blue) 100%) !important;
   color: #0369a1 !important;
   font-weight: 700 !important;
   border: 1px solid #bae6fd !important;
 }
 
 /* 展开箭头 */
-.sidebar-menu > .ant-menu > .ant-menu-submenu .ant-menu-submenu-arrow {
+.sidebar:not(.sidebar--figma) .sidebar-menu > .ant-menu > .ant-menu-submenu .ant-menu-submenu-arrow {
   color: #94a3b8 !important;
   font-size: 12px !important;
   transition: all 0.2s ease !important;
@@ -190,13 +202,13 @@ html, body {
   pointer-events: none !important;
 }
 
-.sidebar-menu > .ant-menu > .ant-menu-submenu-open .ant-menu-submenu-arrow {
+.sidebar:not(.sidebar--figma) .sidebar-menu > .ant-menu > .ant-menu-submenu-open .ant-menu-submenu-arrow {
   color: #0369a1 !important;
   transform: rotate(180deg) !important;
 }
 
 /* ========== 子菜单容器 ========== */
-.sidebar-menu > .ant-menu > .ant-menu-submenu .ant-menu-sub {
+.sidebar:not(.sidebar--figma) .sidebar-menu > .ant-menu > .ant-menu-submenu .ant-menu-sub {
   background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%) !important;
   margin: 8px 16px 12px 16px !important;
   border-radius: 12px !important;
@@ -207,19 +219,19 @@ html, body {
   z-index: 5 !important;
 }
 
-.sidebar-menu > .ant-menu > .ant-menu-submenu .ant-menu-sub::before {
+.sidebar:not(.sidebar--figma) .sidebar-menu > .ant-menu > .ant-menu-submenu .ant-menu-sub::before {
   content: '' !important;
   position: absolute !important;
   top: 0 !important;
   left: 4px !important;
   width: 3px !important;
   height: 100% !important;
-  background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  background: linear-gradient(180deg, var(--ff-accent) 0%, var(--ff-accent-mid) 100%) !important;
   border-radius: 2px !important;
 }
 
 /* ========== 子菜单分组标题 ========== */
-.sidebar-menu .ant-menu-item-group-title {
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-item-group-title {
   padding: 16px 24px 12px 24px !important;
   color: #64748b !important;
   font-size: 11px !important;
@@ -234,19 +246,19 @@ html, body {
   position: relative !important;
 }
 
-.sidebar-menu .ant-menu-item-group-title::after {
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-item-group-title::after {
   content: '' !important;
   position: absolute !important;
   bottom: -1px !important;
   left: 24px !important;
   width: 40px !important;
   height: 2px !important;
-  background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  background: linear-gradient(90deg, var(--ff-accent) 0%, var(--ff-accent-mid) 100%) !important;
   border-radius: 1px !important;
 }
 
 /* ========== 子菜单项 ========== */
-.sidebar-menu .ant-menu-sub .ant-menu-item {
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-sub .ant-menu-item {
   margin: 3px 12px !important;
   padding: 0 !important;
   border-radius: 8px !important;
@@ -256,7 +268,7 @@ html, body {
   position: relative !important;
 }
 
-.sidebar-menu .ant-menu-sub .ant-menu-item a {
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-sub .ant-menu-item a {
   display: flex !important;
   align-items: center !important;
   padding: 12px 16px 12px 28px !important;
@@ -270,7 +282,7 @@ html, body {
   background-color: transparent !important;
 }
 
-.sidebar-menu .ant-menu-sub .ant-menu-item a::before {
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-sub .ant-menu-item a::before {
   content: '•' !important;
   position: absolute !important;
   left: 16px !important;
@@ -279,41 +291,41 @@ html, body {
   line-height: 1 !important;
 }
 
-.sidebar-menu .ant-menu-sub .ant-menu-item:hover {
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-sub .ant-menu-item:hover {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
   border: 1px solid #e2e8f0 !important;
 }
 
-.sidebar-menu .ant-menu-sub .ant-menu-item:hover a {
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-sub .ant-menu-item:hover a {
   color: #334155 !important;
   transform: translateX(2px) !important;
 }
 
-.sidebar-menu .ant-menu-sub .ant-menu-item:hover a::before {
-  color: #3b82f6 !important;
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-sub .ant-menu-item:hover a::before {
+  color: var(--ff-accent) !important;
 }
 
-.sidebar-menu .ant-menu-sub .ant-menu-item-selected {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
-  box-shadow: 0 3px 10px rgba(59, 130, 246, 0.4) !important;
-  border: 1px solid #2563eb !important;
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-sub .ant-menu-item-selected {
+  background: linear-gradient(135deg, var(--ff-accent) 0%, var(--ff-accent-mid) 100%) !important;
+  box-shadow: 0 3px 10px rgba(var(--ff-accent-rgb), 0.4) !important;
+  border: 1px solid var(--ff-btn-primary-hover) !important;
 }
 
-.sidebar-menu .ant-menu-sub .ant-menu-item-selected a {
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-sub .ant-menu-item-selected a {
   color: #ffffff !important;
   font-weight: 500 !important;
 }
 
-.sidebar-menu .ant-menu-sub .ant-menu-item-selected a::before {
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-sub .ant-menu-item-selected a::before {
   color: #ffffff !important;
   content: '▶' !important;
   font-size: 10px !important;
 }
 
 /* ========== 菜单图标 ========== */
-.sidebar-menu > .ant-menu > .ant-menu-item .anticon,
-.sidebar-menu > .ant-menu > .ant-menu-submenu > .ant-menu-submenu-title .anticon {
+.sidebar:not(.sidebar--figma) .sidebar-menu > .ant-menu > .ant-menu-item .anticon,
+.sidebar:not(.sidebar--figma) .sidebar-menu > .ant-menu > .ant-menu-submenu > .ant-menu-submenu-title .anticon {
   font-size: 18px !important;
   margin-right: 14px !important;
   color: inherit !important;
@@ -368,60 +380,60 @@ main.flex-1,
 }
 
 /* ========== 折叠状态 ========== */
-.sidebar.collapsed .sidebar-header {
+.sidebar:not(.sidebar--figma).collapsed .sidebar-header {
   padding: 24px 16px !important;
 }
 
-.sidebar.collapsed .sidebar-menu > .ant-menu > .ant-menu-item a,
-.sidebar.collapsed .sidebar-menu > .ant-menu > .ant-menu-submenu > .ant-menu-submenu-title {
+.sidebar:not(.sidebar--figma).collapsed .sidebar-menu > .ant-menu > .ant-menu-item a,
+.sidebar:not(.sidebar--figma).collapsed .sidebar-menu > .ant-menu > .ant-menu-submenu > .ant-menu-submenu-title {
   padding: 16px 20px !important;
   justify-content: center !important;
 }
 
-.sidebar.collapsed .sidebar-menu > .ant-menu > .ant-menu-item .anticon,
-.sidebar.collapsed .sidebar-menu > .ant-menu > .ant-menu-submenu .anticon {
+.sidebar:not(.sidebar--figma).collapsed .sidebar-menu > .ant-menu > .ant-menu-item .anticon,
+.sidebar:not(.sidebar--figma).collapsed .sidebar-menu > .ant-menu > .ant-menu-submenu .anticon {
   margin-right: 0 !important;
 }
 
-.sidebar.collapsed .sidebar-menu .ant-menu-sub {
+.sidebar:not(.sidebar--figma).collapsed .sidebar-menu .ant-menu-sub {
   display: none !important;
 }
 
 /* ========== 滚动条 ========== */
-.sidebar-menu::-webkit-scrollbar {
+.sidebar:not(.sidebar--figma) .sidebar-menu::-webkit-scrollbar {
   width: 8px !important;
 }
 
-.sidebar-menu::-webkit-scrollbar-track {
+.sidebar:not(.sidebar--figma) .sidebar-menu::-webkit-scrollbar-track {
   background: rgba(248, 250, 252, 0.8) !important;
   border-radius: 4px !important;
 }
 
-.sidebar-menu::-webkit-scrollbar-thumb {
+.sidebar:not(.sidebar--figma) .sidebar-menu::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, #cbd5e1 0%, #94a3b8 100%) !important;
   border-radius: 4px !important;
 }
 
-.sidebar-menu::-webkit-scrollbar-thumb:hover {
+.sidebar:not(.sidebar--figma) .sidebar-menu::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%) !important;
 }
 
 /* ========== 响应式设计 ========== */
 @media (max-width: 1024px) {
   .sidebar {
-    width: 280px !important;
+    width: var(--bjt-sidebar-width, 303px) !important;
   }
   
   .site-header,
   .main-header {
-    left: 280px !important;
-    width: calc(100% - 280px) !important;
+    left: var(--bjt-sidebar-width, 303px) !important;
+    width: calc(100% - var(--bjt-sidebar-width, 303px)) !important;
   }
   
   main.flex-1,
   .main-content {
-    margin-left: 280px !important;
-    width: calc(100% - 280px) !important;
+    margin-left: var(--bjt-sidebar-width, 303px) !important;
+    width: calc(100% - var(--bjt-sidebar-width, 303px)) !important;
     padding: 24px !important;
   }
 }
@@ -456,37 +468,37 @@ main.flex-1,
 }
 
 /* ========== 清除默认样式 ========== */
-.sidebar-menu .ant-menu-item::after,
-.sidebar-menu .ant-menu-submenu-title::after {
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-item::after,
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-submenu-title::after {
   display: none !important;
 }
 
-.sidebar-menu .ant-menu-item-group {
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-item-group {
   margin: 0 !important;
 }
 
-.sidebar-menu .ant-menu-item-group-list {
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-item-group-list {
   margin: 0 !important;
   padding: 0 !important;
 }
 
 /* ========== 文本处理 ========== */
-.sidebar-menu .ant-menu-item a,
-.sidebar-menu .ant-menu-submenu-title,
-.sidebar-menu .ant-menu-item-group-title {
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-item a,
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-submenu-title,
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-item-group-title {
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
 }
 
 /* ========== 动画效果 ========== */
-.sidebar-menu .ant-menu-sub {
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-sub {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
   transform-origin: top !important;
 }
 
-.sidebar-menu .ant-menu-item,
-.sidebar-menu .ant-menu-submenu-title {
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-item,
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-submenu-title {
   transition: all 0.2s ease !important;
 }
 
@@ -516,12 +528,12 @@ main.flex-1,
 }
 
 /* ========== 防止样式冲突 ========== */
-.sidebar-menu .ant-menu-submenu-title:hover {
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-submenu-title:hover {
   background-color: rgba(248, 250, 252, 0.8) !important;
 }
 
-.sidebar-menu .ant-menu-submenu-selected > .ant-menu-submenu-title,
-.sidebar-menu .ant-menu-submenu-open > .ant-menu-submenu-title {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%) !important;
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-submenu-selected > .ant-menu-submenu-title,
+.sidebar:not(.sidebar--figma) .sidebar-menu .ant-menu-submenu-open > .ant-menu-submenu-title {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--ff-tint-blue) 65%, white) 0%, var(--ff-tint-blue) 100%) !important;
   color: #0369a1 !important;
 } 

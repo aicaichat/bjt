@@ -1,0 +1,471 @@
+/**
+ * Figma 模式侧栏 — 与 machine-selection-figma 选型页同一套视觉语言：
+ * 白底、冷灰描边、海军蓝强调、系统无衬线、轻阴影。
+ * Dev Mode 出图后可将下面 --sd-* 替换为标注 hex。
+ */
+
+.sidebar.sidebar--figma {
+  /* 继承 MainLayout .figma-front 的 --ff-*，单点改 token */
+  --sd-bg: var(--ff-surface);
+  --sd-header-bg: var(--ff-surface);
+  --sd-border: var(--ff-border);
+  --sd-text: var(--ff-text);
+  --sd-text-secondary: var(--ff-text-muted);
+  --sd-accent: var(--ff-accent);
+  --sd-accent-dark: var(--ff-accent-mid);
+  --sd-hover-bg: #f3f4f6;
+  /* 展开的一级行：稿面为白底主色字，不用浅蓝底 */
+  --sd-active-bg: var(--ff-surface);
+  --sd-nav-pill-bg: var(--ff-accent-dark);
+  /* 二级区底：稿面为白 #FFFFFF */
+  --sd-submenu-bg: var(--ff-surface);
+  --sd-font: var(--ff-font);
+  width: var(--bjt-sidebar-width, 303px);
+  background-color: var(--sd-bg) !important;
+  border-right: none !important;
+  box-shadow: inset -0.5px 0 0 var(--ff-sidebar-divider) !important;
+  font-family: var(--sd-font);
+  /* Figma 侧栏容器：column + gap 24 + 底 padding 13 */
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 24px;
+  padding: 0 0 13px !important;
+  box-sizing: border-box !important;
+}
+
+.sidebar.sidebar--figma.collapsed {
+  width: var(--bjt-sidebar-collapsed-width, 80px);
+}
+
+@media (min-width: 1200px) {
+  .sidebar.sidebar--figma {
+    width: var(--bjt-sidebar-width, 303px) !important;
+  }
+  .sidebar.sidebar--figma.collapsed {
+    width: var(--bjt-sidebar-collapsed-width, 80px) !important;
+  }
+}
+
+.sidebar.sidebar--figma .sidebar-header {
+  background-color: var(--sd-header-bg) !important;
+  border-bottom: none !important;
+  box-shadow: inset 0 -0.5px 0 var(--ff-sidebar-divider) !important;
+}
+
+/* 双品牌：BJT 标 + Locked Air / LOCKED PAPER（收起时仅 BJT） */
+/* Frame 86 / 153 / 87：303×109、水平 padding 24、logo 区 vertical padding 10 50 */
+.sidebar.sidebar--figma .sidebar-header--figma-brand {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  gap: 20px;
+  min-height: 109px;
+  padding: 0 24px !important;
+}
+
+.sidebar.sidebar--figma .sidebar-header--figma-brand .sidebar-brand {
+  flex: 1;
+  min-width: 0;
+  justify-content: center;
+  padding: 10px 50px;
+  box-sizing: border-box;
+}
+
+.sidebar.sidebar--figma .sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.sidebar.sidebar--figma .sidebar-brand__bjt {
+  flex-shrink: 0;
+}
+
+.sidebar.sidebar--figma .sidebar-brand__bjt img {
+  display: block;
+  height: 28px;
+  width: auto;
+  max-width: 177px;
+  object-fit: contain;
+  filter: none;
+}
+
+.sidebar.sidebar--figma .sidebar-brand__wordmark {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+  line-height: 1.15;
+}
+
+.sidebar.sidebar--figma .sidebar-brand__line1 {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--sd-accent);
+  letter-spacing: 0.01em;
+}
+
+.sidebar.sidebar--figma .sidebar-brand__line2 {
+  font-size: 9px;
+  font-weight: 600;
+  color: #374151;
+  letter-spacing: 0.04em;
+}
+
+.sidebar.sidebar--figma .sidebar-brand__rule {
+  display: block;
+  height: 1px;
+  width: 100%;
+  margin: 3px 0 2px;
+  background: var(--sd-border);
+}
+
+.sidebar.sidebar--figma.collapsed .sidebar-header--figma-brand {
+  min-height: 72px;
+  padding: 8px 12px !important;
+  gap: 8px;
+  justify-content: center;
+}
+
+.sidebar.sidebar--figma.collapsed .sidebar-header--figma-brand .sidebar-brand {
+  padding: 8px 6px;
+}
+
+.sidebar.sidebar--figma.collapsed .sidebar-brand__bjt img {
+  max-width: 44px;
+  height: 32px;
+}
+
+.sidebar.sidebar--figma .sidebar-toggle {
+  border: 1px solid var(--sd-border) !important;
+  color: var(--sd-text-secondary) !important;
+  border-radius: 8px !important;
+  background: #fff !important;
+}
+
+.sidebar.sidebar--figma .sidebar-toggle:hover {
+  border-color: var(--sd-accent) !important;
+  color: var(--sd-accent) !important;
+  background: var(--sd-hover-bg) !important;
+}
+
+/* Frame 574：菜单区左右 10px，纵向滚动占满剩余高度 */
+.sidebar.sidebar--figma .sidebar-menu {
+  padding: 0 10px !important;
+  margin: 0 !important;
+  background: var(--sd-bg);
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sidebar.sidebar--figma .sidebar-menu-content {
+  background: transparent !important;
+  font-family: var(--sd-font) !important;
+}
+
+.sidebar.sidebar--figma .sidebar-menu-content.ant-menu-inline {
+  border-inline-end: none !important;
+}
+
+/* 自定义 Figma 对齐图标（sidebarNavIcons.tsx）：与 Ant 图标同槽位、统一 16px */
+.sidebar.sidebar--figma .sidebar-nav-icon-svg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 0;
+  color: inherit;
+  vertical-align: -0.125em;
+}
+
+.sidebar.sidebar--figma .sidebar-nav-icon-svg svg {
+  display: block;
+}
+
+/* 图标与文案间距 Figma gap 5 */
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item-icon {
+  margin-inline-end: 5px !important;
+}
+
+/* 一级直达（Home / Contact）：标题色 rgba(0,0,0,0.85)，图标 18×18 */
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item .ant-menu-item-icon {
+  color: rgba(0, 0, 0, 0.85) !important;
+  font-size: 18px !important;
+  width: 18px !important;
+  min-width: 18px !important;
+  line-height: 1 !important;
+}
+
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item:hover .ant-menu-item-icon {
+  color: var(--sd-accent) !important;
+}
+
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item-selected .ant-menu-item-icon {
+  color: #ffffff !important;
+}
+
+/* 含子级一级：图一默认黑字黑图标，展开或子项被选中时再主色 */
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-submenu > .ant-menu-submenu-title .ant-menu-item-icon {
+  color: rgba(0, 0, 0, 0.85) !important;
+  font-size: 18px !important;
+  width: 18px !important;
+  min-width: 18px !important;
+  line-height: 1 !important;
+}
+
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-submenu > .ant-menu-submenu-title:hover .ant-menu-item-icon {
+  color: var(--sd-accent) !important;
+}
+
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-submenu-open > .ant-menu-submenu-title .ant-menu-item-icon,
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-submenu-selected > .ant-menu-submenu-title .ant-menu-item-icon {
+  color: var(--sd-accent) !important;
+}
+
+/* 内容宽约 279（Frame 574：303 − 左右 10×2 − margin） */
+.sidebar.sidebar--figma:not(.collapsed) .sidebar-menu-content > .ant-menu > .ant-menu-item,
+.sidebar.sidebar--figma:not(.collapsed) .sidebar-menu-content > .ant-menu > .ant-menu-submenu {
+  margin: 2px 2px !important;
+  width: calc(100% - 4px) !important;
+  max-width: 279px !important;
+  box-sizing: border-box !important;
+  border-radius: 8px !important;
+}
+
+.sidebar.sidebar--figma.collapsed .sidebar-menu-content .ant-menu-item,
+.sidebar.sidebar--figma.collapsed .sidebar-menu-content .ant-menu-submenu {
+  max-width: none !important;
+  width: auto !important;
+}
+
+/* 一级直达项（Home / Contact）：Figma 55px 高、16/19、400、左内边距 10px */
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item .sidebar-top-link {
+  display: flex;
+  align-items: center;
+  min-height: 55px;
+  padding: 0 10px !important;
+  color: var(--sd-text) !important;
+  font-weight: 400 !important;
+  font-size: 16px !important;
+  line-height: 19px !important;
+  border-radius: 8px !important;
+  text-decoration: none !important;
+}
+
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item .sidebar-top-link:hover {
+  color: var(--sd-accent) !important;
+  background-color: var(--sd-hover-bg) !important;
+}
+
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item-selected {
+  background: transparent !important;
+}
+
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item-selected .sidebar-top-link {
+  background-color: var(--sd-nav-pill-bg) !important;
+  color: #ffffff !important;
+  font-weight: 400 !important;
+  box-shadow: none !important;
+}
+
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item-selected .sidebar-top-link:hover {
+  background-color: var(--sd-nav-pill-bg) !important;
+  color: #ffffff !important;
+}
+
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-submenu > .ant-menu-submenu-title {
+  padding: 0 0 0 10px !important;
+  margin: 0 !important;
+  min-height: 55px !important;
+  height: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  color: rgba(0, 0, 0, 0.85) !important;
+  font-weight: 400 !important;
+  font-size: 16px !important;
+  line-height: 19px !important;
+  border-radius: 8px !important;
+}
+
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-submenu > .ant-menu-submenu-title:hover {
+  color: var(--sd-accent) !important;
+  background-color: var(--sd-hover-bg) !important;
+}
+
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-submenu-open > .ant-menu-submenu-title,
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-submenu-selected > .ant-menu-submenu-title {
+  color: var(--sd-accent) !important;
+  background-color: var(--sd-active-bg) !important;
+  font-weight: 400 !important;
+}
+
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-submenu > .ant-menu-submenu-title .ant-menu-submenu-arrow {
+  color: rgba(0, 0, 0, 0.45) !important;
+  font-size: 12px !important;
+}
+
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-submenu > .ant-menu-submenu-title:hover .ant-menu-submenu-arrow {
+  color: var(--sd-accent) !important;
+}
+
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-submenu-open > .ant-menu-submenu-title .ant-menu-submenu-arrow,
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-submenu-selected > .ant-menu-submenu-title .ant-menu-submenu-arrow {
+  color: var(--sd-accent) !important;
+}
+
+/* 气柱袋图标：一级选中态白底 + 深蓝条，避免整图标刷白后条纹消失 */
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item-selected .sidebar-nav-icon--aircol-frame {
+  fill: #ffffff !important;
+}
+
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item-selected .sidebar-nav-icon--aircol-stripe {
+  fill: var(--sd-nav-pill-bg) !important;
+}
+
+/* 顶栏外链（气柱袋）：与 Home 同行高、↗ 紧跟文案 */
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item .sidebar-top-link--external {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  box-sizing: border-box;
+  min-height: 55px;
+  padding: 0 10px !important;
+  width: 100%;
+  color: var(--sd-text) !important;
+  font-weight: 400 !important;
+  font-size: 16px !important;
+  line-height: 19px !important;
+  border-radius: 8px !important;
+  text-decoration: none !important;
+}
+
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item .sidebar-top-link--external:hover {
+  color: var(--sd-accent) !important;
+  background-color: var(--sd-hover-bg) !important;
+}
+
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item .sidebar-top-link--external .sidebar-ext-icon {
+  font-size: 12px;
+  opacity: 0.85;
+  line-height: 1;
+}
+
+/* 子级：左侧缩进 + 浅底，贴近 Figma 二级列表 */
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-sub {
+  background-color: var(--sd-submenu-bg) !important;
+  border-left: none !important;
+  margin-left: 0 !important;
+  padding: 4px 0 8px !important;
+  border-radius: 0 0 8px 8px !important;
+}
+
+.sidebar.sidebar--figma:not(.collapsed) .sidebar-menu-content .ant-menu-sub .ant-menu-item {
+  margin: 2px 2px !important;
+  padding-inline-start: 0 !important;
+  padding-inline-end: 0 !important;
+  max-width: 279px !important;
+  height: auto !important;
+}
+
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-sub.ant-menu-inline {
+  background: var(--sd-submenu-bg) !important;
+}
+
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-sub .ant-menu-item .sidebar-sub-link,
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-sub .ant-menu-item .sidebar-sub-external {
+  display: flex !important;
+  align-items: center !important;
+  padding: 10px 8px 10px 32px !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  font-size: 14px !important;
+  color: var(--ff-text-muted) !important;
+  font-weight: 400 !important;
+  text-decoration: none !important;
+  line-height: 1.35 !important;
+  background: var(--ff-surface) !important;
+}
+
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-sub .ant-menu-item .sidebar-sub-link-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-sub .ant-menu-item .sidebar-sub-leading-anticon {
+  font-size: 14px;
+  color: inherit;
+}
+
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-sub .ant-menu-item .sidebar-ext-icon {
+  margin-left: 4px;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-sub .ant-menu-item:not(.ant-menu-item-selected) .sidebar-sub-link:hover,
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-sub .ant-menu-item:not(.ant-menu-item-selected) .sidebar-sub-external:hover {
+  color: var(--sd-accent) !important;
+  background-color: transparent !important;
+}
+
+/* Figma：二级选中 = 深蓝底 + 白字 */
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-sub .ant-menu-item-selected .sidebar-sub-link,
+.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-sub .ant-menu-item-selected .sidebar-sub-external {
+  background-color: var(--sd-nav-pill-bg) !important;
+  color: #ffffff !important;
+  font-weight: 400 !important;
+  border-radius: 8px !important;
+}
+
+.sidebar.sidebar--figma
+  .sidebar-menu-content
+  .ant-menu-sub
+  .ant-menu-item-selected
+  .sidebar-sub-leading-wrap,
+.sidebar.sidebar--figma
+  .sidebar-menu-content
+  .ant-menu-sub
+  .ant-menu-item-selected
+  .sidebar-sub-leading-anticon {
+  color: #ffffff !important;
+}
+
+.sidebar.sidebar--figma .sidebar-menu::-webkit-scrollbar-track {
+  background: var(--sd-bg);
+}
+
+.sidebar.sidebar--figma .sidebar-menu::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.sidebar.sidebar--figma .sidebar-menu::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* 收起仍可点图标 */
+.sidebar.sidebar--figma.collapsed .sidebar-menu-content .ant-menu-item .ant-menu-item-icon,
+.sidebar.sidebar--figma.collapsed .sidebar-menu-content .ant-menu-submenu-title .ant-menu-item-icon {
+  line-height: 1 !important;
+}
+
+@media (max-width: 768px) {
+  .sidebar.sidebar--figma {
+    width: var(--bjt-sidebar-width, 303px);
+    box-shadow: 4px 0 24px rgba(15, 36, 64, 0.12) !important;
+  }
+}

@@ -39,6 +39,8 @@
   "nav": {
     "home": "首页",
     "products": "产品",
+    "machines": "设备选型",
+    "consumables": "耗材",
     "support": "支持",
     "contactUs": "联系我们",
     "register": "注册",
@@ -46,6 +48,7 @@
     "account": "账户"
   },
   "header": {
+    "topNavAria": "主导航",
     "cart": "购物车",
     "login": "登录",
     "profile": "我的资料",
@@ -341,19 +344,21 @@
   "menu": {
     "Air Cushioning System": "气垫系统",
     "Air Cushion Machine & Accessory": "气垫机与配件",
-    "Film options": "气垫膜选项",
+    "Film options": "薄膜选项",
     "Spare parts": "备件",
     "Paper Cushioning System": "纸垫系统",
     "Paper Cushion Machine & Accessory": "纸垫机与配件",
     "Paper options": "纸张选项",
     "Water Cushioning System": "湿水胶带系统",
-    "Water Activated Tape Dispenser & Accessory": "湿水胶带分配器与配件",
+    "Water Activated Tape System": "湿水胶带系统",
+    "Water Activated Tape Dispenser & Accessory": "湿水胶带机与配件",
     "Water Activated Tape options": "湿水胶带选项",
-    "Air Column Bag System": "气柱袋系统",
+    "Air Column Bag System": "气柱袋系列",
     "Air Column Bag Products": "气柱袋产品",
     "After-sales service": "售后服务",
     "Document Download": "文档下载",
-    "FAQ": "常见问题"
+    "FAQ": "常见问题",
+    "Pay by Card": "信用卡支付"
   },
   "cart": {
     "title": "购物车",

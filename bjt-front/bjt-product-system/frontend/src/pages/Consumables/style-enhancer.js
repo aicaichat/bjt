@@ -57,7 +57,7 @@ function enhancePageHeader() {
       left: 0;
       right: 0;
       height: 4px;
-      background: linear-gradient(90deg, #3b82f6, #2563eb, #1d4ed8);
+      background: linear-gradient(90deg, #012583, #011b52, #011f5c);
     `;
     sectionTitle.style.position = 'relative';
     sectionTitle.appendChild(gradientBorder);

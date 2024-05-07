@@ -8,6 +8,47 @@
   margin: 0;
 }
 
+/* Figma: vertical thumbnails on the left, main image on the right */
+.thumbnail-gallery-left {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
+  max-width: 380px;
+  margin: 0;
+}
+
+.thumbnail-gallery-left .thumbnails-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.thumbnail-gallery-left .thumbnail-small {
+  width: 56px;
+  height: 56px;
+}
+
+.thumbnail-gallery-left .main-image-container {
+  flex: 1;
+  min-width: 0;
+  max-width: 280px;
+}
+
+.thumbnail-gallery-left .main-image-wrapper {
+  height: 200px;
+  max-width: 100%;
+}
+
+.thumbnail-gallery-left .active-indicator--left-col {
+  bottom: 4px;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  top: auto;
+}
+
 /* New Main Image + Thumbnails Layout */
 .thumbnail-gallery-main {
   display: flex;
@@ -29,18 +70,18 @@
   position: relative;
   width: 100%;
   height: 180px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--ff-border);
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
-  background: #f9fafb;
+  background: var(--ff-surface-muted);
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .main-image-wrapper:hover {
-  border-color: #3b82f6;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  border-color: var(--ff-accent);
+  box-shadow: 0 4px 12px rgba(var(--ff-accent-rgb), 0.15);
   transform: translateY(-1px);
 }
 
@@ -104,25 +145,25 @@
   position: relative;
   width: 60px;
   height: 60px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--ff-border);
   border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
-  background: #f9fafb;
+  background: var(--ff-surface-muted);
   transition: all 0.3s ease;
   flex-shrink: 0;
 }
 
 .thumbnail-small:hover {
-  border-color: #3b82f6;
+  border-color: var(--ff-accent);
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 4px 8px rgba(var(--ff-accent-rgb), 0.2);
 }
 
 .thumbnail-small.active {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 1px #3b82f6;
-  background: #eff6ff;
+  border-color: var(--ff-accent);
+  box-shadow: 0 0 0 1px var(--ff-accent);
+  background: var(--ff-tint-blue);
 }
 
 .thumbnail-image {
@@ -145,7 +186,7 @@
   transform: translateX(-50%);
   width: 6px;
   height: 6px;
-  background: #3b82f6;
+  background: var(--ff-accent);
   border-radius: 50%;
   box-shadow: 0 0 0 2px white;
 }
@@ -245,9 +286,10 @@
   width: 100%;
 }
 
-.machine-gallery .thumbnail-gallery-main {
+.machine-gallery .thumbnail-gallery-main,
+.machine-gallery .thumbnail-gallery-left {
   margin: 0;
-  max-width: 280px;
+  max-width: 380px;
   width: 100%;
 }
 

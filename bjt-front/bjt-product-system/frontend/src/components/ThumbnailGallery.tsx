@@ -6,7 +6,8 @@ interface ThumbnailGalleryProps {
   images: string[];
   altText?: string;
   className?: string;
-  layout?: 'grid' | 'main-with-thumbnails';
+  /** main-with-thumbnails: thumbs below; thumbnails-left: Figma style vertical thumbs on the left */
+  layout?: 'grid' | 'main-with-thumbnails' | 'thumbnails-left';
 }
 
 const ThumbnailGallery: React.FC<ThumbnailGalleryProps> = ({
@@ -63,67 +64,155 @@ const ThumbnailGallery: React.FC<ThumbnailGalleryProps> = ({
     }
   };
 
+  const mainBlock = (
+    <div className="main-image-container">
+      <div
+        className="main-image-wrapper"
+        onClick={() => openModal(currentImageIndex)}
+      >
+        <img
+          src={displayImages[currentImageIndex]}
+          alt={`${altText} - Main View`}
+          className="main-image"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.style.display = 'none';
+          }}
+        />
+        <div className="main-image-overlay">
+          <div className="enlarge-hint">点击放大</div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const thumbsRow = (direction: 'row' | 'column') => (
+    <div className={direction === 'row' ? 'thumbnails-row' : 'thumbnails-column'}>
+      {displayImages.slice(0, THUMB_ROW_MAX).map((image, index) => (
+        <div
+          key={index}
+          className={`thumbnail-small ${index === currentImageIndex ? 'active' : ''}`}
+          onClick={() => setCurrentImageIndex(index)}
+          role="button"
+          tabIndex={0}
+          aria-label={`${altText} ${index + 1}`}
+          aria-pressed={index === currentImageIndex}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setCurrentImageIndex(index);
+            }
+          }}
+        >
+          <img
+            src={image}
+            alt={`${altText} ${index + 1}`}
+            className="thumbnail-image"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+            }}
+          />
+          {index === currentImageIndex && direction === 'row' && (
+            <div className="active-indicator"></div>
+          )}
+          {index === currentImageIndex && direction === 'column' && (
+            <div className="active-indicator active-indicator--left-col"></div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+
+  if (layout === 'thumbnails-left') {
+    return (
+      <>
+        <div className={`thumbnail-gallery-left ${className}`}>
+          {thumbsRow('column')}
+          {mainBlock}
+        </div>
+        {/* Image Modal — same as main-with-thumbnails */}
+        <Modal
+          open={isModalOpen}
+          onCancel={closeModal}
+          footer={null}
+          width="90vw"
+          style={{ maxWidth: '1200px' }}
+          centered
+          destroyOnClose
+          className="image-modal"
+          closeIcon={<span className="text-white text-xl">×</span>}
+          maskStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.8)' }}
+          onKeyDown={handleKeyDown}
+          keyboard
+        >
+          <div className="relative">
+            {displayImages.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-2 rounded-full transition-all duration-200"
+                  onClick={goToPrevious}
+                >
+                  <LeftOutlined className="text-xl" />
+                </button>
+                <button
+                  type="button"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-2 rounded-full transition-all duration-200"
+                  onClick={goToNext}
+                >
+                  <RightOutlined className="text-xl" />
+                </button>
+              </>
+            )}
+            <div className="flex justify-center items-center" style={{ minHeight: '60vh' }}>
+              <img
+                src={displayImages[currentImageIndex]}
+                alt={`${altText} ${currentImageIndex + 1}`}
+                className="max-w-full max-h-[80vh] object-contain"
+                style={{ maxHeight: '80vh' }}
+              />
+            </div>
+            {displayImages.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
+                {currentImageIndex + 1} / {displayImages.length}
+              </div>
+            )}
+            {displayImages.length > 1 && (
+              <div className="flex justify-center mt-4 gap-2 max-w-full overflow-x-auto pb-2">
+                {displayImages.map((image, index) => (
+                  <div
+                    key={index}
+                    className={`
+                      w-16 h-16 cursor-pointer rounded border-2 transition-all duration-200 flex-shrink-0
+                      ${index === currentImageIndex
+                        ? 'border-blue-500 shadow-lg'
+                        : 'border-gray-300 hover:border-gray-400'
+                      }
+                    `}
+                    onClick={() => setCurrentImageIndex(index)}
+                  >
+                    <img
+                      src={image}
+                      alt={`Thumbnail ${index + 1}`}
+                      className="w-full h-full object-contain p-1"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </Modal>
+      </>
+    );
+  }
+
   if (layout === 'main-with-thumbnails') {
     return (
       <>
-        {/* Main Image with Thumbnails Layout */}
         <div className={`thumbnail-gallery-main ${className}`}>
-          {/* Large Main Image */}
-          <div className="main-image-container">
-            <div
-              className="main-image-wrapper"
-              onClick={() => openModal(currentImageIndex)}
-            >
-              <img
-                src={displayImages[currentImageIndex]}
-                alt={`${altText} - Main View`}
-                className="main-image"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                }}
-              />
-              {/* Click to enlarge overlay */}
-              <div className="main-image-overlay">
-                <div className="enlarge-hint">点击放大</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Small Thumbnails */}
-          <div className="thumbnails-row">
-            {displayImages.slice(0, THUMB_ROW_MAX).map((image, index) => (
-              <div
-                key={index}
-                className={`thumbnail-small ${index === currentImageIndex ? 'active' : ''}`}
-                onClick={() => setCurrentImageIndex(index)}
-                role="button"
-                tabIndex={0}
-                aria-label={`${altText} ${index + 1}`}
-                aria-pressed={index === currentImageIndex}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setCurrentImageIndex(index);
-                  }
-                }}
-              >
-                <img
-                  src={image}
-                  alt={`${altText} ${index + 1}`}
-                  className="thumbnail-image"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                  }}
-                />
-                {/* Active indicator */}
-                {index === currentImageIndex && (
-                  <div className="active-indicator"></div>
-                )}
-              </div>
-            ))}
-          </div>
+          {mainBlock}
+          {thumbsRow('row')}
         </div>
 
         {/* Image Modal */}

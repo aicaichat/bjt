@@ -1,0 +1,45 @@
+/**
+ * 前台 Figma 全局令牌（Home + 侧栏 + 顶栏 + 主栏 — Dev Mode）
+ * - 主页根/side nav/顶栏条：#FFFFFF
+ * - 主内容画布（Frame 3）：#F1F5F9
+ * - 主色调：#012583
+ * 须在 main.tsx 中先于 index.css、sidebar-functional-fix 等加载。
+ */
+:root {
+  --ff-surface: #ffffff;
+  --ff-surface-muted: #f9fafb;
+  /* 与 Home 最外层 / 侧栏同源 */
+  --ff-app-bg: #ffffff;
+  /* 顶栏下主滚动区（Figma Frame 3） */
+  --ff-content-canvas-bg: #f1f5f9;
+  /* 兼容旧引用：等同主画布 */
+  --ff-page-bg: #f1f5f9;
+  /* Figma Frame 529（主内容列 auto layout）：区块间距与列底内边距 */
+  --ff-main-stack-gap: 24px;
+  --ff-main-column-pad-bottom: 24px;
+  --ff-border: #e5e7eb;
+  --ff-border-muted: #dedede;
+  /* 标题 / 一级文案（如 Contact、Air Column） */
+  --ff-text: rgba(0, 0, 0, 0.85);
+  /* 副标题 / 二级导航 */
+  --ff-text-muted: rgba(0, 0, 0, 0.65);
+  --ff-toolbar-text: #333333;
+  /* 主色调 — 导航高亮、区块头、线框按钮描边 */
+  --ff-accent: #012583;
+  --ff-accent-mid: #011f5c;
+  --ff-accent-dark: #012583;
+  --ff-nav-top: #012583;
+  --ff-nav-bottom: #011845;
+  --ff-tint-blue: #e8eef9;
+  --ff-focus-ring: rgba(1, 37, 131, 0.14);
+  --ff-header-shadow: rgba(15, 36, 64, 0.06);
+  /* 顶栏下分割线 0.5px rgba(0,0,0,0.25) */
+  --ff-header-divider: rgba(0, 0, 0, 0.25);
+  /* 侧栏右侧内描边 */
+  --ff-sidebar-divider: rgba(0, 0, 0, 0.16);
+  --ff-btn-primary-hover: #011b52;
+  --ff-font: 'Roboto', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', Arial,
+    sans-serif;
+  /* 与 --ff-accent #012583 同源，供 rgba(var(--ff-accent-rgb), α) 使用 */
+  --ff-accent-rgb: 1, 37, 131;
+}

@@ -78,7 +78,7 @@ body {
 }
 
 .section-header {
-  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  background: linear-gradient(135deg, var(--ff-accent) 0%, var(--ff-accent-mid) 100%);
   color: #ffffff;
   padding: 1.5rem 2rem;
   font-size: 1.5rem;
@@ -132,9 +132,9 @@ body {
 }
 
 .product-link:hover {
-  background-color: #eff6ff;
-  border-color: #3b82f6;
-  color: #1e40af;
+  background-color: var(--ff-tint-blue);
+  border-color: var(--ff-accent);
+  color: var(--ff-accent-mid);
   text-decoration: none;
   transform: translateX(4px);
 }
@@ -171,7 +171,7 @@ body {
 .divider {
   width: 60px;
   height: 3px;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(90deg, var(--ff-accent), #8b5cf6);
   margin: 0.5rem 0 1rem 0;
   border-radius: 2px;
 }

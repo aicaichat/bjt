@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import '../../styles/header.css';
 import '../../styles/header-search-right.css';
 import { useAuth } from '../../contexts/AuthContext';
@@ -61,7 +61,6 @@ const Header = ({
   onSearch,
 }: HeaderProps) => {
   const { t, i18n } = useTranslation();
-  const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { language, setLanguage, getI18nLanguage } = useLanguage();
@@ -168,19 +167,46 @@ const Header = ({
   // 修复语言显示
   const currentLanguageDisplay = language === 'cn' ? '中文' : 'English';
 
+  /** 顶栏主导航（与侧栏互补；窄屏可横向滚动） */
+  const topNavItems = useMemo(
+    (): Array<{ to: string; labelKey: string; end?: boolean }> => [
+      { to: '/', labelKey: 'nav.home', end: true },
+      { to: '/machines', labelKey: 'nav.machines' },
+      { to: '/consumables', labelKey: 'nav.consumables' },
+      { to: '/support', labelKey: 'nav.support' },
+      { to: '/contact', labelKey: 'nav.contactUs' },
+    ],
+    []
+  );
+
   return (
     <header ref={headerRef} className={classNames('main-header', className)}>
-      <div className="container mx-auto flex items-center justify-between py-4 px-4">
-        {/* 左侧空白区域或其他内容 */}
-        <div className="left-section flex items-center">
-          {/* 可以在这里添加其他左侧内容 */}
-        </div>
+      <div className="container mx-auto flex items-center justify-between py-4 px-4 gap-4">
+        <nav
+          className="header-top-nav left-section flex flex-1 min-w-0 items-center gap-1 sm:gap-2 overflow-x-auto"
+          aria-label={t('header.topNavAria')}
+        >
+          {topNavItems.map(({ to, labelKey, end: navEnd }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={navEnd ?? false}
+              className={({ isActive }) =>
+                classNames('header-top-nav__link', {
+                  'header-top-nav__link--active': isActive,
+                })
+              }
+            >
+              {t(labelKey)}
+            </NavLink>
+          ))}
+        </nav>
 
-        <div className="right-section flex items-center space-x-4">
-          {/* 搜索框 - 移动到右侧 */}
-          <div className="search-container-right">
+        {/* Figma 顺序：搜索 → 购物车 → 语言 → 用户 */}
+        <div className="right-section header-toolbar-figma flex items-center flex-nowrap shrink-0">
+          <div className="search-container-right shrink min-w-0">
             <Input
-              placeholder={t('header.searchPlaceholder', '搜索产品...')}
+              placeholder={t('header.searchPlaceholder', '搜索产品')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onPressEnter={handleSearchSubmit}
@@ -193,38 +219,38 @@ const Header = ({
               allowClear
             />
           </div>
-          {/* 语言切换 */}
-          <Dropdown 
-            menu={{ items: languageMenuItems }} 
+
+          <Link to="/cart" className="cart-link shrink-0">
+            <Badge count={itemCount} size="small">
+              <Button type="text" icon={<ShoppingCartOutlined />} className="action-button header-toolbar-btn">
+                {!isMobile && <span>{safeRender(t('header.cart'))}</span>}
+              </Button>
+            </Badge>
+          </Link>
+
+          <Dropdown
+            menu={{ items: languageMenuItems }}
             trigger={['click']}
             placement="bottomRight"
           >
-            <Button type="text" icon={<GlobalOutlined />} className="action-button language-button">
-              <SafeContent>
-                {safeRender(currentLanguageDisplay)}
-              </SafeContent>
+            <Button
+              type="text"
+              icon={<GlobalOutlined />}
+              className="action-button language-button header-toolbar-btn shrink-0"
+            >
+              {!isMobile && (
+                <SafeContent>{safeRender(currentLanguageDisplay)}</SafeContent>
+              )}
             </Button>
           </Dropdown>
 
-          {/* 购物车 */}
-          {(user || location.pathname !== '/') && (
-            <Link to="/cart" className="cart-link">
-              <Badge count={itemCount} size="small">
-                <Button type="text" icon={<ShoppingCartOutlined />} className="action-button">
-                  {!isMobile && safeRender(t('header.cart'))}
-                </Button>
-              </Badge>
-            </Link>
-          )}
-
-          {/* 用户菜单 */}
           {user ? (
             <Dropdown
               menu={{ items: userMenuItems }}
               trigger={['click']}
               placement="bottomRight"
             >
-              <Button type="text" className="user-info">
+              <Button type="text" className="user-info header-toolbar-btn shrink-0">
                 <div className="user-avatar">
                   {safeRender(user.name).charAt(0).toUpperCase()}
                 </div>
@@ -232,9 +258,13 @@ const Header = ({
               </Button>
             </Dropdown>
           ) : (
-            <button className="login-button" onClick={handleLogin}>
-              {safeRender(t('header.login'))}
-            </button>
+            <Button
+              type="text"
+              icon={<UserOutlined />}
+              className="action-button header-toolbar-btn header-toolbar-login-icon shrink-0"
+              onClick={handleLogin}
+              aria-label={safeRender(t('header.login'))}
+            />
           )}
         </div>
       </div>

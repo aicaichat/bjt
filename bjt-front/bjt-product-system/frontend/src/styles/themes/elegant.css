@@ -25,7 +25,7 @@
   --success-color: #166534;
   --error-color: #b91c1c;
   --warning-color: #b45309;
-  --info-color: #1e40af;
+  --info-color: var(--ff-accent-mid);
   
   /* 中性色调 - 暖灰 */
   --gray-50: #fafafa;

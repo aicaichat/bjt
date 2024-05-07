@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
-/* Import Google Fonts */
+/* Import Google Fonts — Figma 正文/按钮：Roboto 16/19 */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 
 /* Reset and base styles */
 *,
@@ -13,7 +14,7 @@
 }
 
 html {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-family: var(--ff-font, 'Roboto', 'Inter', system-ui, sans-serif);
   line-height: 1.5;
   font-weight: 400;
   font-synthesis: none;
@@ -26,15 +27,16 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: #ffffff;
-  color: #1f2937;
+  background-color: var(--ff-app-bg, #ffffff);
+  color: var(--ff-text, rgba(0, 0, 0, 0.85));
   font-size: 16px;
-  line-height: 1.6;
+  line-height: 1.19;
 }
 
 #root {
   min-height: 100vh;
   width: 100%;
+  background-color: var(--ff-app-bg, #ffffff);
 }
 
 /* Layout fixes */
@@ -68,7 +70,7 @@ body {
 
 @media (min-width: 768px) {
   .content-wrapper {
-    margin-left: 280px;
+    margin-left: var(--bjt-sidebar-width, 303px);
   }
 }
 

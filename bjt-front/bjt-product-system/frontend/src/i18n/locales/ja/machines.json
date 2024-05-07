@@ -54,6 +54,18 @@
     "addToCartFailed": "追加に失敗しました"
   },
   "pageTitle": "機器の選択",
+  "figma": {
+    "modelParamComparison": "機種パラメータ比較表",
+    "compareColModel": "モデル",
+    "compareColPicture": "画像",
+    "compareColType": "タイプ",
+    "compareColSpeed": "速度",
+    "compareColMaterial": "材料",
+    "compareColFilmType": "フィルム種",
+    "compareColFilmWidth": "フィルム幅",
+    "compareColMaxRoll": "最大巻径",
+    "compareDataPending": "—"
+  },
   "addToCart": "カートに追加します",
   "noPermissionAdd": "追加する許可はありません",
   "tableHeaders": "[オブジェクトオブジェクト]",
