@@ -286,7 +286,7 @@ $admin_pages = BJT_Admin_Pages::get_instance();
 /* 导航样式 */
 .bjt-admin-sidebar {
     position: fixed;
-    left: 160px;
+    left: 0;
     top: 32px;
     bottom: 0;
     width: 220px;
@@ -371,6 +371,10 @@ $admin_pages = BJT_Admin_Pages::get_instance();
 /* 隐藏WordPress原生菜单 */
 #adminmenumain {
     display: none !important;
+}
+
+#wpadminbar {
+    z-index: 99999;
 }
 
 #wpcontent, #wpfooter {
