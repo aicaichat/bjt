@@ -1,0 +1,57 @@
+# WordPress核心文件
+/index.php
+/license.txt
+/readme.html
+/wp-activate.php
+/wp-admin/
+/wp-blog-header.php
+/wp-comments-post.php
+/wp-config-sample.php
+/wp-config.php
+/wp-cron.php
+/wp-includes/
+/wp-links-opml.php
+/wp-load.php
+/wp-login.php
+/wp-mail.php
+/wp-settings.php
+/wp-signup.php
+/wp-trackback.php
+/xmlrpc.php
+
+# 上传的文件
+/wp-content/uploads/
+
+# 日志文件
+*.log
+
+# 主题（除了我们开发的主题）
+/wp-content/themes/*
+!/wp-content/themes/bjt-theme/
+
+# 插件（除了我们开发的插件）
+/wp-content/plugins/*
+!/wp-content/plugins/bjt-product-admin/
+
+# 插件打包生成的文件
+/wp-content/plugins/bjt-product-admin/packages/
+
+# Mac系统文件
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Windows系统文件
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# 编辑器/IDE文件
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.swp
+.*.swp 
