@@ -1,0 +1,87 @@
+.theme-switcher {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+.theme-options {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  background-color: var(--background-secondary);
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.theme-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-option:hover {
+  background-color: var(--background-hover);
+}
+
+.theme-option.active {
+  background-color: var(--background-active);
+  font-weight: 500;
+}
+
+.theme-color-preview {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.theme-color-preview[data-theme="theme-default"] {
+  background: linear-gradient(135deg, #1A365D 0%, #0066cc 100%);
+}
+
+.theme-color-preview[data-theme="theme-simple"] {
+  background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+}
+
+.theme-color-preview[data-theme="theme-dark"] {
+  background: linear-gradient(135deg, #2c3e50 0%, #1a1a2e 100%);
+}
+
+.theme-label {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .theme-options {
+    gap: 0.5rem;
+  }
+  
+  .theme-option {
+    padding: 0.4rem 0.6rem;
+  }
+  
+  .theme-label {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .theme-options {
+    flex-direction: column;
+    width: max-content;
+  }
+  
+  .theme-option {
+    width: 100%;
+    justify-content: flex-start;
+  }
+} 

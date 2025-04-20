@@ -1,0 +1,178 @@
+/* Home页面特定样式 */
+
+.home-page {
+  padding: 2rem 0;
+  background-color: var(--bg-color, #f8f9fa);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Main Content Styles */
+.product-section {
+  margin-bottom: 3rem;
+  padding: 2rem;
+  background-color: var(--bg-card);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.product-section:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
+}
+
+.section-header {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 1.5rem;
+  padding: 15px 20px;
+  background-color: var(--primary-color, #1A365D);
+  border-radius: var(--border-radius-lg, 6px) var(--border-radius-lg, 6px) 0 0;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.1);
+  margin-left: -2rem;
+  margin-right: -2rem;
+  margin-top: -2rem;
+}
+
+.section-content {
+  display: flex;
+  gap: 2rem;
+}
+
+.section-text {
+  flex: 3;
+  min-width: 300px;
+  color: var(--text-secondary, #555);
+  line-height: 1.6;
+  padding-right: 20px;
+}
+
+.section-image {
+  flex: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.section-image img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-fast);
+}
+
+.section-image img:hover {
+  transform: scale(1.05);
+}
+
+.introduction {
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.divider {
+  height: 3px;
+  width: 50px;
+  background-color: var(--accent-color);
+  margin-bottom: 1rem;
+}
+
+.product-links {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.product-link {
+  display: block;
+  color: var(--secondary-color, #0066cc);
+  font-weight: 500;
+  text-decoration: none;
+  padding: 0.5rem 0;
+  transition: color var(--transition-fast), transform var(--transition-fast);
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.product-link::after {
+  content: "⚡";
+  margin-left: 8px;
+  font-size: 0.8em;
+}
+
+.product-link:hover {
+  text-decoration: underline;
+  color: var(--secondary-dark, #0055a8);
+  transform: none;
+}
+
+.product-link::before {
+  content: none;
+}
+
+/* 加载状态 */
+.loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  position: relative;
+}
+
+.loading-state::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 40px;
+  margin-left: 15px;
+  border: 3px solid var(--border-color);
+  border-radius: 50%;
+  border-top-color: var(--primary-color);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 错误状态 */
+.error-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-size: 1.2rem;
+  color: var(--error-color);
+  background-color: rgba(var(--error-color-rgb), 0.1);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--error-color);
+  padding: 1rem;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .section-content {
+    flex-direction: column;
+  }
+  
+  .section-text {
+    padding-right: 0;
+    margin-bottom: 20px;
+  }
+  
+  .section-image {
+    order: -1;
+    margin-bottom: 1.5rem;
+  }
+} 
