@@ -1,8 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Consumables.css';
 import { productApi, cartApi } from '../../services/api';
 import { mockProductApi, mockCartApi } from '../../services/mockApi';
+
+// Define interface for regional prices
+interface RegionPrices {
+  eu: number;
+  na: number;
+  au: number;
+  cn: number;
+}
 
 // 替换为本地占位图片路径
 const placeholderImage = '/images/placeholders/placeholder-80x80.svg';
@@ -19,14 +27,17 @@ const apiService = {
   cart: USE_MOCK_API ? mockCartApi : cartApi
 };
 
-// 模拟当前用户数据
-const mockCurrentUser = {
-  id: 'user1',
-  username: 'testuser',
-  role: 'customer', // 可选值: 'admin', 'sales', 'customer', 'partner'
-  discount: 0.9, // 折扣率，仅对customer和partner生效
-  name: 'Test User',
-  email: 'test@example.com'
+// 根据登录账号确定用户区域
+const getUserRegionFromEmail = (email: string) => {
+  if (email.includes('eu')) return 'eu';
+  if (email.includes('au')) return 'au';
+  if (email.includes('northamerica')) return 'na';
+  return 'cn'; // 默认为中国区域
+};
+
+// 检查用户是否是VIP
+const isVipUser = (email: string) => {
+  return email.toLowerCase().includes('vip');
 };
 
 // 模拟产品数据，与mockup/4.html保持一致
@@ -47,9 +58,21 @@ const mockConsumables = [
       compatibility: 'E5P/E4S'
     },
     pricing: [
-      { range: '1-10', price: 100 },
-      { range: '11-100', price: 90 },
-      { range: '> 100', price: 50 }
+      { 
+        range: '1-10', 
+        price: 100,
+        regionalPrices: { eu: 120, na: 100, au: 130, cn: 650 } 
+      },
+      { 
+        range: '11-100', 
+        price: 90,
+        regionalPrices: { eu: 100, na: 90, au: 110, cn: 580 } 
+      },
+      { 
+        range: '> 100', 
+        price: 50,
+        regionalPrices: { eu: 60, na: 50, au: 65, cn: 320 } 
+      }
     ],
     inventory: { us: 1, au: 2, eu: 3 }
   },
@@ -69,9 +92,21 @@ const mockConsumables = [
       compatibility: 'E5P/E4S'
     },
     pricing: [
-      { range: '1-10', price: 95 },
-      { range: '11-100', price: 85 },
-      { range: '> 100', price: 45 }
+      { 
+        range: '1-10', 
+        price: 95,
+        regionalPrices: { eu: 115, na: 95, au: 125, cn: 620 } 
+      },
+      { 
+        range: '11-100', 
+        price: 85,
+        regionalPrices: { eu: 95, na: 85, au: 105, cn: 550 } 
+      },
+      { 
+        range: '> 100', 
+        price: 45,
+        regionalPrices: { eu: 55, na: 45, au: 60, cn: 290 } 
+      }
     ],
     inventory: { us: 2, au: 3, eu: 5 }
   },
@@ -91,9 +126,21 @@ const mockConsumables = [
       compatibility: 'E5P/E4S'
     },
     pricing: [
-      { range: '1-10', price: 110 },
-      { range: '11-100', price: 100 },
-      { range: '> 100', price: 60 }
+      { 
+        range: '1-10', 
+        price: 110,
+        regionalPrices: { eu: 130, na: 110, au: 140, cn: 700 } 
+      },
+      { 
+        range: '11-100', 
+        price: 100,
+        regionalPrices: { eu: 120, na: 100, au: 130, cn: 650 } 
+      },
+      { 
+        range: '> 100', 
+        price: 60,
+        regionalPrices: { eu: 70, na: 60, au: 75, cn: 390 } 
+      }
     ],
     inventory: { us: 3, au: 2, eu: 4 }
   }
@@ -155,6 +202,7 @@ const lengths = [
 ];
 
 export default function ConsumablesPage() {
+  const navigate = useNavigate();
   // 状态定义
   const [consumables, setConsumables] = useState(mockConsumables);
   const [loading, setLoading] = useState<boolean>(false);
@@ -162,8 +210,15 @@ export default function ConsumablesPage() {
   const [quantities, setQuantities] = useState<{[key: string]: number}>({});
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [showCartModal, setShowCartModal] = useState(false);
-  // 添加当前用户状态
-  const [currentUser, setCurrentUser] = useState(mockCurrentUser);
+  const [currentUser, setCurrentUser] = useState({
+    id: '',
+    username: '',
+    role: 'customer',
+    discount: 0.9,
+    name: '',
+    email: '',
+    region: 'cn'
+  });
   
   // 筛选条件状态
   const [selectedModel, setSelectedModel] = useState<string>('all');
@@ -180,6 +235,75 @@ export default function ConsumablesPage() {
   
   // 显示形状尺寸示意图状态
   const [showShapeDimension, setShowShapeDimension] = useState<boolean>(true);
+
+  // 检查用户身份验证
+  useEffect(() => {
+    const authData = localStorage.getItem('user');
+    
+    if (!authData) {
+      // 未登录，重定向到登录页面
+      navigate('/login');
+      return;
+    }
+    
+    try {
+      const userData = JSON.parse(authData);
+      const userEmail = userData.email || '';
+      const isVip = isVipUser(userEmail);
+      
+      // 设置用户数据
+      setCurrentUser({
+        id: userData.id || 'guest',
+        username: userData.username || userData.name || 'Guest User',
+        role: userData.role || 'customer',
+        // VIP用户有更高的折扣, 伙伴关系次之
+        discount: isVip ? 0.8 : userData.role === 'partner' ? 0.85 : 0.9,
+        name: userData.name || userData.displayName || 'Guest User',
+        email: userEmail,
+        region: getUserRegionFromEmail(userEmail)
+      });
+    } catch (err) {
+      console.error('Error parsing auth data:', err);
+      navigate('/login');
+    }
+  }, [navigate]);
+
+  // Get the currency symbol based on user's region
+  const getCurrencySymbol = () => {
+    switch(currentUser.region) {
+      case 'eu': return '€';
+      case 'na': return '$';
+      case 'au': return 'A$';
+      case 'cn': return '¥';
+      default: return '¥';
+    }
+  };
+
+  // Get regional price based on user role and region
+  const getRegionalPrice = (priceInfo: any) => {
+    if (!priceInfo.regionalPrices) return priceInfo.price;
+    
+    const region = currentUser.region;
+    let price = priceInfo.regionalPrices[region] || priceInfo.price;
+    
+    // Apply role-based pricing
+    if (currentUser.role === 'admin') {
+      // Admin sees cost price (70% of standard price)
+      return price * 0.7;
+    } else if (currentUser.role === 'sales') {
+      // Sales personnel see standard price
+      return price;
+    } else if (currentUser.role === 'customer' || currentUser.role === 'partner') {
+      // Check if VIP customer
+      if (isVipUser(currentUser.email)) {
+        return price * 0.8; // VIP 享受20%折扣
+      }
+      // 普通客户或合作伙伴看到折扣价
+      return price * (currentUser.discount || 1);
+    }
+    
+    return price;
+  };
 
   // 初始化数量状态
   useEffect(() => {
@@ -221,25 +345,6 @@ export default function ConsumablesPage() {
     }
   };
 
-  // 根据用户类型和数量计算价格
-  const calculatePrice = (price: number, quantity: number) => {
-    let finalPrice = price;
-    
-    // 根据用户角色应用不同的价格策略
-    if (currentUser.role === 'admin') {
-      // 管理员看到成本价
-      finalPrice = price * 0.7; // 假设成本是70%的售价
-    } else if (currentUser.role === 'sales') {
-      // 销售人员看到标准价格
-      finalPrice = price;
-    } else if (currentUser.role === 'customer' || currentUser.role === 'partner') {
-      // 普通客户和合作伙伴看到折扣价
-      finalPrice = price * (currentUser.discount || 1);
-    }
-    
-    return finalPrice;
-  };
-
   // 更新数量
   const handleQuantityChange = (itemId: string, value: string) => {
     const newValue = parseInt(value, 10);
@@ -272,8 +377,8 @@ export default function ConsumablesPage() {
         return false;
       }) || item.pricing[0];
       
-      // 应用用户折扣
-      const finalPrice = calculatePrice(priceInfo.price, quantity);
+      // 使用区域价格计算最终价格
+      const finalPrice = getRegionalPrice(priceInfo);
       
       // 添加购物车项到本地存储
       let cartItems = [];
@@ -449,30 +554,45 @@ export default function ConsumablesPage() {
         
         <div className="user-info-bar">
           <div className="container">
-            <div className="user-role">
-              <span>Current Role:</span>
+            <div className="user-info">
+              <span className="user-label">User:</span>
+              <span className="user-value">{currentUser.name || currentUser.username}</span>
               <span className="role-badge">{getRoleDisplayName(currentUser.role)}</span>
+              {isVipUser(currentUser.email) && (
+                <span className="vip-badge">VIP</span>
+              )}
             </div>
-            
-            <div className="role-switcher">
+            <div className="user-actions">
+              <div className="user-email">
+                <span className="email-label">Email:</span>
+                <span className="email-value">{currentUser.email}</span>
+              </div>
               <button 
-                className={`role-btn ${currentUser.role === 'customer' ? 'active' : ''}`} 
-                onClick={() => setCurrentUser({...mockCurrentUser, role: 'customer'})}
+                className="btn-logout" 
+                onClick={() => {
+                  localStorage.removeItem('user');
+                  navigate('/login');
+                }}
               >
-                Customer
+                Logout
               </button>
-              <button 
-                className={`role-btn ${currentUser.role === 'partner' ? 'active' : ''}`}
-                onClick={() => setCurrentUser({...mockCurrentUser, role: 'partner'})}
-              >
-                Partner
-              </button>
-              <button 
-                className={`role-btn ${currentUser.role === 'sales' ? 'active' : ''}`}
-                onClick={() => setCurrentUser({...mockCurrentUser, role: 'sales'})}
-              >
-                Sales
-              </button>
+            </div>
+          </div>
+          
+          <div className="container" style={{ marginTop: '10px' }}>
+            <div className="user-role">
+              <span>Region:</span>
+              <span className="role-badge">{currentUser.region.toUpperCase()}</span>
+              <span className="currency-label">Currency: {getCurrencySymbol()}</span>
+              {isVipUser(currentUser.email) && (
+                <span className="discount-badge">Discount: 20%</span>
+              )}
+              {!isVipUser(currentUser.email) && currentUser.role === 'partner' && (
+                <span className="discount-badge">Discount: 15%</span>
+              )}
+              {!isVipUser(currentUser.email) && currentUser.role === 'customer' && (
+                <span className="discount-badge">Discount: 10%</span>
+              )}
             </div>
           </div>
         </div>
@@ -684,7 +804,7 @@ export default function ConsumablesPage() {
                       <div key={idx} className="price-tier">
                         <span className="price-range">{price.range}:</span>
                         <span className="price-value">
-                          ¥{calculatePrice(price.price, quantities[item.id] || 1).toFixed(2)}
+                          {getCurrencySymbol()}{getRegionalPrice(price).toFixed(2)}
                         </span>
                       </div>
                     ))}
@@ -718,10 +838,34 @@ export default function ConsumablesPage() {
             </tbody>
           </table>
           
-          {/* 价格说明（仅针对普通客户和合作伙伴） */}
-          {(currentUser.role === 'customer' || currentUser.role === 'partner') && (
+          {/* 价格说明（根据不同用户角色显示不同内容） */}
+          {currentUser.role === 'customer' && isVipUser(currentUser.email) && (
             <div className="price-disclaimer">
-              * Displayed prices include your member discount. Final prices may be adjusted based on total order quantity and other factors.
+              * VIP Member Pricing: Displayed prices include your special 20% VIP discount and are shown in {getCurrencySymbol()} for your region ({currentUser.region.toUpperCase()}). 
+              Final prices may be adjusted based on total order quantity.
+            </div>
+          )}
+          {currentUser.role === 'customer' && !isVipUser(currentUser.email) && (
+            <div className="price-disclaimer">
+              * Displayed prices include your 10% member discount and are shown in {getCurrencySymbol()} for your region ({currentUser.region.toUpperCase()}). 
+              Final prices may be adjusted based on total order quantity and other factors.
+            </div>
+          )}
+          {currentUser.role === 'partner' && (
+            <div className="price-disclaimer">
+              * Partner Pricing: Displayed prices include your 15% partner discount and are shown in {getCurrencySymbol()} for your region ({currentUser.region.toUpperCase()}). 
+              Final prices may be adjusted based on total order quantity.
+            </div>
+          )}
+          {currentUser.role === 'sales' && (
+            <div className="price-disclaimer">
+              * Prices are shown in {getCurrencySymbol()} for region {currentUser.region.toUpperCase()}. 
+              Customer prices will be calculated with applicable discounts. VIP customers receive 20% discount.
+            </div>
+          )}
+          {currentUser.role === 'admin' && (
+            <div className="price-disclaimer">
+              * Admin view: Displaying cost prices in {getCurrencySymbol()} for region {currentUser.region.toUpperCase()}.
             </div>
           )}
         </div>
