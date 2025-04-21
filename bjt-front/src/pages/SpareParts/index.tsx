@@ -1,6 +1,7 @@
-import React, { useState, useEffect, ChangeEvent, createRef } from 'react';
+import React, { useState, useEffect, ChangeEvent, createRef, useRef, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getAllSpareParts, SparePart, getSparePartsFilterOptions, SparePartsFilterOptions } from '../../api/sparePartsApi';
+import AuthContext from '../../contexts/AuthContext';
 import './SpareParts.css';
 
 // 定义 Timeout 类型，避免使用 NodeJS.Timeout
@@ -19,7 +20,7 @@ const isVipUser = (email: string) => {
   return email.toLowerCase().includes('vip');
 };
 
-const SparePartsPage: React.FC = () => {
+const SparePartsPage = () => {
   const navigate = useNavigate();
   
   // 状态管理
@@ -28,7 +29,7 @@ const SparePartsPage: React.FC = () => {
   const [showConfirmClear, setShowConfirmClear] = useState(false);
   const [currentPartType, setCurrentPartType] = useState('consumable');
   const [currentProductType, setCurrentProductType] = useState('machine');
-  const [selectedModel, setSelectedModel] = useState('ALL');
+  const [selectedModel, setSelectedModel] = useState('');
   const [activeNotification, setActiveNotification] = useState<HTMLDivElement | null>(null);
   const [notificationTimeout, setNotificationTimeout] = useState<Timeout | null>(null);
   const [quantities, setQuantities] = useState<{[key: string]: number}>({});
@@ -53,8 +54,17 @@ const SparePartsPage: React.FC = () => {
   const [filterOptions, setFilterOptions] = useState<SparePartsFilterOptions | null>(null);
   
   // 添加tooltip状态管理
-  const [tooltipVisible, setTooltipVisible] = useState<{ [key: string]: boolean }>({});
-  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [tooltipPos, setTooltipPos] = useState({ left: 0, top: 0 });
+  const [selectedPart, setSelectedPart] = useState<SparePart | null>(null);
+  const [tooltipHovered, setTooltipHovered] = useState(false);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  
+  const authContext = useContext(AuthContext);
+  // Handle the case where context might be undefined
+  const user = authContext?.user || null;
+  const userRole = user?.role || 'customer';
+  const userRegion = user?.region || 'EU';
   
   // 检查用户身份验证
   useEffect(() => {
@@ -101,7 +111,13 @@ const SparePartsPage: React.FC = () => {
   
   // Get the currency symbol based on user's region
   const getCurrencySymbol = () => {
-    switch(currentUser.region) {
+    // Make sure we have a user with a region
+    if (!currentUser || !currentUser.region) {
+      return '¥'; // Default to CNY
+    }
+    
+    const region = currentUser.region.toLowerCase();
+    switch(region) {
       case 'eu': return '€';
       case 'na': return '$';
       case 'au': return 'A$';
@@ -125,16 +141,37 @@ const SparePartsPage: React.FC = () => {
   
   // 加载备件数据
   const loadSparePartsData = async () => {
+    console.log("Starting loadSparePartsData with filters:", { currentPartType, currentProductType, selectedModel });
     setLoading(true);
     setError(null);
     
     try {
+      // 构建查询参数，确保将当前产品类型正确传递
+      const params: any = {};
+      
+      // Only add parameters if they have values
+      if (currentPartType) {
+        params.consumable = currentPartType;
+      }
+      
+      if (currentProductType) {
+        params.product_type = currentProductType;
+      }
+      
+      // 只有在选择了特定型号时才添加型号参数
+      if (selectedModel && selectedModel !== 'ALL' && selectedModel !== '') {
+        params.model = selectedModel;
+      }
+      
+      // 添加调试日志
+      console.log('API params:', params);
+      
       // 使用新的API接口获取数据
-      const data = await getAllSpareParts({
-        consumable: currentPartType,
-        model: selectedModel !== 'ALL' ? selectedModel : undefined,
-        product_type: currentProductType
-      });
+      const data = await getAllSpareParts(params);
+      
+      // 添加调试日志
+      console.log('API response data:', data);
+      console.log('API response length:', data.length);
       
       setSpareParts(data);
     } catch (err) {
@@ -142,6 +179,7 @@ const SparePartsPage: React.FC = () => {
       setError('Failed to load spare parts data. Please try again later.');
     } finally {
       setLoading(false);
+      console.log("Finished loadSparePartsData, loading state set to false");
     }
   };
   
@@ -175,7 +213,46 @@ const SparePartsPage: React.FC = () => {
     // 确保 spareParts 不是 null 或 undefined
     if (!Array.isArray(spareParts)) return [];
     
-    return spareParts;
+    // 添加调试信息
+    console.log('Filtering parts with criteria:', {
+      currentPartType,
+      currentProductType,
+      selectedModel
+    });
+    
+    let filteredResults = [...spareParts];
+    
+    // 根据部件类型筛选 (consumable, electronic, mechanical)
+    if (currentPartType && currentPartType !== 'all') {
+      if (currentPartType === 'electronic') {
+        // 对于non-consumable选项，匹配electronic或mechanical类型
+        filteredResults = filteredResults.filter(part => 
+          part.type === 'electronic' || part.type === 'mechanical'
+        );
+      } else {
+        // 对于consumable选项，直接匹配
+        filteredResults = filteredResults.filter(part => part.type === currentPartType);
+      }
+      console.log(`After filtering by part type ${currentPartType}, found ${filteredResults.length} results`);
+    }
+    
+    // 根据产品类型筛选 (machine, accessory)
+    if (currentProductType && currentProductType !== 'all') {
+      filteredResults = filteredResults.filter(part => part.product_type === currentProductType);
+      console.log(`After filtering by product type ${currentProductType}, found ${filteredResults.length} results`);
+    }
+    
+    // 根据型号筛选
+    if (selectedModel && selectedModel !== 'all' && selectedModel !== '') {
+      filteredResults = filteredResults.filter(part => {
+        // 分割app_model字段并检查是否包含所选型号
+        const models = part.app_model.split(/,\s*/);
+        return models.some(m => m.trim() === selectedModel);
+      });
+      console.log(`After filtering by model ${selectedModel}, found ${filteredResults.length} results`);
+    }
+    
+    return filteredResults;
   };
   
   // 找到适合数量的价格区间
@@ -461,229 +538,273 @@ const SparePartsPage: React.FC = () => {
   };
   
   // 处理规格悬浮提示
-  const handleSpecMouseEnter = (e: React.MouseEvent, partId: string) => {
+  const handleSpecMouseEnter = (e: React.MouseEvent, part: SparePart) => {
+    e.preventDefault();
     const rect = e.currentTarget.getBoundingClientRect();
-    setTooltipPosition({
-      x: rect.left,
-      y: rect.bottom + 10
+    setTooltipPos({
+      left: rect.left + window.scrollX,
+      top: rect.bottom + window.scrollY + 5
     });
-    setTooltipVisible(prev => ({
-      ...prev,
-      [partId]: true
-    }));
+    setSelectedPart(part);
+    setShowTooltip(true);
   };
   
-  const handleSpecMouseLeave = (partId: string) => {
-    setTooltipVisible(prev => ({
-      ...prev,
-      [partId]: false
-    }));
+  const handleSpecMouseLeave = () => {
+    setShowTooltip(false);
+    // 添加短延迟以便更平滑地处理从单元格到工具提示的移动
+    setTimeout(() => {
+      if (!tooltipHovered) {
+        setSelectedPart(null);
+      }
+    }, 300);
   };
   
-  // 渲染备件列表
-  const renderSpareParts = () => {
+  // 处理鼠标进入工具提示
+  const handleTooltipMouseEnter = () => {
+    setTooltipHovered(true);
+  };
+  
+  // 处理鼠标离开工具提示
+  const handleTooltipMouseLeave = () => {
+    setTooltipHovered(false);
+    setShowTooltip(false);
+    setSelectedPart(null);
+  };
+  
+  // 关闭当前tooltip
+  const closeTooltip = () => {
+    setShowTooltip(false);
+    setSelectedPart(null);
+  };
+  
+  // 点击外部关闭tooltip
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (showTooltip && tooltipRef.current && !tooltipRef.current.contains(e.target as Node)) {
+        closeTooltip();
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showTooltip) {
+        closeTooltip();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showTooltip]);
+  
+  // Calculate the final price based on the user's region and the quantity
+  const calculateFinalPrice = (part: SparePart): number => {
+    const quantity = quantities[part.id] || 1;
+    let price = part.prices.current; // Default to current price
+    
+    // Find the appropriate price tier
+    const tier = part.prices.tiers.find(t => {
+      const range = t.range;
+      if (range.includes('-')) {
+        const [min, max] = range.split('-').map(Number);
+        return quantity >= min && quantity <= max;
+      } else if (range.includes('>')) {
+        const min = parseInt(range.replace('>', ''));
+        return quantity > min;
+      }
+      return false;
+    });
+    
+    if (tier) {
+      // Get price based on user region
+      if (user?.region) {
+        const region = user.region.toLowerCase();
+        if (region === 'eu') return tier.eu;
+        if (region === 'na') return tier.na;
+        if (region === 'au') return tier.au;
+        if (region === 'cn') return tier.cn;
+      }
+      return tier.price;
+    }
+    
+    return price;
+  };
+
+  // 添加到购物车的处理函数
+  const handleAddToCart = (part: SparePart, quantity: number, price: number) => {
+    addToCart(part.id, part.name_en, price, quantity);
+  };
+  
+  const renderSpareParts = (): React.ReactNode => {
     const filteredParts = getFilteredParts();
     
     if (loading) {
       return (
-        <div className="loading-state">
+        <div className="loading-container">
           <div className="loading-spinner"></div>
-          <p>Loading spare parts...</p>
+          <p>加载中...</p>
         </div>
       );
     }
     
     if (error) {
       return (
-        <div className="error-state">
-          <div className="error-icon">!</div>
-          <p>{error}</p>
+        <div className="error-container">
+          <p>加载失败: {error}</p>
+          <button onClick={loadSparePartsData} className="retry-button">
+            重试
+          </button>
         </div>
       );
     }
     
     if (filteredParts.length === 0) {
-      return (
-        <div className="empty-state">
-          <div className="empty-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="8" x2="12" y2="12"></line>
-              <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-          </div>
-          <p>No spare parts found matching your criteria.</p>
-        </div>
-      );
+      return <div className="no-results">没有符合条件的备件</div>;
     }
     
     return (
-      <table className="products-table">
-        <thead>
-          <tr>
-            <th>Image</th>
-            <th>Product Name</th>
-            <th>Product Code</th>
-            <th>Specifications</th>
-            <th>Price</th>
-            {(currentUser.role === 'sales' || currentUser.role === 'admin') && <th>Inventory</th>}
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredParts.map((part) => (
-            <tr key={part.id}>
-              <td>
-                <img 
-                  src={part.image_url} 
-                  alt={part.name_cn} 
-                  className="product-image"
-                  onError={handleImageError}
-                />
-              </td>
-              <td>
-                <div className="product-name">{part.name_cn}</div>
-                <div className="product-model">{part.app_model}</div>
-              </td>
-              <td>
-                <div className="product-code">{part.part_number}</div>
-              </td>
-              <td>
-                <div 
-                  className="specs-info"
-                  onMouseEnter={(e) => handleSpecMouseEnter(e, part.id)}
-                  onMouseLeave={() => handleSpecMouseLeave(part.id)}
-                >
-                  <div className="specs-row">
-                    <div className="specs-label">Spec:</div>
-                    <div className="specs-value">{currentUser.region === 'na' || currentUser.region === 'au' ? part.spec_imperial : part.spec}</div>
-                  </div>
-                  <div className="specs-row">
-                    <div className="specs-label">适配序列号:</div>
-                    <div className="specs-value">{part.app_sn}</div>
-                  </div>
-                  
-                  <div className="tooltip-hint">
-                    <span className="tooltip-icon">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="16" x2="12" y2="12"></line>
-                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                      </svg>
-                    </span>
-                    <span className="tooltip-text">悬浮查看详细规格</span>
-                  </div>
-                  
-                  {/* 规格信息悬浮提示 */}
-                  {tooltipVisible[part.id] && (
-                    <div className="specs-tooltip" style={{ 
-                      position: 'fixed',
-                      left: `${tooltipPosition.x}px`, 
-                      top: `${tooltipPosition.y}px` 
-                    }}>
-                      <div className="tooltip-header">产品详细规格</div>
-                      <div className="tooltip-row">
-                        <span className="tooltip-label">包装尺寸 cm:</span>
-                        <span className="tooltip-value">{part.package_size}</span>
-                      </div>
-                      <div className="tooltip-row">
-                        <span className="tooltip-label">包装尺寸 inch:</span>
-                        <span className="tooltip-value">
-                          {part.package_size_imperial || (() => {
-                            try {
-                              const dimensions = part.package_size.split('×');
-                              if (dimensions.length === 3) {
-                                return `${Math.round(parseFloat(dimensions[0]) / 2.54 * 10) / 10} × ${Math.round(parseFloat(dimensions[1]) / 2.54 * 10) / 10} × ${Math.round(parseFloat(dimensions[2]) / 2.54 * 10) / 10}`;
-                              }
-                              return part.package_size;
-                            } catch (e) {
-                              return part.package_size;
-                            }
-                          })()}
-                        </span>
-                      </div>
-                      <div className="tooltip-row">
-                        <span className="tooltip-label">单件净重 kg:</span>
-                        <span className="tooltip-value">{part.package_weight}</span>
-                      </div>
-                      <div className="tooltip-row">
-                        <span className="tooltip-label">单件净重 lbs:</span>
-                        <span className="tooltip-value">{Math.round(part.package_weight * 2.2046 * 100) / 100}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </td>
-              <td>
-                {part.prices.tiers.map((tier, index) => {
-                  let price = tier.price;
-                  switch(currentUser.region) {
-                    case 'eu': price = tier.eu; break;
-                    case 'na': price = tier.na; break;
-                    case 'au': price = tier.au; break;
-                    case 'cn': price = tier.cn; break;
-                  }
-                  
-                  return (
-                    <div key={index} className="price-tier">
-                      <span className="price-range">{tier.range}:</span>
-                      <span className="price-value">
-                        {getCurrencySymbol()}{price.toFixed(2)}
-                      </span>
-                    </div>
-                  );
-                })}
-              </td>
-              {/* 只有销售人员和管理员可以看到库存 */}
-              {(currentUser.role === 'sales' || currentUser.role === 'admin') && (
-                <td>
-                  <div className="inventory-container">
-                    <div className="inventory-item">
-                      <span className="inventory-region">EU:</span>
-                      <span className={`inventory-value ${getInventoryLevel(part.inventory.eu)}`}>{part.inventory.eu}</span>
-                    </div>
-                    <div className="inventory-item">
-                      <span className="inventory-region">NA:</span>
-                      <span className={`inventory-value ${getInventoryLevel(part.inventory.na)}`}>{part.inventory.na}</span>
-                    </div>
-                    <div className="inventory-item">
-                      <span className="inventory-region">AU:</span>
-                      <span className={`inventory-value ${getInventoryLevel(part.inventory.au)}`}>{part.inventory.au}</span>
-                    </div>
-                    <div className="inventory-item">
-                      <span className="inventory-region">CN:</span>
-                      <span className={`inventory-value ${getInventoryLevel(part.inventory.cn)}`}>{part.inventory.cn}</span>
-                    </div>
-                  </div>
-                </td>
-              )}
-              <td>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <span>Qty:</span>
-                  <input 
-                    type="number" 
-                    className="quantity-input" 
-                    value={quantities[part.id] || 1} 
-                    min="1"
-                    onChange={(e) => handleQuantityChange(part.id, e)}
-                  />
-                  <button 
-                    className="btn-add"
-                    onClick={() => addToCart(
-                      part.id,
-                      part.name_cn,
-                      getPriceForRegion(part),
-                      quantities[part.id] || 1
-                    )}
-                  >
-                    Add
-                  </button>
-                </div>
-              </td>
+      <>
+        <table className="spare-parts-table">
+          <thead>
+            <tr>
+              <th>图片</th>
+              <th>产品编码</th>
+              <th>规格</th>
+              <th>价格</th>
+              {(user?.role === 'sales' || user?.role === 'admin') && <th>库存</th>}
+              <th>操作</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredParts.map((part) => {
+              const finalPrice = calculateFinalPrice(part);
+              return (
+                <tr key={part.id} className="spare-part-row">
+                  <td className="part-image-cell">
+                    <img src={part.image_url} alt={part.name_en} className="part-image" />
+                  </td>
+                  <td className="part-code-cell">
+                    <div className="part-code">{part.part_number}</div>
+                    <div className="part-name">{part.name_en}</div>
+                  </td>
+                  <td 
+                    className="part-specs-cell" 
+                    onMouseEnter={(e) => handleSpecMouseEnter(e, part)}
+                    onMouseLeave={handleSpecMouseLeave}
+                  >
+                    <div className="spec-preview">
+                      <div className="spec-summary">
+                        <p><strong>Spec.:</strong> {part.spec}</p>
+                        <p><strong>适配序列号:</strong> {part.app_sn}</p>
+                        <p><strong>单箱数量:</strong> {part.box_quantity || 'N/A'}</p>
+                      </div>
+                      <span className="view-more">查看更多规格</span>
+                    </div>
+                  </td>
+                  <td className="part-price-cell">
+                    <div className="price-tiers">
+                      <div className="current-price">
+                        {getCurrencySymbol()} {finalPrice.toFixed(2)}
+                      </div>
+                      {part.prices.tiers.map((tier, index) => (
+                        <div key={index} className="price-tier">
+                          <span>{tier.range}: {getCurrencySymbol()} {
+                            (user?.region === 'eu' ? tier.eu : 
+                             user?.region === 'na' ? tier.na :
+                             user?.region === 'au' ? tier.au :
+                             user?.region === 'cn' ? tier.cn : 
+                             tier.price).toFixed(2)
+                          }</span>
+                        </div>
+                      ))}
+                    </div>
+                  </td>
+                  {(user?.role === 'sales' || user?.role === 'admin') && (
+                    <td className="part-inventory-cell">
+                      <div className="inventory-info">
+                        <div>EU: {part.inventory.eu}</div>
+                        <div>NA: {part.inventory.na}</div>
+                        <div>AU: {part.inventory.au}</div>
+                        <div>CN: {part.inventory.cn}</div>
+                      </div>
+                    </td>
+                  )}
+                  <td className="part-actions-cell">
+                    <div className="quantity-control">
+                      <button 
+                        className="quantity-btn"
+                        onClick={() => {
+                          const newQty = Math.max(1, (quantities[part.id] || 1) - 1);
+                          setQuantities({...quantities, [part.id]: newQty});
+                        }}
+                        disabled={(quantities[part.id] || 1) <= 1}
+                      >
+                        -
+                      </button>
+                      <input
+                        type="text"
+                        value={quantities[part.id] || 1}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value, 10);
+                          if (!isNaN(value) && value > 0) {
+                            setQuantities({...quantities, [part.id]: value});
+                          }
+                        }}
+                        className="quantity-input"
+                      />
+                      <button 
+                        className="quantity-btn"
+                        onClick={() => {
+                          const newQty = (quantities[part.id] || 1) + 1;
+                          setQuantities({...quantities, [part.id]: newQty});
+                        }}
+                      >
+                        +
+                      </button>
+                    </div>
+                    <button
+                      className="add-to-cart-btn"
+                      onClick={() => handleAddToCart(part, quantities[part.id] || 1, finalPrice)}
+                    >
+                      Add to Cart
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+
+        {showTooltip && selectedPart && (
+          <div 
+            ref={tooltipRef}
+            className="spec-tooltip" 
+            style={{ 
+              top: tooltipPos.top, 
+              left: tooltipPos.left 
+            }}
+            onMouseEnter={handleTooltipMouseEnter}
+            onMouseLeave={handleTooltipMouseLeave}
+          >
+            <h4>
+              {selectedPart.name_en}
+              <button className="tooltip-close" onClick={closeTooltip}>×</button>
+            </h4>
+            <div className="tooltip-content">
+              <p><strong>包装尺寸 cm:</strong> {selectedPart.package_size}</p>
+              <p><strong>包装尺寸 inch:</strong> {selectedPart.package_size_imperial || 'N/A'}</p>
+              <p><strong>单件净重 kg:</strong> {selectedPart.package_weight}</p>
+              <p><strong>单件净重 lbs:</strong> {(selectedPart.package_weight * 2.20462).toFixed(2)}</p>
+              <p><strong>适配序列号:</strong> {selectedPart.app_sn}</p>
+              <p><strong>适用型号:</strong> {selectedPart.app_model}</p>
+              <p><strong>规格描述:</strong> {selectedPart.spec}</p>
+            </div>
+          </div>
+        )}
+      </>
     );
   };
   
@@ -701,7 +822,7 @@ const SparePartsPage: React.FC = () => {
       }
     }) || part.prices.tiers[0];
     
-    switch(currentUser.region) {
+    switch(userRegion) {
       case 'eu': return tier.eu;
       case 'na': return tier.na;
       case 'au': return tier.au;
@@ -781,209 +902,177 @@ const SparePartsPage: React.FC = () => {
 
   // 用于获取不同产品类型的型号
   const fetchModels = async (productType: string) => {
+    console.log(`Fetching models for product type: ${productType}`);
     try {
       setLoading(true);
       // 根据产品类型获取不同的型号列表
       const options = await getSparePartsFilterOptions(productType);
+      console.log(`Received filter options for ${productType}:`, options);
       
       if (productType === 'machine') {
-        setHostModels(options.hostModels);
+        setHostModels(options.hostModels || []);
+        console.log(`Set host models:`, options.hostModels);
       } else if (productType === 'accessory') {
-        setAccessoryModels(options.accessoryModels);
+        setAccessoryModels(options.accessoryModels || []);
+        console.log(`Set accessory models:`, options.accessoryModels);
       }
       
-      // 重置已选型号为空
+      // 重置已选型号为空字符串
       setSelectedModel('');
+      
+      // 当切换产品类型时，重新加载数据
+      loadSparePartsData();
+      
       setLoading(false);
     } catch (err) {
-      console.error(`Error loading ${productType} models:`, err);
-      setError(`Failed to load ${productType} models. Please try again later.`);
+      console.error(`Error fetching models for ${productType}:`, err);
+      // When there's an error loading models, keep the page usable with empty model list
+      if (productType === 'machine') {
+        setHostModels([]);
+      } else if (productType === 'accessory') {
+        setAccessoryModels([]);
+      }
       setLoading(false);
     }
   };
 
-  // 处理产品类型变更
-  const handleProductTypeChange = (type: string) => {
-    setCurrentProductType(type);
-    fetchModels(type);
-  };
-
+  // 渲染主页面
   return (
-    <div className="spare-parts-page">
-      {/* 显示添加到购物车的通知 */}
-      <div className="cart-notifications" id="cart-notifications"></div>
-      
-      <div className="breadcrumb">
-        <Link to="/">Home</Link> &gt; <Link to="/products">Products</Link> &gt; <span>Spare Parts</span>
+    <div className="spare-parts-container">
+      <div className="user-info-bar">
+        {/* ... existing code ... */}
       </div>
       
-      <div className="top-bar">
-        <div className="top-bar-content">
-          <span>Please find and select the spare parts you need.</span>
+      <div className="spare-parts-page">
+        <div className="page-header">
+          <h1>Spare Parts</h1>
         </div>
-      </div>
-      
-      <h1 className="page-title">Spare Parts & Accessories</h1>
-      
-      {/* 筛选区域 */}
-      <div className="filter-container">
-        {/* 产品类型选择（主机或配件） */}
-        <div className="filter-section">
-          <h3>产品类型</h3>
-          <div className="product-type-buttons">
-            <button 
-              className={`product-type-button ${currentProductType === 'machine' ? 'active' : ''}`} 
-              onClick={() => handleProductTypeChange('machine')}
-            >
-              主机
-            </button>
-            <button 
-              className={`product-type-button ${currentProductType === 'accessory' ? 'active' : ''}`} 
-              onClick={() => handleProductTypeChange('accessory')}
-            >
-              配件
-            </button>
+
+        <div className="filter-container">
+          <div className="filter-row">
+            <span className="filter-label">商品类型:</span>
+            <div className="product-type-buttons">
+              <button
+                className={currentProductType === 'machine' ? 'active' : ''}
+                onClick={() => {
+                  setCurrentProductType('machine');
+                  fetchModels('machine');
+                }}
+              >
+                主机
+              </button>
+              <button
+                className={currentProductType === 'accessory' ? 'active' : ''}
+                onClick={() => {
+                  setCurrentProductType('accessory');
+                  fetchModels('accessory');
+                }}
+              >
+                配件
+              </button>
+            </div>
           </div>
-        </div>
-        
-        {/* 型号选择 */}
-        <div className="filter-section">
-          <h3>适用机型</h3>
-          <div className="model-select-container">
-            <select 
-              className="model-select" 
+          
+          <div className="filter-row">
+            <span className="filter-label">适用型号:</span>
+            <select
+              className="model-select"
               value={selectedModel}
               onChange={(e) => setSelectedModel(e.target.value)}
             >
               <option value="">所有型号</option>
               {currentProductType === 'machine' ? (
                 hostModels.map((model, index) => (
-                  <option key={index} value={model}>{model}</option>
+                  <option key={index} value={model}>
+                    {model}
+                  </option>
                 ))
               ) : (
                 accessoryModels.map((model, index) => (
-                  <option key={index} value={model}>{model}</option>
+                  <option key={index} value={model}>
+                    {model}
+                  </option>
                 ))
               )}
             </select>
-            {loading && <span className="loading-indicator">加载中...</span>}
           </div>
-        </div>
-        
-        {/* 备件类型选择 */}
-        <div className="filter-section">
-          <h3>备件类型</h3>
-          <div className="part-type-buttons">
-            <button 
-              className={`part-type-button ${currentPartType === '' ? 'active' : ''}`} 
-              onClick={() => setCurrentPartType('')}
-            >
-              全部
-            </button>
-            <button 
-              className={`part-type-button ${currentPartType === 'consumable' ? 'active' : ''}`} 
-              onClick={() => setCurrentPartType('consumable')}
-            >
-              消耗品
-            </button>
-            <button 
-              className={`part-type-button ${currentPartType === 'non-consumable' ? 'active' : ''}`} 
-              onClick={() => setCurrentPartType('non-consumable')}
-            >
-              非消耗品
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      {/* 备件列表 */}
-      <div className="spare-parts-list-container">
-        {renderSpareParts()}
-      </div>
-      
-      {/* 回到顶部按钮 */}
-      <button 
-        className="back-to-top-btn"
-        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-      >
-        ↑
-      </button>
-      
-      {/* 购物车浮动按钮 */}
-      <button 
-        className="cart-float-btn"
-        onClick={() => setShowCartModal(true)}
-      >
-        <div className="cart-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="9" cy="21" r="1"></circle>
-            <circle cx="20" cy="21" r="1"></circle>
-            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-          </svg>
-          {cart.length > 0 && (
-            <span className="cart-badge">{cart.length}</span>
-          )}
-        </div>
-      </button>
-      
-      {/* 购物车预览 */}
-      {showCartModal && (
-        <div className="cart-preview active">
-          <div className="cart-header">
-            <div className="cart-title">购物车</div>
-            <button className="close-cart" onClick={() => setShowCartModal(false)}>×</button>
-          </div>
-          <div className="cart-items">
-            {renderCartItems()}
-          </div>
-          <div className="cart-footer">
-            <div className="cart-total">
-              <span>合计:</span>
-              <span>¥{calculateCartTotal().toFixed(2)}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px' }}>
-              <button 
-                id="clear-cart-btn" 
-                className="checkout-btn" 
-                style={{ backgroundColor: '#e53935', width: 'auto', marginRight: '10px' }}
-                onClick={() => setShowConfirmClear(true)}
+          
+          <div className="filter-row">
+            <span className="filter-label">备件类型:</span>
+            <div className="part-type-buttons">
+              <button
+                className={currentPartType === 'consumable' ? 'active' : ''}
+                onClick={() => setCurrentPartType('consumable')}
               >
-                清空购物车
+                Consumable
               </button>
-              <button className="checkout-btn">结算</button>
+              <button
+                className={currentPartType === 'electronic' ? 'active' : ''}
+                onClick={() => setCurrentPartType('electronic')}
+              >
+                Non-consumable
+              </button>
             </div>
-            
-            {/* 清空购物车确认面板 */}
-            <div className={`cart-confirm ${showConfirmClear ? 'show' : ''}`}>
-              <div className="cart-confirm-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
-                  <line x1="12" y1="8" x2="12" y2="12"></line>
-                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                </svg>
+          </div>
+        </div>
+
+        <div className="spare-parts-list">
+          {renderSpareParts()}
+        </div>
+
+        {/* 购物车弹窗 */}
+        {showCartModal && (
+          <div className="cart-modal">
+            <div className="cart-modal-backdrop" onClick={() => setShowCartModal(false)}></div>
+            <div className="cart-modal-content">
+              <div className="cart-modal-header">
+                <h3>Shopping Cart</h3>
+                <button className="cart-modal-close" onClick={() => setShowCartModal(false)}>×</button>
               </div>
-              <div className="cart-confirm-title">确认清空购物车</div>
-              <div className="cart-confirm-text">此操作将清空购物车中所有商品，且无法恢复。</div>
-              <div className="cart-confirm-buttons">
-                <button 
-                  className="cart-confirm-button cart-confirm-cancel"
-                  onClick={() => setShowConfirmClear(false)}
-                >
-                  取消
+              <div className="cart-modal-body">
+                {renderCartItems()}
+              </div>
+              {cart.length > 0 && (
+                <div className="cart-modal-footer">
+                  <div className="cart-total-line">
+                    <span>Total:</span>
+                    <span className="cart-grand-total">¥{calculateCartTotal().toFixed(2)}</span>
+                  </div>
+                  <div className="cart-actions">
+                    <button className="cart-clear-btn" onClick={() => setShowConfirmClear(true)}>
+                      Clear Cart
+                    </button>
+                    <button className="cart-checkout-btn" onClick={() => navigate('/checkout')}>
+                      Checkout
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 确认清空购物车 */}
+        {showConfirmClear && (
+          <div className="confirm-dialog">
+            <div className="confirm-dialog-backdrop"></div>
+            <div className="confirm-dialog-content">
+              <h4>Clear Cart?</h4>
+              <p>Are you sure you want to remove all items from your cart?</p>
+              <div className="confirm-dialog-actions">
+                <button className="btn-cancel" onClick={() => setShowConfirmClear(false)}>
+                  Cancel
                 </button>
-                <button 
-                  className="cart-confirm-button cart-confirm-proceed"
-                  onClick={clearCart}
-                >
-                  确认清空
+                <button className="btn-confirm" onClick={clearCart}>
+                  Clear
                 </button>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
 
-export default SparePartsPage; 
+export default SparePartsPage;
