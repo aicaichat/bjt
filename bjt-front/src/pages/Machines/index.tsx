@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import './Machines.css';
 import { useCart } from '../../contexts/CartContext';
 import { useAuth, UserRole } from '../../contexts/AuthContext';
+import { Button } from 'antd';
+import { RightOutlined } from '@ant-design/icons';
 
 // 定义产品规格类型
 interface ProductSpecs {
@@ -17,6 +19,22 @@ interface RegionPrices {
   NA: { base: number; tier1: number; tier2: number; vip: number };
   AU: { base: number; tier1: number; tier2: number; vip: number };
   CN: { base: number; tier1: number; tier2: number; vip: number };
+}
+
+// Define the MachineProduct interface
+interface MachineProduct {
+  id: string;
+  name: string;
+  image_url: string;
+  subtitle?: string;
+  specs: Record<string, string>;
+  inventory: Array<{region: string, amount: number}>;
+  prices: {
+    base: number;
+    tier1: number;
+    tier2: number;
+    vip: number;
+  };
 }
 
 const MachinesPage: React.FC = () => {
@@ -246,7 +264,14 @@ const MachinesPage: React.FC = () => {
       };
     } else if (productId === 'printhead') {
       productName = '热敏打印头组件';
-      price = 2200;
+      const printHeadPrices: RegionPrices = {
+        EU: { base: 220, tier1: 200, tier2: 180, vip: 170 },
+        NA: { base: 240, tier1: 220, tier2: 190, vip: 180 },
+        AU: { base: 300, tier1: 280, tier2: 250, vip: 230 },
+        CN: { base: 2200, tier1: 2000, tier2: 1800, vip: 1700 }
+      };
+      const prices = getRegionalPrice(printHeadPrices);
+      price = prices.base;
       image_url = '/images/accessories/printhead.jpg'; // 请确保路径正确
       specs = {
         partNumber: 'BJT-TH-300P-2024',
@@ -254,7 +279,14 @@ const MachinesPage: React.FC = () => {
       };
     } else if (productId === 'controller') {
       productName = '主控制板';
-      price = 1800;
+      const controllerPrices: RegionPrices = {
+        EU: { base: 180, tier1: 165, tier2: 150, vip: 140 },
+        NA: { base: 200, tier1: 180, tier2: 160, vip: 150 },
+        AU: { base: 250, tier1: 230, tier2: 210, vip: 190 },
+        CN: { base: 1800, tier1: 1650, tier2: 1500, vip: 1400 }
+      };
+      const prices = getRegionalPrice(controllerPrices);
+      price = prices.base;
       image_url = '/images/accessories/controller.jpg'; // 请确保路径正确
       specs = {
         partNumber: 'BJT-MCB-200-2024',
@@ -262,7 +294,14 @@ const MachinesPage: React.FC = () => {
       };
     } else if (productId === 'paper') {
       productName = '热敏标签纸卷（5卷装）';
-      price = 320;
+      const paperPrices: RegionPrices = {
+        EU: { base: 32, tier1: 28, tier2: 25, vip: 22 },
+        NA: { base: 35, tier1: 30, tier2: 28, vip: 25 },
+        AU: { base: 45, tier1: 40, tier2: 36, vip: 32 },
+        CN: { base: 320, tier1: 280, tier2: 250, vip: 220 }
+      };
+      const prices = getRegionalPrice(paperPrices);
+      price = prices.base;
       image_url = '/images/consumables/paper.jpg'; // 请确保路径正确
       specs = {
         partNumber: 'BJT-TP-40x30-700-2024',
@@ -270,7 +309,14 @@ const MachinesPage: React.FC = () => {
       };
     } else if (productId === 'ribbon') {
       productName = '热转印色带（2卷装）';
-      price = 280;
+      const ribbonPrices: RegionPrices = {
+        EU: { base: 28, tier1: 25, tier2: 22, vip: 20 },
+        NA: { base: 30, tier1: 28, tier2: 24, vip: 22 },
+        AU: { base: 40, tier1: 36, tier2: 32, vip: 28 },
+        CN: { base: 280, tier1: 250, tier2: 220, vip: 190 }
+      };
+      const prices = getRegionalPrice(ribbonPrices);
+      price = prices.base;
       image_url = '/images/consumables/ribbon.jpg'; // 请确保路径正确
       specs = {
         partNumber: 'BJT-TR-110-300-2024',
@@ -334,6 +380,146 @@ const MachinesPage: React.FC = () => {
     handleMachineSelection('lpv1');
   }, []);
 
+  // 获取库存状态颜色和类名
+  const getStockStatus = (amount: number) => {
+    if (amount <= 0) {
+      return { className: 'out-of-stock', colorClass: 'inventory-low' };
+    } else if (amount <= 5) {
+      return { className: 'low-stock', colorClass: 'inventory-low' };
+    } else if (amount <= 20) {
+      return { className: 'medium-stock', colorClass: 'inventory-medium' };
+    } else {
+      return { className: 'high-stock', colorClass: 'inventory-high' };
+    }
+  };
+
+  // 格式化日期为 '今日 HH:MM' 格式
+  const formatDate = () => {
+    const now = new Date();
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    return `今日 ${hours}:${minutes}`;
+  };
+
+  // Implement the getProductName function
+  const getProductName = (product: MachineProduct): string => {
+    return product.name || product.id;
+  };
+
+  // Fix the renderProduct function
+  const renderProduct = (product: MachineProduct) => {
+    const formatPrice = (price: number): string => {
+      return price.toLocaleString();
+    };
+
+    // Get the correct price based on regional settings
+    const productPrices = {
+      basePrice: product.prices.base,
+      tier1Price: product.prices.tier1,
+      tier2Price: product.prices.tier2,
+      vipPrice: product.prices.vip
+    };
+
+    return (
+      <div className="product-card" key={product.id}>
+        <div className="product-inner">
+          <div className="product-header">
+            <h3>{getProductName(product)}</h3>
+            {product.subtitle && <p className="product-subtitle">{product.subtitle}</p>}
+          </div>
+          <div className="product-body">
+            <div className="product-image">
+              <img src={product.image_url} alt={product.name} />
+            </div>
+            <div className="product-specs">
+              {Object.entries(product.specs).map(([key, value]) => (
+                <div className="spec-item" key={key}>
+                  <span className="spec-label">{key}:</span>
+                  <span className="spec-value">{value}</span>
+                </div>
+              ))}
+            </div>
+            {isSales && (
+              <div className="product-inventory">
+                <div className="inventory-regions">
+                  <div className="product-inventory-title">库存状态</div>
+                  <div className="inventory-region">
+                    <span className="region-label">EU</span>
+                    <span className={`region-value ${parseInt('24') < 10 ? 'low-stock' : ''}`}>24台</span>
+                  </div>
+                  <div className="inventory-region">
+                    <span className="region-label">AU</span>
+                    <span className={`region-value ${parseInt('18') < 10 ? 'low-stock' : ''}`}>18台</span>
+                  </div>
+                  <div className="inventory-region">
+                    <span className="region-label">DE</span>
+                    <span className={`region-value ${parseInt('15') < 10 ? 'low-stock' : ''}`}>15台</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div className="product-pricing">
+              <h4>价格信息</h4>
+              <div className="price-tiers">
+                <div className="price-tier">
+                  <span className="tier-label">标准价 (1-4台)</span>
+                  <span className="tier-price">
+                    <span className="price-currency">{getCurrencySymbol(userRegion)}</span>
+                    <span className="price-amount">{formatPrice(productPrices.basePrice)}</span>
+                  </span>
+                </div>
+                <div className="price-tier">
+                  <span className="tier-label">批发价 (5-9台)</span>
+                  <span className="tier-price">
+                    <span className="price-currency">{getCurrencySymbol(userRegion)}</span>
+                    <span className="price-amount">{formatPrice(productPrices.tier1Price)}</span>
+                  </span>
+                </div>
+                <div className="price-tier">
+                  <span className="tier-label">批发价 (10+台)</span>
+                  <span className="tier-price">
+                    <span className="price-currency">{getCurrencySymbol(userRegion)}</span>
+                    <span className="price-amount">{formatPrice(productPrices.tier2Price)}</span>
+                  </span>
+                </div>
+                {isVIP && (
+                  <div className="vip-price">
+                    <span>VIP 价格</span>
+                    <span>
+                      <span className="price-currency">{getCurrencySymbol(userRegion)}</span>
+                      <span className="price-amount">{formatPrice(productPrices.vipPrice)}</span>
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="product-footer">
+            <button className="btn-primary" onClick={() => handleAddToCart(product)}>
+              添加到购物车
+            </button>
+            <button className="btn-link" onClick={() => showProductDetails(product)}>
+              查看详情
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Define these functions if they don't exist
+  const handleAddToCart = (product: MachineProduct) => {
+    // Implement add to cart logic
+    console.log('Adding to cart:', product);
+    // Example implementation:
+    addToCart('machine', product.id);
+  };
+
+  const showProductDetails = (product: MachineProduct) => {
+    // Implement show details logic
+    console.log('Showing details for:', product);
+  };
+
   return (
     <div className="machines-page">
       {/* 面包屑导航 */}
@@ -371,7 +557,7 @@ const MachinesPage: React.FC = () => {
               type="radio" 
               id="lpv1" 
               name="machine" 
-              className="machine-radio" 
+              className="machine-radio"
               checked={selectedMachine === 'lpv1'}
               onChange={() => handleMachineSelection('lpv1')}
             />
@@ -432,18 +618,20 @@ const MachinesPage: React.FC = () => {
             </div>
             {isSales && (
               <div className="product-inventory">
-                <div className="product-inventory-title">库存状态</div>
-                <div>
-                  <div className="inventory-region">EU区域</div>
-                  <div className="inventory-status">24台</div>
-                </div>
-                <div className={parseInt('18') < 10 ? 'low-stock' : ''}>
-                  <div className="inventory-region">AU区域</div>
-                  <div className="inventory-status">18台</div>
-                </div>
-                <div className={parseInt('15') < 10 ? 'low-stock' : ''}>
-                  <div className="inventory-region">DE区域</div>
-                  <div className="inventory-status">15台</div>
+                <div className="inventory-regions">
+                  <div className="product-inventory-title">库存状态</div>
+                  <div className="inventory-region">
+                    <span className="region-label">EU</span>
+                    <span className={`region-value ${parseInt('24') < 10 ? 'low-stock' : ''}`}>24台</span>
+                  </div>
+                  <div className="inventory-region">
+                    <span className="region-label">AU</span>
+                    <span className={`region-value ${parseInt('18') < 10 ? 'low-stock' : ''}`}>18台</span>
+                  </div>
+                  <div className="inventory-region">
+                    <span className="region-label">DE</span>
+                    <span className={`region-value ${parseInt('15') < 10 ? 'low-stock' : ''}`}>15台</span>
+                  </div>
                 </div>
               </div>
             )}
@@ -468,8 +656,11 @@ const MachinesPage: React.FC = () => {
                       </div>
                       {isVIP && (
                         <div className="vip-price">
-                          <span>VIP价</span>
-                          <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.vip.toLocaleString()}</span></span>
+                          <span>VIP 价格</span>
+                          <span>
+                            <span className="price-currency">{prices.symbol}</span>
+                            <span className="price-amount">{prices.vip.toLocaleString()}</span>
+                          </span>
                         </div>
                       )}
                     </>
@@ -480,12 +671,12 @@ const MachinesPage: React.FC = () => {
             <img 
               src="/images/placeholders/placeholder.svg" 
               alt="LP-V1" 
-              className="product-image" 
+              className="product-image"
             />
             <div className="product-actions">
-              <input 
-                type="number" 
-                min="1" 
+              <input
+                type="number"
+                min="1"
                 value={quantities.lpv1} 
                 className="quantity-input"
                 onChange={(e) => handleQuantityChange('lpv1', parseInt(e.target.value) || 1)} 
@@ -496,7 +687,7 @@ const MachinesPage: React.FC = () => {
             </div>
           </div>
         </div>
-
+        
         {/* LP-F1 气垫机 */}
         <div className="product-item" data-product-id="lpf1">
           <div className="product-selector">
@@ -504,7 +695,7 @@ const MachinesPage: React.FC = () => {
               type="radio" 
               id="lpf1" 
               name="machine" 
-              className="machine-radio" 
+              className="machine-radio"
               checked={selectedMachine === 'lpf1'}
               onChange={() => handleMachineSelection('lpf1')}
             />
@@ -565,18 +756,20 @@ const MachinesPage: React.FC = () => {
             </div>
             {isSales && (
               <div className="product-inventory">
-                <div className="product-inventory-title">库存状态</div>
-                <div>
-                  <div className="inventory-region">EU区域</div>
-                  <div className="inventory-status">20台</div>
-                </div>
-                <div className={parseInt('15') < 10 ? 'low-stock' : ''}>
-                  <div className="inventory-region">AU区域</div>
-                  <div className="inventory-status">15台</div>
-                </div>
-                <div className={parseInt('10') < 10 ? 'low-stock' : ''}>
-                  <div className="inventory-region">DE区域</div>
-                  <div className="inventory-status">10台</div>
+                <div className="inventory-regions">
+                  <div className="product-inventory-title">库存状态</div>
+                  <div className="inventory-region">
+                    <span className="region-label">EU</span>
+                    <span className={`region-value ${parseInt('20') < 10 ? 'low-stock' : ''}`}>20台</span>
+                  </div>
+                  <div className="inventory-region">
+                    <span className="region-label">AU</span>
+                    <span className={`region-value ${parseInt('15') < 10 ? 'low-stock' : ''}`}>15台</span>
+                  </div>
+                  <div className="inventory-region">
+                    <span className="region-label">DE</span>
+                    <span className={`region-value ${parseInt('10') < 10 ? 'low-stock' : ''}`}>10台</span>
+                  </div>
                 </div>
               </div>
             )}
@@ -601,8 +794,11 @@ const MachinesPage: React.FC = () => {
                       </div>
                       {isVIP && (
                         <div className="vip-price">
-                          <span>VIP价</span>
-                          <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.vip.toLocaleString()}</span></span>
+                          <span>VIP 价格</span>
+                          <span>
+                            <span className="price-currency">{prices.symbol}</span>
+                            <span className="price-amount">{prices.vip.toLocaleString()}</span>
+                          </span>
                         </div>
                       )}
                     </>
@@ -613,12 +809,12 @@ const MachinesPage: React.FC = () => {
             <img 
               src="/images/placeholders/placeholder.svg" 
               alt="LP-F1" 
-              className="product-image" 
+              className="product-image"
             />
             <div className="product-actions">
-              <input 
-                type="number" 
-                min="1" 
+              <input
+                type="number"
+                min="1"
                 value={quantities.lpf1} 
                 className="quantity-input"
                 onChange={(e) => handleQuantityChange('lpf1', parseInt(e.target.value) || 1)} 
@@ -643,28 +839,28 @@ const MachinesPage: React.FC = () => {
           <div className="filter-title">电压选择:</div>
           <div className="voltage-options">
             <label className="voltage-option">
-              <input 
-                type="radio" 
+              <input
+                type="radio"
                 name="voltage" 
-                value="220V" 
-                checked={selectedVoltage === '220V'} 
+                value="220V"
+                checked={selectedVoltage === '220V'}
                 onChange={handleVoltageChange}
               />
               <span>220V</span>
             </label>
             <label className="voltage-option">
-              <input 
-                type="radio" 
+              <input
+                type="radio"
                 name="voltage" 
-                value="110V" 
-                checked={selectedVoltage === '110V'} 
+                value="110V"
+                checked={selectedVoltage === '110V'}
                 onChange={handleVoltageChange}
               />
               <span>110V</span>
             </label>
           </div>
         </div>
-
+        
         <div className="product-list">
           {/* 地面支架 */}
           <div className="product-item" data-product-id="floor-stand">
@@ -732,18 +928,20 @@ const MachinesPage: React.FC = () => {
               </div>
               {isSales && (
                 <div className="product-inventory">
-                  <div className="product-inventory-title">库存状态</div>
-                  <div>
-                    <div className="inventory-region">EU区域</div>
-                    <div className="inventory-status">16个</div>
-                  </div>
-                  <div className={parseInt('12') < 10 ? 'low-stock' : ''}>
-                    <div className="inventory-region">AU区域</div>
-                    <div className="inventory-status">12个</div>
-                  </div>
-                  <div className={parseInt('8') < 10 ? 'low-stock' : ''}>
-                    <div className="inventory-region">DE区域</div>
-                    <div className="inventory-status">8个</div>
+                  <div className="inventory-regions">
+                    <div className="product-inventory-title">库存状态</div>
+                    <div className="inventory-region">
+                      <span className="region-label">EU</span>
+                      <span className={`region-value ${parseInt('16') < 10 ? 'low-stock' : ''}`}>16个</span>
+                    </div>
+                    <div className="inventory-region">
+                      <span className="region-label">AU</span>
+                      <span className={`region-value ${parseInt('12') < 10 ? 'low-stock' : ''}`}>12个</span>
+                    </div>
+                    <div className="inventory-region">
+                      <span className="region-label">DE</span>
+                      <span className={`region-value ${parseInt('8') < 10 ? 'low-stock' : ''}`}>8个</span>
+                    </div>
                   </div>
                 </div>
               )}
@@ -778,12 +976,12 @@ const MachinesPage: React.FC = () => {
               <img 
                 src="/images/placeholders/placeholder.svg" 
                 alt="地面支架" 
-                className="product-image" 
+                className="product-image"
               />
               <div className="product-actions">
-                <input 
-                  type="number" 
-                  min="1" 
+                <input
+                  type="number"
+                  min="1"
                   value={quantities.floorStand} 
                   className="quantity-input"
                   onChange={(e) => handleQuantityChange('floorStand', parseInt(e.target.value) || 1)} 
@@ -794,7 +992,7 @@ const MachinesPage: React.FC = () => {
               </div>
             </div>
           </div>
-
+          
           {/* 桌面支架 */}
           <div className="product-item" data-product-id="table-stand">
             <div className="product-selector">
@@ -861,18 +1059,20 @@ const MachinesPage: React.FC = () => {
               </div>
               {isSales && (
                 <div className="product-inventory">
-                  <div className="product-inventory-title">库存状态</div>
-                  <div>
-                    <div className="inventory-region">EU区域</div>
-                    <div className="inventory-status">20个</div>
-                  </div>
-                  <div className={parseInt('15') < 10 ? 'low-stock' : ''}>
-                    <div className="inventory-region">AU区域</div>
-                    <div className="inventory-status">15个</div>
-                  </div>
-                  <div className={parseInt('10') < 10 ? 'low-stock' : ''}>
-                    <div className="inventory-region">DE区域</div>
-                    <div className="inventory-status">10个</div>
+                  <div className="inventory-regions">
+                    <div className="product-inventory-title">库存状态</div>
+                    <div className="inventory-region">
+                      <span className="region-label">EU</span>
+                      <span className={`region-value ${parseInt('20') < 10 ? 'low-stock' : ''}`}>20个</span>
+                    </div>
+                    <div className="inventory-region">
+                      <span className="region-label">AU</span>
+                      <span className={`region-value ${parseInt('15') < 10 ? 'low-stock' : ''}`}>15个</span>
+                    </div>
+                    <div className="inventory-region">
+                      <span className="region-label">DE</span>
+                      <span className={`region-value ${parseInt('10') < 10 ? 'low-stock' : ''}`}>10个</span>
+                    </div>
                   </div>
                 </div>
               )}
@@ -907,12 +1107,12 @@ const MachinesPage: React.FC = () => {
               <img 
                 src="/images/placeholders/placeholder.svg" 
                 alt="桌面支架" 
-                className="product-image" 
+                className="product-image"
               />
               <div className="product-actions">
-                <input 
-                  type="number" 
-                  min="1" 
+                <input
+                  type="number"
+                  min="1"
                   value={quantities.tableStand} 
                   className="quantity-input"
                   onChange={(e) => handleQuantityChange('tableStand', parseInt(e.target.value) || 1)} 
@@ -925,7 +1125,7 @@ const MachinesPage: React.FC = () => {
           </div>
         </div>
       </div>
-
+      
       {/* 配件选择部分 - 第二级 */}
       <div id="accessory-level-2" className="accessory-level-2">
         <div className="section-title">
@@ -998,47 +1198,70 @@ const MachinesPage: React.FC = () => {
                   </span>
                 </div>
               </div>
-              <div className="product-inventory">
-                <div className="product-inventory-title">库存状态</div>
-                <div>
-                  <div className="inventory-region">EU区域</div>
-                  <div className="inventory-status">30个</div>
+              {isSales && (
+                <div className="product-inventory">
+                  <div className="inventory-regions">
+                    <div className="product-inventory-title">库存状态</div>
+                    <div className="inventory-region">
+                      <span className="region-label">EU</span>
+                      <span className={`region-value ${parseInt('30') < 10 ? 'low-stock' : ''}`}>30个</span>
+                    </div>
+                    <div className="inventory-region">
+                      <span className="region-label">AU</span>
+                      <span className={`region-value ${parseInt('25') < 10 ? 'low-stock' : ''}`}>25个</span>
+                    </div>
+                    <div className="inventory-region">
+                      <span className="region-label">DE</span>
+                      <span className={`region-value ${parseInt('20') < 10 ? 'low-stock' : ''}`}>20个</span>
+                    </div>
+                  </div>
                 </div>
-                <div className={parseInt('25') < 10 ? 'low-stock' : ''}>
-                  <div className="inventory-region">AU区域</div>
-                  <div className="inventory-status">25个</div>
-                </div>
-                <div className={parseInt('20') < 10 ? 'low-stock' : ''}>
-                  <div className="inventory-region">DE区域</div>
-                  <div className="inventory-status">20个</div>
-                </div>
-              </div>
+              )}
               <div className="product-pricing">
                 <div className="price-tiers">
                   <div className="price-title">价格信息</div>
-                  <div className="base-price">
-                    <span><span className="price-currency">¥</span><span className="price-amount">2,200</span></span>
-                    <span className="quantity-range">1-5个</span>
-                  </div>
-                  <div className="tier-price">
-                    <span><span className="price-currency">¥</span><span className="price-amount">2,000</span></span>
-                    <span className="quantity-range">6-20个</span>
-                  </div>
-                  <div className="tier-price">
-                    <span><span className="price-currency">¥</span><span className="price-amount">1,800</span></span>
-                    <span className="quantity-range">20+个</span>
-                  </div>
+                  {(() => {
+                    const printHeadPrices: RegionPrices = {
+                      EU: { base: 220, tier1: 200, tier2: 180, vip: 170 },
+                      NA: { base: 240, tier1: 220, tier2: 190, vip: 180 },
+                      AU: { base: 300, tier1: 280, tier2: 250, vip: 230 },
+                      CN: { base: 2200, tier1: 2000, tier2: 1800, vip: 1700 }
+                    };
+                    const prices = getRegionalPrice(printHeadPrices);
+                    return (
+                      <>
+                        <div className="base-price">
+                          <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.base.toLocaleString()}</span></span>
+                          <span className="quantity-range">1-5个</span>
+                        </div>
+                        <div className="tier-price">
+                          <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.tier1.toLocaleString()}</span></span>
+                          <span className="quantity-range">6-20个</span>
+                        </div>
+                        <div className="tier-price">
+                          <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.tier2.toLocaleString()}</span></span>
+                          <span className="quantity-range">20+个</span>
+                        </div>
+                        {isVIP && (
+                          <div className="vip-price">
+                            <span>VIP价</span>
+                            <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.vip.toLocaleString()}</span></span>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
-              <img 
+              <img
                 src="/images/placeholders/placeholder.svg" 
                 alt="打印头" 
-                className="product-image" 
+                className="product-image"
               />
               <div className="product-actions">
-                <input 
-                  type="number" 
-                  min="1" 
+                <input
+                  type="number"
+                  min="1"
                   value={quantities.printHead} 
                   className="quantity-input"
                   onChange={(e) => handleQuantityChange('printHead', parseInt(e.target.value) || 1)} 
@@ -1049,7 +1272,7 @@ const MachinesPage: React.FC = () => {
               </div>
             </div>
           </div>
-
+          
           {/* 主控制板 */}
           <div className="product-item" data-product-id="controller">
             <div className="product-selector">
@@ -1114,47 +1337,70 @@ const MachinesPage: React.FC = () => {
                   </span>
                 </div>
               </div>
-              <div className="product-inventory">
-                <div className="product-inventory-title">库存状态</div>
-                <div>
-                  <div className="inventory-region">EU区域</div>
-                  <div className="inventory-status">25个</div>
+              {isSales && (
+                <div className="product-inventory">
+                  <div className="inventory-regions">
+                    <div className="product-inventory-title">库存状态</div>
+                    <div className="inventory-region">
+                      <span className="region-label">EU</span>
+                      <span className={`region-value ${parseInt('25') < 10 ? 'low-stock' : ''}`}>25个</span>
+                    </div>
+                    <div className="inventory-region">
+                      <span className="region-label">AU</span>
+                      <span className={`region-value ${parseInt('20') < 10 ? 'low-stock' : ''}`}>20个</span>
+                    </div>
+                    <div className="inventory-region">
+                      <span className="region-label">DE</span>
+                      <span className={`region-value ${parseInt('15') < 10 ? 'low-stock' : ''}`}>15个</span>
+                    </div>
+                  </div>
                 </div>
-                <div className={parseInt('20') < 10 ? 'low-stock' : ''}>
-                  <div className="inventory-region">AU区域</div>
-                  <div className="inventory-status">20个</div>
-                </div>
-                <div className={parseInt('15') < 10 ? 'low-stock' : ''}>
-                  <div className="inventory-region">DE区域</div>
-                  <div className="inventory-status">15个</div>
-                </div>
-              </div>
+              )}
               <div className="product-pricing">
                 <div className="price-tiers">
                   <div className="price-title">价格信息</div>
-                  <div className="base-price">
-                    <span><span className="price-currency">¥</span><span className="price-amount">1,800</span></span>
-                    <span className="quantity-range">1-5个</span>
-                  </div>
-                  <div className="tier-price">
-                    <span><span className="price-currency">¥</span><span className="price-amount">1,650</span></span>
-                    <span className="quantity-range">6-20个</span>
-                  </div>
-                  <div className="tier-price">
-                    <span><span className="price-currency">¥</span><span className="price-amount">1,500</span></span>
-                    <span className="quantity-range">20+个</span>
-                  </div>
+                  {(() => {
+                    const controllerPrices: RegionPrices = {
+                      EU: { base: 180, tier1: 165, tier2: 150, vip: 140 },
+                      NA: { base: 200, tier1: 180, tier2: 160, vip: 150 },
+                      AU: { base: 250, tier1: 230, tier2: 210, vip: 190 },
+                      CN: { base: 1800, tier1: 1650, tier2: 1500, vip: 1400 }
+                    };
+                    const prices = getRegionalPrice(controllerPrices);
+                    return (
+                      <>
+                        <div className="base-price">
+                          <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.base.toLocaleString()}</span></span>
+                          <span className="quantity-range">1-5个</span>
+                        </div>
+                        <div className="tier-price">
+                          <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.tier1.toLocaleString()}</span></span>
+                          <span className="quantity-range">6-20个</span>
+                        </div>
+                        <div className="tier-price">
+                          <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.tier2.toLocaleString()}</span></span>
+                          <span className="quantity-range">20+个</span>
+                        </div>
+                        {isVIP && (
+                          <div className="vip-price">
+                            <span>VIP价</span>
+                            <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.vip.toLocaleString()}</span></span>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
-              <img 
+              <img
                 src="/images/placeholders/placeholder.svg" 
                 alt="主控制板" 
-                className="product-image" 
+                className="product-image"
               />
               <div className="product-actions">
-                <input 
-                  type="number" 
-                  min="1" 
+                <input
+                  type="number"
+                  min="1"
                   value={quantities.mainBoard} 
                   className="quantity-input"
                   onChange={(e) => handleQuantityChange('mainBoard', parseInt(e.target.value) || 1)} 
@@ -1240,47 +1486,70 @@ const MachinesPage: React.FC = () => {
                   </span>
                 </div>
               </div>
-              <div className="product-inventory">
-                <div className="product-inventory-title">库存状态</div>
-                <div>
-                  <div className="inventory-region">EU区域</div>
-                  <div className="inventory-status">40个</div>
+              {isSales && (
+                <div className="product-inventory">
+                  <div className="inventory-regions">
+                    <div className="product-inventory-title">库存状态</div>
+                    <div className="inventory-region">
+                      <span className="region-label">EU</span>
+                      <span className={`region-value ${parseInt('40') < 10 ? 'low-stock' : ''}`}>40个</span>
+                    </div>
+                    <div className="inventory-region">
+                      <span className="region-label">AU</span>
+                      <span className={`region-value ${parseInt('35') < 10 ? 'low-stock' : ''}`}>35个</span>
+                    </div>
+                    <div className="inventory-region">
+                      <span className="region-label">DE</span>
+                      <span className={`region-value ${parseInt('25') < 10 ? 'low-stock' : ''}`}>25个</span>
+                    </div>
+                  </div>
                 </div>
-                <div className={parseInt('35') < 10 ? 'low-stock' : ''}>
-                  <div className="inventory-region">AU区域</div>
-                  <div className="inventory-status">35个</div>
-                </div>
-                <div className={parseInt('25') < 10 ? 'low-stock' : ''}>
-                  <div className="inventory-region">DE区域</div>
-                  <div className="inventory-status">25个</div>
-                </div>
-              </div>
+              )}
               <div className="product-pricing">
                 <div className="price-tiers">
                   <div className="price-title">价格信息</div>
-                  <div className="base-price">
-                    <span><span className="price-currency">¥</span><span className="price-amount">320</span></span>
-                    <span className="quantity-range">1-10个</span>
-                  </div>
-                  <div className="tier-price">
-                    <span><span className="price-currency">¥</span><span className="price-amount">280</span></span>
-                    <span className="quantity-range">11-50个</span>
-                  </div>
-                  <div className="tier-price">
-                    <span><span className="price-currency">¥</span><span className="price-amount">250</span></span>
-                    <span className="quantity-range">50+个</span>
-                  </div>
+                  {(() => {
+                    const paperPrices: RegionPrices = {
+                      EU: { base: 32, tier1: 28, tier2: 25, vip: 22 },
+                      NA: { base: 35, tier1: 30, tier2: 28, vip: 25 },
+                      AU: { base: 45, tier1: 40, tier2: 36, vip: 32 },
+                      CN: { base: 320, tier1: 280, tier2: 250, vip: 220 }
+                    };
+                    const prices = getRegionalPrice(paperPrices);
+                    return (
+                      <>
+                        <div className="base-price">
+                          <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.base.toLocaleString()}</span></span>
+                          <span className="quantity-range">1-10个</span>
+                        </div>
+                        <div className="tier-price">
+                          <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.tier1.toLocaleString()}</span></span>
+                          <span className="quantity-range">11-50个</span>
+                        </div>
+                        <div className="tier-price">
+                          <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.tier2.toLocaleString()}</span></span>
+                          <span className="quantity-range">50+个</span>
+                        </div>
+                        {isVIP && (
+                          <div className="vip-price">
+                            <span>VIP价</span>
+                            <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.vip.toLocaleString()}</span></span>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
-              <img 
+              <img
                 src="/images/placeholders/placeholder.svg" 
                 alt="热敏标签纸" 
-                className="product-image" 
+                className="product-image"
               />
               <div className="product-actions">
-                <input 
-                  type="number" 
-                  min="1" 
+                <input
+                  type="number"
+                  min="1"
                   value={quantities.thermalPaper} 
                   className="quantity-input"
                   onChange={(e) => handleQuantityChange('thermalPaper', parseInt(e.target.value) || 1)} 
@@ -1291,7 +1560,7 @@ const MachinesPage: React.FC = () => {
               </div>
             </div>
           </div>
-
+          
           {/* 色带 */}
           <div className="product-item" data-product-id="ribbon">
             <div className="product-selector">
@@ -1356,47 +1625,70 @@ const MachinesPage: React.FC = () => {
                   </span>
                 </div>
               </div>
-              <div className="product-inventory">
-                <div className="product-inventory-title">库存状态</div>
-                <div>
-                  <div className="inventory-region">EU区域</div>
-                  <div className="inventory-status">35个</div>
+              {isSales && (
+                <div className="product-inventory">
+                  <div className="inventory-regions">
+                    <div className="product-inventory-title">库存状态</div>
+                    <div className="inventory-region">
+                      <span className="region-label">EU</span>
+                      <span className={`region-value ${parseInt('35') < 10 ? 'low-stock' : ''}`}>35个</span>
+                    </div>
+                    <div className="inventory-region">
+                      <span className="region-label">AU</span>
+                      <span className={`region-value ${parseInt('30') < 10 ? 'low-stock' : ''}`}>30个</span>
+                    </div>
+                    <div className="inventory-region">
+                      <span className="region-label">DE</span>
+                      <span className={`region-value ${parseInt('20') < 10 ? 'low-stock' : ''}`}>20个</span>
+                    </div>
+                  </div>
                 </div>
-                <div className={parseInt('30') < 10 ? 'low-stock' : ''}>
-                  <div className="inventory-region">AU区域</div>
-                  <div className="inventory-status">30个</div>
-                </div>
-                <div className={parseInt('20') < 10 ? 'low-stock' : ''}>
-                  <div className="inventory-region">DE区域</div>
-                  <div className="inventory-status">20个</div>
-                </div>
-              </div>
+              )}
               <div className="product-pricing">
                 <div className="price-tiers">
                   <div className="price-title">价格信息</div>
-                  <div className="base-price">
-                    <span><span className="price-currency">¥</span><span className="price-amount">280</span></span>
-                    <span className="quantity-range">1-10个</span>
-                  </div>
-                  <div className="tier-price">
-                    <span><span className="price-currency">¥</span><span className="price-amount">250</span></span>
-                    <span className="quantity-range">11-50个</span>
-                  </div>
-                  <div className="tier-price">
-                    <span><span className="price-currency">¥</span><span className="price-amount">220</span></span>
-                    <span className="quantity-range">50+个</span>
-                  </div>
+                  {(() => {
+                    const ribbonPrices: RegionPrices = {
+                      EU: { base: 28, tier1: 25, tier2: 22, vip: 20 },
+                      NA: { base: 30, tier1: 28, tier2: 24, vip: 22 },
+                      AU: { base: 40, tier1: 36, tier2: 32, vip: 28 },
+                      CN: { base: 280, tier1: 250, tier2: 220, vip: 190 }
+                    };
+                    const prices = getRegionalPrice(ribbonPrices);
+                    return (
+                      <>
+                        <div className="base-price">
+                          <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.base.toLocaleString()}</span></span>
+                          <span className="quantity-range">1-10个</span>
+                        </div>
+                        <div className="tier-price">
+                          <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.tier1.toLocaleString()}</span></span>
+                          <span className="quantity-range">11-50个</span>
+                        </div>
+                        <div className="tier-price">
+                          <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.tier2.toLocaleString()}</span></span>
+                          <span className="quantity-range">50+个</span>
+                        </div>
+                        {isVIP && (
+                          <div className="vip-price">
+                            <span>VIP价</span>
+                            <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.vip.toLocaleString()}</span></span>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
-              <img 
+              <img
                 src="/images/placeholders/placeholder.svg" 
                 alt="色带" 
-                className="product-image" 
+                className="product-image"
               />
               <div className="product-actions">
-                <input 
-                  type="number" 
-                  min="1" 
+                <input
+                  type="number"
+                  min="1"
                   value={quantities.ribbon} 
                   className="quantity-input"
                   onChange={(e) => handleQuantityChange('ribbon', parseInt(e.target.value) || 1)} 

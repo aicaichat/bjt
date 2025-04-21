@@ -59,6 +59,236 @@ export interface SparePartsFilterOptions {
   partTypes: { id: string; name: string }[];
 }
 
+// 添加安全部件测试数据
+const safetyParts: SparePart[] = [
+  {
+    id: "sp101",
+    part_number: "BJT-SP-101",
+    name_cn: "急停按钮组件",
+    name_en: "Emergency Stop Button Assembly",
+    package_size: "12x12x8cm",
+    package_size_imperial: "4.7x4.7x3.1in",
+    package_weight: 0.35,
+    app_model: "LP-V1, LP-F1, LP-E4S",
+    app_sn: "All",
+    spec_imperial: "IEC 60947-5-1, Red Mushroom, 22mm Diameter",
+    spec: "IEC 60947-5-1, 红色蘑菇头, 直径22mm",
+    image_url: "/images/spare-parts/emergency-stop.jpg",
+    status: "active",
+    box_quantity: 10,
+    inventory: {
+      total: 95,
+      eu: 25,
+      na: 35,
+      au: 15,
+      cn: 20
+    },
+    prices: {
+      original: 180,
+      current: 160,
+      tiers: [
+        { range: "1-5", price: 160, eu: 22, na: 24, au: 26, cn: 160 },
+        { range: "6-20", price: 150, eu: 20, na: 22, au: 24, cn: 150 },
+        { range: ">20", price: 140, eu: 18, na: 20, au: 22, cn: 140 }
+      ]
+    },
+    product_type: "machine",
+    is_consumable: false,
+    type: "mechanical",
+    created_at: "2023-06-10T09:20:00Z",
+    updated_at: "2023-11-20T11:30:00Z"
+  },
+  {
+    id: "sp102",
+    part_number: "BJT-SP-102",
+    name_cn: "安全联锁开关",
+    name_en: "Safety Interlock Switch",
+    package_size: "15x10x5cm",
+    package_size_imperial: "5.9x3.9x2.0in",
+    package_weight: 0.28,
+    app_model: "LP-V1, LP-F1",
+    app_sn: "All",
+    spec_imperial: "24VDC, 2A, IP67 Rated, Tongue Actuated",
+    spec: "24VDC, 2A, IP67防护等级, 舌片驱动",
+    image_url: "/images/spare-parts/safety-switch.jpg",
+    status: "active",
+    box_quantity: 12,
+    inventory: {
+      total: 80,
+      eu: 20,
+      na: 30,
+      au: 10,
+      cn: 20
+    },
+    prices: {
+      original: 220,
+      current: 195,
+      tiers: [
+        { range: "1-5", price: 195, eu: 26, na: 28, au: 30, cn: 195 },
+        { range: "6-20", price: 180, eu: 24, na: 26, au: 28, cn: 180 },
+        { range: ">20", price: 165, eu: 22, na: 24, au: 26, cn: 165 }
+      ]
+    },
+    product_type: "machine",
+    is_consumable: false,
+    type: "electronic",
+    created_at: "2023-06-15T10:45:00Z",
+    updated_at: "2023-11-22T12:40:00Z"
+  },
+  {
+    id: "sp103",
+    part_number: "BJT-SP-103",
+    name_cn: "安全继电器",
+    name_en: "Safety Relay Module",
+    package_size: "12x10x6cm",
+    package_size_imperial: "4.7x3.9x2.4in",
+    package_weight: 0.22,
+    app_model: "LP-V1, LP-F1, LP-E4S",
+    app_sn: "All",
+    spec_imperial: "24VDC, 2 NO + 1 NC, Dual Channel, Category 4",
+    spec: "24VDC, 2常开+1常闭, 双通道, 4类别",
+    image_url: "/images/spare-parts/safety-relay.jpg",
+    status: "active",
+    box_quantity: 8,
+    inventory: {
+      total: 65,
+      eu: 15,
+      na: 25,
+      au: 10,
+      cn: 15
+    },
+    prices: {
+      original: 280,
+      current: 250,
+      tiers: [
+        { range: "1-5", price: 250, eu: 32, na: 35, au: 38, cn: 250 },
+        { range: "6-20", price: 235, eu: 30, na: 33, au: 36, cn: 235 },
+        { range: ">20", price: 220, eu: 28, na: 31, au: 34, cn: 220 }
+      ]
+    },
+    product_type: "machine",
+    is_consumable: false,
+    type: "electronic",
+    created_at: "2023-06-20T11:30:00Z",
+    updated_at: "2023-11-25T13:50:00Z"
+  }
+];
+
+// 添加电气部件测试数据
+const electricalParts: SparePart[] = [
+  {
+    id: "sp201",
+    part_number: "BJT-SP-201",
+    name_cn: "变频器",
+    name_en: "Variable Frequency Drive",
+    package_size: "30x25x15cm",
+    package_size_imperial: "11.8x9.8x5.9in",
+    package_weight: 2.8,
+    app_model: "LP-V1, LP-F1",
+    app_sn: "All",
+    spec_imperial: "0.75kW, 220V, Single Phase, 4.5A",
+    spec: "0.75kW, 220V, 单相, 4.5A",
+    image_url: "/images/spare-parts/vfd.jpg",
+    status: "active",
+    box_quantity: 2,
+    inventory: {
+      total: 45,
+      eu: 10,
+      na: 15,
+      au: 8,
+      cn: 12
+    },
+    prices: {
+      original: 680,
+      current: 620,
+      tiers: [
+        { range: "1-2", price: 620, eu: 85, na: 90, au: 95, cn: 620 },
+        { range: "3-5", price: 590, eu: 80, na: 85, au: 90, cn: 590 },
+        { range: ">5", price: 560, eu: 75, na: 80, au: 85, cn: 560 }
+      ]
+    },
+    product_type: "machine",
+    is_consumable: false,
+    type: "electronic",
+    created_at: "2023-07-05T09:15:00Z",
+    updated_at: "2023-12-01T10:20:00Z"
+  },
+  {
+    id: "sp202",
+    part_number: "BJT-SP-202",
+    name_cn: "伺服电机",
+    name_en: "Servo Motor",
+    package_size: "25x20x15cm",
+    package_size_imperial: "9.8x7.9x5.9in",
+    package_weight: 1.6,
+    app_model: "LP-F1",
+    app_sn: "All",
+    spec_imperial: "400W, 3000RPM, 220VAC, Encoder: 2500P/R",
+    spec: "400W, 3000RPM, 220VAC, 编码器: 2500P/R",
+    image_url: "/images/spare-parts/servo-motor.jpg",
+    status: "active",
+    box_quantity: 2,
+    inventory: {
+      total: 35,
+      eu: 8,
+      na: 12,
+      au: 5,
+      cn: 10
+    },
+    prices: {
+      original: 850,
+      current: 780,
+      tiers: [
+        { range: "1-2", price: 780, eu: 105, na: 110, au: 120, cn: 780 },
+        { range: "3-5", price: 750, eu: 100, na: 105, au: 115, cn: 750 },
+        { range: ">5", price: 720, eu: 95, na: 100, au: 110, cn: 720 }
+      ]
+    },
+    product_type: "machine",
+    is_consumable: false,
+    type: "electronic",
+    created_at: "2023-07-10T14:25:00Z",
+    updated_at: "2023-12-05T15:35:00Z"
+  },
+  {
+    id: "sp203",
+    part_number: "BJT-SP-203",
+    name_cn: "PLC控制器",
+    name_en: "PLC Controller",
+    package_size: "20x15x10cm",
+    package_size_imperial: "7.9x5.9x3.9in",
+    package_weight: 0.85,
+    app_model: "LP-V1, LP-F1",
+    app_sn: "All",
+    spec_imperial: "14 I/O Points, 24VDC, Ethernet/IP, Program Memory 32K",
+    spec: "14个I/O点, 24VDC, 以太网/IP, 程序内存32K",
+    image_url: "/images/spare-parts/plc.jpg",
+    status: "active",
+    box_quantity: 3,
+    inventory: {
+      total: 40,
+      eu: 10,
+      na: 15,
+      au: 5,
+      cn: 10
+    },
+    prices: {
+      original: 780,
+      current: 720,
+      tiers: [
+        { range: "1-2", price: 720, eu: 95, na: 100, au: 110, cn: 720 },
+        { range: "3-5", price: 690, eu: 90, na: 95, au: 105, cn: 690 },
+        { range: ">5", price: 660, eu: 85, na: 90, au: 100, cn: 660 }
+      ]
+    },
+    product_type: "machine",
+    is_consumable: false,
+    type: "electronic",
+    created_at: "2023-07-15T10:40:00Z",
+    updated_at: "2023-12-10T12:50:00Z"
+  }
+];
+
 // Mock数据：备件列表
 export const mockSpareParts: SparePart[] = [
   {
@@ -838,16 +1068,15 @@ export const mockSpareParts: SparePart[] = [
     created_at: "2023-04-15T13:40:00Z",
     updated_at: "2023-11-20T14:50:00Z"
   }
-];
+].concat(safetyParts, electricalParts);
 
 // Mock数据：筛选选项
 const mockFilterOptions: SparePartsFilterOptions = {
   hostModels: ["LP-V1", "LP-F1", "LP-E4S"],
   accessoryModels: ["Standard", "Premium", "Professional"],
   partTypes: [
-    { id: "consumable", name: "Consumables" },
-    { id: "electronic", name: "Electronics" },
-    { id: "mechanical", name: "Mechanical" }
+    { id: "consumable", name: "耗材" },
+    { id: "non-consumable", name: "非耗材" }
   ]
 };
 
@@ -858,6 +1087,9 @@ export async function getAllSpareParts(params?: SparePartsQueryParams): Promise<
     // const response = await axios.get('/api/spare-parts', { params });
     // return response.data;
     
+    // 添加调试日志
+    console.log('getAllSpareParts called with params:', params);
+    
     // 模拟API调用，添加筛选逻辑
     return new Promise((resolve) => {
       // 模拟网络延迟
@@ -866,23 +1098,31 @@ export async function getAllSpareParts(params?: SparePartsQueryParams): Promise<
         
         // 根据备件类型筛选
         if (params?.consumable) {
-          if (params.consumable === 'consumable') {
-            results = results.filter(part => part.type === 'consumable');
-          } else if (params.consumable === 'non-consumable') {
-            results = results.filter(part => part.type !== 'consumable');
-          }
-        }
-        
-        // 根据机器型号筛选
-        if (params?.model) {
-          results = results.filter(part => part.app_model.includes(params.model as string));
+          console.log(`Filtering by consumable type: ${params.consumable}`);
+          results = results.filter(part => part.type === params.consumable);
+          console.log(`After filtering by consumable=${params.consumable}, found ${results.length} results`);
         }
         
         // 根据产品类型筛选
         if (params?.product_type) {
+          console.log(`Filtering by product_type: ${params.product_type}`);
           results = results.filter(part => part.product_type === params.product_type);
+          console.log(`After filtering by product_type=${params.product_type}, found ${results.length} results`);
         }
         
+        // 根据机器型号筛选（只有当选择了特定型号时）
+        if (params?.model && params.model !== '') {
+          console.log(`Filtering by model: ${params.model}`);
+          // 检查app_model字段
+          results = results.filter(part => {
+            // 分割型号字符串并查找匹配项
+            const models = part.app_model.split(/,\s*/);
+            return models.some(m => m.trim() === params.model);
+          });
+          console.log(`After filtering by model=${params.model}, found ${results.length} results`);
+        }
+        
+        console.log(`Returning ${results.length} results`);
         resolve(results);
       }, 500); // 模拟0.5秒网络延迟
     });

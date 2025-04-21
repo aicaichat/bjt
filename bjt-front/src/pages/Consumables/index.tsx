@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Consumables.css';
 import { productApi, cartApi } from '../../services/api';
@@ -201,6 +201,14 @@ const lengths = [
   { id: 'length3', name: '400mm' }
 ];
 
+// 添加模型使用图片路径映射
+const modelExplodedViews = {
+  'all': '/images/placeholders/placeholder-480x220.svg',
+  'model1': '/images/models/LA-E4S-exploded-view.svg',
+  'model2': '/images/models/MEX-10-20-exploded-view.svg',
+  'model3': '/images/models/LP-V1-exploded-view.svg'
+};
+
 export default function ConsumablesPage() {
   const navigate = useNavigate();
   // 状态定义
@@ -229,13 +237,14 @@ export default function ConsumablesPage() {
   const [selectedWeight, setSelectedWeight] = useState<string>('all');
   const [selectedWidth, setSelectedWidth] = useState<string>('all');
   const [selectedLength, setSelectedLength] = useState<string>('all');
-  const [selectedPartType, setSelectedPartType] = useState<string>('consumables');
-  
-  // 显示模型使用区域状态
   const [showModelUsage, setShowModelUsage] = useState<boolean>(false);
   
-  // 显示形状尺寸示意图状态
-  const [showShapeDimension, setShowShapeDimension] = useState<boolean>(true);
+  // 修改tooltip状态管理
+  const [showSpecTooltip, setShowSpecTooltip] = useState<boolean>(false);
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+  const [activeItem, setActiveItem] = useState<any>(null);
+  const [tooltipHovered, setTooltipHovered] = useState<boolean>(false);
+  const tooltipRef = useRef<HTMLDivElement>(null);
 
   // 检查用户身份验证
   useEffect(() => {
@@ -489,11 +498,6 @@ export default function ConsumablesPage() {
     setSelectedLength(event.target.value);
   };
 
-  // 处理部件类型变更
-  const handlePartTypeChange = (type: string) => {
-    setSelectedPartType(type);
-  };
-
   // 重置筛选条件
   const handleResetFilters = () => {
     setSelectedModel('all');
@@ -504,7 +508,6 @@ export default function ConsumablesPage() {
     setSelectedWeight('all');
     setSelectedWidth('all');
     setSelectedLength('all');
-    setSelectedPartType('consumables');
     setShowModelUsage(false);
   };
 
@@ -520,10 +523,70 @@ export default function ConsumablesPage() {
       thickness: selectedThickness,
       weight: selectedWeight,
       width: selectedWidth,
-      length: selectedLength,
-      partType: selectedPartType
+      length: selectedLength
     });
   };
+
+  // 更新为点击事件处理
+  const handleSpecClick = (e: React.MouseEvent, item: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    setTooltipPosition({
+      top: rect.top + window.scrollY - 10, // 在元素上方显示
+      left: Math.max(20, rect.left + window.scrollX - 150) // 水平居中但不超出屏幕左侧
+    });
+    
+    // 如果已经显示该项的tooltip，则关闭它
+    if (showSpecTooltip && activeItem && activeItem.id === item.id) {
+      setShowSpecTooltip(false);
+      setActiveItem(null);
+    } else {
+      // 否则显示新的tooltip
+      setActiveItem(item);
+      setShowSpecTooltip(true);
+    }
+  };
+  
+  // 处理鼠标进入tooltip
+  const handleTooltipMouseEnter = () => {
+    setTooltipHovered(true);
+  };
+  
+  // 处理鼠标离开tooltip
+  const handleTooltipMouseLeave = () => {
+    setTooltipHovered(false);
+  };
+  
+  // 关闭tooltip
+  const closeTooltip = () => {
+    setShowSpecTooltip(false);
+    setActiveItem(null);
+  };
+  
+  // 添加点击外部和ESC关闭tooltip
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (showSpecTooltip && tooltipRef.current && !tooltipRef.current.contains(e.target as Node)) {
+        closeTooltip();
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showSpecTooltip) {
+        closeTooltip();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showSpecTooltip]);
 
   // 加载中状态显示
   if (loading) {
@@ -547,68 +610,12 @@ export default function ConsumablesPage() {
   }
 
   return (
-    <>
-      <div className="consumables-page">
-        <div className="breadcrumb">
-          <Link to="/">Home</Link> &gt; <Link to="/products">Products</Link> &gt; <span>Consumables</span>
-        </div>
-        
-        <div className="top-bar">
-          <div className="top-bar-content">
-            <img src={infoIconPlaceholder} alt="Info" />
-            <span>Please select the appropriate consumables for your needs. You can choose different materials and sizes of bubble bags.</span>
-          </div>
-        </div>
-        
-        <div className="user-info-bar">
-          <div className="container">
-            <div className="user-info">
-              <span className="user-label">User:</span>
-              <span className="user-value">{currentUser.name || currentUser.username}</span>
-              <span className="role-badge">{getRoleDisplayName(currentUser.role)}</span>
-              {isVipUser(currentUser.email) && (
-                <span className="vip-badge">VIP</span>
-              )}
-            </div>
-            <div className="user-actions">
-              <div className="user-email">
-                <span className="email-label">Email:</span>
-                <span className="email-value">{currentUser.email}</span>
-              </div>
-              <button 
-                className="btn-logout" 
-                onClick={() => {
-                  localStorage.removeItem('user');
-                  navigate('/login');
-                }}
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-          
-          <div className="container" style={{ marginTop: '10px' }}>
-            <div className="user-role">
-              <span>Region:</span>
-              <span className="role-badge">{currentUser.region.toUpperCase()}</span>
-              <span className="currency-label">Currency: {getCurrencySymbol()}</span>
-              {isVipUser(currentUser.email) && (
-                <span className="discount-badge">Discount: 20%</span>
-              )}
-              {!isVipUser(currentUser.email) && currentUser.role === 'partner' && (
-                <span className="discount-badge">Discount: 15%</span>
-              )}
-              {!isVipUser(currentUser.email) && currentUser.role === 'customer' && (
-                <span className="discount-badge">Discount: 10%</span>
-              )}
-            </div>
-          </div>
-        </div>
-        
+    <div className="consumables-page">
+      <div className="container">
         <div className="section-title">
           <div className="title-text">
-            <h2>Consumables Selection</h2>
-            <p>Select specific consumable accessories based on your application scenario</p>
+            <h2>Consumable Products</h2>
+            <p>BJT Bubble Films, Cushioning Bags and Other Products</p>
           </div>
         </div>
         
@@ -676,23 +683,6 @@ export default function ConsumablesPage() {
                 </div>
               ))}
             </div>
-            
-            <div className="shape-dimension-toggle">
-              <label>
-                <input 
-                  type="checkbox" 
-                  checked={showShapeDimension} 
-                  onChange={() => setShowShapeDimension(!showShapeDimension)}
-                />
-                Show Dimension Guide
-              </label>
-            </div>
-            
-            {showShapeDimension && (
-              <div className="shape-dimension">
-                <img src={dimensionGuidePlaceholder} alt="Dimension Guide" />
-              </div>
-            )}
           </div>
           
           <div className="filter-section">
@@ -713,35 +703,41 @@ export default function ConsumablesPage() {
               </div>
             </div>
             
-            <div className="filter-row">
-              <div className="filter-group">
-                <label>{selectedMaterial === 'paper_pe' ? 'Weight:' : 'Thickness:'}</label>
-                <select 
-                  value={selectedMaterial === 'paper_pe' ? selectedWeight : selectedThickness}
-                  onChange={selectedMaterial === 'paper_pe' ? handleWeightChange : handleThicknessChange}
-                >
-                  {(selectedMaterial === 'paper_pe' ? weights : thicknesses).map(item => (
-                    <option key={item.id} value={item.id}>{item.name}</option>
-                  ))}
-                </select>
+            <div className="dimensions-container">
+              <div className="dimensions-filters">
+                <div className="filter-group vertical">
+                  <label>{selectedMaterial === 'paper_pe' ? 'Weight:' : 'Thickness:'}</label>
+                  <select 
+                    value={selectedMaterial === 'paper_pe' ? selectedWeight : selectedThickness}
+                    onChange={selectedMaterial === 'paper_pe' ? handleWeightChange : handleThicknessChange}
+                  >
+                    {(selectedMaterial === 'paper_pe' ? weights : thicknesses).map(item => (
+                      <option key={item.id} value={item.id}>{item.name}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="filter-group vertical">
+                  <label>Width:</label>
+                  <select value={selectedWidth} onChange={handleWidthChange}>
+                    {widths.map(width => (
+                      <option key={width.id} value={width.id}>{width.name}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="filter-group vertical">
+                  <label>Length:</label>
+                  <select value={selectedLength} onChange={handleLengthChange}>
+                    {lengths.map(length => (
+                      <option key={length.id} value={length.id}>{length.name}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
               
-              <div className="filter-group">
-                <label>Width:</label>
-                <select value={selectedWidth} onChange={handleWidthChange}>
-                  {widths.map(width => (
-                    <option key={width.id} value={width.id}>{width.name}</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="filter-group">
-                <label>Length:</label>
-                <select value={selectedLength} onChange={handleLengthChange}>
-                  {lengths.map(length => (
-                    <option key={length.id} value={length.id}>{length.name}</option>
-                  ))}
-                </select>
+              <div className="dimension-image">
+                <img src={dimensionGuidePlaceholder} alt="Product Dimensions" />
               </div>
             </div>
           </div>
@@ -752,20 +748,24 @@ export default function ConsumablesPage() {
           </div>
           
           <div className="filter-section">
-            <h3>Part Type</h3>
-            <div className="part-type-buttons">
-              <button
-                className={`part-type-button ${selectedPartType === 'consumables' ? 'active' : ''}`}
-                onClick={() => handlePartTypeChange('consumables')}
-              >
-                Consumables
-              </button>
-              <button
-                className={`part-type-button ${selectedPartType === 'non-consumables' ? 'active' : ''}`}
-                onClick={() => handlePartTypeChange('non-consumables')}
-              >
-                Non-Consumables
-              </button>
+            <h3>Model Usage Guide</h3>
+            <div className="model-usage-guide">
+              {selectedModel !== 'all' && (
+                <div className="model-usage-content">
+                  <img 
+                    src={modelExplodedViews[selectedModel as keyof typeof modelExplodedViews]} 
+                    alt={`${models.find(m => m.id === selectedModel)?.name} Usage Guide`} 
+                  />
+                  <p className="model-usage-note">
+                    This exploded view shows how consumables are used with the selected {models.find(m => m.id === selectedModel)?.name} model.
+                  </p>
+                </div>
+              )}
+              {selectedModel === 'all' && (
+                <div className="model-usage-prompt">
+                  <p>Please select a specific machine model to view the corresponding usage guide.</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -794,7 +794,10 @@ export default function ConsumablesPage() {
                     <div className="product-model">{item.model}</div>
                   </td>
                   <td>
-                    <div className="specs-table">
+                    <div 
+                      className="specs-table" 
+                      onClick={(e) => handleSpecClick(e, item)}
+                    >
                       <div className="specs-row">
                         <div className="specs-label">Material:</div>
                         <div className="specs-value">{item.specs.material}</div>
@@ -896,6 +899,66 @@ export default function ConsumablesPage() {
           )}
         </div>
       </div>
-    </>
+      
+      {/* 修改tooltip组件 */}
+      {showSpecTooltip && activeItem && (
+        <div 
+          className="spec-tooltip"
+          ref={tooltipRef}
+          style={{ 
+            top: tooltipPosition.top, 
+            left: tooltipPosition.left 
+          }}
+          onMouseEnter={handleTooltipMouseEnter}
+          onMouseLeave={handleTooltipMouseLeave}
+        >
+          <h4>
+            {activeItem.name} Specifications
+            <button className="tooltip-close" onClick={closeTooltip}>×</button>
+          </h4>
+          <div className="tooltip-content">
+            {/* 其他信息 */}
+            <div className="tooltip-section">
+              <h5>Product Specifications</h5>
+              <p><strong>Material:</strong> {activeItem.specs.material}</p>
+              <p><strong>Shape:</strong> {activeItem.specs.shape}</p>
+              <p><strong>Thickness (um/gsm):</strong> {activeItem.specs.thickness}</p>
+              <p><strong>Thickness (mil/#):</strong> {selectedUnit === 'imperial' ? 
+                (parseFloat(activeItem.specs.thickness) * 0.03937).toFixed(3) + ' mil' : 
+                activeItem.specs.thickness}</p>
+              <p><strong>Film Width (cm):</strong> {(parseFloat(activeItem.specs.width) / 10).toFixed(1)}</p>
+              <p><strong>Film Width (inch):</strong> {(parseFloat(activeItem.specs.width) / 25.4).toFixed(2)}</p>
+              <p><strong>Bag Length (cm):</strong> {(parseFloat(activeItem.specs.length) / 10).toFixed(1)}</p>
+              <p><strong>Bag Length (inch):</strong> {(parseFloat(activeItem.specs.length) / 25.4).toFixed(2)}</p>
+              <p><strong>Total Length (m):</strong> {activeItem.specs.rollLength}</p>
+              <p><strong>Total Length (ft):</strong> {(parseFloat(activeItem.specs.rollLength) * 3.28084).toFixed(0)}</p>
+            </div>
+            
+            {/* 包装信息 */}
+            <div className="tooltip-section">
+              <h5>Package Information</h5>
+              <p><strong>Package Type:</strong> Carton Box</p>
+              <p><strong>Package Size (cm):</strong> 30 × 25 × 20</p>
+              <p><strong>Package Size (inch):</strong> 11.8 × 9.8 × 7.9</p>
+              <p><strong>Net Weight (kg):</strong> 5.2</p>
+              <p><strong>Net Weight (lbs):</strong> 11.5</p>
+              <p><strong>Pallet Size (cm):</strong> 120 × 100 × 15</p>
+            </div>
+            
+            {/* 托盘信息 */}
+            <div className="tooltip-section">
+              <h5>Pallet Information</h5>
+              <p><strong>Rolls per Pallet:</strong> 40</p>
+              <p><strong>Gross Weight (kg):</strong> 220</p>
+              <p><strong>Gross Weight (lbs):</strong> 485</p>
+              <p><strong>Pallet Height (cm):</strong> 180</p>
+              <p><strong>Pallet Height (inch):</strong> 70.9</p>
+              <p><strong>Core Diameter (cm):</strong> 7.6</p>
+              <p><strong>Core Diameter (inch):</strong> 3.0</p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 } 
