@@ -1,12 +1,27 @@
 import React, { useState, useEffect, ChangeEvent, createRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { getAllSpareParts, SparePart, getSparePartsFilterOptions } from '../../api/sparePartsApi';
 import './SpareParts.css';
 
 // 定义 Timeout 类型，避免使用 NodeJS.Timeout
 type Timeout = ReturnType<typeof setTimeout>;
 
+// 根据登录账号确定用户区域
+const getUserRegionFromEmail = (email: string) => {
+  if (email.includes('eu')) return 'eu';
+  if (email.includes('au')) return 'au';
+  if (email.includes('northamerica')) return 'na';
+  return 'cn'; // 默认为中国区域
+};
+
+// 检查用户是否是VIP
+const isVipUser = (email: string) => {
+  return email.toLowerCase().includes('vip');
+};
+
 const SparePartsPage: React.FC = () => {
+  const navigate = useNavigate();
+  
   // 状态管理
   const [cart, setCart] = useState<any[]>([]);
   const [showCartModal, setShowCartModal] = useState(false);
@@ -14,17 +29,81 @@ const SparePartsPage: React.FC = () => {
   const [currentPartType, setCurrentPartType] = useState('consumable');
   const [currentProductType, setCurrentProductType] = useState('machine');
   const [selectedModel, setSelectedModel] = useState('ALL');
-  const [userAccountType, setUserAccountType] = useState('sales');
   const [activeNotification, setActiveNotification] = useState<HTMLDivElement | null>(null);
   const [notificationTimeout, setNotificationTimeout] = useState<Timeout | null>(null);
-  const [quantities, setQuantities] = useState<Record<number, number>>({});
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  
+  // 用户数据状态
+  const [currentUser, setCurrentUser] = useState({
+    id: '',
+    username: '',
+    role: 'customer',
+    discount: 0.9,
+    name: '',
+    email: '',
+    region: 'cn'
+  });
   
   // API数据状态
-  const [spareParts, setSpareParts] = useState<SparePart[]>([]);
+  const [spareParts, setSpareParts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hostModels, setHostModels] = useState<string[]>([]);
   const [accessoryModels, setAccessoryModels] = useState<string[]>([]);
+  
+  // 检查用户身份验证
+  useEffect(() => {
+    const authData = localStorage.getItem('user');
+    
+    if (!authData) {
+      // 未登录，重定向到登录页面
+      navigate('/login');
+      return;
+    }
+    
+    try {
+      const userData = JSON.parse(authData);
+      const userEmail = userData.email || '';
+      const isVip = isVipUser(userEmail);
+      
+      // 设置用户数据
+      setCurrentUser({
+        id: userData.id || 'guest',
+        username: userData.username || userData.name || 'Guest User',
+        role: userData.role || 'customer',
+        // VIP用户有更高的折扣, 伙伴关系次之
+        discount: isVip ? 0.8 : userData.role === 'partner' ? 0.85 : 0.9,
+        name: userData.name || userData.displayName || 'Guest User',
+        email: userEmail,
+        region: getUserRegionFromEmail(userEmail)
+      });
+    } catch (err) {
+      console.error('Error parsing auth data:', err);
+      navigate('/login');
+    }
+  }, [navigate]);
+  
+  // 获取用户角色的显示名称
+  const getRoleDisplayName = (role: string) => {
+    switch (role) {
+      case 'admin': return 'Admin';
+      case 'sales': return 'Sales';
+      case 'customer': return 'Customer';
+      case 'partner': return 'Partner';
+      default: return 'Guest';
+    }
+  };
+  
+  // Get the currency symbol based on user's region
+  const getCurrencySymbol = () => {
+    switch(currentUser.region) {
+      case 'eu': return '€';
+      case 'na': return '$';
+      case 'au': return 'A$';
+      case 'cn': return '¥';
+      default: return '¥';
+    }
+  };
   
   // 在组件首次渲染时从localStorage加载购物车数据并获取备件数据
   useEffect(() => {
@@ -347,36 +426,27 @@ const SparePartsPage: React.FC = () => {
   // 创建对数量输入框的引用
   const quantityRefs = React.useRef<Record<string, HTMLInputElement>>({});
   
-  // 处理数量变化
+  // 更新数量输入框
   const handleQuantityChange = (
-    id: number,
+    id: string,
     event?: React.ChangeEvent<HTMLInputElement>,
     action?: 'increase' | 'decrease'
   ) => {
-    const refKey = `quantity-${id}`;
-    const input = quantityRefs.current[refKey];
+    let newValue = quantities[id] || 1;
     
-    if (!input) {
-      console.error(`No ref found for quantity input with id ${id}`);
-      return;
-    }
-    
-    let value = event ? parseInt(event.target.value) || 0 : parseInt(input.value) || 0;
-
     if (action === 'increase') {
-      value += 1;
+      newValue += 1;
     } else if (action === 'decrease') {
-      value = Math.max(0, value - 1);
+      newValue = Math.max(1, newValue - 1);
+    } else if (event) {
+      const inputValue = parseInt(event.target.value);
+      newValue = isNaN(inputValue) ? 1 : Math.max(1, inputValue);
     }
-
-    // 更新输入框的值
-    input.value = value.toString();
-
-    // 更新state
-    setQuantities((prev) => ({
-      ...prev,
-      [id]: value
-    }));
+    
+    setQuantities({
+      ...quantities,
+      [id]: newValue
+    });
   };
   
   // 计算购物车总价
@@ -393,160 +463,156 @@ const SparePartsPage: React.FC = () => {
   
   // 渲染备件列表
   const renderSpareParts = () => {
+    const filteredParts = getFilteredParts();
+    
     if (loading) {
       return (
-        <div className="loading-container">
+        <div className="loading-state">
           <div className="loading-spinner"></div>
-          <div className="loading-text">正在加载备件数据...</div>
+          <p>Loading spare parts...</p>
         </div>
       );
     }
     
     if (error) {
       return (
-        <div className="error-container">
-          <div className="error-icon">⚠️</div>
-          <div className="error-message">{error}</div>
-          <button className="retry-button" onClick={loadSparePartsData}>重新加载</button>
+        <div className="error-state">
+          <div className="error-icon">!</div>
+          <p>{error}</p>
         </div>
       );
     }
-    
-    const filteredParts = getFilteredParts();
     
     if (filteredParts.length === 0) {
       return (
-        <div style={{ textAlign: 'center', padding: '30px', color: '#666' }}>
-          没有找到符合条件的备件
+        <div className="empty-state">
+          <div className="empty-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+          </div>
+          <p>No spare parts found matching your criteria.</p>
         </div>
       );
     }
     
-    return filteredParts.map(part => {
-      // 价格层级HTML
-      const priceTiersHtml = part.prices?.tiers.map((tier: any, index: number) => {
-        if (index === 0) {
-          return (
-            <div className="price-tier" key={index}>
-              <span className="original-price">¥{part.prices?.original.toFixed(2)}</span>
-              <span className="current-price">¥{tier.price.toFixed(2)}</span> ({tier.range})
-            </div>
-          );
-        } else {
-          return (
-            <div className="price-tier" key={index}>
-              ¥{tier.price.toFixed(2)} ({tier.range})
-            </div>
-          );
-        }
-      }) || [];
-      
-      // 库存地区HTML
-      const inventoryLocationsHtml = part.inventory?.locations.map((location: any, index: number) => (
-        <div key={index}>{location.code}: {location.count}</div>
-      )) || [];
-      
-      // 为每个备件项生成一个唯一的引用key
-      const refKey = `quantity-${part.id}`;
-      const partId = Number(part.id);
-      
-      return (
-        <div className="spare-part-item" key={part.id}>
-          <div className="part-image">
-            <img 
-              src={part.image_url} 
-              alt={part.name_cn} 
-              onError={handleImageError}
-            />
-          </div>
-          <div className="part-details">
-            <div className="part-info">
-              <h3>{part.name_cn}</h3>
-              
-              <div className="part-property">
-                <span className="property-label">料号:</span>
-                <span>{part.part_number}</span>
-              </div>
-              
-              <div className="part-property">
-                <span className="property-label">适配型号:</span>
-                <span>{part.app_model}</span>
-              </div>
-              
-              <div className="part-property">
-                <span className="property-label">适配序列号:</span>
-                <span>{part.app_sn}</span>
-              </div>
-              
-              <div className="part-property">
-                <span className="property-label">配件类型:</span>
-                <span>{part.accessory_type || '-'}</span>
-              </div>
-              
-              <div className="part-property">
-                <span className="property-label">包装尺寸:</span>
-                <span>{part.package_size}</span>
-              </div>
-              
-              <div className="part-property">
-                <span className="property-label">包装毛重:</span>
-                <span>{part.package_weight} kg</span>
-              </div>
-            </div>
-          </div>
-          <div className="price-column">
-            <div className="price-tiers">
-              {priceTiersHtml}
-            </div>
-          </div>
-          <div className="inventory-column">
-            <div className="inventory-status">
-              <div className={`inventory-badge inventory-${part.inventory?.status || 'medium'}`}>
-                {part.inventory?.statusText || '适中'}
-              </div>
-            </div>
-            {inventoryLocationsHtml}
-          </div>
-          <div className="part-actions">
-            <div className="quantity-control">
-              <button 
-                className="quantity-btn" 
-                onClick={() => handleQuantityChange(partId, undefined, 'decrease')}
-              >
-                -
-              </button>
-              <input 
-                type="number" 
-                className={`quantity-input quantity-input-${part.id}`}
-                min="1" 
-                defaultValue="1" 
-                max="999"
-                onChange={(e) => handleQuantityChange(partId, e)}
-                ref={el => {
-                  if (el) quantityRefs.current[refKey] = el;
-                }}
-                data-id={part.id}
-              />
-              <button 
-                className="quantity-btn" 
-                onClick={() => handleQuantityChange(partId, undefined, 'increase')}
-              >
-                +
-              </button>
-            </div>
-            <button 
-              className="add-to-cart" 
-              onClick={() => {
-                const quantity = quantities[partId] || 1;
-                addToCart(part.id, part.name_cn, part.prices?.tiers[0].price || 0, quantity);
-              }}
-            >
-              <span className="cart-icon-small">🛒</span> 添加
-            </button>
-          </div>
+    return (
+      <>
+        <div className="spare-parts-list-header">
+          <div className="list-header-image">Image</div>
+          <div className="list-header-details">Part Details</div>
+          <div className="list-header-pricing">Pricing & Actions</div>
         </div>
-      );
-    });
+        <div className="spare-parts-list">
+          {filteredParts.map((part) => (
+            <div key={part.id} className="spare-part-item">
+              <div className="part-image">
+                <img 
+                  src={part.image_url} 
+                  alt={part.name_cn || part.part_number} 
+                  onError={handleImageError}
+                />
+              </div>
+              
+              <div className="part-content">
+                <div className="part-details">
+                  <h3 className="part-name">{part.name_cn || part.part_number}</h3>
+                  <div className="part-specs">
+                    <div className="spec-item">
+                      <span className="spec-label">Part Number:</span>
+                      <span className="spec-value">{part.part_number}</span>
+                    </div>
+                    <div className="spec-item">
+                      <span className="spec-label">Compatible:</span>
+                      <span className="spec-value">{part.app_model || 'Universal'}</span>
+                    </div>
+                    
+                    {/* Only show inventory for sales and admin */}
+                    {(currentUser.role === 'sales' || currentUser.role === 'admin') && (
+                      <div className="spec-item inventory">
+                        <span className="spec-label">Inventory:</span>
+                        <span className="spec-value">
+                          {part.inventory?.total || part.inventory?.status || 'Not available'}
+                        </span>
+                      </div>
+                    )}
+                    
+                    <div className="spec-item">
+                      <span className="spec-label">Package:</span>
+                      <span className="spec-value">{part.package_size}</span>
+                    </div>
+                    <div className="spec-item">
+                      <span className="spec-label">Weight:</span>
+                      <span className="spec-value">{part.package_weight}kg</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="part-pricing">
+                  <div className="price-tiers">
+                    {/* Display price tiers with role-based pricing and regional currency */}
+                    {part.prices && part.prices.tiers ? (
+                      part.prices.tiers.map((tier: any, index: number) => (
+                        <div key={index} className="price-tier">
+                          <span className="tier-range">{tier.range}:</span>
+                          <span className="tier-price">
+                            {getCurrencySymbol()}{tier.price.toFixed(2)}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="price-tier">
+                        <span className="tier-price">
+                          {getCurrencySymbol()}{(part.prices?.current || 0).toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="part-actions">
+                    <div className="quantity-control">
+                      <button 
+                        className="quantity-btn minus"
+                        onClick={() => handleQuantityChange(part.id, undefined, 'decrease')}
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        min="1"
+                        value={quantities[part.id] || 1}
+                        onChange={(e) => handleQuantityChange(part.id, e)}
+                        className="quantity-input"
+                      />
+                      <button 
+                        className="quantity-btn plus"
+                        onClick={() => handleQuantityChange(part.id, undefined, 'increase')}
+                      >
+                        +
+                      </button>
+                    </div>
+                    
+                    <button 
+                      className="add-to-cart-btn"
+                      onClick={() => addToCart(
+                        part.id,
+                        part.name_cn || part.part_number,
+                        part.prices?.current || part.prices?.tiers?.[0]?.price || 0,
+                        quantities[part.id] || 1
+                      )}
+                    >
+                      Add to Cart
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </>
+    );
   };
   
   // 渲染购物车项
@@ -619,139 +685,137 @@ const SparePartsPage: React.FC = () => {
   };
 
   return (
-    <>
-      {/* 面包屑导航 */}
+    <div className="spare-parts-page">
+      {/* 显示添加到购物车的通知 */}
+      <div className="cart-notifications" id="cart-notifications"></div>
+      
       <div className="breadcrumb">
-        <Link to="/">首页</Link> &gt; <Link to="/products">产品中心</Link> &gt; <span>备件选择</span>
+        <Link to="/">Home</Link> &gt; <Link to="/products">Products</Link> &gt; <span>Spare Parts</span>
       </div>
       
-      {/* 角色切换器 */}
-      <div className="role-switcher">
-        <div className="role-title">选择身份</div>
-        <div className="role-buttons">
-          <button
-            className={`role-button ${userAccountType === 'customer' ? 'active' : ''}`}
-            onClick={() => setUserAccountType('customer')}
-          >
-            普通客户
-          </button>
-          <button
-            className={`role-button ${userAccountType === 'partner' ? 'active' : ''}`}
-            onClick={() => setUserAccountType('partner')}
-          >
-            合作伙伴
-          </button>
-          <button
-            className={`role-button ${userAccountType === 'sales' ? 'active' : ''}`}
-            onClick={() => setUserAccountType('sales')}
-          >
-            销售人员
-          </button>
+      <div className="top-bar">
+        <div className="top-bar-content">
+          <span>Please find and select the spare parts you need.</span>
         </div>
       </div>
       
-      {/* 产品栏目标题 */}
-      <div className="section-title">
-        <div className="title-text">
-          <h2>备件选择</h2>
-          <p>选择完毕后请点击加入购物车</p>
-        </div>
-      </div>
-      
-      {/* 备件类型选择 */}
-      <div className="tabs">
-        <button 
-          className={`tab-button ${currentPartType === 'consumable' ? 'active' : ''}`}
-          onClick={() => setCurrentPartType('consumable')}
-        >
-          耗材配件
-        </button>
-        <button 
-          className={`tab-button ${currentPartType === 'wearing' ? 'active' : ''}`}
-          onClick={() => setCurrentPartType('wearing')}
-        >
-          易损配件
-        </button>
-        <button 
-          className={`tab-button ${currentPartType === 'standard' ? 'active' : ''}`}
-          onClick={() => setCurrentPartType('standard')}
-        >
-          标准配件
-        </button>
-      </div>
-      
-      {/* 主机型号筛选 */}
-      <div className="filter-section">
-        <div className="filter-title">主机型号</div>
-        <div className="filter-options">
-          <button 
-            className={`filter-option ${selectedModel === 'ALL' ? 'active' : ''}`} 
-            onClick={() => setSelectedModel('ALL')}
-          >
-            ALL
-          </button>
-          {hostModels.map((model, index) => (
+      <div className="user-info-bar">
+        <div className="container">
+          <div className="user-info">
+            <span className="user-label">User:</span>
+            <span className="user-value">{currentUser.name || currentUser.username}</span>
+            <span className="role-badge">{getRoleDisplayName(currentUser.role)}</span>
+            {isVipUser(currentUser.email) && (
+              <span className="vip-badge">VIP</span>
+            )}
+          </div>
+          <div className="user-actions">
+            <div className="user-email">
+              <span className="email-label">Email:</span>
+              <span className="email-value">{currentUser.email}</span>
+            </div>
             <button 
-              key={index}
-              className={`filter-option ${selectedModel === model ? 'active' : ''}`}
-              onClick={() => setSelectedModel(model)}
+              className="btn-logout" 
+              onClick={() => {
+                localStorage.removeItem('user');
+                navigate('/login');
+              }}
             >
-              {model}
+              Logout
             </button>
-          ))}
+          </div>
+        </div>
+        
+        <div className="container" style={{ marginTop: '10px' }}>
+          <div className="user-role">
+            <span>Region:</span>
+            <span className="role-badge">{currentUser.region.toUpperCase()}</span>
+            <span className="currency-label">Currency: {getCurrencySymbol()}</span>
+            {isVipUser(currentUser.email) && (
+              <span className="discount-badge">Discount: 20%</span>
+            )}
+            {!isVipUser(currentUser.email) && currentUser.role === 'partner' && (
+              <span className="discount-badge">Discount: 15%</span>
+            )}
+            {!isVipUser(currentUser.email) && currentUser.role === 'customer' && (
+              <span className="discount-badge">Discount: 10%</span>
+            )}
+          </div>
         </div>
       </div>
       
-      {/* 辅机型号筛选 */}
-      <div className="filter-section">
-        <div className="filter-title">辅机型号</div>
-        <div className="filter-options">
-          <button 
-            className={`filter-option ${currentProductType === 'machine' ? 'active' : ''}`}
-            onClick={() => setCurrentProductType('machine')}
-          >
-            ALL
-          </button>
-          {accessoryModels.map((model, index) => (
-            <button 
-              key={index}
-              className={`filter-option ${currentProductType === model ? 'active' : ''}`}
-              onClick={() => setCurrentProductType(model)}
+      <h1 className="page-title">Spare Parts & Accessories</h1>
+      
+      <div className="filter-container">
+        {/* 备件类型选择 */}
+        <div className="filter-section">
+          <h3>Part Type</h3>
+          <div className="part-type-buttons">
+            <button
+              className={`part-type-button ${currentPartType === 'consumable' ? 'active' : ''}`}
+              onClick={() => setCurrentPartType('consumable')}
             >
-              {model}
+              Consumables
             </button>
-          ))}
+            <button
+              className={`part-type-button ${currentPartType === 'electronic' ? 'active' : ''}`}
+              onClick={() => setCurrentPartType('electronic')}
+            >
+              Electronics
+            </button>
+            <button
+              className={`part-type-button ${currentPartType === 'mechanical' ? 'active' : ''}`}
+              onClick={() => setCurrentPartType('mechanical')}
+            >
+              Mechanical
+            </button>
+          </div>
+        </div>
+        
+        {/* 产品类型选择 */}
+        <div className="filter-section">
+          <h3>Product Type</h3>
+          <div className="product-type-buttons">
+            <button
+              className={`product-type-button ${currentProductType === 'machine' ? 'active' : ''}`}
+              onClick={() => setCurrentProductType('machine')}
+            >
+              Machines
+            </button>
+            <button
+              className={`product-type-button ${currentProductType === 'accessory' ? 'active' : ''}`}
+              onClick={() => setCurrentProductType('accessory')}
+            >
+              Accessories
+            </button>
+          </div>
+        </div>
+        
+        {/* 模型选择 */}
+        <div className="filter-section">
+          <h3>Machine Model</h3>
+          <select
+            value={selectedModel}
+            onChange={(e) => setSelectedModel(e.target.value)}
+            className="model-select"
+          >
+            <option value="ALL">All Models</option>
+            {currentProductType === 'machine' ? (
+              hostModels.map((model, index) => (
+                <option key={index} value={model}>{model}</option>
+              ))
+            ) : (
+              accessoryModels.map((model, index) => (
+                <option key={index} value={model}>{model}</option>
+              ))
+            )}
+          </select>
         </div>
       </div>
       
       {/* 备件列表 */}
       <div className="spare-parts-list-container">
-        {loading ? (
-          <div className="loading-container">
-            <div className="loading-spinner"></div>
-            <div>加载中...</div>
-          </div>
-        ) : error ? (
-          <div className="error-container">
-            <div className="error-icon">!</div>
-            <div>{error}</div>
-          </div>
-        ) : getFilteredParts().length === 0 ? (
-          <div className="empty-container">
-            <div className="empty-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-              </svg>
-            </div>
-            <div>没有找到符合条件的备件</div>
-          </div>
-        ) : (
-          <div className="spare-parts-grid">
-            {renderSpareParts()}
-          </div>
-        )}
+        {renderSpareParts()}
       </div>
       
       {/* 回到顶部按钮 */}
@@ -835,7 +899,7 @@ const SparePartsPage: React.FC = () => {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 
