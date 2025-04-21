@@ -1,6 +1,6 @@
 import React, { useState, useEffect, ChangeEvent, createRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getAllSpareParts, SparePart, getSparePartsFilterOptions } from '../../api/sparePartsApi';
+import { getAllSpareParts, SparePart, getSparePartsFilterOptions, SparePartsFilterOptions } from '../../api/sparePartsApi';
 import './SpareParts.css';
 
 // 定义 Timeout 类型，避免使用 NodeJS.Timeout
@@ -31,7 +31,7 @@ const SparePartsPage: React.FC = () => {
   const [selectedModel, setSelectedModel] = useState('ALL');
   const [activeNotification, setActiveNotification] = useState<HTMLDivElement | null>(null);
   const [notificationTimeout, setNotificationTimeout] = useState<Timeout | null>(null);
-  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [quantities, setQuantities] = useState<{[key: string]: number}>({});
   
   // 用户数据状态
   const [currentUser, setCurrentUser] = useState({
@@ -45,11 +45,16 @@ const SparePartsPage: React.FC = () => {
   });
   
   // API数据状态
-  const [spareParts, setSpareParts] = useState<any[]>([]);
+  const [spareParts, setSpareParts] = useState<SparePart[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hostModels, setHostModels] = useState<string[]>([]);
   const [accessoryModels, setAccessoryModels] = useState<string[]>([]);
+  const [filterOptions, setFilterOptions] = useState<SparePartsFilterOptions | null>(null);
+  
+  // 添加tooltip状态管理
+  const [tooltipVisible, setTooltipVisible] = useState<{ [key: string]: boolean }>({});
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   
   // 检查用户身份验证
   useEffect(() => {
@@ -115,30 +120,25 @@ const SparePartsPage: React.FC = () => {
   // 在筛选条件变化时重新加载数据
   useEffect(() => {
     loadSparePartsData();
-  }, [currentPartType, selectedModel]);
+  }, [currentPartType, currentProductType, selectedModel]);
   
   // 加载备件数据
   const loadSparePartsData = async () => {
+    setLoading(true);
+    setError(null);
+    
     try {
-      setLoading(true);
+      // 使用新的API接口获取数据
       const data = await getAllSpareParts({
         consumable: currentPartType,
-        model: selectedModel !== 'ALL' ? selectedModel : undefined
+        model: selectedModel !== 'ALL' ? selectedModel : undefined,
+        product_type: currentProductType
       });
       
-      // 检查数据是否是数组，如果不是则创建空数组
-      const partsArray = Array.isArray(data) ? data : [];
-      setSpareParts(partsArray);
-      
-      if (!Array.isArray(data)) {
-        console.error('API返回的备件数据不是数组格式:', data);
-      }
-      
-      setError(null);
+      setSpareParts(data);
     } catch (err) {
-      console.error('Failed to load spare parts data:', err);
-      setSpareParts([]);
-      setError('加载备件数据失败，请稍后重试');
+      console.error('Error loading spare parts data:', err);
+      setError('Failed to load spare parts data. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -148,21 +148,11 @@ const SparePartsPage: React.FC = () => {
   const loadFilterOptions = async () => {
     try {
       const options = await getSparePartsFilterOptions();
-      
-      // 验证返回的数据结构，如果不符合预期，则使用默认空数组
-      const hostModelsList = Array.isArray(options?.hostModels) ? options.hostModels : [];
-      const accessoryModelsList = Array.isArray(options?.accessoryModels) ? options.accessoryModels : [];
-      
-      setHostModels(hostModelsList);
-      setAccessoryModels(accessoryModelsList);
-      
-      if (!options || !options.hostModels || !options.accessoryModels) {
-        console.error('API返回的筛选选项数据结构不符合预期:', options);
-      }
+      setFilterOptions(options);
+      setHostModels(options.hostModels);
+      setAccessoryModels(options.accessoryModels);
     } catch (err) {
-      console.error('Failed to load filter options:', err);
-      setHostModels([]);
-      setAccessoryModels([]);
+      console.error('Error loading filter options:', err);
     }
   };
   
@@ -185,30 +175,7 @@ const SparePartsPage: React.FC = () => {
     // 确保 spareParts 不是 null 或 undefined
     if (!Array.isArray(spareParts)) return [];
     
-    return spareParts.filter(part => {
-      // 根据备件类型筛选
-      if (currentPartType === 'consumable' && part.type !== 'consumable') {
-        return false;
-      }
-      if (currentPartType === 'non-consumable' && part.type === 'consumable') {
-        return false;
-      }
-      
-      // 根据产品类型筛选
-      if (currentProductType === 'machine' && part.product_type !== 'machine') {
-        return false;
-      }
-      if (currentProductType === 'accessory' && part.product_type !== 'accessory') {
-        return false;
-      }
-      
-      // 根据模型筛选
-      if (selectedModel !== 'ALL' && !part.app_model?.includes(selectedModel)) {
-        return false;
-      }
-      
-      return true;
-    });
+    return spareParts;
   };
   
   // 找到适合数量的价格区间
@@ -486,6 +453,33 @@ const SparePartsPage: React.FC = () => {
     img.onerror = null; // 防止循环触发
   };
   
+  // 根据库存数量确定库存级别
+  const getInventoryLevel = (quantity: number): string => {
+    if (quantity > 30) return 'high';
+    if (quantity > 10) return 'medium';
+    return 'low';
+  };
+  
+  // 处理规格悬浮提示
+  const handleSpecMouseEnter = (e: React.MouseEvent, partId: string) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setTooltipPosition({
+      x: Math.max(0, rect.left + window.scrollX),
+      y: Math.max(0, rect.bottom + window.scrollY + 5) // 添加5px间距
+    });
+    setTooltipVisible({
+      ...tooltipVisible,
+      [partId]: true
+    });
+  };
+  
+  const handleSpecMouseLeave = (partId: string) => {
+    setTooltipVisible({
+      ...tooltipVisible,
+      [partId]: false
+    });
+  };
+  
   // 渲染备件列表
   const renderSpareParts = () => {
     const filteredParts = getFilteredParts();
@@ -524,120 +518,180 @@ const SparePartsPage: React.FC = () => {
     }
     
     return (
-      <>
-        <div className="spare-parts-list-header">
-          <div className="list-header-image">Image</div>
-          <div className="list-header-details">Part Details</div>
-          <div className="list-header-pricing">Pricing & Actions</div>
-        </div>
-        <div className="spare-parts-list">
+      <table className="products-table">
+        <thead>
+          <tr>
+            <th>Image</th>
+            <th>Product Name</th>
+            <th>Product Code</th>
+            <th>Specifications</th>
+            <th>Price</th>
+            {(currentUser.role === 'sales' || currentUser.role === 'admin') && <th>Inventory</th>}
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
           {filteredParts.map((part) => (
-            <div key={part.id} className="spare-part-item">
-              <div className="part-image">
+            <tr key={part.id}>
+              <td>
                 <img 
                   src={part.image_url} 
-                  alt={part.name_cn || part.part_number} 
+                  alt={part.name_cn} 
+                  className="product-image"
                   onError={handleImageError}
                 />
-              </div>
-              
-              <div className="part-content">
-                <div className="part-details">
-                  <h3 className="part-name">{part.name_cn || part.part_number}</h3>
-                  <div className="part-specs">
-                    <div className="spec-item">
-                      <span className="spec-label">Part Number:</span>
-                      <span className="spec-value">{part.part_number}</span>
-                    </div>
-                    <div className="spec-item">
-                      <span className="spec-label">Compatible:</span>
-                      <span className="spec-value">{part.app_model || 'Universal'}</span>
-                    </div>
-                    
-                    {/* Only show inventory for sales and admin */}
-                    {(currentUser.role === 'sales' || currentUser.role === 'admin') && (
-                      <div className="spec-item inventory">
-                        <span className="spec-label">Inventory:</span>
-                        <span className="spec-value">
-                          {part.inventory?.total || part.inventory?.status || 'Not available'}
-                        </span>
-                      </div>
-                    )}
-                    
-                    <div className="spec-item">
-                      <span className="spec-label">Package:</span>
-                      <span className="spec-value">{part.package_size}</span>
-                    </div>
-                    <div className="spec-item">
-                      <span className="spec-label">Weight:</span>
-                      <span className="spec-value">{part.package_weight}kg</span>
-                    </div>
+              </td>
+              <td>
+                <div className="product-name">{part.name_cn}</div>
+                <div className="product-model">{part.app_model}</div>
+              </td>
+              <td>
+                <div className="product-code">{part.part_number}</div>
+              </td>
+              <td>
+                <div 
+                  className="specs-info"
+                  onMouseEnter={(e) => handleSpecMouseEnter(e, part.id)}
+                  onMouseLeave={() => handleSpecMouseLeave(part.id)}
+                >
+                  <div className="specs-row">
+                    <div className="specs-label">Spec:</div>
+                    <div className="specs-value">{currentUser.region === 'na' || currentUser.region === 'au' ? part.spec_imperial : part.spec}</div>
                   </div>
-                </div>
-                
-                <div className="part-pricing">
-                  <div className="price-tiers">
-                    {/* Display price tiers with role-based pricing and regional currency */}
-                    {part.prices && part.prices.tiers ? (
-                      part.prices.tiers.map((tier: any, index: number) => (
-                        <div key={index} className="price-tier">
-                          <span className="tier-range">{tier.range}:</span>
-                          <span className="tier-price">
-                            {getCurrencySymbol()}{tier.price.toFixed(2)}
-                          </span>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="price-tier">
-                        <span className="tier-price">
-                          {getCurrencySymbol()}{(part.prices?.current || 0).toFixed(2)}
-                        </span>
-                      </div>
-                    )}
+                  <div className="specs-row">
+                    <div className="specs-label">适配序列号:</div>
+                    <div className="specs-value">{part.app_sn}</div>
                   </div>
                   
-                  <div className="part-actions">
-                    <div className="quantity-control">
-                      <button 
-                        className="quantity-btn minus"
-                        onClick={() => handleQuantityChange(part.id, undefined, 'decrease')}
-                      >
-                        -
-                      </button>
-                      <input
-                        type="number"
-                        min="1"
-                        value={quantities[part.id] || 1}
-                        onChange={(e) => handleQuantityChange(part.id, e)}
-                        className="quantity-input"
-                      />
-                      <button 
-                        className="quantity-btn plus"
-                        onClick={() => handleQuantityChange(part.id, undefined, 'increase')}
-                      >
-                        +
-                      </button>
+                  {/* 规格信息悬浮提示 */}
+                  {tooltipVisible[part.id] && (
+                    <div className="specs-tooltip" style={{ left: `${tooltipPosition.x}px`, top: `${tooltipPosition.y}px` }}>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">包装尺寸 cm:</span>
+                        <span className="tooltip-value">{part.package_size}</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">包装尺寸 inch:</span>
+                        <span className="tooltip-value">
+                          {part.package_size_imperial || (() => {
+                            try {
+                              const dimensions = part.package_size.split('×');
+                              if (dimensions.length === 3) {
+                                return `${Math.round(parseFloat(dimensions[0]) / 2.54 * 10) / 10} × ${Math.round(parseFloat(dimensions[1]) / 2.54 * 10) / 10} × ${Math.round(parseFloat(dimensions[2]) / 2.54 * 10) / 10}`;
+                              }
+                              return part.package_size;
+                            } catch (e) {
+                              return part.package_size;
+                            }
+                          })()}
+                        </span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">单件净重 kg:</span>
+                        <span className="tooltip-value">{part.package_weight}</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">单件净重 lbs:</span>
+                        <span className="tooltip-value">{Math.round(part.package_weight * 2.2046 * 100) / 100}</span>
+                      </div>
                     </div>
-                    
-                    <button 
-                      className="add-to-cart-btn"
-                      onClick={() => addToCart(
-                        part.id,
-                        part.name_cn || part.part_number,
-                        part.prices?.current || part.prices?.tiers?.[0]?.price || 0,
-                        quantities[part.id] || 1
-                      )}
-                    >
-                      Add to Cart
-                    </button>
-                  </div>
+                  )}
                 </div>
-              </div>
-            </div>
+              </td>
+              <td>
+                {part.prices.tiers.map((tier, index) => {
+                  let price = tier.price;
+                  switch(currentUser.region) {
+                    case 'eu': price = tier.eu; break;
+                    case 'na': price = tier.na; break;
+                    case 'au': price = tier.au; break;
+                    case 'cn': price = tier.cn; break;
+                  }
+                  
+                  return (
+                    <div key={index} className="price-tier">
+                      <span className="price-range">{tier.range}:</span>
+                      <span className="price-value">
+                        {getCurrencySymbol()}{price.toFixed(2)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </td>
+              {/* 只有销售人员和管理员可以看到库存 */}
+              {(currentUser.role === 'sales' || currentUser.role === 'admin') && (
+                <td>
+                  <div className="inventory-container">
+                    <div className="inventory-item">
+                      <span className="inventory-region">EU:</span>
+                      <span className={`inventory-value ${getInventoryLevel(part.inventory.eu)}`}>{part.inventory.eu}</span>
+                    </div>
+                    <div className="inventory-item">
+                      <span className="inventory-region">NA:</span>
+                      <span className={`inventory-value ${getInventoryLevel(part.inventory.na)}`}>{part.inventory.na}</span>
+                    </div>
+                    <div className="inventory-item">
+                      <span className="inventory-region">AU:</span>
+                      <span className={`inventory-value ${getInventoryLevel(part.inventory.au)}`}>{part.inventory.au}</span>
+                    </div>
+                    <div className="inventory-item">
+                      <span className="inventory-region">CN:</span>
+                      <span className={`inventory-value ${getInventoryLevel(part.inventory.cn)}`}>{part.inventory.cn}</span>
+                    </div>
+                  </div>
+                </td>
+              )}
+              <td>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <span>Qty:</span>
+                  <input 
+                    type="number" 
+                    className="quantity-input" 
+                    value={quantities[part.id] || 1} 
+                    min="1"
+                    onChange={(e) => handleQuantityChange(part.id, e)}
+                  />
+                  <button 
+                    className="btn-add"
+                    onClick={() => addToCart(
+                      part.id,
+                      part.name_cn,
+                      getPriceForRegion(part),
+                      quantities[part.id] || 1
+                    )}
+                  >
+                    Add
+                  </button>
+                </div>
+              </td>
+            </tr>
           ))}
-        </div>
-      </>
+        </tbody>
+      </table>
     );
+  };
+  
+  // 获取区域对应的价格
+  const getPriceForRegion = (part: SparePart): number => {
+    const quantity = quantities[part.id] || 1;
+    const tier = part.prices.tiers.find(t => {
+      const range = t.range.replace(/[^\d-]/g, '');
+      if (range.includes('-')) {
+        const [min, max] = range.split('-').map(Number);
+        return quantity >= min && quantity <= max;
+      } else {
+        const min = parseInt(range.replace('>', ''));
+        return quantity > min;
+      }
+    }) || part.prices.tiers[0];
+    
+    switch(currentUser.region) {
+      case 'eu': return tier.eu;
+      case 'na': return tier.na;
+      case 'au': return tier.au;
+      case 'cn': return tier.cn;
+      default: return tier.price;
+    }
   };
   
   // 渲染购物车项
@@ -721,51 +775,6 @@ const SparePartsPage: React.FC = () => {
       <div className="top-bar">
         <div className="top-bar-content">
           <span>Please find and select the spare parts you need.</span>
-        </div>
-      </div>
-      
-      <div className="user-info-bar">
-        <div className="container">
-          <div className="user-info">
-            <span className="user-label">User:</span>
-            <span className="user-value">{currentUser.name || currentUser.username}</span>
-            <span className="role-badge">{getRoleDisplayName(currentUser.role)}</span>
-            {isVipUser(currentUser.email) && (
-              <span className="vip-badge">VIP</span>
-            )}
-          </div>
-          <div className="user-actions">
-            <div className="user-email">
-              <span className="email-label">Email:</span>
-              <span className="email-value">{currentUser.email}</span>
-            </div>
-            <button 
-              className="btn-logout" 
-              onClick={() => {
-                localStorage.removeItem('user');
-                navigate('/login');
-              }}
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-        
-        <div className="container" style={{ marginTop: '10px' }}>
-          <div className="user-role">
-            <span>Region:</span>
-            <span className="role-badge">{currentUser.region.toUpperCase()}</span>
-            <span className="currency-label">Currency: {getCurrencySymbol()}</span>
-            {isVipUser(currentUser.email) && (
-              <span className="discount-badge">Discount: 20%</span>
-            )}
-            {!isVipUser(currentUser.email) && currentUser.role === 'partner' && (
-              <span className="discount-badge">Discount: 15%</span>
-            )}
-            {!isVipUser(currentUser.email) && currentUser.role === 'customer' && (
-              <span className="discount-badge">Discount: 10%</span>
-            )}
-          </div>
         </div>
       </div>
       
