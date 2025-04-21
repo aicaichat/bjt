@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT 产品列表</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="images/logo.webp" alt="BJT Logo">
+                </a>
+            </div>
+            <div class="navigation">
+                <nav>
+                    <ul class="nav-menu">
+                        <li><a href="index.html" class="nav-link">首页</a></li>
+                        <li><a href="products.html" class="nav-link active">产品</a></li>
+                        <li><a href="#" class="nav-link">文档</a></li>
+                        <li><a href="#" class="nav-link">支持</a></li>
+                    </ul>
+                </nav>
+            </div>
+            <div class="header-actions">
+                <select class="language-select">
+                    <option value="zh">中文</option>
+                    <option value="en">🇬🇧 English</option>
+                    <option value="ja">🇯🇵 日本語</option>
+                    <option value="ko">🇰🇷 한국어</option>
+                    <option value="fr">🇫🇷 français</option>
+                    <option value="de">🇩🇪 Deutsch</option>
+                    <option value="es">🇪🇸 Español</option>
+                    <option value="it">🇮🇹 italiano</option>
+                    <option value="ru">🇷🇺 русский</option>
+                    <option value="pt">🇵🇹 português</option>
+                    <option value="th">🇹🇭 ไทย</option>
+                    <option value="vi">🇻🇳 tiếng việt</option>
+                </select>
+                <div class="user-menu">
+                    <button class="user-menu-toggle">
+                        <div class="user-avatar">访客</div>
+                        <span class="user-name">游客</span>
+                    </button>
+                    <div class="user-menu-content">
+                        <ul>
+                            <li><a href="login.html">登录</a></li>
+                            <li><a href="#">注册</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <main class="container">
+        <div class="page-title">
+            <h1>产品列表</h1>
+        </div>
+        
+        <!-- 过滤器栏 -->
+        <div class="filter-bar">
+            <div class="filter-group">
+                <label for="category-filter">产品分类：</label>
+                <select id="category-filter" class="filter-select">
+                    <option value="all">全部产品</option>
+                    <option value="machining">机床加工</option>
+                    <option value="edm">电加工设备</option>
+                    <option value="sheet">钣金设备</option>
+                    <option value="laser">激光加工</option>
+                    <option value="plasma">等离子切割</option>
+                    <option value="welding">焊接设备</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="price-filter">价格范围：</label>
+                <select id="price-filter" class="filter-select">
+                    <option value="all">全部价格</option>
+                    <option value="0-100000">¥0 - ¥100,000</option>
+                    <option value="100000-200000">¥100,000 - ¥200,000</option>
+                    <option value="200000-300000">¥200,000 - ¥300,000</option>
+                    <option value="300000+">¥300,000+</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="sort-by">排序方式：</label>
+                <select id="sort-by" class="filter-select">
+                    <option value="default">默认排序</option>
+                    <option value="price-asc">价格：从低到高</option>
+                    <option value="price-desc">价格：从高到低</option>
+                    <option value="name-asc">名称：A-Z</option>
+                    <option value="name-desc">名称：Z-A</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- 产品列表 -->
+        <div class="product-grid" id="product-grid">
+            <!-- 产品将由JavaScript动态加载 -->
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <div class="footer-container">
+                <div class="footer-col">
+                    <h3>关于我们</h3>
+                    <ul>
+                        <li><a href="#">公司简介</a></li>
+                        <li><a href="#">发展历程</a></li>
+                        <li><a href="#">联系我们</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h3>产品中心</h3>
+                    <ul>
+                        <li><a href="#">气垫包装系统</a></li>
+                        <li><a href="#">纸垫包装系统</a></li>
+                        <li><a href="#">机床加工设备</a></li>
+                        <li><a href="#">激光加工设备</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h3>客户支持</h3>
+                    <ul>
+                        <li><a href="#">技术支持</a></li>
+                        <li><a href="#">下载中心</a></li>
+                        <li><a href="#">常见问题</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>Copyright © 2023 Hangzhou Bingjia Tech. Co., Ltd. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <script src="js/main.js"></script>
+    <script src="js/data.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 语言选择器事件
+            document.querySelector('.language-select').addEventListener('change', function() {
+                const selectedLanguage = this.value;
+                showNotification(`语言已切换为: ${selectedLanguage}`, 'success');
+            });
+            
+            // 用户菜单展开/收起
+            const userMenuToggle = document.querySelector('.user-menu-toggle');
+            if (userMenuToggle) {
+                userMenuToggle.addEventListener('click', function() {
+                    const userMenu = this.closest('.user-menu');
+                    userMenu.classList.toggle('active');
+                });
+                
+                // 点击页面其他位置关闭用户菜单
+                document.addEventListener('click', function(e) {
+                    const userMenu = document.querySelector('.user-menu');
+                    if (!userMenu.contains(e.target)) {
+                        userMenu.classList.remove('active');
+                    }
+                });
+            }
+            
+            // 渲染产品列表
+            renderProducts();
+            
+            // 筛选器事件
+            document.getElementById('category-filter').addEventListener('change', renderProducts);
+            document.getElementById('price-filter').addEventListener('change', renderProducts);
+            document.getElementById('sort-by').addEventListener('change', renderProducts);
+        });
+        
+        // 渲染产品列表
+        function renderProducts() {
+            // 获取筛选值
+            const categoryFilter = document.getElementById('category-filter').value;
+            const priceFilter = document.getElementById('price-filter').value;
+            const sortBy = document.getElementById('sort-by').value;
+            
+            const productGrid = document.getElementById('product-grid');
+            productGrid.innerHTML = '';
+            
+            // 过滤产品
+            let filteredProducts = window.data.products.filter(product => {
+                // 类别筛选
+                if (categoryFilter !== 'all' && product.category !== categoryFilter) {
+                    return false;
+                }
+                
+                // 价格筛选
+                if (priceFilter !== 'all') {
+                    const price = product.price;
+                    if (priceFilter === '0-100000' && (price < 0 || price > 100000)) {
+                        return false;
+                    } else if (priceFilter === '100000-200000' && (price < 100000 || price > 200000)) {
+                        return false;
+                    } else if (priceFilter === '200000-300000' && (price < 200000 || price > 300000)) {
+                        return false;
+                    } else if (priceFilter === '300000+' && price < 300000) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
+            
+            // 排序产品
+            if (sortBy === 'price-asc') {
+                filteredProducts.sort((a, b) => a.price - b.price);
+            } else if (sortBy === 'price-desc') {
+                filteredProducts.sort((a, b) => b.price - a.price);
+            } else if (sortBy === 'name-asc') {
+                filteredProducts.sort((a, b) => a.title.localeCompare(b.title));
+            } else if (sortBy === 'name-desc') {
+                filteredProducts.sort((a, b) => b.title.localeCompare(a.title));
+            }
+            
+            // 渲染产品
+            filteredProducts.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = 'product-card';
+                
+                const priceDisplay = product.oldPrice 
+                    ? `<span class="old-price">¥${product.oldPrice.toLocaleString()}</span> <span class="current-price">¥${product.price.toLocaleString()}</span>`
+                    : `<span class="current-price">¥${product.price.toLocaleString()}</span>`;
+                
+                productCard.innerHTML = `
+                    <div class="product-image">
+                        <img src="${product.images[0]}" alt="${product.title}">
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-title">${product.title}</h3>
+                        <div class="product-price">${priceDisplay}</div>
+                        <div class="product-meta">
+                            <span>${getCategoryName(product.category)}</span>
+                            <span>${product.inStock ? '有库存' : '无库存'}</span>
+                        </div>
+                    </div>
+                `;
+                
+                productCard.addEventListener('click', function() {
+                    window.location.href = `product-detail.html?id=${product.id}`;
+                });
+                
+                productGrid.appendChild(productCard);
+            });
+            
+            // 如果没有产品
+            if (filteredProducts.length === 0) {
+                productGrid.innerHTML = '<div class="no-products">没有找到符合条件的产品</div>';
+            }
+        }
+        
+        // 获取分类名称
+        function getCategoryName(categoryId) {
+            const category = window.data.categories.find(cat => cat.id === categoryId);
+            return category ? category.name : categoryId;
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,189 @@
+:root {
+  /* 
+   * 主题色设置
+   * 整个系统的基础色彩配置
+   */
+  
+  /* 主色系 */
+  --primary: #4F46E5;           /* 主题色 - 靛蓝 */
+  --primary-light: #818CF8;     /* 主题色浅色 */
+  --primary-dark: #4338CA;      /* 主题色深色 */
+  --primary-bg: #EEF2FF;        /* 主题色背景 */
+  
+  /* 辅助色 */
+  --secondary: #10B981;         /* 辅助色 - 绿色 */
+  --secondary-light: #34D399;   /* 辅助色浅色 */
+  --secondary-dark: #059669;    /* 辅助色深色 */
+  --secondary-bg: #ECFDF5;      /* 辅助色背景 */
+  
+  /* 强调色 */
+  --accent: #FB923C;            /* 强调色 - 橙色 */
+  --accent-light: #FDBA74;      /* 强调色浅色 */
+  --accent-dark: #EA580C;       /* 强调色深色 */
+  --accent-bg: #FFF7ED;         /* 强调色背景 */
+  
+  /* 状态颜色 */
+  --success: #22C55E;           /* 成功状态 */
+  --error: #EF4444;             /* 错误状态 */
+  --warning: #F59E0B;           /* 警告状态 */
+  --info: #3B82F6;              /* 信息状态 */
+  
+  /* 中性色 */
+  --gray-50: #F9FAFB;
+  --gray-100: #F3F4F6;
+  --gray-200: #E5E7EB;
+  --gray-300: #D1D5DB;
+  --gray-400: #9CA3AF;
+  --gray-500: #6B7280;
+  --gray-600: #4B5563;
+  --gray-700: #374151;
+  --gray-800: #1F2937;
+  --gray-900: #111827;
+  
+  /* 背景色 */
+  --background-primary: #FFFFFF;   /* 主背景色 */
+  --background-secondary: #F9FAFB; /* 次要背景色 */
+  --background-card: #FFFFFF;      /* 卡片背景色 */
+  --background-modal: #FFFFFF;     /* 模态框背景色 */
+  
+  /* 文本颜色 */
+  --text-primary: #111827;       /* 主要文本颜色 */
+  --text-secondary: #4B5563;     /* 次要文本颜色 */
+  --text-tertiary: #9CA3AF;      /* 第三级文本颜色 */
+  --text-disabled: #D1D5DB;      /* 禁用文本颜色 */
+  --text-onPrimary: #FFFFFF;     /* 主色上的文本 */
+  --text-onDark: #FFFFFF;        /* 深色背景上的文本 */
+  
+  /* 边框颜色 */
+  --border-light: #E5E7EB;       /* 浅色边框 */
+  --border-default: #D1D5DB;     /* 默认边框 */
+  --border-dark: #9CA3AF;        /* 深色边框 */
+  
+  /*
+   * 尺寸、间距与大小设置
+   */
+  
+  /* 基础间距（4px的倍数） */
+  --spacing-0: 0;
+  --spacing-1: 0.25rem; /* 4px */
+  --spacing-2: 0.5rem;  /* 8px */
+  --spacing-3: 0.75rem; /* 12px */
+  --spacing-4: 1rem;    /* 16px */
+  --spacing-5: 1.25rem; /* 20px */
+  --spacing-6: 1.5rem;  /* 24px */
+  --spacing-8: 2rem;    /* 32px */
+  --spacing-10: 2.5rem; /* 40px */
+  --spacing-12: 3rem;   /* 48px */
+  --spacing-16: 4rem;   /* 64px */
+  --spacing-20: 5rem;   /* 80px */
+  --spacing-24: 6rem;   /* 96px */
+  --spacing-32: 8rem;   /* 128px */
+  
+  /* 边框半径 */
+  --radius-none: 0;
+  --radius-sm: 0.125rem;    /* 2px */
+  --radius-default: 0.25rem; /* 4px */
+  --radius-md: 0.375rem;    /* 6px */
+  --radius-lg: 0.5rem;      /* 8px */
+  --radius-xl: 0.75rem;     /* 12px */
+  --radius-2xl: 1rem;       /* 16px */
+  --radius-3xl: 1.5rem;     /* 24px */
+  --radius-full: 9999px;    /* 圆形 */
+  
+  /* 阴影 */
+  --shadow-none: none;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+  --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+  
+  /* 字体大小 */
+  --text-xs: 0.75rem;      /* 12px */
+  --text-sm: 0.875rem;     /* 14px */
+  --text-base: 1rem;       /* 16px */
+  --text-lg: 1.125rem;     /* 18px */
+  --text-xl: 1.25rem;      /* 20px */
+  --text-2xl: 1.5rem;      /* 24px */
+  --text-3xl: 1.875rem;    /* 30px */
+  --text-4xl: 2.25rem;     /* 36px */
+  --text-5xl: 3rem;        /* 48px */
+  
+  /* 字体粗细 */
+  --weight-thin: 100;
+  --weight-extralight: 200;
+  --weight-light: 300;
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --weight-extrabold: 800;
+  --weight-black: 900;
+  
+  /* 行高 */
+  --line-none: 1;
+  --line-tight: 1.25;
+  --line-snug: 1.375;
+  --line-normal: 1.5;
+  --line-relaxed: 1.625;
+  --line-loose: 2;
+  
+  /* 
+   * 过渡和动画设置
+   */
+  --transition-fastest: 0.05s;
+  --transition-fast: 0.1s;
+  --transition-normal: 0.2s;
+  --transition-slow: 0.3s;
+  --transition-slower: 0.5s;
+  
+  /* 
+   * z-index层级设置
+   */
+  --z-0: 0;
+  --z-10: 10;
+  --z-20: 20;
+  --z-30: 30;
+  --z-40: 40;
+  --z-50: 50;
+  --z-dropdown: 100;       /* 下拉菜单 */
+  --z-sticky: 200;         /* 粘性元素 */
+  --z-fixed: 300;          /* 固定定位 */
+  --z-drawer: 400;         /* 抽屉组件 */
+  --z-modal: 500;          /* 模态框 */
+  --z-modal-backdrop: 490; /* 模态框背景 */
+  --z-tooltip: 600;        /* 工具提示 */
+  --z-toast: 700;          /* 消息提示 */
+  --z-popup: 800;          /* 弹出层 */
+  --z-max: 9999;           /* 最高层级 */
+  
+  /* 
+   * 网格设置
+   */
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
+  --container-2xl: 1536px;
+  
+  /* 响应式断点 */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+}
+
+/* 响应式断点 */
+/* 这些是在媒体查询中使用的值
+   使用方法:
+   @media (max-width: 768px) {
+     // 平板样式
+   }
+   
+   @media (max-width: 480px) {
+     // 手机样式
+   }
+*/ 

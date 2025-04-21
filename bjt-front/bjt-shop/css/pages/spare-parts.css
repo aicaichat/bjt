@@ -1,0 +1,477 @@
+/* 备件选择页面样式 */
+.spare-parts-page {
+    padding-bottom: 50px;
+}
+
+/* 账号信息 */
+.account-info {
+    margin-bottom: 20px;
+    background-color: #f8f9fa;
+    padding: 12px;
+    border-radius: 6px;
+    border-left: 4px solid var(--primary-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.account-type {
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.account-type-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-left: 10px;
+}
+
+.badge-sales {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+}
+
+.badge-distributor {
+    background-color: #fff3e0;
+    color: #e65100;
+}
+
+.badge-customer {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+/* 产品类型选项卡 */
+.product-type-tabs {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.product-type-tab {
+    padding: 12px 24px;
+    background-color: var(--gray-light);
+    border: 1px solid var(--border-color);
+    border-bottom: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    margin-right: 5px;
+}
+
+.product-type-tab.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.product-type-tab:hover:not(.active) {
+    background-color: var(--gray);
+}
+
+/* 模型选择 */
+.model-select {
+    margin: 20px 0;
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: var(--box-shadow);
+}
+
+.model-select label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: var(--primary-color);
+}
+
+.model-select select {
+    width: 100%;
+    max-width: 300px;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: white;
+    font-size: 16px;
+}
+
+/* 备件分类 */
+.spare-parts-types {
+    margin: 30px 0;
+}
+
+.spare-parts-title {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: var(--primary-color);
+    position: relative;
+    padding-bottom: 10px;
+}
+
+.spare-parts-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 80px;
+    height: 3px;
+    background: var(--primary-color);
+}
+
+.spare-parts-tabs {
+    display: flex;
+    margin-bottom: 30px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tab-button {
+    padding: 12px 24px;
+    background-color: var(--gray-light);
+    border: 1px solid var(--border-color);
+    border-bottom: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    margin-right: 5px;
+}
+
+.tab-button.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.tab-button:hover:not(.active) {
+    background-color: var(--gray);
+}
+
+/* 备件列表标题行 */
+.spare-parts-list-header {
+    display: grid;
+    grid-template-columns: 120px 1fr 200px 160px 160px;
+    gap: 15px;
+    margin-bottom: 15px;
+    padding: 0 20px 10px;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: bold;
+    color: var(--text-light);
+}
+
+/* 备件列表项 */
+.spare-part-item {
+    background-color: white;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    display: grid;
+    grid-template-columns: 120px 1fr 200px 160px 160px;
+    gap: 15px;
+    align-items: center;
+    box-shadow: var(--box-shadow);
+    transition: all 0.3s ease;
+}
+
+.spare-part-item:hover {
+    box-shadow: var(--box-shadow-hover);
+    transform: translateY(-2px);
+}
+
+.part-image {
+    width: 100%;
+}
+
+.part-image img {
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+    border: 1px solid #eee;
+    padding: 5px;
+}
+
+.part-details {
+    flex: 1;
+    min-width: 300px;
+}
+
+.part-info h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: var(--primary-color);
+}
+
+.part-properties {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: 10px;
+    margin-bottom: 15px;
+}
+
+.part-property {
+    margin-bottom: 8px;
+    display: flex;
+}
+
+.property-label {
+    font-weight: bold;
+    width: 120px;
+    color: var(--text-light);
+}
+
+.price-tiers {
+    margin-top: 0;
+    border-top: none;
+    padding-top: 0;
+}
+
+.price-tier {
+    margin-bottom: 5px;
+    color: var(--secondary-color);
+    font-weight: 500;
+}
+
+.original-price {
+    text-decoration: line-through;
+    color: #888;
+    font-size: 0.9em;
+}
+
+.current-price {
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.inventory-column {
+    text-align: center;
+}
+
+.inventory-status {
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.inventory-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+
+.inventory-high {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.inventory-medium {
+    background-color: #fff3e0;
+    color: #e65100;
+}
+
+.inventory-low {
+    background-color: #ffebee;
+    color: #c62828;
+}
+
+.part-actions {
+    text-align: center;
+}
+
+.quantity-control {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.quantity-btn {
+    width: 32px;
+    height: 32px;
+    background-color: var(--gray-light);
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.quantity-btn:hover {
+    background-color: var(--gray);
+}
+
+.quantity-input {
+    width: 50px;
+    height: 32px;
+    padding: 0 5px;
+    text-align: center;
+    border: none;
+    border-left: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    font-size: 16px;
+}
+
+.add-to-cart {
+    padding: 10px 20px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.add-to-cart:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.cart-icon-small {
+    margin-right: 8px;
+}
+
+/* 提示框样式 */
+.info-tooltip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    font-size: 12px;
+    margin-left: 10px;
+    cursor: pointer;
+}
+
+.tooltip-content {
+    position: absolute;
+    top: -5px;
+    left: 30px;
+    width: 280px;
+    background-color: white;
+    border-radius: 6px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    padding: 15px;
+    z-index: 100;
+    font-size: 14px;
+    color: #333;
+    visibility: hidden;
+    opacity: 0;
+    transition: all 0.3s ease;
+    transform: translateY(10px);
+    pointer-events: none;
+}
+
+.info-tooltip:hover .tooltip-content {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.tooltip-title {
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: var(--primary-color);
+    font-size: 16px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 5px;
+}
+
+.tooltip-property {
+    margin-bottom: 5px;
+}
+
+.tooltip-property-label {
+    font-weight: 600;
+    color: #555;
+    margin-right: 5px;
+}
+
+.tooltip-section {
+    margin-bottom: 10px;
+}
+
+/* 响应式设计 */
+@media (max-width: 992px) {
+    .spare-part-item {
+        grid-template-columns: 120px 1fr 150px;
+        grid-template-rows: auto auto;
+    }
+    
+    .price-column {
+        grid-column: 2;
+        grid-row: 2;
+        text-align: left;
+    }
+    
+    .inventory-column {
+        grid-column: 3;
+        grid-row: 1;
+    }
+    
+    .part-actions {
+        grid-column: 3;
+        grid-row: 2;
+        text-align: right;
+    }
+    
+    .spare-parts-list-header {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .spare-part-item {
+        grid-template-columns: 100px 1fr;
+        grid-template-rows: auto auto auto auto;
+        gap: 10px;
+    }
+    
+    .part-details {
+        grid-column: 1 / span 2;
+        grid-row: 2;
+    }
+    
+    .price-column {
+        grid-column: 1 / span 2;
+        grid-row: 3;
+        text-align: left;
+    }
+    
+    .inventory-column {
+        grid-column: 1 / span 2;
+        grid-row: 4;
+        text-align: left;
+    }
+    
+    .part-actions {
+        grid-column: 1 / span 2;
+        grid-row: 5;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid var(--border-color);
+        padding-top: 15px;
+        margin-top: 10px;
+    }
+    
+    .quantity-control {
+        margin-bottom: 0;
+    }
+} 

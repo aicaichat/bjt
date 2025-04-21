@@ -1,0 +1,98 @@
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f0f2f5;
+  padding: 20px;
+}
+
+.login-form-wrapper {
+  width: 100%;
+  max-width: 450px;
+}
+
+.login-card {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.login-title {
+  margin-bottom: 8px !important;
+}
+
+.login-subtitle {
+  display: block;
+  margin-bottom: 24px;
+}
+
+.login-form {
+  margin-top: 20px;
+}
+
+.login-button {
+  height: 45px;
+  font-size: 16px;
+  margin-top: 10px;
+}
+
+.login-error {
+  color: #ff4d4f;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.test-accounts-toggle {
+  display: flex;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.test-accounts-section {
+  background-color: #f9f9f9;
+  padding: 16px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.test-accounts-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.test-account-card {
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.test-account-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.test-account-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.info-icon {
+  color: #1890ff;
+  cursor: pointer;
+}
+
+.test-account-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.test-accounts-note {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 13px;
+} 

@@ -1,0 +1,1964 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT 备件选择页面</title>
+    <style>
+        /* 通用样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', '微软雅黑', sans-serif;
+        }
+        
+        body {
+            background-color: #f7f9fb;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* 顶部导航 */
+        header {
+            background-color: white;
+            border-bottom: 1px solid #eee;
+            padding: 15px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo {
+            height: 40px;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .nav-menu {
+            display: flex;
+            margin-right: 20px;
+        }
+        
+        .nav-item {
+            margin: 0 15px;
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .nav-item:hover {
+            color: #1a57a5;
+        }
+        
+        .language-selector {
+            margin-right: 15px;
+            border: 1px solid #ddd;
+            padding: 5px 10px;
+            border-radius: 4px;
+            background-color: #fff;
+            min-width: 120px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .language-selector option {
+            padding: 5px;
+        }
+        
+        /* Responsive Header */
+        @media (max-width: 768px) {
+            .header-right {
+                justify-content: center;
+                margin-top: 10px;
+            }
+            
+            .nav-menu {
+                margin-right: 0;
+                margin-bottom: 10px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .nav-item {
+                margin: 5px 10px;
+            }
+            
+            .language-selector {
+                margin-bottom: 10px;
+            }
+        }
+        
+        /* User dropdown styles */
+        .user-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            background-color: #f5f5f5;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            border: 1px solid #ddd;
+        }
+        
+        .user-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .user-name {
+            font-weight: 500;
+            margin-right: 5px;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: white;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1000;
+            border-radius: 4px;
+        }
+        
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            text-align: left;
+        }
+        
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+        
+        .user-dropdown:hover .dropdown-content {
+            display: block;
+        }
+        
+        /* 面包屑导航 */
+        .breadcrumb {
+            padding: 15px 0;
+            color: #666;
+        }
+        
+        .breadcrumb a {
+            color: #1a57a5;
+            text-decoration: none;
+        }
+        
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        
+        /* 模型选择 */
+        .model-select {
+            margin: 20px 0;
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .model-select label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #1a57a5;
+        }
+        
+        .model-select select {
+            width: 100%;
+            max-width: 300px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            font-size: 16px;
+        }
+        
+        /* 备件分类选项 */
+        .spare-parts-types {
+            margin: 30px 0;
+        }
+        
+        .spare-parts-title {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #1a57a5;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        .spare-parts-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 80px;
+            height: 3px;
+            background: #1a57a5;
+        }
+        
+        .spare-parts-tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .tab-button {
+            padding: 12px 24px;
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+            margin-right: 5px;
+        }
+        
+        .tab-button.active {
+            background-color: #1a57a5;
+            color: white;
+            border-color: #1a57a5;
+        }
+        
+        .tab-button:hover:not(.active) {
+            background-color: #e5e5e5;
+        }
+        
+        /* 购物车图标 */
+        .cart-icon {
+            position: fixed;
+            right: 30px;
+            bottom: 30px;
+            width: 60px;
+            height: 60px;
+            background-color: #1a57a5;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            z-index: 999;
+        }
+        
+        .cart-icon:hover {
+            transform: scale(1.1);
+            background-color: #184785;
+        }
+        
+        .cart-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #e74c3c;
+            color: white;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            padding: 0 5px;
+            font-weight: bold;
+        }
+        
+        /* 备件列表项 */
+        .spare-part-item {
+            background-color: white;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: 120px 1fr 200px 160px 160px;
+            gap: 15px;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .spare-part-item:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .part-image {
+            width: 100%;
+        }
+        
+        .part-image img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+            border: 1px solid #eee;
+            padding: 5px;
+        }
+        
+        .part-details {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .part-info h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #1a57a5;
+        }
+        
+        .part-properties {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .part-property {
+            margin-bottom: 8px;
+            display: flex;
+        }
+        
+        .property-label {
+            font-weight: bold;
+            width: 120px;
+            color: #555;
+        }
+        
+        .price-tiers {
+            margin-top: 0;
+            border-top: none;
+            padding-top: 0;
+        }
+        
+        .price-tier {
+            margin-bottom: 5px;
+            color: #e74c3c;
+            font-weight: 500;
+        }
+        
+        .original-price {
+            text-decoration: line-through;
+            color: #888;
+            font-size: 0.9em;
+        }
+        
+        .current-price {
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        
+        .inventory-column {
+            text-align: center;
+        }
+        
+        .inventory-status {
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .inventory-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        
+        .inventory-high {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .inventory-medium {
+            background-color: #fff3e0;
+            color: #e65100;
+        }
+        
+        .inventory-low {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        
+        .part-actions {
+            text-align: center;
+        }
+        
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .quantity-btn {
+            width: 32px;
+            height: 32px;
+            background-color: #f5f5f5;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .quantity-btn:hover {
+            background-color: #e5e5e5;
+        }
+        
+        .quantity-input {
+            width: 50px;
+            height: 32px;
+            padding: 0 5px;
+            text-align: center;
+            border: none;
+            border-left: 1px solid #ddd;
+            border-right: 1px solid #ddd;
+            font-size: 16px;
+        }
+        
+        .add-to-cart {
+            padding: 10px 20px;
+            background-color: #1a57a5;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .add-to-cart:hover {
+            background-color: #184785;
+            transform: translateY(-2px);
+        }
+        
+        .cart-icon-small {
+            margin-right: 8px;
+        }
+        
+        /* 购物车预览 */
+        .cart-preview {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 380px;
+            height: 100vh;
+            background-color: white;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+            z-index: 1000;
+            transition: right 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .cart-preview.active {
+            right: 0;
+        }
+        
+        .cart-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .cart-title {
+            font-size: 18px;
+            color: #1a57a5;
+            font-weight: bold;
+        }
+        
+        .close-cart {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .cart-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .cart-item {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+        
+        .cart-item-top {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        
+        .cart-item-img {
+            width: 70px;
+            height: 70px;
+            object-fit: contain;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            margin-right: 12px;
+        }
+        
+        .cart-item-main {
+            flex: 1;
+        }
+        
+        .cart-item-name {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .cart-item-sku {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        
+        .cart-item-price {
+            font-size: 14px;
+            color: #e74c3c;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        
+        .cart-item-details {
+            font-size: 12px;
+            color: #777;
+            margin-bottom: 10px;
+        }
+        
+        .cart-item-detail {
+            margin-bottom: 3px;
+        }
+        
+        .cart-item-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .cart-item-qty {
+            display: flex;
+            align-items: center;
+        }
+        
+        .cart-item-remove {
+            background: none;
+            border: none;
+            color: #e74c3c;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 10px;
+        }
+        
+        .cart-footer {
+            padding: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .checkout-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #1a57a5;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .checkout-btn:hover {
+            background-color: #184785;
+        }
+        
+        .empty-cart-message {
+            text-align: center;
+            padding: 50px 0;
+            color: #999;
+        }
+        
+        /* 价格区间样式 */
+        .cart-item-tiers {
+            font-size: 12px;
+            color: #777;
+            margin-top: 5px;
+        }
+        
+        .cart-item-tiers .tier-current {
+            color: #1a57a5;
+            font-weight: bold;
+        }
+        
+        /* 购物车通知样式 */
+        .cart-notification {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background-color: #333;
+            color: white;
+            padding: 0;
+            border-radius: 4px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 1100;
+            opacity: 0;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            max-width: 400px;
+            width: 90%;
+        }
+        
+        .cart-notification.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        
+        .cart-notification-content {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+        }
+        
+        .cart-notification-icon {
+            color: #4CAF50;
+            margin-right: 12px;
+        }
+        
+        .cart-notification-text {
+            flex: 1;
+            font-size: 14px;
+        }
+        
+        .cart-notification-close {
+            background: none;
+            border: none;
+            color: #aaa;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 8px;
+            margin-left: 5px;
+        }
+        
+        .cart-notification-progress {
+            height: 3px;
+            background-color: #4CAF50;
+            width: 100%;
+            transition: width 3s linear;
+        }
+        
+        /* 清空购物车确认面板 */
+        .cart-confirm {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .cart-confirm.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .cart-confirm-icon {
+            color: #ff9800;
+            margin-bottom: 15px;
+        }
+        
+        .cart-confirm-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .cart-confirm-text {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+            text-align: center;
+            max-width: 80%;
+        }
+        
+        .cart-confirm-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .cart-confirm-button {
+            padding: 8px 20px;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        
+        .cart-confirm-cancel {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .cart-confirm-cancel:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .cart-confirm-proceed {
+            background-color: #e53935;
+            color: white;
+        }
+        
+        .cart-confirm-proceed:hover {
+            background-color: #c62828;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 992px) {
+            .spare-part-item {
+                grid-template-columns: 120px 1fr 150px;
+                grid-template-rows: auto auto;
+            }
+            
+            .price-column {
+                grid-column: 2;
+                grid-row: 2;
+                text-align: left;
+            }
+            
+            .inventory-column {
+                grid-column: 3;
+                grid-row: 1;
+            }
+            
+            .part-actions {
+                grid-column: 3;
+                grid-row: 2;
+                text-align: right;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .spare-part-item {
+                grid-template-columns: 100px 1fr;
+                grid-template-rows: auto auto auto auto;
+                gap: 10px;
+            }
+            
+            .part-details {
+                grid-column: 1 / span 2;
+                grid-row: 2;
+            }
+            
+            .price-column {
+                grid-column: 1 / span 2;
+                grid-row: 3;
+                text-align: left;
+            }
+            
+            .inventory-column {
+                grid-column: 1 / span 2;
+                grid-row: 4;
+                text-align: left;
+            }
+            
+            .part-actions {
+                grid-column: 1 / span 2;
+                grid-row: 5;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-top: 1px solid #eee;
+                padding-top: 15px;
+                margin-top: 10px;
+            }
+            
+            .quantity-control {
+                margin-bottom: 0;
+            }
+            
+            .cart-preview {
+                width: 320px;
+            }
+        }
+        
+        /* Column headers */
+        .spare-parts-list-header {
+            display: grid;
+            grid-template-columns: 120px 1fr 200px 160px 160px;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 0 20px 10px;
+            border-bottom: 1px solid #ddd;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        @media (max-width: 992px) {
+            .spare-parts-list-header {
+                display: none;
+            }
+        }
+        
+        /* First add account-specific styles */
+        .account-info {
+            margin-bottom: 20px;
+            background-color: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 4px solid #1a57a5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .account-type {
+            font-weight: bold;
+            color: #1a57a5;
+        }
+        
+        .account-type-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .badge-sales {
+            background-color: #e3f2fd;
+            color: #1565c0;
+        }
+        
+        .badge-distributor {
+            background-color: #fff3e0;
+            color: #e65100;
+        }
+        
+        .badge-customer {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        /* 产品类型选项卡样式 */
+        .product-type-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .product-type-tab {
+            padding: 12px 24px;
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+            margin-right: 5px;
+        }
+        
+        .product-type-tab.active {
+            background-color: #1a57a5;
+            color: white;
+            border-color: #1a57a5;
+        }
+        
+        .product-type-tab:hover:not(.active) {
+            background-color: #e5e5e5;
+        }
+    </style>
+    <script>
+        // Language switching function
+        function changeLanguage(lang) {
+            console.log('Language changed to: ' + lang);
+            // Here you would implement the actual language change logic
+            // For example, storing the selected language in a cookie or localStorage
+            // and then reloading the page or updating UI elements
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add event listener to language selector
+            const langSelector = document.querySelector('.language-selector');
+            if (langSelector) {
+                langSelector.addEventListener('change', function(e) {
+                    changeLanguage(e.target.value);
+                });
+            }
+            
+            // Existing document ready code would go here
+        });
+    </script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-left">
+                <img src="logo-1.webp" alt="BJT Logo" class="logo">
+            </div>
+            <div class="header-right">
+                <nav class="nav-menu">
+                    <a href="#" class="nav-item">Home</a>
+                    <a href="#" class="nav-item">Products</a>
+                    <a href="#" class="nav-item">Documentation</a>
+                    <a href="#" class="nav-item">Support</a>
+                </nav>
+                <select class="language-selector" aria-label="Select language">
+                    <option value="zh">中文</option>
+                    <option value="en">🇬🇧 English</option>
+                    <option value="ja">🇯🇵 日本語</option>
+                    <option value="ko">🇰🇷 한국어</option>
+                    <option value="fr">🇫🇷 français</option>
+                    <option value="de">🇩🇪 Deutsch</option>
+                    <option value="es">🇪🇸 Español</option>
+                    <option value="it">🇮🇹 italiano</option>
+                    <option value="ru">🇷🇺 русский</option>
+                    <option value="pt">🇵🇹 português</option>
+                    <option value="th">🇹🇭 ไทย</option>
+                    <option value="vi">🇻🇳 tiếng việt</option>
+                </select>
+                <div class="user-dropdown">
+                    <div class="user-info">
+                        <img src="user-avatar.jpg" alt="User Avatar" class="user-avatar">
+                        <span class="user-name">已登录用户</span>
+                    </div>
+                    <div class="dropdown-content">
+                        <a href="#">Profile</a>
+                        <a href="#">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <!-- 面包屑导航 -->
+        <div class="breadcrumb">
+            <a href="#">首页</a> > <span>备件分类</span>
+        </div>
+        
+        <!-- 账号信息 -->
+        <div class="account-info">
+            <div>
+                欢迎，<span class="account-username">Zhang Wei</span>
+                <span class="account-type-badge badge-sales">销售账号</span>
+            </div>
+            <div class="account-type">账号类型：销售</div>
+        </div>
+        
+        <!-- 产品类型选择 -->
+        <div class="product-type-tabs">
+            <button class="product-type-tab active" data-type="machine">主机</button>
+            <button class="product-type-tab" data-type="accessory">配件</button>
+        </div>
+        
+        <!-- 模型选择 -->
+        <div class="model-select">
+            <div>
+                <label for="model">Model:</label>
+                <select id="model">
+                    <option value="ALL">ALL</option>
+                    <option value="LA-E4S">LA-E4S</option>
+                    <option value="LA-E5P">LA-E5P</option>
+                    <option value="LP-V1">LP-V1</option>
+                    <option value="LP-F1">LP-F1</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- 备件分类 -->
+        <div class="spare-parts-types">
+            <div class="spare-parts-title">备件选择</div>
+            <div class="spare-parts-tabs">
+                <button class="tab-button active" data-type="consumable">Consumable</button>
+                <button class="tab-button" data-type="non-consumable">Non-consumable</button>
+            </div>
+            
+            <!-- 备件列表 标题行 -->
+            <div class="spare-parts-list-header">
+                <div>图片</div>
+                <div>产品信息</div>
+                <div>价格</div>
+                <div>库存</div>
+                <div>操作</div>
+            </div>
+            
+            <!-- 备件列表 -->
+            <div class="spare-parts-list" id="spareParts">
+                <!-- Product items will be displayed here -->
+            </div>
+        </div>
+        
+        <!-- 页脚 -->
+        <div style="text-align: center; margin-top: 50px; color: #666; font-size: 12px;">
+            Copyright©Hangzhou Bingjia Tech. Co., Ltd.
+        </div>
+    </div>
+    
+    <!-- 浮动购物车图标 -->
+    <div class="cart-icon" id="cartToggle">
+        🛒
+        <div class="cart-badge" id="cartCount">0</div>
+    </div>
+    
+    <!-- 购物车预览 -->
+    <div class="cart-preview" id="cartPreview">
+        <div class="cart-header">
+            <div class="cart-title">购物车</div>
+            <button class="close-cart" id="closeCart">×</button>
+        </div>
+        <div class="cart-items" id="cartItems">
+            <!-- 购物车物品将动态插入这里 -->
+            <div class="empty-cart-message">购物车为空</div>
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>合计:</span>
+                <span id="cartTotal">¥0.00</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                <button id="clear-cart-btn" class="checkout-btn" style="background-color: #e53935; width: auto; margin-right: 10px;">清空购物车</button>
+                <button class="checkout-btn">结算</button>
+            </div>
+            <!-- 清空购物车确认面板 -->
+            <div id="cart-confirm" class="cart-confirm">
+                <div class="cart-confirm-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                </div>
+                <div class="cart-confirm-title">确认清空购物车</div>
+                <div class="cart-confirm-text">此操作将清空购物车中所有商品，且无法恢复。</div>
+                <div class="cart-confirm-buttons">
+                    <button id="cart-confirm-cancel" class="cart-confirm-button cart-confirm-cancel">取消</button>
+                    <button id="cart-confirm-proceed" class="cart-confirm-button cart-confirm-proceed">确认清空</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 初始化购物车
+        let cart = [];
+        let userAccountType = 'sales'; // 可以是 'sales', 'distributor', 'customer'
+        let currentPartType = 'consumable'; // 默认显示消耗品
+        let currentProductType = 'machine'; // 默认显示主机
+        
+        // 备件数据
+        const sparePartsData = {
+            consumable: [
+                {
+                    id: 'BM-001',
+                    name: 'Brushless motor',
+                    sku: 'BJT-MO-55-2023',
+                    image: 'https://via.placeholder.com/120x120?text=Motor',
+                    compatibleModel: 'LP-V1',
+                    serialRange: '00012-00032',
+                    dimensions: '15 × 15 × 10 cm',
+                    weight: '0.5 kg',
+                    accessoryType: 'Motor',
+                    prices: {
+                        original: 120,
+                        current: 100,
+                        tiers: [
+                            { range: '1-10', price: 100 },
+                            { range: '11-100', price: 90 },
+                            { range: '>100', price: 50 }
+                        ]
+                    },
+                    inventory: {
+                        status: 'high',
+                        statusText: '充足',
+                        locations: [
+                            { code: 'EU', count: 20 },
+                            { code: 'AU', count: 20 },
+                            { code: 'DE', count: 10 }
+                        ]
+                    }
+                },
+                {
+                    id: 'CP-001',
+                    name: 'Control Panel',
+                    sku: 'BJT-CP-22-2023',
+                    image: 'https://via.placeholder.com/120x120?text=Part',
+                    compatibleModel: 'LA-E4S, LA-E5P',
+                    serialRange: 'All',
+                    dimensions: '20 × 15 × 5 cm',
+                    weight: '0.3 kg',
+                    accessoryType: 'Control Panel',
+                    prices: {
+                        original: 95,
+                        current: 80,
+                        tiers: [
+                            { range: '1-10', price: 80 },
+                            { range: '11-100', price: 70 },
+                            { range: '>100', price: 60 }
+                        ]
+                    },
+                    inventory: {
+                        status: 'medium',
+                        statusText: '适中',
+                        locations: [
+                            { code: 'EU', count: 15 },
+                            { code: 'AU', count: 12 },
+                            { code: 'DE', count: 8 }
+                        ]
+                    }
+                }
+            ],
+            'non-consumable': [
+                {
+                    id: 'PR-001',
+                    name: 'Pressure Roller',
+                    sku: 'BJT-PR-33-2023',
+                    image: 'https://via.placeholder.com/120x120?text=Roller',
+                    compatibleModel: 'LP-V1, LP-F1',
+                    serialRange: '20001-30000',
+                    dimensions: '30 × 10 × 10 cm',
+                    weight: '0.8 kg',
+                    accessoryType: 'Sensor',
+                    prices: {
+                        original: 170,
+                        current: 150,
+                        tiers: [
+                            { range: '1-10', price: 150 },
+                            { range: '11-100', price: 140 },
+                            { range: '>100', price: 130 }
+                        ]
+                    },
+                    inventory: {
+                        status: 'low',
+                        statusText: '紧缺',
+                        locations: [
+                            { code: 'EU', count: 10 },
+                            { code: 'AU', count: 8 },
+                            { code: 'DE', count: 5 }
+                        ]
+                    }
+                },
+                {
+                    id: 'SK-001',
+                    name: 'Rubber Seal Kit',
+                    sku: 'BJT-SK-11-2023',
+                    image: 'https://via.placeholder.com/120x120?text=Seal',
+                    compatibleModel: 'ALL',
+                    serialRange: 'ALL',
+                    dimensions: '15 × 10 × 5 cm',
+                    weight: '0.2 kg',
+                    accessoryType: 'Connection Cable',
+                    prices: {
+                        original: 135,
+                        current: 120,
+                        tiers: [
+                            { range: '1-10', price: 120 },
+                            { range: '11-100', price: 110 },
+                            { range: '>100', price: 100 }
+                        ]
+                    },
+                    inventory: {
+                        status: 'high',
+                        statusText: '充足',
+                        locations: [
+                            { code: 'EU', count: 25 },
+                            { code: 'AU', count: 18 },
+                            { code: 'DE', count: 12 }
+                        ]
+                    }
+                }
+            ]
+        };
+        
+        // 显示备件列表
+        function displaySpareParts(type) {
+            const sparePartsContainer = document.getElementById('spareParts');
+            const parts = sparePartsData[type];
+            
+            // 清空现有内容
+            sparePartsContainer.innerHTML = '';
+            
+            // 获取筛选条件
+            const modelFilter = document.getElementById('model').value;
+            
+            // 如果没有备件
+            if (!parts || parts.length === 0) {
+                sparePartsContainer.innerHTML = '<div style="text-align: center; padding: 30px; color: #666;">没有找到符合条件的备件</div>';
+                return;
+            }
+            
+            // 过滤备件
+            const filteredParts = parts.filter(part => {
+                // 如果选择了ALL，则不过滤该条件
+                const modelMatch = modelFilter === 'ALL' || part.compatibleModel.includes(modelFilter) || part.compatibleModel === 'ALL';
+                
+                return modelMatch;
+            });
+            
+            // 如果过滤后没有备件
+            if (filteredParts.length === 0) {
+                sparePartsContainer.innerHTML = '<div style="text-align: center; padding: 30px; color: #666;">没有找到符合条件的备件</div>';
+                return;
+            }
+            
+            // 添加每个备件项
+            filteredParts.forEach(part => {
+                const partElement = document.createElement('div');
+                partElement.className = 'spare-part-item';
+                
+                // 价格层级HTML
+                let priceTiersHtml = '';
+                part.prices.tiers.forEach(tier => {
+                    if (tier === part.prices.tiers[0]) {
+                        priceTiersHtml += `
+                            <div class="price-tier">
+                                <span class="original-price">¥${part.prices.original.toFixed(2)}</span>
+                                <span class="current-price">¥${tier.price.toFixed(2)}</span> (${tier.range})
+                            </div>`;
+                    } else {
+                        priceTiersHtml += `<div class="price-tier">¥${tier.price.toFixed(2)} (${tier.range})</div>`;
+                    }
+                });
+                
+                // 库存地区HTML
+                let inventoryLocationsHtml = '';
+                part.inventory.locations.forEach(location => {
+                    inventoryLocationsHtml += `<div>${location.code}: ${location.count}</div>`;
+                });
+                
+                partElement.innerHTML = `
+                    <div class="part-image">
+                        <img src="${part.image}" alt="${part.name}">
+                    </div>
+                    <div class="part-details">
+                        <div class="part-info">
+                            <h3>${part.name}</h3>
+                            
+                            <div class="part-property">
+                                <span class="property-label">料号:</span>
+                                <span>${part.sku}</span>
+                            </div>
+                            
+                            <div class="part-property">
+                                <span class="property-label">适配型号:</span>
+                                <span>${part.compatibleModel}</span>
+                            </div>
+                            
+                            <div class="part-property">
+                                <span class="property-label">适配序列号:</span>
+                                <span>${part.serialRange}</span>
+                            </div>
+                            
+                            <div class="part-property">
+                                <span class="property-label">配件类型:</span>
+                                <span>${part.accessoryType}</span>
+                            </div>
+                            
+                            <div class="part-property">
+                                <span class="property-label">包装尺寸:</span>
+                                <span>${part.dimensions}</span>
+                            </div>
+                            
+                            <div class="part-property">
+                                <span class="property-label">包装毛重:</span>
+                                <span>${part.weight}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="price-column">
+                        <div class="price-tiers">
+                            ${priceTiersHtml}
+                        </div>
+                    </div>
+                    <div class="inventory-column">
+                        <div class="inventory-status">
+                            <div class="inventory-badge inventory-${part.inventory.status}">${part.inventory.statusText}</div>
+                        </div>
+                        ${inventoryLocationsHtml}
+                    </div>
+                    <div class="part-actions">
+                        <div class="quantity-control">
+                            <button class="quantity-btn" data-action="decrease">-</button>
+                            <input type="number" class="quantity-input" min="1" value="1" max="999">
+                            <button class="quantity-btn" data-action="increase">+</button>
+                        </div>
+                        <button class="add-to-cart" data-id="${part.id}" data-name="${part.name}" data-price="${part.prices.tiers[0].price}">
+                            <span class="cart-icon-small">🛒</span> 添加
+                        </button>
+                    </div>
+                `;
+                
+                sparePartsContainer.appendChild(partElement);
+            });
+            
+            // 为新添加的元素设置事件监听器
+            setupEventListeners();
+        }
+        
+        // 从本地存储加载购物车数据
+        function loadCart() {
+            const savedCart = localStorage.getItem('bjt_cart');
+            if (savedCart) {
+                try {
+                    cart = JSON.parse(savedCart);
+                    updateCartDisplay();
+                    updateCartCount();
+                } catch (e) {
+                    console.error('Error loading cart:', e);
+                    cart = [];
+                }
+            }
+        }
+        
+        // 设置不同账号类型的显示
+        function setAccountTypeDisplay() {
+            const accountBadge = document.querySelector('.account-type-badge');
+            const accountTypeText = document.querySelector('.account-type');
+            const inventoryColumns = document.querySelectorAll('.inventory-column');
+            
+            // 根据账号类型更新显示
+            if (userAccountType === 'sales') {
+                accountBadge.className = 'account-type-badge badge-sales';
+                accountBadge.textContent = '销售账号';
+                accountTypeText.textContent = '账号类型：销售';
+                
+                // 显示库存
+                inventoryColumns.forEach(col => {
+                    col.style.display = '';
+                });
+            } else if (userAccountType === 'distributor') {
+                accountBadge.className = 'account-type-badge badge-distributor';
+                accountBadge.textContent = '代理商';
+                accountTypeText.textContent = '账号类型：代理商';
+                
+                // 隐藏库存
+                inventoryColumns.forEach(col => {
+                    col.style.display = 'none';
+                });
+            } else {
+                accountBadge.className = 'account-type-badge badge-customer';
+                accountBadge.textContent = '客户';
+                accountTypeText.textContent = '账号类型：客户';
+                
+                // 隐藏库存
+                inventoryColumns.forEach(col => {
+                    col.style.display = 'none';
+                });
+                
+                // 修改价格显示：客户账号看不到折扣
+                document.querySelectorAll('.original-price').forEach(price => {
+                    price.style.display = 'none';
+                });
+            }
+            
+            // 调整布局
+            if (userAccountType !== 'sales') {
+                document.querySelectorAll('.spare-part-item').forEach(item => {
+                    item.style.gridTemplateColumns = '120px 1fr 200px 160px';
+                });
+                
+                document.querySelectorAll('.spare-parts-list-header').forEach(header => {
+                    header.style.gridTemplateColumns = '120px 1fr 200px 160px';
+                });
+            }
+        }
+        
+        // 更新购物车显示
+        function updateCartDisplay() {
+            const cartItemsContainer = document.getElementById('cartItems');
+            const cartTotalElement = document.getElementById('cartTotal');
+            
+            // 清除当前显示
+            cartItemsContainer.innerHTML = '';
+            
+            // 如果购物车为空
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = '<div class="empty-cart-message">购物车为空</div>';
+                cartTotalElement.textContent = '¥0.00';
+                return;
+            }
+            
+            // 计算总价
+            let total = 0;
+            
+            // 添加每个购物车项
+            cart.forEach((item, index) => {
+                const itemTotal = item.subtotal || (item.price * item.quantity);
+                total += itemTotal;
+                
+                // 创建新的购物车项元素
+                const cartItemElement = document.createElement('div');
+                cartItemElement.className = 'cart-item';
+                
+                // 获取产品的完整信息
+                const productDetails = getProductDetails(item.id);
+                
+                // 获取当前价格区间
+                const currentTier = item.currentTier;
+                const tierText = currentTier ? ` (${currentTier.range})` : '';
+                
+                // 创建价格梯度HTML
+                let tieredPricingHtml = '';
+                if (item.priceTiers && item.priceTiers.length > 0) {
+                    tieredPricingHtml = '<div class="cart-item-tiers">';
+                    item.priceTiers.forEach((tier, i) => {
+                        // 高亮当前价格区间
+                        const isCurrentTier = currentTier && currentTier.range === tier.range;
+                        const tierClass = isCurrentTier ? 'tier-current' : '';
+                        
+                        tieredPricingHtml += `<span class="${tierClass}">¥${tier.price} (${tier.range})</span>`;
+                        
+                        // 添加分隔符
+                        if (i < item.priceTiers.length - 1) {
+                            tieredPricingHtml += ' | ';
+                        }
+                    });
+                    tieredPricingHtml += '</div>';
+                }
+                
+                cartItemElement.innerHTML = `
+                    <div class="cart-item-top">
+                        <img class="cart-item-img" src="${productDetails.image}" alt="${item.name}">
+                        <div class="cart-item-main">
+                            <div class="cart-item-name">${item.name}</div>
+                            <div class="cart-item-sku">料号: ${productDetails.sku}</div>
+                            <div class="cart-item-price">¥${item.price}${tierText} × ${item.quantity}</div>
+                            ${tieredPricingHtml}
+                        </div>
+                    </div>
+                    <div class="cart-item-details">
+                        <div class="cart-item-detail">适配序列号: ${productDetails.serialRange || '所有'}</div>
+                        <div class="cart-item-detail">包装尺寸: ${productDetails.dimensions || '-'}</div>
+                        <div class="cart-item-detail">包装毛重: ${productDetails.weight || '-'}</div>
+                    </div>
+                    <div class="cart-item-controls">
+                        <div class="cart-item-qty">
+                            <button class="cart-qty-btn" onclick="updateCartItemQuantity(${index}, ${item.quantity - 1})">-</button>
+                            <input class="cart-qty-input" type="number" value="${item.quantity}" 
+                                onchange="updateCartItemQuantity(${index}, this.value)">
+                            <button class="cart-qty-btn" onclick="updateCartItemQuantity(${index}, ${item.quantity + 1})">+</button>
+                        </div>
+                        <button class="cart-item-remove" onclick="removeFromCart(${index})">×</button>
+                    </div>
+                `;
+                
+                cartItemsContainer.appendChild(cartItemElement);
+            });
+            
+            // 更新总价
+            cartTotalElement.textContent = `¥${total.toFixed(2)}`;
+        }
+        
+        // 获取产品详细信息
+        function getProductDetails(productId) {
+            // 在所有数据中查找产品
+            let allProducts = [...sparePartsData.consumable, ...sparePartsData['non-consumable']];
+            let product = allProducts.find(p => p.id === productId);
+            
+            if (product) {
+                return product; // 返回完整的产品对象，包括prices属性
+            }
+            
+            // 如果未找到产品，返回默认值
+            return {
+                image: 'https://via.placeholder.com/120x120?text=Unknown',
+                sku: '未知',
+                serialRange: '未知',
+                dimensions: '未知',
+                weight: '未知',
+                prices: { 
+                    original: 0,
+                    current: 0,
+                    tiers: [{ range: '1+', price: 0 }]
+                }
+            };
+        }
+        
+        // 更新购物车数量显示
+        function updateCartCount() {
+            const cartCountElement = document.getElementById('cartCount');
+            const count = cart.reduce((total, item) => total + item.quantity, 0);
+            cartCountElement.textContent = count;
+        }
+        
+        // 添加到购物车
+        function addToCart(id, name, price, quantity) {
+            // 获取产品详情和价格梯度
+            const product = getProductDetails(id);
+            const priceTiers = product.prices.tiers || [{ range: '1+', price: price }];
+            
+            // 检查是否已在购物车中
+            const existingItemIndex = cart.findIndex(item => item.id === id);
+            
+            if (existingItemIndex >= 0) {
+                // 更新现有项
+                cart[existingItemIndex].quantity += quantity;
+                
+                // 更新当前价格区间
+                const newTier = findPriceTier(priceTiers, cart[existingItemIndex].quantity);
+                cart[existingItemIndex].currentTier = newTier;
+                cart[existingItemIndex].price = newTier.price;
+                
+                // 更新小计
+                cart[existingItemIndex].subtotal = cart[existingItemIndex].quantity * newTier.price;
+            } else {
+                // 找到适合数量的价格区间
+                const initialTier = findPriceTier(priceTiers, quantity);
+                
+                // 添加新项
+                cart.push({
+                    id,
+                    name,
+                    basePrice: price,
+                    price: initialTier.price,
+                    currentTier: initialTier,
+                    quantity,
+                    subtotal: quantity * initialTier.price,
+                    priceTiers: priceTiers
+                });
+            }
+            
+            // 更新购物车显示和计数
+            updateCartDisplay();
+            updateCartCount();
+            
+            // 保存到本地存储
+            localStorage.setItem('bjt_cart', JSON.stringify(cart));
+            
+            // 显示添加成功通知
+            showCartNotification(`${quantity} x ${name} 已添加到购物车`);
+        }
+        
+        // 找到合适的价格区间
+        function findPriceTier(priceTiers, quantity) {
+            // 如果没有价格区间，返回默认值
+            if (!priceTiers || priceTiers.length === 0) {
+                return { range: '1+', price: 0 };
+            }
+            
+            // 遍历所有价格区间，找到数量适合的区间
+            for (const tier of priceTiers) {
+                const range = tier.range;
+                
+                if (range.includes('-')) {
+                    // 区间格式: "1-10"
+                    const [min, max] = range.split('-').map(n => parseInt(n));
+                    if (quantity >= min && quantity <= max) {
+                        return tier;
+                    }
+                } else if (range.includes('>')) {
+                    // 区间格式: ">100"
+                    const min = parseInt(range.replace('>', ''));
+                    if (quantity > min) {
+                        return tier;
+                    }
+                } else {
+                    // 其他格式
+                    return tier;
+                }
+            }
+            
+            // 如果没有找到匹配的区间，返回最后一个区间（通常是最大数量）
+            return priceTiers[priceTiers.length - 1];
+        }
+        
+        // 更新购物车项数量
+        function updateCartItemQuantity(index, quantity) {
+            quantity = parseInt(quantity);
+            
+            if (isNaN(quantity) || quantity < 1) {
+                quantity = 1;
+            }
+            
+            cart[index].quantity = quantity;
+            
+            // 更新价格区间
+            if (cart[index].priceTiers) {
+                const newTier = findPriceTier(cart[index].priceTiers, quantity);
+                cart[index].currentTier = newTier;
+                cart[index].price = newTier.price;
+                cart[index].subtotal = quantity * newTier.price;
+            } else {
+                cart[index].subtotal = quantity * cart[index].price;
+            }
+            
+            updateCartDisplay();
+            updateCartCount();
+            localStorage.setItem('bjt_cart', JSON.stringify(cart));
+        }
+        
+        // 从购物车中移除
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCartDisplay();
+            updateCartCount();
+            localStorage.setItem('bjt_cart', JSON.stringify(cart));
+        }
+        
+        // 为元素设置事件监听器
+        function setupEventListeners() {
+            // 设置数量控制
+            document.querySelectorAll('.quantity-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const input = this.parentNode.querySelector('.quantity-input');
+                    let value = parseInt(input.value);
+                    
+                    if (this.dataset.action === 'increase') {
+                        input.value = value + 1;
+                    } else if (this.dataset.action === 'decrease' && value > 1) {
+                        input.value = value - 1;
+                    }
+                });
+            });
+            
+            // 设置添加到购物车按钮
+            document.querySelectorAll('.add-to-cart').forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = this.dataset.id;
+                    const name = this.dataset.name;
+                    const price = parseFloat(this.dataset.price);
+                    const quantityInput = this.parentNode.querySelector('.quantity-input');
+                    const quantity = parseInt(quantityInput.value);
+                    
+                    addToCart(id, name, price, quantity);
+                });
+            });
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 显示默认类型的备件列表
+            displaySpareParts(currentPartType);
+            
+            loadCart();
+            setAccountTypeDisplay();
+            
+            // 允许切换不同账户类型（仅用于演示）
+            const accountBadge = document.querySelector('.account-type-badge');
+            if (accountBadge) {
+                accountBadge.addEventListener('click', function() {
+                    if (userAccountType === 'sales') {
+                        userAccountType = 'distributor';
+                    } else if (userAccountType === 'distributor') {
+                        userAccountType = 'customer';
+                    } else {
+                        userAccountType = 'sales';
+                    }
+                    setAccountTypeDisplay();
+                });
+            }
+            
+            // 切换主机/配件产品类型
+            document.querySelectorAll('.product-type-tab').forEach(button => {
+                button.addEventListener('click', function() {
+                    document.querySelectorAll('.product-type-tab').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    // 切换显示的产品类型
+                    currentProductType = this.dataset.type;
+                    
+                    // 根据产品类型更新显示或筛选
+                    updateProductDisplay();
+                });
+            });
+            
+            // 切换备件类型标签
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    document.querySelectorAll('.tab-button').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    // 切换显示的备件类型
+                    currentPartType = this.dataset.type;
+                    displaySpareParts(currentPartType);
+                });
+            });
+            
+            // 监听筛选条件变化
+            document.getElementById('model').addEventListener('change', function() {
+                displaySpareParts(currentPartType);
+            });
+            
+            // 设置购物车切换
+            const cartToggle = document.getElementById('cartToggle');
+            const closeCart = document.getElementById('closeCart');
+            const cartPreview = document.getElementById('cartPreview');
+            
+            cartToggle.addEventListener('click', function() {
+                cartPreview.classList.add('active');
+            });
+            
+            closeCart.addEventListener('click', function() {
+                cartPreview.classList.remove('active');
+            });
+            
+            // 为清空购物车相关的按钮添加事件监听器
+            setupClearCartListeners();
+        });
+        
+        // 清空购物车函数
+        function clearCart() {
+            // 清空购物车数组
+            cart = [];
+            
+            // 清除localStorage中的购物车数据
+            localStorage.removeItem('bjt_cart');
+            
+            // 更新显示
+            updateCartDisplay();
+            updateCartCount();
+            
+            // 显示通知
+            showCartNotification('购物车已清空');
+            
+            // 隐藏确认面板
+            hideClearCartConfirmation();
+        }
+        
+        // 设置清空购物车相关按钮的事件监听器
+        function setupClearCartListeners() {
+            // 清空购物车按钮
+            const clearCartBtn = document.getElementById('clear-cart-btn');
+            if (clearCartBtn) {
+                clearCartBtn.addEventListener('click', showClearCartConfirmation);
+            }
+            
+            // 确认面板的取消按钮
+            const cancelBtn = document.getElementById('cart-confirm-cancel');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', hideClearCartConfirmation);
+            }
+            
+            // 确认面板的确认按钮
+            const confirmBtn = document.getElementById('cart-confirm-proceed');
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', clearCart);
+            }
+        }
+        
+        // 显示清空购物车确认面板
+        function showClearCartConfirmation() {
+            const confirmPanel = document.getElementById('cart-confirm');
+            if (confirmPanel) {
+                confirmPanel.classList.add('show');
+                
+                // 添加点击事件监听，点击面板外部关闭确认
+                document.addEventListener('click', handleOutsideClick);
+            }
+        }
+        
+        // 隐藏清空购物车确认面板
+        function hideClearCartConfirmation() {
+            const confirmPanel = document.getElementById('cart-confirm');
+            if (confirmPanel) {
+                confirmPanel.classList.remove('show');
+                
+                // 移除点击事件监听
+                document.removeEventListener('click', handleOutsideClick);
+            }
+        }
+        
+        // 处理点击确认面板外部事件
+        function handleOutsideClick(event) {
+            const confirmPanel = document.getElementById('cart-confirm');
+            // 检查点击是否在确认面板外部
+            if (confirmPanel && !confirmPanel.contains(event.target) && 
+                event.target.id !== 'clear-cart-btn' && !event.target.closest('#clear-cart-btn')) {
+                hideClearCartConfirmation();
+            }
+        }
+        
+        // 通知系统
+        let activeNotification = null;
+        let notificationTimeout = null;
+        
+        // 显示购物车通知
+        function showCartNotification(message, duration = 3000) {
+            // 如果已经有通知在显示，先清除它
+            if (activeNotification) {
+                document.body.removeChild(activeNotification);
+                clearTimeout(notificationTimeout);
+                activeNotification = null;
+            }
+            
+            // 创建通知元素
+            const notification = document.createElement('div');
+            notification.className = 'cart-notification';
+            
+            // 通知内容
+            const content = document.createElement('div');
+            content.className = 'cart-notification-content';
+            
+            const icon = document.createElement('div');
+            icon.className = 'cart-notification-icon';
+            icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>';
+            
+            const text = document.createElement('div');
+            text.className = 'cart-notification-text';
+            text.textContent = message;
+            
+            content.appendChild(icon);
+            content.appendChild(text);
+            
+            // 关闭按钮
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'cart-notification-close';
+            closeBtn.innerHTML = '×';
+            closeBtn.addEventListener('click', () => {
+                closeNotification(notification);
+            });
+            
+            // 进度条
+            const progress = document.createElement('div');
+            progress.className = 'cart-notification-progress';
+            
+            // 添加到通知元素
+            notification.appendChild(content);
+            notification.appendChild(closeBtn);
+            notification.appendChild(progress);
+            
+            // 添加到文档
+            document.body.appendChild(notification);
+            
+            // 添加进度条动画
+            progress.style.transition = `width ${duration}ms linear`;
+            
+            // 强制重绘
+            notification.offsetHeight;
+            
+            // 开始进度条动画
+            requestAnimationFrame(() => {
+                notification.classList.add('show');
+                progress.style.width = '0%';
+            });
+            
+            // 设置自动关闭
+            notificationTimeout = setTimeout(() => {
+                closeNotification(notification);
+            }, duration);
+            
+            // 保存当前通知引用
+            activeNotification = notification;
+            
+            return notification;
+        }
+        
+        // 关闭通知
+        function closeNotification(notification) {
+            if (!notification) return;
+            
+            notification.classList.remove('show');
+            
+            // 移除元素
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+                if (activeNotification === notification) {
+                    activeNotification = null;
+                }
+            }, 300);
+        }
+        
+        // 更新产品显示，根据当前选择的产品类型（主机/配件）
+        function updateProductDisplay() {
+            // 这里可以根据产品类型更新模型选择下拉框的选项、更新显示等
+            const modelSelect = document.getElementById('model');
+            
+            if (currentProductType === 'machine') {
+                // 显示主机相关选项
+                modelSelect.innerHTML = `
+                    <option value="ALL">ALL</option>
+                    <option value="LA-E4S">LA-E4S</option>
+                    <option value="LA-E5P">LA-E5P</option>
+                    <option value="LP-V1">LP-V1</option>
+                    <option value="LP-F1">LP-F1</option>
+                `;
+            } else {
+                // 显示配件相关选项
+                modelSelect.innerHTML = `
+                    <option value="ALL">ALL</option>
+                    <option value="HDPE">HDPE 包装</option>
+                    <option value="LDPE">LDPE 耗材</option>
+                    <option value="PAPER">纸质包装</option>
+                `;
+            }
+            
+            // 重新筛选显示备件列表
+            displaySpareParts(currentPartType);
+        }
+    </script>
+</body>
+</html>

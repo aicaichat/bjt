@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Details - BJT Shop</title>
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/product-details.css">
+</head>
+<body>
+  <!-- Header Placeholder -->
+  <div id="header-placeholder"></div>
+
+  <div class="container my-4">
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+        <li class="breadcrumb-item"><a href="product-config.html">Products</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Product Details</li>
+      </ol>
+    </nav>
+
+    <!-- Product Details Section -->
+    <div class="product-details-section">
+      <!-- Loading Placeholder -->
+      <div id="productLoadingPlaceholder" class="loading-placeholder">
+        <div class="spinner"></div>
+        <p>Loading product details...</p>
+      </div>
+
+      <!-- Product Content (Hidden until loaded) -->
+      <div id="productContent" class="product-content row" style="display: none;">
+        <!-- Product Images Column -->
+        <div class="col-lg-5 mb-4">
+          <div class="product-image-container">
+            <img id="productImage" src="img/product-placeholder.jpg" alt="Product" class="product-image">
+          </div>
+          <div id="imageGallery" class="image-gallery">
+            <!-- Thumbnails will be populated here -->
+          </div>
+        </div>
+
+        <!-- Product Info Column -->
+        <div class="col-lg-7">
+          <h1 id="productName" class="product-title"></h1>
+          <p id="productShortDescription" class="product-short-description"></p>
+          
+          <div class="product-meta">
+            <div class="product-id-container">
+              <span class="meta-label">Product ID:</span>
+              <span id="productId"></span>
+            </div>
+            <div class="product-category-container">
+              <span class="meta-label">Category:</span>
+              <span id="productCategory"></span>
+            </div>
+            <div id="productPartNumberContainer" class="product-part-number-container" style="display: none;">
+              <span class="meta-label">Part Number:</span>
+              <span id="productPartNumber"></span>
+            </div>
+          </div>
+          
+          <div class="product-price-section">
+            <div class="current-price">
+              <span id="productPrice" class="product-price"></span>
+              <span id="productOriginalPrice" class="product-original-price" style="display: none;"></span>
+            </div>
+            
+            <div id="tieredPriceSection" class="tiered-prices-section" style="display: none;">
+              <h6 class="tiered-prices-title">Volume Pricing</h6>
+              <div id="productTieredPrices" class="tiered-prices-list">
+                <!-- Tiered prices will be populated here -->
+              </div>
+            </div>
+          </div>
+          
+          <div id="inventorySection" class="inventory-section" style="display: none;">
+            <span id="inventoryStatus" class="inventory-status"></span>
+            <span id="inventoryQuantity" class="inventory-quantity"></span>
+          </div>
+          
+          <div class="product-actions">
+            <div class="quantity-selector">
+              <label for="productQuantity" class="quantity-label">Quantity:</label>
+              <div class="quantity-controls">
+                <button id="decreaseQuantity" class="quantity-btn">
+                  <i class="fas fa-minus"></i>
+                </button>
+                <input id="productQuantity" type="number" min="1" value="1" class="quantity-input">
+                <button id="increaseQuantity" class="quantity-btn">
+                  <i class="fas fa-plus"></i>
+                </button>
+              </div>
+            </div>
+            
+            <button id="addToCartBtn" class="btn btn-primary add-to-cart-btn">
+              <i class="fas fa-cart-plus mr-2"></i>Add to Cart
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Product Tabs Section -->
+    <div id="productTabsSection" class="product-tabs-section" style="display: none;">
+      <ul class="nav nav-tabs" id="productTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <a class="nav-link active" id="description-tab" data-toggle="tab" href="#description" role="tab" aria-controls="description" aria-selected="true">Description</a>
+        </li>
+        <li class="nav-item" role="presentation">
+          <a class="nav-link" id="specifications-tab" data-toggle="tab" href="#specifications" role="tab" aria-controls="specifications" aria-selected="false">Specifications</a>
+        </li>
+        <li class="nav-item" id="featuresTabItem" role="presentation" style="display: none;">
+          <a class="nav-link" id="features-tab" data-toggle="tab" href="#features" role="tab" aria-controls="features" aria-selected="false">Features</a>
+        </li>
+        <li class="nav-item" id="compatibilityTabItem" role="presentation" style="display: none;">
+          <a class="nav-link" id="compatibility-tab" data-toggle="tab" href="#compatibility" role="tab" aria-controls="compatibility" aria-selected="false">Compatibility</a>
+        </li>
+      </ul>
+      
+      <div class="tab-content" id="productTabsContent">
+        <div class="tab-pane fade show active" id="description" role="tabpanel" aria-labelledby="description-tab">
+          <div id="productDescription">
+            <!-- Product description will be populated here -->
+          </div>
+        </div>
+        
+        <div class="tab-pane fade" id="specifications" role="tabpanel" aria-labelledby="specifications-tab">
+          <table class="table specs-table">
+            <tbody id="specificationsTableBody">
+              <!-- Specifications will be populated here -->
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="tab-pane fade" id="features" role="tabpanel" aria-labelledby="features-tab">
+          <ul id="featuresList" class="features-list">
+            <!-- Features will be populated here -->
+          </ul>
+        </div>
+        
+        <div class="tab-pane fade" id="compatibility" role="tabpanel" aria-labelledby="compatibility-tab">
+          <div id="compatibilityContent">
+            <!-- Compatibility information will be populated here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Related Products Section -->
+    <div id="relatedProductsSection" class="related-products-section mt-5" style="display: none;">
+      <h2 class="section-title">Related Products</h2>
+      <div id="relatedProductsList" class="row">
+        <!-- Related products will be populated here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer Placeholder -->
+  <div id="footer-placeholder"></div>
+
+  <!-- Cart Button -->
+  <button id="cartButton" class="cart-button">
+    <i class="fas fa-shopping-cart"></i>
+    <span id="cartCount" class="cart-count">0</span>
+  </button>
+
+  <!-- Cart Preview -->
+  <div id="cartPreview" class="cart-preview">
+    <div class="cart-preview-header">
+      <h4 class="cart-preview-title">Your Cart</h4>
+      <button id="closeCartBtn" class="close-cart-btn">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="cart-preview-body">
+      <div id="cartItems" class="cart-items">
+        <!-- Cart items will be populated here -->
+      </div>
+      
+      <div id="emptyCartMessage" class="empty-cart-message" style="display: none;">
+        <i class="fas fa-shopping-cart fa-3x mb-3"></i>
+        <p>Your cart is empty</p>
+      </div>
+    </div>
+    
+    <div class="cart-preview-footer">
+      <div class="cart-total-section">
+        <span>Total:</span>
+        <span id="cartTotal">¥0.00</span>
+      </div>
+      
+      <div class="cart-buttons">
+        <button id="clearCartBtn" class="btn btn-outline-secondary">Clear Cart</button>
+        <button id="checkoutBtn" class="btn btn-primary">Checkout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clear Cart Confirmation -->
+  <div id="clearCartConfirmation" class="clear-cart-confirmation" style="display: none;">
+    <div class="confirmation-dialog">
+      <h5 class="confirmation-title">Clear Cart</h5>
+      <p class="confirmation-message">Are you sure you want to remove all items from your cart?</p>
+      <div class="confirmation-buttons">
+        <button id="cancelClearBtn" class="btn btn-secondary">Cancel</button>
+        <button id="confirmClearBtn" class="btn btn-danger">Clear Cart</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification -->
+  <div id="notification" class="notification"></div>
+
+  <!-- Related Product Template -->
+  <template id="relatedProductTemplate">
+    <div class="col-md-6 col-lg-3 mb-4">
+      <div class="related-product-item">
+        <div class="related-product-image">
+          <img src="img/product-placeholder.jpg" alt="Related Product">
+        </div>
+        <div class="related-product-details">
+          <h5 class="related-product-name"></h5>
+          <p class="related-product-description"></p>
+          <div class="related-product-price"></div>
+          <button class="btn btn-outline-primary view-details-btn">View Details</button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <!-- Scripts -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/product-details.js"></script>
+</body>
+</html> 

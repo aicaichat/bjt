@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的订单 - BJT 产品管理系统</title>
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <style>
+        /* Additional styles for orders page */
+        .order-card {
+            background-color: var(--bg-white);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow);
+            margin-bottom: var(--spacing-xl);
+            overflow: hidden;
+            transition: box-shadow var(--transition-fast);
+        }
+
+        .order-card:hover {
+            box-shadow: var(--box-shadow-hover);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-md) var(--spacing-lg);
+            background-color: var(--bg-light);
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .order-number {
+            font-weight: var(--font-weight-bold);
+            color: var(--primary-color);
+        }
+
+        .order-date {
+            color: var(--text-light);
+            font-size: var(--font-size-sm);
+        }
+
+        .order-content {
+            padding: var(--spacing-lg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .order-items {
+            flex: 1;
+            margin-right: var(--spacing-xl);
+        }
+
+        .order-total {
+            font-weight: var(--font-weight-bold);
+            color: var(--accent-color);
+            font-size: var(--font-size-lg);
+        }
+
+        .order-footer {
+            padding: var(--spacing-sm) var(--spacing-lg);
+            background-color: var(--bg-light);
+            border-top: 1px solid var(--border-light);
+            text-align: right;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: var(--z-modal);
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: var(--bg-white);
+            margin: 10% auto;
+            padding: 0;
+            width: 80%;
+            max-width: 700px;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow-hover);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            padding: var(--spacing-lg);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: var(--primary-color);
+        }
+
+        .modal-close {
+            color: var(--text-light);
+            font-size: 24px;
+            font-weight: var(--font-weight-bold);
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: var(--spacing-xl);
+        }
+
+        .modal-footer {
+            padding: var(--spacing-lg);
+            border-top: 1px solid var(--border-light);
+            text-align: right;
+        }
+
+        .order-items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: var(--spacing-lg) 0;
+        }
+
+        .order-items-table th,
+        .order-items-table td {
+            padding: var(--spacing-md);
+            text-align: left;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .order-items-table th {
+            background-color: var(--bg-light);
+            font-weight: var(--font-weight-medium);
+        }
+
+        .order-items-table tfoot td {
+            border-bottom: none;
+            padding-top: var(--spacing-lg);
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .no-orders-message {
+            text-align: center;
+            padding: var(--spacing-2xl);
+            background-color: var(--bg-white);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow);
+        }
+
+        .no-orders-message p {
+            margin-bottom: var(--spacing-lg);
+            color: var(--text-light);
+            font-size: var(--font-size-lg);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Container -->
+    <div id="header-container"></div>
+    
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Breadcrumb -->
+        <div class="breadcrumb">
+            <a href="../index.html">首页</a> > 我的订单
+        </div>
+        
+        <!-- Page Title -->
+        <h1>我的订单</h1>
+        
+        <!-- Orders Container -->
+        <div id="orders-container">
+            <!-- Orders will be loaded dynamically -->
+            <div class="loading-spinner">加载中...</div>
+        </div>
+    </main>
+    
+    <!-- Footer Container -->
+    <div id="footer-container"></div>
+    
+    <!-- Cart Container -->
+    <div id="cart-container"></div>
+    
+    <!-- JavaScript -->
+    <script src="../js/utils.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/cart.js"></script>
+    <script src="../js/app.js"></script>
+</body>
+</html> 

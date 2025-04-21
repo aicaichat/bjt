@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <rect width="120" height="120" fill="#f0f0f0"/>
+  <ellipse cx="60" cy="30" rx="30" ry="10" fill="#bbbbbb" stroke="#888888" stroke-width="2"/>
+  <rect x="30" y="30" width="60" height="60" fill="#bbbbbb" stroke="#888888" stroke-width="2"/>
+  <ellipse cx="60" cy="90" rx="30" ry="10" fill="#bbbbbb" stroke="#888888" stroke-width="2"/>
+  <text x="60" y="65" font-family="Arial" font-size="12" text-anchor="middle" fill="#333333">SP-001</text>
+  <text x="60" y="80" font-family="Arial" font-size="10" text-anchor="middle" fill="#333333">气缸套</text>
+</svg> 

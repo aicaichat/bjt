@@ -1,0 +1,88 @@
+{
+  "projectName": "BJT产品管理系统前端重构",
+  "technologies": {
+    "frontend": "React 18+",
+    "routing": "React Router v6",
+    "stateManagement": ["React Context", "useReducer", "Redux Toolkit (optional)"],
+    "styling": ["CSS Modules", "Styled Components (optional)"],
+    "apiClient": "Axios",
+    "formHandling": "React Hook Form",
+    "testing": ["Jest", "React Testing Library", "Cypress"]
+  },
+  "codeStyle": {
+    "javascript": {
+      "semicolons": true,
+      "quotes": "single",
+      "indentation": 2,
+      "lineLength": 100,
+      "jsxBracketSameLine": false,
+      "arrowParens": "always"
+    },
+    "componentStructure": {
+      "preferFunctionalComponents": true,
+      "hookNaming": "use{Feature}",
+      "propValidation": "PropTypes or TypeScript"
+    }
+  },
+  "strictRules": [
+    "所有功能必须与原始模板(mockup/*.html)完全一致，不得添加、删除或修改任何功能",
+    "所有用户交互和业务逻辑必须保持与原始实现相同",
+    "必须保留所有响应式设计行为和断点",
+    "样式和UI外观必须与原始模板100%匹配",
+    "组件必须有清晰的责任划分和命名",
+    "复杂逻辑必须有详细注释并引用原始实现",
+    "API服务层必须为WordPress REST API设计"
+  ],
+  "directoryStructure": {
+    "src": {
+      "assets": "静态资源文件",
+      "components": {
+        "common": "可复用的UI组件",
+        "layout": "页面布局组件如Header, Footer等"
+      },
+      "pages": "对应原始模板的页面组件",
+      "hooks": "自定义React hooks",
+      "services": "API服务层, WordPress集成",
+      "context": "React context状态管理",
+      "utils": "工具函数",
+      "styles": "全局样式和主题变量"
+    },
+    "public": "静态文件",
+    "tests": "测试文件"
+  },
+  "namingConventions": {
+    "components": "PascalCase (如ProductCard.jsx)",
+    "hooks": "camelCase以use开头 (如useCart.js)",
+    "utilities": "camelCase (如formatPrice.js)",
+    "contexts": "PascalCase以Context结尾 (如CartContext.js)",
+    "testFiles": "原文件名.test.js"
+  },
+  "commitMessageFormat": "[type]: description",
+  "commitTypes": {
+    "feat": "新功能",
+    "fix": "修复",
+    "docs": "文档",
+    "style": "代码风格",
+    "refactor": "重构",
+    "test": "测试",
+    "chore": "构建过程或辅助工具变动"
+  },
+  "branchingStrategy": {
+    "main": "生产版本",
+    "develop": "开发版本",
+    "feature": "feature/功能名称",
+    "bugfix": "bugfix/问题简述"
+  },
+  "prReviewRequirements": [
+    "所有主要PR必须有至少1位审阅者",
+    "测试必须通过",
+    "必须符合项目代码风格",
+    "功能必须与原始模板一致"
+  ],
+  "documentationRequirements": [
+    "组件用途与属性文档",
+    "API接口文档",
+    "关键业务逻辑说明",
+    "测试与部署指南"
+  ]
+} 

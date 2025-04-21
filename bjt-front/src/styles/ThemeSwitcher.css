@@ -1,38 +1,66 @@
 .theme-switcher {
-  position: relative;
   display: flex;
+  align-items: center;
   justify-content: center;
-  margin: 1rem 0;
+  gap: 16px;
+  padding: 12px;
+  margin: 0 auto;
+  max-width: 600px;
+}
+
+.theme-switcher-label {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-color);
 }
 
 .theme-options {
   display: flex;
-  gap: 0.75rem;
-  padding: 0.5rem;
-  background-color: var(--background-secondary);
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  gap: 12px;
 }
 
 .theme-option {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  border: none;
-  background-color: transparent;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
   cursor: pointer;
+  position: relative;
+  background-color: var(--bg-color-secondary);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
   transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
 }
 
 .theme-option:hover {
-  background-color: var(--background-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.theme-option::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--primary-color);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: -1;
+}
+
+.theme-option:hover::after {
+  opacity: 0.05;
 }
 
 .theme-option.active {
-  background-color: var(--background-active);
-  font-weight: 500;
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .theme-color-preview {
@@ -59,7 +87,26 @@
   color: var(--text-primary);
 }
 
-/* Responsive styles */
+/* Responsive design */
+@media (max-width: 640px) {
+  .theme-switcher {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 8px;
+  }
+  
+  .theme-options {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .theme-option {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+}
+
+/* Animations */
 @media (max-width: 768px) {
   .theme-options {
     gap: 0.5rem;

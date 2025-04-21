@@ -1,0 +1,229 @@
+/*
+ * 购物车页面模块化样式
+ * 使用Tailwind工具类和组件库，确保样式独立性
+ */
+
+/* 
+ * 注意：这是一个CSS Module文件，所有类名会自动转换为唯一名称
+ * 所以我们可以放心使用简短的类名，不会与全局样式冲突
+ */
+
+.container {
+  @apply max-w-screen-xl mx-auto px-4;
+}
+
+.orderTitle {
+  @apply text-2xl font-bold mb-6 text-gray-darkest border-b pb-2;
+}
+
+.cartEmpty {
+  @apply text-center py-12;
+}
+
+.cartEmptyIcon {
+  @apply text-6xl text-gray-darker mb-4;
+}
+
+.cartEmptyTitle {
+  @apply text-xl font-medium text-gray-darkest mb-2;
+}
+
+.cartEmptyText {
+  @apply text-gray-darker mb-6;
+}
+
+.cartEmptyButton {
+  @apply px-6 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors inline-flex items-center;
+}
+
+.cartContent {
+  @apply flex flex-col lg:flex-row gap-6;
+}
+
+.cartItems {
+  @apply flex-grow;
+}
+
+.cartSummary {
+  @apply w-full lg:w-80 flex-shrink-0;
+}
+
+.cartSummaryCard {
+  @apply bg-white rounded-lg border border-gray p-4 shadow-sm sticky top-4;
+}
+
+.summaryTitle {
+  @apply text-lg font-medium text-gray-darkest mb-4 pb-2 border-b border-gray;
+}
+
+.summaryRow {
+  @apply flex justify-between py-2 text-gray-darkest;
+}
+
+.summaryRowTotal {
+  @apply flex justify-between py-3 text-lg font-bold text-gray-darkest border-t border-gray mt-2;
+}
+
+.checkoutButton {
+  @apply w-full py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors mt-4;
+}
+
+.continueShoppingLink {
+  @apply text-center block mt-3 text-primary hover:text-primary-dark transition-colors;
+}
+
+/* 折扣码部分 */
+.discountCode {
+  @apply mt-4 pt-4 border-t border-gray;
+}
+
+.discountTitle {
+  @apply text-sm font-medium text-gray-darkest mb-2;
+}
+
+.discountForm {
+  @apply flex gap-2;
+}
+
+.discountInput {
+  @apply flex-grow border border-gray rounded px-3 py-2 text-sm;
+}
+
+.discountButton {
+  @apply bg-gray-light text-gray-darkest px-3 py-2 rounded text-sm hover:bg-gray transition-colors;
+}
+
+/* 购物车项目区域 */
+.itemsContainer {
+  @apply bg-white rounded-lg border border-gray overflow-hidden shadow-sm;
+}
+
+.itemsHeader {
+  @apply bg-gray-lightest p-4 border-b border-gray;
+}
+
+.selectAllContainer {
+  @apply flex items-center;
+}
+
+.selectAllCheckbox {
+  @apply mr-2;
+}
+
+.selectAllLabel {
+  @apply text-gray-darkest;
+}
+
+.itemList {
+  @apply divide-y divide-gray;
+}
+
+.cartItem {
+  @apply p-4 flex flex-col sm:flex-row;
+}
+
+.itemCheckbox {
+  @apply mr-4 self-start mt-1;
+}
+
+.itemImage {
+  @apply w-20 h-20 object-contain border border-gray rounded mr-4 hidden sm:block;
+}
+
+.itemDetails {
+  @apply flex-grow;
+}
+
+.itemTitle {
+  @apply font-medium text-gray-darkest mb-1;
+}
+
+.itemCode {
+  @apply text-sm text-gray-darker mb-2;
+}
+
+.itemSpecs {
+  @apply flex flex-wrap gap-2 mb-3;
+}
+
+.itemSpec {
+  @apply text-xs bg-gray-lightest text-gray-darkest py-1 px-2 rounded;
+}
+
+.itemPricing {
+  @apply flex flex-col sm:flex-row sm:items-center justify-between mt-2;
+}
+
+.itemPrice {
+  @apply text-primary font-bold text-lg;
+}
+
+.itemActions {
+  @apply flex items-center mt-2 sm:mt-0;
+}
+
+.quantitySelector {
+  @apply flex items-center border border-gray rounded mr-3;
+}
+
+.quantityButton {
+  @apply w-8 h-8 flex items-center justify-center bg-gray-lightest text-gray-darkest;
+}
+
+.quantityInput {
+  @apply w-10 h-8 text-center border-x border-gray;
+}
+
+.removeButton {
+  @apply text-danger hover:text-red-700 transition-colors;
+}
+
+/* 购物车分组标题 */
+.cartTypeTitle {
+  @apply text-lg font-medium bg-gray-lightest p-3 border-y border-gray;
+}
+
+/* 订单按钮 */
+.orderButtons {
+  @apply flex justify-between mt-6;
+}
+
+.clearCartButton {
+  @apply px-4 py-2 border border-gray text-gray-darkest rounded hover:bg-gray-lightest transition-colors;
+}
+
+/* 订单提示 */
+.orderNote {
+  @apply bg-blue-50 border border-blue-200 rounded-lg p-4 text-blue-800 mt-6;
+}
+
+.orderNoteTitle {
+  @apply font-medium mb-1;
+}
+
+.orderNoteText {
+  @apply text-sm;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .cartContent {
+    @apply flex-col;
+  }
+  
+  .cartSummary {
+    @apply w-full order-first mb-4 lg:mb-0 lg:order-last;
+  }
+  
+  .cartSummaryCard {
+    @apply static;
+  }
+  
+  .itemsHeader {
+    @apply flex-col;
+  }
+  
+  .selectAllContainer {
+    @apply mb-2;
+  }
+} 

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT 产品管理系统</title>
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+</head>
+<body class="page">
+    <header id="header" class="header">
+        <div class="header-container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="images/logo-1.webp" alt="BJT Logo" onerror="this.src='images/logo.png'">
+                </a>
+            </div>
+            <div class="navigation">
+                <nav>
+                    <ul class="nav-menu">
+                        <li><a href="index.html" class="nav-link active">Home</a></li>
+                        <li class="dropdown">
+                            <a href="products.html" class="nav-link">Products</a>
+                            <div class="dropdown-menu">
+                                <div class="dropdown-section">
+                                    <h3 class="dropdown-title">Air Cushioning System</h3>
+                                    <ul class="dropdown-list">
+                                        <li><a href="products.html?category=air&type=machine">Air Cushion Machine & Accessory</a></li>
+                                        <li><a href="products.html?category=air&type=film">Film options</a></li>
+                                        <li><a href="products.html?category=air&type=spare">Spare parts</a></li>
+                                    </ul>
+                                </div>
+                                <div class="dropdown-section">
+                                    <h3 class="dropdown-title">Paper Cushioning System</h3>
+                                    <ul class="dropdown-list">
+                                        <li><a href="products.html?category=paper&type=machine">Paper Cushion Machine & Accessory</a></li>
+                                        <li><a href="products.html?category=paper&type=options">Paper options</a></li>
+                                        <li><a href="products.html?category=paper&type=spare">Spare parts</a></li>
+                                    </ul>
+                                </div>
+                                <div class="dropdown-section">
+                                    <h3 class="dropdown-title">Water Cushioning System</h3>
+                                    <ul class="dropdown-list">
+                                        <li><a href="products.html?category=water&type=dispenser">Water Activated Tape Dispenser & Accessory</a></li>
+                                        <li><a href="products.html?category=water&type=tape">Water Activated Tape options</a></li>
+                                        <li><a href="products.html?category=water&type=spare">Spare parts</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="dropdown">
+                            <a href="support.html" class="nav-link">Support</a>
+                            <div class="dropdown-menu">
+                                <ul class="dropdown-list">
+                                    <li><a href="support.html?type=service">After-sales service</a></li>
+                                    <li><a href="support.html?type=download">Document Download</a></li>
+                                    <li><a href="support.html?type=faq">FAQ</a></li>
+                                </ul>
+                            </div>
+                        </li>
+                        <li><a href="contact.html" class="nav-link">Contact Us</a></li>
+                    </ul>
+                </nav>
+            </div>
+            <div class="header-right">
+                <!-- 主题切换器将由JavaScript添加到这里 -->
+                <select class="language-select">
+                    <option value="en">🇬🇧 English</option>
+                    <option value="zh" selected>🇨🇳 中文</option>
+                    <option value="ja">🇯🇵 日本語</option>
+                    <option value="ko">🇰🇷 한국어</option>
+                    <option value="de">🇩🇪 Deutsch</option>
+                    <option value="fr">🇫🇷 Français</option>
+                    <option value="es">🇪🇸 Español</option>
+                </select>
+                <button class="login-btn">登录</button>
+                <button class="mobile-menu-toggle" aria-label="Toggle menu">
+                    <span class="hamburger-icon"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <main class="container">
+        <!-- 气垫系统 -->
+        <div id="air-system" class="product-section" data-category="air">
+            <div class="section-header">
+                <h2>气垫包装系统</h2>
+            </div>
+            <div class="section-content">
+                <div class="section-text">
+                    <p class="introduction">产品介绍</p>
+                    <div class="divider"></div>
+                    <p>我们的气垫包装系统为您的产品在运输过程中提供卓越保护。专为高效和多功能性设计，这个系统可以创建完美匹配您产品的定制气垫，确保安全到达目的地。</p>
+                    
+                    <div class="product-links">
+                        <a href="products.html?category=air&type=machine" class="product-link">
+                            <span class="link-title">气垫包装机及配件</span>
+                            <span class="link-desc">适用于各种包装场景的高效气垫包装机器与配件</span>
+                        </a>
+                        <a href="products.html?category=air&type=film" class="product-link">
+                            <span class="link-title">薄膜选择</span>
+                            <span class="link-desc">多种规格的气垫薄膜，满足不同保护需求</span>
+                        </a>
+                        <a href="products.html?category=air&type=spare" class="product-link">
+                            <span class="link-title">备件</span>
+                            <span class="link-desc">原厂备件，确保设备长期稳定运行</span>
+                        </a>
+                    </div>
+                </div>
+                <div class="section-image">
+                    <img src="images/air-cushion-system.jpg" alt="气垫包装系统" onerror="this.src='images/placeholder.jpg'">
+                </div>
+            </div>
+        </div>
+        
+        <!-- 纸垫系统 -->
+        <div id="paper-system" class="product-section" data-category="paper">
+            <div class="section-header">
+                <h2>纸垫包装系统</h2>
+            </div>
+            <div class="section-content">
+                <div class="section-text">
+                    <p class="introduction">产品介绍</p>
+                    <div class="divider"></div>
+                    <p>我们的纸垫包装系统提供环保的包装解决方案，同时保证卓越的保护效果。该系统将纸张转化为强韧、灵活的缓冲材料，适用于各种包装需求。</p>
+                    
+                    <div class="product-links">
+                        <a href="products.html?category=paper&type=machine" class="product-link">
+                            <span class="link-title">纸垫包装机及配件</span>
+                            <span class="link-desc">高效环保的纸垫成型设备与配件</span>
+                        </a>
+                        <a href="products.html?category=paper&type=options" class="product-link">
+                            <span class="link-title">纸张选择</span>
+                            <span class="link-desc">多种规格和材质的环保纸张</span>
+                        </a>
+                        <a href="products.html?category=paper&type=spare" class="product-link">
+                            <span class="link-title">备件</span>
+                            <span class="link-desc">原厂备件，确保设备长期稳定运行</span>
+                        </a>
+                    </div>
+                </div>
+                <div class="section-image">
+                    <img src="images/paper-cushion-system.jpg" alt="纸垫包装系统" onerror="this.src='images/placeholder.jpg'">
+                </div>
+            </div>
+        </div>
+
+        <!-- 水胶带系统 -->
+        <div id="water-system" class="product-section" data-category="water">
+            <div class="section-header">
+                <h2>水胶带包装系统</h2>
+            </div>
+            <div class="section-content">
+                <div class="section-text">
+                    <p class="introduction">产品介绍</p>
+                    <div class="divider"></div>
+                    <p>我们的水胶带系统提供最牢固的包装封口解决方案。活化后的水胶带能与纸箱纤维形成牢固结合，确保您的包装安全完整，适合各种运输环境。</p>
+                    
+                    <div class="product-links">
+                        <a href="products.html?category=water&type=dispenser" class="product-link">
+                            <span class="link-title">水胶带分配器及配件</span>
+                            <span class="link-desc">高效便捷的水胶带分配设备</span>
+                        </a>
+                        <a href="products.html?category=water&type=tape" class="product-link">
+                            <span class="link-title">水胶带选择</span>
+                            <span class="link-desc">多种规格和强度的水胶带产品</span>
+                        </a>
+                        <a href="products.html?category=water&type=spare" class="product-link">
+                            <span class="link-title">备件</span>
+                            <span class="link-desc">原厂备件，确保设备长期稳定运行</span>
+                        </a>
+                    </div>
+                </div>
+                <div class="section-image">
+                    <img src="images/water-tape-system.jpg" alt="水胶带包装系统" onerror="this.src='images/placeholder.jpg'">
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer id="footer" class="footer">
+        <div class="footer-container">
+            <div class="footer-section footer-about">
+                <div class="footer-logo">
+                    <img src="images/logo-footer.webp" alt="BJT Logo" width="120" height="35">
+                </div>
+                <p class="footer-desc">BJT是领先的包装解决方案提供商，致力于为客户提供高效、环保的产品保护方案。</p>
+                <div class="social-media">
+                    <a href="#" class="social-icon" title="WeChat">
+                        <img src="images/barcode.webp" alt="WeChat QR Code" class="qr-code">
+                    </a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3 class="footer-title">产品系列</h3>
+                <ul class="footer-links">
+                    <li><a href="products.html?category=air">气垫包装系统</a></li>
+                    <li><a href="products.html?category=paper">纸垫包装系统</a></li>
+                    <li><a href="products.html?category=water">水胶带包装系统</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3 class="footer-title">支持</h3>
+                <ul class="footer-links">
+                    <li><a href="support.html?type=service">售后服务</a></li>
+                    <li><a href="support.html?type=download">文档下载</a></li>
+                    <li><a href="support.html?type=faq">常见问题</a></li>
+                </ul>
+            </div>
+            <div class="footer-section footer-contact">
+                <h3 class="footer-title">联系我们</h3>
+                <address class="contact-info">
+                    <p><strong>Hangzhou Bing Jia Tech. Co., Ltd.</strong></p>
+                    <p>Room 201, 1st and 2nd Floors, Building 7, No. 8-2, 8-3, 8-5, Keji Avenue, Yuhang Street, Yuhang District, Hangzhou City, Zhejiang Province, China</p>
+                    <p><i class="icon-phone"></i> +86 400-123-4567</p>
+                    <p><i class="icon-email"></i> info@bjt-tech.com</p>
+                </address>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2023 Hangzhou Bing Jia Tech. Co., Ltd. 保留所有权利.</p>
+        </div>
+    </footer>
+    
+    <!-- 通知容器 -->
+    <div class="notification-container"></div>
+    
+    <!-- 加载JavaScript文件，按照依赖顺序加载 -->
+    <script src="js/utils.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/theme-switcher.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 在DOM加载完毕后，确保主题切换器被初始化
+            if (typeof ThemeSwitcher !== 'undefined') {
+                ThemeSwitcher.init();
+            }
+            
+            // 加载产品数据，如果有API
+            loadProductData().catch(err => console.error('Error loading product data:', err));
+            
+            // 初始化产品链接点击事件
+            if (typeof setupProductLinks === 'function') {
+                setupProductLinks();
+            } else {
+                // 后备实现
+                document.querySelectorAll('.product-link').forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        // 检查登录状态
+                        if (!isUserLoggedIn()) {
+                            e.preventDefault();
+                            showLoginPrompt();
+                        }
+                    });
+                });
+            }
+        });
+        
+        // 从API加载产品数据
+        async function loadProductData() {
+            try {
+                // 如果有API，从API获取数据
+                // const response = await fetch('api/products/categories');
+                // const data = await response.json();
+                
+                // 使用本地数据作为后备
+                const data = {
+                    categories: [
+                        {
+                            id: 'air',
+                            name: '气垫包装系统',
+                            description: '我们的气垫包装系统为您的产品在运输过程中提供卓越保护。专为高效和多功能性设计，这个系统可以创建完美匹配您产品的定制气垫，确保安全到达目的地。',
+                            image: 'images/air-cushion-system.jpg',
+                            subcategories: [
+                                { id: 'machine', name: '气垫包装机及配件', description: '适用于各种包装场景的高效气垫包装机器与配件' },
+                                { id: 'film', name: '薄膜选择', description: '多种规格的气垫薄膜，满足不同保护需求' },
+                                { id: 'spare', name: '备件', description: '原厂备件，确保设备长期稳定运行' }
+                            ]
+                        },
+                        {
+                            id: 'paper',
+                            name: '纸垫包装系统',
+                            description: '我们的纸垫包装系统提供环保的包装解决方案，同时保证卓越的保护效果。该系统将纸张转化为强韧、灵活的缓冲材料，适用于各种包装需求。',
+                            image: 'images/paper-cushion-system.jpg',
+                            subcategories: [
+                                { id: 'machine', name: '纸垫包装机及配件', description: '高效环保的纸垫成型设备与配件' },
+                                { id: 'options', name: '纸张选择', description: '多种规格和材质的环保纸张' },
+                                { id: 'spare', name: '备件', description: '原厂备件，确保设备长期稳定运行' }
+                            ]
+                        },
+                        {
+                            id: 'water',
+                            name: '水胶带包装系统',
+                            description: '我们的水胶带系统提供最牢固的包装封口解决方案。活化后的水胶带能与纸箱纤维形成牢固结合，确保您的包装安全完整，适合各种运输环境。',
+                            image: 'images/water-tape-system.jpg',
+                            subcategories: [
+                                { id: 'dispenser', name: '水胶带分配器及配件', description: '高效便捷的水胶带分配设备' },
+                                { id: 'tape', name: '水胶带选择', description: '多种规格和强度的水胶带产品' },
+                                { id: 'spare', name: '备件', description: '原厂备件，确保设备长期稳定运行' }
+                            ]
+                        }
+                    ]
+                };
+                
+                // 更新界面
+                updateProductUI(data);
+                
+                return data;
+            } catch (error) {
+                console.error('Error fetching product data:', error);
+                return null;
+            }
+        }
+        
+        // 更新产品UI
+        function updateProductUI(data) {
+            if (!data || !data.categories) return;
+            
+            data.categories.forEach(category => {
+                const categoryEl = document.querySelector(`[data-category="${category.id}"]`);
+                if (!categoryEl) return;
+                
+                // 更新标题和描述（如果需要）
+                const titleEl = categoryEl.querySelector('h2');
+                if (titleEl) titleEl.textContent = category.name;
+                
+                const descEl = categoryEl.querySelector('.section-text p:not(.introduction)');
+                if (descEl) descEl.textContent = category.description;
+                
+                // 更新图片
+                if (category.image) {
+                    const imgEl = categoryEl.querySelector('.section-image img');
+                    if (imgEl) {
+                        imgEl.src = category.image;
+                        imgEl.alt = category.name;
+                    }
+                }
+                
+                // 更新子类别链接
+                if (category.subcategories && category.subcategories.length) {
+                    const linksContainer = categoryEl.querySelector('.product-links');
+                    if (!linksContainer) return;
+                    
+                    // 保留现有DOM结构，仅更新内容
+                    const links = linksContainer.querySelectorAll('.product-link');
+                    category.subcategories.forEach((subcat, index) => {
+                        if (index < links.length) {
+                            const linkTitle = links[index].querySelector('.link-title');
+                            const linkDesc = links[index].querySelector('.link-desc');
+                            
+                            if (linkTitle) linkTitle.textContent = subcat.name;
+                            if (linkDesc) linkDesc.textContent = subcat.description;
+                            
+                            links[index].href = `products.html?category=${category.id}&type=${subcat.id}`;
+                        }
+                    });
+                }
+            });
+        }
+        
+        // 检查用户是否登录
+        function isUserLoggedIn() {
+            return localStorage.getItem('bjt-user') !== null;
+        }
+        
+        // 显示登录提示
+        function showLoginPrompt() {
+            if (typeof showNotification === 'function') {
+                showNotification('请先登录以访问产品信息', 'warning');
+                
+                // 在通知后延迟跳转
+                setTimeout(() => {
+                    window.location.href = 'pages/login.html';
+                }, 2000);
+            } else {
+                alert('请先登录以访问此内容');
+                window.location.href = 'pages/login.html';
+            }
+        }
+    </script>
+</body>
+</html> 

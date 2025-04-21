@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT - 确认订单</title>
+    <style>
+        /* 通用样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', 'Helvetica', sans-serif;
+        }
+        
+        body {
+            background-color: #f7f9fb;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* 顶部导航 */
+        header {
+            background-color: white;
+            border-bottom: 1px solid #eee;
+            padding: 15px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .logo img {
+            height: 40px;
+        }
+        
+        /* 进度指示器 */
+        .progress-indicator {
+            margin: 30px 0;
+            display: flex;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .progress-bar {
+            position: absolute;
+            top: 24px;
+            left: 15%;
+            right: 15%;
+            height: 2px;
+            background-color: #ddd;
+            z-index: 1;
+        }
+        
+        .progress-bar-active {
+            position: absolute;
+            top: 24px;
+            left: 15%;
+            width: 35%;
+            height: 2px;
+            background-color: #1a57a5;
+            z-index: 2;
+        }
+        
+        .progress-step {
+            position: relative;
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 120px;
+        }
+        
+        .step-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: white;
+            border: 2px solid #ddd;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 24px;
+            color: #ddd;
+        }
+        
+        .step-circle.active {
+            border-color: #1a57a5;
+            background-color: #1a57a5;
+            color: white;
+        }
+        
+        .step-circle.completed {
+            border-color: #1a57a5;
+            background-color: white;
+            color: #1a57a5;
+        }
+        
+        .step-title {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .step-title.active {
+            color: #1a57a5;
+            font-weight: bold;
+        }
+        
+        /* 主要内容 */
+        .main-content {
+            display: flex;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        /* 左侧内容区 */
+        .left-column {
+            flex: 3;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        /* 左侧表单 */
+        .shipping-form {
+            background-color: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        /* 左侧订单详情 */
+        .order-details {
+            background-color: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .form-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 25px;
+            color: #1a57a5;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .required::after {
+            content: '*';
+            color: #e74c3c;
+            margin-left: 4px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            font-size: 14px;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+        }
+        
+        .form-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .form-col {
+            flex: 1;
+        }
+        
+        /* 右侧订单摘要 */
+        .order-summary {
+            flex: 2;
+            background-color: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            max-width: 400px;
+            position: sticky;
+            top: 20px;
+            align-self: flex-start;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+        
+        .summary-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 25px;
+            color: #1a57a5;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        .summary-items {
+            margin-bottom: 25px;
+        }
+        
+        .summary-item {
+            display: flex;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f1f1f1;
+        }
+        
+        .item-image {
+            width: 70px;
+            height: 70px;
+            min-width: 70px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-right: 15px;
+        }
+        
+        .item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .item-details {
+            flex: 1;
+        }
+        
+        .item-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .item-sku {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        
+        .item-price {
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .item-quantity {
+            color: #666;
+        }
+        
+        .fee-section {
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+        
+        .fee-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .fee-total {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 18px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        /* 底部按钮 */
+        .bottom-actions {
+            text-align: right;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background-color: #1a57a5;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #154785;
+        }
+        
+        .btn-secondary {
+            background-color: white;
+            color: #333;
+            border: 1px solid #ddd;
+            margin-right: 10px;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #f9f9f9;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 992px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .order-summary {
+                max-width: 100%;
+                position: static;
+                order: -1;
+                margin-bottom: 30px;
+            }
+            
+            .progress-bar, .progress-bar-active {
+                left: 10%;
+                right: 10%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .progress-indicator {
+                overflow-x: auto;
+                justify-content: flex-start;
+                padding-bottom: 10px;
+            }
+            
+            .progress-bar, .progress-bar-active {
+                left: 60px;
+                right: 60px;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .bottom-actions {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .btn-secondary {
+                margin-right: 0;
+                order: 2;
+            }
+            
+            .btn-primary {
+                order: 1;
+            }
+        }
+        
+        /* 订单项样式 */
+        .order-item {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            background-color: white;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .order-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        .item-image {
+            width: 80px;
+            height: 80px;
+            min-width: 80px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-right: 15px;
+            padding: 5px;
+        }
+        
+        .item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .item-details {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .item-model {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #002366;
+            display: flex;
+            align-items: center;
+        }
+        
+        .item-type-tag {
+            display: inline-block;
+            padding: 3px 8px;
+            font-size: 12px;
+            border-radius: 4px;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        
+        .tag-machine {
+            background-color: #e3f2fd;
+            color: #1565c0;
+        }
+        
+        .tag-accessory {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .tag-consumable {
+            background-color: #fff3e0;
+            color: #e65100;
+        }
+        
+        .item-property {
+            margin: 6px 0;
+            color: #666;
+            display: flex;
+            align-items: flex-start;
+            font-size: 13px;
+        }
+        
+        .property-label {
+            flex: 0 0 80px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .property-value {
+            flex: 1;
+        }
+        
+        .item-price-quantity {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .item-quantity-badge {
+            background-color: #f1f1f1;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: #555;
+        }
+        
+        .item-price-value {
+            font-weight: bold;
+            color: #e74c3c;
+            font-size: 16px;
+        }
+        
+        /* Tooltip styles */
+        .info-tooltip {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background-color: #1a57a5;
+            color: white;
+            border-radius: 50%;
+            font-size: 11px;
+            margin-left: 8px;
+            cursor: pointer;
+        }
+        
+        .tooltip-content {
+            position: absolute;
+            top: -5px;
+            left: 25px;
+            width: 250px;
+            background-color: white;
+            border-radius: 6px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            padding: 15px;
+            z-index: 100;
+            font-size: 13px;
+            color: #333;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
+            transform: translateY(10px);
+            pointer-events: none;
+        }
+        
+        .info-tooltip:hover .tooltip-content {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .tooltip-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #1a57a5;
+            font-size: 14px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        
+        .tooltip-property {
+            margin-bottom: 5px;
+        }
+        
+        .tooltip-property-label {
+            font-weight: 600;
+            color: #555;
+            margin-right: 5px;
+        }
+        
+        .tooltip-section {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <img src="https://via.placeholder.com/150x40/1A365D/FFFFFF?text=BJT+Logo" alt="BJT Logo">
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <h1 style="text-align: center; margin-bottom: 20px;">确认订单</h1>
+        
+        <!-- 进度指示器 -->
+        <div class="progress-indicator">
+            <div class="progress-bar"></div>
+            <div class="progress-bar-active"></div>
+            
+            <div class="progress-step">
+                <div class="step-circle completed">✓</div>
+                <div class="step-title">购物车</div>
+            </div>
+            
+            <div class="progress-step">
+                <div class="step-circle active">2</div>
+                <div class="step-title active">确认订单</div>
+            </div>
+            
+            <div class="progress-step">
+                <div class="step-circle">3</div>
+                <div class="step-title">完成</div>
+            </div>
+        </div>
+        
+        <!-- 主要内容 -->
+        <div class="main-content">
+            <!-- 左侧内容 -->
+            <div class="left-column">
+                <!-- 收货信息 -->
+                <div class="shipping-form">
+                    <h2 class="form-title">收货信息</h2>
+                    
+                    <div class="form-row">
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label required">联系人</label>
+                                <input type="text" class="form-input" placeholder="请输入联系人姓名" value="Eric">
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label required">电话</label>
+                                <input type="tel" class="form-input" placeholder="请输入联系电话" value="+86 13057101000">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label required">邮箱</label>
+                        <input type="email" class="form-input" placeholder="请输入电子邮箱" value="eric@bingjiatech.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label required">公司名称</label>
+                        <input type="text" class="form-input" placeholder="请输入公司名称" value="Hangzhou Bingjia Tech. Co., Ltd.">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label required">国家/地区</label>
+                        <select class="form-select">
+                            <option value="CN" selected>中国</option>
+                            <option value="US">美国</option>
+                            <option value="GB">英国</option>
+                            <option value="DE">德国</option>
+                            <option value="JP">日本</option>
+                            <option value="AU">澳大利亚</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label required">详细地址</label>
+                        <textarea class="form-textarea" placeholder="请输入详细地址">1818-2, Wenyixi Road, Hangzhou, Zhejiang Province, China</textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">备注</label>
+                        <textarea class="form-textarea" placeholder="可选：添加订单备注"></textarea>
+                    </div>
+                </div>
+                
+                <!-- 订单明细 -->
+                <div class="order-details">
+                    <h2 class="form-title">订单明细</h2>
+                    
+                    <!-- 机器产品 -->
+                    <div class="order-item">
+                        <div class="item-image">
+                            <img src="https://via.placeholder.com/80x80?text=LA-E5P" alt="LA-E5P Machine">
+                        </div>
+                        <div class="item-details">
+                            <div class="item-model">
+                                LA-E5P
+                                <span class="item-type-tag tag-machine">主机</span>
+                                <div class="info-tooltip">i
+                                    <div class="tooltip-content">
+                                        <div class="tooltip-title">LA-E5P 详细信息</div>
+                                        <div class="tooltip-section">
+                                            <div class="tooltip-property">
+                                                <span class="tooltip-property-label">包装尺寸:</span>
+                                                <span>120 × 80 × 80 cm</span>
+                                            </div>
+                                            <div class="tooltip-property">
+                                                <span class="tooltip-property-label">包装毛重:</span>
+                                                <span>130 kg</span>
+                                            </div>
+                                            <div class="tooltip-property">
+                                                <span class="tooltip-property-label">打托后总高度:</span>
+                                                <span>90 cm</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="item-property">
+                                <span class="property-label">料号:</span>
+                                <span class="property-value">BJT-LA-E5P-2023</span>
+                            </div>
+                            <div class="item-property">
+                                <span class="property-label">产品名称:</span>
+                                <span class="property-value">全自动高速包装机</span>
+                            </div>
+                            <div class="item-property">
+                                <span class="property-label">托盘尺寸:</span>
+                                <span class="property-value">120 × 80 × 80 cm</span>
+                            </div>
+                            <div class="item-property">
+                                <span class="property-label">一托数量:</span>
+                                <span class="property-value">1台</span>
+                            </div>
+                            <div class="item-price-quantity">
+                                <div class="item-quantity-badge">数量: 2</div>
+                                <div class="item-price-value">¥15,000.00</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 配件产品 -->
+                    <div class="order-item">
+                        <div class="item-image">
+                            <img src="https://via.placeholder.com/80x80?text=EC2007" alt="EC2007 控制板">
+                        </div>
+                        <div class="item-details">
+                            <div class="item-model">
+                                EC2007 控制板
+                                <span class="item-type-tag tag-accessory">配件</span>
+                                <div class="info-tooltip">i
+                                    <div class="tooltip-content">
+                                        <div class="tooltip-title">EC2007 控制板详细信息</div>
+                                        <div class="tooltip-section">
+                                            <div class="tooltip-property">
+                                                <span class="tooltip-property-label">包装尺寸:</span>
+                                                <span>20 × 15 × 5 cm</span>
+                                            </div>
+                                            <div class="tooltip-property">
+                                                <span class="tooltip-property-label">包装毛重:</span>
+                                                <span>0.3 kg</span>
+                                            </div>
+                                            <div class="tooltip-property">
+                                                <span class="tooltip-property-label">打托后总高度:</span>
+                                                <span>60 cm</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="item-property">
+                                <span class="property-label">型号:</span>
+                                <span class="property-value">EC2007</span>
+                            </div>
+                            <div class="item-property">
+                                <span class="property-label">料号:</span>
+                                <span class="property-value">BJT-EC2007-2023</span>
+                            </div>
+                            <div class="item-property">
+                                <span class="property-label">产品名称:</span>
+                                <span class="property-value">高级控制面板</span>
+                            </div>
+                            <div class="item-property">
+                                <span class="property-label">电压:</span>
+                                <span class="property-value">220V/110V</span>
+                            </div>
+                            <div class="item-property">
+                                <span class="property-label">频率:</span>
+                                <span class="property-value">50Hz/60Hz</span>
+                            </div>
+                            <div class="item-property">
+                                <span class="property-label">托盘尺寸:</span>
+                                <span class="property-value">80 × 60 × 20 cm</span>
+                            </div>
+                            <div class="item-property">
+                                <span class="property-label">一托数量:</span>
+                                <span class="property-value">100个</span>
+                            </div>
+                            <div class="item-price-quantity">
+                                <div class="item-quantity-badge">数量: 1</div>
+                                <div class="item-price-value">¥2,400.00</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 耗材产品 -->
+                    <div class="order-item">
+                        <div class="item-image">
+                            <img src="https://via.placeholder.com/80x80?text=SS" alt="填充气泡膜-SS">
+                        </div>
+                        <div class="item-details">
+                            <div class="item-model">
+                                填充气泡膜-SS
+                                <span class="item-type-tag tag-consumable">耗材</span>
+                                <div class="info-tooltip">i
+                                    <div class="tooltip-content">
+                                        <div class="tooltip-title">填充气泡膜-SS 详细信息</div>
+                                        <div class="tooltip-section">
+                                            <div class="tooltip-property">
+                                                <span class="tooltip-property-label">包装材质:</span>
+                                                <span>HDPE高密度聚乙烯</span>
+                                            </div>
+                                        </div>
+                                        <div class="tooltip-section">
+                                            <div class="tooltip-title">公制规格:</div>
+                                            <div class="tooltip-property">
+                                                <span class="tooltip-property-label">厚度:</span>
+                                                <span>0.05mm</span>
+                                            </div>
+                                            <div class="tooltip-property">
+                                                <span class="tooltip-property-label">克重:</span>
+                                                <span>45g/m²</span>
+                                            </div>
+                                            <div class="tooltip-property">
+                                                <span class="tooltip-property-label">膜宽:</span>
+                                                <span>300mm</span>
+                                            </div>
+                                            <div class="tooltip-property">
+                                                <span class="tooltip-property-label">袋长:</span>
+                                                <span>200m</span>
+                                            </div>
+                                        </div>
+                                        <div class="tooltip-section">
+                                            <div class="tooltip-title">英制规格:</div>
+                                            <div class="tooltip-property">
+                                                <span class="tooltip-property-label">厚度:</span>
+                                                <span>2 mil</span>
+                                            </div>
+                                            <div class="tooltip-property">
+                                                <span class="tooltip-property-label">克重:</span>
+                                                <span>1.3 oz/yd²</span>
+                                            </div>
+                                            <div class="tooltip-property">
+                                                <span class="tooltip-property-label">膜宽:</span>
+                                                <span>11.8 inch</span>
+                                            </div>
+                                            <div class="tooltip-property">
+                                                <span class="tooltip-property-label">袋长:</span>
+                                                <span>656 ft</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="item-property">
+                                <span class="property-label">适配机型:</span>
+                                <span class="property-value">ALL</span>
+                            </div>
+                            <div class="item-property">
+                                <span class="property-label">料号:</span>
+                                <span class="property-value">BJT-SS-2023</span>
+                            </div>
+                            <div class="item-property">
+                                <span class="property-label">规格:</span>
+                                <span class="property-value">300mm×200m</span>
+                            </div>
+                            <div class="item-property">
+                                <span class="property-label">材质:</span>
+                                <span class="property-value">HDPE</span>
+                            </div>
+                            <div class="item-price-quantity">
+                                <div class="item-quantity-badge">数量: 1</div>
+                                <div class="item-price-value">¥2,800.00</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 底部按钮 -->
+                <div class="bottom-actions">
+                    <button class="btn btn-secondary">返回购物车</button>
+                    <button class="btn btn-primary">确认提交</button>
+                </div>
+                
+                <!-- 提示信息 -->
+                <div style="margin-top: 20px; color: #666; font-size: 13px;">
+                    <p style="color: #e74c3c">* 库存不足商品仅支持PO订单</p>
+                    <p>* PO订单将以PDF文件形式生成，可用于与销售人员沟通</p>
+                </div>
+            </div>
+            
+            <!-- 右侧价格摘要 -->
+            <div class="order-summary">
+                <h2 class="summary-title">价格结算</h2>
+                
+                <div class="fee-section">
+                    <div class="fee-item">
+                        <span>商品总额：</span>
+                        <span>¥32,800.00</span>
+                    </div>
+                    <div class="fee-item">
+                        <span>税费：</span>
+                        <span>¥1,640.00</span>
+                    </div>
+                    <div class="fee-item">
+                        <span>运费：</span>
+                        <span>¥200.00</span>
+                    </div>
+                    
+                    <div class="fee-total">
+                        <span>订单总额：</span>
+                        <span>¥34,640.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 生成PO订单按钮事件
+        document.querySelector('.btn-primary').addEventListener('click', function() {
+            alert('正在生成PO订单...');
+        });
+        
+        // 返回购物车按钮事件
+        document.querySelector('.btn-secondary').addEventListener('click', function() {
+            alert('返回购物车页面');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的订单 - BJT Products</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        header {
+            background-color: #fff;
+            padding: 15px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .logo {
+            height: 40px;
+        }
+        
+        .language-selector {
+            float: right;
+            border: 1px solid #ddd;
+            padding: 5px 10px;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+        
+        .page-title {
+            text-align: center;
+            color: #1A365D;
+            margin: 30px 0;
+        }
+        
+        .status-tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        
+        .status-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .status-tab.active {
+            color: #1A365D;
+            font-weight: bold;
+        }
+        
+        .status-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: #1A365D;
+        }
+        
+        .filter-section {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .date-range {
+            display: flex;
+            align-items: center;
+        }
+        
+        .date-input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 0 5px;
+        }
+        
+        .search-box {
+            flex-grow: 1;
+            display: flex;
+        }
+        
+        .search-input {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px 0 0 4px;
+        }
+        
+        .search-button {
+            padding: 8px 15px;
+            background-color: #1A365D;
+            color: white;
+            border: none;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+        }
+        
+        .order-list {
+            margin-bottom: 30px;
+        }
+        
+        .order-card {
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-bottom: 1px solid #eee;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .order-id {
+            font-weight: bold;
+        }
+        
+        .order-date {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .order-status {
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .status-pending {
+            background-color: #ffc107;
+        }
+        
+        .status-paid {
+            background-color: #17a2b8;
+        }
+        
+        .status-shipped {
+            background-color: #6f42c1;
+        }
+        
+        .status-completed {
+            background-color: #28a745;
+        }
+        
+        .status-cancelled {
+            background-color: #dc3545;
+        }
+        
+        .order-details {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .detail-label {
+            color: #666;
+            margin-right: 20px;
+        }
+        
+        .detail-value {
+            font-weight: 500;
+        }
+        
+        .order-actions {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .action-button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        
+        .primary-button {
+            background-color: #1A365D;
+            color: white;
+        }
+        
+        .secondary-button {
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            color: #333;
+        }
+        
+        .expand-button {
+            background: none;
+            border: none;
+            color: #1A365D;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            padding: 5px;
+            font-size: 14px;
+        }
+        
+        .expand-icon {
+            margin-right: 5px;
+            transition: transform 0.3s;
+        }
+        
+        .expanded .expand-icon {
+            transform: rotate(90deg);
+        }
+        
+        .order-items {
+            padding: 0 15px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background-color: #f9f9f9;
+        }
+        
+        .order-card.expanded .order-items {
+            max-height: 500px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .item-card {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            gap: 15px;
+        }
+        
+        .item-card:last-child {
+            border-bottom: none;
+        }
+        
+        .item-image {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        
+        .item-details {
+            flex-grow: 1;
+        }
+        
+        .item-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .item-specs {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .item-price {
+            font-size: 14px;
+        }
+        
+        .item-quantity {
+            background-color: #eee;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .page-item {
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .page-item.active {
+            background-color: #1A365D;
+            color: white;
+            border-color: #1A365D;
+        }
+        
+        .page-item:hover:not(.active) {
+            background-color: #f0f0f0;
+        }
+        
+        .empty-orders {
+            text-align: center;
+            padding: 40px 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .empty-icon {
+            font-size: 48px;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .status-tabs {
+                overflow-x: auto;
+                white-space: nowrap;
+                padding-bottom: 5px;
+            }
+            
+            .order-header, .detail-row, .order-actions {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+            
+            .order-header > div:last-child {
+                align-self: flex-end;
+                margin-top: -30px;
+            }
+            
+            .search-box {
+                width: 100%;
+            }
+            
+            .item-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .item-image {
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <img src="/api/placeholder/150/40" alt="BJT Logo" class="logo">
+                <select class="language-selector">
+                    <option value="zh">中文</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <h1 class="page-title">我的订单</h1>
+        
+        <div class="status-tabs">
+            <div class="status-tab active" data-status="all">全部</div>
+            <div class="status-tab" data-status="pending">待付款</div>
+            <div class="status-tab" data-status="paid">待发货</div>
+            <div class="status-tab" data-status="shipped">已发货</div>
+            <div class="status-tab" data-status="completed">已完成</div>
+            <div class="status-tab" data-status="cancelled">已取消</div>
+        </div>
+        
+        <div class="filter-section">
+            <div class="date-range">
+                <span>时间范围：</span>
+                <input type="date" class="date-input" id="start-date">
+                <span>至</span>
+                <input type="date" class="date-input" id="end-date">
+            </div>
+            <div class="search-box">
+                <input type="text" class="search-input" placeholder="输入订单号或商品名称搜索">
+                <button class="search-button">搜索</button>
+            </div>
+        </div>
+        
+        <div class="order-list">
+            <!-- 订单1 -->
+            <div class="order-card">
+                <div class="order-header">
+                    <div class="order-id">订单号：BJT20231015001</div>
+                    <div class="order-date">下单时间：2023-10-15 14:30:25</div>
+                    <div><span class="order-status status-shipped">已发货</span></div>
+                </div>
+                <div class="order-details">
+                    <div class="detail-row">
+                        <div>
+                            <span class="detail-label">订单总额：</span>
+                            <span class="detail-value">¥234,670.00</span>
+                        </div>
+                        <div>
+                            <span class="detail-label">支付方式：</span>
+                            <span class="detail-value">银行转账</span>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <div>
+                            <span class="detail-label">收货信息：</span>
+                            <span class="detail-value">李四 | 浙江省杭州市滨江区滨盛路1508号 | 13800138000</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="order-actions">
+                    <button class="expand-button">
+                        <span class="expand-icon">▶</span> 查看商品详情
+                    </button>
+                    <div>
+                        <button class="action-button secondary-button">导出PO单</button>
+                        <button class="action-button primary-button">查看详情</button>
+                    </div>
+                </div>
+                <div class="order-items">
+                    <div class="item-card">
+                        <img src="/api/placeholder/60/60" alt="Product" class="item-image">
+                        <div class="item-details">
+                            <div class="item-name">LP-V1 包装机</div>
+                            <div class="item-specs">标准型号 | SKU: LP-V1-001</div>
+                            <div class="item-price">¥100,000.00</div>
+                        </div>
+                        <div class="item-quantity">x2</div>
+                    </div>
+                    <div class="item-card">
+                        <img src="/api/placeholder/60/60" alt="Product" class="item-image">
+                        <div class="item-details">
+                            <div class="item-name">Floor Stand</div>
+                            <div class="item-specs">标准配置 | SKU: FS-001</div>
+                            <div class="item-price">¥8,000.00</div>
+                        </div>
+                        <div class="item-quantity">x2</div>
+                    </div>
+                    <div class="item-card">
+                        <img src="/api/placeholder/60/60" alt="Product" class="item-image">
+                        <div class="item-details">
+                            <div class="item-name">Cable Holder</div>
+                            <div class="item-specs">3米 | SKU: CH-001</div>
+                            <div class="item-price">¥500.00</div>
+                        </div>
+                        <div class="item-quantity">x4</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 订单2 -->
+            <div class="order-card">
+                <div class="order-header">
+                    <div class="order-id">订单号：BJT20231012005</div>
+                    <div class="order-date">下单时间：2023-10-12 09:15:10</div>
+                    <div><span class="order-status status-completed">已完成</span></div>
+                </div>
+                <div class="order-details">
+                    <div class="detail-row">
+                        <div>
+                            <span class="detail-label">订单总额：</span>
+                            <span class="detail-value">¥45,000.00</span>
+                        </div>
+                        <div>
+                            <span class="detail-label">支付方式：</span>
+                            <span class="detail-value">支付宝</span>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <div>
+                            <span class="detail-label">收货信息：</span>
+                            <span class="detail-value">王五 | 上海市浦东新区张江高科技园区博云路100号 | 13900139000</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="order-actions">
+                    <button class="expand-button">
+                        <span class="expand-icon">▶</span> 查看商品详情
+                    </button>
+                    <div>
+                        <button class="action-button secondary-button">导出PO单</button>
+                        <button class="action-button primary-button">查看详情</button>
+                    </div>
+                </div>
+                <div class="order-items">
+                    <div class="item-card">
+                        <img src="/api/placeholder/60/60" alt="Product" class="item-image">
+                        <div class="item-details">
+                            <div class="item-name">LP-F1 包装机</div>
+                            <div class="item-specs">标准型号 | SKU: LP-F1-001</div>
+                            <div class="item-price">¥45,000.00</div>
+                        </div>
+                        <div class="item-quantity">x1</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 订单3 -->
+            <div class="order-card">
+                <div class="order-header">
+                    <div class="order-id">订单号：BJT20231001015</div>
+                    <div class="order-date">下单时间：2023-10-01 16:45:33</div>
+                    <div><span class="order-status status-pending">待付款</span></div>
+                </div>
+                <div class="order-details">
+                    <div class="detail-row">
+                        <div>
+                            <span class="detail-label">订单总额：</span>
+                            <span class="detail-value">¥15,800.00</span>
+                        </div>
+                        <div>
+                            <span class="detail-label">支付方式：</span>
+                            <span class="detail-value">待选择</span>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <div>
+                            <span class="detail-label">收货信息：</span>
+                            <span class="detail-value">赵六 | 北京市海淀区中关村南大街5号 | 13700137000</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="order-actions">
+                    <button class="expand-button">
+                        <span class="expand-icon">▶</span> 查看商品详情
+                    </button>
+                    <div>
+                        <button class="action-button secondary-button">取消订单</button>
+                        <button class="action-button primary-button">去支付</button>
+                    </div>
+                </div>
+                <div class="order-items">
+                    <div class="item-card">
+                        <img src="/api/placeholder/60/60" alt="Product" class="item-image">
+                        <div class="item-details">
+                            <div class="item-name">特种薄膜</div>
+                            <div class="item-specs">A4/100张/包 | SKU: SF-A4-100</div>
+                            <div class="item-price">¥150.00</div>
+                        </div>
+                        <div class="item-quantity">x20</div>
+                    </div>
+                    <div class="item-card">
+                        <img src="/api/placeholder/60/60" alt="Product" class="item-image">
+                        <div class="item-details">
+                            <div class="item-name">Label Kit</div>
+                            <div class="item-specs">标准配置 | SKU: LK-001</div>
+                            <div class="item-price">¥2,800.00</div>
+                        </div>
+                        <div class="item-quantity">x5</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="pagination">
+            <div class="page-item">«</div>
+            <div class="page-item active">1</div>
+            <div class="page-item">2</div>
+            <div class="page-item">3</div>
+            <div class="page-item">...</div>
+            <div class="page-item">10</div>
+            <div class="page-item">»</div>
+        </div>
+    </div>
+    
+    <script>
+        // 选项卡切换
+        document.querySelectorAll('.status-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.status-tab').forEach(t => {
+                    t.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // 这里应该添加筛选逻辑
+                const status = this.dataset.status;
+                console.log('筛选状态:', status);
+                
+                // 模拟操作，实际应用中应该是异步获取数据
+                if (status === 'completed') {
+                    showEmptyOrders();
+                } else {
+                    hideEmptyOrders();
+                }
+            });
+        });
+        
+        // 展开收起功能
+        document.querySelectorAll('.expand-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const orderCard = this.closest('.order-card');
+                orderCard.classList.toggle('expanded');
+            });
+        });
+        
+        // 搜索功能
+        document.querySelector('.search-button').addEventListener('click', function() {
+            const searchValue = document.querySelector('.search-input').value.trim();
+            if (searchValue) {
+                console.log('搜索:', searchValue);
+                alert(`搜索: ${searchValue}`);
+            }
+        });
+        
+        // 日期筛选
+        document.getElementById('start-date').addEventListener('change', updateDateFilter);
+        document.getElementById('end-date').addEventListener('change', updateDateFilter);
+        
+        function updateDateFilter() {
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+            
+            if (startDate && endDate) {
+                console.log('日期范围:', startDate, '至', endDate);
+            }
+        }
+        
+        // 显示空订单状态
+        function showEmptyOrders() {
+            // 确保没有创建过空订单提示
+            if (!document.querySelector('.empty-orders')) {
+                const orderList = document.querySelector('.order-list');
+                orderList.innerHTML = `
+                    <div class="empty-orders">
+                        <div class="empty-icon">📂</div>
+                        <h3>没有找到符合条件的订单</h3>
+                        <p>您可以尝试调整筛选条件或创建新订单</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // 隐藏空订单状态
+        function hideEmptyOrders() {
+            const emptyElem = document.querySelector('.empty-orders');
+            if (emptyElem) {
+                emptyElem.remove();
+                // 这里应该重新加载订单列表
+                // 此处省略...
+            }
+        }
+        
+        // 分页事件
+        document.querySelectorAll('.page-item').forEach(item => {
+            item.addEventListener('click', function() {
+                if (!this.classList.contains('active')) {
+                    document.querySelectorAll('.page-item').forEach(p => {
+                        p.classList.remove('active');
+                    });
+                    
+                    if (this.textContent !== '«' && this.textContent !== '»' && this.textContent !== '...') {
+                        this.classList.add('active');
+                        
+                        // 这里应该添加分页逻辑
+                        console.log('页码:', this.textContent);
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

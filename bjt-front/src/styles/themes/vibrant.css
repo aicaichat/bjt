@@ -1,0 +1,209 @@
+/* 
+ * 活力现代风格主题
+ * 特点：鲜明、活力、现代感
+ * 主色调：鲜明色彩
+ */
+
+:root.theme-vibrant {
+  /* 品牌主色调 - 高饱和紫色 */
+  --primary-color: #7c3aed;
+  --primary-light: #a78bfa;
+  --primary-dark: #5b21b6;
+  --primary-bg: #f5f3ff;
+  
+  /* 辅助色系 - 活力青绿 */
+  --secondary-color: #06b6d4;
+  --secondary-light: #67e8f9;
+  --secondary-dark: #0891b2;
+  
+  /* 强调色 - 明亮粉红 */
+  --accent-color: #ec4899;
+  --accent-light: #f9a8d4;
+  --accent-dark: #be185d;
+  
+  /* 情境色彩 */
+  --success-color: #10b981;
+  --error-color: #ef4444;
+  --warning-color: #f59e0b;
+  --info-color: #3b82f6;
+  
+  /* 中性色调 */
+  --gray-50: #fafafa;
+  --gray-100: #f4f4f5;
+  --gray-200: #e4e4e7;
+  --gray-300: #d4d4d8;
+  --gray-400: #a1a1aa;
+  --gray-500: #71717a;
+  --gray-600: #52525b;
+  --gray-700: #3f3f46;
+  --gray-800: #27272a;
+  --gray-900: #18181b;
+  
+  /* 背景色 */
+  --bg-color: #fafafa;
+  --bg-card: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-inset: #f4f4f5;
+  
+  /* 文本颜色 */
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --text-tertiary: #71717a;
+  --text-disabled: #a1a1aa;
+  --text-on-primary: #ffffff;
+  --text-on-dark: #ffffff;
+  
+  /* 边框 */
+  --border-color: #e4e4e7;
+  --border-light: #f4f4f5;
+  --border-focus: var(--primary-color);
+  
+  /* 阴影 */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-hover: 0 10px 20px rgba(124, 58, 237, 0.15), 0 3px 6px rgba(124, 58, 237, 0.1);
+  
+  /* 字体 */
+  --font-family: 'Montserrat', 'Roboto', sans-serif;
+  
+  /* 圆角 */
+  --border-radius-sm: 8px;
+  --border-radius-md: 12px;
+  --border-radius-lg: 16px;
+  --border-radius-xl: 24px;
+  --border-radius-full: 9999px;
+  
+  /* 特定组件样式 */
+  --header-height: 70px;
+  --navbar-bg: #ffffff;
+  --navbar-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --section-header-style: normal;
+  --card-hover-transform: scale(1.03);
+}
+
+/* 特定组件设置 */
+.theme-vibrant .section-header {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #18181b;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: none;
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 4px rgba(124, 58, 237, 0.2);
+}
+
+.theme-vibrant .section-header::before {
+  content: "";
+  position: absolute;
+  top: 0.25em;
+  left: -0.5em;
+  width: 0.25em;
+  height: 0.8em;
+  background-color: #ec4899;
+  border-radius: 4px;
+  z-index: -1;
+}
+
+.theme-vibrant .section-header::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 8px;
+  background: linear-gradient(90deg, #7c3aed, #06b6d4, #ec4899);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.4);
+}
+
+.theme-vibrant .btn-primary {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--border-radius-full);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
+  transition: all 0.3s ease;
+  border: none;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.theme-vibrant .btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.theme-vibrant .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.25);
+}
+
+.theme-vibrant .btn-primary:hover::before {
+  opacity: 1;
+}
+
+.theme-vibrant .card {
+  border-radius: var(--border-radius-lg);
+  border: none;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+}
+
+.theme-vibrant .card:hover {
+  transform: var(--card-hover-transform);
+  box-shadow: 0 20px 30px -10px rgba(124, 58, 237, 0.2);
+}
+
+.theme-vibrant .product-link {
+  color: var(--primary-color);
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background-color: var(--primary-bg);
+  border-radius: var(--border-radius-full);
+  margin-bottom: 0.5rem;
+}
+
+.theme-vibrant .product-link::before {
+  content: '→';
+  margin-right: 0.5rem;
+  transition: transform 0.3s ease;
+}
+
+.theme-vibrant .product-link:hover {
+  color: var(--primary-dark);
+  background-color: var(--primary-light);
+  color: var(--text-on-primary);
+  transform: translateX(5px);
+}
+
+.theme-vibrant .product-link:hover::before {
+  transform: translateX(3px);
+}
+
+.theme-vibrant .divider {
+  height: 6px;
+  width: 60px;
+  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+  border-radius: 3px;
+  margin-bottom: 1.5rem;
+} 

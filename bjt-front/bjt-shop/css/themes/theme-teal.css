@@ -1,0 +1,86 @@
+/**
+ * BJT Shop - 青色主题
+ * 企业级工业设备电商平台设计
+ */
+
+:root.theme-teal {
+  /* 主色调 */
+  --primary-color: #00796B;
+  --primary-color-light: #009688;
+  --primary-color-dark: #00695C;
+  
+  /* 次要色调 */
+  --secondary-color: #26A69A;
+  --secondary-color-light: #4DB6AC;
+  --secondary-color-dark: #00897B;
+
+  /* 强调色 */
+  --accent-color: #00BCD4;
+  --accent-color-light: #4DD0E1;
+  --accent-color-dark: #00ACC1;
+  
+  /* 中性色 */
+  --background-color: #FFFFFF;
+  --background-alt: #F5FAFA;
+  --surface-color: #FFFFFF;
+  --text-color: #37474F;
+  --text-color-secondary: #607D8B;
+  --text-color-light: #90A4AE;
+  --border-color: #E0F2F1;
+  
+  /* 功能色 */
+  --success-color: #2E7D32;
+  --warning-color: #FF8F00;
+  --error-color: #D50000;
+  --info-color: #0288D1;
+  
+  /* 排版 */
+  --font-family: 'Segoe UI', 'SF Pro Text', 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-size-base: 16px;
+  --font-size-small: 14px;
+  --font-size-smaller: 12px;
+  --font-size-large: 18px;
+  --font-size-larger: 20px;
+  --font-size-xlarge: 24px;
+  --font-size-xxlarge: 28px;
+  --line-height-base: 1.6;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 600;
+  
+  /* 布局 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+  --container-width: 1200px;
+  --header-height: 72px;
+  
+  /* 边框 */
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --border-width: 1px;
+  --border-width-thick: 2px;
+  
+  /* 阴影 */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.12);
+  
+  /* 过渡动画 */
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 250ms ease-in-out;
+  --transition-slow: 350ms ease-in-out;
+  
+  /* 特定组件参数 */
+  --header-background: var(--background-color);
+  --footer-background: var(--primary-color);
+  --footer-text-color: #FFFFFF;
+  --button-height: 42px;
+  --button-padding: 0 20px;
+  --input-height: 42px;
+  --input-padding: 0 12px;
+} 

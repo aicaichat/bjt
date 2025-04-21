@@ -1,0 +1,134 @@
+<!-- 订单确认页面 -->
+<div class="order-confirm-page">
+    <h1 class="page-title">确认订单</h1>
+    
+    <!-- 进度指示器 -->
+    <div class="progress-indicator">
+        <div class="progress-bar"></div>
+        <div class="progress-bar-active"></div>
+        
+        <div class="progress-step">
+            <div class="step-circle completed">✓</div>
+            <div class="step-title">购物车</div>
+        </div>
+        
+        <div class="progress-step">
+            <div class="step-circle active">2</div>
+            <div class="step-title active">确认订单</div>
+        </div>
+        
+        <div class="progress-step">
+            <div class="step-circle">3</div>
+            <div class="step-title">完成</div>
+        </div>
+    </div>
+    
+    <!-- 主要内容 -->
+    <div class="main-content">
+        <!-- 左侧内容 -->
+        <div class="left-column">
+            <!-- 收货信息 -->
+            <div class="shipping-form">
+                <h2 class="form-title">收货信息</h2>
+                
+                <form id="shipping-form">
+                    <div class="form-row">
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label required">联系人</label>
+                                <input type="text" name="contact_name" class="form-input" placeholder="请输入联系人姓名" required>
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label required">电话</label>
+                                <input type="tel" name="contact_phone" class="form-input" placeholder="请输入联系电话" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label required">邮箱</label>
+                        <input type="email" name="contact_email" class="form-input" placeholder="请输入电子邮箱" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label required">公司名称</label>
+                        <input type="text" name="company_name" class="form-input" placeholder="请输入公司名称" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label required">国家/地区</label>
+                        <select name="country" class="form-select" required>
+                            <option value="">请选择国家/地区</option>
+                            <option value="CN">中国</option>
+                            <option value="US">美国</option>
+                            <option value="GB">英国</option>
+                            <option value="DE">德国</option>
+                            <option value="JP">日本</option>
+                            <option value="AU">澳大利亚</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label required">详细地址</label>
+                        <textarea name="address" class="form-textarea" placeholder="请输入详细地址" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">备注</label>
+                        <textarea name="remarks" class="form-textarea" placeholder="可选：添加订单备注"></textarea>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- 订单明细 -->
+            <div class="order-details">
+                <h2 class="form-title">订单明细</h2>
+                
+                <!-- 动态加载订单商品 -->
+                <div id="order-items-container">
+                    <!-- 通过JavaScript动态加载订单项目 -->
+                    <div class="loading-indicator">加载中...</div>
+                </div>
+            </div>
+            
+            <!-- 底部按钮 -->
+            <div class="bottom-actions">
+                <button id="back-to-cart" class="btn btn-secondary">返回购物车</button>
+                <button id="submit-order" class="btn btn-primary">确认提交</button>
+            </div>
+            
+            <!-- 提示信息 -->
+            <div class="order-notes">
+                <p class="note note-red">* 库存不足商品仅支持PO订单</p>
+                <p class="note">* PO订单将以PDF文件形式生成，可用于与销售人员沟通</p>
+            </div>
+        </div>
+        
+        <!-- 右侧价格摘要 -->
+        <div class="order-summary">
+            <h2 class="summary-title">价格结算</h2>
+            
+            <div class="fee-section">
+                <div class="fee-item">
+                    <span>商品总额：</span>
+                    <span id="order-subtotal">¥0.00</span>
+                </div>
+                <div class="fee-item">
+                    <span>税费：</span>
+                    <span id="order-tax">¥0.00</span>
+                </div>
+                <div class="fee-item">
+                    <span>运费：</span>
+                    <span id="order-shipping">¥0.00</span>
+                </div>
+                
+                <div class="fee-total">
+                    <span>订单总额：</span>
+                    <span id="order-total">¥0.00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

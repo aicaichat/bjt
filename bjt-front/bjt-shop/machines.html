@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT 主机选择</title>
+    <style>
+        /* 通用样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        header {
+            background-color: #fff;
+            padding: 15px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo {
+            height: 40px;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .nav-menu {
+            display: flex;
+            margin-right: 20px;
+        }
+        
+        .nav-item {
+            margin: 0 15px;
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .nav-item:hover {
+            color: #1a57a5;
+        }
+        
+        .language-selector {
+            margin-right: 15px;
+            border: 1px solid #ddd;
+            padding: 5px 10px;
+            border-radius: 4px;
+            background-color: #fff;
+            min-width: 120px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .language-selector option {
+            padding: 5px;
+        }
+        
+        /* Responsive Header */
+        @media (max-width: 768px) {
+            .header-right {
+                justify-content: center;
+                margin-top: 10px;
+            }
+            
+            .nav-menu {
+                margin-right: 0;
+                margin-bottom: 10px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .nav-item {
+                margin: 5px 10px;
+            }
+            
+            .language-selector {
+                margin-bottom: 10px;
+            }
+        }
+        
+        /* User dropdown styles */
+        .user-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            background-color: #f5f5f5;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            border: 1px solid #ddd;
+        }
+        
+        .user-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .user-name {
+            font-weight: 500;
+            margin-right: 5px;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: white;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1000;
+            border-radius: 4px;
+        }
+        
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            text-align: left;
+        }
+        
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+        
+        .user-dropdown:hover .dropdown-content {
+            display: block;
+        }
+        
+        .breadcrumb {
+            padding: 15px 0;
+            color: #666;
+        }
+        
+        .breadcrumb a {
+            color: #1a57a5;
+            text-decoration: none;
+        }
+        
+        /* 购物车浮动按钮样式 */
+        .cart-floating {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #1a57a5;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+            z-index: 900;
+        }
+        
+        .cart-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: red;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        /* 模态窗口样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background-color: #fff;
+            width: 80%;
+            max-width: 500px;
+            margin: 100px auto;
+            padding: 20px;
+            border-radius: 8px;
+            position: relative;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+            border: none;
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            cursor: pointer;
+            background-color: #f1f6ff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .modal-close:hover {
+            background-color: #e1ebff;
+            transform: rotate(90deg);
+        }
+        
+        .modal h3 {
+            color: #1a57a5;
+            margin-bottom: 15px;
+            font-weight: 600;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        /* 添加到现有的style标签中 */
+        .section-title {
+            margin: 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #ccc;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            cursor: pointer;
+        }
+        
+        .tab.active {
+            background-color: #1a57a5;
+            color: white;
+            border-color: #1a57a5;
+        }
+        
+        .product-list {
+            margin-bottom: 30px;
+        }
+        
+        .product-item {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .product-selector {
+            margin-right: 15px;
+        }
+        
+        .product-info {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        
+        .product-code {
+            width: 100px;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        .product-details {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 8px;
+            font-size: 13px;
+        }
+        
+        .product-detail-item {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 3px 8px;
+            margin-right: 8px;
+            margin-bottom: 6px;
+            color: #495057;
+            transition: all 0.2s ease;
+        }
+        
+        .product-detail-item strong {
+            color: #1a57a5;
+            font-weight: 500;
+        }
+        
+        .product-description {
+            flex: 1;
+            margin-right: 15px;
+            padding-bottom: 8px;
+        }
+        
+        .product-description > div:first-of-type {
+            margin-bottom: 8px;
+        }
+        
+        .product-inventory {
+            width: 150px;
+            color: #666;
+        }
+        
+        .product-pricing {
+            width: 150px;
+        }
+        
+        .product-image {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+            margin: 0 15px;
+        }
+        
+        .product-actions {
+            display: flex;
+            align-items: center;
+        }
+        
+        .quantity-input {
+            width: 50px;
+            text-align: center;
+            margin: 0 5px;
+            padding: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .btn-add {
+            background-color: #1a57a5;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        
+        .specification-link, .more-info-link {
+            display: inline-flex;
+            align-items: center;
+            background-color: #f1f6ff;
+            padding: 5px 12px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            color: #1a57a5;
+            text-decoration: none;
+            border: 1px solid #e1ebff;
+            margin-right: 8px;
+            margin-top: 8px;
+        }
+        
+        .specification-link:hover, .more-info-link:hover {
+            background-color: #e1ebff;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(26, 87, 165, 0.15);
+        }
+        
+        .more-info-section {
+            margin-top: 8px;
+        }
+        
+        /* 电压选择样式 */
+        .voltage-options {
+            margin: 20px 0;
+        }
+        
+        .voltage-option {
+            margin-right: 20px;
+        }
+
+        /* 配件部分样式 */
+        .accessory-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px dashed #ccc;
+            display: none; /* 初始隐藏 */
+        }
+        
+        .accessory-section.visible {
+            display: block;
+        }
+        
+        /* 嵌套的配件 */
+        .accessory-level-2,
+        .accessory-level-3,
+        .accessory-level-4,
+        .accessory-level-5 {
+            margin-left: 20px;
+            padding-left: 15px;
+            border-left: 3px solid #1a57a5;
+            margin-top: 15px;
+            display: none; /* 初始隐藏 */
+        }
+        
+        .accessory-level-2.visible,
+        .accessory-level-3.visible,
+        .accessory-level-4.visible,
+        .accessory-level-5.visible {
+            display: block;
+        }
+        
+        .level-indicator {
+            font-size: 12px;
+            background-color: #1a57a5;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 5px;
+        }
+        
+        .dynamic-note {
+            display: inline-block;
+            font-size: 13px;
+            color: #555;
+            background-color: #f1f6ff;
+            border: 1px solid #d9e6ff;
+            border-radius: 4px;
+            padding: 3px 8px;
+            margin-left: 10px;
+            font-weight: normal;
+        }
+        
+        /* 配件规格样式 */
+        .accessory-specs {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 8px;
+            gap: 6px;
+        }
+        
+        .accessory-spec-item {
+            background-color: #f1f6ff;
+            border: 1px solid #d9e6ff;
+            border-radius: 4px;
+            padding: 3px 8px;
+            color: #495057;
+            font-size: 13px;
+            flex-grow: 1;
+            min-width: 110px;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+        
+        .accessory-spec-item strong {
+            color: #1a57a5;
+            font-weight: 500;
+            margin-right: 4px;
+            min-width: 55px;
+            display: inline-block;
+        }
+        
+        .frequency-spec {
+            background-color: #daeeff;
+            border: 2px solid #2b87db;
+            border-radius: 4px;
+            padding: 5px 12px;
+            color: #0055aa;
+            font-size: 14px;
+            font-weight: 600;
+            flex-grow: 1;
+            min-width: 110px;
+            display: flex;
+            align-items: center;
+            order: -1; /* 使其显示在最前 */
+            margin-right: 8px;
+            margin-bottom: 6px;
+            box-shadow: 0 2px 8px rgba(0,102,204,0.2);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .accessory-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        /* 浮动购物车按钮 */
+        .floating-cart-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background-color: #1976d2;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transition: transform 0.3s, background-color 0.3s;
+        }
+
+        .floating-cart-button:hover {
+            transform: scale(1.1);
+            background-color: #1565c0;
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #ff5722;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            animation: modalFadeIn 0.3s;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            max-height: calc(80vh - 70px);
+        }
+
+        /* 购物车项目样式 */
+        #cart-items {
+            margin-bottom: 20px;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .cart-item-details {
+            flex: 1;
+        }
+
+        .cart-item-name {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .cart-item-price {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .cart-item-actions {
+            display: flex;
+            align-items: center;
+        }
+
+        .cart-item-total {
+            font-weight: 500;
+            color: #1976d2;
+            margin-right: 15px;
+        }
+
+        .remove-item {
+            background-color: #f5f5f5;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            color: #ff5722;
+            transition: background-color 0.3s;
+        }
+
+        .remove-item:hover {
+            background-color: #ffebee;
+        }
+
+        .empty-cart {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        /* 购物车汇总样式 */
+        .cart-summary {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        .cart-total-container {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+
+        .cart-total-value {
+            font-weight: bold;
+            color: #1976d2;
+        }
+
+        .cart-buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* 确认对话框样式 */
+        .confirm-dialog {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1200;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .confirm-content {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .confirm-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        /* 按钮样式 */
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+
+        .btn-primary {
+            background-color: #1976d2;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1565c0;
+        }
+
+        .btn-danger {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #d32f2f;
+        }
+
+        .btn-secondary {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background-color: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-left">
+                <img src="images/logo.webp" alt="BJT Logo" class="logo">
+            </div>
+            <div class="header-right">
+                <nav class="nav-menu">
+                    <a href="index.html" class="nav-item">首页</a>
+                    <a href="products.html" class="nav-item">产品</a>
+                    <a href="#" class="nav-item">文档</a>
+                    <a href="#" class="nav-item">支持</a>
+                </nav>
+                <select class="language-selector" aria-label="Select language">
+                    <option value="zh">中文</option>
+                    <option value="en">🇬🇧 English</option>
+                    <option value="ja">🇯🇵 日本語</option>
+                    <option value="ko">🇰🇷 한국어</option>
+                    <option value="fr">🇫🇷 français</option>
+                    <option value="de">🇩🇪 Deutsch</option>
+                    <option value="es">🇪🇸 Español</option>
+                    <option value="it">🇮🇹 italiano</option>
+                    <option value="ru">🇷🇺 русский</option>
+                    <option value="pt">🇵🇹 português</option>
+                    <option value="th">🇹🇭 ไทย</option>
+                    <option value="vi">🇻🇳 tiếng việt</option>
+                </select>
+                <div class="user-dropdown">
+                    <div class="user-info">
+                        <img src="images/user-avatar.jpg" alt="User Avatar" class="user-avatar">
+                        <span class="user-name">已登录用户</span>
+                    </div>
+                    <div class="dropdown-content">
+                        <a href="#">个人信息</a>
+                        <a href="#">退出登录</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- 浮动购物车按钮 -->
+    <div class="floating-cart-button">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="cart-count">0</span>
+    </div>
+    
+    <!-- 信息模态窗口 - 产品详情 -->
+    <div id="info-modal-1" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="hideModal('info-modal-1')">×</span>
+            <h3>LP-V1 详细信息</h3>
+            <div style="margin-top: 15px; line-height: 1.6;">
+                <p><strong>包装尺寸:</strong> 60 × 40 × 35 cm</p>
+                <p><strong>包装毛重:</strong> 15 kg</p>
+                <p><strong>打托后总高度:</strong> 90 cm</p>
+                <p><strong>其他规格参数:</strong> 详见规格PDF</p>
+            </div>
+        </div>
+    </div>
+    
+    <div id="info-modal-2" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="hideModal('info-modal-2')">×</span>
+            <h3>LP-F1 详细信息</h3>
+            <div style="margin-top: 15px; line-height: 1.6;">
+                <p><strong>包装尺寸:</strong> 55 × 35 × 30 cm</p>
+                <p><strong>包装毛重:</strong> 12 kg</p>
+                <p><strong>打托后总高度:</strong> 80 cm</p>
+                <p><strong>其他规格参数:</strong> 详见规格PDF</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 购物车模态框 -->
+    <div id="cart-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>购物车</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="cart-items">
+                    <!-- 购物车内容将通过JavaScript动态生成 -->
+                </div>
+                <div class="cart-summary">
+                    <div class="cart-total-container">
+                        <span>总计:</span>
+                        <span class="cart-total-value">¥<span id="cart-total">0</span></span>
+                    </div>
+                    <div class="cart-buttons">
+                        <button id="clear-cart-btn" class="btn btn-danger">清空购物车</button>
+                        <button id="checkout-btn" class="btn btn-primary">结算</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 清空购物车确认对话框 -->
+    <div id="clear-confirm" class="confirm-dialog">
+        <div class="confirm-content">
+            <p>确定要清空购物车吗？</p>
+            <div class="confirm-buttons">
+                <button id="cancel-clear" class="btn btn-secondary">取消</button>
+                <button id="confirm-clear" class="btn btn-danger">确定</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="index.html">首页</a> > <a href="products.html">产品分类</a> > <span>包装机</span>
+        </div>
+        
+        <h1 class="section-title">Machine</h1>
+        
+        <div class="tabs">
+            <div class="tab active">Void Fill</div>
+            <div class="tab">Cushioning</div>
+            <div class="tab">Wrapping</div>
+        </div>
+    </div>
+
+    <!-- 在container div内添加产品列表 -->
+    <div class="product-list">
+        <!-- 第1个产品 -->
+        <div class="product-item" data-product="LP-V1">
+            <div class="product-selector">
+                <input type="radio" name="product" id="product1" class="product-radio" data-product="LP-V1" checked>
+            </div>
+            <div class="product-info">
+                <div class="product-code">LP-V1</div>
+                <div class="product-description">
+                    <strong>描述</strong>
+                    <div>部分属性展示</div>
+                    <div class="product-details">
+                        <span class="product-detail-item"><strong>料号:</strong> BJT-LP-V1-2024</span>
+                        <span class="product-detail-item"><strong>托盘尺寸:</strong> 120 × 80 × 160 cm</span>
+                        <span class="product-detail-item"><strong>一拖数量:</strong> 24件</span>
+                    </div>
+                    <div class="more-info-section">
+                        <a href="#" class="specification-link">Specification pdf</a>
+                        <span class="tooltip">
+                            <a href="#" class="more-info-link" onclick="showModal('info-modal-1')">More info</a>
+                        </span>
+                    </div>
+                </div>
+                <div class="product-inventory">
+                    <div>库存：EU20</div>
+                    <div>AU20</div>
+                    <div>DE10</div>
+                </div>
+                <div class="product-pricing">
+                    <div>价格：100 (1-10)</div>
+                    <div>90 (11-100)</div>
+                    <div>50 (>100)</div>
+                </div>
+            </div>
+            <img src="images/products/machine1.jpg" alt="Product Image" class="product-image">
+            <div class="product-actions">
+                <span>X</span>
+                <input type="number" class="quantity-input" value="1" min="1">
+                <button class="btn-add" onclick="addMachineToCart('LP-V1', 100)">添加</button>
+            </div>
+        </div>
+        
+        <!-- 第2个产品 -->
+        <div class="product-item" data-product="LP-F1">
+            <div class="product-selector">
+                <input type="radio" name="product" id="product2" class="product-radio" data-product="LP-F1">
+            </div>
+            <div class="product-info">
+                <div class="product-code">LP-F1</div>
+                <div class="product-description">
+                    <strong>Des.</strong>
+                    <div>部分属性展示</div>
+                    <div class="product-details">
+                        <span class="product-detail-item"><strong>料号:</strong> BJT-LP-F1-2024</span>
+                        <span class="product-detail-item"><strong>托盘尺寸:</strong> 110 × 75 × 145 cm</span>
+                        <span class="product-detail-item"><strong>一拖数量:</strong> 20件</span>
+                    </div>
+                    <div class="more-info-section">
+                        <a href="#" class="specification-link">Specification pdf</a>
+                        <span class="tooltip">
+                            <a href="#" class="more-info-link" onclick="showModal('info-modal-2')">More info</a>
+                        </span>
+                    </div>
+                </div>
+                <div class="product-inventory">
+                    <div>库存：EU15</div>
+                    <div>AU15</div>
+                    <div>DE8</div>
+                </div>
+                <div class="product-pricing">
+                    <div>价格：120 (1-10)</div>
+                    <div>110 (11-100)</div>
+                    <div>95 (>100)</div>
+                </div>
+            </div>
+            <img src="images/products/machine2.jpg" alt="Product Image" class="product-image">
+            <div class="product-actions">
+                <span>X</span>
+                <input type="number" class="quantity-input" value="1" min="1">
+                <button class="btn-add" onclick="addMachineToCart('LP-F1', 120)">添加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 电压选择部分 -->
+    <div class="voltage-options" id="voltageOptions">
+        <span>Voltage:</span>
+        <label class="voltage-option">
+            <input type="radio" name="voltage" id="voltage220" class="voltage-radio" value="220" checked> 220
+        </label>
+        <label class="voltage-option">
+            <input type="radio" name="voltage" id="voltage110" class="voltage-radio" value="110"> 110
+        </label>
+    </div>
+
+    <!-- 配件第1级部分 -->
+    <div class="accessory-section" id="accessory-level-1">
+        <h2 class="section-title">Accessory #1 <span class="level-indicator">Level 1</span>
+            <span id="level1-context-message" class="dynamic-note">请先选择上方的主机型号</span>
+        </h2>
+        
+        <!-- 配件列表第1级 -->
+        <div class="product-list">
+            <!-- 配件1-1 -->
+            <div class="product-item" data-accessory="Floor-Stand">
+                <div class="product-selector">
+                    <input type="radio" name="accessory1" id="accessory1-1" class="accessory-radio level-1" data-accessory="Floor-Stand">
+                </div>
+                <div class="product-info">
+                    <div class="product-code">Floor Stand</div>
+                    <div class="product-description">
+                        <div class="accessory-name">地面支架组件</div>
+                        <div class="accessory-specs">
+                            <span class="frequency-spec"><strong>频率:</strong> 50Hz</span>
+                            <span class="accessory-spec-item"><strong>料号:</strong> BJT-FS-V2-2024</span>
+                            <span class="accessory-spec-item"><strong>电压:</strong> 220V</span>
+                            <span class="accessory-spec-item"><strong>托盘尺寸:</strong> 90×70×120cm</span>
+                            <span class="accessory-spec-item"><strong>一托数量:</strong> 36件</span>
+                        </div>
+                        <div class="more-info-section">
+                            <a href="#" class="specification-link">Specification pdf</a>
+                            <a href="#" class="more-info-link" onclick="showModal('accessory-info-1')">more info</a>
+                        </div>
+                    </div>
+                    <div class="product-inventory">
+                        <div>库存：EU12</div>
+                        <div>AU10</div>
+                        <div>DE8</div>
+                    </div>
+                    <div class="product-pricing">
+                        <div>价格：80 (1-5)</div>
+                        <div>70 (6-20)</div>
+                        <div>60 (>20)</div>
+                    </div>
+                </div>
+                <img src="images/products/accessory1.jpg" alt="Accessory Image" class="product-image">
+                <div class="product-actions">
+                    <span>X</span>
+                    <input type="number" class="quantity-input" value="1" min="1">
+                    <button class="btn-add" onclick="addAccessoryToCart('Floor-Stand', 80)">添加</button>
+                </div>
+            </div>
+            
+            <!-- 配件1-2 -->
+            <div class="product-item" data-accessory="Table-Stand">
+                <div class="product-selector">
+                    <input type="radio" name="accessory1" id="accessory1-2" class="accessory-radio level-1" data-accessory="Table-Stand">
+                </div>
+                <div class="product-info">
+                    <div class="product-code">Table Stand</div>
+                    <div class="product-description">
+                        <div class="accessory-name">桌面支架组件</div>
+                        <div class="accessory-specs">
+                            <span class="frequency-spec"><strong>频率:</strong> 50Hz</span>
+                            <span class="accessory-spec-item"><strong>料号:</strong> BJT-TS-V1-2024</span>
+                            <span class="accessory-spec-item"><strong>电压:</strong> 220V</span>
+                            <span class="accessory-spec-item"><strong>托盘尺寸:</strong> 80×60×110cm</span>
+                            <span class="accessory-spec-item"><strong>一托数量:</strong> 20件</span>
+                        </div>
+                        <div class="more-info-section">
+                            <a href="#" class="specification-link">Specification pdf</a>
+                            <a href="#" class="more-info-link" onclick="showModal('accessory-info-2')">more info</a>
+                        </div>
+                    </div>
+                    <div class="product-inventory">
+                        <div>库存：EU15</div>
+                        <div>AU12</div>
+                        <div>DE10</div>
+                    </div>
+                    <div class="product-pricing">
+                        <div>价格：75 (1-5)</div>
+                        <div>65 (6-20)</div>
+                        <div>55 (>20)</div>
+                    </div>
+                </div>
+                <img src="images/products/accessory2.jpg" alt="Accessory Image" class="product-image">
+                <div class="product-actions">
+                    <span>X</span>
+                    <input type="number" class="quantity-input" value="1" min="1">
+                    <button class="btn-add" onclick="addAccessoryToCart('Table-Stand', 75)">添加</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 配件第2级部分 -->
+    <div class="accessory-level-2" id="accessory-level-2">
+        <h2 class="section-title">Accessory #2 <span class="level-indicator">Level 2</span>
+            <span id="level2-context-message" class="dynamic-note"></span>
+        </h2>
+        
+        <!-- 配件列表第2级 -->
+        <div class="product-list">
+            <!-- 配件2-1 -->
+            <div class="product-item" data-parent="Floor-Stand" data-accessory="Cable-Holder">
+                <div class="product-selector">
+                    <input type="radio" name="accessory2" id="accessory2-1" class="accessory-radio level-2" data-accessory="Cable-Holder">
+                </div>
+                <div class="product-info">
+                    <div class="product-code">Cable Holder</div>
+                    <div class="product-description">
+                        <div class="accessory-name">线缆管理组件</div>
+                        <div class="accessory-specs">
+                            <span class="frequency-spec"><strong>频率:</strong> 50Hz</span>
+                            <span class="accessory-spec-item"><strong>料号:</strong> BJT-CH-V1-2024</span>
+                            <span class="accessory-spec-item"><strong>电压:</strong> 220V</span>
+                            <span class="accessory-spec-item"><strong>托盘尺寸:</strong> 60×45×30cm</span>
+                            <span class="accessory-spec-item"><strong>一托数量:</strong> 36件</span>
+                        </div>
+                        <div class="more-info-section">
+                            <a href="#" class="specification-link">Specification pdf</a>
+                            <a href="#" class="more-info-link" onclick="showModal('accessory-info-3')">more info</a>
+                        </div>
+                    </div>
+                    <div class="product-inventory">
+                        <div>库存：EU20</div>
+                        <div>AU15</div>
+                        <div>DE10</div>
+                    </div>
+                    <div class="product-pricing">
+                        <div>价格：30 (1-10)</div>
+                        <div>25 (11-50)</div>
+                        <div>20 (>50)</div>
+                    </div>
+                </div>
+                <img src="images/products/accessory3.jpg" alt="Accessory Image" class="product-image">
+                <div class="product-actions">
+                    <span>X</span>
+                    <input type="number" class="quantity-input" value="1" min="1">
+                    <button class="btn-add" onclick="addAccessoryToCart('Cable-Holder', 30)">添加</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 简化配件第3级 -->
+    <div class="accessory-level-3" id="accessory-level-3">
+        <h2 class="section-title">Accessory #3 <span class="level-indicator">Level 3</span>
+            <span id="level3-context-message" class="dynamic-note"></span>
+        </h2>
+        <div class="product-list">
+            <!-- 配件内容将由JavaScript动态管理 -->
+        </div>
+    </div>
+
+    <!-- 简化配件第4级 -->
+    <div class="accessory-level-4" id="accessory-level-4">
+        <h2 class="section-title">Accessory #4 <span class="level-indicator">Level 4</span>
+            <span id="level4-context-message" class="dynamic-note"></span>
+        </h2>
+        <div class="product-list">
+            <!-- 配件内容将由JavaScript动态管理 -->
+        </div>
+    </div>
+
+    <!-- 简化配件第5级 -->
+    <div class="accessory-level-5" id="accessory-level-5">
+        <h2 class="section-title">Accessory #5 <span class="level-indicator">Level 5</span>
+            <span id="level5-context-message" class="dynamic-note"></span>
+        </h2>
+        <div class="product-list">
+            <!-- 配件内容将由JavaScript动态管理 -->
+        </div>
+    </div>
+
+    <footer style="margin-top: 50px; text-align: center; padding: 20px; background-color: #f0f0f0; color: #666;">
+        <div class="container">
+            Copyright@Hangzhou Bingjia Tech. Co., Ltd.
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html> 

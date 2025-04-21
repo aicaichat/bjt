@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>膜材选择 - BJT包装系统</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/film-options.css">
+</head>
+<body>
+    <!-- 页头占位符 -->
+    <div id="header-placeholder"></div>
+    
+    <main class="main-container">
+        <!-- 面包屑导航 -->
+        <div class="breadcrumb-nav">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="index.html">首页</a></li>
+                    <li class="breadcrumb-item"><a href="product-config.html">产品配置</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">膜材选择</li>
+                </ol>
+            </nav>
+        </div>
+        
+        <h1 class="page-title">选择兼容膜材</h1>
+        
+        <!-- 已选机器显示区 -->
+        <section class="selected-machine-section">
+            <h2 class="section-title">已选设备</h2>
+            <div id="selected-machine" class="machine-details-container">
+                <div class="loading-placeholder">
+                    <div class="spinner"></div>
+                    <p class="loading-text">加载机器信息...</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 膜材筛选区 -->
+        <section class="filter-section">
+            <h2 class="section-title">筛选条件</h2>
+            <div class="filter-container">
+                <!-- 第一行筛选 - 规格尺寸 -->
+                <div class="filter-row">
+                    <div class="filter-label">规格尺寸:</div>
+                    <div class="filter-options">
+                        <select id="thickness-filter" class="filter-select">
+                            <option value="all">所有厚度</option>
+                        </select>
+                        <select id="width-filter" class="filter-select">
+                            <option value="all">所有宽度</option>
+                        </select>
+                        <select id="length-filter" class="filter-select">
+                            <option value="all">所有长度</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- 第二行筛选 - 形状和材料 -->
+                <div class="filter-row">
+                    <div class="filter-label">气垫形状:</div>
+                    <div class="filter-options shape-options">
+                        <div class="shape-option" data-shape="square">
+                            <img src="images/shapes/square.png" alt="方形气垫" class="shape-image">
+                            <span>方形</span>
+                        </div>
+                        <div class="shape-option" data-shape="tube">
+                            <img src="images/shapes/tube.png" alt="管状气垫" class="shape-image">
+                            <span>管状</span>
+                        </div>
+                        <div class="shape-option" data-shape="bubble">
+                            <img src="images/shapes/bubble.png" alt="泡泡气垫" class="shape-image">
+                            <span>泡泡</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="filter-row">
+                    <div class="filter-label">材料类型:</div>
+                    <div class="filter-options material-options">
+                        <label class="material-option">
+                            <input type="checkbox" name="material" value="standard"> 标准聚乙烯
+                        </label>
+                        <label class="material-option">
+                            <input type="checkbox" name="material" value="biodegradable"> 可生物降解
+                        </label>
+                        <label class="material-option">
+                            <input type="checkbox" name="material" value="static"> 防静电
+                        </label>
+                        <label class="material-option">
+                            <input type="checkbox" name="material" value="recycled"> 再生材料
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- 价格范围滑块 -->
+                <div class="filter-row">
+                    <div class="filter-label">价格范围:</div>
+                    <div class="filter-options">
+                        <div class="price-range-container">
+                            <div class="price-labels">
+                                <span id="min-price-label">¥0</span>
+                                <span id="max-price-label">¥500</span>
+                            </div>
+                            <div class="range-slider">
+                                <input type="range" id="min-price" class="range" min="0" max="500" value="0" step="10">
+                                <input type="range" id="max-price" class="range" min="0" max="500" value="500" step="10">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 第三行筛选 - 库存和排序 -->
+                <div class="filter-row">
+                    <div class="filter-label">库存状态:</div>
+                    <div class="filter-options">
+                        <select id="stock-filter" class="filter-select">
+                            <option value="all">所有商品</option>
+                            <option value="in-stock">有库存</option>
+                            <option value="out-of-stock">无库存</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="filter-row">
+                    <div class="filter-label">排序方式:</div>
+                    <div class="filter-options">
+                        <select id="sort-filter" class="filter-select">
+                            <option value="default">默认排序</option>
+                            <option value="price-asc">价格从低到高</option>
+                            <option value="price-desc">价格从高到低</option>
+                            <option value="name-asc">名称 A-Z</option>
+                            <option value="name-desc">名称 Z-A</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="filter-actions">
+                    <button id="reset-filters" class="btn btn-outline-secondary">
+                        <i class="fas fa-undo"></i> 重置筛选
+                    </button>
+                    <button id="apply-filters" class="btn btn-primary">
+                        <i class="fas fa-filter"></i> 应用筛选
+                    </button>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 膜材列表 -->
+        <section class="products-section">
+            <div class="section-header">
+                <h2 class="section-title">兼容膜材</h2>
+                <div class="results-count">找到 <span id="results-count">0</span> 个商品</div>
+            </div>
+            
+            <div id="film-list" class="products-grid">
+                <div class="loading-indicator">
+                    <div class="spinner"></div>
+                    <p class="loading-text">加载兼容膜材...</p>
+                </div>
+            </div>
+            
+            <!-- 无结果显示 -->
+            <div id="no-results" class="no-results-message" style="display: none;">
+                <i class="fas fa-search"></i>
+                <h3>未找到符合条件的膜材</h3>
+                <p>请尝试调整筛选条件或 <button id="reset-no-results" class="reset-link">重置所有筛选</button></p>
+            </div>
+            
+            <!-- 分页控件 -->
+            <div class="pagination-container">
+                <div class="pagination" id="pagination">
+                    <!-- 分页将由JS动态生成 -->
+                </div>
+            </div>
+        </section>
+        
+        <!-- 最近查看 -->
+        <section class="recently-viewed-section">
+            <h2 class="section-title">最近查看</h2>
+            <div id="recently-viewed" class="products-row">
+                <!-- 最近查看的产品将由JS动态生成 -->
+            </div>
+        </section>
+        
+        <!-- 推荐组合 -->
+        <section class="recommended-bundles-section">
+            <h2 class="section-title">推荐组合</h2>
+            <div id="recommended-bundles" class="bundles-container">
+                <!-- 推荐组合将由JS动态生成 -->
+            </div>
+        </section>
+    </main>
+    
+    <!-- 页脚占位符 -->
+    <div id="footer-placeholder"></div>
+    
+    <!-- 浮动购物车按钮 -->
+    <button id="cart-button" class="cart-button">
+        <i class="fas fa-shopping-cart"></i>
+        <span id="cart-count" class="cart-count">0</span>
+    </button>
+    
+    <!-- 购物车预览 -->
+    <div id="cart-preview" class="cart-preview">
+        <div class="cart-preview-header">
+            <h3 class="cart-preview-title">购物车</h3>
+            <button id="close-cart" class="close-cart-btn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="cart-preview-body">
+            <div id="cart-items" class="cart-items">
+                <!-- 购物车项目将在这里动态生成 -->
+            </div>
+            <div id="empty-cart-message" class="empty-cart-message">
+                <i class="fas fa-shopping-cart"></i>
+                <p>购物车为空</p>
+            </div>
+        </div>
+        <div class="cart-preview-footer">
+            <div class="cart-total-section">
+                <span>总计:</span>
+                <span id="cart-total" class="cart-total">¥0.00</span>
+            </div>
+            <div class="cart-buttons">
+                <button id="clear-cart" class="btn btn-outline-danger">清空购物车</button>
+                <button id="checkout" class="btn btn-primary">结算</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 清空购物车确认对话框 -->
+    <div id="clear-cart-confirmation" class="clear-cart-confirmation" style="display: none;">
+        <div class="confirmation-dialog">
+            <h4 class="confirmation-title">确认清空购物车?</h4>
+            <p class="confirmation-message">此操作将删除购物车中的所有商品，且不可撤销。</p>
+            <div class="confirmation-buttons">
+                <button id="cancel-clear" class="btn btn-secondary">取消</button>
+                <button id="confirm-clear" class="btn btn-danger">确认清空</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 产品详情模态框 -->
+    <div id="product-details-modal" class="modal fade">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-product-name"></h5>
+                    <button type="button" class="close modal-close" data-dismiss="modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="product-detail-content">
+                        <div class="product-detail-image">
+                            <img id="modal-product-image" src="" alt="">
+                        </div>
+                        <div class="product-detail-info">
+                            <p id="modal-product-description"></p>
+                            <div class="product-specs">
+                                <h6>规格参数:</h6>
+                                <div id="modal-product-specs"></div>
+                            </div>
+                            <div class="product-pricing">
+                                <div id="modal-product-price" class="product-price"></div>
+                                <div id="modal-product-original" class="product-original-price"></div>
+                            </div>
+                            <div class="product-inventory">
+                                <span id="modal-inventory-status" class="inventory-status"></span>
+                            </div>
+                            <div class="product-actions">
+                                <div class="quantity-selector">
+                                    <label for="modal-quantity">数量:</label>
+                                    <div class="quantity-controls">
+                                        <button id="modal-decrease-quantity" class="quantity-btn">-</button>
+                                        <input id="modal-quantity" type="number" class="quantity-input" value="1" min="1" max="99">
+                                        <button id="modal-increase-quantity" class="quantity-btn">+</button>
+                                    </div>
+                                </div>
+                                <button id="modal-add-to-cart" class="btn btn-primary">添加到购物车</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 产品项模板 -->
+    <template id="film-item-template">
+        <div class="product-item">
+            <div class="product-badge"></div>
+            <div class="product-image-container">
+                <img src="" alt="" class="product-image">
+            </div>
+            <div class="product-info">
+                <h3 class="product-name"></h3>
+                <p class="product-description"></p>
+                <div class="product-meta">
+                    <span class="product-code"></span>
+                    <span class="product-dimensions"></span>
+                </div>
+                <div class="product-price-container">
+                    <span class="product-price"></span>
+                    <span class="product-original-price"></span>
+                </div>
+                <div class="product-inventory">
+                    <span class="inventory-status"></span>
+                </div>
+                <div class="product-actions">
+                    <button class="btn btn-sm btn-outline-secondary view-details-btn">
+                        <i class="fas fa-eye"></i> 查看详情
+                    </button>
+                    <button class="btn btn-sm btn-outline-info spec-download-btn">
+                        <i class="fas fa-file-download"></i> 规格表
+                    </button>
+                    <div class="quantity-selector">
+                        <div class="quantity-controls">
+                            <button class="quantity-btn decrease-btn">-</button>
+                            <input type="number" class="quantity-input" value="1" min="1" max="99">
+                            <button class="quantity-btn increase-btn">+</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary add-to-cart-btn">
+                        <i class="fas fa-cart-plus"></i> 添加到购物车
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+    
+    <!-- 购物车项模板 -->
+    <template id="cart-item-template">
+        <div class="cart-item">
+            <div class="cart-item-image">
+                <img src="" alt="">
+            </div>
+            <div class="cart-item-details">
+                <div class="cart-item-name"></div>
+                <div class="cart-item-price"></div>
+                <div class="cart-item-quantity">
+                    <button class="quantity-btn decrease-btn" data-action="decrease">-</button>
+                    <span class="quantity-value">1</span>
+                    <button class="quantity-btn increase-btn" data-action="increase">+</button>
+                </div>
+            </div>
+            <button class="cart-item-remove">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </div>
+    </template>
+    
+    <!-- 推荐组合模板 -->
+    <template id="bundle-template">
+        <div class="bundle-item">
+            <div class="bundle-header">
+                <h3 class="bundle-title"></h3>
+                <span class="bundle-savings"></span>
+            </div>
+            <div class="bundle-products"></div>
+            <div class="bundle-footer">
+                <div class="bundle-pricing">
+                    <div class="bundle-price"></div>
+                    <div class="bundle-original-price"></div>
+                </div>
+                <button class="btn btn-primary add-bundle-btn">
+                    <i class="fas fa-cart-plus"></i> 添加组合到购物车
+                </button>
+            </div>
+        </div>
+    </template>
+    
+    <!-- 通知元素 -->
+    <div id="notification" class="notification"></div>
+    
+    <!-- 脚本 -->
+    <script src="js/utils.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/film-options.js"></script>
+    
+    <script>
+        // 在页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 加载头部和底部组件
+            loadComponent('components/header.html', 'header-placeholder');
+            loadComponent('components/footer.html', 'footer-placeholder');
+            
+            // 初始化页面
+            if (typeof init === 'function') {
+                init();
+            }
+        });
+        
+        // 加载组件的辅助函数
+        function loadComponent(url, targetId) {
+            const target = document.getElementById(targetId);
+            if (!target) return;
+            
+            fetch(url)
+                .then(response => response.text())
+                .then(html => {
+                    target.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error loading component:', error);
+                });
+        }
+    </script>
+</body>
+</html> 

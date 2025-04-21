@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT 产品详情</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="images/logo.webp" alt="BJT Logo">
+                </a>
+            </div>
+            <div class="navigation">
+                <nav>
+                    <ul class="nav-menu">
+                        <li><a href="index.html" class="nav-link">首页</a></li>
+                        <li><a href="products.html" class="nav-link active">产品</a></li>
+                        <li><a href="#" class="nav-link">文档</a></li>
+                        <li><a href="#" class="nav-link">支持</a></li>
+                    </ul>
+                </nav>
+            </div>
+            <div class="header-actions">
+                <select class="language-select">
+                    <option value="zh">中文</option>
+                    <option value="en">🇬🇧 English</option>
+                    <option value="ja">🇯🇵 日本語</option>
+                    <option value="ko">🇰🇷 한국어</option>
+                    <option value="fr">🇫🇷 français</option>
+                    <option value="de">🇩🇪 Deutsch</option>
+                    <option value="es">🇪🇸 Español</option>
+                    <option value="it">🇮🇹 italiano</option>
+                    <option value="ru">🇷🇺 русский</option>
+                    <option value="pt">🇵🇹 português</option>
+                    <option value="th">🇹🇭 ไทย</option>
+                    <option value="vi">🇻🇳 tiếng việt</option>
+                </select>
+                <div class="user-menu">
+                    <button class="user-menu-toggle">
+                        <div class="user-avatar">访客</div>
+                        <span class="user-name">游客</span>
+                    </button>
+                    <div class="user-menu-content">
+                        <ul>
+                            <li><a href="login.html">登录</a></li>
+                            <li><a href="#">注册</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <main class="container">
+        <!-- 面包屑导航 -->
+        <div class="breadcrumb">
+            <a href="index.html">首页</a> &gt; <a href="products.html">产品列表</a> &gt; <span id="product-breadcrumb">产品详情</span>
+        </div>
+        
+        <div class="product-detail" id="product-detail">
+            <!-- 产品详情将由JavaScript动态加载 -->
+        </div>
+        
+        <!-- 产品选项卡 -->
+        <div class="product-tabs">
+            <div class="tab-header">
+                <div class="tab-link active" data-tab="description">产品描述</div>
+                <div class="tab-link" data-tab="specs">规格参数</div>
+                <div class="tab-link" data-tab="reviews">用户评价</div>
+                <div class="tab-link" data-tab="inquiry">询价表单</div>
+            </div>
+            
+            <div class="tab-content active" id="tab-description">
+                <!-- 产品描述将由JavaScript动态加载 -->
+            </div>
+            
+            <div class="tab-content" id="tab-specs">
+                <!-- 规格参数将由JavaScript动态加载 -->
+            </div>
+            
+            <div class="tab-content" id="tab-reviews">
+                <!-- 用户评价将由JavaScript动态加载 -->
+            </div>
+            
+            <div class="tab-content" id="tab-inquiry">
+                <div class="inquiry-form">
+                    <h3>产品询价</h3>
+                    <p>填写以下表单，我们的销售人员将尽快与您联系。</p>
+                    
+                    <form id="inquiry-form">
+                        <div class="form-group">
+                            <label for="name">您的姓名</label>
+                            <input type="text" id="name" name="name" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="company">公司名称</label>
+                            <input type="text" id="company" name="company" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">电子邮箱</label>
+                            <input type="email" id="email" name="email" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="phone">联系电话</label>
+                            <input type="tel" id="phone" name="phone" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="quantity">意向数量</label>
+                            <input type="number" id="quantity" name="quantity" class="form-control" min="1" value="1">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="message">留言</label>
+                            <textarea id="message" name="message" class="form-control" rows="5"></textarea>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">提交询价</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 相关产品 -->
+        <div class="related-products">
+            <h2>相关产品</h2>
+            <div class="related-products-slider" id="related-products">
+                <!-- 相关产品将由JavaScript动态加载 -->
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <div class="footer-container">
+                <div class="footer-col">
+                    <h3>关于我们</h3>
+                    <ul>
+                        <li><a href="#">公司简介</a></li>
+                        <li><a href="#">发展历程</a></li>
+                        <li><a href="#">联系我们</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h3>产品中心</h3>
+                    <ul>
+                        <li><a href="#">气垫包装系统</a></li>
+                        <li><a href="#">纸垫包装系统</a></li>
+                        <li><a href="#">机床加工设备</a></li>
+                        <li><a href="#">激光加工设备</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h3>客户支持</h3>
+                    <ul>
+                        <li><a href="#">技术支持</a></li>
+                        <li><a href="#">下载中心</a></li>
+                        <li><a href="#">常见问题</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>Copyright © 2023 Hangzhou Bingjia Tech. Co., Ltd. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <script src="js/main.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/product-detail.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取URL参数中的产品ID
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = parseInt(urlParams.get('id'));
+            
+            if (!productId) {
+                // 如果没有产品ID，重定向到产品列表页
+                window.location.href = 'products.html';
+                return;
+            }
+            
+            // 从数据中查找产品
+            const product = window.data.products.find(p => p.id === productId);
+            
+            if (!product) {
+                // 如果产品不存在，显示错误信息
+                document.getElementById('product-detail').innerHTML = '<div class="error-message">产品不存在</div>';
+                return;
+            }
+            
+            // 更新页面标题和面包屑导航
+            document.title = `${product.title} - BJT 产品详情`;
+            document.getElementById('product-breadcrumb').textContent = product.title;
+            
+            // 渲染产品详情
+            renderProductDetail(product);
+            
+            // 渲染产品描述
+            document.getElementById('tab-description').innerHTML = `
+                <div class="product-description">
+                    ${product.description}
+                </div>
+            `;
+            
+            // 渲染规格参数
+            renderProductSpecs(product);
+            
+            // 渲染用户评价
+            renderProductReviews(product);
+            
+            // 渲染相关产品
+            renderRelatedProducts(product);
+            
+            // 选项卡切换
+            document.querySelectorAll('.tab-link').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // 移除所有选项卡的active类
+                    document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // 添加当前选项卡的active类
+                    this.classList.add('active');
+                    document.getElementById(`tab-${this.dataset.tab}`).classList.add('active');
+                    
+                    // 更新URL哈希
+                    window.location.hash = this.dataset.tab;
+                });
+            });
+            
+            // 根据URL哈希切换选项卡
+            const hash = window.location.hash.substring(1);
+            if (hash) {
+                const tab = document.querySelector(`.tab-link[data-tab="${hash}"]`);
+                if (tab) {
+                    tab.click();
+                }
+            }
+            
+            // 询价表单提交
+            document.getElementById('inquiry-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // 在实际应用中，这里会发送AJAX请求
+                // 现在我们只显示一个成功消息
+                showNotification('您的询价已提交，我们会尽快与您联系！', 'success');
+                this.reset();
+            });
+            
+            // 语言选择器事件
+            document.querySelector('.language-select').addEventListener('change', function() {
+                const selectedLanguage = this.value;
+                showNotification(`语言已切换为: ${selectedLanguage}`, 'success');
+            });
+            
+            // 用户菜单展开/收起
+            const userMenuToggle = document.querySelector('.user-menu-toggle');
+            if (userMenuToggle) {
+                userMenuToggle.addEventListener('click', function() {
+                    const userMenu = this.closest('.user-menu');
+                    userMenu.classList.toggle('active');
+                });
+                
+                // 点击页面其他位置关闭用户菜单
+                document.addEventListener('click', function(e) {
+                    const userMenu = document.querySelector('.user-menu');
+                    if (!userMenu.contains(e.target)) {
+                        userMenu.classList.remove('active');
+                    }
+                });
+            }
+        });
+        
+        // 渲染产品详情
+        function renderProductDetail(product) {
+            const productDetail = document.getElementById('product-detail');
+            
+            // 准备价格显示
+            const priceDisplay = product.oldPrice 
+                ? `<span class="old-price">¥${product.oldPrice.toLocaleString()}</span> <span class="current-price">¥${product.price.toLocaleString()}</span>`
+                : `<span class="current-price">¥${product.price.toLocaleString()}</span>`;
+            
+            // 准备库存状态显示
+            const stockStatus = product.inStock 
+                ? '<span class="stock-status in-stock">有库存</span>' 
+                : '<span class="stock-status out-of-stock">无库存</span>';
+            
+            // 渲染产品详情HTML
+            productDetail.innerHTML = `
+                <div class="product-gallery">
+                    <div class="main-image">
+                        <img src="${product.images[0]}" alt="${product.title}" id="main-product-image">
+                    </div>
+                    <div class="thumbnails">
+                        ${product.images.map((img, index) => `
+                            <div class="thumbnail ${index === 0 ? 'active' : ''}" data-image="${img}">
+                                <img src="${img}" alt="${product.title}">
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="product-content">
+                    <h1 class="product-detail-title">${product.title}</h1>
+                    <p class="product-short-desc">${product.shortDescription}</p>
+                    <div class="product-detail-price">${priceDisplay}</div>
+                    <div class="product-stock">${stockStatus}</div>
+                    
+                    <div class="product-specs">
+                        <div class="product-spec-item">
+                            <div class="product-spec-label">分类:</div>
+                            <div class="product-spec-value">${getCategoryName(product.category)}</div>
+                        </div>
+                        <div class="product-spec-item">
+                            <div class="product-spec-label">型号:</div>
+                            <div class="product-spec-value">${product.specs['型号'] || '-'}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="product-actions">
+                        <div class="add-to-cart">
+                            <div class="quantity-control">
+                                <button class="quantity-btn" id="decrease-quantity">-</button>
+                                <input type="number" class="quantity-input" id="product-quantity" value="1" min="1" max="99">
+                                <button class="quantity-btn" id="increase-quantity">+</button>
+                            </div>
+                            <button class="btn btn-accent" id="add-to-cart-btn">
+                                <i class="cart-icon-small"></i> 添加到购物车
+                            </button>
+                        </div>
+                        <button class="btn btn-primary" id="buy-now-btn">立即购买</button>
+                    </div>
+                </div>
+            `;
+            
+            // 缩略图点击事件
+            document.querySelectorAll('.thumbnail').forEach(thumbnail => {
+                thumbnail.addEventListener('click', function() {
+                    const imgSrc = this.dataset.image;
+                    document.getElementById('main-product-image').src = imgSrc;
+                    
+                    // 移除所有缩略图的active类
+                    document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+                    
+                    // 添加当前缩略图的active类
+                    this.classList.add('active');
+                });
+            });
+            
+            // 数量增减按钮
+            document.getElementById('decrease-quantity').addEventListener('click', function() {
+                const quantityInput = document.getElementById('product-quantity');
+                let quantity = parseInt(quantityInput.value);
+                if (quantity > 1) {
+                    quantityInput.value = quantity - 1;
+                }
+            });
+            
+            document.getElementById('increase-quantity').addEventListener('click', function() {
+                const quantityInput = document.getElementById('product-quantity');
+                let quantity = parseInt(quantityInput.value);
+                quantityInput.value = quantity + 1;
+            });
+            
+            // 添加到购物车按钮
+            document.getElementById('add-to-cart-btn').addEventListener('click', function() {
+                const quantity = parseInt(document.getElementById('product-quantity').value);
+                
+                // 创建一个自定义事件，包含产品信息
+                const addToCartEvent = new CustomEvent('add-to-cart', {
+                    detail: {
+                        id: product.id,
+                        name: product.title,
+                        price: product.price,
+                        image: product.images[0],
+                        quantity: quantity
+                    }
+                });
+                
+                // 触发事件
+                document.dispatchEvent(addToCartEvent);
+                
+                // 显示成功消息
+                showNotification(`已将 ${quantity} 个 ${product.title} 添加到购物车`, 'success');
+            });
+            
+            // 立即购买按钮
+            document.getElementById('buy-now-btn').addEventListener('click', function() {
+                const quantity = parseInt(document.getElementById('product-quantity').value);
+                
+                // 在实际应用中，这里会跳转到结算页面
+                // 现在我们只显示一个消息
+                showNotification('功能开发中，敬请期待！', 'warning');
+            });
+        }
+        
+        // 渲染规格参数
+        function renderProductSpecs(product) {
+            const specsTab = document.getElementById('tab-specs');
+            
+            // 创建规格参数表格
+            let specsHTML = '<table class="specs-table">';
+            
+            // 遍历产品规格
+            for (const [key, value] of Object.entries(product.specs)) {
+                specsHTML += `
+                    <tr>
+                        <th>${key}</th>
+                        <td>${value}</td>
+                    </tr>
+                `;
+            }
+            
+            specsHTML += '</table>';
+            
+            // 更新规格参数选项卡内容
+            specsTab.innerHTML = specsHTML;
+        }
+        
+        // 渲染用户评价
+        function renderProductReviews(product) {
+            const reviewsTab = document.getElementById('tab-reviews');
+            
+            // 从数据中获取该产品的评价
+            const productReviews = window.data.reviews.filter(review => review.productId === product.id);
+            
+            // 如果没有评价
+            if (productReviews.length === 0) {
+                reviewsTab.innerHTML = '<div class="no-reviews">暂无评价</div>';
+                return;
+            }
+            
+            // 创建评价列表
+            let reviewsHTML = '<div class="reviews-list">';
+            
+            // 遍历产品评价
+            productReviews.forEach(review => {
+                // 创建星级评分HTML
+                let starsHTML = '';
+                for (let i = 1; i <= 5; i++) {
+                    if (i <= review.rating) {
+                        starsHTML += '<span class="star filled">★</span>';
+                    } else {
+                        starsHTML += '<span class="star">☆</span>';
+                    }
+                }
+                
+                // 添加评价HTML
+                reviewsHTML += `
+                    <div class="review-item">
+                        <div class="review-header">
+                            <div class="review-author">
+                                <span class="author-name">${review.username}</span>
+                                ${review.verified ? '<span class="verified-badge">已验证购买</span>' : ''}
+                            </div>
+                            <div class="review-rating">${starsHTML}</div>
+                        </div>
+                        <div class="review-title">${review.title}</div>
+                        <div class="review-content">${review.content}</div>
+                        <div class="review-date">${review.date}</div>
+                    </div>
+                `;
+            });
+            
+            reviewsHTML += '</div>';
+            
+            // 更新用户评价选项卡内容
+            reviewsTab.innerHTML = reviewsHTML;
+        }
+        
+        // 渲染相关产品
+        function renderRelatedProducts(product) {
+            const relatedProductsContainer = document.getElementById('related-products');
+            
+            // 如果没有相关产品
+            if (!product.relatedProducts || product.relatedProducts.length === 0) {
+                relatedProductsContainer.style.display = 'none';
+                return;
+            }
+            
+            // 创建相关产品列表
+            let relatedProductsHTML = '';
+            
+            // 获取相关产品数据
+            product.relatedProducts.forEach(relatedId => {
+                const relatedProduct = window.data.products.find(p => p.id === relatedId);
+                
+                if (relatedProduct) {
+                    // 准备价格显示
+                    const priceDisplay = relatedProduct.oldPrice 
+                        ? `<span class="old-price">¥${relatedProduct.oldPrice.toLocaleString()}</span> <span class="current-price">¥${relatedProduct.price.toLocaleString()}</span>`
+                        : `<span class="current-price">¥${relatedProduct.price.toLocaleString()}</span>`;
+                    
+                    // 添加相关产品HTML
+                    relatedProductsHTML += `
+                        <div class="product-card">
+                            <div class="product-image">
+                                <img src="${relatedProduct.images[0]}" alt="${relatedProduct.title}">
+                            </div>
+                            <div class="product-info">
+                                <h3 class="product-title">${relatedProduct.title}</h3>
+                                <div class="product-price">${priceDisplay}</div>
+                                <div class="product-meta">
+                                    <span>${getCategoryName(relatedProduct.category)}</span>
+                                    <span>${relatedProduct.inStock ? '有库存' : '无库存'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            // 更新相关产品容器
+            relatedProductsContainer.innerHTML = relatedProductsHTML;
+            
+            // 添加点击事件
+            relatedProductsContainer.querySelectorAll('.product-card').forEach((card, index) => {
+                card.addEventListener('click', function() {
+                    const relatedId = product.relatedProducts[index];
+                    window.location.href = `product-detail.html?id=${relatedId}`;
+                });
+            });
+        }
+        
+        // 获取分类名称
+        function getCategoryName(categoryId) {
+            const category = window.data.categories.find(cat => cat.id === categoryId);
+            return category ? category.name : categoryId;
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Configuration - BJT Shop</title>
+    <link rel="icon" href="../favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/product-config.css">
+</head>
+<body>
+    <div id="header"></div>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="breadcrumb">
+                <a href="home.html">Home</a>
+                <span class="separator">/</span>
+                <a href="products.html">Products</a>
+                <span class="separator">/</span>
+                <span class="current">Configuration</span>
+            </div>
+            
+            <div class="config-container">
+                <div class="config-header">
+                    <h1 class="config-title">Build Your Custom Solution</h1>
+                    <div class="config-filters">
+                        <select id="voltage-filter" class="form-select">
+                            <option value="">All Voltages</option>
+                            <option value="110V">110V</option>
+                            <option value="220V">220V</option>
+                            <option value="110V/220V">110V/220V</option>
+                        </select>
+                        <button id="reset-config" class="btn btn-outline">Reset</button>
+                    </div>
+                </div>
+                
+                <div class="config-body">
+                    <div class="config-levels">
+                        <!-- Level 1: Main Products -->
+                        <div id="level-1" class="config-level">
+                            <div class="config-level-header">
+                                <div>
+                                    <h2 class="level-title">Step 1: Select a Machine</h2>
+                                    <p class="level-description">Choose your primary machine for packaging solutions</p>
+                                </div>
+                            </div>
+                            <div id="level-1-products" class="product-grid">
+                                <!-- Products will be loaded here -->
+                                <div class="loading-spinner"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Level 2: First Level Accessories -->
+                        <div id="level-2" class="config-level" style="display: none;">
+                            <div class="config-level-header">
+                                <div>
+                                    <h2 class="level-title">Step 2: Select Accessories</h2>
+                                    <p class="level-description">Choose compatible accessories for your machine</p>
+                                </div>
+                            </div>
+                            <div id="level-2-products" class="product-grid">
+                                <!-- Products will be loaded here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Level 3: Second Level Accessories -->
+                        <div id="level-3" class="config-level" style="display: none;">
+                            <div class="config-level-header">
+                                <div>
+                                    <h2 class="level-title">Step 3: Additional Components</h2>
+                                    <p class="level-description">Choose additional components to enhance your solution</p>
+                                </div>
+                            </div>
+                            <div id="level-3-products" class="product-grid">
+                                <!-- Products will be loaded here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Level 4: Third Level Accessories -->
+                        <div id="level-4" class="config-level" style="display: none;">
+                            <div class="config-level-header">
+                                <div>
+                                    <h2 class="level-title">Step 4: Advanced Options</h2>
+                                    <p class="level-description">Select advanced options to complete your configuration</p>
+                                </div>
+                            </div>
+                            <div id="level-4-products" class="product-grid">
+                                <!-- Products will be loaded here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Level 5: Fourth Level Accessories -->
+                        <div id="level-5" class="config-level" style="display: none;">
+                            <div class="config-level-header">
+                                <div>
+                                    <h2 class="level-title">Step 5: Finishing Touches</h2>
+                                    <p class="level-description">Add final components to complete your setup</p>
+                                </div>
+                            </div>
+                            <div id="level-5-products" class="product-grid">
+                                <!-- Products will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="config-summary">
+                        <h3 class="config-summary-header">Configuration Summary</h3>
+                        <div class="config-summary-content">
+                            <div id="empty-summary-message" class="empty-summary-message">
+                                <p>No items selected yet</p>
+                                <p>Start by selecting a machine from Step 1</p>
+                            </div>
+                            <ul id="selected-items-list" class="selected-items-list" style="display: none;">
+                                <!-- Selected items will be displayed here -->
+                            </ul>
+                        </div>
+                        <div class="config-summary-footer">
+                            <div class="config-total">
+                                <span class="config-total-label">Total:</span>
+                                <span id="config-total-price" class="config-total-price">$0.00</span>
+                            </div>
+                            <div class="config-actions">
+                                <button id="add-config-to-cart" class="btn btn-primary" disabled>Add to Cart</button>
+                                <button id="save-config" class="btn btn-outline" disabled>Save Configuration</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Product Details Modal -->
+    <div id="product-details-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal">&times;</button>
+            <div class="modal-header">
+                <h2 class="modal-title">Product Details</h2>
+            </div>
+            <div class="modal-body">
+                <div class="modal-product-image">
+                    <img id="modal-product-img" src="" alt="Product Image">
+                </div>
+                <div class="modal-product-details">
+                    <div class="modal-product-info">
+                        <h3 id="modal-product-name" class="modal-title"></h3>
+                        <p id="modal-product-model" class="modal-product-model"></p>
+                        <p id="modal-product-price" class="modal-product-price"></p>
+                        <p id="modal-product-voltage" class="modal-product-voltage"></p>
+                    </div>
+                    <p id="modal-product-description" class="modal-product-description"></p>
+                    <h4 class="modal-product-specs-title">Specifications</h4>
+                    <ul id="modal-product-specs" class="modal-product-specs">
+                        <!-- Specs will be loaded here -->
+                    </ul>
+                    <button id="modal-select-product" class="btn btn-primary">Select This Product</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="footer"></div>
+    
+    <!-- Scripts -->
+    <script src="../js/utils.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/cart.js"></script>
+    <script src="../js/main.js"></script>
+    <script src="../js/theme-switcher.js"></script>
+    <script src="../js/product-config.js"></script>
+</body>
+</html> 

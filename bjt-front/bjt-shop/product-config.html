@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT - 气垫包装机及配件</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- 自定义CSS -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/product-config.css">
+    <link rel="stylesheet" href="css/icons.css">
+    <link rel="stylesheet" href="css/bootstrap-overrides.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+</head>
+<body class="page product-config-page">
+    <!-- 页头导航区域 -->
+    <div id="header"></div>
+    
+    <main class="container">
+        <!-- 面包屑导航 -->
+        <div class="breadcrumb">
+            <a href="index.html">首页</a> &gt; 
+            <a href="products.html">产品</a> &gt; 
+            <span>气垫包装机及配件</span>
+        </div>
+
+        <h1 class="page-title">气垫包装机及配件</h1>
+        
+        <!-- 产品筛选区 -->
+        <div class="filter-container">
+            <button class="filter-toggle" id="filter-toggle">
+                <span>筛选</span>
+                <i class="bi bi-funnel"></i>
+            </button>
+            
+            <div class="filter-panel" id="filter-panel">
+                <div class="filter-header">
+                    <h3>筛选选项</h3>
+                    <button class="close-btn" id="close-filter"><i class="bi bi-x-lg"></i></button>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">电压选择</label>
+                    <div class="filter-options">
+                        <label class="radio-container">
+                            <input type="radio" name="voltage" value="220V" checked>
+                            <span class="radio-checkmark"></span>
+                            <span class="radio-text">220V</span>
+                        </label>
+                        <label class="radio-container">
+                            <input type="radio" name="voltage" value="110V">
+                            <span class="radio-checkmark"></span>
+                            <span class="radio-text">110V</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">频率选择</label>
+                    <div class="filter-options">
+                        <label class="radio-container">
+                            <input type="radio" name="frequency" value="50Hz" checked>
+                            <span class="radio-checkmark"></span>
+                            <span class="radio-text">50Hz</span>
+                        </label>
+                        <label class="radio-container">
+                            <input type="radio" name="frequency" value="60Hz">
+                            <span class="radio-checkmark"></span>
+                            <span class="radio-text">60Hz</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">排序方式</label>
+                    <select class="filter-select form-select" id="sort-select">
+                        <option value="default">默认排序</option>
+                        <option value="price-asc">价格: 从低到高</option>
+                        <option value="price-desc">价格: 从高到低</option>
+                        <option value="name-asc">名称: A-Z</option>
+                        <option value="name-desc">名称: Z-A</option>
+                    </select>
+                </div>
+                
+                <div class="filter-actions">
+                    <button class="btn btn-secondary" id="reset-filters">重置</button>
+                    <button class="btn btn-primary" id="apply-filters">应用</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 产品配置系统 -->
+        <div class="product-config-system">
+            <!-- 主机选择区 -->
+            <section class="config-section" id="machines-section">
+                <div class="section-header">
+                    <h2 class="section-title">选择主机型号</h2>
+                    <div class="section-actions">
+                        <button class="btn btn-outline btn-sm" id="collapse-machines">
+                            <i class="bi bi-chevron-up"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="section-content" id="machines-container">
+                    <div class="loading-indicator">
+                        <div class="spinner"></div>
+                        <p>正在加载产品...</p>
+                    </div>
+                    <!-- 产品列表将通过JS动态加载 -->
+                </div>
+            </section>
+            
+            <!-- 一级配件区域 -->
+            <section class="config-section hidden" id="accessories-level-1-section">
+                <div class="section-header">
+                    <h2 class="section-title">一级配件选择</h2>
+                    <div class="section-actions">
+                        <button class="btn btn-outline btn-sm" id="collapse-accessories-1">
+                            <i class="bi bi-chevron-up"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="section-content" id="accessories-level-1-container">
+                    <div class="empty-state">
+                        <p>请先选择主机型号</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 二级配件区域 -->
+            <section class="config-section hidden" id="accessories-level-2-section">
+                <div class="section-header">
+                    <h2 class="section-title">二级配件选择</h2>
+                    <div class="section-actions">
+                        <button class="btn btn-outline btn-sm" id="collapse-accessories-2">
+                            <i class="bi bi-chevron-up"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="section-content" id="accessories-level-2-container">
+                    <div class="empty-state">
+                        <p>请先选择一级配件</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 三级配件区域 -->
+            <section class="config-section hidden" id="accessories-level-3-section">
+                <div class="section-header">
+                    <h2 class="section-title">三级配件选择</h2>
+                    <div class="section-actions">
+                        <button class="btn btn-outline btn-sm" id="collapse-accessories-3">
+                            <i class="bi bi-chevron-up"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="section-content" id="accessories-level-3-container">
+                    <div class="empty-state">
+                        <p>请先选择二级配件</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 四级配件区域 -->
+            <section class="config-section hidden" id="accessories-level-4-section">
+                <div class="section-header">
+                    <h2 class="section-title">四级配件选择</h2>
+                    <div class="section-actions">
+                        <button class="btn btn-outline btn-sm" id="collapse-accessories-4">
+                            <i class="bi bi-chevron-up"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="section-content" id="accessories-level-4-container">
+                    <div class="empty-state">
+                        <p>请先选择三级配件</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 五级配件区域 -->
+            <section class="config-section hidden" id="accessories-level-5-section">
+                <div class="section-header">
+                    <h2 class="section-title">五级配件选择</h2>
+                    <div class="section-actions">
+                        <button class="btn btn-outline btn-sm" id="collapse-accessories-5">
+                            <i class="bi bi-chevron-up"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="section-content" id="accessories-level-5-container">
+                    <div class="empty-state">
+                        <p>请先选择四级配件</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+    
+    <!-- 购物车浮动按钮 -->
+    <div class="cart-floating" id="cart-toggle">
+        <i class="bi bi-cart-fill"></i>
+        <span class="cart-count" id="cart-count">0</span>
+    </div>
+    
+    <!-- 购物车预览面板 -->
+    <div id="cart-preview" class="cart-preview">
+        <div class="cart-header">
+            <h3>购物车</h3>
+            <button id="close-cart" class="close-btn"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div id="cart-items" class="cart-items">
+            <p id="empty-cart-message" class="empty-cart-message">购物车是空的</p>
+            
+            <!-- 分组显示购物车项目 -->
+            <div id="cart-machine-group" class="cart-group hidden">
+                <h4 class="cart-group-title">主机</h4>
+                <div id="cart-machine-items" class="cart-group-items"></div>
+            </div>
+            
+            <div id="cart-accessory-group" class="cart-group hidden">
+                <h4 class="cart-group-title">配件</h4>
+                <div id="cart-accessory-items" class="cart-group-items"></div>
+            </div>
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total-container">
+                <span>总计:</span>
+                <span id="cart-total" class="cart-total">¥0.00</span>
+            </div>
+            <div class="cart-actions">
+                <button id="clear-cart-btn" class="btn btn-secondary">清空</button>
+                <button id="checkout-btn" class="btn btn-primary">结算</button>
+            </div>
+        </div>
+        <div id="cart-confirm" class="cart-confirm">
+            <div class="confirm-container">
+                <p>确定要清空购物车吗？</p>
+                <div class="confirm-actions">
+                    <button id="cart-confirm-cancel" class="btn btn-secondary">取消</button>
+                    <button id="cart-confirm-proceed" class="btn btn-warning">确定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 产品详情模态框 -->
+    <div id="product-detail-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-product-title">产品详情</h3>
+                <button class="close-btn" id="close-modal"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="modal-body" id="modal-product-body">
+                <!-- 产品详情将通过JS动态加载 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 通知容器 -->
+    <div id="notification-container" class="notification-container"></div>
+    
+    <!-- 页脚区域 -->
+    <div id="footer"></div>
+    
+    <!-- 产品项模板 -->
+    <template id="product-item-template">
+        <div class="product-item">
+            <div class="product-selection">
+                <label class="radio-container">
+                    <input type="radio" name="product">
+                    <span class="radio-checkmark"></span>
+                </label>
+            </div>
+            
+            <div class="product-image">
+                <img src="" alt="">
+            </div>
+            
+            <div class="product-info">
+                <div class="product-header">
+                    <h3 class="product-model"></h3>
+                    <div class="product-tools">
+                        <button class="info-tooltip" data-tooltip="查看详情">
+                            <i class="bi bi-info-circle"></i>
+                        </button>
+                        <a href="#" class="spec-download" target="_blank" title="下载规格说明">
+                            <i class="bi bi-download"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <p class="product-description"></p>
+                
+                <div class="product-specs">
+                    <div class="spec-item">
+                        <span class="spec-label">料号:</span>
+                        <span class="spec-value product-part-number"></span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">托盘尺寸:</span>
+                        <span class="spec-value product-pallet-size"></span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">一托数量:</span>
+                        <span class="spec-value product-pallet-quantity"></span>
+                    </div>
+                    <div class="spec-item voltage-item hidden">
+                        <span class="spec-label">电压:</span>
+                        <span class="spec-value product-voltage"></span>
+                    </div>
+                    <div class="spec-item frequency-item hidden">
+                        <span class="spec-label">频率:</span>
+                        <span class="spec-value product-frequency"></span>
+                    </div>
+                </div>
+                
+                <div class="product-inventory sales-only">
+                    <span class="inventory-status"></span>
+                </div>
+            </div>
+            
+            <div class="product-pricing">
+                <div class="price-tiers">
+                    <div class="tier-item">
+                        <span class="tier-range"></span>
+                        <span class="tier-price"></span>
+                    </div>
+                </div>
+                
+                <div class="product-actions">
+                    <div class="quantity-control">
+                        <button class="qty-btn qty-decrease">-</button>
+                        <input type="number" class="qty-input" value="1" min="1">
+                        <button class="qty-btn qty-increase">+</button>
+                    </div>
+                    <button class="btn btn-primary add-to-cart-btn">
+                        <i class="bi bi-cart-plus"></i>
+                        <span>加入购物车</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+    
+    <!-- 购物车项模板 -->
+    <template id="cart-item-template">
+        <div class="cart-item">
+            <div class="cart-item-image">
+                <img src="" alt="">
+            </div>
+            <div class="cart-item-details">
+                <h4 class="cart-item-title"></h4>
+                <div class="cart-item-price"></div>
+                <div class="cart-item-controls">
+                    <div class="cart-qty-control">
+                        <button class="cart-qty-btn cart-qty-decrease">-</button>
+                        <input type="number" class="cart-qty-input" value="1" min="1">
+                        <button class="cart-qty-btn cart-qty-increase">+</button>
+                    </div>
+                    <button class="cart-remove-btn">&times;</button>
+                </div>
+            </div>
+        </div>
+    </template>
+    
+    <!-- JavaScript文件 -->
+    <script src="js/utils.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/product-config.js"></script>
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 加载头部和底部组件
+            fetch('components/header.html')
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('header').innerHTML = html;
+                    // 设置活动导航项
+                    document.querySelectorAll('.nav-link').forEach(link => {
+                        link.classList.remove('active');
+                    });
+                    const productConfigLink = document.getElementById('nav-product-config');
+                    if (productConfigLink) {
+                        productConfigLink.classList.add('active');
+                    }
+                })
+                .catch(err => console.error('加载头部出错:', err));
+            
+            fetch('components/footer.html')
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('footer').innerHTML = html;
+                })
+                .catch(err => console.error('加载底部出错:', err));
+            
+            // 初始化产品配置系统
+            if (typeof ProductConfigSystem !== 'undefined') {
+                ProductConfigSystem.init();
+            }
+            
+            // 初始化购物车
+            if (typeof initCart !== 'undefined') {
+                initCart();
+            }
+            
+            // 设置筛选面板开关事件
+            const filterToggle = document.getElementById('filter-toggle');
+            const filterPanel = document.getElementById('filter-panel');
+            const closeFilter = document.getElementById('close-filter');
+            
+            if (filterToggle && filterPanel) {
+                filterToggle.addEventListener('click', function() {
+                    filterPanel.classList.toggle('active');
+                });
+            }
+            
+            if (closeFilter && filterPanel) {
+                closeFilter.addEventListener('click', function() {
+                    filterPanel.classList.remove('active');
+                });
+            }
+            
+            // 设置折叠部分事件
+            document.querySelectorAll('[id^="collapse-"]').forEach(button => {
+                button.addEventListener('click', function() {
+                    const sectionId = this.id.replace('collapse-', '');
+                    const sectionContent = document.getElementById(`${sectionId}-container`);
+                    if (sectionContent) {
+                        sectionContent.classList.toggle('collapsed');
+                        this.querySelector('i').classList.toggle('collapsed');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="150" height="40" viewBox="0 0 150 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- B -->
+  <path d="M10 5H25C28.3137 5 31 7.68629 31 11V14C31 17.3137 28.3137 20 25 20H10V5Z" fill="#1A365D"/>
+  <path d="M10 20H27C30.3137 20 33 22.6863 33 26V29C33 32.3137 30.3137 35 27 35H10V20Z" fill="#1A365D"/>
+  <path d="M10 5H17V35H10V5Z" fill="#1A365D"/>
+  
+  <!-- J -->
+  <path d="M43 5H62V12H56V28C56 31.866 52.866 35 49 35H43V28H48V12H43V5Z" fill="#1A365D"/>
+  
+  <!-- T -->
+  <path d="M70 5H95V12H87V35H78V12H70V5Z" fill="#1A365D"/>
+  
+  <!-- 标语 -->
+  <text x="102" y="20" font-family="Arial, sans-serif" font-size="7" fill="#1A365D">Packaging</text>
+  <text x="102" y="30" font-family="Arial, sans-serif" font-size="7" fill="#1A365D">Solutions</text>
+</svg> 

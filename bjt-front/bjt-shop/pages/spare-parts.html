@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>备件配件 - BJT 产品管理系统</title>
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/components.css">
+</head>
+<body>
+    <!-- Header Container -->
+    <div id="header-container"></div>
+    
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Breadcrumb -->
+        <div class="breadcrumb">
+            <a href="../index.html">首页</a> > 备件配件
+        </div>
+        
+        <!-- Page Title -->
+        <h1>备件配件</h1>
+        
+        <!-- Login Required Notice (will be hidden when logged in) -->
+        <div id="login-required-notice" class="login-required-notice">
+            <p>查看和购买备件需要登录账户。</p>
+            <a href="login.html" class="btn btn-primary">立即登录</a>
+        </div>
+        
+        <!-- Products Grid with Filters (will be shown when logged in) -->
+        <div id="spare-parts-container" class="products-container" style="display: none;">
+            <!-- Filters -->
+            <div class="filter-section">
+                <h3 class="filter-title">筛选条件</h3>
+                
+                <div class="filter-group">
+                    <label class="filter-label">备件类型</label>
+                    <select id="category-filter" class="filter-select">
+                        <option value="all">全部类型</option>
+                        <option value="motor">电机</option>
+                        <option value="control">控制部件</option>
+                        <option value="roller">辊轮</option>
+                        <option value="seal">密封件</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">适用设备</label>
+                    <select id="model-filter" class="filter-select">
+                        <option value="all">全部设备</option>
+                        <option value="LA-E4S">LA-E4S</option>
+                        <option value="LA-E5P">LA-E5P</option>
+                        <option value="LP-V1">LP-V1</option>
+                        <option value="LP-F1">LP-F1</option>
+                        <option value="ALL">通用</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">价格范围</label>
+                    <div class="price-range">
+                        <input type="number" id="min-price-filter" class="form-control" placeholder="最低价格">
+                        <span>至</span>
+                        <input type="number" id="max-price-filter" class="form-control" placeholder="最高价格">
+                    </div>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">搜索</label>
+                    <input type="text" id="product-search" class="form-control" placeholder="输入关键词">
+                </div>
+                
+                <div class="filter-actions">
+                    <button id="reset-filters" class="btn btn-secondary">重置筛选</button>
+                </div>
+            </div>
+            
+            <!-- Products -->
+            <div class="products-list">
+                <div id="products-container" class="row">
+                    <!-- Products will be loaded dynamically -->
+                    <div class="loading-spinner">加载中...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Footer Container -->
+    <div id="footer-container"></div>
+    
+    <!-- Cart Container -->
+    <div id="cart-container"></div>
+    
+    <!-- JavaScript -->
+    <script src="../js/utils.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/cart.js"></script>
+    <script src="../js/products.js"></script>
+    <script src="../js/app.js"></script>
+    
+    <script>
+        // Check if user is logged in and show/hide appropriate sections
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginRequiredNotice = document.getElementById('login-required-notice');
+            const sparePartsContainer = document.getElementById('spare-parts-container');
+            
+            function updateVisibility() {
+                const isLoggedIn = BJTAuth.isLoggedIn();
+                
+                if (isLoggedIn) {
+                    // User is logged in, show spare parts
+                    loginRequiredNotice.style.display = 'none';
+                    sparePartsContainer.style.display = 'flex';
+                } else {
+                    // User is not logged in, show login notice
+                    loginRequiredNotice.style.display = 'block';
+                    sparePartsContainer.style.display = 'none';
+                }
+            }
+            
+            // Check initially
+            updateVisibility();
+            
+            // Listen for storage events (in case user logs in/out in another tab)
+            window.addEventListener('storage', function(event) {
+                if (event.key === 'bjt_user_data') {
+                    updateVisibility();
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

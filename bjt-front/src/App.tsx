@@ -14,6 +14,7 @@ import Consumables from './pages/Consumables/index';
 import SpareParts from './pages/SpareParts/index';
 import Machines from './pages/Machines/index';
 import Cart from './pages/Cart';
+import ProductDetail from './pages/ProductDetail';
 // 其他页面组件（占位符）
 const Checkout = () => <div className="container mx-auto p-4">结账页面（待实现）</div>;
 const OrderDetail = () => <div className="container mx-auto p-4">订单详情页面（待实现）</div>;
@@ -25,6 +26,9 @@ import GuideIndex from './guide/index';
 // 导入认证上下文
 import { useAuth, AuthProvider } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
+// 导入购物车上下文和组件
+import { CartProvider } from './contexts/CartContext';
+import { CartButton, CartSidebar } from './components/Cart';
 
 // 路由保护组件
 interface ProtectedRouteProps {
@@ -59,142 +63,157 @@ const App: React.FC = () => {
     <Router>
       <AuthProvider>
         <LanguageProvider>
-          <Routes>
-            {/* 首页 - 公开访问 */}
-            <Route
-              path="/"
-              element={
-                <MainLayout>
-                  <Home />
-                </MainLayout>
-              }
-            />
+          <CartProvider>
+            <Routes>
+              {/* 首页 - 公开访问 */}
+              <Route
+                path="/"
+                element={
+                  <MainLayout>
+                    <Home />
+                  </MainLayout>
+                }
+              />
+              
+              {/* Home 路径重定向到首页 */}
+              <Route
+                path="/home"
+                element={<Navigate to="/" replace />}
+              />
 
-            {/* 受保护的页面 - 需要登录 */}
-            {/* 旧路径重定向 */}
-            <Route
-              path="/products"
-              element={<Navigate to="/machines" replace />}
-            />
-            
-            <Route
-              path="/products/consumables"
-              element={<Navigate to="/consumables" replace />}
-            />
-            
-            <Route
-              path="/products/spare-parts"
-              element={<Navigate to="/spare-parts" replace />}
-            />
-            
-            {/* 设备选型页面 */}
-            <Route
-              path="/machines"
-              element={
-                <ProtectedRoute>
-                  <MainLayout>
-                    <Machines />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-            
-            {/* 耗材选择页面 */}
-            <Route
-              path="/consumables"
-              element={
-                <ProtectedRoute>
-                  <MainLayout>
-                    <Consumables />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
+              {/* 受保护的页面 - 需要登录 */}
+              {/* 旧路径重定向 */}
+              <Route
+                path="/products"
+                element={<Navigate to="/machines" replace />}
+              />
+              
+              <Route
+                path="/products/consumables"
+                element={<Navigate to="/consumables" replace />}
+              />
+              
+              <Route
+                path="/products/spare-parts"
+                element={<Navigate to="/spare-parts" replace />}
+              />
+              
+              {/* 设备选型页面 */}
+              <Route
+                path="/machines"
+                element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <Machines />
+                    </MainLayout>
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* 耗材选择页面 */}
+              <Route
+                path="/consumables"
+                element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <Consumables />
+                    </MainLayout>
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* 备件选择页面 */}
-            <Route
-              path="/spare-parts"
-              element={
-                <ProtectedRoute>
+              {/* 备件选择页面 */}
+              <Route
+                path="/spare-parts"
+                element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <SpareParts />
+                    </MainLayout>
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* 购物车页面 */}
+              <Route
+                path="/cart"
+                element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <Cart />
+                    </MainLayout>
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* 订单相关页面 */}
+              <Route
+                path="/checkout"
+                element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <Checkout />
+                    </MainLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/orders"
+                element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <OrderList />
+                    </MainLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/orders/:id"
+                element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <OrderDetail />
+                    </MainLayout>
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* UI 组件指南 */}
+              <Route
+                path="/guide"
+                element={
                   <MainLayout>
-                    <SpareParts />
+                    <GuideIndex />
                   </MainLayout>
-                </ProtectedRoute>
-              }
-            />
+                }
+              />
+
+              {/* 认证页面 - 不带标准布局 */}
+              <Route path="/login" element={<Login />} />
+
+              {/* 404页面 */}
+              <Route
+                path="*"
+                element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <div className="container mx-auto p-4 text-center">
+                        <h1 className="text-4xl font-bold text-gray-800 mb-4">404</h1>
+                        <p className="text-lg text-gray-600">页面不存在</p>
+                      </div>
+                    </MainLayout>
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route path="/products/:id" element={<ProductDetail />} />
+              <Route path="/:type/:id" element={<ProductDetail />} />
+            </Routes>
             
-            {/* 购物车页面 */}
-            <Route
-              path="/cart"
-              element={
-                <ProtectedRoute>
-                  <MainLayout>
-                    <Cart />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-            
-            {/* 订单相关页面 */}
-            <Route
-              path="/checkout"
-              element={
-                <ProtectedRoute>
-                  <MainLayout>
-                    <Checkout />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/orders"
-              element={
-                <ProtectedRoute>
-                  <MainLayout>
-                    <OrderList />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/orders/:id"
-              element={
-                <ProtectedRoute>
-                  <MainLayout>
-                    <OrderDetail />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-
-            {/* UI 组件指南 */}
-            <Route
-              path="/guide"
-              element={
-                <MainLayout>
-                  <GuideIndex />
-                </MainLayout>
-              }
-            />
-
-            {/* 认证页面 - 不带标准布局 */}
-            <Route path="/login" element={<Login />} />
-
-            {/* 404页面 */}
-            <Route
-              path="*"
-              element={
-                <ProtectedRoute>
-                  <MainLayout>
-                    <div className="container mx-auto p-4 text-center">
-                      <h1 className="text-4xl font-bold text-gray-800 mb-4">404</h1>
-                      <p className="text-lg text-gray-600">页面不存在</p>
-                    </div>
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
+            {/* 全局购物车组件 */}
+            <CartButton />
+            <CartSidebar />
+          </CartProvider>
         </LanguageProvider>
       </AuthProvider>
     </Router>

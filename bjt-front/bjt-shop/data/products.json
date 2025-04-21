@@ -1,0 +1,274 @@
+{
+  "machines": [
+    {
+      "id": "LA-E4S",
+      "name": "气垫包装系统 LA-E4S",
+      "model": "LA-E4S",
+      "shortDescription": "高效气垫包装系统，适用于各种包装需求",
+      "description": "LA-E4S是一款多功能气垫包装系统，能够快速生产各种规格的气垫膜。该设备运行速度快，噪音低，操作简单，是电子商务、仓储物流、制造业等行业的理想选择。",
+      "price": 12800.00,
+      "originalPrice": 15000.00,
+      "image": "images/machines/la-e4s.jpg",
+      "category": "machine",
+      "features": [
+        "每分钟可生产13-18米气垫膜",
+        "7英寸彩色触摸屏",
+        "可调节气垫尺寸",
+        "自动切断功能",
+        "先进的温度控制系统"
+      ],
+      "specifications": {
+        "电压": "220V / 50Hz",
+        "功率": "380W",
+        "重量": "41kg",
+        "尺寸": "550×380×320mm",
+        "噪音": "≤60dB"
+      }
+    },
+    {
+      "id": "LP-V1",
+      "name": "纸垫包装系统 LP-V1",
+      "model": "LP-V1",
+      "shortDescription": "高效环保纸垫包装系统",
+      "description": "LP-V1纸垫包装系统使用100%可回收牛皮纸，提供优异的缓冲和填充性能。该设备操作简便，占用空间小，是追求环保包装解决方案的企业的理想选择。",
+      "price": 16800.00,
+      "originalPrice": 19000.00,
+      "image": "images/machines/lp-v1.jpg",
+      "category": "machine",
+      "features": [
+        "每分钟可生产8-12米纸垫",
+        "多种成型模式可选",
+        "环保可降解材料",
+        "静音设计",
+        "低能耗"
+      ],
+      "specifications": {
+        "电压": "220V / 50Hz",
+        "功率": "450W",
+        "重量": "48kg",
+        "尺寸": "620×410×360mm",
+        "噪音": "≤55dB"
+      }
+    },
+    {
+      "id": "M003",
+      "name": "水溶性切割系统 WCM-300",
+      "shortDescription": "水溶性包装材料专用切割机，精确控制长度和形状",
+      "description": "WCM-300是专为水溶性环保包装材料设计的高精度切割系统。采用智能控制技术，可以根据需要精确切割不同长度和形状的包装材料，大大提高了包装效率并减少材料浪费。该系统适用于各种水溶性膜和生物降解材料的切割。",
+      "price": 14200.00,
+      "image": "images/products/machine-wcm-300.jpg",
+      "category": "machine",
+      "specificationFile": "files/specs/wcm-300-spec.pdf",
+      "features": [
+        "高精度切割",
+        "兼容各种环保材料",
+        "预设10种常用尺寸",
+        "边缘处理技术",
+        "触摸屏控制"
+      ],
+      "specifications": {
+        "电压": "220V",
+        "频率": "50Hz",
+        "功率": "650W",
+        "尺寸": "520 x 380 x 280mm",
+        "重量": "18kg",
+        "产地": "中国"
+      },
+      "inventory": 12
+    },
+    {
+      "id": "M004",
+      "name": "高速缓冲包装机 RQP-2000",
+      "shortDescription": "全自动高速缓冲材料包装系统，适用于高产能包装线",
+      "description": "RQP-2000是一款工业级高速缓冲包装系统，专为大型电商和物流中心设计。该系统可以自动感测产品尺寸，并生成最合适的缓冲包装方案。系统集成了智能控制和自动进料技术，显著提高包装效率，降低人工成本。",
+      "price": 28500.00,
+      "originalPrice": 32000.00,
+      "image": "images/products/machine-rqp-2000.jpg",
+      "category": "machine",
+      "specificationFile": "files/specs/rqp-2000-spec.pdf",
+      "features": [
+        "自动尺寸检测",
+        "智能包装方案生成",
+        "每小时可处理500+包裹",
+        "多种包装材料兼容",
+        "数据追踪和优化"
+      ],
+      "specifications": {
+        "电压": "220V/380V",
+        "频率": "50Hz",
+        "功率": "1200W",
+        "尺寸": "1850 x 950 x 1200mm",
+        "重量": "220kg",
+        "产地": "中国"
+      },
+      "inventory": 5
+    }
+  ],
+  "consumables": [
+    {
+      "id": "film1",
+      "name": "气泡膜 A-20-200",
+      "shortDescription": "标准气泡膜，适用于大多数包装需求",
+      "description": "高品质气泡膜，提供卓越保护，适用于各种物品包装。",
+      "price": 198.00,
+      "originalPrice": 220.00,
+      "partNumber": "A-20-200",
+      "image": "images/films/film1.jpg",
+      "category": "film",
+      "compatibleModels": ["LA-E4S", "all"],
+      "specifications": {
+        "thickness": "20μm",
+        "width": "200mm",
+        "length": "100m"
+      },
+      "priceTiers": [
+        { "quantity": 1, "price": 198.00 },
+        { "quantity": 5, "price": 188.00 },
+        { "quantity": 10, "price": 178.00 }
+      ],
+      "inventory": 150
+    },
+    {
+      "id": "film2",
+      "name": "气泡膜 A-25-300",
+      "shortDescription": "加厚气泡膜，适用于重型物品",
+      "description": "加厚型气泡膜，提供更强保护，适用于重型或易碎物品。",
+      "price": 258.00,
+      "originalPrice": 280.00,
+      "partNumber": "A-25-300",
+      "image": "images/films/film2.jpg",
+      "category": "film",
+      "compatibleModels": ["LA-E4S", "all"],
+      "specifications": {
+        "thickness": "25μm",
+        "width": "300mm",
+        "length": "100m"
+      },
+      "priceTiers": [
+        { "quantity": 1, "price": 258.00 },
+        { "quantity": 5, "price": 248.00 },
+        { "quantity": 10, "price": 238.00 }
+      ],
+      "inventory": 120
+    },
+    {
+      "id": "film3",
+      "name": "气泡膜 A-15-150",
+      "shortDescription": "轻型气泡膜，适用于小型物品",
+      "description": "轻型气泡膜，经济实惠，适用于小型物品或填充空隙。",
+      "price": 158.00,
+      "originalPrice": 175.00,
+      "partNumber": "A-15-150",
+      "image": "images/films/film3.jpg",
+      "category": "film",
+      "compatibleModels": ["LA-E4S", "LP-V1", "all"],
+      "specifications": {
+        "thickness": "15μm",
+        "width": "150mm",
+        "length": "100m"
+      },
+      "priceTiers": [
+        { "quantity": 1, "price": 158.00 },
+        { "quantity": 5, "price": 148.00 },
+        { "quantity": 10, "price": 138.00 }
+      ],
+      "inventory": 200
+    },
+    {
+      "id": "film4",
+      "name": "气泡膜 A-20-400",
+      "shortDescription": "宽幅气泡膜，适用于大型物品",
+      "description": "宽幅气泡膜，适用于大型物品的包装或作为填充物使用。",
+      "price": 288.00,
+      "originalPrice": 320.00,
+      "partNumber": "A-20-400",
+      "image": "images/films/film4.jpg",
+      "category": "film",
+      "compatibleModels": ["LA-E4S", "all"],
+      "specifications": {
+        "thickness": "20μm",
+        "width": "400mm",
+        "length": "100m"
+      },
+      "priceTiers": [
+        { "quantity": 1, "price": 288.00 },
+        { "quantity": 5, "price": 275.00 },
+        { "quantity": 10, "price": 260.00 }
+      ],
+      "inventory": 80
+    },
+    {
+      "id": "film5",
+      "name": "气泡膜 A-30-300",
+      "shortDescription": "特级加厚气泡膜，适用于重型物品",
+      "description": "特级加厚气泡膜，提供最佳保护，适用于重型、高价值或特别易碎的物品包装。",
+      "price": 328.00,
+      "originalPrice": 360.00,
+      "partNumber": "A-30-300",
+      "image": "images/films/film5.jpg",
+      "category": "film",
+      "compatibleModels": ["LA-E4S", "all"],
+      "specifications": {
+        "thickness": "30μm",
+        "width": "300mm",
+        "length": "100m"
+      },
+      "priceTiers": [
+        { "quantity": 1, "price": 328.00 },
+        { "quantity": 5, "price": 315.00 },
+        { "quantity": 10, "price": 300.00 }
+      ],
+      "inventory": 60
+    }
+  ],
+  "spareParts": [
+    {
+      "id": "part1",
+      "name": "LA-E4S 电热管",
+      "shortDescription": "LA-E4S型号气垫机电热管",
+      "description": "适用于LA-E4S气垫包装系统的原厂替换电热管，确保设备正常发热功能。",
+      "price": 388.00,
+      "originalPrice": 420.00,
+      "partNumber": "LA-E4S-HEAT-01",
+      "image": "images/parts/part1.jpg",
+      "category": "sparePart",
+      "compatibleModels": ["LA-E4S"],
+      "serialRange": "所有系列",
+      "type": "电气组件",
+      "dimensions": "200 × 15 × 10mm",
+      "weight": "0.2kg"
+    },
+    {
+      "id": "part2",
+      "name": "LA-E4S 电机",
+      "shortDescription": "LA-E4S型号气垫机电机组件",
+      "description": "适用于LA-E4S气垫包装系统的原厂替换电机，稳定可靠，低噪音设计。",
+      "price": 688.00,
+      "originalPrice": 750.00,
+      "partNumber": "LA-E4S-MOTOR-01",
+      "image": "images/parts/part2.jpg",
+      "category": "sparePart",
+      "compatibleModels": ["LA-E4S"],
+      "serialRange": "所有系列",
+      "type": "电气组件",
+      "dimensions": "100 × 80 × 80mm",
+      "weight": "1.2kg"
+    },
+    {
+      "id": "part3",
+      "name": "LP-V1 切纸刀片组",
+      "shortDescription": "LP-V1型号纸垫机切纸刀片组",
+      "description": "适用于LP-V1纸垫包装系统的原厂替换切纸刀片组，保证切纸质量和使用寿命。",
+      "price": 328.00,
+      "originalPrice": 360.00,
+      "partNumber": "LP-V1-BLADE-01",
+      "image": "images/parts/part3.jpg",
+      "category": "sparePart",
+      "compatibleModels": ["LP-V1"],
+      "serialRange": "所有系列",
+      "type": "机械组件",
+      "dimensions": "150 × 30 × 5mm",
+      "weight": "0.3kg"
+    }
+  ]
+} 

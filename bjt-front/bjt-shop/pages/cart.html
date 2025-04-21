@@ -1,0 +1,53 @@
+<!-- 购物车页面 -->
+<div class="cart-page">
+    <!-- 订单标题 -->
+    <div class="order-title">
+        <h1>购物车</h1>
+        <p>请确认您的购物车商品</p>
+    </div>
+    
+    <div class="order-list">
+        <div class="order-header">
+            <div style="flex: 0 0 40px;">
+                <div class="checkbox-custom" id="select-all"></div>
+            </div>
+            <div style="flex: 1;">产品</div>
+            <div style="width: 160px; text-align: right;">数量</div>
+            <div style="width: 150px; text-align: right;">价格</div>
+        </div>
+        
+        <!-- 全选链接 -->
+        <div style="margin: 15px 0;">
+            <a href="#" id="select-all-link" style="color: #4285f4; text-decoration: none;">全选</a>
+        </div>
+        
+        <!-- 购物车项目将在此显示 -->
+        <div id="cart-items-container">
+            <!-- 通过JavaScript动态加载购物车项目 -->
+            <div class="loading-indicator">加载中...</div>
+        </div>
+        
+        <!-- 购物车为空提示 -->
+        <div id="cart-empty" class="cart-empty" style="display: none;">
+            <p>您的购物车是空的</p>
+            <a href="/products" class="btn btn-primary">浏览产品</a>
+        </div>
+    </div>
+    
+    <!-- Order Summary Section -->
+    <div class="order-summary">
+        <div class="summary-row">
+            <div class="summary-label">已选商品:</div>
+            <div class="summary-value" id="selected-count">0 件</div>
+        </div>
+        <div class="summary-row">
+            <div class="summary-label">商品总额:</div>
+            <div class="summary-value" id="selected-total">¥ 0.00</div>
+        </div>
+    </div>
+    
+    <div class="bottom-actions">
+        <button id="continue-shopping" class="btn btn-secondary">继续购物</button>
+        <button id="checkout-btn" class="btn btn-primary">结算</button>
+    </div>
+</div> 

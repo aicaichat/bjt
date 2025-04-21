@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>包装设备 - BJT 产品管理系统</title>
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="icon" href="../favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <!-- Header Container -->
+    <div id="header-container"></div>
+    
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Breadcrumb -->
+        <div class="breadcrumb">
+            <a href="../index.html">首页</a> > 包装设备
+        </div>
+        
+        <!-- Page Title -->
+        <h1>包装设备</h1>
+        
+        <!-- Products Grid with Filters -->
+        <div class="products-container">
+            <!-- Filters -->
+            <div class="filter-section">
+                <h3 class="filter-title">筛选条件</h3>
+                
+                <div class="filter-group">
+                    <label class="filter-label">设备类型</label>
+                    <select id="category-filter" class="filter-select">
+                        <option value="all">全部类型</option>
+                        <option value="air-cushion">气垫包装设备</option>
+                        <option value="paper-cushion">纸质包装设备</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">价格范围</label>
+                    <div class="price-range">
+                        <input type="number" id="min-price-filter" class="form-control" placeholder="最低价格">
+                        <span>至</span>
+                        <input type="number" id="max-price-filter" class="form-control" placeholder="最高价格">
+                    </div>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">搜索</label>
+                    <input type="text" id="product-search" class="form-control" placeholder="输入关键词">
+                </div>
+                
+                <div class="filter-actions">
+                    <button id="reset-filters" class="btn btn-secondary">重置筛选</button>
+                </div>
+            </div>
+            
+            <!-- Products -->
+            <div class="products-list">
+                <div id="products-container" class="row">
+                    <!-- Products will be loaded dynamically -->
+                    <div class="loading-spinner">加载中...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Footer Container -->
+    <div id="footer-container"></div>
+    
+    <!-- Cart Container -->
+    <div id="cart-container"></div>
+    
+    <!-- JavaScript -->
+    <script src="../js/utils.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/cart.js"></script>
+    <script src="../js/theme-switcher.js"></script>
+    <script src="../js/products.js"></script>
+    <script src="../js/main.js"></script>
+</body>
+</html> 

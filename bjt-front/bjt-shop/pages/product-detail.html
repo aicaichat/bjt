@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>产品详情 - BJT 产品管理系统</title>
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/components.css">
+</head>
+<body>
+    <!-- Header Container -->
+    <div id="header-container"></div>
+    
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Breadcrumb will be updated dynamically based on product type -->
+        <div class="breadcrumb" id="product-breadcrumb">
+            <a href="../index.html">首页</a> > <span id="breadcrumb-type">产品</span> > <span id="breadcrumb-name">产品详情</span>
+        </div>
+        
+        <!-- Product Details Container -->
+        <div id="product-details-container">
+            <!-- Product details will be loaded dynamically -->
+            <div class="loading-spinner">加载中...</div>
+        </div>
+        
+        <!-- Related Products Section -->
+        <section class="section related-products-section" id="related-products-section" style="display: none;">
+            <h2 class="section-title">相关产品</h2>
+            <div id="related-products" class="row">
+                <!-- Related products will be loaded dynamically -->
+            </div>
+        </section>
+    </main>
+    
+    <!-- Footer Container -->
+    <div id="footer-container"></div>
+    
+    <!-- Cart Container -->
+    <div id="cart-container"></div>
+    
+    <!-- JavaScript -->
+    <script src="../js/utils.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/cart.js"></script>
+    <script src="../js/products.js"></script>
+    <script src="../js/app.js"></script>
+    
+    <script>
+        // Additional script for product detail page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get product ID and type from URL parameters
+            const productId = BJTUtils.getUrlParam('id');
+            const productType = BJTUtils.getUrlParam('type');
+            
+            // Update breadcrumb based on product type
+            const breadcrumbType = document.getElementById('breadcrumb-type');
+            if (breadcrumbType) {
+                switch(productType) {
+                    case 'machines':
+                        breadcrumbType.textContent = '包装设备';
+                        breadcrumbType.parentElement.querySelector('a:nth-child(3)').href = 'products.html';
+                        break;
+                    case 'consumables':
+                        breadcrumbType.textContent = '包装耗材';
+                        breadcrumbType.parentElement.querySelector('a:nth-child(3)').href = 'consumables.html';
+                        break;
+                    case 'spareParts':
+                        breadcrumbType.textContent = '备件配件';
+                        breadcrumbType.parentElement.querySelector('a:nth-child(3)').href = 'spare-parts.html';
+                        break;
+                }
+            }
+            
+            // Load product details
+            if (productId && productType) {
+                BJTProducts.loadProductData(function() {
+                    // Get the product
+                    const product = BJTProducts.findProductById(productId, productType);
+                    
+                    if (product) {
+                        // Update page title and breadcrumb
+                        document.title = `${product.name} - BJT 产品管理系统`;
+                        document.getElementById('breadcrumb-name').textContent = product.name;
+                        
+                        // Load related products (products of the same category)
+                        loadRelatedProducts(product, productType);
+                    }
+                });
+            }
+        });
+        
+        /**
+         * Load related products based on the current product
+         * @param {Object} product - The current product
+         * @param {string} productType - The product type
+         */
+        function loadRelatedProducts(product, productType) {
+            const relatedProductsSection = document.getElementById('related-products-section');
+            const relatedProductsContainer = document.getElementById('related-products');
+            
+            if (!relatedProductsSection || !relatedProductsContainer) return;
+            
+            // Get all products of the same type
+            const allProducts = BJTProducts.productData[productType] || [];
+            
+            // Filter related products (same category, but not the current product)
+            let relatedProducts = allProducts.filter(p => 
+                p.id !== product.id && p.category === product.category
+            );
+            
+            // If less than 2 products found, get products of any category
+            if (relatedProducts.length < 2) {
+                relatedProducts = allProducts.filter(p => 
+                    p.id !== product.id
+                );
+            }
+            
+            // Limit to 4 related products
+            relatedProducts = relatedProducts.slice(0, 4);
+            
+            if (relatedProducts.length > 0) {
+                // Show the section
+                relatedProductsSection.style.display = 'block';
+                
+                // Create HTML for related products
+                let relatedHTML = '';
+                
+                relatedProducts.forEach(relatedProduct => {
+                    relatedHTML += `
+                        <div class="col col-sm-6 col-lg-3">
+                            <div class="product-card">
+                                <img src="${relatedProduct.image}" alt="${relatedProduct.name}" class="product-image">
+                                <div class="product-info">
+                                    <h3 class="product-title">${relatedProduct.name}</h3>
+                                    <p class="product-short-desc">${relatedProduct.shortDescription}</p>
+                                    <div class="product-meta">
+                                        <div class="product-price">
+                                            <span class="current-price">${BJTUtils.formatCurrency(relatedProduct.price)}</span>
+                                        </div>
+                                        <a href="product-detail.html?id=${relatedProduct.id}&type=${productType}" class="btn btn-primary">查看详情</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                relatedProductsContainer.innerHTML = relatedHTML;
+            }
+        }
+    </script>
+</body>
+</html> 

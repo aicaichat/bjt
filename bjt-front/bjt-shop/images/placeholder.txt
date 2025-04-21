@@ -1,0 +1,28 @@
+The following placeholder images should be created for the application:
+
+1. logo.webp - Company logo (already copied)
+2. user-avatar.jpg - Default user avatar image
+3. admin-avatar.jpg - Admin user avatar image
+4. sales-avatar.jpg - Sales user avatar image
+5. customer-avatar.jpg - Customer user avatar image
+6. machine-e4s.jpg - Air Cushioning System LA-E4S image
+7. machine-e5p.jpg - Air Cushioning System LA-E5P image
+8. machine-lpv1.jpg - Paper Packaging System LP-V1 image
+9. machine-lpf1.jpg - Paper Packaging System LP-F1 image
+10. consumable-bubble.jpg - MEX-10-20-10 Bubble Film image
+11. consumable-bubble2.jpg - MEX-10-20-13 Bubble Film image
+12. consumable-bubble3.jpg - MEX-10-20-15 Bubble Film image
+13. consumable-paper.jpg - PAP-10-20 Paper Cushion image
+14. spare-motor.jpg - Brushless Motor image
+15. spare-panel.jpg - Control Panel image
+16. spare-roller.jpg - Pressure Roller image
+17. spare-seal.jpg - Rubber Seal Kit image
+18. placeholder.jpg - Default placeholder image
+19. category-machines.jpg - Machines category image
+20. category-consumables.jpg - Consumables category image
+21. category-spare-parts.jpg - Spare parts category image
+22. about-company.jpg - Company image for about section
+
+In a real application, high-quality product images would be used. For this demo, placeholder images can be created using online services or sample images.
+
+Note: Image files should be optimized for web (compressed JPG/PNG or WebP format) to ensure fast loading times. 

@@ -1,56 +1,51 @@
-import React, { useState, useEffect } from 'react';
-import { THEMES, setTheme } from '../styles/theme-switcher.js';
+import React, { useEffect, useState } from 'react';
 import '../styles/ThemeSwitcher.css';
 
-interface ThemeSwitcherProps {
-  className?: string;
-}
+const ThemeSwitcher: React.FC = () => {
+  const [activeTheme, setActiveTheme] = useState<string>('theme-modern');
 
-const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ className = '' }) => {
-  const [activeTheme, setActiveTheme] = useState<string>(
-    localStorage.getItem('bjt-theme-preference') || THEMES.DEFAULT
-  );
-  
-  const themeLabels = {
-    [THEMES.DEFAULT]: 'BJT Blue',
-    [THEMES.SIMPLE]: 'Clean Simple',
-    [THEMES.DARK]: 'Dark Mode'
-  };
-  
+  const themes = [
+    { id: 'theme-modern', label: 'Modern Tech' },
+    { id: 'theme-simple', label: 'Clean Simple' },
+    { id: 'theme-dark', label: 'Dark Mode' }
+  ];
+
   useEffect(() => {
-    // Initialize from localStorage
-    const savedTheme = localStorage.getItem('bjt-theme-preference') || THEMES.DEFAULT;
+    // Initialize from localStorage or set default
+    const savedTheme = localStorage.getItem('theme') || 'theme-modern';
     setActiveTheme(savedTheme);
-    setTheme(savedTheme); // Apply theme on component mount
+    document.documentElement.className = savedTheme;
 
-    // Listen for storage events (if changed in another tab)
+    // Listen for theme changes from other tabs/windows
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'bjt-theme-preference') {
-        setActiveTheme(e.newValue || THEMES.DEFAULT);
+      if (e.key === 'theme' && e.newValue) {
+        setActiveTheme(e.newValue);
+        document.documentElement.className = e.newValue;
       }
     };
-    
+
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
-  
-  const handleThemeChange = (themeName: string) => {
-    setTheme(themeName);
-    setActiveTheme(themeName);
+
+  const handleThemeChange = (themeId: string) => {
+    setActiveTheme(themeId);
+    document.documentElement.className = themeId;
+    localStorage.setItem('theme', themeId);
   };
-  
+
   return (
-    <div className={`theme-switcher ${className}`}>
+    <div className="theme-switcher">
+      <span className="theme-switcher-label">Theme:</span>
       <div className="theme-options">
-        {Object.entries(themeLabels).map(([theme, label]) => (
+        {themes.map((theme) => (
           <button
-            key={theme}
-            className={`theme-option ${activeTheme === theme ? 'active' : ''}`}
-            onClick={() => handleThemeChange(theme)}
-            aria-label={`Switch to ${label} theme`}
+            key={theme.id}
+            className={`theme-option ${activeTheme === theme.id ? 'active' : ''}`}
+            onClick={() => handleThemeChange(theme.id)}
+            aria-label={`Switch to ${theme.label} theme`}
           >
-            <span className="theme-color-preview" data-theme={theme}></span>
-            <span className="theme-label">{label}</span>
+            {theme.label}
           </button>
         ))}
       </div>

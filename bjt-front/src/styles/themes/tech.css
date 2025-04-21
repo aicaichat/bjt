@@ -1,0 +1,394 @@
+/* 
+ * 现代科技风格主题
+ * 特点：锐利、数字化、前卫
+ * 设计理念：Digital Innovation
+ */
+
+:root.theme-tech {
+  /* 品牌主色调 - 霓虹蓝 */
+  --primary-color: #0ea5e9;
+  --primary-light: #38bdf8;
+  --primary-dark: #0284c7;
+  --primary-bg: #e0f2fe;
+  
+  /* 辅助色系 - 荧光绿 */
+  --secondary-color: #10b981;
+  --secondary-light: #34d399;
+  --secondary-dark: #059669;
+  
+  /* 强调色 - 霓虹紫 */
+  --accent-color: #8b5cf6;
+  --accent-light: #a78bfa;
+  --accent-dark: #7c3aed;
+  
+  /* 情境色彩 - 高对比 */
+  --success-color: #22c55e;
+  --error-color: #f43f5e;
+  --warning-color: #eab308;
+  --info-color: #0ea5e9;
+  
+  /* 中性色调 - 冷调深灰 */
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+  
+  /* 背景色 - 深暗面板 */
+  --bg-color: #0f172a;
+  --bg-card: #1e293b;
+  --bg-elevated: #334155;
+  --bg-inset: #0f172a;
+  
+  /* 文本颜色 - 高对比 */
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  --text-disabled: #64748b;
+  --text-on-primary: #ffffff;
+  --text-on-dark: #f8fafc;
+  
+  /* 边框 - 潜力 */
+  --border-color: #1e293b;
+  --border-light: #334155;
+  --border-focus: #0ea5e9;
+  
+  /* 阴影 - 霓虹效果 */
+  --shadow-sm: 0 1px 3px rgba(14, 165, 233, 0.15);
+  --shadow-md: 0 4px 6px rgba(14, 165, 233, 0.15);
+  --shadow-lg: 0 10px 15px rgba(14, 165, 233, 0.15);
+  --shadow-xl: 0 20px 25px rgba(14, 165, 233, 0.15);
+  --shadow-hover: 0 0 15px rgba(14, 165, 233, 0.25);
+  
+  /* 字体 - 未来感 */
+  --font-family: 'Chakra Petch', 'Space Grotesk', system-ui, sans-serif;
+  --font-family-sans: 'Space Grotesk', system-ui, sans-serif;
+  
+  /* 圆角 - 最小化 */
+  --border-radius-sm: 3px;
+  --border-radius-md: 4px;
+  --border-radius-lg: 6px;
+  --border-radius-xl: 8px;
+  --border-radius-full: 9999px;
+  
+  /* 特定组件样式 */
+  --header-height: 70px;
+  --navbar-bg: linear-gradient(180deg, #0f172a, #1e293b);
+  --navbar-shadow: 0 1px 3px rgba(14, 165, 233, 0.25);
+  --card-hover-transform: translateY(-5px);
+}
+
+/* 特定组件设置 */
+.theme-tech .section-header {
+  font-family: var(--font-family);
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1.75rem;
+  position: relative;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.theme-tech .section-header::after {
+  content: "";
+  position: absolute;
+  bottom: -0.75rem;
+  left: 0;
+  width: 3rem;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+  border-radius: var(--border-radius-full);
+}
+
+.theme-tech .btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+  font-family: var(--font-family);
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.625rem 1.5rem;
+  border-radius: var(--border-radius-md);
+  border: none;
+  box-shadow: 0 0 10px rgba(14, 165, 233, 0.25);
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.theme-tech .btn-primary::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+  transition: all 0.3s ease;
+  z-index: -1;
+}
+
+.theme-tech .btn-primary:hover {
+  background-color: var(--primary-dark);
+  box-shadow: 0 0 15px rgba(14, 165, 233, 0.5);
+  transform: translateY(-2px);
+}
+
+.theme-tech .btn-primary:hover::before {
+  left: 100%;
+}
+
+.theme-tech .btn-primary:active {
+  transform: translateY(0);
+}
+
+.theme-tech .card {
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  overflow: hidden;
+  padding: 1.5rem;
+  position: relative;
+}
+
+.theme-tech .card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 0;
+  background: linear-gradient(180deg, var(--primary-color), var(--accent-color));
+  transition: height 0.3s ease;
+}
+
+.theme-tech .card:hover {
+  transform: var(--card-hover-transform);
+  box-shadow: var(--shadow-hover);
+  border-color: var(--border-light);
+}
+
+.theme-tech .card:hover::before {
+  height: 100%;
+}
+
+.theme-tech .product-link {
+  font-family: var(--font-family);
+  color: var(--primary-color);
+  font-weight: 600;
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  margin-top: 0.75rem;
+  position: relative;
+}
+
+.theme-tech .product-link::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: var(--primary-color);
+  transition: width 0.2s ease;
+}
+
+.theme-tech .product-link:hover {
+  color: var(--primary-light);
+}
+
+.theme-tech .product-link:hover::after {
+  width: 100%;
+}
+
+.theme-tech .product-link:hover svg {
+  transform: translateX(5px);
+}
+
+.theme-tech .product-link svg {
+  transition: transform 0.2s ease;
+}
+
+/* 表单元素 */
+.theme-tech input, .theme-tech select, .theme-tech textarea {
+  font-family: var(--font-family-sans);
+  border: 1px solid var(--border-light);
+  border-radius: var(--border-radius-md);
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  background-color: rgba(15, 23, 42, 0.7);
+  color: var(--text-primary);
+}
+
+.theme-tech input:focus, .theme-tech select:focus, .theme-tech textarea:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
+  outline: none;
+}
+
+/* 标签 */
+.theme-tech .tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  background-color: rgba(14, 165, 233, 0.1);
+  color: var(--primary-light);
+  border-radius: var(--border-radius-sm);
+  font-family: var(--font-family-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.theme-tech .tag-primary {
+  background-color: rgba(14, 165, 233, 0.15);
+  color: var(--primary-light);
+  border: 1px solid rgba(14, 165, 233, 0.3);
+}
+
+/* 价格展示 */
+.theme-tech .price {
+  font-family: var(--font-family);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: block;
+  margin: 0.5rem 0;
+  background: linear-gradient(90deg, var(--primary-light), var(--accent-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.theme-tech .price-original {
+  font-family: var(--font-family-sans);
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+  text-decoration: line-through;
+  margin-left: 0.5rem;
+}
+
+/* 表格样式 */
+.theme-tech table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 1.5rem;
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.theme-tech table th {
+  text-align: left;
+  padding: 1rem 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background-color: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-light);
+  font-family: var(--font-family);
+  font-size: 0.875rem;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.theme-tech table td {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+  font-family: var(--font-family-sans);
+  color: var(--text-secondary);
+}
+
+.theme-tech table tr:hover td {
+  background-color: rgba(14, 165, 233, 0.05);
+}
+
+.theme-tech table tr:last-child td {
+  border-bottom: none;
+}
+
+/* 状态指示器 */
+.theme-tech .status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--border-radius-sm);
+}
+
+.theme-tech .status-available {
+  background-color: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.theme-tech .status-low {
+  background-color: rgba(234, 179, 8, 0.1);
+  color: #eab308;
+  border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+.theme-tech .status-unavailable {
+  background-color: rgba(244, 63, 94, 0.1);
+  color: #f43f5e;
+  border: 1px solid rgba(244, 63, 94, 0.3);
+}
+
+/* 通知 */
+.theme-tech .notification {
+  padding: 1rem;
+  border-radius: var(--border-radius-md);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-tech .notification::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: currentColor;
+}
+
+.theme-tech .notification-info {
+  background-color: rgba(14, 165, 233, 0.1);
+  color: #0ea5e9;
+}
+
+.theme-tech .notification-success {
+  background-color: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+
+.theme-tech .notification-warning {
+  background-color: rgba(234, 179, 8, 0.1);
+  color: #eab308;
+}
+
+.theme-tech .notification-error {
+  background-color: rgba(244, 63, 94, 0.1);
+  color: #f43f5e;
+} 

@@ -1,0 +1,3 @@
+docker-compose logs wordpress | tail -n 100 | cat
+
+docker-compose exec wordpress wp plugin deactivate bjt-product-admin && docker-compose exec wordpress wp plugin activate bjt-product-admin

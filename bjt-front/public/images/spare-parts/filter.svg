@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <rect width="120" height="120" fill="#f0f0f0"/>
+  <circle cx="60" cy="60" r="40" fill="#dddddd" stroke="#888888" stroke-width="2"/>
+  <circle cx="60" cy="60" r="30" fill="white" stroke="#888888" stroke-width="1"/>
+  <circle cx="60" cy="60" r="20" fill="#eeeeee" stroke="#888888" stroke-width="1"/>
+  <line x1="60" y1="20" x2="60" y2="100" stroke="#888888" stroke-width="1" stroke-dasharray="2,2"/>
+  <line x1="20" y1="60" x2="100" y2="60" stroke="#888888" stroke-width="1" stroke-dasharray="2,2"/>
+  <text x="60" y="50" font-family="Arial" font-size="12" text-anchor="middle" fill="#333333">SP-002</text>
+  <text x="60" y="70" font-family="Arial" font-size="10" text-anchor="middle" fill="#333333">空气滤清器</text>
+</svg> 

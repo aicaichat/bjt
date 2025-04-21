@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT 包装解决方案 - 专业包装设备供应商</title>
+    <meta name="description" content="BJT提供专业的包装解决方案，包括气垫机、纸垫机和水胶带系统，满足各种包装需求。">
+    <link rel="icon" href="../favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/themes.css">
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/layout.css">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Header Container -->
+    <header id="header"></header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Products Section -->
+        <section class="products-showcase">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">专业包装解决方案</h2>
+                    <p class="section-subtitle">全面的包装设备和耗材，满足各行业需求</p>
+                </div>
+                <div class="products-grid" id="productsGrid">
+                    <!-- 产品类别将通过JavaScript动态加载 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Why Choose Us Section -->
+        <section class="features">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">为什么选择我们？</h2>
+                    <p class="section-subtitle">我们专注于提供完整的包装解决方案，从设备到耗材，全方位满足您的需求</p>
+                </div>
+                <div class="features__grid">
+                    <div class="feature-card">
+                        <div class="feature-card__icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                        </div>
+                        <h3 class="feature-card__title">高品质产品</h3>
+                        <p class="feature-card__text">我们的所有产品均经过严格测试，确保稳定性和长期可靠性</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-card__icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 6v6l4 2"></path>
+                            </svg>
+                        </div>
+                        <h3 class="feature-card__title">快速交付</h3>
+                        <p class="feature-card__text">从下单到交付，我们提供业内领先的交货周期和物流解决方案</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-card__icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="feature-card__title">专业服务</h3>
+                        <p class="feature-card__text">我们的技术团队提供全方位支持，从安装到维护，确保您的设备始终处于最佳状态</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Call to Action Section -->
+        <section class="cta">
+            <div class="container">
+                <div class="cta__content">
+                    <h2 class="cta__title">准备升级您的包装系统？</h2>
+                    <p class="cta__text">联系我们的专业团队，获取个性化解决方案和报价</p>
+                    <a href="contact.html" class="btn btn-primary btn-large">立即咨询</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer Container -->
+    <footer id="footer"></footer>
+
+    <!-- 通知容器 -->
+    <div class="notification-container"></div>
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="loginModalLabel">请先登录</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>您需要登录才能访问该内容。是否前往登录页面？</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <a href="login.html" class="btn btn-primary">前往登录</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../js/utils.js"></script>
+    <script src="../js/router.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/cart.js"></script>
+    <script src="../js/theme-switcher.js"></script>
+    <script src="../js/components/header.js"></script>
+    <script src="../js/components/footer.js"></script>
+    <script src="../js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('首页加载完成');
+            
+            // 初始化头部和页脚组件
+            if (window.HeaderComponent && typeof HeaderComponent.init === 'function') {
+                HeaderComponent.init('header');
+            }
+            
+            if (window.FooterComponent && typeof FooterComponent.init === 'function') {
+                FooterComponent.init('footer');
+            }
+            
+            // 加载产品数据
+            loadProductCategories();
+            
+            // 为产品链接添加登录检查
+            setupProductLinks();
+            
+            // 函数：加载产品类别
+            function loadProductCategories() {
+                // 模拟从API获取数据
+                const productCategories = [
+                    {
+                        id: 'air-cushion',
+                        name: '气垫包装系统',
+                        description: '高效的产品保护解决方案，减少运输损坏，降低包装成本',
+                        image: '../images/air-cushion-system.webp',
+                        links: [
+                            { id: 'machine', name: '气垫机及配件', url: 'air-cushion.html' },
+                            { id: 'film', name: '气垫膜选项', url: 'air-film.html' },
+                            { id: 'spare', name: '备件', url: 'air-spare-parts.html' }
+                        ]
+                    },
+                    {
+                        id: 'paper-cushion',
+                        name: '纸垫包装系统',
+                        description: '环保包装解决方案，将普通纸张转化为高效缓冲材料，可回收利用',
+                        image: '../images/paper-cushion-system.webp',
+                        links: [
+                            { id: 'machine', name: '纸垫机及配件', url: 'paper-cushion.html' },
+                            { id: 'paper', name: '纸张选项', url: 'paper-options.html' },
+                            { id: 'spare', name: '备件', url: 'paper-spare-parts.html' }
+                        ]
+                    },
+                    {
+                        id: 'water-tape',
+                        name: '水胶带系统',
+                        description: '安全可靠的包装封口解决方案，提供更强的粘合力和安全性',
+                        image: '../images/water-tape-system.webp',
+                        links: [
+                            { id: 'dispenser', name: '水胶带分配器及配件', url: 'water-tape-dispenser.html' },
+                            { id: 'tape', name: '水胶带选项', url: 'water-tape-options.html' },
+                            { id: 'spare', name: '备件', url: 'water-tape-spare-parts.html' }
+                        ]
+                    }
+                ];
+                
+                renderProductCategories(productCategories);
+            }
+            
+            // 函数：渲染产品类别
+            function renderProductCategories(categories) {
+                const container = document.getElementById('productsGrid');
+                if (!container) return;
+                
+                container.innerHTML = '';
+                
+                categories.forEach((category, index) => {
+                    // 创建产品类别卡片
+                    const categoryElement = document.createElement('div');
+                    categoryElement.className = `product-category ${index % 2 !== 0 ? 'product-category--reverse' : ''}`;
+                    
+                    // 构建链接HTML
+                    let linksHtml = '';
+                    category.links.forEach(link => {
+                        linksHtml += `<li><a href="${link.url}" class="product-link" data-category="${category.id}" data-type="${link.id}">${link.name}</a></li>`;
+                    });
+                    
+                    // 设置HTML内容
+                    categoryElement.innerHTML = `
+                        <div class="product-category__image">
+                            <img src="${category.image}" alt="${category.name}" class="product-category__img">
+                        </div>
+                        <div class="product-category__content">
+                            <h3 class="product-category__title">${category.name}</h3>
+                            <p class="product-category__desc">${category.description}</p>
+                            <ul class="product-category__links">
+                                ${linksHtml}
+                            </ul>
+                            <a href="products.html?category=${category.id}" class="btn btn-outline">了解更多</a>
+                        </div>
+                    `;
+                    
+                    container.appendChild(categoryElement);
+                });
+                
+                // 加载完成后重新绑定产品链接事件
+                setupProductLinks();
+            }
+            
+            // 函数：为产品链接添加登录检查
+            function setupProductLinks() {
+                const productLinks = document.querySelectorAll('.product-link');
+                
+                productLinks.forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        // 检查用户是否已登录
+                        if (!isUserLoggedIn()) {
+                            e.preventDefault();
+                            showLoginPrompt();
+                        }
+                    });
+                });
+            }
+            
+            // 函数：检查用户是否已登录
+            function isUserLoggedIn() {
+                return localStorage.getItem('bjt-user') !== null;
+            }
+            
+            // 函数：显示登录提示
+            function showLoginPrompt() {
+                if (typeof bootstrap !== 'undefined') {
+                    const modal = new bootstrap.Modal(document.getElementById('loginModal'));
+                    modal.show();
+                } else {
+                    // 降级处理，如果bootstrap不可用
+                    if (confirm('您需要登录才能访问该内容。是否前往登录页面？')) {
+                        window.location.href = 'login.html';
+                    }
+                }
+            }
+            
+            // 暴露给全局，供其他组件使用
+            window.showLoginPrompt = showLoginPrompt;
+        });
+    </script>
+</body>
+</html> 

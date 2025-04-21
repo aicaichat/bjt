@@ -1,0 +1,158 @@
+/**
+ * BJT Shop - 蓝色主题 (默认)
+ * 企业级工业设备电商平台设计
+ */
+
+:root.theme-blue {
+  /* 主色调 */
+  --primary-color: #1A365D;
+  --primary-color-light: #274785;
+  --primary-color-dark: #132948;
+  
+  /* 次要色调 */
+  --secondary-color: #4A90E2;
+  --secondary-color-light: #6BA5EA;
+  --secondary-color-dark: #3A7BC9;
+
+  /* 强调色 */
+  --accent-color: #00A3E0;
+  --accent-color-light: #33B5E5;
+  --accent-color-dark: #0082B3;
+  
+  /* 中性色 */
+  --background-color: #FFFFFF;
+  --background-alt: #F7F9FC;
+  --surface-color: #FFFFFF;
+  --text-color: #333333;
+  --text-color-secondary: #757575;
+  --text-color-light: #999999;
+  --border-color: #E1E7EF;
+  
+  /* 功能色 */
+  --success-color: #10B981;
+  --warning-color: #F59E0B;
+  --error-color: #EF4444;
+  --info-color: #3B82F6;
+  
+  /* 排版 */
+  --font-family: 'Segoe UI', 'SF Pro Text', 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-size-base: 16px;
+  --font-size-small: 14px;
+  --font-size-smaller: 12px;
+  --font-size-large: 18px;
+  --font-size-larger: 20px;
+  --font-size-xlarge: 24px;
+  --font-size-xxlarge: 28px;
+  --line-height-base: 1.6;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 600;
+  
+  /* 布局 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+  --container-width: 1200px;
+  --header-height: 72px;
+  
+  /* 边框 */
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --border-width: 1px;
+  --border-width-thick: 2px;
+  
+  /* 阴影 */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.12);
+  
+  /* 过渡动画 */
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 250ms ease-in-out;
+  --transition-slow: 350ms ease-in-out;
+  
+  /* 特定组件参数 */
+  --header-background: var(--background-color);
+  --footer-background: var(--primary-color);
+  --footer-text-color: #FFFFFF;
+  --button-height: 42px;
+  --button-padding: 0 20px;
+  --input-height: 42px;
+  --input-padding: 0 12px;
+}
+
+/* 如果不存在主题类，默认应用蓝色主题 */
+:root:not(.theme-blue):not(.theme-teal):not(.theme-purple) {
+  --primary-color: #1A365D;
+  --primary-color-light: #274785;
+  --primary-color-dark: #132948;
+  
+  --secondary-color: #4A90E2;
+  --secondary-color-light: #6BA5EA;
+  --secondary-color-dark: #3A7BC9;
+
+  --accent-color: #00A3E0;
+  --accent-color-light: #33B5E5;
+  --accent-color-dark: #0082B3;
+  
+  --background-color: #FFFFFF;
+  --background-alt: #F7F9FC;
+  --surface-color: #FFFFFF;
+  --text-color: #333333;
+  --text-color-secondary: #757575;
+  --text-color-light: #999999;
+  --border-color: #E1E7EF;
+  
+  --success-color: #10B981;
+  --warning-color: #F59E0B;
+  --error-color: #EF4444;
+  --info-color: #3B82F6;
+  
+  --font-family: 'Segoe UI', 'SF Pro Text', 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-size-base: 16px;
+  --font-size-small: 14px;
+  --font-size-smaller: 12px;
+  --font-size-large: 18px;
+  --font-size-larger: 20px;
+  --font-size-xlarge: 24px;
+  --font-size-xxlarge: 28px;
+  --line-height-base: 1.6;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 600;
+  
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+  --container-width: 1200px;
+  --header-height: 72px;
+  
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --border-width: 1px;
+  --border-width-thick: 2px;
+  
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.12);
+  
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 250ms ease-in-out;
+  --transition-slow: 350ms ease-in-out;
+
+  --header-background: var(--background-color);
+  --footer-background: var(--primary-color);
+  --footer-text-color: #FFFFFF;
+  --button-height: 42px;
+  --button-padding: 0 20px;
+  --input-height: 42px;
+  --input-padding: 0 12px;
+} 

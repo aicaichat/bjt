@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>气垫机及配件 - BJT产品管理系统</title>
+    <link rel="icon" href="../favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/components.css">
+</head>
+<body>
+    <!-- Header Container -->
+    <header id="header"></header>
+
+    <!-- Main Content -->
+    <main class="container my-5">
+        <section class="product-hero">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="product-title">气垫机及配件</h1>
+                    <p class="product-description">
+                        我们的气垫机系列提供高效的产品保护，设计灵活多变，能够完美保护您的物品。适合各种包装场景，
+                        尤其适用于电子产品、玻璃制品和精密仪器的安全运输。
+                    </p>
+                    <div class="product-features">
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                </svg>
+                            </div>
+                            <div class="feature-text">高效保护，减少运输损坏</div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                                </svg>
+                            </div>
+                            <div class="feature-text">操作简便，提高包装效率</div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                </svg>
+                            </div>
+                            <div class="feature-text">品质可靠，使用寿命长</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <img src="../images/air-cushion-hero.jpg" alt="气垫机" class="product-hero-image">
+                </div>
+            </div>
+        </section>
+
+        <section class="product-listing mt-5">
+            <h2 class="section-title">气垫机型号</h2>
+            <div class="row" id="airCushionProducts">
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="product-card">
+                        <div class="product-badge">热销</div>
+                        <img src="../images/products/ac-3000.jpg" alt="AC-3000气垫机" class="product-image">
+                        <div class="product-info">
+                            <h3 class="product-name">AC-3000 气垫机</h3>
+                            <p class="product-specs">生产速度：20m/min</p>
+                            <p class="product-price">¥21,800</p>
+                            <div class="product-actions">
+                                <button class="btn btn-outline-primary view-details" data-id="ac3000">查看详情</button>
+                                <button class="btn btn-primary add-to-cart" data-id="ac3000">加入购物车</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="product-card">
+                        <div class="product-badge product-badge-new">新品</div>
+                        <img src="../images/products/ac-5000.jpg" alt="AC-5000气垫机" class="product-image">
+                        <div class="product-info">
+                            <h3 class="product-name">AC-5000 气垫机</h3>
+                            <p class="product-specs">生产速度：35m/min</p>
+                            <p class="product-price">¥35,600</p>
+                            <div class="product-actions">
+                                <button class="btn btn-outline-primary view-details" data-id="ac5000">查看详情</button>
+                                <button class="btn btn-primary add-to-cart" data-id="ac5000">加入购物车</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="product-card">
+                        <img src="../images/products/ac-1500.jpg" alt="AC-1500气垫机" class="product-image">
+                        <div class="product-info">
+                            <h3 class="product-name">AC-1500 气垫机</h3>
+                            <p class="product-specs">生产速度：15m/min</p>
+                            <p class="product-price">¥15,900</p>
+                            <div class="product-actions">
+                                <button class="btn btn-outline-primary view-details" data-id="ac1500">查看详情</button>
+                                <button class="btn btn-primary add-to-cart" data-id="ac1500">加入购物车</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="accessories-section mt-5">
+            <h2 class="section-title">气垫机配件</h2>
+            <div class="row" id="airCushionAccessories">
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="accessory-card">
+                        <img src="../images/accessories/ac-film-roll.jpg" alt="气垫膜卷" class="accessory-image">
+                        <div class="accessory-info">
+                            <h3 class="accessory-name">气垫膜卷</h3>
+                            <p class="accessory-compatibility">适用机型：全系列</p>
+                            <p class="accessory-price">¥380</p>
+                            <button class="btn btn-sm btn-primary add-to-cart" data-id="acfilm">加入购物车</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="accessory-card">
+                        <img src="../images/accessories/ac-pump.jpg" alt="气泵组件" class="accessory-image">
+                        <div class="accessory-info">
+                            <h3 class="accessory-name">气泵组件</h3>
+                            <p class="accessory-compatibility">适用机型：AC-3000, AC-5000</p>
+                            <p class="accessory-price">¥1,250</p>
+                            <button class="btn btn-sm btn-primary add-to-cart" data-id="acpump">加入购物车</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="accessory-card">
+                        <img src="../images/accessories/ac-control-panel.jpg" alt="控制面板" class="accessory-image">
+                        <div class="accessory-info">
+                            <h3 class="accessory-name">控制面板</h3>
+                            <p class="accessory-compatibility">适用机型：全系列</p>
+                            <p class="accessory-price">¥820</p>
+                            <button class="btn btn-sm btn-primary add-to-cart" data-id="acpanel">加入购物车</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="accessory-card">
+                        <img src="../images/accessories/ac-seal-kit.jpg" alt="密封圈套件" class="accessory-image">
+                        <div class="accessory-info">
+                            <h3 class="accessory-name">密封圈套件</h3>
+                            <p class="accessory-compatibility">适用机型：全系列</p>
+                            <p class="accessory-price">¥180</p>
+                            <button class="btn btn-sm btn-primary add-to-cart" data-id="acseal">加入购物车</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="technical-specs mt-5">
+            <h2 class="section-title">技术规格</h2>
+            <div class="table-responsive">
+                <table class="table table-striped specs-table">
+                    <thead>
+                        <tr>
+                            <th>参数</th>
+                            <th>AC-1500</th>
+                            <th>AC-3000</th>
+                            <th>AC-5000</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>生产速度</td>
+                            <td>15m/min</td>
+                            <td>20m/min</td>
+                            <td>35m/min</td>
+                        </tr>
+                        <tr>
+                            <td>气垫尺寸</td>
+                            <td>200×100mm</td>
+                            <td>200×150mm</td>
+                            <td>250×200mm</td>
+                        </tr>
+                        <tr>
+                            <td>膜宽</td>
+                            <td>400mm</td>
+                            <td>400mm</td>
+                            <td>500mm</td>
+                        </tr>
+                        <tr>
+                            <td>功率</td>
+                            <td>800W</td>
+                            <td>1200W</td>
+                            <td>1500W</td>
+                        </tr>
+                        <tr>
+                            <td>电源要求</td>
+                            <td>220V, 50Hz</td>
+                            <td>220V, 50Hz</td>
+                            <td>220V, 50Hz</td>
+                        </tr>
+                        <tr>
+                            <td>机器尺寸</td>
+                            <td>800×400×350mm</td>
+                            <td>900×450×400mm</td>
+                            <td>1100×500×450mm</td>
+                        </tr>
+                        <tr>
+                            <td>净重</td>
+                            <td>45kg</td>
+                            <td>60kg</td>
+                            <td>75kg</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer Container -->
+    <footer id="footer"></footer>
+
+    <!-- 通知容器 -->
+    <div class="notification-container"></div>
+
+    <!-- 产品详情模态框 -->
+    <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="productModalLabel">产品详情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="productModalBody">
+                    <!-- 产品详情将通过JavaScript动态加载 -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" id="addToCartModal">加入购物车</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../js/utils.js"></script>
+    <script src="../js/router.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/theme-switcher.js"></script>
+    <script src="../js/cart.js"></script>
+    <script src="../js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Air Cushion page loaded');
+            
+            // 设置产品详情按钮点击事件
+            document.querySelectorAll('.view-details').forEach(button => {
+                button.addEventListener('click', function() {
+                    const productId = this.getAttribute('data-id');
+                    showProductDetails(productId);
+                });
+            });
+            
+            // 设置加入购物车按钮点击事件
+            document.querySelectorAll('.add-to-cart').forEach(button => {
+                button.addEventListener('click', function() {
+                    const productId = this.getAttribute('data-id');
+                    const productElement = this.closest('.product-card, .accessory-card');
+                    
+                    const name = productElement.querySelector('.product-name, .accessory-name').textContent;
+                    const priceText = productElement.querySelector('.product-price, .accessory-price').textContent;
+                    const price = parseInt(priceText.replace(/[^\d]/g, ''));
+                    const image = productElement.querySelector('img').src;
+                    
+                    addToCart(productId, name, price, image);
+                    showToast(`${name} 已添加到购物车`, 'success');
+                });
+            });
+            
+            // 显示产品详情的函数
+            function showProductDetails(productId) {
+                // 模拟从数据库获取产品详情
+                const products = {
+                    'ac3000': {
+                        name: 'AC-3000 气垫机',
+                        price: 21800,
+                        description: 'AC-3000是一款中端气垫机型号，适合中等规模的包装需求。该机型操作简便，维护成本低，生产效率高。',
+                        features: [
+                            '自动化程度高，可连续工作8小时以上',
+                            '支持多种气垫尺寸和形状',
+                            '噪音低，能耗小',
+                            '易于维护，关键部件模块化设计'
+                        ],
+                        image: '../images/products/ac-3000.jpg'
+                    },
+                    'ac5000': {
+                        name: 'AC-5000 气垫机',
+                        price: 35600,
+                        description: 'AC-5000是我们的高端气垫机型号，适合大规模的包装生产线。该机型采用了最新技术，生产效率高，可靠性强。',
+                        features: [
+                            '高速生产，每分钟可生产35米气垫膜',
+                            '智能控制系统，可通过触摸屏调整参数',
+                            '支持网络连接，可远程监控生产状态',
+                            '模块化设计，便于升级和维护'
+                        ],
+                        image: '../images/products/ac-5000.jpg'
+                    },
+                    'ac1500': {
+                        name: 'AC-1500 气垫机',
+                        price: 15900,
+                        description: 'AC-1500是我们的入门级气垫机型号，适合小型企业和初次使用气垫包装的用户。操作简单，价格实惠。',
+                        features: [
+                            '结构紧凑，占用空间小',
+                            '操作简单，无需专业培训',
+                            '维护成本低，关键零部件耐用',
+                            '适用于多种常见包装场景'
+                        ],
+                        image: '../images/products/ac-1500.jpg'
+                    }
+                };
+                
+                const product = products[productId];
+                if (!product) return;
+                
+                const modalBody = document.getElementById('productModalBody');
+                let featuresHtml = '<ul class="feature-list">';
+                product.features.forEach(feature => {
+                    featuresHtml += `<li>${feature}</li>`;
+                });
+                featuresHtml += '</ul>';
+                
+                modalBody.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <img src="${product.image}" class="img-fluid product-detail-image" alt="${product.name}">
+                        </div>
+                        <div class="col-md-6">
+                            <h3>${product.name}</h3>
+                            <p class="product-detail-price">¥${product.price.toLocaleString()}</p>
+                            <p class="product-detail-description">${product.description}</p>
+                            <h4>产品特点</h4>
+                            ${featuresHtml}
+                        </div>
+                    </div>
+                `;
+                
+                // 设置模态框中"加入购物车"按钮的数据
+                const addToCartBtn = document.getElementById('addToCartModal');
+                addToCartBtn.setAttribute('data-id', productId);
+                addToCartBtn.setAttribute('data-name', product.name);
+                addToCartBtn.setAttribute('data-price', product.price);
+                addToCartBtn.setAttribute('data-image', product.image);
+                
+                const modal = new bootstrap.Modal(document.getElementById('productModal'));
+                modal.show();
+                
+                // 设置模态框中"加入购物车"按钮的点击事件
+                addToCartBtn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    const name = this.getAttribute('data-name');
+                    const price = parseInt(this.getAttribute('data-price'));
+                    const image = this.getAttribute('data-image');
+                    
+                    addToCart(id, name, price, image);
+                    showToast(`${name} 已添加到购物车`, 'success');
+                    modal.hide();
+                });
+            }
+        });
+    </script>
+</body>
+</html> 
