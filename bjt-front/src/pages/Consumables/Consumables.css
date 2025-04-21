@@ -177,6 +177,33 @@
   color: #212529;
 }
 
+/* Part Type Button Styles */
+.part-type-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.part-type-button {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f5f5f5;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.part-type-button:hover {
+  background-color: #e0e0e0;
+}
+
+.part-type-button.active {
+  background-color: #1a57a5;
+  color: white;
+  border-color: #1a57a5;
+}
+
 .filter-group {
   display: flex;
   align-items: center;

@@ -229,6 +229,7 @@ export default function ConsumablesPage() {
   const [selectedWeight, setSelectedWeight] = useState<string>('all');
   const [selectedWidth, setSelectedWidth] = useState<string>('all');
   const [selectedLength, setSelectedLength] = useState<string>('all');
+  const [selectedPartType, setSelectedPartType] = useState<string>('consumables');
   
   // 显示模型使用区域状态
   const [showModelUsage, setShowModelUsage] = useState<boolean>(false);
@@ -488,6 +489,11 @@ export default function ConsumablesPage() {
     setSelectedLength(event.target.value);
   };
 
+  // 处理部件类型变更
+  const handlePartTypeChange = (type: string) => {
+    setSelectedPartType(type);
+  };
+
   // 重置筛选条件
   const handleResetFilters = () => {
     setSelectedModel('all');
@@ -498,6 +504,7 @@ export default function ConsumablesPage() {
     setSelectedWeight('all');
     setSelectedWidth('all');
     setSelectedLength('all');
+    setSelectedPartType('consumables');
     setShowModelUsage(false);
   };
 
@@ -513,7 +520,8 @@ export default function ConsumablesPage() {
       thickness: selectedThickness,
       weight: selectedWeight,
       width: selectedWidth,
-      length: selectedLength
+      length: selectedLength,
+      partType: selectedPartType
     });
   };
 
@@ -741,6 +749,24 @@ export default function ConsumablesPage() {
           <div className="filter-actions">
             <button className="btn-reset" onClick={handleResetFilters}>Reset</button>
             <button className="btn-apply" onClick={handleApplyFilters}>Apply Filters</button>
+          </div>
+          
+          <div className="filter-section">
+            <h3>Part Type</h3>
+            <div className="part-type-buttons">
+              <button
+                className={`part-type-button ${selectedPartType === 'consumables' ? 'active' : ''}`}
+                onClick={() => handlePartTypeChange('consumables')}
+              >
+                Consumables
+              </button>
+              <button
+                className={`part-type-button ${selectedPartType === 'non-consumables' ? 'active' : ''}`}
+                onClick={() => handlePartTypeChange('non-consumables')}
+              >
+                Non-Consumables
+              </button>
+            </div>
           </div>
         </div>
         
