@@ -4,8 +4,11 @@ import './Consumables.css';
 import { productApi, cartApi } from '../../services/api';
 import { mockProductApi, mockCartApi } from '../../services/mockApi';
 
-// 临时占位图片路径
-const placeholderImage = 'https://via.placeholder.com/80x80?text=Product';
+// 替换为本地占位图片路径
+const placeholderImage = '/images/placeholders/placeholder-80x80.svg';
+const shapePlaceholderImage = '/images/placeholders/placeholder-80x60.svg';
+const dimensionGuidePlaceholder = '/images/placeholders/placeholder-480x220.svg';
+const infoIconPlaceholder = '/images/placeholders/placeholder-24x24.svg';
 
 // 使用环境变量或配置决定是否使用模拟API
 const USE_MOCK_API = true; // 设置为true强制使用模拟API进行开发
@@ -33,7 +36,7 @@ const mockConsumables = [
     name: '标准气泡膜',
     code: 'PL-001',
     model: 'MEX-10-20-10',
-    image: 'https://via.placeholder.com/80x80?text=MEX-10-20-10',
+    image: placeholderImage,
     specs: {
       material: 'HDPE',
       shape: 'Pillow',
@@ -55,7 +58,7 @@ const mockConsumables = [
     name: '缓冲气泡膜',
     code: 'PL-002',
     model: 'MEX-10-20-13',
-    image: 'https://via.placeholder.com/80x80?text=MEX-10-20-13',
+    image: placeholderImage,
     specs: {
       material: 'HDPE',
       shape: 'Pillow',
@@ -77,7 +80,7 @@ const mockConsumables = [
     name: '防震气泡膜',
     code: 'PL-003',
     model: 'MEX-10-20-15',
-    image: 'https://via.placeholder.com/80x80?text=MEX-10-20-15',
+    image: placeholderImage,
     specs: {
       material: 'HDPE',
       shape: 'Pillow',
@@ -98,9 +101,9 @@ const mockConsumables = [
 
 // 形状选项，与mockup/4.html中保持一致
 const shapes = [
-  { id: 'pillow', name: 'Pillow', image: 'https://via.placeholder.com/80x60?text=Pillow' },
-  { id: 'bubble', name: 'Bubble', image: 'https://via.placeholder.com/80x60?text=Bubble' },
-  { id: 'tube', name: 'Tube', image: 'https://via.placeholder.com/80x60?text=Tube' }
+  { id: 'pillow', name: 'Pillow', image: shapePlaceholderImage },
+  { id: 'bubble', name: 'Bubble', image: shapePlaceholderImage },
+  { id: 'tube', name: 'Tube', image: shapePlaceholderImage }
 ];
 
 // 材料选项，与mockup/4.html中保持一致
@@ -439,7 +442,7 @@ export default function ConsumablesPage() {
         
         <div className="top-bar">
           <div className="top-bar-content">
-            <img src="https://via.placeholder.com/24x24?text=i" alt="Info" />
+            <img src={infoIconPlaceholder} alt="Info" />
             <span>请根据您的需要，选择合适的耗材。用户可选不同材质和尺寸的气泡袋。</span>
           </div>
         </div>
@@ -559,7 +562,7 @@ export default function ConsumablesPage() {
             
             {showShapeDimension && (
               <div className="shape-dimension">
-                <img src="https://via.placeholder.com/480x220?text=Dimension+Guide" alt="尺寸图示" />
+                <img src={dimensionGuidePlaceholder} alt="尺寸图示" />
               </div>
             )}
           </div>
