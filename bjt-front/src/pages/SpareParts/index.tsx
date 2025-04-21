@@ -180,10 +180,35 @@ const SparePartsPage: React.FC = () => {
     }
   };
   
-  // 根据筛选条件显示备件列表
+  // 根据筛选条件过滤备件
   const getFilteredParts = () => {
-    // 确保即使 spareParts 是未定义或 null，也返回空数组
-    return Array.isArray(spareParts) ? spareParts : [];
+    // 确保 spareParts 不是 null 或 undefined
+    if (!Array.isArray(spareParts)) return [];
+    
+    return spareParts.filter(part => {
+      // 根据备件类型筛选
+      if (currentPartType === 'consumable' && part.type !== 'consumable') {
+        return false;
+      }
+      if (currentPartType === 'non-consumable' && part.type === 'consumable') {
+        return false;
+      }
+      
+      // 根据产品类型筛选
+      if (currentProductType === 'machine' && part.product_type !== 'machine') {
+        return false;
+      }
+      if (currentProductType === 'accessory' && part.product_type !== 'accessory') {
+        return false;
+      }
+      
+      // 根据模型筛选
+      if (selectedModel !== 'ALL' && !part.app_model?.includes(selectedModel)) {
+        return false;
+      }
+      
+      return true;
+    });
   };
   
   // 找到适合数量的价格区间
@@ -747,31 +772,6 @@ const SparePartsPage: React.FC = () => {
       <h1 className="page-title">Spare Parts & Accessories</h1>
       
       <div className="filter-container">
-        {/* 备件类型选择 */}
-        <div className="filter-section">
-          <h3>Part Type</h3>
-          <div className="part-type-buttons">
-            <button
-              className={`part-type-button ${currentPartType === 'consumable' ? 'active' : ''}`}
-              onClick={() => setCurrentPartType('consumable')}
-            >
-              Consumables
-            </button>
-            <button
-              className={`part-type-button ${currentPartType === 'electronic' ? 'active' : ''}`}
-              onClick={() => setCurrentPartType('electronic')}
-            >
-              Electronics
-            </button>
-            <button
-              className={`part-type-button ${currentPartType === 'mechanical' ? 'active' : ''}`}
-              onClick={() => setCurrentPartType('mechanical')}
-            >
-              Mechanical
-            </button>
-          </div>
-        </div>
-        
         {/* 产品类型选择 */}
         <div className="filter-section">
           <h3>Product Type</h3>
@@ -810,6 +810,25 @@ const SparePartsPage: React.FC = () => {
               ))
             )}
           </select>
+        </div>
+        
+        {/* 备件类型选择 - 移到最后 */}
+        <div className="filter-section">
+          <h3>Part Type</h3>
+          <div className="part-type-buttons">
+            <button
+              className={`part-type-button ${currentPartType === 'consumable' ? 'active' : ''}`}
+              onClick={() => setCurrentPartType('consumable')}
+            >
+              Consumables
+            </button>
+            <button
+              className={`part-type-button ${currentPartType === 'non-consumable' ? 'active' : ''}`}
+              onClick={() => setCurrentPartType('non-consumable')}
+            >
+              Non-Consumables
+            </button>
+          </div>
         </div>
       </div>
       
