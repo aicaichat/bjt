@@ -115,6 +115,7 @@ const SparePartsPage: React.FC = () => {
     loadCart();
     loadSparePartsData();
     loadFilterOptions();
+    fetchModels(currentProductType); // 初始化时加载当前产品类型的型号
   }, []);
   
   // 在筛选条件变化时重新加载数据
@@ -147,10 +148,9 @@ const SparePartsPage: React.FC = () => {
   // 加载筛选选项
   const loadFilterOptions = async () => {
     try {
+      // 不传参数，获取所有筛选选项
       const options = await getSparePartsFilterOptions();
       setFilterOptions(options);
-      setHostModels(options.hostModels);
-      setAccessoryModels(options.accessoryModels);
     } catch (err) {
       console.error('Error loading filter options:', err);
     }
@@ -464,20 +464,20 @@ const SparePartsPage: React.FC = () => {
   const handleSpecMouseEnter = (e: React.MouseEvent, partId: string) => {
     const rect = e.currentTarget.getBoundingClientRect();
     setTooltipPosition({
-      x: Math.max(0, rect.left + window.scrollX),
-      y: Math.max(0, rect.bottom + window.scrollY + 5) // 添加5px间距
+      x: rect.left,
+      y: rect.bottom + 10
     });
-    setTooltipVisible({
-      ...tooltipVisible,
+    setTooltipVisible(prev => ({
+      ...prev,
       [partId]: true
-    });
+    }));
   };
   
   const handleSpecMouseLeave = (partId: string) => {
-    setTooltipVisible({
-      ...tooltipVisible,
+    setTooltipVisible(prev => ({
+      ...prev,
       [partId]: false
-    });
+    }));
   };
   
   // 渲染备件列表
@@ -563,9 +563,25 @@ const SparePartsPage: React.FC = () => {
                     <div className="specs-value">{part.app_sn}</div>
                   </div>
                   
+                  <div className="tooltip-hint">
+                    <span className="tooltip-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                      </svg>
+                    </span>
+                    <span className="tooltip-text">悬浮查看详细规格</span>
+                  </div>
+                  
                   {/* 规格信息悬浮提示 */}
                   {tooltipVisible[part.id] && (
-                    <div className="specs-tooltip" style={{ left: `${tooltipPosition.x}px`, top: `${tooltipPosition.y}px` }}>
+                    <div className="specs-tooltip" style={{ 
+                      position: 'fixed',
+                      left: `${tooltipPosition.x}px`, 
+                      top: `${tooltipPosition.y}px` 
+                    }}>
+                      <div className="tooltip-header">产品详细规格</div>
                       <div className="tooltip-row">
                         <span className="tooltip-label">包装尺寸 cm:</span>
                         <span className="tooltip-value">{part.package_size}</span>
@@ -763,6 +779,35 @@ const SparePartsPage: React.FC = () => {
     });
   };
 
+  // 用于获取不同产品类型的型号
+  const fetchModels = async (productType: string) => {
+    try {
+      setLoading(true);
+      // 根据产品类型获取不同的型号列表
+      const options = await getSparePartsFilterOptions(productType);
+      
+      if (productType === 'machine') {
+        setHostModels(options.hostModels);
+      } else if (productType === 'accessory') {
+        setAccessoryModels(options.accessoryModels);
+      }
+      
+      // 重置已选型号为空
+      setSelectedModel('');
+      setLoading(false);
+    } catch (err) {
+      console.error(`Error loading ${productType} models:`, err);
+      setError(`Failed to load ${productType} models. Please try again later.`);
+      setLoading(false);
+    }
+  };
+
+  // 处理产品类型变更
+  const handleProductTypeChange = (type: string) => {
+    setCurrentProductType(type);
+    fetchModels(type);
+  };
+
   return (
     <div className="spare-parts-page">
       {/* 显示添加到购物车的通知 */}
@@ -780,62 +825,72 @@ const SparePartsPage: React.FC = () => {
       
       <h1 className="page-title">Spare Parts & Accessories</h1>
       
+      {/* 筛选区域 */}
       <div className="filter-container">
-        {/* 产品类型选择 */}
+        {/* 产品类型选择（主机或配件） */}
         <div className="filter-section">
-          <h3>Product Type</h3>
+          <h3>产品类型</h3>
           <div className="product-type-buttons">
-            <button
-              className={`product-type-button ${currentProductType === 'machine' ? 'active' : ''}`}
-              onClick={() => setCurrentProductType('machine')}
+            <button 
+              className={`product-type-button ${currentProductType === 'machine' ? 'active' : ''}`} 
+              onClick={() => handleProductTypeChange('machine')}
             >
-              Machines
+              主机
             </button>
-            <button
-              className={`product-type-button ${currentProductType === 'accessory' ? 'active' : ''}`}
-              onClick={() => setCurrentProductType('accessory')}
+            <button 
+              className={`product-type-button ${currentProductType === 'accessory' ? 'active' : ''}`} 
+              onClick={() => handleProductTypeChange('accessory')}
             >
-              Accessories
+              配件
             </button>
           </div>
         </div>
         
-        {/* 模型选择 */}
+        {/* 型号选择 */}
         <div className="filter-section">
-          <h3>Machine Model</h3>
-          <select
-            value={selectedModel}
-            onChange={(e) => setSelectedModel(e.target.value)}
-            className="model-select"
-          >
-            <option value="ALL">All Models</option>
-            {currentProductType === 'machine' ? (
-              hostModels.map((model, index) => (
-                <option key={index} value={model}>{model}</option>
-              ))
-            ) : (
-              accessoryModels.map((model, index) => (
-                <option key={index} value={model}>{model}</option>
-              ))
-            )}
-          </select>
+          <h3>适用机型</h3>
+          <div className="model-select-container">
+            <select 
+              className="model-select" 
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value)}
+            >
+              <option value="">所有型号</option>
+              {currentProductType === 'machine' ? (
+                hostModels.map((model, index) => (
+                  <option key={index} value={model}>{model}</option>
+                ))
+              ) : (
+                accessoryModels.map((model, index) => (
+                  <option key={index} value={model}>{model}</option>
+                ))
+              )}
+            </select>
+            {loading && <span className="loading-indicator">加载中...</span>}
+          </div>
         </div>
         
-        {/* 备件类型选择 - 移到最后 */}
+        {/* 备件类型选择 */}
         <div className="filter-section">
-          <h3>Part Type</h3>
+          <h3>备件类型</h3>
           <div className="part-type-buttons">
-            <button
-              className={`part-type-button ${currentPartType === 'consumable' ? 'active' : ''}`}
+            <button 
+              className={`part-type-button ${currentPartType === '' ? 'active' : ''}`} 
+              onClick={() => setCurrentPartType('')}
+            >
+              全部
+            </button>
+            <button 
+              className={`part-type-button ${currentPartType === 'consumable' ? 'active' : ''}`} 
               onClick={() => setCurrentPartType('consumable')}
             >
-              Consumables
+              消耗品
             </button>
-            <button
-              className={`part-type-button ${currentPartType === 'non-consumable' ? 'active' : ''}`}
+            <button 
+              className={`part-type-button ${currentPartType === 'non-consumable' ? 'active' : ''}`} 
               onClick={() => setCurrentPartType('non-consumable')}
             >
-              Non-Consumables
+              非消耗品
             </button>
           </div>
         </div>

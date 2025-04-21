@@ -130,30 +130,32 @@
 /* 筛选容器 */
 .filter-container {
   display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
+  flex-direction: column;
+  gap: 15px;
   margin-bottom: 30px;
-  padding: 15px;
+  padding: 20px;
   background-color: #f8f9fa;
-  border-radius: 4px;
+  border-radius: 8px;
   border: 1px solid #e9ecef;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .filter-section {
-  flex: 1;
-  min-width: 200px;
+  width: 100%;
 }
 
 .filter-section h3 {
   font-size: 16px;
-  margin-bottom: 10px;
-  color: #444;
+  margin-bottom: 12px;
+  color: #333;
+  font-weight: 600;
 }
 
 /* 按钮组样式 */
 .part-type-buttons,
 .product-type-buttons {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
@@ -167,6 +169,8 @@
   transition: all 0.2s;
   font-size: 14px;
   color: #333;
+  min-width: 100px;
+  text-align: center;
 }
 
 .part-type-button:hover,
@@ -184,10 +188,27 @@
 /* 模型选择器 */
 .model-select {
   width: 100%;
-  padding: 8px;
+  max-width: 320px;
+  padding: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 14px;
+  background-color: #fff;
+}
+
+.loading-indicator {
+  display: inline-block;
+  margin-left: 10px;
+  font-size: 12px;
+  color: #666;
+  animation: pulse 1.5s infinite;
+}
+
+/* 模型加载容器 */
+.model-select-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 /* 表格样式 */
@@ -788,48 +809,100 @@
 .specs-info {
   position: relative;
   cursor: pointer;
-  padding: 4px;
+  padding: 8px;
   border-radius: 4px;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
+  border: 1px dashed transparent;
 }
 
 .specs-info:hover {
   background-color: #f5f9ff;
+  border-color: #c5d9f8;
+}
+
+/* 提示图标和文字 */
+.tooltip-hint {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+  color: #0066cc;
+  font-size: 0.85em;
+}
+
+.tooltip-icon {
+  margin-right: 5px;
+  display: flex;
+  align-items: center;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+.tooltip-text {
+  font-style: italic;
 }
 
 .specs-tooltip {
-  position: absolute;
-  z-index: 1000;
-  min-width: 300px;
-  padding: 15px;
+  position: fixed;
+  z-index: 1001;
+  min-width: 320px;
+  padding: 0;
   background-color: white;
   border-radius: 6px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   border: 1px solid #e0e0e0;
-  animation: tooltipFadeIn 0.2s ease-in-out;
+  animation: tooltipFadeIn 0.3s ease-in-out;
   transform-origin: top left;
+  overflow: hidden;
+  max-width: 90vw;
+}
+
+.tooltip-header {
+  padding: 12px 15px;
+  background-color: #0066cc;
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  border-bottom: 1px solid #0055aa;
 }
 
 @keyframes tooltipFadeIn {
   from {
     opacity: 0;
-    transform: scale(0.95);
+    transform: translateY(-10px);
   }
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: translateY(0);
   }
 }
 
 .tooltip-row {
-  margin-bottom: 10px;
+  margin: 0;
+  padding: 10px 15px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .tooltip-row:last-child {
   margin-bottom: 0;
+  border-bottom: none;
+}
+
+.tooltip-row:nth-child(odd) {
+  background-color: #f9f9f9;
 }
 
 .tooltip-label {
