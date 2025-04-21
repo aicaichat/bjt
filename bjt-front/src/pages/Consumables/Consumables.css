@@ -251,10 +251,12 @@
   display: flex;
   gap: 20px;
   margin-bottom: 15px;
+  justify-content: flex-start;
 }
 
 .shape-option {
   position: relative;
+  width: 100px;
 }
 
 .shape-option input[type="radio"] {
@@ -281,6 +283,9 @@
   height: 60px;
   margin-bottom: 8px;
   border-radius: 4px;
+  object-fit: contain;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
 }
 
 .shape-label span {
@@ -316,12 +321,17 @@
   border-radius: 6px;
   padding: 15px;
   border: 1px solid #e9ecef;
+  margin-top: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .shape-dimension img {
   width: 100%;
   height: auto;
   border-radius: 4px;
+  max-height: 220px;
+  object-fit: contain;
 }
 
 /* 材料选择器 */
@@ -332,23 +342,26 @@
 }
 
 .material-btn {
-  padding: 6px 15px;
+  padding: 8px 15px;
   border: 1px solid #ced4da;
   border-radius: 4px;
   background-color: #fff;
   cursor: pointer;
   font-size: 14px;
   transition: all 0.2s ease;
+  min-width: 80px;
+  text-align: center;
 }
 
 .material-btn:hover {
-  background-color: #f8f9fa;
+  background-color: #f0f7ff;
 }
 
 .material-btn.active {
   background-color: #1a57a5;
   color: white;
   border-color: #1a57a5;
+  font-weight: 500;
 }
 
 .filter-row {
@@ -374,10 +387,11 @@
 .btn-reset,
 .btn-apply {
   padding: 8px 20px;
-  border-radius: 6px;
+  border-radius: 4px;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
+  font-weight: 500;
 }
 
 .btn-reset {
@@ -398,6 +412,8 @@
 
 .btn-apply:hover {
   background-color: #124e92;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(26, 87, 165, 0.2);
 }
 
 /* 产品表格样式 */
@@ -410,7 +426,8 @@
 
 .products-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .products-table th {
@@ -429,11 +446,11 @@
   vertical-align: top;
 }
 
-.products-table tbody tr:hover {
+.products-table tr:hover td {
   background-color: #f8f9fa;
 }
 
-.products-table tbody tr:last-child td {
+.products-table tr:last-child td {
   border-bottom: none;
 }
 
@@ -443,6 +460,8 @@
   object-fit: contain;
   border-radius: 4px;
   border: 1px solid #e9ecef;
+  padding: 5px;
+  background-color: white;
 }
 
 .product-code {
@@ -507,26 +526,36 @@
 /* 按钮和输入 */
 .quantity-input {
   width: 60px;
-  padding: 6px 10px;
+  padding: 8px 10px;
   border: 1px solid #ced4da;
   border-radius: 4px;
   text-align: center;
   margin: 0 10px;
+  font-size: 14px;
+}
+
+.quantity-input:focus {
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
 .btn-add {
   background-color: #1a57a5;
   color: white;
   border: none;
-  padding: 6px 15px;
+  padding: 8px 15px;
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
   transition: all 0.2s ease;
+  font-weight: 500;
 }
 
 .btn-add:hover {
   background-color: #124e92;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(26, 87, 165, 0.2);
 }
 
 /* 价格说明 */

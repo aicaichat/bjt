@@ -25,7 +25,7 @@ const mockCurrentUser = {
   username: 'testuser',
   role: 'customer', // 可选值: 'admin', 'sales', 'customer', 'partner'
   discount: 0.9, // 折扣率，仅对customer和partner生效
-  name: '测试用户',
+  name: 'Test User',
   email: 'test@example.com'
 };
 
@@ -33,7 +33,7 @@ const mockCurrentUser = {
 const mockConsumables = [
   {
     id: '1',
-    name: '标准气泡膜',
+    name: 'Standard Bubble Film',
     code: 'PL-001',
     model: 'MEX-10-20-10',
     image: placeholderImage,
@@ -55,7 +55,7 @@ const mockConsumables = [
   },
   {
     id: '2',
-    name: '缓冲气泡膜',
+    name: 'Cushioning Bubble Film',
     code: 'PL-002',
     model: 'MEX-10-20-13',
     image: placeholderImage,
@@ -77,7 +77,7 @@ const mockConsumables = [
   },
   {
     id: '3',
-    name: '防震气泡膜',
+    name: 'Anti-shock Bubble Film',
     code: 'PL-003',
     model: 'MEX-10-20-15',
     image: placeholderImage,
@@ -213,11 +213,11 @@ export default function ConsumablesPage() {
   // 获取用户角色的显示名称
   const getRoleDisplayName = (role: string) => {
     switch (role) {
-      case 'admin': return '管理员';
-      case 'sales': return '销售人员';
-      case 'customer': return '普通客户';
-      case 'partner': return '合作伙伴';
-      default: return '访客';
+      case 'admin': return 'Admin';
+      case 'sales': return 'Sales';
+      case 'customer': return 'Customer';
+      case 'partner': return 'Partner';
+      default: return 'Guest';
     }
   };
 
@@ -320,7 +320,7 @@ export default function ConsumablesPage() {
       setCartItems(cartItems);
       
       // 显示添加成功的通知
-      alert(`已添加 ${quantity} 件 ${item.name} 到购物车`);
+      alert(`Added ${quantity} ${item.name} to cart`);
       
       // 重置商品数量
       setQuantities(prev => ({
@@ -329,7 +329,7 @@ export default function ConsumablesPage() {
       }));
     } catch (err) {
       console.error('Error adding to cart:', err);
-      alert('添加到购物车失败，请稍后再试');
+      alert('Failed to add to cart. Please try again later.');
     }
   };
 
@@ -400,7 +400,7 @@ export default function ConsumablesPage() {
   const handleApplyFilters = () => {
     // 在实际应用中，这里会根据筛选条件从API获取数据
     // 在当前模拟环境中，我们已经有了固定的mockConsumables数据
-    console.log('应用筛选条件', {
+    console.log('Applied filters', {
       model: selectedModel,
       unit: selectedUnit,
       shape: selectedShape,
@@ -417,7 +417,7 @@ export default function ConsumablesPage() {
     return (
       <div className="loading-container">
         <div className="loading-spinner"></div>
-        <p>正在加载耗材数据...</p>
+        <p>Loading consumables data...</p>
       </div>
     );
   }
@@ -426,9 +426,9 @@ export default function ConsumablesPage() {
   if (error) {
     return (
       <div className="error-container">
-        <h2>出错了</h2>
+        <h2>Error</h2>
         <p>{error}</p>
-        <button onClick={() => window.location.reload()}>重试</button>
+        <button onClick={() => window.location.reload()}>Retry</button>
       </div>
     );
   }
@@ -437,20 +437,20 @@ export default function ConsumablesPage() {
     <>
       <div className="consumables-page">
         <div className="breadcrumb">
-          <Link to="/">首页</Link> &gt; <Link to="/products">产品中心</Link> &gt; <span>耗材选择</span>
+          <Link to="/">Home</Link> &gt; <Link to="/products">Products</Link> &gt; <span>Consumables</span>
         </div>
         
         <div className="top-bar">
           <div className="top-bar-content">
             <img src={infoIconPlaceholder} alt="Info" />
-            <span>请根据您的需要，选择合适的耗材。用户可选不同材质和尺寸的气泡袋。</span>
+            <span>Please select the appropriate consumables for your needs. You can choose different materials and sizes of bubble bags.</span>
           </div>
         </div>
         
         <div className="user-info-bar">
           <div className="container">
             <div className="user-role">
-              <span>当前身份：</span>
+              <span>Current Role:</span>
               <span className="role-badge">{getRoleDisplayName(currentUser.role)}</span>
             </div>
             
@@ -459,19 +459,19 @@ export default function ConsumablesPage() {
                 className={`role-btn ${currentUser.role === 'customer' ? 'active' : ''}`} 
                 onClick={() => setCurrentUser({...mockCurrentUser, role: 'customer'})}
               >
-                普通客户
+                Customer
               </button>
               <button 
                 className={`role-btn ${currentUser.role === 'partner' ? 'active' : ''}`}
                 onClick={() => setCurrentUser({...mockCurrentUser, role: 'partner'})}
               >
-                合作伙伴
+                Partner
               </button>
               <button 
                 className={`role-btn ${currentUser.role === 'sales' ? 'active' : ''}`}
                 onClick={() => setCurrentUser({...mockCurrentUser, role: 'sales'})}
               >
-                销售人员
+                Sales
               </button>
             </div>
           </div>
@@ -479,15 +479,15 @@ export default function ConsumablesPage() {
         
         <div className="section-title">
           <div className="title-text">
-            <h2>耗材选择</h2>
-            <p>根据您的应用场景选择特定的耗材配件</p>
+            <h2>Consumables Selection</h2>
+            <p>Select specific consumable accessories based on your application scenario</p>
           </div>
         </div>
         
         <div className="filter-container">
           <div className="filter-section">
             <div className="filter-group">
-              <label>适用机型：</label>
+              <label>Machine Model:</label>
               <select value={selectedModel} onChange={handleModelChange}>
                 {models.map(model => (
                   <option key={model.id} value={model.id}>{model.name}</option>
@@ -497,19 +497,19 @@ export default function ConsumablesPage() {
             </div>
             
             <div className="filter-group">
-              <label>单位：</label>
+              <label>Units:</label>
               <div className="unit-selector">
                 <button 
                   className={`unit-btn ${selectedUnit === 'metric' ? 'active' : ''}`}
                   onClick={() => handleUnitChange('metric')}
                 >
-                  公制
+                  Metric
                 </button>
                 <button 
                   className={`unit-btn ${selectedUnit === 'imperial' ? 'active' : ''}`}
                   onClick={() => handleUnitChange('imperial')}
                 >
-                  英制
+                  Imperial
                 </button>
               </div>
             </div>
@@ -517,20 +517,20 @@ export default function ConsumablesPage() {
             {showModelUsage && (
               <div className="model-usage-popup">
                 <div className="popup-header">
-                  <h3>机型适用关系说明</h3>
+                  <h3>Machine Compatibility Information</h3>
                   <button className="close-popup" onClick={() => setShowModelUsage(false)}>×</button>
                 </div>
                 <div className="popup-content">
-                  <p>LA-E4S: 仅支持标准规格的气泡膜材料</p>
-                  <p>MEX-10-20: 支持全系列材料，但不同规格有特殊要求</p>
-                  <p>LP-V1: 支持所有材料和规格</p>
+                  <p>LA-E4S: Only supports standard bubble film materials</p>
+                  <p>MEX-10-20: Supports all series materials with specific requirements for different specifications</p>
+                  <p>LP-V1: Supports all materials and specifications</p>
                 </div>
               </div>
             )}
           </div>
           
           <div className="filter-section">
-            <h3>形状</h3>
+            <h3>Shape</h3>
             <div className="shape-selector">
               {shapes.map(shape => (
                 <div key={shape.id} className="shape-option">
@@ -556,13 +556,13 @@ export default function ConsumablesPage() {
                   checked={showShapeDimension} 
                   onChange={() => setShowShapeDimension(!showShapeDimension)}
                 />
-                显示尺寸示意图
+                Show Dimension Guide
               </label>
             </div>
             
             {showShapeDimension && (
               <div className="shape-dimension">
-                <img src={dimensionGuidePlaceholder} alt="尺寸图示" />
+                <img src={dimensionGuidePlaceholder} alt="Dimension Guide" />
               </div>
             )}
           </div>
@@ -570,7 +570,7 @@ export default function ConsumablesPage() {
           <div className="filter-section">
             <div className="filter-row">
               <div className="filter-group">
-                <label>材料：</label>
+                <label>Material:</label>
                 <div className="material-selector">
                   {materials.map(material => (
                     <button 
@@ -587,7 +587,7 @@ export default function ConsumablesPage() {
             
             <div className="filter-row">
               <div className="filter-group">
-                <label>{selectedMaterial === 'paper_pe' ? '克重：' : '厚度：'}</label>
+                <label>{selectedMaterial === 'paper_pe' ? 'Weight:' : 'Thickness:'}</label>
                 <select 
                   value={selectedMaterial === 'paper_pe' ? selectedWeight : selectedThickness}
                   onChange={selectedMaterial === 'paper_pe' ? handleWeightChange : handleThicknessChange}
@@ -599,7 +599,7 @@ export default function ConsumablesPage() {
               </div>
               
               <div className="filter-group">
-                <label>宽度：</label>
+                <label>Width:</label>
                 <select value={selectedWidth} onChange={handleWidthChange}>
                   {widths.map(width => (
                     <option key={width.id} value={width.id}>{width.name}</option>
@@ -608,7 +608,7 @@ export default function ConsumablesPage() {
               </div>
               
               <div className="filter-group">
-                <label>长度：</label>
+                <label>Length:</label>
                 <select value={selectedLength} onChange={handleLengthChange}>
                   {lengths.map(length => (
                     <option key={length.id} value={length.id}>{length.name}</option>
@@ -619,8 +619,8 @@ export default function ConsumablesPage() {
           </div>
           
           <div className="filter-actions">
-            <button className="btn-reset" onClick={handleResetFilters}>重置</button>
-            <button className="btn-apply" onClick={handleApplyFilters}>应用筛选</button>
+            <button className="btn-reset" onClick={handleResetFilters}>Reset</button>
+            <button className="btn-apply" onClick={handleApplyFilters}>Apply Filters</button>
           </div>
         </div>
         
@@ -628,12 +628,12 @@ export default function ConsumablesPage() {
           <table className="products-table">
             <thead>
               <tr>
-                <th>图片</th>
-                <th>产品代码</th>
-                <th>规格</th>
-                <th>价格</th>
-                {(currentUser.role === 'sales' || currentUser.role === 'admin') && <th>库存</th>}
-                <th>操作</th>
+                <th>Image</th>
+                <th>Product Code</th>
+                <th>Specifications</th>
+                <th>Price</th>
+                {(currentUser.role === 'sales' || currentUser.role === 'admin') && <th>Inventory</th>}
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -650,31 +650,31 @@ export default function ConsumablesPage() {
                   <td>
                     <div className="specs-table">
                       <div className="specs-row">
-                        <div className="specs-label">材料:</div>
+                        <div className="specs-label">Material:</div>
                         <div className="specs-value">{item.specs.material}</div>
                       </div>
                       <div className="specs-row">
-                        <div className="specs-label">形状:</div>
+                        <div className="specs-label">Shape:</div>
                         <div className="specs-value">{item.specs.shape}</div>
                       </div>
                       <div className="specs-row">
-                        <div className="specs-label">厚度:</div>
+                        <div className="specs-label">Thickness:</div>
                         <div className="specs-value">{item.specs.thickness}</div>
                       </div>
                       <div className="specs-row">
-                        <div className="specs-label">宽度:</div>
+                        <div className="specs-label">Width:</div>
                         <div className="specs-value">{item.specs.width}</div>
                       </div>
                       <div className="specs-row">
-                        <div className="specs-label">长度:</div>
+                        <div className="specs-label">Length:</div>
                         <div className="specs-value">{item.specs.length}</div>
                       </div>
                       <div className="specs-row">
-                        <div className="specs-label">卷长:</div>
+                        <div className="specs-label">Roll Length:</div>
                         <div className="specs-value">{item.specs.rollLength}</div>
                       </div>
                       <div className="specs-row">
-                        <div className="specs-label">兼容性:</div>
+                        <div className="specs-label">Compatible:</div>
                         <div className="specs-value">{item.specs.compatibility}</div>
                       </div>
                     </div>
@@ -692,12 +692,12 @@ export default function ConsumablesPage() {
                   {/* 只有销售人员和管理员可以看到库存 */}
                   {(currentUser.role === 'sales' || currentUser.role === 'admin') && (
                     <td>
-                      us:{item.inventory.us}, au:{item.inventory.au}, eu:{item.inventory.eu}
+                      US:{item.inventory.us}, AU:{item.inventory.au}, EU:{item.inventory.eu}
                     </td>
                   )}
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <span>X</span>
+                      <span>Qty:</span>
                       <input 
                         type="number" 
                         className="quantity-input" 
@@ -721,7 +721,7 @@ export default function ConsumablesPage() {
           {/* 价格说明（仅针对普通客户和合作伙伴） */}
           {(currentUser.role === 'customer' || currentUser.role === 'partner') && (
             <div className="price-disclaimer">
-              * 显示的价格已包含您的会员折扣，最终价格可能会根据订单总量和其他因素调整。
+              * Displayed prices include your member discount. Final prices may be adjusted based on total order quantity and other factors.
             </div>
           )}
         </div>
