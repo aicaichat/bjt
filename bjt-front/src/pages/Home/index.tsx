@@ -8,7 +8,7 @@ import apiService, { ProductLine } from '../../services/api';
 const USE_MOCK_DATA = true;
 
 // 临时占位图片路径
-const placeholderImage = 'https://via.placeholder.com/300x200';
+const placeholderImage = '/images/placeholders/placeholder-300x200.svg';
 
 // 模拟产品线数据
 const mockProductLines: ProductLine[] = [

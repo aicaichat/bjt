@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, message, Typography, Row, Col, Card, Switch, Badge, Tag } from 'antd';
 import { UserOutlined, LockOutlined, BankOutlined, ShopOutlined, UserSwitchOutlined } from '@ant-design/icons';
-import { mockLogin } from '../../services/auth';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import './Login.css';
 import logo from '../../assets/logo.svg';
 
@@ -21,6 +21,7 @@ const Login: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [showTestAccounts, setShowTestAccounts] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const testAccounts: TestAccount[] = [
     {
@@ -60,21 +61,12 @@ const Login: React.FC = () => {
     setErrorMsg('');
 
     try {
-      const response = await mockLogin(values.email, values.password);
-      
-      if (response.success) {
-        // Store token and user info
-        localStorage.setItem('token', response.token);
-        localStorage.setItem('user', JSON.stringify(response.user));
-        
-        message.success('Login successful!');
-        navigate('/home');
-      } else {
-        setErrorMsg(response.message || 'Failed to login');
-      }
-    } catch (error) {
+      await login(values.email, values.password);
+      message.success('Login successful!');
+      navigate('/home');
+    } catch (error: any) {
       console.error('Login error:', error);
-      setErrorMsg('An error occurred during login');
+      setErrorMsg(error.message || 'An error occurred during login');
     } finally {
       setLoading(false);
     }

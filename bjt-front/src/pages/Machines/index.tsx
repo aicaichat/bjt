@@ -26,8 +26,24 @@ const MachinesPage: React.FC = () => {
   const { user } = useAuth();
   
   // 状态管理
-  const [selectedMachine, setSelectedMachine] = useState<string | null>('lpv1'); // 默认选中第一个机器
-  const [selectedVoltage, setSelectedVoltage] = useState('220V');
+  const [selectedMachine, setSelectedMachine] = useState<string>('');
+  const [selectedAccessories, setSelectedAccessories] = useState<{ [key: number]: string }>({});
+  const [selectedVoltage, setSelectedVoltage] = useState<string>('220V');
+  const [cartCount, setCartCount] = useState<number>(0);
+  const [showCartNotificationFlag, setShowCartNotificationFlag] = useState<boolean>(false);
+  const [notificationProduct, setNotificationProduct] = useState<string>('');
+  const [notificationQuantity, setNotificationQuantity] = useState<number>(1);
+  // Add state for quantities
+  const [quantities, setQuantities] = useState<{ [key: string]: number }>({
+    'lpv1': 1,
+    'lpf1': 1,
+    'floorStand': 1,
+    'tableStand': 1,
+    'printHead': 1,
+    'mainBoard': 1,
+    'thermalPaper': 1,
+    'ribbon': 1
+  });
   
   // 判断用户角色
   const isSales = user && (user.role === UserRole.SALES || user.role === UserRole.ADMIN);
@@ -104,6 +120,14 @@ const MachinesPage: React.FC = () => {
     CN: { base: 75, tier1: 65, tier2: 55, vip: 50 }
   };
 
+  // Add function to handle quantity changes
+  const handleQuantityChange = (product: string, value: number) => {
+    setQuantities(prev => ({
+      ...prev,
+      [product]: value
+    }));
+  };
+
   // 处理机器选择
   const handleMachineSelection = (machineId: string) => {
     setSelectedMachine(machineId);
@@ -171,12 +195,8 @@ const MachinesPage: React.FC = () => {
 
   // 添加到购物车
   const addToCart = (productType: string, productId: string) => {
-    // 获取数量
-    let quantity = 1;
-    const quantityInput = document.querySelector(`[data-product-id="${productId}"] .quantity-input`) as HTMLInputElement;
-    if (quantityInput) {
-      quantity = parseInt(quantityInput.value) || 1;
-    }
+    // Get the quantity from state
+    const quantity = quantities[productId] || 1;
     
     // 获取产品名称和价格
     let productName = '';
@@ -290,45 +310,21 @@ const MachinesPage: React.FC = () => {
       });
     }
     
-    // 显示添加到购物车通知
-    showCartNotification(productName, quantity);
+    // Update notification with the correct quantity
+    setNotificationProduct(productName);
+    setNotificationQuantity(quantity);
+    setShowCartNotificationFlag(true);
   };
   
   // 显示购物车通知
   const showCartNotification = (productName: string, quantity: number) => {
-    const notification = document.createElement('div');
-    notification.className = 'cart-notification show';
+    setNotificationProduct(productName);
+    setNotificationQuantity(quantity);
+    setShowCartNotificationFlag(true);
     
-    notification.innerHTML = `
-      <div class="cart-notification-content">
-        <div class="cart-notification-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="9" cy="21" r="1"></circle>
-            <circle cx="20" cy="21" r="1"></circle>
-            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-          </svg>
-        </div>
-        <div class="cart-notification-text">已添加 ${quantity} 个 ${productName} 到购物车</div>
-      </div>
-      <button class="cart-notification-close">×</button>
-      <div class="cart-notification-progress"></div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // 添加关闭按钮点击事件
-    const closeBtn = notification.querySelector('.cart-notification-close');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => {
-        document.body.removeChild(notification);
-      });
-    }
-    
-    // 3秒后自动关闭
+    // 3秒后自动隐藏通知
     setTimeout(() => {
-      if (document.body.contains(notification)) {
-        document.body.removeChild(notification);
-      }
+      setShowCartNotificationFlag(false);
     }, 3000);
   };
   
@@ -340,178 +336,395 @@ const MachinesPage: React.FC = () => {
 
   return (
     <div className="machines-page">
-      {/* 主内容区 */}
-      <main className="flex-grow">
-        {/* 面包屑导航 */}
-        <div className="breadcrumb">
-          <a href="/">首页</a> &gt; <span>气垫机选型</span>
+      {/* 面包屑导航 */}
+      <div className="breadcrumb">
+        <a href="/">首页</a> &gt; <span>气垫机选型</span>
+      </div>
+
+      {/* 购物车通知 */}
+      <div className={`cart-notification ${showCartNotificationFlag ? 'show' : ''}`}>
+        <div className="cart-notification-content">
+          <div className="cart-notification-icon">✓</div>
+          <div className="cart-notification-text">
+            已添加 {notificationQuantity} 个 {notificationProduct} 到购物车
+          </div>
+          <button 
+            className="cart-notification-close"
+            onClick={() => setShowCartNotificationFlag(false)}
+          >
+            ×
+          </button>
+        </div>
+        <div className="cart-notification-progress"></div>
+      </div>
+
+      {/* 机器选择部分 */}
+      <div className="section-title">
+        气垫机型号选择
+      </div>
+
+      <div className="product-list">
+        {/* LP-V1 气垫机 */}
+        <div className="product-item" data-product-id="lpv1">
+          <div className="product-selector">
+            <input 
+              type="radio" 
+              id="lpv1" 
+              name="machine" 
+              className="machine-radio" 
+              checked={selectedMachine === 'lpv1'}
+              onChange={() => handleMachineSelection('lpv1')}
+            />
+          </div>
+          <div className="product-info">
+            <div className="product-code">LP-V1</div>
+            <div className="product-description">
+              <div>全自动触摸屏标签打印贴标一体机</div>
+              <div className="product-details">
+                <span className="product-detail-item"><strong>料号:</strong> BJT-LP-V1-2024</span>
+                <span className="product-detail-item"><strong>尺寸:</strong> 400×300×350mm</span>
+                <span className="product-detail-item"><strong>重量:</strong> 15kg</span>
+                <span className="product-detail-item"><strong>功率:</strong> 120W</span>
+                <span className="product-detail-item"><strong>托盘尺寸:</strong> 120×80×160cm</span>
+                <span className="product-detail-item"><strong>一托数量:</strong> 24件</span>
+              </div>
+              <div className="more-info-section">
+                <a href="#specifications" className="specification-link">规格详情</a>
+                <span className="tooltip">
+                  <a href="#more-info" className="more-info-link">更多信息</a>
+                  <div className="tooltip-content">
+                    <div className="tooltip-title">LP-V1详细信息</div>
+                    <div className="tooltip-row">
+                      <span className="tooltip-label">包装尺寸 cm:</span>
+                      <span>45×35×40</span>
+                    </div>
+                    <div className="tooltip-row">
+                      <span className="tooltip-label">包装尺寸 inch:</span>
+                      <span>17.7×13.8×15.7</span>
+                    </div>
+                    <div className="tooltip-row">
+                      <span className="tooltip-label">单件净重 kg:</span>
+                      <span>15</span>
+                    </div>
+                    <div className="tooltip-row">
+                      <span className="tooltip-label">单件净重 lbs:</span>
+                      <span>33.1</span>
+                    </div>
+                    <div className="tooltip-row">
+                      <span className="tooltip-label">打托高度 cm:</span>
+                      <span>160</span>
+                    </div>
+                    <div className="tooltip-row">
+                      <span className="tooltip-label">打托高度 inch:</span>
+                      <span>63</span>
+                    </div>
+                    <div className="tooltip-row">
+                      <span className="tooltip-label">整托毛重 kg:</span>
+                      <span>385</span>
+                    </div>
+                    <div className="tooltip-row">
+                      <span className="tooltip-label">整托毛重 lbs:</span>
+                      <span>848.8</span>
+                    </div>
+                  </div>
+                </span>
+              </div>
+            </div>
+            {isSales && (
+              <div className="product-inventory">
+                <div className="product-inventory-title">库存状态</div>
+                <div>
+                  <div className="inventory-region">EU区域</div>
+                  <div className="inventory-status">24台</div>
+                </div>
+                <div className={parseInt('18') < 10 ? 'low-stock' : ''}>
+                  <div className="inventory-region">AU区域</div>
+                  <div className="inventory-status">18台</div>
+                </div>
+                <div className={parseInt('15') < 10 ? 'low-stock' : ''}>
+                  <div className="inventory-region">DE区域</div>
+                  <div className="inventory-status">15台</div>
+                </div>
+              </div>
+            )}
+            <div className="product-pricing">
+              <div className="price-tiers">
+                {(() => {
+                  const prices = getRegionalPrice(lpv1Prices);
+                  return (
+                    <>
+                      <div className="price-title">价格信息</div>
+                      <div className="base-price">
+                        <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.base.toLocaleString()}</span></span>
+                        <span className="quantity-range">1-4台</span>
+                      </div>
+                      <div className="tier-price">
+                        <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.tier1.toLocaleString()}</span></span>
+                        <span className="quantity-range">5-9台</span>
+                      </div>
+                      <div className="tier-price">
+                        <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.tier2.toLocaleString()}</span></span>
+                        <span className="quantity-range">10+台</span>
+                      </div>
+                      {isVIP && (
+                        <div className="vip-price">
+                          <span>VIP价</span>
+                          <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.vip.toLocaleString()}</span></span>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+            <img 
+              src="/images/placeholders/placeholder.svg" 
+              alt="LP-V1" 
+              className="product-image" 
+            />
+            <div className="product-actions">
+              <input 
+                type="number" 
+                min="1" 
+                value={quantities.lpv1} 
+                className="quantity-input"
+                onChange={(e) => handleQuantityChange('lpv1', parseInt(e.target.value) || 1)} 
+              />
+              <button className="btn-add" onClick={() => addToCart('machine', 'lpv1')}>
+                加入购物车
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* 机器选择部分 */}
+        {/* LP-F1 气垫机 */}
+        <div className="product-item" data-product-id="lpf1">
+          <div className="product-selector">
+            <input 
+              type="radio" 
+              id="lpf1" 
+              name="machine" 
+              className="machine-radio" 
+              checked={selectedMachine === 'lpf1'}
+              onChange={() => handleMachineSelection('lpf1')}
+            />
+          </div>
+          <div className="product-info">
+            <div className="product-code">LP-F1</div>
+            <div className="product-description">
+              <div>工业级快速贴标机</div>
+              <div className="product-details">
+                <span className="product-detail-item"><strong>料号:</strong> BJT-LP-F1-2024</span>
+                <span className="product-detail-item"><strong>尺寸:</strong> 350×250×300mm</span>
+                <span className="product-detail-item"><strong>重量:</strong> 12kg</span>
+                <span className="product-detail-item"><strong>功率:</strong> 90W</span>
+                <span className="product-detail-item"><strong>托盘尺寸:</strong> 110×75×145cm</span>
+                <span className="product-detail-item"><strong>一托数量:</strong> 20件</span>
+              </div>
+              <div className="more-info-section">
+                <a href="#specifications" className="specification-link">规格详情</a>
+                <span className="tooltip">
+                  <a href="#more-info" className="more-info-link">更多信息</a>
+                  <div className="tooltip-content">
+                    <div className="tooltip-title">LP-F1详细信息</div>
+                    <div className="tooltip-row">
+                      <span className="tooltip-label">包装尺寸 cm:</span>
+                      <span>40×30×35</span>
+                    </div>
+                    <div className="tooltip-row">
+                      <span className="tooltip-label">包装尺寸 inch:</span>
+                      <span>15.7×11.8×13.8</span>
+                    </div>
+                    <div className="tooltip-row">
+                      <span className="tooltip-label">单件净重 kg:</span>
+                      <span>12</span>
+                    </div>
+                    <div className="tooltip-row">
+                      <span className="tooltip-label">单件净重 lbs:</span>
+                      <span>26.5</span>
+                    </div>
+                    <div className="tooltip-row">
+                      <span className="tooltip-label">打托高度 cm:</span>
+                      <span>145</span>
+                    </div>
+                    <div className="tooltip-row">
+                      <span className="tooltip-label">打托高度 inch:</span>
+                      <span>57.1</span>
+                    </div>
+                    <div className="tooltip-row">
+                      <span className="tooltip-label">整托毛重 kg:</span>
+                      <span>268</span>
+                    </div>
+                    <div className="tooltip-row">
+                      <span className="tooltip-label">整托毛重 lbs:</span>
+                      <span>590.8</span>
+                    </div>
+                  </div>
+                </span>
+              </div>
+            </div>
+            {isSales && (
+              <div className="product-inventory">
+                <div className="product-inventory-title">库存状态</div>
+                <div>
+                  <div className="inventory-region">EU区域</div>
+                  <div className="inventory-status">20台</div>
+                </div>
+                <div className={parseInt('15') < 10 ? 'low-stock' : ''}>
+                  <div className="inventory-region">AU区域</div>
+                  <div className="inventory-status">15台</div>
+                </div>
+                <div className={parseInt('10') < 10 ? 'low-stock' : ''}>
+                  <div className="inventory-region">DE区域</div>
+                  <div className="inventory-status">10台</div>
+                </div>
+              </div>
+            )}
+            <div className="product-pricing">
+              <div className="price-tiers">
+                {(() => {
+                  const prices = getRegionalPrice(lpf1Prices);
+                  return (
+                    <>
+                      <div className="price-title">价格信息</div>
+                      <div className="base-price">
+                        <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.base.toLocaleString()}</span></span>
+                        <span className="quantity-range">1-4台</span>
+                      </div>
+                      <div className="tier-price">
+                        <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.tier1.toLocaleString()}</span></span>
+                        <span className="quantity-range">5-9台</span>
+                      </div>
+                      <div className="tier-price">
+                        <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.tier2.toLocaleString()}</span></span>
+                        <span className="quantity-range">10+台</span>
+                      </div>
+                      {isVIP && (
+                        <div className="vip-price">
+                          <span>VIP价</span>
+                          <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.vip.toLocaleString()}</span></span>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+            <img 
+              src="/images/placeholders/placeholder.svg" 
+              alt="LP-F1" 
+              className="product-image" 
+            />
+            <div className="product-actions">
+              <input 
+                type="number" 
+                min="1" 
+                value={quantities.lpf1} 
+                className="quantity-input"
+                onChange={(e) => handleQuantityChange('lpf1', parseInt(e.target.value) || 1)} 
+              />
+              <button className="btn-add" onClick={() => addToCart('machine', 'lpf1')}>
+                加入购物车
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 配件选择部分 - 第一级 */}
+      <div id="accessory-level-1" className="accessory-level-1">
         <div className="section-title">
-          气垫机型号选择
+          配件选择 <span className="level-indicator">- 一级配件</span>
+          <span id="level1-context-message" className="dynamic-note">下方列出的是 LP-V1 的适配件</span>
+        </div>
+
+        {/* 电压筛选 */}
+        <div className="voltage-options-section">
+          <div className="filter-title">电压选择:</div>
+          <div className="voltage-options">
+            <label className="voltage-option">
+              <input 
+                type="radio" 
+                name="voltage" 
+                value="220V" 
+                checked={selectedVoltage === '220V'} 
+                onChange={handleVoltageChange}
+              />
+              <span>220V</span>
+            </label>
+            <label className="voltage-option">
+              <input 
+                type="radio" 
+                name="voltage" 
+                value="110V" 
+                checked={selectedVoltage === '110V'} 
+                onChange={handleVoltageChange}
+              />
+              <span>110V</span>
+            </label>
+          </div>
         </div>
 
         <div className="product-list">
-          {/* LP-V1 气垫机 */}
-          <div className="product-item" data-product-id="lpv1">
+          {/* 地面支架 */}
+          <div className="product-item" data-product-id="floor-stand">
             <div className="product-selector">
               <input 
                 type="radio" 
-                id="lpv1" 
-                name="machine" 
-                className="machine-radio" 
-                checked={selectedMachine === 'lpv1'}
-                onChange={() => handleMachineSelection('lpv1')}
+                id="floor-stand" 
+                name="accessory-level-1" 
+                className="accessory-radio" 
+                onChange={() => handleAccessorySelection(1, 'floor-stand', '地面支架')}
               />
             </div>
             <div className="product-info">
-              <div className="product-code">LP-V1</div>
+              <div className="product-code">Floor Stand</div>
               <div className="product-description">
-                <div>全自动触摸屏标签打印贴标一体机</div>
-                <div className="product-details">
-                  <span className="product-detail-item"><strong>料号:</strong> BJT-LP-V1-2024</span>
-                  <span className="product-detail-item"><strong>尺寸:</strong> 400×300×350mm</span>
-                  <span className="product-detail-item"><strong>重量:</strong> 15kg</span>
-                  <span className="product-detail-item"><strong>功率:</strong> 120W</span>
-                  <span className="product-detail-item"><strong>托盘尺寸:</strong> 120×80×160cm</span>
-                  <span className="product-detail-item"><strong>一托数量:</strong> 24件</span>
+                <div className="accessory-name">地面支架组件</div>
+                <div className="accessory-specs">
+                  <span className="frequency-spec"><strong>频率:</strong> N/A</span>
+                  <span className="accessory-spec-item"><strong>料号:</strong> BJT-FS-V2-2024</span>
+                  <span className="accessory-spec-item"><strong>电压:</strong> N/A</span>
+                  <span className="accessory-spec-item"><strong>托盘尺寸:</strong> 90×70×120cm</span>
+                  <span className="accessory-spec-item"><strong>一托数量:</strong> 16件</span>
                 </div>
                 <div className="more-info-section">
                   <a href="#specifications" className="specification-link">规格详情</a>
                   <span className="tooltip">
                     <a href="#more-info" className="more-info-link">更多信息</a>
                     <div className="tooltip-content">
-                      <div className="tooltip-title">LP-V1详细信息</div>
+                      <div className="tooltip-title">地面支架详细信息</div>
                       <div className="tooltip-row">
                         <span className="tooltip-label">包装尺寸 cm:</span>
-                        <span>45×35×40</span>
+                        <span>95×75×25</span>
                       </div>
                       <div className="tooltip-row">
                         <span className="tooltip-label">包装尺寸 inch:</span>
-                        <span>17.7×13.8×15.7</span>
+                        <span>37.4×29.5×9.8</span>
                       </div>
                       <div className="tooltip-row">
                         <span className="tooltip-label">单件净重 kg:</span>
-                        <span>15</span>
+                        <span>7.8</span>
                       </div>
                       <div className="tooltip-row">
                         <span className="tooltip-label">单件净重 lbs:</span>
-                        <span>33.1</span>
+                        <span>17.2</span>
                       </div>
                       <div className="tooltip-row">
                         <span className="tooltip-label">打托高度 cm:</span>
-                        <span>160</span>
+                        <span>120</span>
                       </div>
                       <div className="tooltip-row">
                         <span className="tooltip-label">打托高度 inch:</span>
-                        <span>63</span>
+                        <span>47.2</span>
                       </div>
                       <div className="tooltip-row">
                         <span className="tooltip-label">整托毛重 kg:</span>
-                        <span>385</span>
-                      </div>
-                      <div className="tooltip-row">
-                        <span className="tooltip-label">整托毛重 lbs:</span>
-                        <span>848.8</span>
-                      </div>
-                    </div>
-                  </span>
-                </div>
-              </div>
-              {isSales && (
-                <div className="product-inventory">
-                  <div>库存：EU24</div>
-                  <div>AU18</div>
-                  <div>DE15</div>
-                </div>
-              )}
-              <div className="product-pricing">
-                <div className="price-tiers">
-                  {(() => {
-                    const prices = getRegionalPrice(lpv1Prices);
-                    return (
-                      <>
-                        <div>价格：{prices.symbol}{prices.base.toLocaleString()} (1-4)</div>
-                        <div>{prices.symbol}{prices.tier1.toLocaleString()} (5-9)</div>
-                        <div>{prices.symbol}{prices.tier2.toLocaleString()} (10+)</div>
-                        {isVIP && <div>VIP价：{prices.symbol}{prices.vip.toLocaleString()}</div>}
-                      </>
-                    );
-                  })()}
-                </div>
-              </div>
-              <img src="https://via.placeholder.com/100" alt="LP-V1" className="product-image" />
-              <div className="product-actions">
-                <input type="number" min="1" value="1" className="quantity-input" />
-                <button className="btn-add" onClick={() => addToCart('machine', 'lpv1')}>
-                  加入购物车
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* LP-F1 气垫机 */}
-          <div className="product-item" data-product-id="lpf1">
-            <div className="product-selector">
-              <input 
-                type="radio" 
-                id="lpf1" 
-                name="machine" 
-                className="machine-radio" 
-                checked={selectedMachine === 'lpf1'}
-                onChange={() => handleMachineSelection('lpf1')}
-              />
-            </div>
-            <div className="product-info">
-              <div className="product-code">LP-F1</div>
-              <div className="product-description">
-                <div>工业级快速贴标机</div>
-                <div className="product-details">
-                  <span className="product-detail-item"><strong>料号:</strong> BJT-LP-F1-2024</span>
-                  <span className="product-detail-item"><strong>尺寸:</strong> 350×250×300mm</span>
-                  <span className="product-detail-item"><strong>重量:</strong> 12kg</span>
-                  <span className="product-detail-item"><strong>功率:</strong> 90W</span>
-                  <span className="product-detail-item"><strong>托盘尺寸:</strong> 110×75×145cm</span>
-                  <span className="product-detail-item"><strong>一托数量:</strong> 20件</span>
-                </div>
-                <div className="more-info-section">
-                  <a href="#specifications" className="specification-link">规格详情</a>
-                  <span className="tooltip">
-                    <a href="#more-info" className="more-info-link">更多信息</a>
-                    <div className="tooltip-content">
-                      <div className="tooltip-title">LP-F1详细信息</div>
-                      <div className="tooltip-row">
-                        <span className="tooltip-label">包装尺寸 cm:</span>
-                        <span>40×30×35</span>
-                      </div>
-                      <div className="tooltip-row">
-                        <span className="tooltip-label">包装尺寸 inch:</span>
-                        <span>15.7×11.8×13.8</span>
-                      </div>
-                      <div className="tooltip-row">
-                        <span className="tooltip-label">单件净重 kg:</span>
-                        <span>12</span>
-                      </div>
-                      <div className="tooltip-row">
-                        <span className="tooltip-label">单件净重 lbs:</span>
-                        <span>26.5</span>
-                      </div>
-                      <div className="tooltip-row">
-                        <span className="tooltip-label">打托高度 cm:</span>
                         <span>145</span>
                       </div>
                       <div className="tooltip-row">
-                        <span className="tooltip-label">打托高度 inch:</span>
-                        <span>57.1</span>
-                      </div>
-                      <div className="tooltip-row">
-                        <span className="tooltip-label">整托毛重 kg:</span>
-                        <span>268</span>
-                      </div>
-                      <div className="tooltip-row">
                         <span className="tooltip-label">整托毛重 lbs:</span>
-                        <span>590.8</span>
+                        <span>319.7</span>
                       </div>
                     </div>
                   </span>
@@ -519,633 +732,682 @@ const MachinesPage: React.FC = () => {
               </div>
               {isSales && (
                 <div className="product-inventory">
-                  <div>库存：EU20</div>
-                  <div>AU15</div>
-                  <div>DE10</div>
+                  <div className="product-inventory-title">库存状态</div>
+                  <div>
+                    <div className="inventory-region">EU区域</div>
+                    <div className="inventory-status">16个</div>
+                  </div>
+                  <div className={parseInt('12') < 10 ? 'low-stock' : ''}>
+                    <div className="inventory-region">AU区域</div>
+                    <div className="inventory-status">12个</div>
+                  </div>
+                  <div className={parseInt('8') < 10 ? 'low-stock' : ''}>
+                    <div className="inventory-region">DE区域</div>
+                    <div className="inventory-status">8个</div>
+                  </div>
                 </div>
               )}
               <div className="product-pricing">
-                <div className="price-tiers">
-                  {(() => {
-                    const prices = getRegionalPrice(lpf1Prices);
-                    return (
-                      <>
-                        <div>价格：{prices.symbol}{prices.base.toLocaleString()} (1-4)</div>
-                        <div>{prices.symbol}{prices.tier1.toLocaleString()} (5-9)</div>
-                        <div>{prices.symbol}{prices.tier2.toLocaleString()} (10+)</div>
-                        {isVIP && <div>VIP价：{prices.symbol}{prices.vip.toLocaleString()}</div>}
-                      </>
-                    );
-                  })()}
+                {(() => {
+                  const prices = getRegionalPrice(floorStandPrices);
+                  return (
+                    <div className="price-tiers">
+                      <div className="price-title">价格信息</div>
+                      <div className="base-price">
+                        <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.base}</span></span>
+                        <span className="quantity-range">1-5个</span>
+                      </div>
+                      <div className="tier-price">
+                        <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.tier1}</span></span>
+                        <span className="quantity-range">6-20个</span>
+                      </div>
+                      <div className="tier-price">
+                        <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.tier2}</span></span>
+                        <span className="quantity-range">20+个</span>
+                      </div>
+                      {isVIP && (
+                        <div className="vip-price">
+                          <span>VIP价</span>
+                          <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.vip}</span></span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+              <img 
+                src="/images/placeholders/placeholder.svg" 
+                alt="地面支架" 
+                className="product-image" 
+              />
+              <div className="product-actions">
+                <input 
+                  type="number" 
+                  min="1" 
+                  value={quantities.floorStand} 
+                  className="quantity-input"
+                  onChange={(e) => handleQuantityChange('floorStand', parseInt(e.target.value) || 1)} 
+                />
+                <button className="btn-add" onClick={() => addToCart('accessory', 'floor-stand')}>
+                  加入购物车
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* 桌面支架 */}
+          <div className="product-item" data-product-id="table-stand">
+            <div className="product-selector">
+              <input 
+                type="radio" 
+                id="table-stand" 
+                name="accessory-level-1" 
+                className="accessory-radio"
+                onChange={() => handleAccessorySelection(1, 'table-stand', '桌面支架')}
+              />
+            </div>
+            <div className="product-info">
+              <div className="product-code">Table Stand</div>
+              <div className="product-description">
+                <div className="accessory-name">桌面支架组件</div>
+                <div className="accessory-specs">
+                  <span className="frequency-spec"><strong>频率:</strong> N/A</span>
+                  <span className="accessory-spec-item"><strong>料号:</strong> BJT-TS-V1-2024</span>
+                  <span className="accessory-spec-item"><strong>电压:</strong> N/A</span>
+                  <span className="accessory-spec-item"><strong>托盘尺寸:</strong> 80×60×110cm</span>
+                  <span className="accessory-spec-item"><strong>一托数量:</strong> 20件</span>
+                </div>
+                <div className="more-info-section">
+                  <a href="#specifications" className="specification-link">规格详情</a>
+                  <span className="tooltip">
+                    <a href="#more-info" className="more-info-link">更多信息</a>
+                    <div className="tooltip-content">
+                      <div className="tooltip-title">桌面支架详细信息</div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">包装尺寸 cm:</span>
+                        <span>65×55×20</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">包装尺寸 inch:</span>
+                        <span>25.6×21.7×7.9</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">单件净重 kg:</span>
+                        <span>3.5</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">单件净重 lbs:</span>
+                        <span>7.7</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">打托高度 cm:</span>
+                        <span>110</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">打托高度 inch:</span>
+                        <span>43.3</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">整托毛重 kg:</span>
+                        <span>84</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">整托毛重 lbs:</span>
+                        <span>185.2</span>
+                      </div>
+                    </div>
+                  </span>
                 </div>
               </div>
-              <img src="https://via.placeholder.com/100" alt="LP-F1" className="product-image" />
+              {isSales && (
+                <div className="product-inventory">
+                  <div className="product-inventory-title">库存状态</div>
+                  <div>
+                    <div className="inventory-region">EU区域</div>
+                    <div className="inventory-status">20个</div>
+                  </div>
+                  <div className={parseInt('15') < 10 ? 'low-stock' : ''}>
+                    <div className="inventory-region">AU区域</div>
+                    <div className="inventory-status">15个</div>
+                  </div>
+                  <div className={parseInt('10') < 10 ? 'low-stock' : ''}>
+                    <div className="inventory-region">DE区域</div>
+                    <div className="inventory-status">10个</div>
+                  </div>
+                </div>
+              )}
+              <div className="product-pricing">
+                {(() => {
+                  const prices = getRegionalPrice(tableStandPrices);
+                  return (
+                    <div className="price-tiers">
+                      <div className="price-title">价格信息</div>
+                      <div className="base-price">
+                        <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.base}</span></span>
+                        <span className="quantity-range">1-5个</span>
+                      </div>
+                      <div className="tier-price">
+                        <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.tier1}</span></span>
+                        <span className="quantity-range">6-20个</span>
+                      </div>
+                      <div className="tier-price">
+                        <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.tier2}</span></span>
+                        <span className="quantity-range">20+个</span>
+                      </div>
+                      {isVIP && (
+                        <div className="vip-price">
+                          <span>VIP价</span>
+                          <span><span className="price-currency">{prices.symbol}</span><span className="price-amount">{prices.vip}</span></span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+              <img 
+                src="/images/placeholders/placeholder.svg" 
+                alt="桌面支架" 
+                className="product-image" 
+              />
               <div className="product-actions">
-                <input type="number" min="1" value="1" className="quantity-input" />
-                <button className="btn-add" onClick={() => addToCart('machine', 'lpf1')}>
+                <input 
+                  type="number" 
+                  min="1" 
+                  value={quantities.tableStand} 
+                  className="quantity-input"
+                  onChange={(e) => handleQuantityChange('tableStand', parseInt(e.target.value) || 1)} 
+                />
+                <button className="btn-add" onClick={() => addToCart('accessory', 'table-stand')}>
                   加入购物车
                 </button>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* 配件选择部分 - 第一级 */}
-        <div id="accessory-level-1" className="accessory-level-1">
-          <div className="section-title">
-            配件选择 <span className="level-indicator">- 一级配件</span>
-            <span id="level1-context-message" className="dynamic-note">下方列出的是 LP-V1 的适配件</span>
-          </div>
+      {/* 配件选择部分 - 第二级 */}
+      <div id="accessory-level-2" className="accessory-level-2">
+        <div className="section-title">
+          配件选择 <span className="level-indicator">- 二级配件</span>
+          <span id="level2-context-message" className="dynamic-note"></span>
+        </div>
 
-          {/* 电压筛选 */}
-          <div className="voltage-options-section">
-            <div className="filter-title">电压选择:</div>
-            <div className="voltage-options">
-              <label className="voltage-option">
+        <div className="product-list">
+          {/* 打印头 */}
+          <div className="product-item" data-product-id="printhead">
+            <div className="product-selector">
+              <input 
+                type="radio" 
+                id="printhead" 
+                name="accessory-level-2" 
+                className="accessory-radio" 
+                onChange={() => handleAccessorySelection(2, 'printhead', '打印头')}
+              />
+            </div>
+            <div className="product-info">
+              <div className="product-code">Print House</div>
+              <div className="product-description">
+                <div className="accessory-name">热敏打印头组件</div>
+                <div className="accessory-specs">
+                  <span className="frequency-spec"><strong>频率:</strong> 50Hz</span>
+                  <span className="accessory-spec-item"><strong>料号:</strong> BJT-TH-300P-2024</span>
+                  <span className="accessory-spec-item"><strong>电压:</strong> {selectedVoltage}</span>
+                  <span className="accessory-spec-item"><strong>托盘尺寸:</strong> 50×40×20cm</span>
+                  <span className="accessory-spec-item"><strong>一托数量:</strong> 100件</span>
+                </div>
+                <div className="more-info-section">
+                  <a href="#specifications" className="specification-link">规格详情</a>
+                  <span className="tooltip">
+                    <a href="#more-info" className="more-info-link">更多信息</a>
+                    <div className="tooltip-content">
+                      <div className="tooltip-title">打印头详细信息</div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">包装尺寸 cm:</span>
+                        <span>55×45×10</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">包装尺寸 inch:</span>
+                        <span>21.7×17.7×3.9</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">单件净重 kg:</span>
+                        <span>0.6</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">单件净重 lbs:</span>
+                        <span>1.3</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">打托高度 cm:</span>
+                        <span>20</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">打托高度 inch:</span>
+                        <span>7.9</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">整托毛重 kg:</span>
+                        <span>80</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">整托毛重 lbs:</span>
+                        <span>176.4</span>
+                      </div>
+                    </div>
+                  </span>
+                </div>
+              </div>
+              <div className="product-inventory">
+                <div className="product-inventory-title">库存状态</div>
+                <div>
+                  <div className="inventory-region">EU区域</div>
+                  <div className="inventory-status">30个</div>
+                </div>
+                <div className={parseInt('25') < 10 ? 'low-stock' : ''}>
+                  <div className="inventory-region">AU区域</div>
+                  <div className="inventory-status">25个</div>
+                </div>
+                <div className={parseInt('20') < 10 ? 'low-stock' : ''}>
+                  <div className="inventory-region">DE区域</div>
+                  <div className="inventory-status">20个</div>
+                </div>
+              </div>
+              <div className="product-pricing">
+                <div className="price-tiers">
+                  <div className="price-title">价格信息</div>
+                  <div className="base-price">
+                    <span><span className="price-currency">¥</span><span className="price-amount">2,200</span></span>
+                    <span className="quantity-range">1-5个</span>
+                  </div>
+                  <div className="tier-price">
+                    <span><span className="price-currency">¥</span><span className="price-amount">2,000</span></span>
+                    <span className="quantity-range">6-20个</span>
+                  </div>
+                  <div className="tier-price">
+                    <span><span className="price-currency">¥</span><span className="price-amount">1,800</span></span>
+                    <span className="quantity-range">20+个</span>
+                  </div>
+                </div>
+              </div>
+              <img 
+                src="/images/placeholders/placeholder.svg" 
+                alt="打印头" 
+                className="product-image" 
+              />
+              <div className="product-actions">
                 <input 
-                  type="radio" 
-                  name="voltage" 
-                  value="220V" 
-                  checked={selectedVoltage === '220V'} 
-                  onChange={handleVoltageChange}
+                  type="number" 
+                  min="1" 
+                  value={quantities.printHead} 
+                  className="quantity-input"
+                  onChange={(e) => handleQuantityChange('printHead', parseInt(e.target.value) || 1)} 
                 />
-                <span>220V</span>
-              </label>
-              <label className="voltage-option">
-                <input 
-                  type="radio" 
-                  name="voltage" 
-                  value="110V" 
-                  checked={selectedVoltage === '110V'} 
-                  onChange={handleVoltageChange}
-                />
-                <span>110V</span>
-              </label>
+                <button className="btn-add" onClick={() => addToCart('accessory', 'printhead')}>
+                  加入购物车
+                </button>
+              </div>
             </div>
           </div>
 
-          <div className="product-list">
-            {/* 地面支架 */}
-            <div className="product-item" data-product-id="floor-stand">
-              <div className="product-selector">
-                <input 
-                  type="radio" 
-                  id="floor-stand" 
-                  name="accessory-level-1" 
-                  className="accessory-radio" 
-                  onChange={() => handleAccessorySelection(1, 'floor-stand', '地面支架')}
-                />
-              </div>
-              <div className="product-info">
-                <div className="product-code">Floor Stand</div>
-                <div className="product-description">
-                  <div className="accessory-name">地面支架组件</div>
-                  <div className="accessory-specs">
-                    <span className="frequency-spec"><strong>频率:</strong> N/A</span>
-                    <span className="accessory-spec-item"><strong>料号:</strong> BJT-FS-V2-2024</span>
-                    <span className="accessory-spec-item"><strong>电压:</strong> N/A</span>
-                    <span className="accessory-spec-item"><strong>托盘尺寸:</strong> 90×70×120cm</span>
-                    <span className="accessory-spec-item"><strong>一托数量:</strong> 16件</span>
-                  </div>
-                  <div className="more-info-section">
-                    <a href="#specifications" className="specification-link">规格详情</a>
-                    <span className="tooltip">
-                      <a href="#more-info" className="more-info-link">更多信息</a>
-                      <div className="tooltip-content">
-                        <div className="tooltip-title">地面支架详细信息</div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">包装尺寸 cm:</span>
-                          <span>95×75×25</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">包装尺寸 inch:</span>
-                          <span>37.4×29.5×9.8</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">单件净重 kg:</span>
-                          <span>7.8</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">单件净重 lbs:</span>
-                          <span>17.2</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">打托高度 cm:</span>
-                          <span>120</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">打托高度 inch:</span>
-                          <span>47.2</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">整托毛重 kg:</span>
-                          <span>145</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">整托毛重 lbs:</span>
-                          <span>319.7</span>
-                        </div>
-                      </div>
-                    </span>
-                  </div>
-                </div>
-                {isSales && (
-                  <div className="product-inventory">
-                    <div>库存：EU16</div>
-                    <div>AU12</div>
-                    <div>DE8</div>
-                  </div>
-                )}
-                <div className="product-pricing">
-                  {(() => {
-                    const prices = getRegionalPrice(floorStandPrices);
-                    return (
-                      <div className="price-tiers">
-                        <div>价格：{prices.symbol}{prices.base} (1-5)</div>
-                        <div>{prices.symbol}{prices.tier1} (6-20)</div>
-                        <div>{prices.symbol}{prices.tier2} ({'>'}20)</div>
-                        {isVIP && <div>VIP价：{prices.symbol}{prices.vip}</div>}
-                      </div>
-                    );
-                  })()}
-                </div>
-                <img src="https://via.placeholder.com/100" alt="地面支架" className="product-image" />
-                <div className="product-actions">
-                  <input type="number" min="1" value="1" className="quantity-input" />
-                  <button className="btn-add" onClick={() => addToCart('accessory', 'floor-stand')}>
-                    加入购物车
-                  </button>
-                </div>
-              </div>
+          {/* 主控制板 */}
+          <div className="product-item" data-product-id="controller">
+            <div className="product-selector">
+              <input 
+                type="radio" 
+                id="controller" 
+                name="accessory-level-2" 
+                className="accessory-radio" 
+                onChange={() => handleAccessorySelection(2, 'controller', '主控制板')}
+              />
             </div>
-
-            {/* 桌面支架 */}
-            <div className="product-item" data-product-id="table-stand">
-              <div className="product-selector">
-                <input 
-                  type="radio" 
-                  id="table-stand" 
-                  name="accessory-level-1" 
-                  className="accessory-radio"
-                  onChange={() => handleAccessorySelection(1, 'table-stand', '桌面支架')}
-                />
+            <div className="product-info">
+              <div className="product-code">Control Board</div>
+              <div className="product-description">
+                <div className="accessory-name">主控制板</div>
+                <div className="accessory-specs">
+                  <span className="frequency-spec"><strong>频率:</strong> 50Hz</span>
+                  <span className="accessory-spec-item"><strong>料号:</strong> BJT-MCB-200-2024</span>
+                  <span className="accessory-spec-item"><strong>电压:</strong> {selectedVoltage}</span>
+                  <span className="accessory-spec-item"><strong>托盘尺寸:</strong> 40×30×15cm</span>
+                  <span className="accessory-spec-item"><strong>一托数量:</strong> 200件</span>
+                </div>
+                <div className="more-info-section">
+                  <a href="#specifications" className="specification-link">规格详情</a>
+                  <span className="tooltip">
+                    <a href="#more-info" className="more-info-link">更多信息</a>
+                    <div className="tooltip-content">
+                      <div className="tooltip-title">主控制板详细信息</div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">包装尺寸 cm:</span>
+                        <span>35×30×5</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">包装尺寸 inch:</span>
+                        <span>13.8×11.8×2.0</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">单件净重 kg:</span>
+                        <span>0.3</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">单件净重 lbs:</span>
+                        <span>0.7</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">打托高度 cm:</span>
+                        <span>15</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">打托高度 inch:</span>
+                        <span>5.9</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">整托毛重 kg:</span>
+                        <span>100</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">整托毛重 lbs:</span>
+                        <span>220.5</span>
+                      </div>
+                    </div>
+                  </span>
+                </div>
               </div>
-              <div className="product-info">
-                <div className="product-code">Table Stand</div>
-                <div className="product-description">
-                  <div className="accessory-name">桌面支架组件</div>
-                  <div className="accessory-specs">
-                    <span className="frequency-spec"><strong>频率:</strong> N/A</span>
-                    <span className="accessory-spec-item"><strong>料号:</strong> BJT-TS-V1-2024</span>
-                    <span className="accessory-spec-item"><strong>电压:</strong> N/A</span>
-                    <span className="accessory-spec-item"><strong>托盘尺寸:</strong> 80×60×110cm</span>
-                    <span className="accessory-spec-item"><strong>一托数量:</strong> 20件</span>
+              <div className="product-inventory">
+                <div className="product-inventory-title">库存状态</div>
+                <div>
+                  <div className="inventory-region">EU区域</div>
+                  <div className="inventory-status">25个</div>
+                </div>
+                <div className={parseInt('20') < 10 ? 'low-stock' : ''}>
+                  <div className="inventory-region">AU区域</div>
+                  <div className="inventory-status">20个</div>
+                </div>
+                <div className={parseInt('15') < 10 ? 'low-stock' : ''}>
+                  <div className="inventory-region">DE区域</div>
+                  <div className="inventory-status">15个</div>
+                </div>
+              </div>
+              <div className="product-pricing">
+                <div className="price-tiers">
+                  <div className="price-title">价格信息</div>
+                  <div className="base-price">
+                    <span><span className="price-currency">¥</span><span className="price-amount">1,800</span></span>
+                    <span className="quantity-range">1-5个</span>
                   </div>
-                  <div className="more-info-section">
-                    <a href="#specifications" className="specification-link">规格详情</a>
-                    <span className="tooltip">
-                      <a href="#more-info" className="more-info-link">更多信息</a>
-                      <div className="tooltip-content">
-                        <div className="tooltip-title">桌面支架详细信息</div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">包装尺寸 cm:</span>
-                          <span>65×55×20</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">包装尺寸 inch:</span>
-                          <span>25.6×21.7×7.9</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">单件净重 kg:</span>
-                          <span>3.5</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">单件净重 lbs:</span>
-                          <span>7.7</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">打托高度 cm:</span>
-                          <span>110</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">打托高度 inch:</span>
-                          <span>43.3</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">整托毛重 kg:</span>
-                          <span>84</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">整托毛重 lbs:</span>
-                          <span>185.2</span>
-                        </div>
-                      </div>
-                    </span>
+                  <div className="tier-price">
+                    <span><span className="price-currency">¥</span><span className="price-amount">1,650</span></span>
+                    <span className="quantity-range">6-20个</span>
+                  </div>
+                  <div className="tier-price">
+                    <span><span className="price-currency">¥</span><span className="price-amount">1,500</span></span>
+                    <span className="quantity-range">20+个</span>
                   </div>
                 </div>
-                {isSales && (
-                  <div className="product-inventory">
-                    <div>库存：EU20</div>
-                    <div>AU15</div>
-                    <div>DE10</div>
-                  </div>
-                )}
-                <div className="product-pricing">
-                  {(() => {
-                    const prices = getRegionalPrice(tableStandPrices);
-                    return (
-                      <div className="price-tiers">
-                        <div>价格：{prices.symbol}{prices.base} (1-5)</div>
-                        <div>{prices.symbol}{prices.tier1} (6-20)</div>
-                        <div>{prices.symbol}{prices.tier2} ({'>'}20)</div>
-                        {isVIP && <div>VIP价：{prices.symbol}{prices.vip}</div>}
-                      </div>
-                    );
-                  })()}
-                </div>
-                <img src="https://via.placeholder.com/100" alt="桌面支架" className="product-image" />
-                <div className="product-actions">
-                  <input type="number" min="1" value="1" className="quantity-input" />
-                  <button className="btn-add" onClick={() => addToCart('accessory', 'table-stand')}>
-                    加入购物车
-                  </button>
-                </div>
+              </div>
+              <img 
+                src="/images/placeholders/placeholder.svg" 
+                alt="主控制板" 
+                className="product-image" 
+              />
+              <div className="product-actions">
+                <input 
+                  type="number" 
+                  min="1" 
+                  value={quantities.mainBoard} 
+                  className="quantity-input"
+                  onChange={(e) => handleQuantityChange('mainBoard', parseInt(e.target.value) || 1)} 
+                />
+                <button className="btn-add" onClick={() => addToCart('accessory', 'controller')}>
+                  加入购物车
+                </button>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* 配件选择部分 - 第二级 */}
-        <div id="accessory-level-2" className="accessory-level-2">
-          <div className="section-title">
-            配件选择 <span className="level-indicator">- 二级配件</span>
-            <span id="level2-context-message" className="dynamic-note"></span>
-          </div>
+      {/* 配件选择部分 - 第三级 */}
+      <div id="accessory-level-3" className="accessory-level-3">
+        <div className="section-title">
+          配件选择 <span className="level-indicator">- 三级配件</span>
+          <span id="level3-context-message" className="dynamic-note"></span>
+        </div>
 
-          <div className="product-list">
-            {/* 打印头 */}
-            <div className="product-item" data-product-id="printhead">
-              <div className="product-selector">
-                <input 
-                  type="radio" 
-                  id="printhead" 
-                  name="accessory-level-2" 
-                  className="accessory-radio" 
-                  onChange={() => handleAccessorySelection(2, 'printhead', '打印头')}
-                />
-              </div>
-              <div className="product-info">
-                <div className="product-code">Print House</div>
-                <div className="product-description">
-                  <div className="accessory-name">热敏打印头组件</div>
-                  <div className="accessory-specs">
-                    <span className="frequency-spec"><strong>频率:</strong> 50Hz</span>
-                    <span className="accessory-spec-item"><strong>料号:</strong> BJT-TH-300P-2024</span>
-                    <span className="accessory-spec-item"><strong>电压:</strong> {selectedVoltage}</span>
-                    <span className="accessory-spec-item"><strong>托盘尺寸:</strong> 50×40×20cm</span>
-                    <span className="accessory-spec-item"><strong>一托数量:</strong> 100件</span>
-                  </div>
-                  <div className="more-info-section">
-                    <a href="#specifications" className="specification-link">规格详情</a>
-                    <span className="tooltip">
-                      <a href="#more-info" className="more-info-link">更多信息</a>
-                      <div className="tooltip-content">
-                        <div className="tooltip-title">打印头详细信息</div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">包装尺寸 cm:</span>
-                          <span>55×45×10</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">包装尺寸 inch:</span>
-                          <span>21.7×17.7×3.9</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">单件净重 kg:</span>
-                          <span>0.6</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">单件净重 lbs:</span>
-                          <span>1.3</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">打托高度 cm:</span>
-                          <span>20</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">打托高度 inch:</span>
-                          <span>7.9</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">整托毛重 kg:</span>
-                          <span>80</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">整托毛重 lbs:</span>
-                          <span>176.4</span>
-                        </div>
+        <div className="product-list">
+          {/* 热敏标签纸 */}
+          <div className="product-item" data-product-id="paper">
+            <div className="product-selector">
+              <input 
+                type="radio" 
+                id="paper" 
+                name="accessory-level-3" 
+                className="accessory-radio" 
+                onChange={() => handleAccessorySelection(3, 'paper', '热敏标签纸')}
+              />
+            </div>
+            <div className="product-info">
+              <div className="product-code">Thermal Paper</div>
+              <div className="product-description">
+                <div className="accessory-name">热敏标签纸卷（5卷装）</div>
+                <div className="accessory-specs">
+                  <span className="frequency-spec"><strong>频率:</strong> N/A</span>
+                  <span className="accessory-spec-item"><strong>料号:</strong> BJT-TP-40x30-700-2024</span>
+                  <span className="accessory-spec-item"><strong>电压:</strong> N/A</span>
+                  <span className="accessory-spec-item"><strong>托盘尺寸:</strong> 45×35×20cm</span>
+                  <span className="accessory-spec-item"><strong>一托数量:</strong> 50套</span>
+                </div>
+                <div className="more-info-section">
+                  <a href="#specifications" className="specification-link">规格详情</a>
+                  <span className="tooltip">
+                    <a href="#more-info" className="more-info-link">更多信息</a>
+                    <div className="tooltip-content">
+                      <div className="tooltip-title">热敏标签纸详细信息</div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">包装尺寸 cm:</span>
+                        <span>48×38×25</span>
                       </div>
-                    </span>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">包装尺寸 inch:</span>
+                        <span>18.9×15.0×9.8</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">单件净重 kg:</span>
+                        <span>2.8</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">单件净重 lbs:</span>
+                        <span>6.2</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">打托高度 cm:</span>
+                        <span>20</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">打托高度 inch:</span>
+                        <span>7.9</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">整托毛重 kg:</span>
+                        <span>160</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">整托毛重 lbs:</span>
+                        <span>352.7</span>
+                      </div>
+                    </div>
+                  </span>
+                </div>
+              </div>
+              <div className="product-inventory">
+                <div className="product-inventory-title">库存状态</div>
+                <div>
+                  <div className="inventory-region">EU区域</div>
+                  <div className="inventory-status">40个</div>
+                </div>
+                <div className={parseInt('35') < 10 ? 'low-stock' : ''}>
+                  <div className="inventory-region">AU区域</div>
+                  <div className="inventory-status">35个</div>
+                </div>
+                <div className={parseInt('25') < 10 ? 'low-stock' : ''}>
+                  <div className="inventory-region">DE区域</div>
+                  <div className="inventory-status">25个</div>
+                </div>
+              </div>
+              <div className="product-pricing">
+                <div className="price-tiers">
+                  <div className="price-title">价格信息</div>
+                  <div className="base-price">
+                    <span><span className="price-currency">¥</span><span className="price-amount">320</span></span>
+                    <span className="quantity-range">1-10个</span>
+                  </div>
+                  <div className="tier-price">
+                    <span><span className="price-currency">¥</span><span className="price-amount">280</span></span>
+                    <span className="quantity-range">11-50个</span>
+                  </div>
+                  <div className="tier-price">
+                    <span><span className="price-currency">¥</span><span className="price-amount">250</span></span>
+                    <span className="quantity-range">50+个</span>
                   </div>
                 </div>
-                <div className="product-inventory">
-                  <div>库存：EU30</div>
-                  <div>AU25</div>
-                  <div>DE20</div>
-                </div>
-                <div className="product-pricing">
-                  <div>价格：¥2,200 (1-5)</div>
-                  <div>¥2,000 (6-20)</div>
-                  <div>¥1,800 ({'>'}20)</div>
-                </div>
-                <img src="https://via.placeholder.com/100" alt="打印头" className="product-image" />
-                <div className="product-actions">
-                  <input type="number" min="1" value="1" className="quantity-input" />
-                  <button className="btn-add" onClick={() => addToCart('accessory', 'printhead')}>
-                    加入购物车
-                  </button>
-                </div>
+              </div>
+              <img 
+                src="/images/placeholders/placeholder.svg" 
+                alt="热敏标签纸" 
+                className="product-image" 
+              />
+              <div className="product-actions">
+                <input 
+                  type="number" 
+                  min="1" 
+                  value={quantities.thermalPaper} 
+                  className="quantity-input"
+                  onChange={(e) => handleQuantityChange('thermalPaper', parseInt(e.target.value) || 1)} 
+                />
+                <button className="btn-add" onClick={() => addToCart('accessory', 'paper')}>
+                  加入购物车
+                </button>
               </div>
             </div>
+          </div>
 
-            {/* 主控制板 */}
-            <div className="product-item" data-product-id="controller">
-              <div className="product-selector">
-                <input 
-                  type="radio" 
-                  id="controller" 
-                  name="accessory-level-2" 
-                  className="accessory-radio" 
-                  onChange={() => handleAccessorySelection(2, 'controller', '主控制板')}
-                />
-              </div>
-              <div className="product-info">
-                <div className="product-code">Control Board</div>
-                <div className="product-description">
-                  <div className="accessory-name">主控制板</div>
-                  <div className="accessory-specs">
-                    <span className="frequency-spec"><strong>频率:</strong> 50Hz</span>
-                    <span className="accessory-spec-item"><strong>料号:</strong> BJT-MCB-200-2024</span>
-                    <span className="accessory-spec-item"><strong>电压:</strong> {selectedVoltage}</span>
-                    <span className="accessory-spec-item"><strong>托盘尺寸:</strong> 40×30×15cm</span>
-                    <span className="accessory-spec-item"><strong>一托数量:</strong> 200件</span>
-                  </div>
-                  <div className="more-info-section">
-                    <a href="#specifications" className="specification-link">规格详情</a>
-                    <span className="tooltip">
-                      <a href="#more-info" className="more-info-link">更多信息</a>
-                      <div className="tooltip-content">
-                        <div className="tooltip-title">主控制板详细信息</div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">包装尺寸 cm:</span>
-                          <span>35×30×5</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">包装尺寸 inch:</span>
-                          <span>13.8×11.8×2.0</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">单件净重 kg:</span>
-                          <span>0.3</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">单件净重 lbs:</span>
-                          <span>0.7</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">打托高度 cm:</span>
-                          <span>15</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">打托高度 inch:</span>
-                          <span>5.9</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">整托毛重 kg:</span>
-                          <span>100</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">整托毛重 lbs:</span>
-                          <span>220.5</span>
-                        </div>
+          {/* 色带 */}
+          <div className="product-item" data-product-id="ribbon">
+            <div className="product-selector">
+              <input 
+                type="radio" 
+                id="ribbon" 
+                name="accessory-level-3" 
+                className="accessory-radio" 
+                onChange={() => handleAccessorySelection(3, 'ribbon', '色带')}
+              />
+            </div>
+            <div className="product-info">
+              <div className="product-code">Thermal Ribbon</div>
+              <div className="product-description">
+                <div className="accessory-name">热转印色带（2卷装）</div>
+                <div className="accessory-specs">
+                  <span className="frequency-spec"><strong>频率:</strong> N/A</span>
+                  <span className="accessory-spec-item"><strong>料号:</strong> BJT-TR-110-300-2024</span>
+                  <span className="accessory-spec-item"><strong>电压:</strong> N/A</span>
+                  <span className="accessory-spec-item"><strong>托盘尺寸:</strong> 35×25×15cm</span>
+                  <span className="accessory-spec-item"><strong>一托数量:</strong> 100套</span>
+                </div>
+                <div className="more-info-section">
+                  <a href="#specifications" className="specification-link">规格详情</a>
+                  <span className="tooltip">
+                    <a href="#more-info" className="more-info-link">更多信息</a>
+                    <div className="tooltip-content">
+                      <div className="tooltip-title">热转印色带详细信息</div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">包装尺寸 cm:</span>
+                        <span>38×28×15</span>
                       </div>
-                    </span>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">包装尺寸 inch:</span>
+                        <span>15.0×11.0×5.9</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">单件净重 kg:</span>
+                        <span>1.5</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">单件净重 lbs:</span>
+                        <span>3.3</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">打托高度 cm:</span>
+                        <span>15</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">打托高度 inch:</span>
+                        <span>5.9</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">整托毛重 kg:</span>
+                        <span>180</span>
+                      </div>
+                      <div className="tooltip-row">
+                        <span className="tooltip-label">整托毛重 lbs:</span>
+                        <span>396.8</span>
+                      </div>
+                    </div>
+                  </span>
+                </div>
+              </div>
+              <div className="product-inventory">
+                <div className="product-inventory-title">库存状态</div>
+                <div>
+                  <div className="inventory-region">EU区域</div>
+                  <div className="inventory-status">35个</div>
+                </div>
+                <div className={parseInt('30') < 10 ? 'low-stock' : ''}>
+                  <div className="inventory-region">AU区域</div>
+                  <div className="inventory-status">30个</div>
+                </div>
+                <div className={parseInt('20') < 10 ? 'low-stock' : ''}>
+                  <div className="inventory-region">DE区域</div>
+                  <div className="inventory-status">20个</div>
+                </div>
+              </div>
+              <div className="product-pricing">
+                <div className="price-tiers">
+                  <div className="price-title">价格信息</div>
+                  <div className="base-price">
+                    <span><span className="price-currency">¥</span><span className="price-amount">280</span></span>
+                    <span className="quantity-range">1-10个</span>
+                  </div>
+                  <div className="tier-price">
+                    <span><span className="price-currency">¥</span><span className="price-amount">250</span></span>
+                    <span className="quantity-range">11-50个</span>
+                  </div>
+                  <div className="tier-price">
+                    <span><span className="price-currency">¥</span><span className="price-amount">220</span></span>
+                    <span className="quantity-range">50+个</span>
                   </div>
                 </div>
-                <div className="product-inventory">
-                  <div>库存：EU25</div>
-                  <div>AU20</div>
-                  <div>DE15</div>
-                </div>
-                <div className="product-pricing">
-                  <div>价格：¥1,800 (1-5)</div>
-                  <div>¥1,650 (6-20)</div>
-                  <div>¥1,500 ({'>'}20)</div>
-                </div>
-                <img src="https://via.placeholder.com/100" alt="主控制板" className="product-image" />
-                <div className="product-actions">
-                  <input type="number" min="1" value="1" className="quantity-input" />
-                  <button className="btn-add" onClick={() => addToCart('accessory', 'controller')}>
-                    加入购物车
-                  </button>
-                </div>
+              </div>
+              <img 
+                src="/images/placeholders/placeholder.svg" 
+                alt="色带" 
+                className="product-image" 
+              />
+              <div className="product-actions">
+                <input 
+                  type="number" 
+                  min="1" 
+                  value={quantities.ribbon} 
+                  className="quantity-input"
+                  onChange={(e) => handleQuantityChange('ribbon', parseInt(e.target.value) || 1)} 
+                />
+                <button className="btn-add" onClick={() => addToCart('accessory', 'ribbon')}>
+                  加入购物车
+                </button>
               </div>
             </div>
           </div>
         </div>
-
-        {/* 配件选择部分 - 第三级 */}
-        <div id="accessory-level-3" className="accessory-level-3">
-          <div className="section-title">
-            配件选择 <span className="level-indicator">- 三级配件</span>
-            <span id="level3-context-message" className="dynamic-note"></span>
-          </div>
-
-          <div className="product-list">
-            {/* 热敏标签纸 */}
-            <div className="product-item" data-product-id="paper">
-              <div className="product-selector">
-                <input 
-                  type="radio" 
-                  id="paper" 
-                  name="accessory-level-3" 
-                  className="accessory-radio" 
-                  onChange={() => handleAccessorySelection(3, 'paper', '热敏标签纸')}
-                />
-              </div>
-              <div className="product-info">
-                <div className="product-code">Thermal Paper</div>
-                <div className="product-description">
-                  <div className="accessory-name">热敏标签纸卷（5卷装）</div>
-                  <div className="accessory-specs">
-                    <span className="frequency-spec"><strong>频率:</strong> N/A</span>
-                    <span className="accessory-spec-item"><strong>料号:</strong> BJT-TP-40x30-700-2024</span>
-                    <span className="accessory-spec-item"><strong>电压:</strong> N/A</span>
-                    <span className="accessory-spec-item"><strong>托盘尺寸:</strong> 45×35×20cm</span>
-                    <span className="accessory-spec-item"><strong>一托数量:</strong> 50套</span>
-                  </div>
-                  <div className="more-info-section">
-                    <a href="#specifications" className="specification-link">规格详情</a>
-                    <span className="tooltip">
-                      <a href="#more-info" className="more-info-link">更多信息</a>
-                      <div className="tooltip-content">
-                        <div className="tooltip-title">热敏标签纸详细信息</div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">包装尺寸 cm:</span>
-                          <span>48×38×25</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">包装尺寸 inch:</span>
-                          <span>18.9×15.0×9.8</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">单件净重 kg:</span>
-                          <span>2.8</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">单件净重 lbs:</span>
-                          <span>6.2</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">打托高度 cm:</span>
-                          <span>20</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">打托高度 inch:</span>
-                          <span>7.9</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">整托毛重 kg:</span>
-                          <span>160</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">整托毛重 lbs:</span>
-                          <span>352.7</span>
-                        </div>
-                      </div>
-                    </span>
-                  </div>
-                </div>
-                <div className="product-inventory">
-                  <div>库存：EU40</div>
-                  <div>AU35</div>
-                  <div>DE25</div>
-                </div>
-                <div className="product-pricing">
-                  <div>价格：¥320 (1-10)</div>
-                  <div>¥280 (11-50)</div>
-                  <div>¥250 ({'>'}50)</div>
-                </div>
-                <img src="https://via.placeholder.com/100" alt="热敏标签纸" className="product-image" />
-                <div className="product-actions">
-                  <input type="number" min="1" value="1" className="quantity-input" />
-                  <button className="btn-add" onClick={() => addToCart('accessory', 'paper')}>
-                    加入购物车
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* 色带 */}
-            <div className="product-item" data-product-id="ribbon">
-              <div className="product-selector">
-                <input 
-                  type="radio" 
-                  id="ribbon" 
-                  name="accessory-level-3" 
-                  className="accessory-radio" 
-                  onChange={() => handleAccessorySelection(3, 'ribbon', '色带')}
-                />
-              </div>
-              <div className="product-info">
-                <div className="product-code">Thermal Ribbon</div>
-                <div className="product-description">
-                  <div className="accessory-name">热转印色带（2卷装）</div>
-                  <div className="accessory-specs">
-                    <span className="frequency-spec"><strong>频率:</strong> N/A</span>
-                    <span className="accessory-spec-item"><strong>料号:</strong> BJT-TR-110-300-2024</span>
-                    <span className="accessory-spec-item"><strong>电压:</strong> N/A</span>
-                    <span className="accessory-spec-item"><strong>托盘尺寸:</strong> 35×25×15cm</span>
-                    <span className="accessory-spec-item"><strong>一托数量:</strong> 100套</span>
-                  </div>
-                  <div className="more-info-section">
-                    <a href="#specifications" className="specification-link">规格详情</a>
-                    <span className="tooltip">
-                      <a href="#more-info" className="more-info-link">更多信息</a>
-                      <div className="tooltip-content">
-                        <div className="tooltip-title">热转印色带详细信息</div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">包装尺寸 cm:</span>
-                          <span>38×28×15</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">包装尺寸 inch:</span>
-                          <span>15.0×11.0×5.9</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">单件净重 kg:</span>
-                          <span>1.5</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">单件净重 lbs:</span>
-                          <span>3.3</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">打托高度 cm:</span>
-                          <span>15</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">打托高度 inch:</span>
-                          <span>5.9</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">整托毛重 kg:</span>
-                          <span>180</span>
-                        </div>
-                        <div className="tooltip-row">
-                          <span className="tooltip-label">整托毛重 lbs:</span>
-                          <span>396.8</span>
-                        </div>
-                      </div>
-                    </span>
-                  </div>
-                </div>
-                <div className="product-inventory">
-                  <div>库存：EU35</div>
-                  <div>AU30</div>
-                  <div>DE20</div>
-                </div>
-                <div className="product-pricing">
-                  <div>价格：¥280 (1-10)</div>
-                  <div>¥250 (11-50)</div>
-                  <div>¥220 ({'>'}50)</div>
-                </div>
-                <img src="https://via.placeholder.com/100" alt="色带" className="product-image" />
-                <div className="product-actions">
-                  <input type="number" min="1" value="1" className="quantity-input" />
-                  <button className="btn-add" onClick={() => addToCart('accessory', 'ribbon')}>
-                    加入购物车
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-
-      {/* 购物车通知 */}
-      <div className="cart-notification">
-        <div className="cart-notification-content">
-          <div className="cart-notification-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="9" cy="21" r="1"></circle>
-              <circle cx="20" cy="21" r="1"></circle>
-              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-            </svg>
-          </div>
-          <div className="cart-notification-text">已添加到购物车</div>
-          <button className="cart-notification-close">×</button>
-        </div>
-        <div className="cart-notification-progress"></div>
       </div>
     </div>
   );
