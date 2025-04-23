@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import './styles/global.css';
 import './styles/theme.css';
@@ -15,10 +15,13 @@ import SpareParts from './pages/SpareParts/index';
 import Machines from './pages/Machines/index';
 import Cart from './pages/Cart';
 import ProductDetail from './pages/ProductDetail';
+import Order from './pages/Order';
+import PO from './pages/PO';
+import OrderList from './pages/OrderList';
+import Profile from './pages/Profile';
 // 其他页面组件（占位符）
 const Checkout = () => <div className="container mx-auto p-4">结账页面（待实现）</div>;
 const OrderDetail = () => <div className="container mx-auto p-4">订单详情页面（待实现）</div>;
-const OrderList = () => <div className="container mx-auto p-4">订单列表页面（待实现）</div>;
 
 // 导入指南组件
 import GuideIndex from './guide/index';
@@ -54,10 +57,18 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 };
 
 const App: React.FC = () => {
-  // 初始化主题系统
-  useEffect(() => {
-    // Theme initialization is handled by ThemeSwitcher component
-  }, []);
+  // 购物车侧边栏状态
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
+  // 打开购物车
+  const openCart = () => {
+    setIsCartOpen(true);
+  };
+
+  // 关闭购物车
+  const closeCart = () => {
+    setIsCartOpen(false);
+  };
 
   return (
     <Router>
@@ -146,6 +157,36 @@ const App: React.FC = () => {
                 }
               />
               
+              {/* 订单确认页面 */}
+              <Route
+                path="/order"
+                element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <Order />
+                    </MainLayout>
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* 添加 /order/confirm 路径重定向到 /order */}
+              <Route
+                path="/order/confirm"
+                element={<Navigate to="/order" replace />}
+              />
+              
+              {/* PO页面 */}
+              <Route
+                path="/po"
+                element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <PO />
+                    </MainLayout>
+                  </ProtectedRoute>
+                }
+              />
+              
               {/* 订单相关页面 */}
               <Route
                 path="/checkout"
@@ -191,6 +232,18 @@ const App: React.FC = () => {
               {/* 认证页面 - 不带标准布局 */}
               <Route path="/login" element={<Login />} />
 
+              {/* 个人资料页面 */}
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <Profile />
+                    </MainLayout>
+                  </ProtectedRoute>
+                }
+              />
+
               {/* 404页面 */}
               <Route
                 path="*"
@@ -211,8 +264,8 @@ const App: React.FC = () => {
             </Routes>
             
             {/* 全局购物车组件 */}
-            <CartButton />
-            <CartSidebar />
+            <CartButton onClick={openCart} />
+            <CartSidebar isOpen={isCartOpen} onClose={closeCart} />
           </CartProvider>
         </LanguageProvider>
       </AuthProvider>

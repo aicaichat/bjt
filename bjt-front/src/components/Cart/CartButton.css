@@ -1,44 +1,43 @@
 .cart-button {
   position: fixed;
-  bottom: 30px;
-  right: 30px;
-  width: 60px;
-  height: 60px;
+  bottom: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  background-color: #1890ff;
   border-radius: 50%;
-  background-color: #1a57a5;
-  color: white;
-  border: none;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
   cursor: pointer;
-  z-index: 990;
-  transition: background-color 0.2s, transform 0.2s;
+  z-index: 999;
+  transition: all 0.3s;
 }
 
 .cart-button:hover {
-  background-color: #144b8e;
   transform: scale(1.05);
+  background-color: #40a9ff;
 }
 
-.cart-button:active {
-  transform: scale(0.95);
+.cart-icon {
+  width: 24px;
+  height: 24px;
+  color: white;
 }
 
 .cart-count {
   position: absolute;
   top: -5px;
   right: -5px;
-  background-color: #e53935;
+  background-color: #ff4d4f;
   color: white;
-  font-size: 12px;
-  font-weight: bold;
-  width: 22px;
-  height: 22px;
   border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  font-weight: bold;
 } 

@@ -1,181 +1,200 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { CartItem as ApiCartItem, CartItemSpecs } from '../services/api';
 
-// 定义购物车商品类型
-export interface CartItem {
-  id: number;
-  model: string;
-  type: 'machine' | 'accessory' | 'consumable' | 'spare';
-  typeLabel: string;
-  image_url: string;
-  sku: string;
+// 定义价格层级接口
+export interface PriceTier {
+  min: number;
+  max: number | null;
   price: number;
   originalPrice?: number;
-  properties: Record<string, string>;
-  quantity: number;
-  checked: boolean;
 }
 
-// 购物车上下文接口
-interface CartContextType {
-  cartItems: CartItem[];
-  isCartOpen: boolean;
-  cartCount: number;
-  totalPrice: number;
-  addToCart: (item: Omit<CartItem, 'checked' | 'quantity'>) => void;
-  removeFromCart: (id: number) => void;
-  updateQuantity: (id: number, quantity: number) => void;
-  toggleItemCheck: (id: number) => void;
-  toggleAllCheck: (checked: boolean) => void;
+// 扩展CartItem接口，添加额外的属性
+export interface CartItem extends ApiCartItem {
+  code: string;
+  partNumber: string;
+  image: string;
+  category: string;
+  productId: number;
+  priceTiers: PriceTier[];
+  properties?: {
+    [key: string]: string;
+  };
+  selected: boolean;
+  originalPrice?: number;
+}
+
+// 定义购物车上下文接口
+export interface CartContextType {
+  items: CartItem[];
+  addItem: (item: CartItem) => void;
+  removeItem: (id: string) => void;
+  updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
-  toggleCart: () => void;
-  closeCart: () => void;
+  totalPrice: number;
+  itemCount: number;
+  selectedItems: CartItem[];
+  selectedCount: number;
+  selectedTotal: number;
+  toggleItemSelection: (id: string, selected: boolean) => void;
+  selectAll: (selected: boolean) => void;
+  isItemSelected: (id: string) => boolean;
 }
 
-// 创建购物车上下文
-const CartContext = createContext<CartContextType | undefined>(undefined);
+// 创建购物车上下文并提供默认值
+export const CartContext = createContext<CartContextType>({
+  items: [],
+  addItem: () => {},
+  removeItem: () => {},
+  updateQuantity: () => {},
+  clearCart: () => {},
+  totalPrice: 0,
+  itemCount: 0,
+  selectedItems: [],
+  selectedCount: 0,
+  selectedTotal: 0,
+  toggleItemSelection: () => {},
+  selectAll: () => {},
+  isItemSelected: () => false
+});
 
-// 购物车提供者Props
 interface CartProviderProps {
   children: ReactNode;
 }
 
-// 本地存储键名
-const CART_STORAGE_KEY = 'bjt_cart';
+// 本地存储键
+const CART_STORAGE_KEY = 'bjt-cart';
 
+// 上下文提供者组件
 export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
-  // 购物车商品状态
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  // 购物车打开状态
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  // 商品总数
-  const [cartCount, setCartCount] = useState(0);
-  // 总价
-  const [totalPrice, setTotalPrice] = useState(0);
-
-  // 初始化时从本地存储加载购物车数据
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
+  
+  // Load cart from localStorage on initial render
   useEffect(() => {
-    try {
-      const savedCart = localStorage.getItem(CART_STORAGE_KEY);
-      if (savedCart) {
+    const savedCart = localStorage.getItem(CART_STORAGE_KEY);
+    if (savedCart) {
+      try {
         const parsedCart = JSON.parse(savedCart);
-        setCartItems(parsedCart);
+        setItems(parsedCart);
+      } catch (error) {
+        console.error('Failed to parse cart from localStorage:', error);
       }
-    } catch (error) {
-      console.error('Failed to load cart from localStorage:', error);
     }
   }, []);
-
-  // 当购物车变化时更新本地存储
+  
+  // Save cart to localStorage whenever it changes
   useEffect(() => {
-    try {
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+  }, [items]);
+  
+  const addItem = (newItem: CartItem) => {
+    setItems(currentItems => {
+      // Check if item already exists in cart
+      const existingItemIndex = currentItems.findIndex(item => 
+        item.id === newItem.id && 
+        JSON.stringify(item.specs) === JSON.stringify(newItem.specs));
       
-      // 更新购物车计数
-      const count = cartItems.reduce((total, item) => total + item.quantity, 0);
-      setCartCount(count);
-      
-      // 更新总价
-      const total = cartItems.reduce((sum, item) => {
-        return item.checked ? sum + (item.price * item.quantity) : sum;
-      }, 0);
-      setTotalPrice(total);
-    } catch (error) {
-      console.error('Failed to save cart to localStorage:', error);
-    }
-  }, [cartItems]);
-
-  // 添加到购物车
-  const addToCart = (item: Omit<CartItem, 'checked' | 'quantity'>) => {
-    setCartItems(prevItems => {
-      // 检查是否已存在相同商品
-      const existingItemIndex = prevItems.findIndex(i => i.id === item.id);
-      
-      if (existingItemIndex !== -1) {
-        // 如果存在，增加数量
-        const updatedItems = [...prevItems];
-        updatedItems[existingItemIndex].quantity += 1;
+      if (existingItemIndex >= 0) {
+        // Update quantity if item exists
+        const updatedItems = [...currentItems];
+        updatedItems[existingItemIndex] = {
+          ...updatedItems[existingItemIndex],
+          quantity: updatedItems[existingItemIndex].quantity + newItem.quantity
+        };
         return updatedItems;
       } else {
-        // 否则添加新商品
-        return [...prevItems, { ...item, quantity: 1, checked: true }];
+        // Add new item if it doesn't exist
+        return [...currentItems, newItem];
       }
     });
   };
-
-  // 从购物车移除
-  const removeFromCart = (id: number) => {
-    setCartItems(prevItems => prevItems.filter(item => item.id !== id));
+  
+  const removeItem = (id: string) => {
+    setItems(currentItems => currentItems.filter(item => item.id !== id));
+    setSelectedItemIds(current => {
+      const updated = new Set(current);
+      updated.delete(id);
+      return updated;
+    });
   };
-
-  // 更新商品数量
-  const updateQuantity = (id: number, quantity: number) => {
-    if (quantity < 1) return;
+  
+  const updateQuantity = (id: string, quantity: number) => {
+    if (quantity <= 0) {
+      removeItem(id);
+      return;
+    }
     
-    setCartItems(prevItems => 
-      prevItems.map(item => 
+    setItems(currentItems => 
+      currentItems.map(item => 
         item.id === id ? { ...item, quantity } : item
       )
     );
   };
-
-  // 切换商品选中状态
-  const toggleItemCheck = (id: number) => {
-    setCartItems(prevItems => 
-      prevItems.map(item => 
-        item.id === id ? { ...item, checked: !item.checked } : item
-      )
-    );
-  };
-
-  // 切换全选状态
-  const toggleAllCheck = (checked: boolean) => {
-    setCartItems(prevItems => 
-      prevItems.map(item => ({ ...item, checked }))
-    );
-  };
-
-  // 清空购物车
+  
   const clearCart = () => {
-    setCartItems([]);
+    setItems([]);
+    setSelectedItemIds(new Set());
   };
-
-  // 切换购物车显示状态
-  const toggleCart = () => {
-    setIsCartOpen(prev => !prev);
+  
+  const toggleItemSelection = (id: string, selected: boolean) => {
+    setSelectedItemIds(current => {
+      const updated = new Set(current);
+      if (selected) {
+        updated.add(id);
+      } else {
+        updated.delete(id);
+      }
+      return updated;
+    });
   };
-
-  // 关闭购物车
-  const closeCart = () => {
-    setIsCartOpen(false);
+  
+  const selectAll = (selected: boolean) => {
+    if (selected) {
+      const allIds = new Set(items.map(item => item.id.toString()));
+      setSelectedItemIds(allIds);
+    } else {
+      setSelectedItemIds(new Set());
+    }
   };
-
-  // 提供上下文值
-  const value: CartContextType = {
-    cartItems,
-    isCartOpen,
-    cartCount,
-    totalPrice,
-    addToCart,
-    removeFromCart,
+  
+  const isItemSelected = (id: string) => selectedItemIds.has(id);
+  
+  // Calculate derived values
+  const itemCount = items.reduce((total, item) => total + item.quantity, 0);
+  const totalPrice = items.reduce((total, item) => total + (item.price * item.quantity), 0);
+  
+  const selectedItems = items.filter(item => selectedItemIds.has(item.id.toString()));
+  const selectedCount = selectedItems.reduce((total, item) => total + item.quantity, 0);
+  const selectedTotal = selectedItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+  
+  const contextValue: CartContextType = {
+    items,
+    addItem,
+    removeItem,
     updateQuantity,
-    toggleItemCheck,
-    toggleAllCheck,
     clearCart,
-    toggleCart,
-    closeCart
+    totalPrice,
+    itemCount,
+    selectedItems,
+    selectedCount,
+    selectedTotal,
+    toggleItemSelection,
+    selectAll,
+    isItemSelected
   };
-
+  
   return (
-    <CartContext.Provider value={value}>
+    <CartContext.Provider value={contextValue}>
       {children}
     </CartContext.Provider>
   );
 };
 
-// 自定义hook，用于在组件中获取购物车上下文
-export const useCart = (): CartContextType => {
+// Custom hook to use the cart context
+export const useCart = () => {
   const context = useContext(CartContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useCart must be used within a CartProvider');
   }
   return context;

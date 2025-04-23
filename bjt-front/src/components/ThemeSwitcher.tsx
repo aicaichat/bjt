@@ -7,7 +7,11 @@ const ThemeSwitcher: React.FC = () => {
   const themes = [
     { id: 'theme-modern', label: 'Modern Tech' },
     { id: 'theme-simple', label: 'Clean Simple' },
-    { id: 'theme-dark', label: 'Dark Mode' }
+    { id: 'theme-vibrant', label: 'Vibrant Style' },
+    { id: 'theme-classic', label: 'Classic Business' },
+    { id: 'theme-tech', label: 'Dark Tech' },
+    { id: 'theme-elegant', label: 'Elegant Style' },
+    { id: 'theme-playful', label: 'Playful Interactive' }
   ];
 
   useEffect(() => {

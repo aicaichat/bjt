@@ -1,38 +1,48 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useCart, CartItem } from '../../contexts/CartContext';
+import { useCart } from '../../contexts/CartContext';
 import './CartSidebar.css';
 
-const CartSidebar: React.FC = () => {
+interface CartSidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
   const { 
-    cartItems, 
-    isCartOpen, 
-    totalPrice, 
-    removeFromCart, 
+    items, 
+    removeItem, 
     updateQuantity, 
-    toggleItemCheck, 
-    toggleAllCheck, 
-    clearCart, 
-    closeCart 
+    toggleItemSelection, 
+    selectAll, 
+    selectedTotal,
+    isItemSelected,
+    clearCart
   } = useCart();
 
-  const isAllSelected = cartItems.length > 0 && cartItems.every(item => item.checked);
+  const hasItems = items.length > 0;
+  const allSelected = hasItems && items.every(item => isItemSelected(item.id));
 
   // 处理全选
   const handleSelectAll = () => {
-    toggleAllCheck(!isAllSelected);
+    selectAll(!allSelected);
   };
 
   // 处理数量减少
-  const handleDecreaseQuantity = (item: CartItem) => {
-    if (item.quantity > 1) {
-      updateQuantity(item.id, item.quantity - 1);
+  const handleDecreaseQuantity = (id: string, quantity: number) => {
+    if (quantity > 1) {
+      updateQuantity(id, quantity - 1);
     }
   };
 
   // 处理数量增加
-  const handleIncreaseQuantity = (item: CartItem) => {
-    updateQuantity(item.id, item.quantity + 1);
+  const handleIncreaseQuantity = (id: string, quantity: number) => {
+    updateQuantity(id, quantity + 1);
+  };
+
+  // 处理单个商品选择状态切换
+  const handleToggleItem = (id: string) => {
+    toggleItemSelection(id, !isItemSelected(id));
   };
 
   // 处理清空购物车
@@ -43,48 +53,48 @@ const CartSidebar: React.FC = () => {
   };
 
   return (
-    <div className={`cart-sidebar ${isCartOpen ? 'open' : ''}`}>
+    <div className={`cart-sidebar ${isOpen ? 'open' : ''}`}>
       <div className="cart-sidebar-header">
         <h3 className="cart-sidebar-title">购物车</h3>
-        <button className="cart-sidebar-close" onClick={closeCart}>×</button>
+        <button className="cart-sidebar-close" onClick={onClose}>×</button>
       </div>
       
       <div className="cart-sidebar-body">
-        {cartItems.length > 0 ? (
+        {hasItems ? (
           <>
             <div className="cart-sidebar-select-all">
               <div 
-                className={`cart-checkbox ${isAllSelected ? 'checked' : ''}`}
+                className={`cart-checkbox ${allSelected ? 'checked' : ''}`}
                 onClick={handleSelectAll}
               >
-                {isAllSelected && <span className="checkbox-tick">✓</span>}
+                {allSelected && <span className="checkbox-tick">✓</span>}
               </div>
               <span>全选</span>
             </div>
             
             <div className="cart-sidebar-items">
-              {cartItems.map(item => (
+              {items.map(item => (
                 <div key={item.id} className="cart-sidebar-item">
                   <div className="cart-item-checkbox">
                     <div 
-                      className={`cart-checkbox ${item.checked ? 'checked' : ''}`}
-                      onClick={() => toggleItemCheck(item.id)}
+                      className={`cart-checkbox ${isItemSelected(item.id) ? 'checked' : ''}`}
+                      onClick={() => handleToggleItem(item.id)}
                     >
-                      {item.checked && <span className="checkbox-tick">✓</span>}
+                      {isItemSelected(item.id) && <span className="checkbox-tick">✓</span>}
                     </div>
                   </div>
                   
                   <div className="cart-item-image">
-                    <img src={item.image_url} alt={item.model} />
+                    <img src={item.image} alt={item.name} />
                   </div>
                   
                   <div className="cart-item-details">
-                    <div className="cart-item-title">{item.model}</div>
-                    <div className="cart-item-sku">SKU: {item.sku}</div>
+                    <div className="cart-item-title">{item.name}</div>
+                    <div className="cart-item-sku">SKU: {item.code}</div>
                     <div className="cart-item-price">¥{item.price.toFixed(2)}</div>
                     
                     <div className="cart-item-properties">
-                      {Object.entries(item.properties).map(([key, value]) => (
+                      {item.properties && Object.entries(item.properties).map(([key, value]) => (
                         <div key={key} className="cart-item-property">
                           {key}: {value}
                         </div>
@@ -95,14 +105,14 @@ const CartSidebar: React.FC = () => {
                       <div className="cart-item-quantity">
                         <button 
                           className="quantity-btn"
-                          onClick={() => handleDecreaseQuantity(item)}
+                          onClick={() => handleDecreaseQuantity(item.id, item.quantity)}
                         >
                           -
                         </button>
                         <span className="quantity-value">{item.quantity}</span>
                         <button 
                           className="quantity-btn"
-                          onClick={() => handleIncreaseQuantity(item)}
+                          onClick={() => handleIncreaseQuantity(item.id, item.quantity)}
                         >
                           +
                         </button>
@@ -110,7 +120,7 @@ const CartSidebar: React.FC = () => {
                       
                       <button 
                         className="cart-item-remove"
-                        onClick={() => removeFromCart(item.id)}
+                        onClick={() => removeItem(item.id)}
                       >
                         删除
                       </button>
@@ -130,22 +140,22 @@ const CartSidebar: React.FC = () => {
       <div className="cart-sidebar-footer">
         <div className="cart-sidebar-total">
           <span>合计:</span>
-          <span className="cart-sidebar-price">¥{totalPrice.toFixed(2)}</span>
+          <span className="cart-sidebar-price">¥{selectedTotal.toFixed(2)}</span>
         </div>
         
         <div className="cart-sidebar-actions">
           <button 
             className="cart-sidebar-clear"
             onClick={handleClearCart}
-            disabled={cartItems.length === 0}
+            disabled={!hasItems}
           >
             清空购物车
           </button>
           
           <Link 
             to="/cart" 
-            className={`cart-sidebar-checkout ${cartItems.length === 0 ? 'disabled' : ''}`}
-            onClick={closeCart}
+            className={`cart-sidebar-checkout ${!hasItems ? 'disabled' : ''}`}
+            onClick={onClose}
           >
             去结算
           </Link>
