@@ -1,0 +1,2458 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: #f5f5f5;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+header {
+    background-color: #fff;
+    padding: 15px 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    height: 40px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.nav-menu {
+    display: flex;
+    margin-right: 20px;
+}
+
+.nav-item {
+    margin: 0 15px;
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+}
+
+.nav-item:hover {
+    color: #1a57a5;
+}
+
+.language-selector {
+    margin-right: 15px;
+    border: 1px solid #ddd;
+    padding: 5px 10px;
+    border-radius: 4px;
+    background-color: #fff;
+    min-width: 120px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.language-selector option {
+    padding: 5px;
+}
+
+/* Responsive Header */
+@media (max-width: 768px) {
+    .header-right {
+        justify-content: center;
+        margin-top: 10px;
+    }
+    
+    .nav-menu {
+        margin-right: 0;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .nav-item {
+        margin: 5px 10px;
+    }
+    
+    .language-selector {
+        margin-bottom: 10px;
+    }
+}
+
+/* User dropdown styles */
+.user-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    background-color: #f5f5f5;
+    padding: 6px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    border: 1px solid #ddd;
+}
+
+.user-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.user-name {
+    font-weight: 500;
+    margin-right: 5px;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: white;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1000;
+    border-radius: 4px;
+}
+
+.dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    text-align: left;
+}
+
+.dropdown-content a:hover {
+    background-color: #f1f1f1;
+}
+
+.user-dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.breadcrumb {
+    padding: 10px 0 20px;
+    color: #666;
+    font-size: 14px;
+}
+
+.breadcrumb a {
+    color: #1a57a5;
+    text-decoration: none;
+}
+
+.section-title {
+    margin: 30px 0 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed #ccc;
+    font-size: 18px;
+    color: #333;
+}
+
+.product-list {
+    margin-bottom: 40px;
+}
+
+/* 更新产品项样式，采用 Consumables 的表格风格 */
+.product-item {
+    background-color: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: all 0.25s ease;
+}
+
+.product-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border-color: #c1d5ff;
+}
+
+.product-selector {
+    margin-right: 15px;
+}
+
+.product-selector input[type="radio"] {
+    margin-right: 0;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.product-image {
+    width: 100px;
+    height: 100px;
+    margin-right: 20px;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.product-info {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.product-description {
+    flex: 2;
+    min-width: 250px;
+    margin-right: 20px;
+}
+
+.product-description > div:first-of-type {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #333;
+    display: flex;
+    align-items: center;
+}
+
+.product-model-code {
+    background-color: #f1f6ff;
+    color: #1a57a5;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    margin-left: 8px;
+}
+
+.product-details {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    gap: 8px 15px;
+}
+
+.product-detail-item {
+    font-size: 14px;
+    color: #555;
+    background-color: #f8f9fa;
+    padding: 3px 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+/* 规格表样式，类似于 Consumables */
+.specs-table {
+    margin-top: 10px;
+    position: relative;
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    padding: 10px;
+    max-width: 100%;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.specs-table:hover {
+    background-color: #f0f7ff;
+}
+
+.specs-row {
+    display: flex;
+    margin-bottom: 5px;
+    align-items: center;
+}
+
+.specs-label {
+    font-weight: 500;
+    min-width: 100px;
+    color: #555;
+}
+
+.specs-value {
+    color: #333;
+}
+
+/* 产品库存和价格区域重新设计 */
+.product-inventory {
+    flex: 1;
+    min-width: 180px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    padding: 10px;
+    margin-right: 15px;
+    transition: all 0.2s ease;
+}
+
+.product-inventory:hover {
+    background-color: #f0f7ff;
+}
+
+.inventory-tiers {
+    display: flex;
+    flex-direction: column;
+}
+
+.inventory-title {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: #495057;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 5px;
+}
+
+.inventory-region {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: 14px;
+}
+
+.inventory-region:last-child {
+    margin-bottom: 0;
+}
+
+.inventory-region:hover {
+    background-color: rgba(26, 87, 165, 0.05);
+}
+
+.region-label {
+    color: #495057;
+    font-weight: 500;
+}
+
+.region-value {
+    padding: 0 8px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.region-value.out-of-stock {
+    color: #dc3545;
+}
+
+.region-value.low-stock {
+    color: #fd7e14;
+}
+
+.region-value.medium-stock {
+    color: #28a745;
+}
+
+.region-value.high-stock {
+    color: #28a745;
+}
+
+/* 产品价格区域 */
+.product-pricing {
+    flex: 1;
+    min-width: 180px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    padding: 10px;
+    margin-right: 15px;
+    transition: all 0.2s ease;
+}
+
+.product-pricing:hover {
+    background-color: #f0f7ff;
+}
+
+.price-tiers {
+    display: flex;
+    flex-direction: column;
+}
+
+.price-tiers div {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: 14px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.price-tiers div:last-child {
+    border-bottom: none;
+}
+
+.price-tiers div:hover {
+    background-color: rgba(26, 87, 165, 0.05);
+}
+
+.price-tiers div.price-title {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: #495057;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 5px;
+}
+
+/* 操作区域样式 */
+.product-actions {
+    min-width: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.quantity-selector {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    width: 100%;
+    justify-content: center;
+}
+
+.quantity-input {
+    width: 60px;
+    text-align: center;
+    border: 1px solid #ced4da;
+    padding: 5px;
+    margin: 0 5px;
+    border-radius: 4px;
+    height: 32px;
+}
+
+.btn-add {
+    width: 100%;
+    background-color: #1a57a5;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 10px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-add:hover {
+    background-color: #15427e;
+}
+
+/* 响应式调整 */
+@media (max-width: 992px) {
+    .product-item {
+        flex-wrap: wrap;
+    }
+    
+    .product-info {
+        width: 100%;
+        margin-bottom: 15px;
+    }
+    
+    .product-inventory, 
+    .product-pricing {
+        min-width: 45%;
+        margin-right: 10px;
+        margin-bottom: 10px;
+    }
+    
+    .product-actions {
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-between;
+    }
+    
+    .quantity-selector {
+        margin-right: 10px;
+        margin-bottom: 0;
+    }
+    
+    .btn-add {
+        width: auto;
+        padding: 8px 15px;
+    }
+}
+
+@media (max-width: 768px) {
+    .product-item {
+        padding: 15px;
+    }
+    
+    .product-info {
+        flex-direction: column;
+    }
+    
+    .product-description {
+        margin-right: 0;
+        margin-bottom: 15px;
+        width: 100%;
+    }
+    
+    .product-inventory, 
+    .product-pricing {
+        width: 100%;
+        margin-right: 0;
+    }
+    
+    .product-image {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .product-actions {
+        flex-direction: column;
+        margin-top: 15px;
+    }
+    
+    .quantity-selector {
+        margin-right: 0;
+        margin-bottom: 10px;
+        width: 100%;
+    }
+    
+    .qty-btn, 
+    .quantity-input {
+        height: 36px;
+    }
+    
+    .btn-add {
+        width: 100%;
+    }
+}
+
+/* 保留原有的响应式设计 */
+@media (max-width: 1200px) {
+    .product-inventory, .product-pricing {
+        width: 180px;
+    }
+}
+
+@media (max-width: 992px) {
+    .machines-page {
+        padding: 20px 15px;
+    }
+    
+    .section-title {
+        margin: 25px 0 15px;
+        font-size: 17px;
+    }
+    
+    .product-item {
+        padding: 15px;
+    margin-bottom: 15px;
+}
+
+    .btn-add {
+        padding: 10px 12px;
+    }
+    
+    .product-info {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+    
+    .product-inventory, .product-pricing {
+        width: 48%;
+        margin: 0 0 15px 0;
+        box-sizing: border-box;
+    }
+    
+    .product-image {
+        order: -1;
+        margin-bottom: 15px;
+    }
+    
+    .product-actions {
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 15px;
+        padding: 10px;
+        gap: 10px;
+    }
+    
+    .quantity-selector {
+        width: auto;
+        margin-bottom: 0;
+        flex: 0 0 auto;
+    }
+    
+    .btn-add {
+        flex: 1;
+        max-width: 200px;
+        margin-top: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .product-item {
+        padding: 12px;
+    }
+    
+    .product-image {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .product-inventory, .product-pricing {
+        padding: 10px;
+    }
+    
+    .inventory-title, .price-tiers div.price-title {
+        font-size: 14px;
+    }
+    
+    .region-label, .region-value, .price-tiers .quantity-range, .price-currency, .price-amount {
+        font-size: 13px;
+    }
+}
+
+/* 配件卡片样式更新 */
+.accessory-name {
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 5px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.accessory-specs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 15px;
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    padding: 12px;
+}
+
+.accessory-spec-item {
+    display: inline-block;
+    background-color: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 5px 10px;
+    margin-bottom: 5px;
+    font-size: 12px;
+    color: #495057;
+    transition: all 0.2s ease;
+}
+
+.accessory-spec-item:hover {
+    background-color: #f1f6ff;
+    border-color: #bfd6ff;
+}
+
+.accessory-spec-item strong {
+    color: #1a57a5;
+    font-weight: 600;
+    margin-right: 3px;
+}
+
+/* Main content area */
+.machines-page {
+    padding: 30px;
+    background-color: #f5f5f5;
+    min-height: calc(100vh - 70px); /* 减去header高度 */
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+/* Accessory Styles */
+.accessory-level-1,
+.accessory-level-2,
+.accessory-level-3,
+.accessory-level-4,
+.accessory-level-5 {
+    margin-top: 30px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    display: none; /* Initially hidden */
+}
+
+.accessory-specs {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 8px;
+    font-size: 13px;
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    padding: 8px;
+    margin: 8px 0;
+}
+
+.accessory-spec-item {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 4px 8px;
+    margin-right: 8px;
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: #495057;
+    transition: all 0.2s ease;
+}
+
+.accessory-spec-item strong {
+    color: #1a57a5;
+    font-weight: 600;
+    margin-right: 2px;
+}
+
+.frequency-spec {
+    background-color: #f1f6ff;
+    border: 1px solid #c1d5ff;
+    border-radius: 4px;
+    padding: 3px 8px;
+    margin-right: 8px;
+    margin-bottom: 6px;
+    color: #495057;
+    transition: all 0.2s ease;
+}
+
+.frequency-spec strong {
+    color: #0066cc;
+    font-weight: 500;
+}
+
+.level-indicator {
+    font-size: 14px;
+    font-weight: 500;
+    margin-left: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+.dynamic-note {
+    font-size: 14px;
+    color: #666;
+    font-style: italic;
+    margin-left: 15px;
+    font-weight: normal;
+    padding: 4px 10px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.level-header {
+    display: flex;
+    align-items: center;
+    background-color: #f5f7fa;
+    padding: 12px 20px;
+    border-bottom: 1px solid #e9ecef;
+    position: relative;
+}
+
+.level-header h2 {
+    font-size: 18px;
+    margin: 0;
+    color: #333;
+}
+
+.context-message {
+    margin-left: 20px;
+    color: #666;
+    font-size: 14px;
+    font-style: italic;
+    flex: 1;
+}
+
+.close-btn {
+    background-color: transparent;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.close-btn:hover {
+    background-color: #e9ecef;
+    color: #333;
+}
+
+.accessory-content {
+    padding: 20px;
+}
+
+/* 配件嵌套层级样式 */
+.accessory-level-2 {
+    border-left: 4px solid #4a90e2;
+}
+
+.accessory-level-3 {
+    border-left: 4px solid #50b766;
+}
+
+.accessory-level-4 {
+    border-left: 4px solid #f5a623;
+}
+
+.accessory-level-5 {
+    border-left: 4px solid #e74c3c;
+}
+
+/* 配件级别指示器样式 */
+.accessory-level-1 .level-indicator {
+    background-color: #e3f2fd;
+    color: #2196f3;
+}
+
+.accessory-level-2 .level-indicator {
+    background-color: #e3f7ed;
+    color: #4caf50;
+}
+
+.accessory-level-3 .level-indicator {
+    background-color: #fff8e1;
+    color: #ff9800;
+}
+
+.accessory-level-4 .level-indicator {
+    background-color: #ffebee;
+    color: #f44336;
+}
+
+.accessory-level-5 .level-indicator {
+    background-color: #f3e5f5;
+    color: #9c27b0;
+}
+
+/* 电压选择区域样式优化 */
+.voltage-options-section {
+    margin: 30px 0 20px;
+    background-color: #f8f9fa;
+    padding: 15px 20px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    max-width: 500px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+}
+
+.voltage-options-section:hover {
+    background-color: #f0f7ff;
+    border-color: #c1d5ff;
+}
+
+.filter-title {
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #1a57a5;
+    font-size: 16px;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 8px;
+}
+
+.voltage-options {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.voltage-option {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.voltage-option:hover {
+    background-color: #e9ecef;
+}
+
+.voltage-option input {
+    margin-right: 8px;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+/* Cart Styles */
+.cart-floating {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #1a57a5;
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    z-index: 900;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.cart-floating:hover {
+    background-color: #14488c;
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+}
+
+.cart-count {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: #e53935;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Tooltip styles */
+.tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip .tooltip-content {
+    visibility: hidden;
+    width: 280px;
+    background-color: white;
+    color: #333;
+    text-align: left;
+    border-radius: 6px;
+    padding: 15px;
+    position: absolute;
+    z-index: 1001;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -140px;
+    opacity: 0;
+    transition: opacity 0.3s, visibility 0.3s;
+    box-shadow: 0 3px 15px rgba(0,0,0,0.15);
+    border: 1px solid #eaeaea;
+    font-size: 13px;
+    line-height: 1.5;
+    pointer-events: none;
+}
+
+.tooltip:hover .tooltip-content {
+    visibility: visible;
+    opacity: 1;
+}
+
+.tooltip .tooltip-content::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -8px;
+    border-width: 8px;
+    border-style: solid;
+    border-color: white transparent transparent transparent;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
+}
+
+.tooltip-title {
+    font-weight: 600;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+    color: #1a57a5;
+}
+
+.tooltip-row {
+    display: flex;
+    margin-bottom: 6px;
+}
+
+.tooltip-label {
+    font-weight: 500;
+    min-width: 110px;
+    color: #555;
+}
+
+/* Product detail item hover effect */
+.product-detail-item:hover, .accessory-spec-item:hover {
+    background-color: #e1ebff;
+    border-color: #c1d5ff;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(26, 87, 165, 0.1);
+}
+
+/* Cart notification */
+.cart-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    background-color: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+    padding: 16px;
+    width: 300px;
+    transition: all 0.3s;
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+}
+
+.notification-icon {
+    margin-right: 12px;
+    font-size: 20px;
+    color: #52c41a;
+}
+
+.notification-text {
+    flex: 1;
+    font-size: 14px;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0 4px;
+}
+
+.notification-actions {
+    margin-top: 12px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.go-to-cart-btn {
+    background-color: #1890ff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.3s;
+}
+
+.go-to-cart-btn:hover {
+    background-color: #40a9ff;
+}
+
+/* 空状态显示样式 */
+.empty-accessories {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin: 20px 0;
+  border: 1px dashed #ccc;
+  width: 100%;
+}
+
+.empty-accessories-icon {
+  font-size: 36px;
+  color: #bbb;
+  margin-bottom: 15px;
+}
+
+.empty-accessories-message {
+  font-size: 16px;
+  color: #666;
+  text-align: center;
+}
+
+.dynamic-note.no-accessories {
+  color: #ff4d4f;
+  font-weight: bold;
+}
+
+/* 表格布局样式 - 基于 SpareParts 样式 */
+.machines-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  table-layout: fixed;
+}
+
+.machines-table th {
+  background-color: #f5f5f5;
+  padding: 12px 15px;
+  text-align: left;
+  font-weight: bold;
+  border-bottom: 2px solid #ddd;
+  white-space: nowrap;
+}
+
+.machines-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+/* 更新表格列宽设置 */
+.machines-table th:nth-child(1),
+.machines-table td:nth-child(1) {
+  width: 50px;
+  text-align: center;
+}
+
+.machines-table th:nth-child(2),
+.machines-table td:nth-child(2) {
+  width: 80px;
+}
+
+.machines-table th:nth-child(3),
+.machines-table td:nth-child(3) {
+  width: 150px;
+}
+
+.machines-table th:nth-child(4),
+.machines-table td:nth-child(4) {
+  width: auto;
+}
+
+.machines-table th:nth-child(5),
+.machines-table td:nth-child(5) {
+  width: 150px;
+}
+
+.machines-table th:nth-child(6),
+.machines-table td:nth-child(6) {
+  width: 100px;
+}
+
+.machines-table th:nth-child(7),
+.machines-table td:nth-child(7) {
+  width: 150px;
+}
+
+/* 选择单元格样式 */
+.selection-cell {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.selection-cell input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+
+/* 机器代码单元格 */
+.machine-code-cell {
+  vertical-align: top;
+}
+
+.machine-code {
+  font-weight: 600;
+  color: #1a57a5;
+  margin-bottom: 5px;
+  display: block;
+}
+
+.machine-name {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 5px;
+  display: block;
+}
+
+.machine-model {
+  font-size: 13px;
+  color: #666;
+  display: block;
+}
+
+/* 规格单元格 */
+.specs-table-cell {
+  padding: 10px 0;
+}
+
+.specs-table {
+  width: 100%;
+  background-color: #f9f9f9;
+  border-radius: 6px;
+  padding: 10px;
+  margin: 0;
+  transition: all 0.2s ease;
+}
+
+.specs-row {
+  display: flex;
+  margin-bottom: 5px;
+  align-items: center;
+}
+
+.specs-label {
+  font-weight: 500;
+  min-width: 100px;
+  color: #555;
+}
+
+.specs-value {
+  color: #333;
+}
+
+/* 价格单元格 */
+.price-tiers-cell {
+  vertical-align: top;
+}
+
+.price-tiers {
+  display: flex;
+  flex-direction: column;
+}
+
+.price-tier {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 14px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.price-tier:last-child {
+  border-bottom: none;
+}
+
+.price-range {
+  color: #555;
+}
+
+.price-value {
+  font-weight: 500;
+  color: #1a57a5;
+}
+
+/* 库存单元格 */
+.inventory-cell {
+  vertical-align: top;
+}
+
+.inventory-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 14px;
+}
+
+.inventory-info div {
+  display: flex;
+  justify-content: space-between;
+}
+
+.inventory-high {
+  color: #28a745;
+}
+
+.inventory-medium {
+  color: #17a2b8;
+}
+
+.inventory-low {
+  color: #dc3545;
+}
+
+/* 操作单元格 */
+.actions-cell {
+  vertical-align: middle;
+  text-align: center;
+}
+
+.quantity-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.quantity-btn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #ced4da;
+  background-color: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 4px;
+}
+
+.quantity-btn:hover {
+  background-color: #e9ecef;
+}
+
+.quantity-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.quantity-input {
+  width: 40px;
+  height: 28px;
+  text-align: center;
+  border: 1px solid #ced4da;
+  margin: 0 5px;
+  border-radius: 4px;
+}
+
+.add-to-cart-btn {
+  background-color: #1a57a5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.2s;
+}
+
+.add-to-cart-btn:hover {
+  background-color: #14447e;
+}
+
+/* 响应式调整 */
+@media (max-width: 992px) {
+  .machines-table {
+    width: 100%;
+    overflow-x: auto;
+    display: block;
+  }
+  
+  .machines-table th,
+  .machines-table td {
+    padding: 10px;
+  }
+}
+
+/* 更新响应式布局中的表格标签内容 */
+@media (max-width: 768px) {
+  .machines-table thead {
+    display: none;
+  }
+  
+  .machines-table, 
+  .machines-table tbody, 
+  .machines-table tr, 
+  .machines-table td {
+    display: block;
+    width: 100%;
+  }
+  
+  .machines-table tr {
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    background-color: #fff;
+  }
+  
+  .machines-table td {
+    border-bottom: 1px solid #eee;
+    padding: 10px;
+    text-align: right;
+    position: relative;
+    padding-left: 50%;
+  }
+  
+  .machines-table td:before {
+    position: absolute;
+    left: 10px;
+    width: 45%;
+    white-space: nowrap;
+    text-align: left;
+    font-weight: bold;
+  }
+  
+  .machines-table td:nth-of-type(1):before { content: "选择"; }
+  .machines-table td:nth-of-type(2):before { content: "图片"; }
+  .machines-table td:nth-of-type(3):before { content: "产品编码"; }
+  .machines-table td:nth-of-type(4):before { content: "规格"; }
+  .machines-table td:nth-of-type(5):before { content: "价格"; }
+  .machines-table td:nth-of-type(6):before { content: "库存"; }
+  .machines-table td:nth-of-type(7):before { content: "操作"; }
+  
+/* 图片单元格样式调整 */
+.machine-image-cell {
+    width: 12%;
+    min-width: 120px;
+    max-width: 180px; /* 增加最大宽度 */
+    padding: 15px;
+    text-align: center;
+    vertical-align: middle;
+  }
+  
+  /* 图片样式优化 */
+  .machine-image {
+    width: 100%; /* 占满单元格宽度 */
+    min-width: 120px;
+    max-width: 160px; /* 增加图片最大宽度 */
+    height: auto;
+    object-fit: contain; /* 保持图片比例 */
+    border-radius: 6px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.1); /* 增强阴影效果 */
+    transition: all 0.3s ease;
+    display: block;
+    margin: 0 auto;
+  }
+  
+  /* 悬停效果增强 */
+  .machine-image:hover {
+    transform: scale(1.1); /* 略微增大悬停时的放大效果 */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+  }
+  
+  /* 添加图片边框 */
+  .machine-image {
+    border: 1px solid #eaeaea;
+    padding: 3px;
+    background-color: white;
+  }
+  
+  /* 响应式调整 */
+  @media (max-width: 1200px) {
+    .machine-image-cell {
+      max-width: 160px;
+    }
+    
+    .machine-image {
+      max-width: 140px;
+    }
+  }
+  
+  @media (max-width: 992px) {
+    .machine-image-cell {
+      width: 110px;
+      min-width: 110px;
+      max-width: 130px;
+    }
+    
+    .machine-image {
+      max-width: 120px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .machine-image-cell {
+      width: 100%;
+      max-width: none;
+      padding: 20px;
+    }
+    
+    .machine-image {
+      max-width: 200px; /* 在移动视图中增大图片 */
+    }
+  }
+  .quantity-control {
+    justify-content: flex-end;
+  }
+}
+
+/* 视图切换按钮样式 */
+.view-toggle {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 15px;
+}
+
+.view-btn {
+  padding: 6px 12px;
+  background-color: #f8f9fa;
+  border: 1px solid #ced4da;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.view-btn:first-child {
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+.view-btn:last-child {
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+  border-left: none;
+}
+
+.view-btn.active {
+  background-color: #1a57a5;
+  color: white;
+  border-color: #1a57a5;
+}
+
+.view-btn:hover:not(.active) {
+  background-color: #e9ecef;
+}
+
+/* 更新配件表格样式 */
+.accessories-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+  border-radius: 6px;
+  table-layout: fixed;
+}
+
+.accessories-table th {
+  background-color: #f5f5f5;
+  padding: 12px 15px;
+  text-align: left;
+  font-weight: bold;
+  border-bottom: 2px solid #ddd;
+  white-space: nowrap;
+}
+
+.accessories-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+/* 配件表格列宽设置 */
+.accessories-table th.selection-th,
+.accessories-table td.selection-cell {
+  width: 50px;
+  text-align: center;
+}
+
+.accessories-table th.image-th,
+.accessories-table td.image-cell {
+  width: 100px;
+  text-align: center;
+}
+
+/* 配件图片样式 */
+.accessory-image {
+  max-width: 80px;
+  max-height: 80px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.accessories-table th.info-th,
+.accessories-table td.info-cell {
+  width: auto;
+}
+
+/* 配件信息样式 */
+.accessory-name {
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+
+.accessory-model-code {
+  color: #666;
+  font-size: 14px;
+  margin-left: 6px;
+  font-weight: normal;
+}
+
+.accessory-specs-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.accessory-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+  background-color: #f9f9f9;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.accessory-spec-item {
+  font-size: 13px;
+  background-color: #f5f5f5;
+  padding: 3px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-right: 6px;
+}
+
+.accessory-spec-item strong {
+  color: #1a57a5;
+  font-weight: 600;
+  margin-right: 3px;
+}
+
+.more-info-section {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.more-info-section a {
+  font-size: 12px;
+  color: #1a57a5;
+  text-decoration: none;
+}
+
+.more-info-section a:hover {
+  text-decoration: underline;
+}
+
+.accessories-table th.inventory-th,
+.accessories-table td.inventory-cell {
+  width: 150px;
+}
+
+.accessories-table th.price-th,
+.accessories-table td.price-cell {
+  width: 150px;
+}
+
+.accessories-table th.actions-th,
+.accessories-table td.actions-cell {
+  width: 150px;
+}
+
+/* 配件行悬停效果 */
+.accessories-table tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+/* 配件无数据样式 */
+.accessories-table td.no-accessories {
+  text-align: center;
+  padding: 30px 20px;
+  color: #666;
+  font-style: italic;
+  background-color: #f9f9f9;
+}
+
+/* 空状态显示样式 */
+.no-accessories {
+  text-align: center;
+  padding: 30px 20px;
+  color: #666;
+  font-style: italic;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+}
+
+/* 响应式调整 */
+@media (max-width: 992px) {
+  .accessories-table {
+    width: 100%;
+    overflow-x: auto;
+    display: block;
+  }
+  
+  .accessories-table th,
+  .accessories-table td {
+    padding: 10px;
+  }
+}
+
+/* 更新响应式布局中的表格标签内容 */
+@media (max-width: 768px) {
+  .accessories-table thead {
+    display: none;
+  }
+  
+  .accessories-table, 
+  .accessories-table tbody, 
+  .accessories-table tr, 
+  .accessories-table td {
+    display: block;
+    width: 100%;
+  }
+  
+  .accessories-table tr {
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    background-color: #fff;
+  }
+  
+  .accessories-table td {
+    border-bottom: 1px solid #eee;
+    padding: 10px;
+    text-align: right;
+    position: relative;
+    padding-left: 50%;
+  }
+  
+  .accessories-table td:before {
+    position: absolute;
+    left: 10px;
+    width: 45%;
+    white-space: nowrap;
+    text-align: left;
+    font-weight: bold;
+  }
+  
+  .accessories-table td:nth-of-type(1):before { content: "选择"; }
+  .accessories-table td:nth-of-type(2):before { content: "图片"; }
+  .accessories-table td:nth-of-type(3):before { content: "配件信息"; }
+  .accessories-table td:nth-of-type(4):before { content: "库存状态"; }
+  .accessories-table td:nth-of-type(5):before { content: "价格信息"; }
+  .accessories-table td:nth-of-type(6):before { content: "数量/操作"; }
+  
+  .accessories-table td.image-cell {
+    text-align: right;
+  }
+  
+  .accessories-table td.actions-cell .quantity-selector {
+    justify-content: flex-end;
+  }
+}
+
+/* 配件导航路径样式 */
+.accessory-path {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+  padding: 10px 15px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.accessory-path-item {
+  display: flex;
+  align-items: center;
+}
+
+.accessory-path-item:not(:last-child):after {
+  content: "›";
+  margin: 0 8px;
+  color: #999;
+  font-weight: bold;
+}
+
+.accessory-path-level {
+  color: #666;
+  margin-right: 3px;
+  font-size: 12px;
+}
+
+.accessory-path-name {
+  color: #1a57a5;
+  font-weight: 500;
+}
+
+/* 加载状态样式 */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 200px;
+  padding: 30px;
+}
+
+.loading-content {
+  text-align: center;
+  padding: 20px;
+  min-width: 150px;
+}
+
+.loading-content p {
+  margin-top: 15px;
+  color: #666;
+  font-size: 14px;
+}
+
+/* 错误状态样式 */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+  margin: 20px auto;
+  background-color: #fff8f8;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 500px;
+}
+
+.error-icon {
+  font-size: 48px;
+  color: #ff4d4f;
+  margin-bottom: 20px;
+}
+
+.error-message h3 {
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.error-message p {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.btn-retry {
+  background-color: #1a57a5;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.3s;
+}
+
+.btn-retry:hover {
+  background-color: #0d4b8f;
+}
+
+/* 产品信息和规格合并单元格样式 */
+.machine-info-cell {
+  padding: 15px;
+  vertical-align: top;
+}
+
+.machine-header {
+  margin-bottom: 12px;
+}
+
+.machine-code {
+  background-color: #1a57a5;
+  color: white;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-right: 10px;
+  font-size: 12px;
+}
+
+.machine-name {
+  font-weight: bold;
+  font-size: 16px;
+  display: block;
+  margin: 5px 0;
+}
+
+.machine-model {
+  color: #666;
+  font-size: 13px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.specs-table {
+  margin: 12px 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.specs-row {
+  display: flex;
+  margin-bottom: 5px;
+}
+
+.specs-label {
+  font-weight: 500;
+  color: #666;
+  margin-right: 5px;
+  min-width: 50px;
+}
+
+.specs-value {
+  color: #333;
+}
+
+/* 整体表格宽度控制 */
+.machines-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+  }
+  
+  /* 表头优化 */
+  .machines-table th {
+    background-color: #f5f5f5;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding: 12px 8px;
+    text-align: left;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #e0e0e0;
+  }
+  
+  /* 交替行颜色 */
+  .machines-table tbody tr:nth-child(odd) {
+    background-color: #fafafa;
+  }
+  
+  /* 高亮当前选中行 */
+  .machines-table tbody tr.selected,
+  .machines-table tbody tr:has(input[type="radio"]:checked) {
+    background-color: #e6f7ff;
+    border-left: 3px solid #1a57a5;
+  }
+  
+  /* 单选框列 - 最窄 */
+  .machines-table th:nth-child(1),
+  .machines-table td:nth-child(1),
+  .selection-cell {
+    width: 5%;
+    min-width: 40px;
+    max-width: 60px;
+    text-align: center;
+    padding: 8px 4px;
+  }
+  
+  /* 图片列 - 固定宽度 */
+  .machines-table th:nth-child(2),
+  .machines-table td:nth-child(2),
+  
+  /* 产品信息列 - 最宽 */
+  .machines-table th:nth-child(3),
+  .machines-table td:nth-child(3),
+  .machine-info-cell {
+    width: 36%;
+    min-width: 300px;
+    padding: 20px;
+    vertical-align: top;
+    border-left: 1px solid #f0f0f0;
+    border-right: 1px solid #f0f0f0;
+    transition: background-color 0.2s;
+  }
+  
+  /* 价格列 - 适中宽度 */
+  .machines-table th:nth-child(4),
+  .machines-table td:nth-child(4),
+  .price-tiers-cell {
+    width: 18%;
+    min-width: 160px;
+    padding: 12px 10px;
+    vertical-align: top;
+  }
+  
+  /* 库存列 - 适中宽度 */
+  .machines-table th:nth-child(5),
+  .machines-table td:nth-child(5),
+  .inventory-cell {
+    width: 16%;
+    min-width: 150px;
+    padding: 12px 10px;
+    vertical-align: top;
+  }
+  
+  /* 操作列 - 合适宽度 */
+  .machines-table th:nth-child(6),
+  .machines-table td:nth-child(6),
+  .actions-cell {
+    width: 13%;
+    min-width: 140px;
+    padding: 12px 8px;
+    vertical-align: middle;
+  }
+  
+  /* 确保内容在单元格内适当换行 */
+  .machines-table td {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  /* 标题区域样式 */
+  .machine-header {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* 产品代码样式 */
+  .machine-code {
+    background-color: #1a57a5;
+    color: white;
+    font-weight: bold;
+    padding: 3px 10px;
+    border-radius: 4px;
+    margin-right: 10px;
+    font-size: 13px;
+    display: inline-block;
+    align-self: flex-start;
+    margin-bottom: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  /* 产品名称样式 */
+  .machine-name {
+    font-weight: bold;
+    font-size: 18px;
+    margin: 5px 0 8px 0;
+    color: #222;
+  }
+  
+  /* 产品型号样式 */
+  .machine-model {
+    color: #666;
+    font-size: 13px;
+    margin-bottom: 12px;
+    font-style: italic;
+  }
+  
+  /* 新增产品描述样式 */
+  .machine-description {
+    color: #555;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 18px;
+    padding: 0 0 10px 0;
+    border-bottom: 1px dashed #eee;
+  }
+  
+  /* 规格表格在较宽的machine-info-cell中也要适当调整 */
+  .specs-table {
+    width: 100%;
+    margin: 15px 0;
+    display: grid;
+    grid-template-columns: 80px 1fr; /* 让标签宽度固定，值自适应 */
+    gap: 10px;
+    border: 1px solid #f0f0f0;
+    border-radius: 6px;
+    padding: 12px;
+    background-color: #fafafa;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  
+  /* 规格行样式 */
+  .specs-row {
+    display: flex;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed #eee;
+  }
+  
+  .specs-row:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+  
+  /* 高亮规格样式 */
+  .specs-highlight {
+    background-color: #f0f7ff;
+    padding: 10px;
+    border-radius: 4px;
+    margin: 5px 0;
+    border-left: 3px solid #1a57a5;
+  }
+  
+  /* 规格标签样式 */
+  .specs-label {
+    font-weight: 600;
+    color: #444;
+    margin-right: 8px;
+    min-width: 60px;
+  }
+  
+  /* 规格值样式 */
+  .specs-value {
+    color: #333;
+    flex: 1;
+  }
+  
+  .specs-highlight .specs-value {
+    font-weight: bold;
+    color: #1a57a5;
+  }
+  
+  /* 更多信息区域样式 */
+  .more-info-section {
+    margin-top: 18px;
+    display: flex;
+    gap: 15px;
+  }
+  
+  .more-info-section a {
+    color: #1a57a5;
+    text-decoration: none;
+    padding: 6px 12px;
+    border: 1px solid #1a57a5;
+    border-radius: 4px;
+    font-size: 13px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .more-info-section a:hover {
+    background-color: #1a57a5;
+    color: white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+  
+  .info-icon {
+    margin-right: 5px;
+    font-weight: bold;
+  }
+  
+  /* 机器图片样式优化 */
+ 
+  
+  /* 优化价格显示，防止拥挤 */
+  .price-tiers {
+    width: 100%;
+  }
+  
+  .price-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+  }
+  
+  .price-tier {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding: 4px 0;
+  }
+  
+  /* 确保价格信息不会折行 */
+  .price-range {
+    color: #666;
+    font-size: 13px;
+  }
+  
+  .price-value {
+    white-space: nowrap;
+    font-weight: 500;
+    color: #1a57a5;
+  }
+  
+  /* 优化库存区域显示 */
+  .inventory-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+  }
+  
+  .inventory-region {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    padding: 3px 0;
+  }
+  
+  .region-label {
+    min-width: 40px;
+    color: #666;
+    font-size: 13px;
+  }
+  
+  .region-value {
+    font-weight: 500;
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-size: 13px;
+  }
+  
+  .high-stock {
+    background-color: #e6f7ee;
+    color: #0c6b58;
+  }
+  
+  .medium-stock {
+    background-color: #fff7e6;
+    color: #d46b08;
+  }
+  
+  .low-stock {
+    background-color: #fff1f0;
+    color: #cf1322;
+  }
+  
+  /* 操作区调整，使内容更紧凑 */
+  .quantity-selector {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+  
+  .qty-btn {
+    background: #f7f7f7;
+    border: 1px solid #d9d9d9;
+    border-radius: 2px;
+    padding: 4px 8px;
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+  
+  .qty-btn:hover:not(:disabled) {
+    background: #e6f7ff;
+    border-color: #1890ff;
+  }
+  
+  .qty-btn:disabled {
+    cursor: not-allowed;
+    color: #d9d9d9;
+  }
+  
+  .quantity-input {
+    width: 40px;
+    text-align: center;
+    border: 1px solid #d9d9d9;
+    padding: 4px 2px;
+    margin: 0 5px;
+  }
+  
+  .btn-add {
+    width: 100%;
+    padding: 8px 5px;
+    font-size: 13px;
+    white-space: nowrap;
+    background-color: #1a57a5;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .btn-add:hover {
+    background-color: #1565c0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+  
+  .anticon {
+    margin-right: 5px;
+  }
+  
+  /* 响应式调整 */
+  @media (max-width: 1200px) {
+    /* 在较小屏幕上调整各列宽度比例 */
+    .machine-info-cell {
+      width: 32%;
+    }
+    
+    .price-tiers-cell,
+    .inventory-cell {
+      width: 17%;
+    }
+    
+    .specs-table {
+      grid-template-columns: 70px 1fr;
+    }
+  }
+  
+  @media (max-width: 992px) {
+    /* 在平板设备上进一步调整 */
+    .machines-table {
+      table-layout: auto; /* 在较小屏幕使用自动布局 */
+    }
+    
+    .machine-image-cell {
+      width: 100px;
+      min-width: 100px;
+    }
+    
+    .machine-info-cell {
+      width: 30%;
+    }
+    
+    .price-tier {
+      flex-direction: column;
+    }
+    
+    .price-value {
+      margin-top: 3px;
+    }
+    
+    .more-info-section {
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .more-info-section a {
+      width: 100%;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    /* 在移动设备上转为响应式布局 */
+    .machines-table thead {
+      display: none;
+    }
+    
+    .machines-table,
+    .machines-table tbody,
+    .machines-table tr {
+      display: block;
+      width: 100%;
+    }
+    
+    .machines-table tr {
+      margin-bottom: 20px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .machines-table th,
+    .machines-table td {
+      display: block;
+      width: 100% !important;
+      max-width: none !important;
+      border: none;
+    }
+    
+    .machines-table td:before {
+      content: attr(data-label);
+      display: block;
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: #666;
+    }
+    
+    .selection-cell {
+      text-align: right;
+      padding: 10px;
+      background-color: #f5f5f5;
+    }
+    
+    .machine-info-cell {
+      border-top: 1px solid #eee;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .machine-image-cell {
+      text-align: center;
+      padding: 15px;
+    }
+    
+    .machine-image {
+      max-width: 180px;
+      margin: 0 auto;
+    }
+    
+    /* 在移动设备上改善内容显示 */
+    .specs-table {
+      grid-template-columns: 1fr;
+    }
+    
+    .specs-row {
+      flex-direction: row;
+      justify-content: space-between;
+    }
+    
+    .inventory-region,
+    .price-tier {
+      padding: 8px 0;
+    }
+    
+    .actions-cell {
+      display: flex;
+      flex-direction: column;
+      padding: 15px;
+    }
+    
+    .quantity-selector {
+      margin-bottom: 15px;
+    }
+    
+    .btn-add {
+      padding: 12px;
+      font-size: 14px;
+    }
+  }
+
+
+  /* 附件规格样式应用到主机表 */
+.accessory-specs-container {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 10px 0;
+  }
+  
+  .accessory-spec-item {
+    margin-right: 15px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: #333;
+  }
+  
+  .accessory-spec-item strong {
+    font-weight: 600;
+    color: #555;
+    margin-right: 3px;
+  }
+  
+  /* 可选：高亮特定规格 */
+  .spec-highlight {
+    background-color: #f0f7ff;
+    padding: 3px 6px;
+    border-radius: 3px;
+    border-left: 2px solid #1a57a5;
+  }

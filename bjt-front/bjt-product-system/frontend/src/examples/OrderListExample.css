@@ -1,0 +1,415 @@
+/* OrderListExample.css */
+/* 容器样式 */
+.order-list-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+/* 页头样式 */
+.order-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.order-list-header h1 {
+  margin: 0;
+  font-size: 24px;
+  color: #333;
+}
+
+.language-switch {
+  padding: 8px 16px;
+  background-color: #f4f6f8;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.language-switch:hover {
+  background-color: #e8e8e8;
+}
+
+/* 过滤器和搜索栏 */
+.order-list-filters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 15px;
+}
+
+.tabs {
+  display: flex;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background-color: #f9f9f9;
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.tabs button {
+  padding: 10px 15px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #555;
+  white-space: nowrap;
+  transition: all 0.3s;
+}
+
+.tabs button:hover {
+  color: #1890ff;
+}
+
+.tabs button.active {
+  background-color: #1890ff;
+  color: white;
+  border-radius: 4px;
+}
+
+.search-form {
+  display: flex;
+  align-items: center;
+}
+
+.search-form input {
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px 0 0 4px;
+  width: 250px;
+  font-size: 14px;
+}
+
+.search-form button {
+  padding: 10px 16px;
+  background-color: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 0 4px 4px 0;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.search-form button:hover {
+  background-color: #0c7cd5;
+}
+
+/* 加载状态 */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+  font-size: 16px;
+  color: #666;
+}
+
+/* 空订单状态 */
+.no-orders {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 50px 20px;
+  text-align: center;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+.no-orders h3 {
+  margin: 0 0 10px;
+  color: #555;
+}
+
+.no-orders p {
+  margin: 0;
+  color: #888;
+}
+
+/* 订单卡片 */
+.order-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+.order-card {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 16px;
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.order-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.order-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.order-status {
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.status-pending {
+  background-color: #ffe58f;
+  color: #876800;
+}
+
+.status-paid {
+  background-color: #b7eb8f;
+  color: #389e0d;
+}
+
+.status-shipped {
+  background-color: #91caff;
+  color: #0958d9;
+}
+
+.status-completed {
+  background-color: #d9f7be;
+  color: #52c41a;
+}
+
+.status-cancelled {
+  background-color: #ffccc7;
+  color: #cf1322;
+}
+
+.label {
+  font-weight: 500;
+  color: #888;
+}
+
+.order-total {
+  padding: 10px 0;
+  border-top: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 10px;
+}
+
+.price {
+  font-size: 16px;
+  font-weight: 600;
+  color: #f5222d;
+}
+
+.order-shipping {
+  margin-bottom: 14px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.order-items-toggle {
+  margin-bottom: 16px;
+}
+
+.view-items-btn {
+  width: 100%;
+  padding: 8px;
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+  font-size: 13px;
+  transition: background-color 0.2s;
+}
+
+.view-items-btn:hover {
+  background-color: #f0f0f0;
+}
+
+.order-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.order-actions button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.btn-export {
+  background-color: #f4f6f8;
+  color: #1890ff;
+  border: 1px solid #d9d9d9;
+}
+
+.btn-export:hover {
+  background-color: #e6f7ff;
+  border-color: #1890ff;
+}
+
+.btn-cancel {
+  background-color: white;
+  color: #ff4d4f;
+  border: 1px solid #ff4d4f;
+}
+
+.btn-cancel:hover {
+  background-color: #fff1f0;
+}
+
+.btn-details {
+  background-color: #1890ff;
+  color: white;
+}
+
+.btn-details:hover {
+  background-color: #0c7cd5;
+}
+
+/* 分页控件 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 20px;
+}
+
+.pagination button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background-color: white;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination button:hover:not(:disabled) {
+  color: #1890ff;
+  border-color: #1890ff;
+}
+
+.pagination button.active {
+  background-color: #1890ff;
+  color: white;
+  border-color: #1890ff;
+}
+
+.pagination button:disabled {
+  color: #d9d9d9;
+  cursor: not-allowed;
+}
+
+/* 响应式设计 */
+@media (min-width: 768px) {
+  .order-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .order-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* 平板和小屏幕适配 */
+@media (max-width: 768px) {
+  .order-list-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .order-list-filters {
+    flex-direction: column;
+  }
+  
+  .tabs {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  
+  .search-form {
+    width: 100%;
+  }
+  
+  .search-form input {
+    flex: 1;
+  }
+}
+
+/* 移动设备适配 */
+@media (max-width: 480px) {
+  .order-list-container {
+    padding: 15px 10px;
+  }
+  
+  .tabs {
+    padding: 2px;
+  }
+  
+  .tabs button {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  
+  .order-card {
+    padding: 12px;
+  }
+  
+  .order-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .order-status {
+    align-self: flex-start;
+  }
+  
+  .order-actions {
+    flex-wrap: wrap;
+  }
+  
+  .order-actions button {
+    flex: 1;
+    text-align: center;
+    min-height: 44px; /* 更大的触摸目标 */
+  }
+  
+  .pagination button {
+    min-width: 30px;
+    min-height: 30px;
+  }
+} 

@@ -1,0 +1,330 @@
+{
+  "home": {
+    "introduction": "Welcome to BJT Product Management System",
+    "browseProducts": "Browse Products"
+  },
+  "loading": {
+    "products": "Loading products...",
+    "productDetails": "Loading product details...",
+    "cart": "Loading cart...",
+    "order": "Loading order...",
+    "machines": "Loading machines...",
+    "accessories": "Loading accessories..."
+  },
+  "errors": {
+    "failedToLoadProducts": "Failed to load products",
+    "productLineNotFound": "Product line not found",
+    "authenticationFailed": "Authentication failed",
+    "loadingFailed": "Loading failed",
+    "networkError": "Network error",
+    "failedToLoadMachines": "Failed to load machines list",
+    "systemError": "System error, please contact administrator",
+    "failedToAddToCart": "Failed to add to cart",
+    "failedToLoadAccessories": "Failed to load accessories"
+  },
+  "messages": {
+    "loginRequired": "Please log in to view this page",
+    "addedToCart": "Added to cart",
+    "noAccessoriesAvailable": "No accessories available for this machine"
+  },
+  "buttons": {
+    "addToCart": "Add to Cart",
+    "viewDetails": "View Details",
+    "loadMore": "Load More",
+    "checkout": "Go to Cart",
+    "close": "Close"
+  },
+  "nav": {
+    "home": "Home",
+    "products": "Products",
+    "support": "Support",
+    "contactUs": "Contact Us",
+    "login": "Login",
+    "account": "Account"
+  },
+  "header": {
+    "cart": "Cart",
+    "login": "Login",
+    "profile": "Profile",
+    "orders": "Orders",
+    "logout": "Logout",
+    "account": "Account",
+    "language": "Language"
+  },
+  "machines": {
+    "pageTitle": "Machine Selection",
+    "tableHeaders": {
+      "index": "No.",
+      "model": "Model",
+      "name": "Name",
+      "price": "Price",
+      "inventory": "Inventory",
+      "quantity": "Quantity",
+      "actions": "Actions",
+      "selection": "Select",
+      "image": "Image",
+      "specs": "Specifications"
+    },
+    "stock": {
+      "outOfStock": "Out of Stock",
+      "lowStock": "Low Stock",
+      "mediumStock": "Medium Stock",
+      "highStock": "In Stock"
+    },
+    "notification": {
+      "added": "has been added to your cart",
+      "quantity": "Quantity"
+    },
+    "accessory": {
+      "selectFor": "Select accessories for",
+      "level": "Level"
+    },
+    "filters": {
+      "all": "All",
+      "priceRange": "Price Range",
+      "region": "Region"
+    },
+    "voltage": "Voltage"
+  },
+  "menu": {
+    "Air Cushioning System": "Air Cushioning System",
+    "Paper Cushioning System": "Paper Cushioning System",
+    "Water Cushioning System": "Water Cushioning System",
+    "Air Cushion Machine & Accessory": "Air Cushion Machine & Accessory",
+    "Film options": "Film options",
+    "Paper Cushion Machine & Accessory": "Paper Cushion Machine & Accessory",
+    "Paper options": "Paper options",
+    "Spare parts": "Spare parts",
+    "Water Activated Tape Dispenser & Accessory": "Water Activated Tape Dispenser & Accessory",
+    "Water Activated Tape options": "Water Activated Tape options",
+    "After-sales service": "After-sales service",
+    "Document Download": "Document Download",
+    "FAQ": "FAQ"
+  },
+  "cart": {
+    "title": "Shopping Cart",
+    "empty": {
+      "message": "Your cart is empty",
+      "continueShopping": "Continue Shopping"
+    },
+    "controls": {
+      "selectAll": "Select All",
+      "unselectAll": "Unselect All",
+      "batchDelete": "Batch Delete",
+      "moveToFavorites": "Add to Favorites"
+    },
+    "productInfo": {
+      "sku": "SKU",
+      "favorite": "Favorite",
+      "delete": "Delete",
+      "subtotal": "Subtotal"
+    },
+    "summary": {
+      "selectedItems": "Selected Items",
+      "count": "items",
+      "total": "Total",
+      "submitOrder": "Proceed to Checkout"
+    },
+    "messages": {
+      "selectAtLeastOne": "Please select at least one item"
+    },
+    "notifications": {
+      "itemRemoved": "Item Removed",
+      "itemRemovedMessage": "The item has been removed from your cart",
+      "itemsRestored": "Cart Restored",
+      "itemsRestoredMessage": "Items returned from the order have been added to your cart"
+    },
+    "errors": {
+      "title": "Cart Error",
+      "removeItemFailed": "Failed to remove item, please try again",
+      "batchRemoveFailed": "Failed to remove selected items, please try again"
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "processing": "Processing..."
+  },
+  "order": {
+    "title": "Confirm Order",
+    "backToCart": "Back to Cart",
+    "items": {
+      "title": "Order Items"
+    },
+    "shipping": {
+      "title": "Shipping Information",
+      "name": "Name",
+      "phone": "Phone",
+      "email": "Email",
+      "company": "Company",
+      "country": "Country",
+      "address": "Address",
+      "city": "City",
+      "state": "State/Province",
+      "postalCode": "Postal Code",
+      "notes": "Notes"
+    },
+    "summary": {
+      "title": "Order Summary",
+      "subtotal": "Subtotal",
+      "shipping": "Shipping",
+      "tax": "Tax",
+      "discount": "Discount",
+      "total": "Total"
+    },
+    "submitOrder": "Place Order",
+    "errors": {
+      "loadData": "Error loading order data",
+      "submit": "Error submitting order",
+      "submitAlert": "Failed to submit order. Please try again."
+    }
+  },
+  "orderList": {
+    "title": "Order History",
+    "loading": "Loading orders...",
+    "orderNumber": "Order Number",
+    "orderDate": "Order Date",
+    "totalAmount": "Total Amount",
+    "paymentMethod": "Payment Method",
+    "shippingInfo": "Shipping Info",
+    "status": {
+      "pending": "Pending",
+      "paid": "Paid",
+      "shipped": "Shipped",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "viewItems": "View Items",
+    "exportPO": "Export PO",
+    "viewDetails": "View Details",
+    "cancelOrder": "Cancel Order",
+    "goToPay": "Go to Pay",
+    "confirmCancel": "Are you sure you want to cancel this order?",
+    "cancelSuccess": "Order cancelled successfully",
+    "exportingPO": "Exporting PO...",
+    "tabs": {
+      "all": "All Orders",
+      "pending": "Pending",
+      "paid": "Paid",
+      "shipped": "Shipped",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "dateRange": "Date Range",
+    "to": "to",
+    "search": "Search",
+    "searchPlaceholder": "Search by order number or product name",
+    "parseError": "Error parsing saved orders",
+    "fetchError": "Error fetching orders",
+    "fetchErrorMessage": "Failed to fetch order data. Please try again.",
+    "noOrdersFound": "No Orders Found",
+    "tryAdjustFilters": "Try adjusting your filters or search criteria",
+    "orderCreatedSuccess": "Order created successfully",
+    "paymentMethod": {
+      "bankTransfer": "Bank Transfer",
+      "creditCard": "Credit Card",
+      "paypal": "PayPal",
+      "alipay": "Alipay",
+      "wechatPay": "WeChat Pay"
+    }
+  },
+  "products": {
+    "model": "Model",
+    "sku": "SKU",
+    "types": {
+      "machine": "Machine",
+      "accessory": "Accessory",
+      "consumable": "Consumable",
+      "spare": "Spare Part"
+    },
+    "specs": {
+      "model": "Model",
+      "partNumber": "Part Number",
+      "voltage": "Voltage",
+      "frequency": "Frequency",
+      "palletSize": "Pallet Size",
+      "palletQty": "Pallet Quantity",
+      "size": "Size"
+    }
+  },
+  "spareParts": {
+    "title": "Spare Parts",
+    "filters": {
+      "label": {
+        "productType": "Product Type",
+        "model": "Model",
+        "partType": "Part Type"
+      },
+      "productType": {
+        "machine": "Machine",
+        "accessory": "Accessory"
+      },
+      "partType": {
+        "consumable": "Consumable",
+        "electronic": "Non-consumable",
+        "accessory": "Accessory Parts"
+      },
+      "model": {
+        "allModels": "All Models"
+      }
+    },
+    "table": {
+      "image": "Image",
+      "code": "Product Code",
+      "specs": "Specifications",
+      "price": "Price",
+      "inventory": "Inventory",
+      "actions": "Actions",
+      "addToCart": "Add to Cart",
+      "viewMore": "View More"
+    },
+    "specs": {
+      "packageSize": "Package Size (cm)",
+      "packageSizeImperial": "Package Size (inch)",
+      "weight": "Net Weight (kg)",
+      "weightImperial": "Net Weight (lbs)",
+      "serialNumber": "Serial Number",
+      "compatibleModels": "Compatible Models",
+      "specifications": "Specifications"
+    },
+    "inventory": {
+      "noInfo": "No inventory information",
+      "outOfStock": "Out of Stock",
+      "lowStock": "Low Stock",
+      "inStock": "In Stock",
+      "highStock": "Well Stocked"
+    },
+    "cart": {
+      "title": "Shopping Cart",
+      "empty": "Your cart is empty",
+      "total": "Total",
+      "clear": "Clear Cart",
+      "checkout": "Checkout",
+      "confirmClear": "Clear Cart?",
+      "confirmClearMessage": "Are you sure you want to remove all items from your cart?",
+      "cancel": "Cancel",
+      "confirm": "Clear",
+      "itemAdded": "has been added to your cart",
+      "cartCleared": "Cart has been cleared",
+      "sku": "SKU"
+    },
+    "loading": "Loading...",
+    "error": {
+      "loadFailed": "Failed to load spare parts data. Please try again later.",
+      "noResults": "No matching spare parts found",
+      "retry": "Retry"
+    },
+    "defaultValues": {
+      "unknown": "Unknown",
+      "notAvailable": "N/A"
+    }
+  },
+  "english": "English",
+  "chinese": "中文",
+  "profile": "Profile",
+  "myOrders": "My Orders",
+  "logout": "Logout",
+  "support": "Support",
+  "contactUs": "Contact Us"
+} 

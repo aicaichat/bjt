@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主机配件选择</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .breadcrumb {
+            padding: 15px 0;
+            color: #666;
+        }
+        
+        .breadcrumb a {
+            color: #1a57a5;
+            text-decoration: none;
+        }
+        
+        .section-title {
+            margin: 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #ccc;
+            color: #333;
+            font-size: 24px;
+        }
+        
+        /* 主机选择区域 */
+        .machine-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .machine-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+        
+        .machine-item {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .machine-item:hover {
+            border-color: #1a57a5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .machine-item.selected {
+            border-color: #1a57a5;
+            background-color: #f1f6ff;
+        }
+        
+        .machine-image {
+            width: 100%;
+            height: 150px;
+            object-fit: contain;
+            margin-bottom: 10px;
+        }
+        
+        .machine-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .machine-desc {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        /* 配件选择区域 */
+        .accessory-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .accessory-level {
+            margin-bottom: 30px;
+        }
+        
+        .level-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .level-indicator {
+            background-color: #1a57a5;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        
+        .accessory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .accessory-item {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .accessory-item:hover {
+            border-color: #1a57a5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .accessory-item.selected {
+            border-color: #1a57a5;
+            background-color: #f1f6ff;
+        }
+        
+        .accessory-image {
+            width: 100%;
+            height: 120px;
+            object-fit: contain;
+            margin-bottom: 10px;
+        }
+        
+        .accessory-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .accessory-specs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 10px 0;
+        }
+        
+        .spec-item {
+            background-color: #f1f6ff;
+            border: 1px solid #d9e6ff;
+            border-radius: 4px;
+            padding: 3px 8px;
+            font-size: 13px;
+            color: #1a57a5;
+        }
+        
+        .required-badge {
+            background-color: #ff4757;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        
+        .accessory-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+        
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .quantity-btn {
+            background: none;
+            border: 1px solid #ddd;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #666;
+        }
+        
+        .quantity-input {
+            width: 40px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 2px;
+        }
+        
+        .add-to-cart-btn {
+            background-color: #1a57a5;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .add-to-cart-btn:hover {
+            background-color: #0d4a8f;
+        }
+        
+        /* 购物车样式 */
+        .cart-floating {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #1a57a5;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+            z-index: 900;
+        }
+        
+        .cart-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        /* 购物车弹窗 */
+        .cart-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .cart-content {
+            background-color: white;
+            width: 90%;
+            max-width: 600px;
+            margin: 50px auto;
+            border-radius: 8px;
+            padding: 20px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .cart-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .cart-items {
+            margin-bottom: 20px;
+        }
+        
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .cart-item-info {
+            flex: 1;
+        }
+        
+        .cart-item-name {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        
+        .cart-item-price {
+            color: #1a57a5;
+            font-weight: 500;
+        }
+        
+        .cart-item-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        /* 提示消息样式 */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #1a57a5;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .toast.error {
+            background-color: #ff4757;
+        }
+        
+        .toast.success {
+            background-color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="#">首页</a> > <a href="#">产品分类</a> > <span>主机配件选择</span>
+        </div>
+        
+        <!-- 主机选择区域 -->
+        <div class="machine-section">
+            <h2 class="section-title">选择主机型号</h2>
+            <div class="machine-list" id="machineList">
+                <!-- 主机列表将通过JavaScript动态加载 -->
+            </div>
+        </div>
+        
+        <!-- 配件选择区域 -->
+        <div id="accessoryContainer">
+            <!-- 配件层级将通过JavaScript动态加载 -->
+        </div>
+    </div>
+    
+    <!-- 购物车浮动按钮 -->
+    <div class="cart-floating" onclick="toggleCart()">
+        <span>🛒</span>
+        <div class="cart-count" id="cartCount">0</div>
+    </div>
+    
+    <!-- 购物车弹窗 -->
+    <div class="cart-modal" id="cartModal">
+        <div class="cart-content">
+            <div class="cart-header">
+                <h3>购物车</h3>
+                <button class="cart-close" onclick="toggleCart()">×</button>
+            </div>
+            <div class="cart-items" id="cartItems">
+                <!-- 购物车商品将通过JavaScript动态加载 -->
+            </div>
+            <div class="cart-total">
+                <span>总计:</span>
+                <span id="cartTotal">¥0</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 全局变量
+        let selectedModel = null;
+        let cart = {
+            items: [],
+            requiredParts: new Map()
+        };
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadMachines();
+            loadCartFromStorage();
+        });
+        
+        // 加载主机列表
+        async function loadMachines() {
+            try {
+                const response = await fetch('/wp-json/bjt-product/v1/hosts');
+                const machines = await response.json();
+                
+                const machineList = document.getElementById('machineList');
+                machineList.innerHTML = machines.map(machine => `
+                    <div class="machine-item" data-model="${machine.model}" onclick="selectMachine('${machine.model}')">
+                        <img src="${machine.image1_url}" alt="${machine.title_cn}" class="machine-image">
+                        <div class="machine-name">${machine.title_cn}</div>
+                        <div class="machine-desc">${machine.description_cn}</div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading machines:', error);
+                showToast('加载主机列表失败', 'error');
+            }
+        }
+        
+        // 选择主机
+        async function selectMachine(model) {
+            selectedModel = model;
+            
+            // 更新UI选中状态
+            document.querySelectorAll('.machine-item').forEach(item => {
+                item.classList.toggle('selected', item.dataset.model === model);
+            });
+            
+            // 加载第一级配件
+            await loadAccessories(null, 1);
+        }
+        
+        // 加载配件
+        async function loadAccessories(parentPartNumber, level) {
+            if (!selectedModel) {
+                showToast('请先选择主机型号', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/wp-json/bjt-product/v1/accessories?model=${selectedModel}&parent=${parentPartNumber}&level=${level}`);
+                const accessories = await response.json();
+                
+                const container = document.getElementById('accessoryContainer');
+                
+                // 清除当前级别之后的所有配件
+                clearAccessoryLevels(level);
+                
+                // 创建新的配件层级
+                const levelSection = document.createElement('div');
+                levelSection.className = 'accessory-section';
+                levelSection.innerHTML = `
+                    <div class="accessory-level" data-level="${level}">
+                        <div class="level-title">
+                            <h3>配件选择</h3>
+                            <span class="level-indicator">Level ${level}</span>
+                        </div>
+                        <div class="accessory-grid">
+                            ${accessories.map(acc => createAccessoryCard(acc, level)).join('')}
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(levelSection);
+            } catch (error) {
+                console.error('Error loading accessories:', error);
+                showToast('加载配件列表失败', 'error');
+            }
+        }
+        
+        // 创建配件卡片HTML
+        function createAccessoryCard(accessory, level) {
+            return `
+                <div class="accessory-item" data-part-number="${accessory.part_number}">
+                    <img src="${accessory.image_url}" alt="${accessory.name_cn}" class="accessory-image">
+                    <div class="accessory-name">
+                        ${accessory.name_cn}
+                        ${accessory.is_required ? '<span class="required-badge">必选</span>' : ''}
+                    </div>
+                    <div class="accessory-specs">
+                        ${accessory.voltage ? `<span class="spec-item">电压: ${accessory.voltage}</span>` : ''}
+                        ${accessory.frequency ? `<span class="spec-item">频率: ${accessory.frequency}</span>` : ''}
+                    </div>
+                    <div class="accessory-actions">
+                        <div class="quantity-control">
+                            <button class="quantity-btn" onclick="updateQuantity('${accessory.part_number}', -1)">-</button>
+                            <input type="number" class="quantity-input" value="1" min="1" 
+                                   onchange="validateQuantity(this)" 
+                                   data-part-number="${accessory.part_number}">
+                            <button class="quantity-btn" onclick="updateQuantity('${accessory.part_number}', 1)">+</button>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCart('${accessory.part_number}', ${level})">
+                            添加到购物车
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 清除指定级别之后的配件层级
+        function clearAccessoryLevels(level) {
+            const container = document.getElementById('accessoryContainer');
+            const levels = container.querySelectorAll('.accessory-level');
+            
+            levels.forEach(levelDiv => {
+                if (parseInt(levelDiv.dataset.level) >= level) {
+                    levelDiv.remove();
+                }
+            });
+        }
+        
+        // 添加到购物车
+        async function addToCart(partNumber, level) {
+            const quantityInput = document.querySelector(`.quantity-input[data-part-number="${partNumber}"]`);
+            const quantity = parseInt(quantityInput.value);
+            
+            try {
+                // 获取配件详情和价格
+                const response = await fetch(`/wp-json/bjt-product/v1/accessories/${partNumber}`);
+                const accessory = await response.json();
+                
+                // 添加配件到购物车
+                addItemToCart(accessory, quantity);
+                
+                // 获取并添加必选备件
+                const requiredResponse = await fetch('/wp-json/bjt-product/v1/required-parts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: selectedModel,
+                        accessory_part_number: partNumber
+                    })
+                });
+                
+                const requiredParts = await requiredResponse.json();
+                if (requiredParts.success && requiredParts.data.length > 0) {
+                    // 存储必选备件信息
+                    cart.requiredParts.set(partNumber, requiredParts.data);
+                    
+                    // 添加必选备件到购物车
+                    requiredParts.data.forEach(part => {
+                        addItemToCart(part, part.quantity * quantity, partNumber);
+                    });
+                    
+                    showToast(`已自动添加 ${requiredParts.data.length} 个必选备件`);
+                }
+                
+                // 加载下一级配件
+                await loadAccessories(partNumber, level + 1);
+                
+                updateCartDisplay();
+                saveCartToStorage();
+                
+            } catch (error) {
+                console.error('Error adding to cart:', error);
+                showToast('添加到购物车失败', 'error');
+            }
+        }
+        
+        // 添加商品到购物车
+        function addItemToCart(item, quantity, parentAccessory = null) {
+            const existingItem = cart.items.find(i => 
+                i.part_number === item.part_number && 
+                i.parent_accessory === parentAccessory
+            );
+            
+            if (existingItem) {
+                existingItem.quantity += quantity;
+                existingItem.subtotal = existingItem.quantity * existingItem.price;
+            } else {
+                cart.items.push({
+                    part_number: item.part_number,
+                    name: item.name_cn,
+                    price: item.price,
+                    quantity: quantity,
+                    subtotal: quantity * item.price,
+                    parent_accessory: parentAccessory,
+                    is_required: !!parentAccessory
+                });
+            }
+        }
+        
+        // 更新购物车显示
+        function updateCartDisplay() {
+            const cartCount = document.getElementById('cartCount');
+            const cartItems = document.getElementById('cartItems');
+            const cartTotal = document.getElementById('cartTotal');
+            
+            // 更新数量
+            const totalQuantity = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+            cartCount.textContent = totalQuantity;
+            
+            // 更新商品列表
+            cartItems.innerHTML = cart.items.map((item, index) => `
+                <div class="cart-item">
+                    <div class="cart-item-info">
+                        <div class="cart-item-name">
+                            ${item.name}
+                            ${item.is_required ? '<span class="required-badge">必选</span>' : ''}
+                            ${item.parent_accessory ? 
+                                `<span class="parent-accessory">配套${item.parent_accessory}</span>` : 
+                                ''}
+                        </div>
+                        <div class="cart-item-price">
+                            ¥${item.price} × ${item.quantity} = ¥${item.subtotal}
+                        </div>
+                    </div>
+                    <div class="cart-item-actions">
+                        <button onclick="updateCartItemQuantity(${index}, -1)">-</button>
+                        <span>${item.quantity}</span>
+                        <button onclick="updateCartItemQuantity(${index}, 1)">+</button>
+                        <button onclick="removeFromCart(${index})">删除</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            // 更新总价
+            const total = cart.items.reduce((sum, item) => sum + item.subtotal, 0);
+            cartTotal.textContent = `¥${total.toLocaleString()}`;
+        }
+        
+        // 更新购物车商品数量
+        function updateCartItemQuantity(index, delta) {
+            const item = cart.items[index];
+            const newQuantity = item.quantity + delta;
+            
+            if (newQuantity > 0) {
+                item.quantity = newQuantity;
+                item.subtotal = item.price * newQuantity;
+                
+                // 如果是配件，同时更新其必选备件的数量
+                if (!item.parent_accessory) {
+                    const requiredParts = cart.requiredParts.get(item.part_number);
+                    if (requiredParts) {
+                        cart.items.forEach(cartItem => {
+                            if (cartItem.parent_accessory === item.part_number) {
+                                const requiredPart = requiredParts.find(
+                                    rp => rp.part_number === cartItem.part_number
+                                );
+                                if (requiredPart) {
+                                    cartItem.quantity = newQuantity * requiredPart.quantity;
+                                    cartItem.subtotal = cartItem.price * cartItem.quantity;
+                                }
+                            }
+                        });
+                    }
+                }
+                
+                updateCartDisplay();
+                saveCartToStorage();
+            }
+        }
+        
+        // 从购物车移除商品
+        function removeFromCart(index) {
+            const item = cart.items[index];
+            
+            // 如果是配件，同时移除其必选备件
+            if (!item.parent_accessory) {
+                const requiredParts = cart.requiredParts.get(item.part_number);
+                if (requiredParts) {
+                    cart.items = cart.items.filter(cartItem => 
+                        cartItem.parent_accessory !== item.part_number
+                    );
+                }
+            }
+            
+            // 移除商品本身
+            cart.items.splice(index, 1);
+            
+            updateCartDisplay();
+            saveCartToStorage();
+        }
+        
+        // 保存购物车到本地存储
+        function saveCartToStorage() {
+            localStorage.setItem('bjt_cart', JSON.stringify({
+                items: cart.items,
+                requiredParts: Array.from(cart.requiredParts.entries())
+            }));
+        }
+        
+        // 从本地存储加载购物车
+        function loadCartFromStorage() {
+            const savedCart = localStorage.getItem('bjt_cart');
+            if (savedCart) {
+                const parsed = JSON.parse(savedCart);
+                cart.items = parsed.items || [];
+                cart.requiredParts = new Map(parsed.requiredParts || []);
+                updateCartDisplay();
+            }
+        }
+        
+        // 切换购物车显示
+        function toggleCart() {
+            const modal = document.getElementById('cartModal');
+            modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        // 显示提示消息
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 100);
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => document.body.removeChild(toast), 300);
+            }, 3000);
+        }
+        
+        // 验证数量输入
+        function validateQuantity(input) {
+            let value = parseInt(input.value);
+            if (isNaN(value) || value < 1) {
+                input.value = 1;
+            }
+        }
+        
+        // 更新数量
+        function updateQuantity(partNumber, delta) {
+            const input = document.querySelector(`.quantity-input[data-part-number="${partNumber}"]`);
+            let value = parseInt(input.value) + delta;
+            if (value >= 1) {
+                input.value = value;
+            }
+        }
+    </script>
+</body>
+</html> 

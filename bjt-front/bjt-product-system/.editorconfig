@@ -1,0 +1,54 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# 顶层配置文件
+root = true
+
+# 所有文件通用配置
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# PHP 文件配置
+[*.php]
+indent_style = space
+indent_size = 4
+max_line_length = 100
+
+# TypeScript/JavaScript 文件配置
+[*.{ts,tsx,js,jsx}]
+indent_style = space
+indent_size = 2
+max_line_length = 100
+
+# CSS/SCSS 文件配置
+[*.{css,scss}]
+indent_style = space
+indent_size = 2
+
+# JSON 文件配置
+[*.json]
+indent_style = space
+indent_size = 2
+
+# Markdown 文件配置
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# WordPress 配置文件
+[wp-config.php]
+indent_style = space
+indent_size = 4
+
+# 配置文件
+[{package.json,.travis.yml}]
+indent_style = space
+indent_size = 2
+
+# Shell 脚本
+[*.sh]
+end_of_line = lf
+indent_style = space
+indent_size = 2 

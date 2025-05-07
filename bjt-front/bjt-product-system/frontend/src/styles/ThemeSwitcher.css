@@ -1,0 +1,148 @@
+/* 主题过渡效果 */
+.theme-transition {
+  transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+}
+
+.theme-transition * {
+  transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+}
+
+/* 主题切换器组件样式 */
+.bjt-theme-switcher {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 12px;
+  margin: 0 auto;
+  max-width: 600px;
+}
+
+.bjt-theme-switcher-label {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.bjt-theme-options {
+  display: flex;
+  gap: 12px;
+}
+
+.bjt-theme-option {
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  position: relative;
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.bjt-theme-option:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.bjt-theme-option::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--primary-color);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: -1;
+}
+
+.bjt-theme-option:hover::after {
+  opacity: 0.05;
+}
+
+.bjt-theme-option.active {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.theme-color-preview {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.theme-color-preview[data-theme="theme-default"] {
+  background: linear-gradient(135deg, #1A365D 0%, #0066cc 100%);
+}
+
+.theme-color-preview[data-theme="theme-simple"] {
+  background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+}
+
+.theme-color-preview[data-theme="theme-dark"] {
+  background: linear-gradient(135deg, #2c3e50 0%, #1a1a2e 100%);
+}
+
+.theme-label {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+/* 响应式设计 */
+@media (max-width: 640px) {
+  .bjt-theme-switcher {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 8px;
+  }
+  
+  .bjt-theme-options {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  
+  .bjt-theme-option {
+    padding: 10px 12px;
+    font-size: 14px;
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* Animations */
+@media (max-width: 768px) {
+  .bjt-theme-options {
+    gap: 0.5rem;
+  }
+  
+  .bjt-theme-option {
+    padding: 0.4rem 0.6rem;
+  }
+  
+  .theme-label {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .bjt-theme-options {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  
+  .bjt-theme-option {
+    width: 100%;
+    padding: 8px 12px;
+  }
+} 

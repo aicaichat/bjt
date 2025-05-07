@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT Part Number Management System - Add New Part</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #f7f9fc;
+            color: #333;
+        }
+        .header {
+            background-color: #fff;
+            padding: 15px 25px;
+            border-bottom: 1px solid #e1e5eb;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: relative;
+            z-index: 10;
+        }
+        .logo {
+            height: 45px;
+        }
+        .container {
+            display: flex;
+            flex: 1;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        .sidebar {
+            width: 220px;
+            background-color: #1a3c70;
+            color: #fff;
+            padding: 15px 0;
+            overflow-y: auto;
+        }
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            background-color: #fff;
+            overflow-y: auto;
+        }
+        .menu-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            font-size: 14px;
+        }
+        .menu-item:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        .menu-item.active {
+            background-color: rgba(255,255,255,0.15);
+            color: #fff;
+            border-left-color: #4dabf7;
+        }
+        .submenu {
+            margin-left: 0;
+            display: none;
+            background-color: rgba(0,0,0,0.15);
+        }
+        .submenu.active {
+            display: block;
+        }
+        .submenu .menu-item {
+            padding-left: 40px;
+            font-size: 13px;
+        }
+        .expandable::after {
+            content: "▶";
+            font-size: 10px;
+            margin-left: auto;
+            transition: transform 0.2s;
+        }
+        .expandable.active::after {
+            content: "▼";
+        }
+        h2 {
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: #1a3c70;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e1e5eb;
+        }
+        .form-container {
+            background-color: #fff;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            padding: 30px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #495057;
+            font-size: 14px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #4dabf7;
+            box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.2);
+        }
+        .form-control:disabled {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+        }
+        .required-mark {
+            color: #dc3545;
+            margin-left: 5px;
+        }
+        .help-text {
+            display: block;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        .crm-tip {
+            color: #155724;
+            background-color: #d4edda;
+            border-radius: 3px;
+            padding: 2px 5px;
+            font-size: 12px;
+            margin-left: 10px;
+            font-weight: normal;
+        }
+        .manual-tip {
+            color: #0c5460;
+            background-color: #d1ecf1;
+            border-radius: 3px;
+            padding: 2px 5px;
+            font-size: 12px;
+            margin-left: 10px;
+            font-weight: normal;
+        }
+        .form-error {
+            display: none;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #dc3545;
+        }
+        .form-control.error {
+            border-color: #dc3545;
+        }
+        .form-control.error:focus {
+            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.25);
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .btn:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+        .btn-primary {
+            background-color: #1a3c70;
+            color: white;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background-color: #15305b;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover:not(:disabled) {
+            background-color: #5a6268;
+        }
+        .btn-action {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn-action:hover:not(:disabled) {
+            background-color: #218838;
+        }
+        .form-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .image-upload-container {
+            border: 2px dashed #ced4da;
+            padding: 20px;
+            text-align: center;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            transition: border-color 0.2s;
+            background-color: #f8f9fa;
+        }
+        .image-upload-container:hover {
+            border-color: #4dabf7;
+        }
+        .image-upload-container.drag-over {
+            border-color: #4dabf7;
+            background-color: rgba(77, 171, 247, 0.05);
+        }
+        .image-upload-btn {
+            display: inline-block;
+            margin-top: 10px;
+        }
+        .image-preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .image-preview-item {
+            width: 150px;
+            position: relative;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .image-preview-item img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            display: block;
+        }
+        .image-preview-actions {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            display: flex;
+            gap: 5px;
+        }
+        .image-action-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.7);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .image-action-btn:hover {
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+        .menu-icon {
+            margin-right: 10px;
+            opacity: 0.8;
+            font-size: 16px;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #333;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .toast.success {
+            background-color: #28a745;
+        }
+        .toast.error {
+            background-color: #dc3545;
+        }
+        .toast.warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .toast.show {
+            display: block;
+            opacity: 1;
+        }
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        .loading-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #4dabf7;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        .loading-text {
+            margin-left: 10px;
+            font-weight: 500;
+            color: #1a3c70;
+        }
+        .input-with-button {
+            display: flex;
+            gap: 10px;
+        }
+        .input-with-button .form-control {
+            flex: 1;
+        }
+        /* Progress bar for uploads */
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            margin-top: 15px;
+            overflow: hidden;
+            display: none;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #4dabf7;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .language-switcher {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background-color: #f8f9fa;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .language-tab {
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #495057;
+            background-color: transparent;
+            border: none;
+            transition: all 0.2s;
+        }
+        .language-tab.active {
+            background-color: #1a3c70;
+            color: white;
+        }
+        .language-tab:hover:not(.active) {
+            background-color: #e9ecef;
+        }
+        .label-edit-btn {
+            margin-left: 8px;
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .label-edit-btn:hover {
+            background-color: #e9ecef;
+            color: #495057;
+        }
+        .label-edit-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .label-edit-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+        }
+        .label-edit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .label-edit-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #6c757d;
+        }
+        .label-edit-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .label-edit-input {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .label-edit-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="/api/placeholder/200/40" alt="BJT Logo" class="logo">
+        <div style="margin-left: auto; display: flex; gap: 20px; align-items: center;">
+            <a href="#" style="color: #1a3c70; text-decoration: none; font-size: 14px; font-weight: 500;">Documentation</a>
+            <a href="#" style="color: #1a3c70; text-decoration: none; font-size: 14px; font-weight: 500;">Support</a>
+            <div style="display: flex; align-items: center; border: 1px solid #e1e5eb; border-radius: 4px; padding: 5px 10px;">
+                <span style="font-size: 13px; margin-right: 5px;">English</span>
+                <span style="font-size: 10px;">▼</span>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="sidebar">
+            <a href="#" class="menu-item">
+                <span class="menu-icon">🏠</span>
+                <span>首页</span>
+            </a>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">📄</span>
+                <span>页面编辑</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">产品线1</a>
+                <a href="#" class="menu-item">产品线2</a>
+                <a href="#" class="menu-item">产品线3</a>
+                <a href="#" class="menu-item">产品线4</a>
+            </div>
+            <a href="#" class="menu-item expandable active">
+                <span class="menu-icon">🛋️</span>
+                <span>气垫机</span>
+            </a>
+            <div class="submenu active">
+                <a href="#" class="menu-item active">主机</a>
+                <a href="#" class="menu-item">配件</a>
+                <a href="#" class="menu-item">耗材</a>
+                <a href="#" class="menu-item">备件</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">📃</span>
+                <span>纸机</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">主机</a>
+                <a href="#" class="menu-item">配件</a>
+                <a href="#" class="menu-item">耗材</a>
+                <a href="#" class="menu-item">备件</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">🧵</span>
+                <span>胶带机</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">主机</a>
+                <a href="#" class="menu-item">配件</a>
+                <a href="#" class="menu-item">耗材</a>
+                <a href="#" class="menu-item">备件</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">💼</span>
+                <span>气柱袋</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">耗材</a>
+            </div>
+            <a href="#" class="menu-item">
+                <span class="menu-icon">👤</span>
+                <span>用户管理</span>
+            </a>
+            <a href="#" class="menu-item">
+                <span class="menu-icon">⚙️</span>
+                <span>系统设置</span>
+            </a>
+        </div>
+        <div class="main-content">
+            <h2>新增料号</h2>
+            <div class="language-switcher" style="margin-bottom: 20px;">
+                <button class="language-tab active" data-lang="cn">中文</button>
+                <button class="language-tab" data-lang="en">English</button>
+            </div>
+            <div class="form-container">
+                <form id="partForm">
+                    <div class="form-section">
+                        <h3>基本信息</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="partNumber">料号</label>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <input type="text" id="partNumber" class="form-control" required>
+                                    <button type="button" class="btn btn-primary" id="fetchFromCRM">从CRM获取</button>
+                                </div>
+                                <span class="hint">*唯一，不能重复</span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="model">型号</label>
+                                <input type="text" id="model" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="voltage">电压</label>
+                                <input type="text" id="voltage" class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="name">产品名称</label>
+                                <input type="text" id="name" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="brand">品牌</label>
+                                <input type="text" id="brand" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>包装信息</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="packageLength">包装长度 (mm)</label>
+                                <input type="number" id="packageLength" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="packageWidth">包装宽度 (mm)</label>
+                                <input type="number" id="packageWidth" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="packageHeight">包装高度 (mm)</label>
+                                <input type="number" id="packageHeight" class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="packageWeight">包装毛重 (kg)</label>
+                                <input type="number" id="packageWeight" class="form-control" step="0.01">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>托盘信息</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="palletLength">托盘长度 (mm)</label>
+                                <input type="number" id="palletLength" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="palletWidth">托盘宽度 (mm)</label>
+                                <input type="number" id="palletWidth" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="palletHeight">托盘高度 (mm)</label>
+                                <input type="number" id="palletHeight" class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="quantityPerPallet">一托数量</label>
+                                <input type="number" id="quantityPerPallet" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="totalHeight">打托后总高度 (mm)</label>
+                                <input type="number" id="totalHeight" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>产品图片</h3>
+                        <div class="image-upload">
+                            <div class="image-preview">
+                                <img src="/api/placeholder/200/200" alt="产品图片预览">
+                                <button type="button" class="remove-image">×</button>
+                            </div>
+                            <label class="btn btn-primary">
+                                上传图片
+                                <input type="file" id="productImage" accept="image/*" style="display: none;">
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="window.history.back()">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Label Edit Modal -->
+    <div class="label-edit-modal" id="labelEditModal">
+        <div class="label-edit-content">
+            <div class="label-edit-header">
+                <h3>编辑字段名称</h3>
+                <button class="label-edit-close">&times;</button>
+            </div>
+            <form class="label-edit-form">
+                <div>
+                    <label>中文名称</label>
+                    <input type="text" class="label-edit-input" id="editCnLabel">
+                </div>
+                <div>
+                    <label>English Name</label>
+                    <input type="text" class="label-edit-input" id="editEnLabel">
+                </div>
+                <div class="label-edit-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelEdit">取消</button>
+                    <button type="submit" class="btn btn-primary" id="saveEdit">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Menu toggle functionality
+            document.querySelectorAll('.expandable').forEach(item => {
+                item.addEventListener('click', event => {
+                    const submenu = item.nextElementSibling;
+                    if (submenu && submenu.classList.contains('submenu')) {
+                        submenu.classList.toggle('active');
+                        item.classList.toggle('active');
+                    }
+                    event.preventDefault();
+                });
+            });
+            
+            // Form elements
+            const form = document.getElementById('partForm');
+            const modelInput = document.getElementById('model');
+            const voltageInput = document.getElementById('voltage');
+            const partnumberInput = document.getElementById('partnumber');
+            const nameInput = document.getElementById('name');
+            const brandInput = document.getElementById('brand');
+            const pakSizeInput = document.getElementById('pak_size');
+            const pakGrossWeightInput = document.getElementById('pak_grossweight');
+            const palletSizeInput = document.getElementById('pallet_size');
+            const pcsPerPalletInput = document.getElementById('pcs_per_pallet');
+            const palletHeightInput = document.getElementById('pallet_height');
+            
+            // Button elements
+            const submitBtn = document.getElementById('submitBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            
+            // Error elements
+            const modelError = document.getElementById('model-error');
+            const partnumberError = document.getElementById('partnumber-error');
+            const nameError = document.getElementById('name-error');
+            
+            // Image upload elements
+            const imageDropArea = document.getElementById('imageDropArea');
+            const imageInput = document.getElementById('imageInput');
+            const imageSelectBtn = document.getElementById('imageSelectBtn');
+            const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+            const imageUploadProgress = document.getElementById('imageUploadProgress');
+            const imageUploadProgressBar = document.getElementById('imageUploadProgressBar');
+            
+            // Language switching functionality
+            const languageTabs = document.querySelectorAll('.language-tab');
+            const labelTexts = document.querySelectorAll('.label-text');
+            
+            // Handle language tab clicks
+            languageTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const lang = this.dataset.lang;
+                    
+                    // Update active state
+                    languageTabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Update labels
+                    updateLabels(lang);
+                });
+            });
+            
+            function updateLabels(lang) {
+                labelTexts.forEach(label => {
+                    const text = label.dataset[lang];
+                    if (text) {
+                        label.textContent = text;
+                    }
+                });
+            }
+            
+            // Label editing functionality
+            const labelEditModal = document.getElementById('labelEditModal');
+            const labelEditForm = document.querySelector('.label-edit-form');
+            const editCnLabel = document.getElementById('editCnLabel');
+            const editEnLabel = document.getElementById('editEnLabel');
+            const cancelEditBtn = document.getElementById('cancelEdit');
+            const closeEditBtn = document.querySelector('.label-edit-close');
+            let currentLabelElement = null;
+            
+            // Handle edit button clicks
+            document.querySelectorAll('.label-edit-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const labelElement = this.previousElementSibling;
+                    currentLabelElement = labelElement;
+                    
+                    // Populate modal with current values
+                    editCnLabel.value = labelElement.dataset.cn;
+                    editEnLabel.value = labelElement.dataset.en;
+                    
+                    // Show modal
+                    labelEditModal.style.display = 'block';
+                });
+            });
+            
+            // Handle form submission
+            labelEditForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                if (currentLabelElement) {
+                    // Update label data attributes
+                    currentLabelElement.dataset.cn = editCnLabel.value;
+                    currentLabelElement.dataset.en = editEnLabel.value;
+                    
+                    // Update visible text based on current language
+                    const currentLang = document.querySelector('.language-tab.active').dataset.lang;
+                    currentLabelElement.textContent = currentLabelElement.dataset[currentLang];
+                    
+                    // Close modal
+                    labelEditModal.style.display = 'none';
+                    
+                    showToast('字段名称已更新');
+                }
+            });
+            
+            // Handle modal close
+            function closeEditModal() {
+                labelEditModal.style.display = 'none';
+                currentLabelElement = null;
+            }
+            
+            cancelEditBtn.addEventListener('click', closeEditModal);
+            closeEditBtn.addEventListener('click', closeEditModal);
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', function(e) {
+                if (e.target === labelEditModal) {
+                    closeEditModal();
+                }
+            });
+            
+            // Image upload functionality
+            imageSelectBtn.addEventListener('click', function() {
+                imageInput.click();
+            });
+            
+            imageInput.addEventListener('change', function() {
+                handleFiles(this.files);
+            });
+            
+            // Prevent default behavior for drag events
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                imageDropArea.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            // Handle drag enter/over events
+            ['dragenter', 'dragover'].forEach(eventName => {
+                imageDropArea.addEventListener(eventName, highlight, false);
+            });
+            
+            // Handle drag leave/drop events
+            ['dragleave', 'drop'].forEach(eventName => {
+                imageDropArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                imageDropArea.classList.add('drag-over');
+            }
+            
+            function unhighlight() {
+                imageDropArea.classList.remove('drag-over');
+            }
+            
+            // Handle dropped files
+            imageDropArea.addEventListener('drop', function(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                handleFiles(files);
+            });
+            
+            function handleFiles(files) {
+                if (files.length === 0) return;
+                
+                const file = files[0];
+                
+                if (!file.type.match('image.*')) {
+                    showToast('请选择图片文件', 'error');
+                    return;
+                }
+                
+                uploadFile(file);
+            }
+            
+            function uploadFile(file) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    imageUploadProgress.style.display = 'block';
+                    imageUploadProgressBar.style.width = '0%';
+                    
+                    let progress = 0;
+                    const interval = setInterval(function() {
+                        progress += 5;
+                        imageUploadProgressBar.style.width = progress + '%';
+                        
+                        if (progress >= 100) {
+                            clearInterval(interval);
+                            
+                            setTimeout(function() {
+                                imageUploadProgress.style.display = 'none';
+                                
+                                imagePreviewContainer.innerHTML = '';
+                                addImagePreview(e.target.result, file.name);
+                                
+                                showToast('图片上传成功', 'success');
+                            }, 500);
+                        }
+                    }, 100);
+                };
+                
+                reader.readAsDataURL(file);
+            }
+            
+            function addImagePreview(src, name) {
+                const previewItem = document.createElement('div');
+                previewItem.className = 'image-preview-item';
+                
+                previewItem.innerHTML = `
+                    <img src="${src}" alt="${name}">
+                    <div class="image-preview-actions">
+                        <button type="button" class="image-action-btn" title="删除">✖</button>
+                    </div>
+                `;
+                
+                const deleteBtn = previewItem.querySelector('.image-action-btn');
+                deleteBtn.addEventListener('click', function() {
+                    previewItem.remove();
+                    showToast('图片已删除', 'warning');
+                });
+                
+                imagePreviewContainer.appendChild(previewItem);
+            }
+            
+            // Form validation and submission
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Validate required fields
+                const modelValue = modelInput.value.trim();
+                const partnumberValue = partnumberInput.value.trim();
+                const nameValue = nameInput.value.trim();
+                
+                if (!modelValue || !partnumberValue || !nameValue) {
+                    showToast('请填写所有必填字段', 'error');
+                    return;
+                }
+                
+                // Gather form data
+                const formData = {
+                    model: modelValue,
+                    voltage: voltageInput.value.trim(),
+                    partnumber: partnumberValue,
+                    name: nameValue,
+                    brand: brandInput.value.trim(),
+                    pak_size: pakSizeInput.value.trim(),
+                    pak_grossweight: pakGrossWeightInput.value.trim(),
+                    pallet_size: palletSizeInput.value.trim(),
+                    pcs_per_pallet: pcsPerPalletInput.value.trim(),
+                    pallet_height: palletHeightInput.value.trim(),
+                    pic: imagePreviewContainer.querySelector('img') ? 
+                         imagePreviewContainer.querySelector('img').src : null
+                };
+                
+                // Here you would typically send the formData to your server
+                console.log('Form data:', formData);
+                
+                // Show success message
+                showToast('保存成功');
+                
+                // Redirect to management page after 1.5 seconds
+                setTimeout(() => {
+                    window.location.href = 'machine-management.html';
+                }, 1500);
+            });
+            
+            // Cancel button
+            cancelBtn.addEventListener('click', function() {
+                if (confirm('确定要取消编辑吗？所有未保存的更改将丢失。')) {
+                    window.location.href = 'machine-management.html';
+                }
+            });
+            
+            // Toast notification functionality
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            function showToast(message, type) {
+                toastMessage.textContent = message;
+                toast.className = 'toast ' + (type || '');
+                toast.classList.add('show');
+                
+                setTimeout(function() {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+
+            // CRM API integration
+            document.getElementById('fetchFromCRM').addEventListener('click', function() {
+                const partNumber = document.getElementById('partNumber').value.trim();
+                
+                if (!partNumber) {
+                    showToast('请输入料号', 'error');
+                    return;
+                }
+
+                // Show loading state
+                this.disabled = true;
+                this.textContent = '获取中...';
+                
+                // Simulate API call to CRM
+                // In a real application, this would be an AJAX call to your backend
+                setTimeout(function() {
+                    // Simulate data returned from CRM
+                    const mockData = {
+                        model: 'Z4BLD-' + partNumber.slice(-2),
+                        voltage: '220V',
+                        name: '标准备件-' + partNumber,
+                        brand: 'BJT',
+                        packageInfo: {
+                            length: 300,
+                            width: 200,
+                            height: 150,
+                            weight: 2.5
+                        },
+                        palletInfo: {
+                            length: 1200,
+                            width: 800,
+                            height: 150,
+                            quantity: 20,
+                            totalHeight: 1200
+                        }
+                    };
+
+                    // Fill form fields with CRM data
+                    document.getElementById('model').value = mockData.model;
+                    document.getElementById('voltage').value = mockData.voltage;
+                    document.getElementById('name').value = mockData.name;
+                    document.getElementById('brand').value = mockData.brand;
+
+                    // Set package information
+                    document.getElementById('packageLength').value = mockData.packageInfo.length;
+                    document.getElementById('packageWidth').value = mockData.packageInfo.width;
+                    document.getElementById('packageHeight').value = mockData.packageInfo.height;
+                    document.getElementById('packageWeight').value = mockData.packageInfo.weight;
+
+                    // Set pallet information
+                    document.getElementById('palletLength').value = mockData.palletInfo.length;
+                    document.getElementById('palletWidth').value = mockData.palletInfo.width;
+                    document.getElementById('palletHeight').value = mockData.palletInfo.height;
+                    document.getElementById('quantityPerPallet').value = mockData.palletInfo.quantity;
+                    document.getElementById('totalHeight').value = mockData.palletInfo.totalHeight;
+
+                    // Reset button state
+                    const fetchButton = document.getElementById('fetchFromCRM');
+                    fetchButton.disabled = false;
+                    fetchButton.textContent = '从CRM获取';
+
+                    showToast('数据获取成功', 'success');
+                }, 1500);
+            });
+        });
+    </script>
+</body>
+</html>

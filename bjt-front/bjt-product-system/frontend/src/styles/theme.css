@@ -1,0 +1,848 @@
+/* BJT Website Design System
+ * 现代化、清晰且专业的设计系统，为产品管理系统提供一致的视觉体验
+ */
+
+/* 导入主题文件 */
+@import './themes/modern.css';
+@import './themes/simple.css';
+@import './themes/vibrant.css';
+@import './themes/classic.css';
+@import './themes/tech.css';
+@import './themes/elegant.css';
+@import './themes/playful.css';
+@import './themes/auto.css';  /* 添加自动主题 */
+
+/* 全局确保深色背景上的文本是白色的，对于所有主题 */
+[style*="background-color:#0f172a"] h1,
+[style*="background-color: #0f172a"] h1,
+[style*="background: #0f172a"] h1,
+[style*="background-color:rgb(15, 23, 42)"] h1,
+[style*="background-color: rgb(15, 23, 42)"] h1,
+[style*="background:rgb(15, 23, 42)"] h1,
+[style*="background-color:#1e40af"] h1,
+[style*="background-color: #1e40af"] h1,
+[style*="background: #1e40af"] h1,
+[style*="background-color:rgb(30, 64, 175)"] h1,
+[style*="background-color: rgb(30, 64, 175)"] h1,
+[style*="background:rgb(30, 64, 175)"] h1,
+[style*="background-color:#1e293b"] h1,
+[style*="background-color: #1e293b"] h1,
+[style*="background: #1e293b"] h1 {
+  color: white !important;
+}
+
+:root {
+  /* 品牌主色调 - 现代科技蓝 */
+  --primary-color: #1E88E5;
+  --primary-light: #64B5F6;
+  --primary-dark: #0D47A1;
+  --primary-bg: #F5F9FF;
+  
+  /* 辅助色系 */
+  --secondary-color: #455A64;
+  --secondary-light: #78909C;
+  --secondary-dark: #263238;
+  
+  /* 强调色 - 用于CTAs和突出元素 */
+  --accent-color: #FF9800;
+  --accent-light: #FFB74D;
+  --accent-dark: #F57C00;
+  
+  /* 情境色彩 */
+  --success-color: #4CAF50;
+  --error-color: #F44336;
+  --warning-color: #FFCA28;
+  --info-color: #29B6F6;
+  
+  /* 中性色调 */
+  --gray-50: #FAFAFA;
+  --gray-100: #F5F5F5;
+  --gray-200: #EEEEEE;
+  --gray-300: #E0E0E0;
+  --gray-400: #BDBDBD;
+  --gray-500: #9E9E9E;
+  --gray-600: #757575;
+  --gray-700: #616161;
+  --gray-800: #424242;
+  --gray-900: #212121;
+  
+  /* 背景色 */
+  --bg-color: #FAFAFA;
+  --bg-card: #FFFFFF;
+  --bg-elevated: #FFFFFF;
+  --bg-inset: #F5F5F5;
+  
+  /* Theme Switcher specific colors */
+  --background-secondary: #F0F0F0;
+  --background-hover: #E8E8E8;
+  --background-active: #E0E0E0;
+  
+  /* 文本颜色 */
+  --text-primary: #212121;
+  --text-secondary: #757575;
+  --text-tertiary: #9E9E9E;
+  --text-disabled: #BDBDBD;
+  --text-on-primary: #FFFFFF;
+  --text-on-dark: #FFFFFF;
+  
+  /* 边框 */
+  --border-color: #E0E0E0;
+  --border-light: #EEEEEE;
+  --border-focus: var(--primary-color);
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --border-radius-xl: 16px;
+  --border-radius-full: 9999px;
+  
+  /* 阴影 */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-hover: 0 10px 20px rgba(0, 0, 0, 0.1), 0 3px 6px rgba(0, 0, 0, 0.05);
+  
+  /* 间距 - 8px比例系统 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --spacing-3xl: 64px;
+  
+  /* 字体 */
+  --font-family: 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 30px;
+  --font-size-4xl: 36px;
+  
+  /* 行高 */
+  --line-height-none: 1;
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+  
+  /* 动画 */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+
+  /* Z-index层级 */
+  --z-index-dropdown: 100;
+  --z-index-sticky: 200;
+  --z-index-fixed: 300;
+  --z-index-modal-backdrop: 400;
+  --z-index-modal: 500;
+  --z-index-popover: 600;
+  --z-index-tooltip: 700;
+}
+
+/* 支持透明度的RGB版本 */
+:root {
+  --primary-color-rgb: 30, 136, 229;
+  --secondary-color-rgb: 69, 90, 100;
+  --accent-color-rgb: 255, 152, 0;
+  --error-color-rgb: 244, 67, 54;
+  --success-color-rgb: 76, 175, 80;
+  --warning-color-rgb: 255, 202, 40;
+  --info-color-rgb: 41, 182, 246;
+}
+
+/* ====================================================================
+ * 暗黑模式支持
+ * ==================================================================== */
+
+@media (prefers-color-scheme: dark) {
+  :root .dark-mode {
+    --primary-color: #64B5F6;
+    --primary-light: #90CAF9;
+    --primary-dark: #1976D2;
+    --primary-bg: #0D1B2A;
+    
+    --bg-color: #121212;
+    --bg-card: #1E1E1E;
+    --bg-elevated: #2D2D2D;
+    --bg-inset: #252525;
+    
+    /* Theme Switcher specific colors */
+    --background-secondary: #2A2A2A;
+    --background-hover: #333333;
+    --background-active: #3A3A3A;
+    
+    --text-primary: #FFFFFF;
+    --text-secondary: #B0B0B0;
+    --text-tertiary: #808080;
+    --text-disabled: #606060;
+    
+    --border-color: #333333;
+    --border-light: #404040;
+  }
+}
+
+/* ====================================================================
+ * 全局样式应用
+ * ==================================================================== */
+
+/* 基础元素样式 */
+body {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  line-height: var(--line-height-normal);
+}
+
+/* 标题样式 */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  line-height: var(--line-height-tight);
+  margin-bottom: var(--spacing-md);
+}
+
+h1 { font-size: var(--font-size-4xl); }
+h2 { font-size: var(--font-size-3xl); }
+h3 { font-size: var(--font-size-2xl); }
+h4 { font-size: var(--font-size-xl); }
+h5 { font-size: var(--font-size-lg); }
+h6 { font-size: var(--font-size-md); }
+
+/* 链接样式 */
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--primary-dark);
+}
+
+/* 按钮样式 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  border-radius: var(--border-radius-md);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: var(--text-on-primary);
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+}
+
+.btn-secondary {
+  background-color: var(--secondary-color);
+  color: var(--text-on-primary);
+  border: none;
+}
+
+.btn-secondary:hover {
+  background-color: var(--secondary-dark);
+}
+
+.btn-outline {
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.btn-outline:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.btn-accent {
+  background-color: var(--accent-color);
+  color: var(--text-on-dark);
+  border: none;
+}
+
+.btn-accent:hover {
+  background-color: var(--accent-dark);
+}
+
+/* 卡片样式 */
+.card {
+  background-color: var(--bg-card);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-md);
+}
+
+/* 表单元素样式 */
+input, select, textarea {
+  font-family: var(--font-family);
+  font-size: var(--font-size-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  background-color: var(--bg-elevated);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.2);
+}
+
+/* 其他组件样式请参考组件库文档 */
+
+/* BJT Website Color Schemes
+ * 
+ * Instructions:
+ * 1. Choose one of the three color themes below
+ * 2. Uncomment the one you want to use
+ * 3. Make sure the other two themes remain commented out
+ */
+
+/* ====================================================================
+ * OPTION 1: CORPORATE BLUE & SLATE
+ * A professional, trustworthy appearance ideal for technical/corporate brand
+ * ==================================================================== */
+
+/*
+:root {
+    --primary-color: #1A4B8F;
+    --secondary-color: #2D6DB5;
+    --accent-color: #45B6FE;
+    
+    --bg-color: #F8FBFF;
+    --bg-card: #FFFFFF;
+    --bg-highlight: #EDF5FF;
+    
+    --text-primary: #2A3642;
+    --text-secondary: #5A6B7F;
+    --text-light: #FFFFFF;
+    
+    --border-color: #E5EBF2;
+    --border-focus: #2D6DB5;
+    
+    --success-color: #267D54;
+    --error-color: #D73C3C;
+    --warning-color: #F0AD4E;
+    --info-color: #45B6FE;
+}
+*/
+
+/* ====================================================================
+ * OPTION 2: INDUSTRIAL ELEGANCE
+ * This scheme conveys precision, technical expertise, and modernity
+ * ==================================================================== */
+
+/*
+:root {
+    --primary-color: #2C3E50;
+    --secondary-color: #34495E;
+    --accent-color: #E67E22;
+    
+    --bg-color: #F5F7FA;
+    --bg-card: #FFFFFF;
+    --bg-highlight: #F8F9FB;
+    
+    --text-primary: #333333;
+    --text-secondary: #7F8C8D;
+    --text-light: #FFFFFF;
+    
+    --border-color: #ECF0F1;
+    --border-focus: #E67E22;
+    
+    --success-color: #27AE60;
+    --error-color: #E74C3C;
+    --warning-color: #F39C12;
+    --info-color: #3498DB;
+}
+*/
+
+/* ====================================================================
+ * OPTION 3: MODERN TECH
+ * This scheme projects innovation and cutting-edge technology
+ * ==================================================================== */
+
+:root {
+    /* Main Colors */
+    --primary-color: #263238;
+    --secondary-color: #455A64;
+    --accent-color: #00BCD4;
+    
+    /* Background Colors */
+    --bg-color: #FAFAFA;
+    --bg-card: #FFFFFF;
+    --bg-highlight: #ECEFF1;
+    
+    /* Text Colors */
+    --text-primary: #212121;
+    --text-secondary: #607D8B;
+    --text-light: #FFFFFF;
+    
+    /* Border Colors */
+    --border-color: #ECEFF1;
+    --border-focus: #00BCD4;
+    
+    /* Status Colors */
+    --success-color: #4CAF50;
+    --error-color: #F44336;
+    --warning-color: #FFC107;
+    --info-color: #2196F3;
+}
+
+/* Add RGB versions of colors for transparency usage */
+:root {
+    --primary-color-rgb: 38, 50, 56;
+    --secondary-color-rgb: 69, 90, 100;
+    --accent-color-rgb: 0, 188, 212;
+}
+
+/* For Option 1, uncomment these when choosing that theme */
+/*
+:root {
+    --primary-color-rgb: 26, 75, 143;
+    --secondary-color-rgb: 45, 109, 181;
+    --accent-color-rgb: 69, 182, 254;
+}
+*/
+
+/* For Option 2, uncomment these when choosing that theme */
+/*
+:root {
+    --primary-color-rgb: 44, 62, 80;
+    --secondary-color-rgb: 52, 73, 94;
+    --accent-color-rgb: 230, 126, 34;
+}
+*/
+
+/* ====================================================================
+ * GLOBAL STYLES APPLICATION
+ * Apply the theme colors to website elements
+ * These styles will work with any of the three color themes
+ * ==================================================================== */
+
+/* General Styles */
+body {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+}
+
+/* Header Styles */
+header {
+    background-color: var(--bg-card);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+/* Logo styling */
+.header .logo img {
+    height: 40px;
+    transition: transform 0.2s ease;
+}
+
+.header .logo a:hover img {
+    transform: scale(1.05);
+}
+
+.nav-link {
+    color: var(--text-secondary);
+}
+
+.nav-link:hover {
+    color: var(--primary-color);
+}
+
+.nav-link::after {
+    background-color: var(--primary-color);
+}
+
+.language-select {
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.language-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.login-btn {
+    background-color: var(--primary-color);
+    color: var(--text-light);
+}
+
+.login-btn:hover {
+    background-color: var(--secondary-color);
+}
+
+/* User information styles in header */
+.user-info {
+    background-color: var(--bg-highlight);
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.user-info:hover {
+    background-color: rgba(var(--primary-color-rgb), 0.1);
+    border-color: var(--primary-color);
+}
+
+.user-avatar {
+    background-color: var(--primary-color);
+    color: var(--text-light);
+}
+
+.user-name {
+    color: var(--text-primary);
+}
+
+.user-dropdown .dropdown-menu {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Main Content Styles */
+.product-section {
+    background-color: var(--bg-card);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.section-header {
+    background-color: var(--primary-color);
+    color: var(--text-light);
+}
+
+.section-text {
+    color: var(--text-secondary);
+}
+
+.product-link {
+    color: var(--secondary-color);
+}
+
+.product-link:hover {
+    color: var(--accent-color);
+}
+
+.divider {
+    background-color: var(--border-color);
+}
+
+/* Tabs */
+.tab {
+    background-color: var(--bg-highlight);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.tab.active {
+    background-color: var(--primary-color);
+    color: var(--text-light);
+    border-color: var(--primary-color);
+}
+
+/* Product List Styles */
+.product-item {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+}
+
+.product-detail-item {
+    background-color: var(--bg-highlight);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.product-detail-item strong {
+    color: var(--primary-color);
+}
+
+.btn-add {
+    background-color: var(--primary-color);
+    color: var(--text-light);
+}
+
+.btn-add:hover {
+    background-color: var(--secondary-color);
+}
+
+/* Accessory Specs */
+.frequency-spec {
+    background-color: var(--bg-highlight);
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+}
+
+.frequency-spec strong {
+    color: var(--primary-color);
+}
+
+.accessory-spec-item {
+    background-color: var(--bg-highlight);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.accessory-spec-item strong {
+    color: var(--primary-color);
+}
+
+.accessory-name {
+    color: var(--text-primary);
+}
+
+/* Information Links */
+.specification-link, .more-info-link {
+    background-color: var(--bg-highlight);
+    color: var(--primary-color);
+    border: 1px solid var(--border-color);
+}
+
+.specification-link:hover, .more-info-link:hover {
+    background-color: rgba(var(--primary-color-rgb), 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(var(--primary-color-rgb), 0.15);
+}
+
+/* Cart Styles */
+.cart-floating {
+    background-color: var(--primary-color);
+    color: var(--text-light);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+}
+
+.cart-count {
+    background-color: var(--error-color);
+    color: var(--text-light);
+}
+
+/* Modal Styles */
+.modal-content {
+    background-color: var(--bg-card);
+    box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+}
+
+.modal-close {
+    background-color: var(--bg-highlight);
+}
+
+.modal-close:hover {
+    background-color: rgba(var(--primary-color-rgb), 0.1);
+}
+
+.modal h3 {
+    color: var(--primary-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.dynamic-note {
+    color: var(--error-color);
+}
+
+.level-indicator {
+    background-color: var(--primary-color);
+    color: var(--text-light);
+}
+
+/* Cart Notification */
+.cart-notification {
+    background-color: var(--primary-color);
+    color: var(--text-light);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Fix for login page */
+.login-page {
+    background-color: var(--bg-color);
+}
+
+.login-container {
+    background-color: var(--bg-card);
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.login-header h1 {
+    color: var(--primary-color);
+}
+
+.login-header p {
+    color: var(--text-secondary);
+}
+
+.login-button {
+    background-color: var(--primary-color);
+    color: var(--text-light);
+}
+
+.login-button:hover {
+    background-color: var(--secondary-color);
+}
+
+.login-button:disabled {
+    background-color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+/* Fix for loading state */
+.loading-container {
+    color: var(--text-secondary);
+}
+
+.loading-spinner {
+    border: 4px solid rgba(var(--primary-color-rgb), 0.1);
+    border-top: 4px solid var(--primary-color);
+}
+
+/* Footer theme styles */
+footer {
+    background-color: var(--bg-card);
+    border-top: 1px solid var(--border-color);
+}
+
+footer h3 {
+    color: var(--primary-color);
+}
+
+footer p {
+    color: var(--text-secondary);
+}
+
+footer a {
+    color: var(--text-secondary);
+}
+
+footer a:hover {
+    color: var(--primary-color);
+}
+
+footer .border-t {
+    border-color: var(--border-color);
+}
+
+footer .text-gray-500 {
+    color: var(--text-secondary);
+}
+
+/* ====================================================================
+ * Theme Class Implementation
+ * ==================================================================== */
+
+/* Default Theme - Modern Tech */
+body.theme-default {
+  /* Main Colors */
+  --primary-color: #1A365D;
+  --primary-light: #274785;
+  --primary-dark: #142a4c;
+  --primary-bg: #f7f9fb;
+  
+  --secondary-color: #0066cc;
+  --secondary-light: #0077e6;
+  --secondary-dark: #0055a8;
+  
+  --accent-color: #0066cc;
+  --accent-light: #0077e6;
+  --accent-dark: #0055a8;
+  
+  --bg-color: #f7f9fb;
+  --bg-card: #FFFFFF;
+  --bg-elevated: #FFFFFF;
+  --bg-inset: #F5F5F5;
+  
+  --background-secondary: #F0F0F0;
+  --background-hover: #E8E8E8;
+  --background-active: #E0E0E0;
+  
+  --text-primary: #333333;
+  --text-secondary: #555555;
+  --text-tertiary: #777777;
+  --text-disabled: #999999;
+  --text-on-primary: #FFFFFF;
+  --text-on-dark: #FFFFFF;
+  
+  --border-color: #eaeaea;
+  --border-light: #eeeeee;
+}
+
+/* Simple Theme - Clean Simple */
+body.theme-simple {
+  --primary-color: #607D8B;
+  --primary-light: #90A4AE;
+  --primary-dark: #455A64;
+  --primary-bg: #ECEFF1;
+  
+  --secondary-color: #78909C;
+  --secondary-light: #B0BEC5;
+  --secondary-dark: #546E7A;
+  
+  --accent-color: #26A69A;
+  --accent-light: #4DB6AC;
+  --accent-dark: #00897B;
+  
+  --bg-color: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-elevated: #FFFFFF;
+  --bg-inset: #F5F5F5;
+  
+  --background-secondary: #F5F5F5;
+  --background-hover: #EEEEEE;
+  --background-active: #E0E0E0;
+  
+  --text-primary: #37474F;
+  --text-secondary: #607D8B;
+  --text-tertiary: #90A4AE;
+  --text-disabled: #B0BEC5;
+  --text-on-primary: #FFFFFF;
+  --text-on-dark: #FFFFFF;
+  
+  --border-color: #CFD8DC;
+  --border-light: #ECEFF1;
+}
+
+/* Dark Theme - Dark Mode */
+body.theme-dark {
+  --primary-color: #64B5F6;
+  --primary-light: #90CAF9;
+  --primary-dark: #1976D2;
+  --primary-bg: #0D1B2A;
+  
+  --secondary-color: #78909C;
+  --secondary-light: #90A4AE;
+  --secondary-dark: #546E7A;
+  
+  --accent-color: #FF9800;
+  --accent-light: #FFB74D;
+  --accent-dark: #F57C00;
+  
+  --bg-color: #121212;
+  --bg-card: #1E1E1E;
+  --bg-elevated: #2D2D2D;
+  --bg-inset: #252525;
+  
+  --background-secondary: #2A2A2A;
+  --background-hover: #333333;
+  --background-active: #3A3A3A;
+  
+  --text-primary: #FFFFFF;
+  --text-secondary: #B0B0B0;
+  --text-tertiary: #808080;
+  --text-disabled: #606060;
+  --text-on-primary: #FFFFFF;
+  --text-on-dark: #FFFFFF;
+  
+  --border-color: #333333;
+  --border-light: #404040;
+} 

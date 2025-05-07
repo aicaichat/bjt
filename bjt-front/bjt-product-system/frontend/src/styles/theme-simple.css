@@ -1,0 +1,294 @@
+/**
+ * 简约主题 - 极简风格
+ * 
+ * 特点：
+ * - 清爽的灰色主色调
+ * - 简约的设计与少量的装饰
+ * - 注重内容的可读性
+ */
+
+.theme-simple {
+  /* 基础色彩 */
+  --primary-color: #546e7a;
+  --primary-light: #819ca9;
+  --primary-dark: #29434e;
+  --primary-hover: #455a64;
+  --primary-active: #37474f;
+  
+  --secondary-color: #78909c;
+  --secondary-light: #a7c0cd;
+  --secondary-dark: #4b636e;
+  
+  --accent-color: #607d8b;
+  --accent-light: #8eacbb;
+  --accent-dark: #34515e;
+  
+  /* 状态色彩 */
+  --success-color: #388e3c;
+  --success-light: #66bb6a;
+  --warning-color: #f9a825;
+  --warning-light: #ffd54f;
+  --error-color: #d32f2f;
+  --error-light: #ef5350;
+  --info-color: #0288d1;
+  --info-light: #29b6f6;
+  
+  /* 中性色彩 */
+  --gray-50: #fafafa;
+  --gray-100: #f5f5f5;
+  --gray-200: #eeeeee;
+  --gray-300: #e0e0e0;
+  --gray-400: #bdbdbd;
+  --gray-500: #9e9e9e;
+  --gray-600: #757575;
+  --gray-700: #616161;
+  --gray-800: #424242;
+  --gray-900: #212121;
+  
+  /* 背景颜色 */
+  --bg-primary: #ffffff;
+  --bg-secondary: #fafafa;
+  --bg-tertiary: #f5f5f5;
+  --bg-card: #ffffff;
+  --bg-modal: #ffffff;
+  --bg-header: #ffffff;
+  --bg-footer: #f5f5f5;
+  
+  /* 文本颜色 */
+  --text-primary: #212121;
+  --text-secondary: #424242;
+  --text-muted: #757575;
+  --text-light: #fafafa;
+  --text-dim: #9e9e9e;
+  --text-on-primary: #ffffff;
+  
+  /* 边框颜色 */
+  --border-light: #eeeeee;
+  --border-medium: #e0e0e0;
+  --border-dark: #bdbdbd;
+  
+  /* 阴影 */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  
+  /* 字体设置 */
+  --font-family-sans: 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-family-headings: 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  
+  /* 组件 */
+  /* 按钮 */
+  --btn-primary-bg: var(--primary-color);
+  --btn-primary-border: var(--primary-dark);
+  --btn-primary-text: white;
+  --btn-primary-hover-bg: var(--primary-hover);
+  --btn-primary-active-bg: var(--primary-active);
+  
+  --btn-secondary-bg: var(--secondary-color);
+  --btn-secondary-border: var(--secondary-dark);
+  --btn-secondary-text: white;
+  --btn-secondary-hover-bg: #6b818c;
+  --btn-secondary-active-bg: #5f7481;
+  
+  /* 卡片 */
+  --card-bg: var(--bg-card);
+  --card-border: var(--border-light);
+  --card-shadow: var(--shadow-sm);
+  --card-border-radius: 4px;
+  
+  /* 产品项 */
+  --product-link-color: var(--primary-color);
+  --product-link-hover: var(--primary-dark);
+  --product-image-border: transparent;
+  --product-price-color: var(--text-secondary);
+  
+  /* 输入框 */
+  --input-bg: white;
+  --input-border: var(--border-medium);
+  --input-border-focus: var(--primary-color);
+  --input-shadow-focus: 0 0 0 2px rgba(84, 110, 122, 0.15);
+  --input-text: var(--text-primary);
+  --input-placeholder: var(--text-dim);
+  
+  /* 选项卡 */
+  --tab-active-bg: transparent;
+  --tab-active-text: var(--primary-color);
+  --tab-inactive-bg: transparent;
+  --tab-inactive-text: var(--gray-600);
+  --tab-border: var(--border-light);
+  --tab-hover-bg: var(--gray-100);
+  
+  /* 标签 */
+  --tag-bg: var(--gray-100);
+  --tag-text: var(--gray-700);
+  --tag-border: transparent;
+  --tag-primary-bg: rgba(84, 110, 122, 0.1);
+  --tag-primary-text: var(--primary-color);
+  --tag-primary-border: transparent;
+  
+  /* 价格 */
+  --price-main-color: var(--text-secondary);
+  --price-discount-color: var(--error-color);
+  --price-original-color: var(--text-dim);
+  
+  /* 表格 */
+  --table-border: var(--border-light);
+  --table-header-bg: var(--bg-tertiary);
+  --table-header-text: var(--text-secondary);
+  --table-row-odd-bg: var(--bg-primary);
+  --table-row-even-bg: var(--bg-secondary);
+  --table-hover-bg: rgba(84, 110, 122, 0.03);
+  
+  /* 状态标识 */
+  --status-available: var(--success-color);
+  --status-limited: var(--warning-color);
+  --status-unavailable: var(--error-color);
+  
+  /* 通知 */
+  --notification-info-bg: rgba(2, 136, 209, 0.05);
+  --notification-info-border: rgba(2, 136, 209, 0.2);
+  --notification-success-bg: rgba(56, 142, 60, 0.05);
+  --notification-success-border: rgba(56, 142, 60, 0.2);
+  --notification-warning-bg: rgba(249, 168, 37, 0.05);
+  --notification-warning-border: rgba(249, 168, 37, 0.2);
+  --notification-error-bg: rgba(211, 47, 47, 0.05);
+  --notification-error-border: rgba(211, 47, 47, 0.2);
+}
+
+/* 简约主题的基础样式 */
+.theme-simple body {
+  font-family: var(--font-family-sans);
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  line-height: 1.6;
+}
+
+.theme-simple h1, 
+.theme-simple h2, 
+.theme-simple h3, 
+.theme-simple h4, 
+.theme-simple h5, 
+.theme-simple h6 {
+  font-family: var(--font-family-headings);
+  color: var(--text-primary);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.theme-simple a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.theme-simple a:hover {
+  color: var(--primary-dark);
+}
+
+/* 主导航 */
+.theme-simple .main-nav {
+  background-color: var(--bg-header);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.theme-simple .nav-link {
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.theme-simple .nav-link:hover {
+  color: var(--primary-color);
+}
+
+.theme-simple .nav-link.active {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+/* 按钮样式 */
+.theme-simple .btn-primary {
+  background-color: var(--btn-primary-bg);
+  border: none;
+  color: var(--btn-primary-text);
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+}
+
+.theme-simple .btn-primary:hover {
+  background-color: var(--btn-primary-hover-bg);
+}
+
+.theme-simple .btn-primary:active {
+  background-color: var(--btn-primary-active-bg);
+}
+
+.theme-simple .btn-secondary {
+  background-color: var(--btn-secondary-bg);
+  border: none;
+  color: var(--btn-secondary-text);
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+}
+
+.theme-simple .btn-secondary:hover {
+  background-color: var(--btn-secondary-hover-bg);
+}
+
+.theme-simple .btn-outline {
+  background-color: transparent;
+  border: 1px solid var(--border-medium);
+  color: var(--text-secondary);
+  font-weight: 400;
+  border-radius: 4px;
+}
+
+.theme-simple .btn-outline:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+/* 卡片样式 */
+.theme-simple .card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--card-shadow);
+  padding: 1.25rem;
+}
+
+/* 表单输入 */
+.theme-simple input,
+.theme-simple select,
+.theme-simple textarea {
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--input-text);
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  transition: all 0.2s;
+  font-size: 0.875rem;
+}
+
+.theme-simple input:focus,
+.theme-simple select:focus,
+.theme-simple textarea:focus {
+  border-color: var(--input-border-focus);
+  box-shadow: var(--input-shadow-focus);
+  outline: none;
+}
+
+.theme-simple input::placeholder {
+  color: var(--input-placeholder);
+}
+
+/* 产品列表样式 */
+.theme-simple .product-item {
+  border: none;
+  transition: transform 0.2s;
+}
+
+.theme-simple .product-item:hover {
+  transform: translateY(-2px);
+} 

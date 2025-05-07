@@ -1,0 +1,763 @@
+/**
+ * 统一Mock数据服务系统
+ * 集中管理所有模拟数据，确保一致性
+ * 提供统一的接口获取模拟数据，便于未来替换为真实API
+ */
+import { API_CONFIG, ASSETS } from '../config/appConfig';
+import { mockMachines, mockAccessories, mockSpareParts } from '../mock/machinesMock';
+import { sparePartsMock, accessoryModels, getSparePartsFilterOptions as getFilterOptions } from '../mock/sparePartsMock';
+import { ProductLine } from './api';
+
+// Destructure for clarity and to avoid property access issues
+const { USE_MOCK_DATA } = API_CONFIG;
+
+// 模拟产品线数据
+export const mockProductLines: ProductLine[] = [
+  {
+    id: 1,
+    title_en: 'Packaging Machines',
+    title_cn: '包装机械',
+    description_en: 'High-quality packaging machines for various industrial applications.',
+    description_cn: '适用于各种工业应用的高质量包装机械。',
+    subitem1_en: 'Machines',
+    subitem1_cn: '设备',
+    subitem2_en: 'Consumables',
+    subitem2_cn: '耗材',
+    subitem3_en: 'Spare Parts',
+    subitem3_cn: '备件',
+    image_url: '/images/product-lines/packaging-machines.jpg',
+    status: 'publish',
+    menu_order: 1
+  },
+  {
+    id: 2,
+    title_en: 'Filling Solutions',
+    title_cn: '灌装解决方案',
+    description_en: 'Efficient filling solutions for liquids, powders and pastes.',
+    description_cn: '液体、粉末和膏状物的高效灌装解决方案。',
+    subitem1_en: 'Machines',
+    subitem1_cn: '设备',
+    subitem2_en: 'Consumables',
+    subitem2_cn: '耗材',
+    subitem3_en: 'Spare Parts',
+    subitem3_cn: '备件',
+    image_url: '/images/product-lines/filling-solutions.jpg',
+    status: 'publish',
+    menu_order: 2
+  },
+  {
+    id: 3,
+    title_en: 'Labeling Systems',
+    title_cn: '标签系统',
+    description_en: 'Precise labeling systems for product identification and branding.',
+    description_cn: '用于产品标识和品牌推广的精确标签系统。',
+    subitem1_en: 'Machines',
+    subitem1_cn: '设备',
+    subitem2_en: 'Consumables',
+    subitem2_cn: '耗材',
+    subitem3_en: 'Spare Parts',
+    subitem3_cn: '备件',
+    image_url: '/images/product-lines/labeling-systems.jpg',
+    status: 'publish',
+    menu_order: 3
+  }
+];
+
+/**
+ * 模拟网络延迟
+ * @param ms 延迟毫秒数
+ * @returns Promise对象
+ */
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * 随机延迟以模拟实际网络情况
+ * @param minMs 最小延迟毫秒数
+ * @param maxMs 最大延迟毫秒数
+ * @returns Promise对象
+ */
+const randomDelay = (minMs = 100, maxMs = 800) => {
+  const delayTime = Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
+  return delay(delayTime);
+};
+
+// Export to be used outside this module
+export { randomDelay };
+
+/**
+ * 检查是否应该使用Mock数据
+ * @returns 是否应该使用Mock数据
+ */
+export const shouldUseMockData = (): boolean => {
+  return USE_MOCK_DATA;
+};
+
+/**
+ * 随机模拟API错误
+ * @param errorRate 错误率（0-1之间的数字）
+ * @param errorTypes 可能的错误类型
+ * @returns 如果触发错误则抛出异常
+ */
+const simulateRandomError = (errorRate = 0.02, errorTypes = ['network', 'server', 'timeout', 'auth']) => {
+  if (Math.random() < errorRate) {
+    const errorType = errorTypes[Math.floor(Math.random() * errorTypes.length)];
+    let error: Error & { status?: number; code?: string } = new Error('模拟API错误');
+    
+    switch (errorType) {
+      case 'network':
+        error.message = '网络连接错误';
+        error.code = 'NETWORK_ERROR';
+        throw error;
+      case 'server':
+        error.message = '服务器错误';
+        error.status = 500;
+        error.code = 'SERVER_ERROR';
+        throw error;
+      case 'timeout':
+        error.message = '请求超时';
+        error.code = 'TIMEOUT';
+        throw error;
+      case 'auth':
+        error.message = '授权已过期';
+        error.status = 401;
+        error.code = 'AUTH_EXPIRED';
+        throw error;
+      default:
+        throw error;
+    }
+  }
+};
+
+/**
+ * 获取API响应包装器
+ * 标准化所有模拟API返回的数据格式
+ */
+const wrapResponse = <T>(data: T, meta = {}) => {
+  return {
+    data,
+    meta: {
+      timestamp: new Date().toISOString(),
+      status: 'success',
+      ...meta
+    }
+  };
+};
+
+/**
+ * 机器设备相关的模拟数据服务
+ */
+export const MachinesMockService = {
+  /**
+   * 获取所有机器设备
+   */
+  getAllMachines: async (params = {}) => {
+    await randomDelay();
+    simulateRandomError();
+    
+    // 返回标准格式的响应
+    return wrapResponse(mockMachines, {
+      count: mockMachines.length,
+      params
+    });
+  },
+
+  /**
+   * 获取指定机器设备的详情
+   */
+  getMachineById: async (id: string) => {
+    await randomDelay(200, 500);
+    simulateRandomError();
+    
+    const machine = mockMachines.find(machine => machine.id === id);
+    if (!machine) {
+      const error: Error & { status?: number } = new Error(`找不到ID为${id}的机器`);
+      error.status = 404;
+      throw error;
+    }
+    
+    return wrapResponse(machine);
+  },
+
+  /**
+   * 获取机器设备配件
+   */
+  getMachineAccessories: async (machineId: string, params = {}) => {
+    await randomDelay();
+    simulateRandomError();
+    
+    const machine = mockMachines.find(machine => machine.id === machineId);
+    if (!machine) {
+      const error: Error & { status?: number } = new Error(`找不到ID为${machineId}的机器`);
+      error.status = 404;
+      throw error;
+    }
+    
+    return wrapResponse(mockAccessories, {
+      machineId,
+      count: mockAccessories.length,
+      params
+    });
+  }
+};
+
+/**
+ * 备件相关的模拟数据服务
+ */
+export const SparePartsMockService = {
+  /**
+   * 获取所有备件
+   * @param params 查询参数
+   */
+  getAllSpareParts: async (params: any = {}) => {
+    await randomDelay();
+    simulateRandomError();
+    
+    let filteredParts = [...sparePartsMock];
+    
+    // 应用筛选条件
+    if (params.type) {
+      filteredParts = filteredParts.filter(part => part.type === params.type);
+    }
+    
+    if (params.product_type) {
+      filteredParts = filteredParts.filter(part => part.product_type === params.product_type);
+    }
+    
+    if (params.model) {
+      filteredParts = filteredParts.filter(part => 
+        Array.isArray(part.app_model) && part.app_model.includes(params.model)
+      );
+    }
+    
+    if (params.category) {
+      filteredParts = filteredParts.filter(part => part.category === params.category);
+    }
+    
+    // 应用分页
+    const page = parseInt(params.page) || 1;
+    const pageSize = parseInt(params.pageSize) || 10;
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    
+    const paginatedParts = filteredParts.slice(startIndex, endIndex);
+    
+    return wrapResponse(paginatedParts, {
+      total: filteredParts.length,
+      page,
+      pageSize,
+      totalPages: Math.ceil(filteredParts.length / pageSize),
+      params
+    });
+  },
+
+  /**
+   * 获取备件详情
+   */
+  getSparePartById: async (id: string) => {
+    await randomDelay(200, 500);
+    simulateRandomError();
+    
+    const part = sparePartsMock.find(part => part.id === id);
+    if (!part) {
+      const error: Error & { status?: number } = new Error(`找不到ID为${id}的备件`);
+      error.status = 404;
+      throw error;
+    }
+    
+    return wrapResponse(part);
+  },
+
+  /**
+   * 获取备件筛选选项
+   */
+  getSparePartsFilterOptions: async () => {
+    await randomDelay(100, 300);
+    simulateRandomError();
+    
+    // 从模拟数据中提取机器型号（LA-开头的）
+    const machineModels = [...new Set(
+      sparePartsMock
+        .filter(part => part.product_type === 'machine')
+        .flatMap(part => Array.isArray(part.app_model) ? part.app_model : [])
+    )];
+    
+    // 使用从sparePartsMock导入的accessoryModels和getFilterOptions
+    // 提取所有唯一的类别
+    const uniqueCategories = [...new Set(
+      sparePartsMock.map(part => part.category)
+    )];
+    
+    const filterOptions = {
+      hostModels: machineModels,
+      accessoryModels: accessoryModels.map((model: { value: string; label: string }) => model.value),
+      partTypes: [
+        { id: "electrical", name: "电气零件" },
+        { id: "mechanical", name: "机械零件" },
+        { id: "electronic", name: "电子零件" },
+        { id: "consumable", name: "耗材" },
+        { id: "accessory", name: "配件" }
+      ],
+      categories: uniqueCategories.map(category => ({
+        id: category,
+        name: category.charAt(0).toUpperCase() + category.slice(1)
+      }))
+    };
+    
+    return wrapResponse(filterOptions);
+  }
+};
+
+/**
+ * 耗材相关的模拟数据
+ */
+// 模拟耗材数据
+const mockConsumables = [
+  {
+    id: '1',
+    name: 'Standard Bubble Film',
+    code: 'PL-001',
+    model: 'MEX-10-20-10',
+    image_url: ASSETS.getUrl('/images/products/consumables/PL-001.jpg'),
+    specs: {
+      material: 'HDPE',
+      shape: 'Pillow',
+      thickness: '0.05mm',
+      width: '200mm',
+      length: '300mm',
+      rollLength: '500m',
+      compatibility: 'E5P/E4S'
+    },
+    pricing: [
+      { 
+        range: '1-10', 
+        price: 100,
+        regionalPrices: { eu: 120, na: 100, au: 130, cn: 650 } 
+      },
+      { 
+        range: '11-100', 
+        price: 90,
+        regionalPrices: { eu: 100, na: 90, au: 110, cn: 580 } 
+      },
+      { 
+        range: '> 100', 
+        price: 50,
+        regionalPrices: { eu: 60, na: 50, au: 65, cn: 320 } 
+      }
+    ],
+    inventory: { us: 1, au: 2, eu: 3, cn: 50 }
+  },
+  {
+    id: '2',
+    name: 'Cushioning Bubble Film',
+    code: 'PL-002',
+    model: 'MEX-10-20-13',
+    image_url: ASSETS.getUrl('/images/products/consumables/PL-002.jpg'),
+    specs: {
+      material: 'HDPE',
+      shape: 'Pillow',
+      thickness: '0.08mm',
+      width: '300mm',
+      length: '400mm',
+      rollLength: '600m',
+      compatibility: 'E5P/E4S'
+    },
+    pricing: [
+      { 
+        range: '1-10', 
+        price: 95,
+        regionalPrices: { eu: 115, na: 95, au: 125, cn: 620 } 
+      },
+      { 
+        range: '11-100', 
+        price: 85,
+        regionalPrices: { eu: 95, na: 85, au: 105, cn: 550 } 
+      },
+      { 
+        range: '> 100', 
+        price: 45,
+        regionalPrices: { eu: 55, na: 45, au: 60, cn: 290 } 
+      }
+    ],
+    inventory: { us: 2, au: 3, eu: 5, cn: 38 }
+  },
+  {
+    id: '3',
+    name: 'Anti-shock Bubble Film',
+    code: 'PL-003',
+    model: 'MEX-10-20-15',
+    image_url: ASSETS.getUrl('/images/products/consumables/PL-003.jpg'),
+    specs: {
+      material: 'HDPE',
+      shape: 'Pillow',
+      thickness: '0.10mm',
+      width: '300mm',
+      length: '450mm',
+      rollLength: '450m',
+      compatibility: 'E5P/E4S'
+    },
+    pricing: [
+      { 
+        range: '1-10', 
+        price: 110,
+        regionalPrices: { eu: 130, na: 110, au: 140, cn: 700 } 
+      },
+      { 
+        range: '11-100', 
+        price: 100,
+        regionalPrices: { eu: 120, na: 100, au: 130, cn: 650 } 
+      },
+      { 
+        range: '> 100', 
+        price: 60,
+        regionalPrices: { eu: 70, na: 60, au: 75, cn: 390 } 
+      }
+    ],
+    inventory: { us: 3, au: 2, eu: 4, cn: 26 }
+  }
+];
+
+// 耗材选项数据
+export const consumableOptions = {
+  shapes: [
+    { id: 'pillow', name: 'Pillow', image_url: ASSETS.getUrl('/images/icons/shape-pillow.svg') },
+    { id: 'bubble', name: 'Bubble', image_url: ASSETS.getUrl('/images/icons/shape-bubble.svg') },
+    { id: 'tube', name: 'Tube', image_url: ASSETS.getUrl('/images/icons/shape-tube.svg') }
+  ],
+  materials: [
+    { id: 'hdpe', name: 'HDPE' },
+    { id: 'ldpe', name: 'LDPE' },
+    { id: 'nylon', name: 'Nylon' },
+    { id: 'paper_pe', name: 'PAPER+PE' }
+  ],
+  models: [
+    { id: 'all', name: 'ALL' },
+    { id: 'la-e4s', name: 'LA-E4S' },
+    { id: 'mex-10-20', name: 'MEX-10-20' },
+    { id: 'lp-v1', name: 'LP-V1' }
+  ],
+  thicknesses: [
+    { id: 'all', name: 'ALL' },
+    { id: '0.05mm', name: '0.05mm' },
+    { id: '0.08mm', name: '0.08mm' },
+    { id: '0.10mm', name: '0.10mm' }
+  ],
+  weights: [
+    { id: 'all', name: 'ALL' },
+    { id: '50g', name: '50g/m²' },
+    { id: '75g', name: '75g/m²' },
+    { id: '100g', name: '100g/m²' }
+  ],
+  widths: [
+    { id: 'all', name: 'ALL' },
+    { id: '200mm', name: '200mm' },
+    { id: '250mm', name: '250mm' },
+    { id: '300mm', name: '300mm' }
+  ],
+  lengths: [
+    { id: 'all', name: 'ALL' },
+    { id: '300mm', name: '300mm' },
+    { id: '350mm', name: '350mm' },
+    { id: '400mm', name: '400mm' }
+  ],
+  modelExplodedViews: {
+    'all': ASSETS.getUrl('/images/models/exploded-view-default.svg'),
+    'la-e4s': ASSETS.getUrl('/images/models/LA-E4S-exploded-view.svg'),
+    'mex-10-20': ASSETS.getUrl('/images/models/MEX-10-20-exploded-view.svg'),
+    'lp-v1': ASSETS.getUrl('/images/models/LP-V1-exploded-view.svg')
+  }
+};
+
+/**
+ * 耗材相关的模拟数据服务
+ */
+export const ConsumablesMockService = {
+  /**
+   * 获取所有耗材
+   * @param filters 筛选参数
+   */
+  getConsumables: async (filters: any = {}) => {
+    await randomDelay(500); // 模拟网络延迟
+    simulateRandomError();
+    
+    // 筛选逻辑
+    let filteredProducts = [...mockConsumables];
+    
+    if (filters.material && filters.material !== 'all') {
+      filteredProducts = filteredProducts.filter(product => 
+        product.specs.material.toLowerCase() === filters.material.toLowerCase()
+      );
+    }
+    
+    if (filters.shape && filters.shape !== 'all') {
+      filteredProducts = filteredProducts.filter(product => 
+        product.specs.shape.toLowerCase() === filters.shape.toLowerCase()
+      );
+    }
+    
+    if (filters.thickness && filters.thickness !== 'all') {
+      filteredProducts = filteredProducts.filter(product => 
+        product.specs.thickness === filters.thickness
+      );
+    }
+    
+    if (filters.weight && filters.weight !== 'all') {
+      filteredProducts = filteredProducts.filter(product => 
+        product.specs.weight === filters.weight
+      );
+    }
+    
+    if (filters.width && filters.width !== 'all') {
+      filteredProducts = filteredProducts.filter(product => 
+        product.specs.width === filters.width
+      );
+    }
+    
+    if (filters.length && filters.length !== 'all') {
+      filteredProducts = filteredProducts.filter(product => 
+        product.specs.length === filters.length
+      );
+    }
+    
+    if (filters.model && filters.model !== 'all') {
+      filteredProducts = filteredProducts.filter(product => 
+        product.specs.compatibility.includes(filters.model)
+      );
+    }
+    
+    // 分页处理
+    const page = filters.page || 1;
+    const pageSize = filters.page_size || 10;
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+    
+    return wrapResponse({
+      items: paginatedProducts,
+      total: filteredProducts.length,
+      page: page,
+      page_size: pageSize,
+      total_pages: Math.ceil(filteredProducts.length / pageSize)
+    });
+  },
+
+  /**
+   * 获取耗材选项
+   */
+  getConsumableOptions: async () => {
+    await randomDelay(200);
+    simulateRandomError();
+    
+    return wrapResponse(consumableOptions);
+  }
+};
+
+/**
+ * 购物车相关的模拟数据服务
+ */
+export const CartMockService = {
+  /**
+   * 获取购物车内容
+   */
+  getCart: async (userId: string) => {
+    await randomDelay(200, 400);
+    simulateRandomError();
+    
+    // 从本地存储获取购物车数据
+    const cartData = localStorage.getItem(`cart_${userId}`);
+    const cart = cartData ? JSON.parse(cartData) : { items: [], total: 0 };
+    
+    return wrapResponse(cart);
+  },
+  
+  /**
+   * 添加商品到购物车
+   */
+  addToCart: async (userId: string, item: any) => {
+    await randomDelay(300, 600);
+    simulateRandomError();
+    
+    // 从本地存储获取购物车数据
+    const cartData = localStorage.getItem(`cart_${userId}`);
+    const cart = cartData ? JSON.parse(cartData) : { items: [], total: 0 };
+    
+    // 检查商品是否已在购物车中
+    const existingItemIndex = cart.items.findIndex((i: any) => i.id === item.id);
+    
+    if (existingItemIndex >= 0) {
+      // 更新已有商品数量
+      cart.items[existingItemIndex].quantity += item.quantity;
+    } else {
+      // 添加新商品
+      cart.items.push(item);
+    }
+    
+    // 重新计算总价
+    cart.total = cart.items.reduce((sum: number, i: any) => sum + (i.price * i.quantity), 0);
+    
+    // 保存到本地存储
+    localStorage.setItem(`cart_${userId}`, JSON.stringify(cart));
+    
+    return wrapResponse(cart);
+  },
+  
+  /**
+   * 更新购物车中商品数量
+   */
+  updateCartItem: async (userId: string, itemId: string, quantity: number) => {
+    await randomDelay(200, 500);
+    simulateRandomError();
+    
+    // 从本地存储获取购物车数据
+    const cartData = localStorage.getItem(`cart_${userId}`);
+    if (!cartData) {
+      const error: Error & { status?: number } = new Error('购物车不存在');
+      error.status = 404;
+      throw error;
+    }
+    
+    const cart = JSON.parse(cartData);
+    
+    // 查找商品
+    const itemIndex = cart.items.findIndex((i: any) => i.id === itemId);
+    if (itemIndex < 0) {
+      const error: Error & { status?: number } = new Error('购物车中找不到该商品');
+      error.status = 404;
+      throw error;
+    }
+    
+    // 更新数量
+    if (quantity <= 0) {
+      // 移除商品
+      cart.items.splice(itemIndex, 1);
+    } else {
+      cart.items[itemIndex].quantity = quantity;
+    }
+    
+    // 重新计算总价
+    cart.total = cart.items.reduce((sum: number, i: any) => sum + (i.price * i.quantity), 0);
+    
+    // 保存到本地存储
+    localStorage.setItem(`cart_${userId}`, JSON.stringify(cart));
+    
+    return wrapResponse(cart);
+  },
+  
+  /**
+   * 清空购物车
+   */
+  clearCart: async (userId: string) => {
+    await randomDelay(100, 300);
+    simulateRandomError();
+    
+    // 保存空购物车到本地存储
+    localStorage.setItem(`cart_${userId}`, JSON.stringify({ items: [], total: 0 }));
+    
+    return wrapResponse({ items: [], total: 0 });
+  }
+};
+
+/**
+ * 订单相关的模拟数据服务
+ */
+export const OrderMockService = {
+  /**
+   * 创建订单
+   */
+  createOrder: async (userId: string, orderData: any) => {
+    await randomDelay(500, 1000);
+    simulateRandomError();
+    
+    const orderId = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    
+    const order = {
+      id: orderId,
+      userId,
+      items: orderData.items,
+      totalAmount: orderData.totalAmount,
+      shippingAddress: orderData.shippingAddress,
+      paymentMethod: orderData.paymentMethod,
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+    
+    // 保存订单到本地存储
+    const ordersData = localStorage.getItem(`orders_${userId}`);
+    const orders = ordersData ? JSON.parse(ordersData) : [];
+    orders.push(order);
+    localStorage.setItem(`orders_${userId}`, JSON.stringify(orders));
+    
+    // 清空购物车
+    await CartMockService.clearCart(userId);
+    
+    return wrapResponse(order);
+  },
+  
+  /**
+   * 获取用户所有订单
+   */
+  getUserOrders: async (userId: string) => {
+    await randomDelay(300, 700);
+    simulateRandomError();
+    
+    // 从本地存储获取订单数据
+    const ordersData = localStorage.getItem(`orders_${userId}`);
+    const orders = ordersData ? JSON.parse(ordersData) : [];
+    
+    return wrapResponse(orders, {
+      count: orders.length
+    });
+  },
+  
+  /**
+   * 获取订单详情
+   */
+  getOrderById: async (userId: string, orderId: string) => {
+    await randomDelay(200, 500);
+    simulateRandomError();
+    
+    // 从本地存储获取订单数据
+    const ordersData = localStorage.getItem(`orders_${userId}`);
+    const orders = ordersData ? JSON.parse(ordersData) : [];
+    
+    // 查找订单
+    const order = orders.find((o: any) => o.id === orderId);
+    if (!order) {
+      const error: Error & { status?: number } = new Error(`找不到ID为${orderId}的订单`);
+      error.status = 404;
+      throw error;
+    }
+    
+    return wrapResponse(order);
+  }
+};
+
+/**
+ * 产品线相关的模拟数据服务
+ */
+export const ProductLinesMockService = {
+  /**
+   * 获取所有产品线
+   */
+  getProductLines: async () => {
+    await randomDelay(200, 500);
+    return mockProductLines;
+  }
+};
+
+// Default export for the mock service
+const mockService = {
+  randomDelay,
+  getProductLines: ProductLinesMockService.getProductLines,
+  // Add other mock services here to expose them through a single entry point
+  ...MachinesMockService,
+  ...SparePartsMockService,
+  shouldUseMockData,
+  delay,
+  simulateRandomError,
+  wrapResponse,
+  ConsumablesMockService,
+  CartMockService,
+  OrderMockService
+};
+
+export default mockService; 

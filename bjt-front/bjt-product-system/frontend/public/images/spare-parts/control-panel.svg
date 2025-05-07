@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <rect width="120" height="120" fill="#f0f0f0"/>
+  <rect x="20" y="30" width="80" height="60" rx="5" ry="5" fill="#333333" stroke="#000000" stroke-width="2"/>
+  <rect x="30" y="40" width="60" height="15" rx="2" ry="2" fill="#666666"/>
+  <circle cx="45" cy="70" r="5" fill="#ff3333"/>
+  <circle cx="65" cy="70" r="5" fill="#33ff33"/>
+  <circle cx="85" cy="70" r="5" fill="#3333ff"/>
+  <rect x="30" y="80" width="15" height="5" fill="#dddddd"/>
+  <rect x="50" y="80" width="15" height="5" fill="#dddddd"/>
+  <rect x="70" y="80" width="15" height="5" fill="#dddddd"/>
+  <text x="60" y="110" font-family="Arial" font-size="12" text-anchor="middle" fill="#333333">SP-003</text>
+  <text x="60" y="20" font-family="Arial" font-size="10" text-anchor="middle" fill="#333333">控制面板</text>
+</svg> 

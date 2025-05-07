@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT 系统管理后台 - 新增耗材</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #f7f9fc;
+            color: #333;
+        }
+        .header {
+            background-color: #fff;
+            padding: 15px 25px;
+            border-bottom: 1px solid #e1e5eb;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: relative;
+            z-index: 10;
+        }
+        .logo {
+            height: 45px;
+        }
+        .container {
+            display: flex;
+            flex: 1;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        .sidebar {
+            width: 220px;
+            background-color: #1a3c70;
+            color: #fff;
+            padding: 15px 0;
+            overflow-y: auto;
+        }
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 8px;
+            margin: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow-y: auto;
+        }
+        .menu-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            font-size: 14px;
+        }
+        .menu-item:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        .menu-item.active {
+            background-color: rgba(255,255,255,0.15);
+            color: #fff;
+            border-left-color: #4dabf7;
+        }
+        .submenu {
+            margin-left: 0;
+            display: none;
+            background-color: rgba(0,0,0,0.15);
+        }
+        .submenu.active {
+            display: block;
+        }
+        .submenu .menu-item {
+            padding-left: 40px;
+            font-size: 13px;
+        }
+        .expandable::after {
+            content: "▶";
+            font-size: 10px;
+            margin-left: auto;
+            transition: transform 0.2s;
+        }
+        .expandable.active::after {
+            content: "▼";
+        }
+        h2 {
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: #1a3c70;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e1e5eb;
+        }
+        .form-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        .form-group label {
+            width: 120px;
+            text-align: right;
+            margin-right: 15px;
+            font-weight: 500;
+            color: #333;
+        }
+        .form-control {
+            flex: 1;
+            max-width: 400px;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .image-upload {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        .image-upload input[type="file"] {
+            display: none;
+        }
+        .image-upload label {
+            padding: 4px 8px;
+            background-color: #1a3c70;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+        .image-upload label:hover {
+            background-color: #15305b;
+        }
+        .image-preview {
+            position: relative;
+            display: inline-block;
+        }
+        .image-preview img {
+            max-width: 200px;
+            max-height: 200px;
+            object-fit: contain;
+            border: 1px solid #e1e5eb;
+            border-radius: 4px;
+            padding: 5px;
+        }
+        .image-preview .remove-image {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .image-preview:hover .remove-image {
+            opacity: 1;
+        }
+        .dimensions-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        .dimension-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .dimension-group label {
+            width: auto;
+            margin-right: 0;
+            min-width: 60px;
+        }
+        .dimension-group input {
+            width: 100px;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .pallet-container {
+            margin-top: 20px;
+            border: 1px solid #e1e5eb;
+            border-radius: 4px;
+            padding: 15px;
+        }
+        .pallet-header {
+            font-weight: 600;
+            color: #1a3c70;
+            margin-bottom: 15px;
+        }
+        .pallet-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 10px;
+        }
+        .pallet-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .pallet-item label {
+            width: auto;
+            margin-right: 0;
+        }
+        .btn-submit {
+            display: block;
+            width: 120px;
+            margin: 30px auto 0;
+            padding: 10px;
+            background-color: #1a3c70;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .btn-submit:hover {
+            background-color: #15305b;
+        }
+        .menu-icon {
+            margin-right: 10px;
+            opacity: 0.8;
+            font-size: 16px;
+        }
+        .form-section {
+            margin-bottom: 30px;
+        }
+        .form-section-title {
+            font-weight: 600;
+            color: #1a3c70;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        .get-button {
+            padding: 8px 16px;
+            background-color: #1a3c70;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .get-button:hover {
+            background-color: #15305b;
+        }
+        .language-switcher {
+            position: relative;
+            cursor: pointer;
+        }
+        .language-switcher .current-lang {
+            display: flex;
+            align-items: center;
+            padding: 5px 10px;
+            border: 1px solid #e1e5eb;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .language-switcher .current-lang:hover {
+            background-color: #f8f9fa;
+        }
+        .language-options {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: #fff;
+            border: 1px solid #e1e5eb;
+            border-radius: 4px;
+            margin-top: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: none;
+            z-index: 1000;
+        }
+        .language-options.active {
+            display: block;
+        }
+        .language-option {
+            padding: 8px 16px;
+            font-size: 13px;
+            color: #333;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .language-option:hover {
+            background-color: #f8f9fa;
+        }
+        .language-option.active {
+            background-color: #e9ecef;
+            color: #1a3c70;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="/api/placeholder/200/40" alt="BJT Logo" class="logo">
+        <div style="margin-left: auto; display: flex; gap: 20px; align-items: center;">
+            <a href="#" style="color: #1a3c70; text-decoration: none; font-size: 14px; font-weight: 500;" data-i18n="nav.docs">文档</a>
+            <a href="#" style="color: #1a3c70; text-decoration: none; font-size: 14px; font-weight: 500;" data-i18n="nav.support">支持</a>
+            <div class="language-switcher">
+                <div class="current-lang">
+                    <span class="current-lang-text">中文</span>
+                    <span style="font-size: 10px; margin-left: 5px;">▼</span>
+                </div>
+                <div class="language-options">
+                    <div class="language-option active" data-lang="zh">中文</div>
+                    <div class="language-option" data-lang="en">English</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="sidebar">
+            <a href="#" class="menu-item">
+                <span class="menu-icon">🏠</span>
+                <span data-i18n="nav.home">首页</span>
+            </a>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">📄</span>
+                <span data-i18n="nav.pageEdit">页面编辑</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item" data-i18n="nav.productLine1">产品线1</a>
+                <a href="#" class="menu-item" data-i18n="nav.productLine2">产品线2</a>
+                <a href="#" class="menu-item" data-i18n="nav.productLine3">产品线3</a>
+                <a href="#" class="menu-item" data-i18n="nav.productLine4">产品线4</a>
+            </div>
+            <a href="#" class="menu-item expandable active">
+                <span class="menu-icon">🛋️</span>
+                <span data-i18n="nav.airCushion">气垫机</span>
+            </a>
+            <div class="submenu active">
+                <a href="#" class="menu-item" data-i18n="nav.mainUnit">主机</a>
+                <a href="#" class="menu-item" data-i18n="nav.accessories">配件</a>
+                <a href="#" class="menu-item active" data-i18n="nav.consumables">耗材</a>
+                <a href="#" class="menu-item" data-i18n="nav.spareParts">备件</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">📃</span>
+                <span data-i18n="nav.paperMachine">纸机</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item" data-i18n="nav.mainUnit">主机</a>
+                <a href="#" class="menu-item" data-i18n="nav.accessories">配件</a>
+                <a href="#" class="menu-item" data-i18n="nav.consumables">耗材</a>
+                <a href="#" class="menu-item" data-i18n="nav.spareParts">备件</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">🧵</span>
+                <span data-i18n="nav.tapeMachine">胶带机</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item" data-i18n="nav.mainUnit">主机</a>
+                <a href="#" class="menu-item" data-i18n="nav.accessories">配件</a>
+                <a href="#" class="menu-item" data-i18n="nav.consumables">耗材</a>
+                <a href="#" class="menu-item" data-i18n="nav.spareParts">备件</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">💼</span>
+                <span data-i18n="nav.airPillowBag">气柱袋</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item" data-i18n="nav.consumables">耗材</a>
+            </div>
+            <a href="#" class="menu-item">
+                <span class="menu-icon">👤</span>
+                <span data-i18n="nav.userManagement">用户管理</span>
+            </a>
+            <a href="#" class="menu-item">
+                <span class="menu-icon">⚙️</span>
+                <span data-i18n="nav.systemSettings">系统设置</span>
+            </a>
+        </div>
+        
+        <div class="main-content">
+            <h2 data-i18n="title.addConsumable">新增耗材</h2>
+            
+            <div class="form-container">
+                <form id="partForm">
+                    <div class="form-section">
+                        <h3 data-lang-cn="基本信息" data-lang-en="Basic Information">基本信息</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="partNumber" data-lang-cn="料号" data-lang-en="Part Number">料号</label>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <input type="text" id="partNumber" class="form-control" required>
+                                    <button type="button" class="btn btn-primary" id="fetchFromCRM" data-lang-cn="从CRM获取" data-lang-en="Fetch from CRM">从CRM获取</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="model" data-lang-cn="适用机型" data-lang-en="Applicable Model">适用机型</label>
+                                <input type="text" id="model" class="form-control" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="bagType" data-lang-cn="袋型" data-lang-en="Bag Type">袋型</label>
+                                <input type="text" id="bagType" class="form-control" readonly>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="material" data-lang-cn="材质" data-lang-en="Material">材质</label>
+                                <input type="text" id="material" class="form-control" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="spec" data-lang-cn="规格型号" data-lang-en="Specification">规格型号</label>
+                                <input type="text" id="spec" class="form-control" readonly>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="brand" data-lang-cn="品牌" data-lang-en="Brand">品牌</label>
+                                <input type="text" id="brand" class="form-control" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="specification" data-lang-cn="spec." data-lang-en="spec.">spec.</label>
+                                <input type="text" id="specification" class="form-control" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 data-lang-cn="尺寸信息" data-lang-en="Dimensions">尺寸信息</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label data-lang-cn="厚度" data-lang-en="Thickness">厚度</label>
+                                <div class="dimensions-container">
+                                    <input type="number" id="thicknessMetric" class="form-control" placeholder="公制" readonly>
+                                    <input type="number" id="thicknessImperial" class="form-control" placeholder="英制" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label data-lang-cn="克重" data-lang-en="Weight">克重</label>
+                                <div class="dimensions-container">
+                                    <input type="number" id="weightMetric" class="form-control" placeholder="公制" readonly>
+                                    <input type="number" id="weightImperial" class="form-control" placeholder="英制" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label data-lang-cn="膜宽" data-lang-en="Film Width">膜宽</label>
+                                <div class="dimensions-container">
+                                    <input type="number" id="filmWidthMetric" class="form-control" placeholder="公制" readonly>
+                                    <input type="number" id="filmWidthImperial" class="form-control" placeholder="英制" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label data-lang-cn="袋长" data-lang-en="Bag Length">袋长</label>
+                                <div class="dimensions-container">
+                                    <input type="number" id="bagLengthMetric" class="form-control" placeholder="公制" readonly>
+                                    <input type="number" id="bagLengthImperial" class="form-control" placeholder="英制" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label data-lang-cn="卷长" data-lang-en="Roll Length">卷长</label>
+                                <div class="dimensions-container">
+                                    <input type="number" id="rollLengthMetric" class="form-control" placeholder="公制" readonly>
+                                    <input type="number" id="rollLengthImperial" class="form-control" placeholder="英制" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="coreInnerDiameter" data-lang-cn="纸筒内径" data-lang-en="Core Inner Diameter">纸筒内径</label>
+                                <input type="number" id="coreInnerDiameter" class="form-control" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="rollDiameter" data-lang-cn="卷径" data-lang-en="Roll Diameter">卷径</label>
+                                <input type="number" id="rollDiameter" class="form-control" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 data-lang-cn="包装信息" data-lang-en="Package Information">包装信息</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="packagingMethod" data-lang-cn="包装方式" data-lang-en="Packaging Method">包装方式</label>
+                                <input type="text" id="packagingMethod" class="form-control" readonly>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label data-lang-cn="产品外包装尺寸" data-lang-en="Product Outer Package Dimensions">产品外包装尺寸</label>
+                                <div class="dimensions-container">
+                                    <input type="number" id="packageLength" class="form-control" placeholder="长" readonly>
+                                    <input type="number" id="packageWidth" class="form-control" placeholder="宽" readonly>
+                                    <input type="number" id="packageHeight" class="form-control" placeholder="高" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="quantityPerBox" data-lang-cn="单箱数量" data-lang-en="Quantity per Box">单箱数量</label>
+                                <input type="number" id="quantityPerBox" class="form-control" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 data-lang-cn="托盘信息" data-lang-en="Pallet Information">托盘信息</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label data-lang-cn="托盘尺寸" data-lang-en="Pallet Dimensions">托盘尺寸</label>
+                                <div class="dimensions-container">
+                                    <input type="number" id="palletLength" class="form-control" placeholder="长" readonly>
+                                    <input type="number" id="palletWidth" class="form-control" placeholder="宽" readonly>
+                                    <input type="number" id="palletHeight" class="form-control" placeholder="高" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="rollsPerPalletA" data-lang-cn="一托卷数A" data-lang-en="Rolls per Pallet A">一托卷数A</label>
+                                <input type="number" id="rollsPerPalletA" class="form-control" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="palletWeightA" data-lang-cn="托盘毛重A" data-lang-en="Pallet Weight A">托盘毛重A</label>
+                                <input type="number" id="palletWeightA" class="form-control" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="totalHeightA" data-lang-cn="打托后总高度A" data-lang-en="Total Height A">打托后总高度A</label>
+                                <input type="number" id="totalHeightA" class="form-control" readonly>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="rollsPerPalletB" data-lang-cn="一托卷数B" data-lang-en="Rolls per Pallet B">一托卷数B</label>
+                                <input type="number" id="rollsPerPalletB" class="form-control" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="palletWeightB" data-lang-cn="托盘毛重B" data-lang-en="Pallet Weight B">托盘毛重B</label>
+                                <input type="number" id="palletWeightB" class="form-control" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="totalHeightB" data-lang-cn="打托后总高度B" data-lang-en="Total Height B">打托后总高度B</label>
+                                <input type="number" id="totalHeightB" class="form-control" readonly>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="rollsPerPalletC" data-lang-cn="一托卷数C" data-lang-en="Rolls per Pallet C">一托卷数C</label>
+                                <input type="number" id="rollsPerPalletC" class="form-control" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="palletWeightC" data-lang-cn="托盘毛重C" data-lang-en="Pallet Weight C">托盘毛重C</label>
+                                <input type="number" id="palletWeightC" class="form-control" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="totalHeightC" data-lang-cn="打托后总高度C" data-lang-en="Total Height C">打托后总高度C</label>
+                                <input type="number" id="totalHeightC" class="form-control" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 data-lang-cn="产品图片" data-lang-en="Product Images">产品图片</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label data-lang-cn="产品图片" data-lang-en="Product Image">产品图片</label>
+                                <div class="image-upload">
+                                    <div class="image-preview">
+                                        <img src="/api/placeholder/200/200" alt="产品图片预览">
+                                        <button type="button" class="remove-btn">×</button>
+                                    </div>
+                                    <input type="file" id="productImage" accept="image/*" style="display: none;">
+                                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('productImage').click()" data-lang-cn="上传图片" data-lang-en="Upload Image">上传图片</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label data-lang-cn="袋型实物" data-lang-en="Bag Type Image">袋型实物</label>
+                                <div class="image-upload">
+                                    <div class="image-preview">
+                                        <img src="/api/placeholder/200/200" alt="袋型实物预览">
+                                        <button type="button" class="remove-btn">×</button>
+                                    </div>
+                                    <input type="file" id="bagTypeImage" accept="image/*" style="display: none;">
+                                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('bagTypeImage').click()" data-lang-cn="上传图片" data-lang-en="Upload Image">上传图片</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label data-lang-cn="包装实物图片" data-lang-en="Package Image">包装实物图片</label>
+                                <div class="image-upload">
+                                    <div class="image-preview">
+                                        <img src="/api/placeholder/200/200" alt="包装实物图片预览">
+                                        <button type="button" class="remove-btn">×</button>
+                                    </div>
+                                    <input type="file" id="packageImage" accept="image/*" style="display: none;">
+                                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('packageImage').click()" data-lang-cn="上传图片" data-lang-en="Upload Image">上传图片</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="window.history.back()" data-lang-cn="取消" data-lang-en="Cancel">取消</button>
+                        <button type="submit" class="btn btn-primary" data-lang-cn="保存" data-lang-en="Save">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Language configuration
+        const i18n = {
+            zh: {
+                nav: {
+                    home: '首页',
+                    pageEdit: '页面编辑',
+                    productLine1: '产品线1',
+                    productLine2: '产品线2',
+                    productLine3: '产品线3',
+                    productLine4: '产品线4',
+                    airCushion: '气垫机',
+                    paperMachine: '纸机',
+                    tapeMachine: '胶带机',
+                    airPillowBag: '气柱袋',
+                    mainUnit: '主机',
+                    accessories: '配件',
+                    consumables: '耗材',
+                    spareParts: '备件',
+                    userManagement: '用户管理',
+                    systemSettings: '系统设置',
+                    docs: '文档',
+                    support: '支持'
+                },
+                title: {
+                    addConsumable: '新增耗材'
+                },
+                section: {
+                    basicInfo: '基本信息',
+                    dimensions: '尺寸信息',
+                    productImage: '产品图片',
+                    productInfo: '产品信息',
+                    rollLength: '卷长信息',
+                    packaging: '包装信息',
+                    pallet: '托盘信息',
+                    roll: '卷筒信息'
+                },
+                form: {
+                    applicableMachine: '适用机型：',
+                    bagType: '袋型：',
+                    material: '材质：',
+                    thickness: '厚度：',
+                    weight: '克重：',
+                    width: '膜宽：',
+                    length: '袋长：',
+                    metric: '公制：',
+                    imperial: '英制：',
+                    productImage: '产品图片：',
+                    bagTypeImage: '袋型实物：',
+                    partNumber: '料号：',
+                    specification: '规格型号：',
+                    spec: 'spec.：',
+                    brand: '品牌：',
+                    rollLength: '卷长：',
+                    packagingMethod: '包装方式：',
+                    packageSize: '产品外包装尺寸：',
+                    quantityPerBox: '单箱数量：',
+                    packagingImage: '包装实物图片：',
+                    palletSize: '托盘尺寸：',
+                    rollsPerPallet: '一托卷数',
+                    palletWeight: '托盘毛重',
+                    palletHeight: '打托后总高度',
+                    coreInnerDiameter: '纸筒内径：',
+                    rollDiameter: '卷径：',
+                    save: '保存',
+                    uploadImage: '上传图片'
+                },
+                messages: {
+                    saveSuccess: '保存成功！',
+                    saveFailed: '保存失败：',
+                    tryAgainLater: '保存失败，请稍后重试'
+                }
+            },
+            en: {
+                nav: {
+                    home: 'Home',
+                    pageEdit: 'Page Edit',
+                    productLine1: 'Product Line 1',
+                    productLine2: 'Product Line 2',
+                    productLine3: 'Product Line 3',
+                    productLine4: 'Product Line 4',
+                    airCushion: 'Air Cushion',
+                    paperMachine: 'Paper Machine',
+                    tapeMachine: 'Tape Machine',
+                    airPillowBag: 'Air Pillow Bag',
+                    mainUnit: 'Main Unit',
+                    accessories: 'Accessories',
+                    consumables: 'Consumables',
+                    spareParts: 'Spare Parts',
+                    userManagement: 'User Management',
+                    systemSettings: 'System Settings',
+                    docs: 'Docs',
+                    support: 'Support'
+                },
+                title: {
+                    addConsumable: 'Add Consumable'
+                },
+                section: {
+                    basicInfo: 'Basic Information',
+                    dimensions: 'Dimensions',
+                    productImage: 'Product Image',
+                    productInfo: 'Product Information',
+                    rollLength: 'Roll Length',
+                    packaging: 'Packaging',
+                    pallet: 'Pallet Information',
+                    roll: 'Roll Information'
+                },
+                form: {
+                    applicableMachine: 'Applicable Machine:',
+                    bagType: 'Bag Type:',
+                    material: 'Material:',
+                    thickness: 'Thickness:',
+                    weight: 'Weight:',
+                    width: 'Width:',
+                    length: 'Length:',
+                    metric: 'Metric:',
+                    imperial: 'Imperial:',
+                    productImage: 'Product Image:',
+                    bagTypeImage: 'Bag Type Image:',
+                    partNumber: 'Part Number:',
+                    specification: 'Specification:',
+                    spec: 'Spec.:',
+                    brand: 'Brand:',
+                    rollLength: 'Roll Length:',
+                    packagingMethod: 'Packaging Method:',
+                    packageSize: 'Package Size:',
+                    quantityPerBox: 'Quantity per Box:',
+                    packagingImage: 'Packaging Image:',
+                    palletSize: 'Pallet Size:',
+                    rollsPerPallet: 'Rolls per Pallet',
+                    palletWeight: 'Pallet Weight',
+                    palletHeight: 'Pallet Height',
+                    coreInnerDiameter: 'Core Inner Diameter:',
+                    rollDiameter: 'Roll Diameter:',
+                    save: 'Save',
+                    uploadImage: 'Upload Image'
+                },
+                messages: {
+                    saveSuccess: 'Save successful!',
+                    saveFailed: 'Save failed:',
+                    tryAgainLater: 'Save failed, please try again later'
+                }
+            }
+        };
+
+        // Language switching functionality
+        let currentLang = 'zh';
+
+        function updateLanguage(lang) {
+            currentLang = lang;
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const keys = element.getAttribute('data-i18n').split('.');
+                let value = i18n[lang];
+                for (const key of keys) {
+                    value = value[key];
+                }
+                if (element.tagName === 'INPUT' && element.type === 'submit') {
+                    element.value = value;
+                } else {
+                    element.textContent = value;
+                }
+            });
+
+            // Update language switcher
+            document.querySelector('.current-lang-text').textContent = lang === 'zh' ? '中文' : 'English';
+            document.querySelectorAll('.language-option').forEach(option => {
+                option.classList.toggle('active', option.getAttribute('data-lang') === lang);
+            });
+
+            // Save language preference
+            localStorage.setItem('preferredLanguage', lang);
+        }
+
+        // Language switcher functionality
+        document.querySelector('.language-switcher').addEventListener('click', function(e) {
+            const options = this.querySelector('.language-options');
+            options.classList.toggle('active');
+            e.stopPropagation();
+        });
+
+        document.querySelectorAll('.language-option').forEach(option => {
+            option.addEventListener('click', function() {
+                const lang = this.getAttribute('data-lang');
+                updateLanguage(lang);
+            });
+        });
+
+        // Close language options when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.language-switcher')) {
+                document.querySelector('.language-options').classList.remove('active');
+            }
+        });
+
+        // Initialize language from localStorage or default to Chinese
+        const savedLang = localStorage.getItem('preferredLanguage') || 'zh';
+        updateLanguage(savedLang);
+
+        // Handle image uploads
+        document.querySelectorAll('input[type="file"]').forEach(fileInput => {
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    const preview = this.parentElement.querySelector('img');
+                    
+                    reader.onload = function(e) {
+                        preview.src = e.target.result;
+                    };
+                    
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+
+        // Handle image removals
+        document.querySelectorAll('.remove-image').forEach(button => {
+            button.addEventListener('click', function() {
+                const preview = this.parentElement.querySelector('img');
+                const fileInput = this.parentElement.parentElement.querySelector('input[type="file"]');
+                preview.src = '/api/placeholder/200/200';
+                fileInput.value = '';
+            });
+        });
+
+        // Handle metric/imperial conversions
+        function setupConversion(metricId, imperialId, conversionFactor, reverse = false) {
+            const metricInput = document.getElementById(metricId);
+            const imperialInput = document.getElementById(imperialId);
+
+            metricInput.addEventListener('input', function() {
+                if (this.value) {
+                    const value = parseFloat(this.value);
+                    imperialInput.value = reverse ? 
+                        (value / conversionFactor).toFixed(2) : 
+                        (value * conversionFactor).toFixed(2);
+                }
+            });
+
+            imperialInput.addEventListener('input', function() {
+                if (this.value) {
+                    const value = parseFloat(this.value);
+                    metricInput.value = reverse ? 
+                        (value * conversionFactor).toFixed(2) : 
+                        (value / conversionFactor).toFixed(2);
+                }
+            });
+        }
+
+        // Set up conversions for all measurement pairs
+        setupConversion('thicknessMetric', 'thicknessImperial', 0.0393701); // mm to mil
+        setupConversion('weightMetric', 'weightImperial', 0.61); // g/m² to lb/ream
+        setupConversion('widthMetric', 'widthImperial', 0.0393701); // mm to inch
+        setupConversion('lengthMetric', 'lengthImperial', 0.0393701); // mm to inch
+        setupConversion('rollLengthMetric', 'rollLengthImperial', 3.28084); // m to ft
+
+        // Form submission
+        document.getElementById('partForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Collect form data
+            const formData = new FormData(this);
+            
+            // Add file data
+            document.querySelectorAll('input[type="file"]').forEach(fileInput => {
+                if (fileInput.files[0]) {
+                    formData.append(fileInput.id, fileInput.files[0]);
+                }
+            });
+
+            // Submit form data
+            fetch('/api/materials', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('保存成功！');
+                    // Optionally redirect or reset form
+                    // window.location.href = '/admin/materials';
+                } else {
+                    alert('保存失败：' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('保存失败，请稍后重试');
+            });
+        });
+
+        // Sidebar menu functionality
+        document.querySelectorAll('.expandable').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                this.classList.toggle('active');
+                this.nextElementSibling.classList.toggle('active');
+            });
+        });
+
+        // CRM API integration
+        document.getElementById('fetchFromCRM').addEventListener('click', function() {
+            const partNumber = document.getElementById('partNumber').value.trim();
+            
+            if (!partNumber) {
+                showToast('请输入料号', 'error');
+                return;
+            }
+
+            // Show loading state
+            this.disabled = true;
+            this.textContent = '获取中...';
+            
+            // Simulate API call to CRM
+            setTimeout(function() {
+                // Mock data from CRM
+                const mockData = {
+                    model: 'PT2001',
+                    bagType: '标准型',
+                    material: 'PE',
+                    thickness: {
+                        metric: 0.05,
+                        imperial: 0.002
+                    },
+                    weight: {
+                        metric: 50,
+                        imperial: 1.76
+                    },
+                    filmWidth: {
+                        metric: 1000,
+                        imperial: 39.37
+                    },
+                    bagLength: {
+                        metric: 2000,
+                        imperial: 78.74
+                    },
+                    spec: 'PT2001-01',
+                    brand: 'BJT',
+                    rollLength: {
+                        metric: 1000,
+                        imperial: 39.37
+                    },
+                    packagingMethod: '纸箱包装',
+                    packageDimensions: {
+                        length: 1000,
+                        width: 800,
+                        height: 600
+                    },
+                    quantityPerBox: 10,
+                    palletDimensions: {
+                        length: 1200,
+                        width: 1000,
+                        height: 150
+                    },
+                    palletA: {
+                        rolls: 20,
+                        weight: 500,
+                        height: 1200
+                    },
+                    palletB: {
+                        rolls: 30,
+                        weight: 750,
+                        height: 1500
+                    },
+                    palletC: {
+                        rolls: 40,
+                        weight: 1000,
+                        height: 1800
+                    },
+                    coreInnerDiameter: 76,
+                    rollDiameter: 300
+                };
+
+                // Fill form fields with CRM data
+                document.getElementById('model').value = mockData.model;
+                document.getElementById('bagType').value = mockData.bagType;
+                document.getElementById('material').value = mockData.material;
+                document.getElementById('thicknessMetric').value = mockData.thickness.metric;
+                document.getElementById('thicknessImperial').value = mockData.thickness.imperial;
+                document.getElementById('weightMetric').value = mockData.weight.metric;
+                document.getElementById('weightImperial').value = mockData.weight.imperial;
+                document.getElementById('filmWidthMetric').value = mockData.filmWidth.metric;
+                document.getElementById('filmWidthImperial').value = mockData.filmWidth.imperial;
+                document.getElementById('bagLengthMetric').value = mockData.bagLength.metric;
+                document.getElementById('bagLengthImperial').value = mockData.bagLength.imperial;
+                document.getElementById('spec').value = mockData.spec;
+                document.getElementById('brand').value = mockData.brand;
+                document.getElementById('rollLengthMetric').value = mockData.rollLength.metric;
+                document.getElementById('rollLengthImperial').value = mockData.rollLength.imperial;
+                document.getElementById('packagingMethod').value = mockData.packagingMethod;
+                document.getElementById('packageLength').value = mockData.packageDimensions.length;
+                document.getElementById('packageWidth').value = mockData.packageDimensions.width;
+                document.getElementById('packageHeight').value = mockData.packageDimensions.height;
+                document.getElementById('quantityPerBox').value = mockData.quantityPerBox;
+                document.getElementById('palletLength').value = mockData.palletDimensions.length;
+                document.getElementById('palletWidth').value = mockData.palletDimensions.width;
+                document.getElementById('palletHeight').value = mockData.palletDimensions.height;
+                document.getElementById('rollsPerPalletA').value = mockData.palletA.rolls;
+                document.getElementById('palletWeightA').value = mockData.palletA.weight;
+                document.getElementById('totalHeightA').value = mockData.palletA.height;
+                document.getElementById('rollsPerPalletB').value = mockData.palletB.rolls;
+                document.getElementById('palletWeightB').value = mockData.palletB.weight;
+                document.getElementById('totalHeightB').value = mockData.palletB.height;
+                document.getElementById('rollsPerPalletC').value = mockData.palletC.rolls;
+                document.getElementById('palletWeightC').value = mockData.palletC.weight;
+                document.getElementById('totalHeightC').value = mockData.palletC.height;
+                document.getElementById('coreInnerDiameter').value = mockData.coreInnerDiameter;
+                document.getElementById('rollDiameter').value = mockData.rollDiameter;
+
+                // Reset button state
+                const fetchButton = document.getElementById('fetchFromCRM');
+                fetchButton.disabled = false;
+                fetchButton.textContent = '从CRM获取';
+
+                showToast('数据获取成功', 'success');
+            }, 1500);
+        });
+    </script>
+</body>
+</html>

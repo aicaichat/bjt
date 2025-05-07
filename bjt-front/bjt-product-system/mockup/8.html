@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT - 新增配件型号</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #f7f9fc;
+            color: #333;
+        }
+        .header {
+            background-color: #fff;
+            padding: 15px 25px;
+            border-bottom: 1px solid #e1e5eb;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: relative;
+            z-index: 10;
+        }
+        .logo {
+            height: 45px;
+        }
+        .container {
+            display: flex;
+            flex: 1;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        .sidebar {
+            width: 220px;
+            background-color: #1a3c70;
+            color: #fff;
+            padding: 15px 0;
+            overflow-y: auto;
+        }
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 8px;
+            margin: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow-y: auto;
+        }
+        .menu-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            font-size: 14px;
+        }
+        .menu-item:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        .menu-item.active {
+            background-color: rgba(255,255,255,0.15);
+            color: #fff;
+            border-left-color: #4dabf7;
+        }
+        .submenu {
+            margin-left: 0;
+            display: none;
+            background-color: rgba(0,0,0,0.15);
+        }
+        .submenu.active {
+            display: block;
+        }
+        .submenu .menu-item {
+            padding-left: 40px;
+            font-size: 13px;
+        }
+        .expandable::after {
+            content: "▶";
+            font-size: 10px;
+            margin-left: auto;
+            transition: transform 0.2s;
+        }
+        .expandable.active::after {
+            content: "▼";
+        }
+        h2 {
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: #1a3c70;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e1e5eb;
+        }
+        .form-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .form-group {
+            margin-bottom: 24px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #1a3c70;
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        .form-control:focus {
+            border-color: #4dabf7;
+            box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.2);
+            outline: none;
+        }
+        .textarea-container {
+            position: relative;
+        }
+        .textarea-label {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 2px 8px;
+            background-color: #f8f9fa;
+            border: 1px solid #e1e5eb;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #666;
+        }
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+        .text-danger {
+            color: #dc3545;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+        .required::after {
+            content: "*";
+            color: #dc3545;
+            margin-left: 4px;
+        }
+        .help-text {
+            color: #6c757d;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        .btn-primary {
+            background-color: #1a3c70;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background-color: #15305b;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: #fff;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e1e5eb;
+        }
+        .image-upload-container {
+            border: 2px dashed #ced4da;
+            border-radius: 6px;
+            padding: 20px;
+            text-align: center;
+            background-color: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .image-upload-container:hover {
+            border-color: #4dabf7;
+            background-color: #f1f8ff;
+        }
+        .image-upload-icon {
+            font-size: 32px;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+        .image-upload-text {
+            color: #495057;
+            font-size: 14px;
+        }
+        .image-preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .image-preview-item {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid #e1e5eb;
+        }
+        .image-preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .image-preview-remove {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 20px;
+            height: 20px;
+            background-color: rgba(220, 53, 69, 0.7);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .image-preview-remove:hover {
+            background-color: rgba(220, 53, 69, 1);
+        }
+        .menu-icon {
+            margin-right: 10px;
+            opacity: 0.8;
+            font-size: 16px;
+        }
+        .note {
+            background-color: #fff8e1;
+            border-left: 4px solid #ffc107;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #333;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .toast.success {
+            background-color: #28a745;
+        }
+        .toast.error {
+            background-color: #dc3545;
+        }
+        .toast.show {
+            display: block;
+            opacity: 1;
+        }
+        /* Language tab styles */
+        .language-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .lang-tab {
+            padding: 8px 16px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            background: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            color: #495057;
+            transition: all 0.2s;
+        }
+        
+        .lang-tab:hover {
+            background: #f8f9fa;
+        }
+        
+        .lang-tab.active {
+            background: #1a3c70;
+            color: #fff;
+            border-color: #1a3c70;
+        }
+        
+        .lang-content {
+            display: none;
+        }
+        
+        .lang-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="/api/placeholder/200/40" alt="BJT Logo" class="logo">
+        <div style="margin-left: auto; display: flex; gap: 20px; align-items: center;">
+            <a href="#" style="color: #1a3c70; text-decoration: none; font-size: 14px; font-weight: 500;">文档</a>
+            <a href="#" style="color: #1a3c70; text-decoration: none; font-size: 14px; font-weight: 500;">支持</a>
+            <div style="display: flex; align-items: center; border: 1px solid #e1e5eb; border-radius: 4px; padding: 5px 10px;">
+                <span style="font-size: 13px; margin-right: 5px;">中文</span>
+                <span style="font-size: 10px;">▼</span>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="sidebar">
+            <a href="#" class="menu-item">
+                <span class="menu-icon">🏠</span>
+                <span>首页</span>
+            </a>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">📄</span>
+                <span>页面编辑</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">产品线1</a>
+                <a href="#" class="menu-item">产品线2</a>
+                <a href="#" class="menu-item">产品线3</a>
+                <a href="#" class="menu-item">产品线4</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">🛋️</span>
+                <span>气垫机</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">主机</a>
+                <a href="#" class="menu-item">配件</a>
+                <a href="#" class="menu-item">耗材</a>
+                <a href="#" class="menu-item">备件</a>
+            </div>
+            <a href="#" class="menu-item expandable active">
+                <span class="menu-icon">📃</span>
+                <span>纸机</span>
+            </a>
+            <div class="submenu active">
+                <a href="#" class="menu-item">主机</a>
+                <a href="#" class="menu-item active">配件</a>
+                <a href="#" class="menu-item">耗材</a>
+                <a href="#" class="menu-item">备件</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">🧵</span>
+                <span>胶带机</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">主机</a>
+                <a href="#" class="menu-item">配件</a>
+                <a href="#" class="menu-item">耗材</a>
+                <a href="#" class="menu-item">备件</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">💼</span>
+                <span>气柱袋</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">耗材</a>
+            </div>
+            <a href="#" class="menu-item">
+                <span class="menu-icon">👤</span>
+                <span>用户管理</span>
+            </a>
+            <a href="#" class="menu-item">
+                <span class="menu-icon">⚙️</span>
+                <span>系统设置</span>
+            </a>
+        </div>
+        
+        <div class="main-content">
+            <h2>新增配件型号</h2>
+            
+            <div class="note">
+                <i style="margin-right: 8px;">ℹ️</i> 请确保型号唯一，并提供完整的中英文描述信息
+            </div>
+            
+            <div class="form-container">
+                <form id="accessoryForm">
+                    <div class="form-group">
+                        <label for="modelNumber" class="required">型号</label>
+                        <input type="text" class="form-control" id="modelNumber" placeholder="请输入型号" required>
+                        <div class="help-text">型号为唯一标识，不能重复</div>
+                        <div class="text-danger" id="modelNumberError"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>说明</label>
+                        <div class="language-tabs" style="margin-bottom: 10px;">
+                            <button type="button" class="lang-tab active" data-lang="cn">中文</button>
+                            <button type="button" class="lang-tab" data-lang="en">English</button>
+                        </div>
+                        <div class="lang-content active" data-lang="cn">
+                            <textarea class="form-control" id="chineseDescription" placeholder="请输入中文描述"></textarea>
+                        </div>
+                        <div class="lang-content" data-lang="en">
+                            <textarea class="form-control" id="englishDescription" placeholder="Please enter English description"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="imageUpload">图片</label>
+                        <input type="file" id="imageUpload" multiple accept="image/*" style="display: none;">
+                        <div class="image-upload-container" id="uploadTrigger">
+                            <div class="image-upload-icon">📷</div>
+                            <div class="image-upload-text">点击或拖拽上传图片</div>
+                            <div class="help-text">支持JPG、PNG、GIF格式，单图大小不超过2MB</div>
+                        </div>
+                        <div class="image-preview-container" id="imagePreviewContainer"></div>
+                        <div class="text-danger" id="imageUploadError"></div>
+                        <div class="help-text">*该图片用于选型页面的示意图。</div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelBtn">取消</button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">提交</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast notification -->
+    <div class="toast" id="toast">
+        <span id="toastMessage">操作成功</span>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Menu toggle functionality
+            document.querySelectorAll('.expandable').forEach(item => {
+                item.addEventListener('click', event => {
+                    const submenu = item.nextElementSibling;
+                    if (submenu && submenu.classList.contains('submenu')) {
+                        submenu.classList.toggle('active');
+                        item.classList.toggle('active');
+                    }
+                    event.preventDefault();
+                });
+            });
+
+            // Automatically expand submenus with active items
+            document.querySelectorAll('.submenu .menu-item.active').forEach(activeItem => {
+                const parentSubmenu = activeItem.closest('.submenu');
+                const parentExpandable = parentSubmenu.previousElementSibling;
+                
+                if (parentSubmenu && parentExpandable) {
+                    parentSubmenu.classList.add('active');
+                    parentExpandable.classList.add('active');
+                }
+            });
+            
+            // Language tab switching
+            const langTabs = document.querySelectorAll('.lang-tab');
+            const langContents = document.querySelectorAll('.lang-content');
+            
+            langTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const lang = tab.getAttribute('data-lang');
+                    
+                    // Update tabs
+                    langTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // Update content
+                    langContents.forEach(content => {
+                        if (content.getAttribute('data-lang') === lang) {
+                            content.classList.add('active');
+                        } else {
+                            content.classList.remove('active');
+                        }
+                    });
+                });
+            });
+            
+            // Image upload functionality
+            const imageUpload = document.getElementById('imageUpload');
+            const uploadTrigger = document.getElementById('uploadTrigger');
+            const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+            const imageUploadError = document.getElementById('imageUploadError');
+            
+            uploadTrigger.addEventListener('click', () => {
+                imageUpload.click();
+            });
+            
+            // Handle drag and drop
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadTrigger.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadTrigger.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadTrigger.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                uploadTrigger.style.borderColor = '#4dabf7';
+                uploadTrigger.style.backgroundColor = '#f1f8ff';
+            }
+            
+            function unhighlight() {
+                uploadTrigger.style.borderColor = '#ced4da';
+                uploadTrigger.style.backgroundColor = '#f8f9fa';
+            }
+            
+            uploadTrigger.addEventListener('drop', handleDrop, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                handleFiles(files);
+            }
+            
+            imageUpload.addEventListener('change', function() {
+                handleFiles(this.files);
+            });
+            
+            function handleFiles(files) {
+                imageUploadError.textContent = '';
+                
+                if (files.length > 5) {
+                    imageUploadError.textContent = '最多只能上传5张图片';
+                    return;
+                }
+                
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    
+                    // Validate file type
+                    if (!file.type.match('image.*')) {
+                        imageUploadError.textContent = '只能上传图片文件';
+                        continue;
+                    }
+                    
+                    // Validate file size (2MB max)
+                    if (file.size > 2 * 1024 * 1024) {
+                        imageUploadError.textContent = '图片大小不能超过2MB';
+                        continue;
+                    }
+                    
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        const previewItem = document.createElement('div');
+                        previewItem.className = 'image-preview-item';
+                        
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        
+                        const removeBtn = document.createElement('div');
+                        removeBtn.className = 'image-preview-remove';
+                        removeBtn.innerHTML = '×';
+                        removeBtn.addEventListener('click', function() {
+                            previewItem.remove();
+                        });
+                        
+                        previewItem.appendChild(img);
+                        previewItem.appendChild(removeBtn);
+                        imagePreviewContainer.appendChild(previewItem);
+                    };
+                    
+                    reader.readAsDataURL(file);
+                }
+            }
+            
+            // Form validation
+            const accessoryForm = document.getElementById('accessoryForm');
+            const modelNumber = document.getElementById('modelNumber');
+            const modelNumberError = document.getElementById('modelNumberError');
+            
+            // Mock function to check if model number exists
+            function modelNumberExists(value) {
+                // This would be an API call in a real application
+                const existingModels = ['PT2001', 'PT2002', 'PT2003'];
+                return existingModels.includes(value);
+            }
+            
+            modelNumber.addEventListener('blur', function() {
+                modelNumberError.textContent = '';
+                
+                if (this.value.trim() === '') {
+                    modelNumberError.textContent = '型号不能为空';
+                    return;
+                }
+                
+                if (modelNumberExists(this.value.trim())) {
+                    modelNumberError.textContent = '该型号已存在，请输入唯一型号';
+                }
+            });
+            
+            // Form submission
+            accessoryForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Validate model number
+                if (modelNumber.value.trim() === '') {
+                    modelNumberError.textContent = '型号不能为空';
+                    modelNumber.focus();
+                    return;
+                }
+                
+                if (modelNumberExists(modelNumber.value.trim())) {
+                    modelNumberError.textContent = '该型号已存在，请输入唯一型号';
+                    modelNumber.focus();
+                    return;
+                }
+                
+                // Show success message
+                showToast('配件型号添加成功', 'success');
+                
+                // In a real application, you would submit the form data to the server here
+                setTimeout(() => {
+                    window.location.href = '#'; // Redirect to accessories management page
+                }, 2000);
+            });
+            
+            // Cancel button
+            document.getElementById('cancelBtn').addEventListener('click', function() {
+                if (confirm('确定要取消？已填写的内容将不会保存')) {
+                    window.location.href = '#'; // Redirect to accessories management page
+                }
+            });
+            
+            // Toast notification functionality
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            function showToast(message, type) {
+                toastMessage.textContent = message;
+                toast.className = 'toast ' + (type || '');
+                toast.classList.add('show');
+                
+                setTimeout(function() {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>

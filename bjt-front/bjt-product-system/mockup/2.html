@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT Machine Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #f7f9fc;
+            color: #333;
+        }
+        .header {
+            background-color: #fff;
+            padding: 15px 25px;
+            border-bottom: 1px solid #e1e5eb;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: relative;
+            z-index: 10;
+        }
+        .logo {
+            height: 45px;
+        }
+        .container {
+            display: flex;
+            flex: 1;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        .sidebar {
+            width: 220px;
+            background-color: #1a3c70;
+            color: #fff;
+            padding: 15px 0;
+            overflow-y: auto;
+        }
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            background-color: #fff;
+            overflow-y: auto;
+        }
+        .menu-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            font-size: 14px;
+        }
+        .menu-item:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        .menu-item.active {
+            background-color: rgba(255,255,255,0.15);
+            color: #fff;
+            border-left-color: #4dabf7;
+        }
+        .submenu {
+            margin-left: 0;
+            display: none;
+            background-color: rgba(0,0,0,0.15);
+        }
+        .submenu.active {
+            display: block;
+        }
+        .submenu .menu-item {
+            padding-left: 40px;
+            font-size: 13px;
+        }
+        .expandable::after {
+            content: "▶";
+            font-size: 10px;
+            margin-left: auto;
+            transition: transform 0.2s;
+        }
+        .expandable.active::after {
+            content: "▼";
+        }
+        h2 {
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: #1a3c70;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e1e5eb;
+        }
+        .section {
+            background-color: #fff;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a3c70;
+            margin: 0;
+        }
+        .btn {
+            padding: 8px 16px;
+            background-color: #1a3c70;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        .btn:hover {
+            background-color: #15305b;
+        }
+        .btn:active {
+            transform: translateY(1px);
+        }
+        .btn-primary {
+            background-color: #1a3c70;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .btn-success {
+            background-color: #28a745;
+        }
+        .btn-info {
+            background-color: #17a2b8;
+        }
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        .btn-link {
+            background: none;
+            color: #1a3c70;
+            text-decoration: underline;
+            padding: 0;
+        }
+        .divider {
+            height: 1px;
+            background-color: #e1e5eb;
+            margin: 30px 0;
+        }
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            text-align: left;
+            padding: 12px 15px;
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #e1e5eb;
+            font-weight: 600;
+            color: #495057;
+        }
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e1e5eb;
+            color: #212529;
+        }
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .filter-label {
+            font-weight: 500;
+            color: #495057;
+            font-size: 14px;
+        }
+        .filter-input {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .filter-input:focus {
+            outline: none;
+            border-color: #4dabf7;
+            box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.2);
+        }
+        .action-buttons {
+            display: flex;
+            gap: 6px;
+        }
+        .pagination {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+            gap: 5px;
+        }
+        .page-item {
+            display: inline-block;
+            min-width: 32px;
+            height: 32px;
+            text-align: center;
+            line-height: 32px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        .page-item:hover {
+            background-color: #e9ecef;
+            border-color: #dee2e6;
+        }
+        .page-item.active {
+            background-color: #1a3c70;
+            border-color: #1a3c70;
+            color: white;
+        }
+        .status-icon {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .status-active {
+            background-color: #28a745;
+        }
+        .status-inactive {
+            background-color: #dc3545;
+        }
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-dialog {
+            background-color: #fff;
+            border-radius: 6px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            width: 400px;
+            max-width: 90%;
+            animation: modalFadeIn 0.3s ease;
+        }
+        .modal-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e1e5eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .modal-title {
+            font-weight: 600;
+            font-size: 18px;
+            color: #1a3c70;
+            margin: 0;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #6c757d;
+        }
+        .modal-body {
+            padding: 20px;
+        }
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #e1e5eb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #495057;
+            font-size: 14px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #4dabf7;
+            box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.2);
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            border-left: 4px solid;
+        }
+        .alert-warning {
+            background-color: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+        .alert-danger {
+            background-color: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #333;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .toast.success {
+            background-color: #28a745;
+        }
+        .toast.error {
+            background-color: #dc3545;
+        }
+        .toast.warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .toast.info {
+            background-color: #17a2b8;
+            color: white;
+        }
+        .toast.show {
+            display: block;
+            opacity: 1;
+        }
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .menu-icon {
+            margin-right: 10px;
+            opacity: 0.8;
+            font-size: 16px;
+        }
+        
+        /* Dropdown menu styles */
+        .btn-group {
+            position: relative;
+            display: inline-flex;
+        }
+        
+        .dropdown-toggle {
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            z-index: 1000;
+            min-width: 10rem;
+            padding: 0.5rem 0;
+            margin: 0.125rem 0 0;
+            font-size: 14px;
+            background-color: #fff;
+            background-clip: padding-box;
+            border: 1px solid rgba(0,0,0,0.15);
+            border-radius: 0.25rem;
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.175);
+        }
+        
+        .dropdown-menu.show {
+            display: block;
+        }
+        
+        .dropdown-item {
+            display: block;
+            width: 100%;
+            padding: 0.5rem 1.5rem;
+            clear: both;
+            font-weight: 400;
+            color: #212529;
+            text-align: inherit;
+            white-space: nowrap;
+            background-color: transparent;
+            border: 0;
+            text-decoration: none;
+        }
+        
+        .dropdown-item:hover, .dropdown-item:focus {
+            color: #16181b;
+            text-decoration: none;
+            background-color: #f8f9fa;
+        }
+        
+        .import-modal {
+            max-width: 600px;
+        }
+        
+        .import-progress {
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .import-progress-bar {
+            height: 5px;
+            background-color: #e9ecef;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+        
+        .import-progress-value {
+            height: 100%;
+            background-color: #1a3c70;
+            width: 0;
+            transition: width 0.3s;
+        }
+        
+        .import-status {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        .file-upload-info {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #e1e5eb;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        
+        .file-upload-info-text {
+            flex: 1;
+            margin-left: 10px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .file-upload-icon {
+            font-size: 20px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="logo-1.webp" alt="BJT Logo" class="logo">
+        <div style="margin-left: auto; display: flex; gap: 20px; align-items: center;">
+            <a href="#" style="color: #1a3c70; text-decoration: none; font-size: 14px; font-weight: 500;">Documentation</a>
+            <a href="#" style="color: #1a3c70; text-decoration: none; font-size: 14px; font-weight: 500;">Support</a>
+            <div style="display: flex; align-items: center; border: 1px solid #e1e5eb; border-radius: 4px; padding: 5px 10px;">
+                <span style="font-size: 13px; margin-right: 5px;">English</span>
+                <span style="font-size: 10px;">▼</span>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="sidebar">
+            <a href="#" class="menu-item">
+                <span class="menu-icon">🏠</span>
+                <span>首页</span>
+            </a>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">📄</span>
+                <span>页面编辑</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">产品线1</a>
+                <a href="#" class="menu-item">产品线2</a>
+                <a href="#" class="menu-item">产品线3</a>
+                <a href="#" class="menu-item">产品线4</a>
+            </div>
+            <a href="#" class="menu-item expandable active">
+                <span class="menu-icon">🛋️</span>
+                <span>气垫机</span>
+            </a>
+            <div class="submenu active">
+                <a href="#" class="menu-item active">主机</a>
+                <a href="#" class="menu-item">配件</a>
+                <a href="#" class="menu-item">耗材</a>
+                <a href="#" class="menu-item">备件</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">📃</span>
+                <span>纸机</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">主机</a>
+                <a href="#" class="menu-item">配件</a>
+                <a href="#" class="menu-item">耗材</a>
+                <a href="#" class="menu-item">备件</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">🧵</span>
+                <span>胶带机</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">主机</a>
+                <a href="#" class="menu-item">配件</a>
+                <a href="#" class="menu-item">耗材</a>
+                <a href="#" class="menu-item">备件</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">💼</span>
+                <span>气柱袋</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">耗材</a>
+            </div>
+            <a href="#" class="menu-item">
+                <span class="menu-icon">👤</span>
+                <span>用户管理</span>
+            </a>
+            <a href="#" class="menu-item">
+                <span class="menu-icon">⚙️</span>
+                <span>系统设置</span>
+            </a>
+        </div>
+        <div class="main-content">
+            <h2>气垫机 - 主机管理</h2>
+            
+            <div class="section">
+                <div class="section-header">
+                    <h3 class="section-title">型号表</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="btn-group">
+                            <button class="btn btn-info dropdown-toggle" id="exportModelBtn" style="display: flex; align-items: center;">
+                                <span style="margin-right: 5px;">导出</span>
+                                <span style="font-size: 10px;">▼</span>
+                            </button>
+                            <div class="dropdown-menu" id="exportModelDropdown">
+                                <a href="#" class="dropdown-item" data-format="excel">Excel</a>
+                                <a href="#" class="dropdown-item" data-format="csv">CSV</a>
+                                <a href="#" class="dropdown-item" data-format="json">JSON</a>
+                            </div>
+                        </div>
+                        <label for="importModelFile" class="btn btn-success" style="display: flex; align-items: center; margin: 0;">
+                            <span>导入</span>
+                            <input type="file" id="importModelFile" accept=".xlsx,.xls,.csv,.json" style="display: none;">
+                        </label>
+                        <button class="btn btn-primary" id="addModelBtn">新增</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">No</th>
+                                <th>型号名称</th>
+                                <th style="width: 180px;">状态</th>
+                                <th style="width: 200px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>LA-E4S</td>
+                                <td><span class="status-icon status-active"></span>已上架</td>
+                                <td class="action-buttons">
+                                    <button class="btn btn-sm btn-primary edit-model">编辑</button>
+                                    <button class="btn btn-sm btn-warning toggle-status">下架</button>
+                                    <button class="btn btn-sm btn-danger delete-model">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>LA-E5P</td>
+                                <td><span class="status-icon status-active"></span>已上架</td>
+                                <td class="action-buttons">
+                                    <button class="btn btn-sm btn-primary edit-model">编辑</button>
+                                    <button class="btn btn-sm btn-warning toggle-status">下架</button>
+                                    <button class="btn btn-sm btn-danger delete-model">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>LA-E6L</td>
+                                <td><span class="status-icon status-inactive"></span>已下架</td>
+                                <td class="action-buttons">
+                                    <button class="btn btn-sm btn-primary edit-model">编辑</button>
+                                    <button class="btn btn-sm btn-success toggle-status">上架</button>
+                                    <button class="btn btn-sm btn-danger delete-model">删除</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination">
+                    <span class="page-item">«</span>
+                    <span class="page-item active">1</span>
+                    <span class="page-item">2</span>
+                    <span class="page-item">3</span>
+                    <span class="page-item">»</span>
+                </div>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <div class="section">
+                <div class="section-header">
+                    <h3 class="section-title">料号表</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="btn-group">
+                            <button class="btn btn-info dropdown-toggle" id="exportPartBtn" style="display: flex; align-items: center;">
+                                <span style="margin-right: 5px;">导出</span>
+                                <span style="font-size: 10px;">▼</span>
+                            </button>
+                            <div class="dropdown-menu" id="exportPartDropdown">
+                                <a href="#" class="dropdown-item" data-format="excel">Excel</a>
+                                <a href="#" class="dropdown-item" data-format="csv">CSV</a>
+                                <a href="#" class="dropdown-item" data-format="json">JSON</a>
+                            </div>
+                        </div>
+                        <label for="importPartFile" class="btn btn-success" style="display: flex; align-items: center; margin: 0;">
+                            <span>导入</span>
+                            <input type="file" id="importPartFile" accept=".xlsx,.xls,.csv,.json" style="display: none;">
+                        </label>
+                        <button class="btn btn-primary" id="addPartBtn">新增</button>
+                    </div>
+                </div>
+                <div class="filters">
+                    <div class="filter-group">
+                        <label class="filter-label">型号：</label>
+                        <select class="filter-input" id="modelFilter">
+                            <option value="">全部</option>
+                            <option value="LA-E4S" selected>LA-E4S</option>
+                            <option value="LA-E5P">LA-E5P</option>
+                            <option value="LA-E6L">LA-E6L</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">料号：</label>
+                        <input type="text" class="filter-input" placeholder="请输入料号">
+                    </div>
+                    <button class="btn btn-primary" id="filterBtn">筛选</button>
+                    <button class="btn" style="background-color: #6c757d;" id="resetFilterBtn">重置</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">No</th>
+                                <th>型号</th>
+                                <th>料号</th>
+                                <th style="width: 180px;">状态</th>
+                                <th style="width: 200px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>LA-E4S</td>
+                                <td>13A00001</td>
+                                <td><span class="status-icon status-active"></span>已上架</td>
+                                <td class="action-buttons">
+                                    <button class="btn btn-sm btn-primary edit-part">编辑</button>
+                                    <button class="btn btn-sm btn-warning toggle-part-status">下架</button>
+                                    <button class="btn btn-sm btn-info link-part">关联</button>
+                                    <button class="btn btn-sm btn-danger delete-part">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>LA-E4S</td>
+                                <td>13A00002</td>
+                                <td><span class="status-icon status-active"></span>已上架</td>
+                                <td class="action-buttons">
+                                    <button class="btn btn-sm btn-primary edit-part">编辑</button>
+                                    <button class="btn btn-sm btn-warning toggle-part-status">下架</button>
+                                    <button class="btn btn-sm btn-info link-part">关联</button>
+                                    <button class="btn btn-sm btn-danger delete-part">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>LA-E5P</td>
+                                <td>13A00003</td>
+                                <td><span class="status-icon status-inactive"></span>已下架</td>
+                                <td class="action-buttons">
+                                    <button class="btn btn-sm btn-primary edit-part">编辑</button>
+                                    <button class="btn btn-sm btn-success toggle-part-status">上架</button>
+                                    <button class="btn btn-sm btn-info link-part">关联</button>
+                                    <button class="btn btn-sm btn-danger delete-part">删除</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination">
+                    <span class="page-item">«</span>
+                    <span class="page-item active">1</span>
+                    <span class="page-item">2</span>
+                    <span class="page-item">3</span>
+                    <span class="page-item">»</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal for adding/editing model -->
+    <div class="modal" id="modelModal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h4 class="modal-title" id="modelModalTitle">新增型号</h4>
+                <button class="modal-close" id="closeModelModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">型号名称：</label>
+                    <input type="text" class="form-control" id="modelName">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">状态：</label>
+                    <select class="form-control" id="modelStatus">
+                        <option value="active">上架</option>
+                        <option value="inactive">下架</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" style="background-color: #6c757d;" id="cancelModelBtn">取消</button>
+                <button class="btn btn-primary" id="saveModelBtn">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for adding/editing part -->
+    <div class="modal" id="partModal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h4 class="modal-title" id="partModalTitle">新增料号</h4>
+                <button class="modal-close" id="closePartModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">型号：</label>
+                    <select class="form-control" id="partModel">
+                        <option value="LA-E4S">LA-E4S</option>
+                        <option value="LA-E5P">LA-E5P</option>
+                        <option value="LA-E6L">LA-E6L</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">料号：</label>
+                    <input type="text" class="form-control" id="partNumber">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">状态：</label>
+                    <select class="form-control" id="partStatus">
+                        <option value="active">上架</option>
+                        <option value="inactive">下架</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" style="background-color: #6c757d;" id="cancelPartBtn">取消</button>
+                <button class="btn btn-primary" id="savePartBtn">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h4 class="modal-title" id="confirmModalTitle">确认操作</h4>
+                <button class="modal-close" id="closeConfirmModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <p id="confirmMessage">您确定要执行此操作吗？此操作无法撤销。</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" style="background-color: #6c757d;" id="cancelConfirmBtn">取消</button>
+                <button class="btn btn-danger" id="confirmActionBtn">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Link Part Modal -->
+    <div class="modal" id="linkModal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h4 class="modal-title">关联产品</h4>
+                <button class="modal-close" id="closeLinkModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">型号：</label>
+                    <input type="text" class="form-control" id="linkModelName" disabled>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">料号：</label>
+                    <input type="text" class="form-control" id="linkPartNumber" disabled>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">关联产品：</label>
+                    <select class="form-control" id="linkProduct">
+                        <option value="">-- 请选择产品 --</option>
+                        <option value="product1">产品A</option>
+                        <option value="product2">产品B</option>
+                        <option value="product3">产品C</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" style="background-color: #6c757d;" id="cancelLinkBtn">取消</button>
+                <button class="btn btn-primary" id="saveLinkBtn">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast">
+        <span id="toastMessage">操作成功</span>
+    </div>
+
+    <!-- Import Modal -->
+    <div class="modal" id="importModal">
+        <div class="modal-dialog import-modal">
+            <div class="modal-header">
+                <h4 class="modal-title" id="importModalTitle">导入数据</h4>
+                <button class="modal-close" id="closeImportModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <p>请确保您的导入文件格式正确。系统支持以下格式：</p>
+                    <ul style="margin-top: 10px; padding-left: 20px;">
+                        <li>Excel文件（.xlsx, .xls）</li>
+                        <li>CSV文件（.csv）</li>
+                        <li>JSON文件（.json）</li>
+                    </ul>
+                </div>
+                
+                <div id="fileUploadInfoContainer" style="display: none;">
+                    <div class="file-upload-info">
+                        <span class="file-upload-icon">📄</span>
+                        <div class="file-upload-info-text">
+                            <span id="uploadFileName">file.xlsx</span>
+                            <div style="font-size: 12px; color: #6c757d;" id="uploadFileSize">1.2 MB</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">验证模式：</label>
+                    <select class="form-control" id="importValidationMode">
+                        <option value="strict">严格模式（遇到错误停止导入）</option>
+                        <option value="loose" selected>宽松模式（跳过错误继续导入）</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">冲突处理：</label>
+                    <select class="form-control" id="importConflictMode">
+                        <option value="skip">跳过已存在的记录</option>
+                        <option value="update" selected>更新已存在的记录</option>
+                        <option value="replace">删除并重新创建记录</option>
+                    </select>
+                </div>
+                
+                <div class="import-progress" id="importProgress">
+                    <div class="import-progress-bar">
+                        <div class="import-progress-value" id="importProgressValue"></div>
+                    </div>
+                    <div class="import-status">
+                        <span id="importProgressText">处理中...</span>
+                        <span id="importProgressPercentage">0%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" style="background-color: #6c757d;" id="cancelImportBtn">取消</button>
+                <button class="btn btn-primary" id="startImportBtn">开始导入</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Menu toggle functionality
+            document.querySelectorAll('.expandable').forEach(item => {
+                item.addEventListener('click', event => {
+                    const submenu = item.nextElementSibling;
+                    if (submenu && submenu.classList.contains('submenu')) {
+                        submenu.classList.toggle('active');
+                        item.classList.toggle('active');
+                    }
+                    event.preventDefault();
+                });
+            });
+
+            // Toast notification functionality
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            function showToast(message, type) {
+                toastMessage.textContent = message;
+                toast.className = 'toast ' + (type || '');
+                toast.classList.add('show');
+                
+                setTimeout(function() {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+
+            // Modal functionality
+            const modelModal = document.getElementById('modelModal');
+            const partModal = document.getElementById('partModal');
+            const confirmModal = document.getElementById('confirmModal');
+            const linkModal = document.getElementById('linkModal');
+
+            // Show/hide modals
+            function showModal(modal) {
+                modal.style.display = 'flex';
+            }
+
+            function hideModal(modal) {
+                modal.style.display = 'none';
+            }
+
+            // Model modal
+            document.getElementById('addModelBtn').addEventListener('click', () => {
+                document.getElementById('modelModalTitle').textContent = '新增型号';
+                document.getElementById('modelName').value = '';
+                document.getElementById('modelStatus').value = 'active';
+                showModal(modelModal);
+            });
+
+            document.getElementById('closeModelModal').addEventListener('click', () => {
+                hideModal(modelModal);
+            });
+
+            document.getElementById('cancelModelBtn').addEventListener('click', () => {
+                hideModal(modelModal);
+            });
+
+            document.getElementById('saveModelBtn').addEventListener('click', () => {
+                const modelName = document.getElementById('modelName').value;
+                const modelStatus = document.getElementById('modelStatus').value;
+                
+                if (!modelName.trim()) {
+                    showToast('请输入型号名称', 'error');
+                    return;
+                }
+                
+                // Save logic would go here
+                hideModal(modelModal);
+                showToast('型号保存成功', 'success');
+            });
+
+            // Part modal
+            document.getElementById('addPartBtn').addEventListener('click', () => {
+                document.getElementById('partModalTitle').textContent = '新增料号';
+                document.getElementById('partModel').value = 'LA-E4S';
+                document.getElementById('partNumber').value = '';
+                document.getElementById('partStatus').value = 'active';
+                showModal(partModal);
+            });
+
+            document.getElementById('closePartModal').addEventListener('click', () => {
+                hideModal(partModal);
+            });
+
+            document.getElementById('cancelPartBtn').addEventListener('click', () => {
+                hideModal(partModal);
+            });
+
+            document.getElementById('savePartBtn').addEventListener('click', () => {
+                const partModel = document.getElementById('partModel').value;
+                const partNumber = document.getElementById('partNumber').value;
+                const partStatus = document.getElementById('partStatus').value;
+                
+                if (!partNumber.trim()) {
+                    showToast('请输入料号', 'error');
+                    return;
+                }
+                
+                // Save logic would go here
+                hideModal(partModal);
+                showToast('料号保存成功', 'success');
+            });
+
+            // Confirm modal
+            document.getElementById('closeConfirmModal').addEventListener('click', () => {
+                hideModal(confirmModal);
+            });
+
+            document.getElementById('cancelConfirmBtn').addEventListener('click', () => {
+                hideModal(confirmModal);
+            });
+
+            // Link modal
+            document.getElementById('closeLinkModal').addEventListener('click', () => {
+                hideModal(linkModal);
+            });
+
+            document.getElementById('cancelLinkBtn').addEventListener('click', () => {
+                hideModal(linkModal);
+            });
+
+            document.getElementById('saveLinkBtn').addEventListener('click', () => {
+                const linkedProduct = document.getElementById('linkProduct').value;
+                
+                if (!linkedProduct) {
+                    showToast('请选择关联产品', 'error');
+                    return;
+                }
+                
+                // Save logic would go here
+                hideModal(linkModal);
+                showToast('关联保存成功', 'success');
+            });
+
+            // Handle model table actions
+            document.querySelectorAll('.edit-model').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const row = this.closest('tr');
+                    const model = row.cells[1].textContent;
+                    const isActive = row.cells[2].querySelector('.status-icon').classList.contains('status-active');
+                    
+                    document.getElementById('modelModalTitle').textContent = '编辑型号';
+                    document.getElementById('modelName').value = model;
+                    document.getElementById('modelStatus').value = isActive ? 'active' : 'inactive';
+                    showModal(modelModal);
+                });
+            });
+
+            document.querySelectorAll('.delete-model').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const row = this.closest('tr');
+                    const model = row.cells[1].textContent;
+                    
+                    document.getElementById('confirmModalTitle').textContent = '删除型号';
+                    document.getElementById('confirmMessage').textContent = `您确定要删除型号 "${model}" 吗？此操作无法撤销。`;
+                    document.getElementById('confirmActionBtn').onclick = function() {
+                        // Delete logic would go here
+                        hideModal(confirmModal);
+                        showToast(`型号 "${model}" 已删除`, 'success');
+                    };
+                    showModal(confirmModal);
+                });
+            });
+
+            document.querySelectorAll('.toggle-status').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const row = this.closest('tr');
+                    const model = row.cells[1].textContent;
+                    const isActive = row.cells[2].querySelector('.status-icon').classList.contains('status-active');
+                    const newStatus = isActive ? '下架' : '上架';
+                    
+                    document.getElementById('confirmModalTitle').textContent = `${newStatus}型号`;
+                    document.getElementById('confirmMessage').textContent = `您确定要${newStatus}型号 "${model}" 吗？`;
+                    document.getElementById('confirmActionBtn').onclick = function() {
+                        // Status toggle logic would go here
+                        const statusCell = row.cells[2];
+                        const statusIcon = statusCell.querySelector('.status-icon');
+                        const statusText = statusCell.childNodes[1];
+                        
+                        if (isActive) {
+                            statusIcon.classList.remove('status-active');
+                            statusIcon.classList.add('status-inactive');
+                            statusText.textContent = '已下架';
+                            btn.textContent = '上架';
+                            btn.classList.remove('btn-warning');
+                            btn.classList.add('btn-success');
+                        } else {
+                            statusIcon.classList.remove('status-inactive');
+                            statusIcon.classList.add('status-active');
+                            statusText.textContent = '已上架';
+                            btn.textContent = '下架';
+                            btn.classList.remove('btn-success');
+                            btn.classList.add('btn-warning');
+                        }
+                        
+                        hideModal(confirmModal);
+                        showToast(`型号 "${model}" 已${newStatus}`, 'success');
+                    };
+                    showModal(confirmModal);
+                });
+            });
+
+            // Handle part table actions
+            document.querySelectorAll('.edit-part').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const row = this.closest('tr');
+                    const model = row.cells[1].textContent;
+                    const partNumber = row.cells[2].textContent;
+                    const isActive = row.cells[3].querySelector('.status-icon').classList.contains('status-active');
+                    
+                    document.getElementById('partModalTitle').textContent = '编辑料号';
+                    document.getElementById('partModel').value = model;
+                    document.getElementById('partNumber').value = partNumber;
+                    document.getElementById('partStatus').value = isActive ? 'active' : 'inactive';
+                    showModal(partModal);
+                });
+            });
+
+            document.querySelectorAll('.delete-part').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const row = this.closest('tr');
+                    const model = row.cells[1].textContent;
+                    const partNumber = row.cells[2].textContent;
+                    
+                    document.getElementById('confirmModalTitle').textContent = '删除料号';
+                    document.getElementById('confirmMessage').textContent = `您确定要删除料号 "${partNumber}" 吗？此操作无法撤销。`;
+                    document.getElementById('confirmActionBtn').onclick = function() {
+                        // Delete logic would go here
+                        hideModal(confirmModal);
+                        showToast(`料号 "${partNumber}" 已删除`, 'success');
+                    };
+                    showModal(confirmModal);
+                });
+            });
+
+            document.querySelectorAll('.link-part').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const row = this.closest('tr');
+                    const model = row.cells[1].textContent;
+                    const partNumber = row.cells[2].textContent;
+                    
+                    document.getElementById('linkModelName').value = model;
+                    document.getElementById('linkPartNumber').value = partNumber;
+                    document.getElementById('linkProduct').value = '';
+                    showModal(linkModal);
+                });
+            });
+
+            // Handle part status toggle
+            document.querySelectorAll('.toggle-part-status').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const row = this.closest('tr');
+                    const model = row.cells[1].textContent;
+                    const partNumber = row.cells[2].textContent;
+                    const isActive = row.cells[3].querySelector('.status-icon').classList.contains('status-active');
+                    const newStatus = isActive ? '下架' : '上架';
+                    
+                    document.getElementById('confirmModalTitle').textContent = `${newStatus}料号`;
+                    document.getElementById('confirmMessage').textContent = `您确定要${newStatus}料号 "${partNumber}" 吗？`;
+                    document.getElementById('confirmActionBtn').onclick = function() {
+                        // Status toggle logic would go here
+                        const statusCell = row.cells[3];
+                        const statusIcon = statusCell.querySelector('.status-icon');
+                        const statusText = statusCell.childNodes[1];
+                        
+                        if (isActive) {
+                            statusIcon.classList.remove('status-active');
+                            statusIcon.classList.add('status-inactive');
+                            statusText.textContent = '已下架';
+                            btn.textContent = '上架';
+                            btn.classList.remove('btn-warning');
+                            btn.classList.add('btn-success');
+                        } else {
+                            statusIcon.classList.remove('status-inactive');
+                            statusIcon.classList.add('status-active');
+                            statusText.textContent = '已上架';
+                            btn.textContent = '下架';
+                            btn.classList.remove('btn-success');
+                            btn.classList.add('btn-warning');
+                        }
+                        
+                        hideModal(confirmModal);
+                        showToast(`料号 "${partNumber}" 已${newStatus}`, 'success');
+                    };
+                    showModal(confirmModal);
+                });
+            });
+
+            // Filter functionality
+            document.getElementById('filterBtn').addEventListener('click', function() {
+                const modelFilter = document.getElementById('modelFilter').value;
+                const partNumberFilter = document.querySelector('.filter-input[placeholder="请输入料号"]').value;
+                
+                // Filter logic would go here
+                showToast('筛选条件已应用', 'success');
+            });
+
+            document.getElementById('resetFilterBtn').addEventListener('click', function() {
+                document.getElementById('modelFilter').value = '';
+                document.querySelector('.filter-input[placeholder="请输入料号"]').value = '';
+                
+                // Reset filter logic would go here
+                showToast('筛选条件已重置', 'success');
+            });
+
+            // Pagination functionality
+            document.querySelectorAll('.pagination .page-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    if (this.classList.contains('active')) return;
+                    
+                    const currentPage = this.closest('.pagination').querySelector('.active');
+                    if (currentPage) currentPage.classList.remove('active');
+                    
+                    if (this.textContent !== '«' && this.textContent !== '»') {
+                        this.classList.add('active');
+                    }
+                    
+                    // Page change logic would go here
+                });
+            });
+            
+            // -------------------------------
+            // Import/Export Functionality
+            // -------------------------------
+            
+            // Export Dropdowns
+            const exportModelBtn = document.getElementById('exportModelBtn');
+            const exportModelDropdown = document.getElementById('exportModelDropdown');
+            const exportPartBtn = document.getElementById('exportPartBtn');
+            const exportPartDropdown = document.getElementById('exportPartDropdown');
+            
+            // Toggle export model dropdown
+            exportModelBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                exportModelDropdown.classList.toggle('show');
+                // Close other dropdowns
+                exportPartDropdown.classList.remove('show');
+            });
+            
+            // Toggle export part dropdown
+            exportPartBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                exportPartDropdown.classList.toggle('show');
+                // Close other dropdowns
+                exportModelDropdown.classList.remove('show');
+            });
+            
+            // Close dropdowns when clicking elsewhere
+            document.addEventListener('click', function(e) {
+                if (!exportModelBtn.contains(e.target) && !exportModelDropdown.contains(e.target)) {
+                    exportModelDropdown.classList.remove('show');
+                }
+                
+                if (!exportPartBtn.contains(e.target) && !exportPartDropdown.contains(e.target)) {
+                    exportPartDropdown.classList.remove('show');
+                }
+            });
+            
+            // Export Model Options
+            exportModelDropdown.querySelectorAll('.dropdown-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const format = this.getAttribute('data-format');
+                    exportData('models', format);
+                    exportModelDropdown.classList.remove('show');
+                });
+            });
+            
+            // Export Part Options
+            exportPartDropdown.querySelectorAll('.dropdown-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const format = this.getAttribute('data-format');
+                    exportData('parts', format);
+                    exportPartDropdown.classList.remove('show');
+                });
+            });
+            
+            // Function to handle exporting data
+            function exportData(type, format) {
+                showToast(`准备导出${type === 'models' ? '型号' : '料号'}数据为${format.toUpperCase()}格式`, 'info');
+                
+                // In a real application, we would make an API call to the server
+                // The API endpoint would be something like:
+                // GET /api/products/export?type={type}&format={format}
+                
+                // Simulate API call
+                setTimeout(() => {
+                    // In a real app, this would trigger file download
+                    showToast(`${type === 'models' ? '型号' : '料号'}数据已成功导出为${format.toUpperCase()}格式`, 'success');
+                }, 1500);
+            }
+            
+            // Import file handling
+            const importModelFile = document.getElementById('importModelFile');
+            const importPartFile = document.getElementById('importPartFile');
+            const importModal = document.getElementById('importModal');
+            const closeImportModal = document.getElementById('closeImportModal');
+            const cancelImportBtn = document.getElementById('cancelImportBtn');
+            const startImportBtn = document.getElementById('startImportBtn');
+            const importProgress = document.getElementById('importProgress');
+            const importProgressValue = document.getElementById('importProgressValue');
+            const importProgressText = document.getElementById('importProgressText');
+            const importProgressPercentage = document.getElementById('importProgressPercentage');
+            const fileUploadInfoContainer = document.getElementById('fileUploadInfoContainer');
+            const uploadFileName = document.getElementById('uploadFileName');
+            const uploadFileSize = document.getElementById('uploadFileSize');
+            
+            let currentImportType = null;
+            let currentImportFile = null;
+            
+            // Import model file
+            importModelFile.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    currentImportType = 'models';
+                    currentImportFile = this.files[0];
+                    prepareImport(currentImportFile, '型号数据');
+                }
+            });
+            
+            // Import part file
+            importPartFile.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    currentImportType = 'parts';
+                    currentImportFile = this.files[0];
+                    prepareImport(currentImportFile, '料号数据');
+                }
+            });
+            
+            // Close import modal
+            closeImportModal.addEventListener('click', () => {
+                hideModal(importModal);
+                resetImportState();
+            });
+            
+            // Cancel import
+            cancelImportBtn.addEventListener('click', () => {
+                hideModal(importModal);
+                resetImportState();
+            });
+            
+            // Start import
+            startImportBtn.addEventListener('click', () => {
+                if (!currentImportFile) {
+                    showToast('请选择要导入的文件', 'error');
+                    return;
+                }
+                
+                const validationMode = document.getElementById('importValidationMode').value;
+                const conflictMode = document.getElementById('importConflictMode').value;
+                
+                startImport(currentImportType, currentImportFile, validationMode, conflictMode);
+            });
+            
+            // Function to prepare import
+            function prepareImport(file, typeText) {
+                // Display file info
+                uploadFileName.textContent = file.name;
+                uploadFileSize.textContent = formatFileSize(file.size);
+                fileUploadInfoContainer.style.display = 'block';
+                
+                // Reset progress
+                resetImportProgress();
+                
+                // Update modal title
+                document.getElementById('importModalTitle').textContent = `导入${typeText}`;
+                
+                // Show modal
+                showModal(importModal);
+            }
+            
+            // Function to start import
+            function startImport(type, file, validationMode, conflictMode) {
+                // Show progress
+                importProgress.style.display = 'block';
+                startImportBtn.disabled = true;
+                
+                // In a real application, we would use FormData to send the file to the server
+                // The API endpoint would be something like:
+                // POST /api/products/import?type={type}&validation={validationMode}&conflict={conflictMode}
+                
+                // Simulate import process
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 5;
+                    importProgressValue.style.width = `${progress}%`;
+                    importProgressPercentage.textContent = `${progress}%`;
+                    
+                    if (progress < 30) {
+                        importProgressText.textContent = '解析文件中...';
+                    } else if (progress < 60) {
+                        importProgressText.textContent = '验证数据中...';
+                    } else if (progress < 90) {
+                        importProgressText.textContent = '导入数据中...';
+                    } else {
+                        importProgressText.textContent = '完成导入';
+                    }
+                    
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        setTimeout(() => {
+                            hideModal(importModal);
+                            resetImportState();
+                            showToast(`${type === 'models' ? '型号' : '料号'}数据导入成功`, 'success');
+                        }, 500);
+                    }
+                }, 200);
+            }
+            
+            // Reset import progress
+            function resetImportProgress() {
+                importProgress.style.display = 'none';
+                importProgressValue.style.width = '0%';
+                importProgressText.textContent = '处理中...';
+                importProgressPercentage.textContent = '0%';
+                startImportBtn.disabled = false;
+            }
+            
+            // Reset import state
+            function resetImportState() {
+                resetImportProgress();
+                fileUploadInfoContainer.style.display = 'none';
+                importModelFile.value = '';
+                importPartFile.value = '';
+                currentImportType = null;
+                currentImportFile = null;
+            }
+            
+            // Format file size
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+            
+            // Update toast function to include info type
+            function showToast(message, type) {
+                toastMessage.textContent = message;
+                toast.className = 'toast ' + (type || '');
+                toast.classList.add('show');
+                
+                setTimeout(function() {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>

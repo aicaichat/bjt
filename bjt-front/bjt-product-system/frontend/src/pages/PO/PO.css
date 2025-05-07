@@ -1,0 +1,373 @@
+/* PO页面样式 */
+:root {
+  --po-border-color: #ccc;
+  --po-header-bg: #f8f9fa;
+  --po-table-header-bg: #f2f2f2;
+  --po-primary-color: #1a57a5;
+  --po-secondary-color: #0d47a1;
+  --po-text-color: #333;
+  --po-success-color: #28a745;
+}
+
+/* 加载样式 */
+.po-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 80vh;
+  width: 100%;
+}
+
+.po-spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border-left-color: var(--po-primary-color);
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 主容器样式 */
+.po-container {
+  padding: 20px;
+  min-height: 100vh;
+  background-color: white;
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 水印效果 */
+.po-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  font-size: 120px;
+  opacity: 0.05;
+  font-weight: bold;
+  color: #000;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 页码水印 */
+.po-page-number {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24px;
+  opacity: 0.2;
+  font-weight: bold;
+  color: #555;
+  pointer-events: none;
+}
+
+/* 头部样式 */
+.po-header-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 10px 0;
+  border-bottom: 2px solid var(--po-primary-color);
+}
+
+.po-page-title {
+  font-size: 28px;
+  font-weight: bold;
+  color: var(--po-primary-color);
+  margin: 0;
+}
+
+.po-header-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.po-status-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+.po-status-value {
+  font-weight: bold;
+  margin-left: 8px;
+  color: var(--po-primary-color);
+  min-width: 100px;
+  text-align: left;
+}
+
+/* 操作按钮样式 */
+.action-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.action-left {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s;
+}
+
+.btn-primary {
+  background-color: var(--po-primary-color);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--po-secondary-color);
+}
+
+.btn-secondary {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.btn-secondary:hover {
+  background-color: #e0e0e0;
+}
+
+.language-toggle {
+  display: flex;
+  gap: 5px;
+}
+
+.btn-language {
+  padding: 6px 12px;
+  border: 1px solid var(--po-border-color);
+  background-color: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.btn-language.active {
+  background-color: var(--po-primary-color);
+  color: white;
+  border-color: var(--po-primary-color);
+}
+
+/* 采购单文档样式 */
+.po-document {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin-bottom: 10px;
+  border: 1px solid black;
+}
+
+/* 产品表格样式 */
+.product-table {
+  margin-top: 0;
+  page-break-before: avoid;
+}
+
+.po-document th,
+.po-document td {
+  border: 1px solid black;
+  padding: 8px;
+  vertical-align: top;
+  overflow: hidden;
+  word-wrap: break-word;
+}
+
+.po-document th {
+  background-color: var(--po-table-header-bg);
+  font-weight: bold;
+  text-align: center;
+}
+
+.po-document tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.po-document p {
+  margin: 5px 0;
+}
+
+/* 分页控制 */
+.po-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0;
+  gap: 15px;
+}
+
+.po-page-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--po-border-color);
+  background-color: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.po-page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.po-page-btn:hover:not(:disabled) {
+  background-color: #f0f0f0;
+}
+
+.po-page-info {
+  font-size: 14px;
+}
+
+/* 底部按钮 */
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--po-border-color);
+}
+
+/* 打印样式 */
+@media print {
+  /* 隐藏不需要打印的元素 */
+  .action-buttons,
+  .po-pagination,
+  .footer,
+  .language-toggle {
+    display: none !important;
+  }
+  
+  /* 调整打印尺寸 */
+  .po-container {
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  /* 确保表格完整打印 */
+  .po-document,
+  .product-table {
+    width: 100%;
+    max-width: 100%;
+    page-break-inside: avoid;
+  }
+  
+  .po-document:first-of-type {
+    margin-bottom: 0;
+  }
+  
+  .product-table {
+    margin-top: 0;
+  }
+  
+  /* 保持水印可见性 */
+  .po-watermark {
+    opacity: 0.03;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  /* 调整页面标题 */
+  .po-page-title {
+    margin-top: 0;
+  }
+  
+  /* 确保表头正确打印 */
+  .po-document th {
+    background-color: var(--po-table-header-bg) !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  /* 确保边框可见 */
+  .po-document th,
+  .po-document td {
+    border: 1px solid var(--po-border-color) !important;
+  }
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .po-header-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .po-header-status {
+    align-items: flex-start;
+    margin-top: 10px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .language-toggle {
+    margin-top: 10px;
+  }
+  
+  .po-document {
+    font-size: 12px;
+  }
+  
+  .po-document th,
+  .po-document td {
+    padding: 5px;
+  }
+}
+
+/* 修复表格单元格最小高度 */
+.po-document td {
+  min-height: 24px;
+  height: 100%;
+}
+
+/* 确保表格头部和产品信息区域固定宽度比例 */
+.po-document colgroup col:nth-child(1) { width: 12%; }
+.po-document colgroup col:nth-child(2) { width: 12%; }
+.po-document colgroup col:nth-child(3) { width: 12%; }
+.po-document colgroup col:nth-child(4) { width: 28%; }
+.po-document colgroup col:nth-child(5) { width: 9%; }
+.po-document colgroup col:nth-child(6) { width: 9%; }
+.po-document colgroup col:nth-child(7) { width: 9%; }
+.po-document colgroup col:nth-child(8) { width: 9%; }
+
+@media print {
+  .po-document {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+

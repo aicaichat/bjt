@@ -1,0 +1,22 @@
+/* 
+ * Main CSS Entry Point
+ * This file imports all CSS modules in the correct order to ensure proper cascading
+ */
+
+/* Import Tailwind directives */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Import design system variables and theme */
+@import './variables.css';
+@import './theme.css';
+
+/* Import component styles and utilities */
+@import './components.css';
+@import './utilities.css';
+
+/* Import global styles */
+@import './global.css';
+
+/* Custom styles for specific pages can be imported last */ 

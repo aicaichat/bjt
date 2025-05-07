@@ -1,0 +1,75 @@
+.product-price-inventory {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.price-inventory-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.price-inventory-header h4 {
+  margin: 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.refresh-btn {
+  cursor: pointer;
+  color: #1890ff;
+  transition: transform 0.3s ease;
+}
+
+.refresh-btn:hover {
+  transform: rotate(90deg);
+  color: #096dd9;
+}
+
+.product-price {
+  margin-bottom: 12px;
+}
+
+.price-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #f5222d;
+  margin-right: 8px;
+}
+
+.discount-tag {
+  vertical-align: middle;
+}
+
+.product-inventory {
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.inventory-amount {
+  margin-left: 8px;
+  color: #666;
+}
+
+.last-update {
+  color: #999;
+  font-size: 12px;
+  text-align: right;
+  margin-top: 8px;
+}
+
+/* Responsive styles */
+@media (max-width: 576px) {
+  .product-price-inventory {
+    padding: 12px;
+  }
+  
+  .price-value {
+    font-size: 20px;
+  }
+} 

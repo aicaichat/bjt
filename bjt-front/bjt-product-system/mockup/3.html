@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT Machine Management System - Add New Machine</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #f7f9fc;
+            color: #333;
+        }
+        .header {
+            background-color: #fff;
+            padding: 15px 25px;
+            border-bottom: 1px solid #e1e5eb;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: relative;
+            z-index: 10;
+        }
+        .logo {
+            height: 45px;
+        }
+        .container {
+            display: flex;
+            flex: 1;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        .sidebar {
+            width: 220px;
+            background-color: #1a3c70;
+            color: #fff;
+            padding: 15px 0;
+            overflow-y: auto;
+        }
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            background-color: #fff;
+            overflow-y: auto;
+        }
+        .menu-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            font-size: 14px;
+        }
+        .menu-item:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        .menu-item.active {
+            background-color: rgba(255,255,255,0.15);
+            color: #fff;
+            border-left-color: #4dabf7;
+        }
+        .submenu {
+            margin-left: 0;
+            display: none;
+            background-color: rgba(0,0,0,0.15);
+        }
+        .submenu.active {
+            display: block;
+        }
+        .submenu .menu-item {
+            padding-left: 40px;
+            font-size: 13px;
+        }
+        .expandable::after {
+            content: "▶";
+            font-size: 10px;
+            margin-left: auto;
+            transition: transform 0.2s;
+        }
+        .expandable.active::after {
+            content: "▼";
+        }
+        h2 {
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: #1a3c70;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e1e5eb;
+        }
+        .form-container {
+            background-color: #fff;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            padding: 30px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+        .form-label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #495057;
+            font-size: 14px;
+        }
+        .form-label .language-tabs {
+            display: flex;
+            margin-left: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .form-label .language-tab {
+            padding: 2px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            background-color: #f8f9fa;
+            border-right: 1px solid #ced4da;
+        }
+        .form-label .language-tab:last-child {
+            border-right: none;
+        }
+        .form-label .language-tab.active {
+            background-color: #1a3c70;
+            color: white;
+        }
+        .form-label .required-mark {
+            margin-left: 5px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #4dabf7;
+            box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.2);
+        }
+        .required-mark {
+            color: #dc3545;
+            margin-left: 5px;
+        }
+        .help-text {
+            display: block;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        .form-error {
+            display: none;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #dc3545;
+        }
+        .form-control.error {
+            border-color: #dc3545;
+        }
+        .form-control.error:focus {
+            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.25);
+        }
+        .text-editor {
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .editor-toolbar {
+            padding: 8px 12px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #ced4da;
+            display: flex;
+            gap: 10px;
+        }
+        .editor-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 2px;
+        }
+        .editor-btn:hover {
+            background-color: #e2e6ea;
+        }
+        .editor-btn.active {
+            background-color: #e2e6ea;
+        }
+        .editor-content {
+            min-height: 200px;
+            padding: 10px 12px;
+        }
+        .language-indicator {
+            display: inline-block;
+            padding: 2px 8px;
+            background-color: #f8f9fa;
+            color: #495057;
+            border-radius: 3px;
+            margin-left: 10px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background-color: #1a3c70;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #15305b;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        .form-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .image-upload-container {
+            border: 2px dashed #ced4da;
+            padding: 20px;
+            text-align: center;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            transition: border-color 0.2s;
+            background-color: #f8f9fa;
+        }
+        .image-upload-container:hover {
+            border-color: #4dabf7;
+        }
+        .image-upload-container.drag-over {
+            border-color: #4dabf7;
+            background-color: rgba(77, 171, 247, 0.05);
+        }
+        .image-upload-btn {
+            display: inline-block;
+            margin-top: 10px;
+        }
+        .image-preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .image-preview-item {
+            width: 150px;
+            position: relative;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .image-preview-item img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            display: block;
+        }
+        .image-preview-actions {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            display: flex;
+            gap: 5px;
+        }
+        .image-action-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.7);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .image-action-btn:hover {
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+        .menu-icon {
+            margin-right: 10px;
+            opacity: 0.8;
+            font-size: 16px;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #333;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .toast.success {
+            background-color: #28a745;
+        }
+        .toast.error {
+            background-color: #dc3545;
+        }
+        .toast.warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .toast.show {
+            display: block;
+            opacity: 1;
+        }
+        /* Progress bar for uploads */
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            margin-top: 15px;
+            overflow: hidden;
+            display: none;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #4dabf7;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .language-switcher {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background-color: #f8f9fa;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .language-tab {
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #495057;
+            background-color: transparent;
+            border: none;
+            transition: all 0.2s;
+        }
+        .language-tab.active {
+            background-color: #1a3c70;
+            color: white;
+        }
+        .language-tab:hover:not(.active) {
+            background-color: #e9ecef;
+        }
+        .label-edit-btn {
+            margin-left: 8px;
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .label-edit-btn:hover {
+            background-color: #e9ecef;
+            color: #495057;
+        }
+        .label-edit-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .label-edit-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+        }
+        .label-edit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .label-edit-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #6c757d;
+        }
+        .label-edit-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .label-edit-input {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .label-edit-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="logo-1.webp" alt="BJT Logo" class="logo">
+    </div>
+    <div class="container">
+        <div class="sidebar">
+            <a href="#" class="menu-item">
+                <span class="menu-icon">🏠</span>
+                <span>首页</span>
+            </a>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">📄</span>
+                <span>页面编辑</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">产品线1</a>
+                <a href="#" class="menu-item">产品线2</a>
+                <a href="#" class="menu-item">产品线3</a>
+                <a href="#" class="menu-item">产品线4</a>
+            </div>
+            <a href="#" class="menu-item expandable active">
+                <span class="menu-icon">🛋️</span>
+                <span>气垫机</span>
+            </a>
+            <div class="submenu active">
+                <a href="#" class="menu-item active">主机</a>
+                <a href="#" class="menu-item">配件</a>
+                <a href="#" class="menu-item">耗材</a>
+                <a href="#" class="menu-item">备件</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">📃</span>
+                <span>纸机</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">主机</a>
+                <a href="#" class="menu-item">配件</a>
+                <a href="#" class="menu-item">耗材</a>
+                <a href="#" class="menu-item">备件</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">🧵</span>
+                <span>胶带机</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">主机</a>
+                <a href="#" class="menu-item">配件</a>
+                <a href="#" class="menu-item">耗材</a>
+                <a href="#" class="menu-item">备件</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">💼</span>
+                <span>气柱袋</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">耗材</a>
+            </div>
+            <a href="#" class="menu-item">
+                <span class="menu-icon">👤</span>
+                <span>用户管理</span>
+            </a>
+            <a href="#" class="menu-item">
+                <span class="menu-icon">⚙️</span>
+                <span>系统设置</span>
+            </a>
+        </div>
+        <div class="main-content">
+            <h2>新增主机</h2>
+            <div class="language-switcher" style="margin-bottom: 20px;">
+                <button class="language-tab active" data-lang="cn">中文</button>
+                <button class="language-tab" data-lang="en">English</button>
+            </div>
+            <div class="form-container">
+                <form id="machineForm">
+                    <!-- Product Basic Information -->
+                    <h3 style="margin-bottom: 20px; color: #495057; border-bottom: 1px solid #e1e5eb; padding-bottom: 10px;">基本信息</h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span class="label-text" data-cn="型号" data-en="Model">型号</span>
+                            <button class="label-edit-btn" data-field="model">✎</button>
+                            <span class="required-mark">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="model" name="model" placeholder="请输入产品型号">
+                        <span class="form-error" id="model-error">型号不能为空</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span class="label-text" data-cn="名称(英文)" data-en="Name (English)">名称(英文)</span>
+                            <button class="label-edit-btn" data-field="name_en">✎</button>
+                            <span class="required-mark">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="name_en" name="name_en" placeholder="Enter product name in English">
+                        <span class="form-error" id="name_en-error">英文名称不能为空</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span class="label-text" data-cn="描述(英文)" data-en="Description (English)">描述(英文)</span>
+                            <button class="label-edit-btn" data-field="description_en">✎</button>
+                            <span class="required-mark">*</span>
+                        </label>
+                        <div class="text-editor">
+                            <div class="editor-content" id="description_en" contenteditable="true" placeholder="Enter product description in English"></div>
+                        </div>
+                        <span class="form-error" id="description_en-error">英文描述不能为空</span>
+                    </div>
+
+                    <!-- Product Images -->
+                    <h3 style="margin: 30px 0 20px; color: #495057; border-bottom: 1px solid #e1e5eb; padding-bottom: 10px;">产品图片</h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span class="label-text" data-cn="图片1" data-en="Image 1">图片1</span>
+                            <button class="label-edit-btn" data-field="image1">✎</button>
+                            <span class="required-mark">*</span>
+                        </label>
+                        <div class="image-upload-container" id="image1DropArea">
+                            <p>将图片拖放至此处，或</p>
+                            <input type="file" id="image1Input" name="image1" accept="image/*" style="display: none;">
+                            <button type="button" class="btn btn-secondary image-upload-btn" id="image1SelectBtn">选择</button>
+                            <div class="progress-container" id="image1UploadProgress">
+                                <div class="progress-bar" id="image1UploadProgressBar"></div>
+                            </div>
+                        </div>
+                        <div class="image-preview-container" id="image1PreviewContainer"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span class="label-text" data-cn="图片2" data-en="Image 2">图片2</span>
+                            <button class="label-edit-btn" data-field="image2">✎</button>
+                        </label>
+                        <div class="image-upload-container" id="image2DropArea">
+                            <p>将图片拖放至此处，或</p>
+                            <input type="file" id="image2Input" name="image2" accept="image/*" style="display: none;">
+                            <button type="button" class="btn btn-secondary image-upload-btn" id="image2SelectBtn">选择</button>
+                            <div class="progress-container" id="image2UploadProgress">
+                                <div class="progress-bar" id="image2UploadProgressBar"></div>
+                            </div>
+                        </div>
+                        <div class="image-preview-container" id="image2PreviewContainer"></div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelBtn">取消</button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">提交</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast notification -->
+    <div class="toast" id="toast">
+        <span id="toastMessage">操作成功</span>
+    </div>
+
+    <!-- Label Edit Modal -->
+    <div class="label-edit-modal" id="labelEditModal">
+        <div class="label-edit-content">
+            <div class="label-edit-header">
+                <h3>编辑字段名称</h3>
+                <button class="label-edit-close">&times;</button>
+            </div>
+            <form class="label-edit-form">
+                <div>
+                    <label>中文名称</label>
+                    <input type="text" class="label-edit-input" id="editCnLabel">
+                </div>
+                <div>
+                    <label>English Name</label>
+                    <input type="text" class="label-edit-input" id="editEnLabel">
+                </div>
+                <div class="label-edit-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelEdit">取消</button>
+                    <button type="submit" class="btn btn-primary" id="saveEdit">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Form validation
+            const machineForm = document.getElementById('machineForm');
+            const model = document.getElementById('model');
+            const modelError = document.getElementById('model-error');
+            const nameEn = document.getElementById('name_en');
+            const nameEnError = document.getElementById('name_en-error');
+            const descriptionEn = document.getElementById('description_en');
+            const descriptionEnError = document.getElementById('description_en-error');
+            const cancelBtn = document.getElementById('cancelBtn');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Cancel button
+            cancelBtn.addEventListener('click', function() {
+                if (confirm('确定要取消编辑吗？所有未保存的更改将丢失。')) {
+                    window.location.href = 'machine-management.html';
+                }
+            });
+            
+            // Form submission
+            submitBtn.addEventListener('click', function() {
+                // Validate required fields
+                const modelValue = model.value.trim();
+                const nameEnValue = nameEn.value.trim();
+                const descriptionEnValue = descriptionEn.textContent.trim();
+                
+                if (!modelValue || !nameEnValue || !descriptionEnValue) {
+                    showToast('请填写所有必填字段', 'error');
+                    return;
+                }
+                
+                // Gather form data
+                const formData = {
+                    model: modelValue,
+                    name_en: nameEnValue,
+                    description_en: descriptionEnValue,
+                    image1: image1Input.files[0] ? image1Input.files[0].name : '',
+                    image2: image2Input.files[0] ? image2Input.files[0].name : ''
+                };
+                
+                // Here you would typically send the formData to your server
+                console.log('Form data:', formData);
+                
+                // Show success message
+                showToast('保存成功');
+                
+                // Redirect to machine management page after 1.5 seconds
+                setTimeout(() => {
+                    window.location.href = 'machine.html';
+                }, 1500);
+            });
+            
+            // Input validation
+            model.addEventListener('input', function() {
+                if (this.value.trim()) {
+                    this.classList.remove('error');
+                    modelError.style.display = 'none';
+                }
+            });
+            
+            nameEn.addEventListener('input', function() {
+                if (this.value.trim()) {
+                    this.classList.remove('error');
+                    nameEnError.style.display = 'none';
+                }
+            });
+            
+            descriptionEn.addEventListener('input', function() {
+                if (this.textContent.trim()) {
+                    this.classList.remove('error');
+                    descriptionEnError.style.display = 'none';
+                }
+            });
+            
+            // Image upload functionality
+            const image1DropArea = document.getElementById('image1DropArea');
+            const image1Input = document.getElementById('image1Input');
+            const image1SelectBtn = document.getElementById('image1SelectBtn');
+            const image1PreviewContainer = document.getElementById('image1PreviewContainer');
+            const image1UploadProgress = document.getElementById('image1UploadProgress');
+            const image1UploadProgressBar = document.getElementById('image1UploadProgressBar');
+            
+            const image2DropArea = document.getElementById('image2DropArea');
+            const image2Input = document.getElementById('image2Input');
+            const image2SelectBtn = document.getElementById('image2SelectBtn');
+            const image2PreviewContainer = document.getElementById('image2PreviewContainer');
+            const image2UploadProgress = document.getElementById('image2UploadProgress');
+            const image2UploadProgressBar = document.getElementById('image2UploadProgressBar');
+            
+            // Handle image file selection button clicks
+            image1SelectBtn.addEventListener('click', function() {
+                image1Input.click();
+            });
+            
+            image2SelectBtn.addEventListener('click', function() {
+                image2Input.click();
+            });
+            
+            // Handle image file selections
+            image1Input.addEventListener('change', function() {
+                handleFiles(this.files, 'image1');
+            });
+            
+            image2Input.addEventListener('change', function() {
+                handleFiles(this.files, 'image2');
+            });
+            
+            // Prevent default behavior for drag events
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                image1DropArea.addEventListener(eventName, preventDefaults, false);
+                image2DropArea.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            // Add visual feedback for drag events
+            ['dragenter', 'dragover'].forEach(eventName => {
+                image1DropArea.addEventListener(eventName, function() {
+                    image1DropArea.classList.add('highlight');
+                }, false);
+                
+                image2DropArea.addEventListener(eventName, function() {
+                    image2DropArea.classList.add('highlight');
+                }, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                image1DropArea.addEventListener(eventName, function() {
+                    image1DropArea.classList.remove('highlight');
+                }, false);
+                
+                image2DropArea.addEventListener(eventName, function() {
+                    image2DropArea.classList.remove('highlight');
+                }, false);
+            });
+            
+            // Handle dropped files
+            image1DropArea.addEventListener('drop', function(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                handleFiles(files, 'image1');
+            }, false);
+            
+            image2DropArea.addEventListener('drop', function(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                handleFiles(files, 'image2');
+            }, false);
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            function handleFiles(files, type) {
+                [...files].forEach(file => {
+                    uploadFile(file, type);
+                    previewFile(file, type);
+                });
+            }
+            
+            function uploadFile(file, type) {
+                let progressBar, progressContainer;
+                
+                switch(type) {
+                    case 'image1':
+                        progressBar = image1UploadProgressBar;
+                        progressContainer = image1UploadProgress;
+                        break;
+                    case 'image2':
+                        progressBar = image2UploadProgressBar;
+                        progressContainer = image2UploadProgress;
+                        break;
+                }
+                
+                progressContainer.style.display = 'block';
+                progressBar.style.width = '0%';
+                
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 10;
+                    progressBar.style.width = progress + '%';
+                    
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        setTimeout(() => {
+                            progressContainer.style.display = 'none';
+                            showToast('图片上传成功');
+                        }, 500);
+                    }
+                }, 200);
+            }
+            
+            function previewFile(file, type) {
+                if (!file.type.match('image.*')) {
+                    showToast('请选择图片文件', 'error');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                
+                reader.onloadend = function() {
+                    let previewContainer;
+                    
+                    switch(type) {
+                        case 'image1':
+                            previewContainer = image1PreviewContainer;
+                            previewContainer.innerHTML = '';
+                            break;
+                        case 'image2':
+                            previewContainer = image2PreviewContainer;
+                            previewContainer.innerHTML = '';
+                            break;
+                    }
+                    
+                    const previewItem = document.createElement('div');
+                    previewItem.className = 'image-preview-item';
+                    
+                    const img = document.createElement('img');
+                    img.src = reader.result;
+                    img.alt = file.name;
+                    
+                    const actions = document.createElement('div');
+                    actions.className = 'image-preview-actions';
+                    
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.type = 'button';
+                    deleteBtn.className = 'image-action-btn';
+                    deleteBtn.title = '删除';
+                    deleteBtn.innerHTML = '✖';
+                    deleteBtn.addEventListener('click', function() {
+                        previewItem.remove();
+                        if (type === 'image1') {
+                            image1Input.value = '';
+                        } else if (type === 'image2') {
+                            image2Input.value = '';
+                        }
+                    });
+                    
+                    actions.appendChild(deleteBtn);
+                    previewItem.appendChild(img);
+                    previewItem.appendChild(actions);
+                    
+                    previewContainer.appendChild(previewItem);
+                }
+            }
+            
+            // Toast notification functionality
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            function showToast(message, type) {
+                toastMessage.textContent = message;
+                toast.className = 'toast ' + (type || '');
+                toast.classList.add('show');
+                
+                setTimeout(function() {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+
+            // Language switching functionality
+            const languageTabs = document.querySelectorAll('.language-tab');
+            const labelTexts = document.querySelectorAll('.label-text');
+            
+            // Handle language tab clicks
+            languageTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const lang = this.dataset.lang;
+                    
+                    // Update active state
+                    languageTabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Update labels
+                    updateLabels(lang);
+                });
+            });
+            
+            function updateLabels(lang) {
+                labelTexts.forEach(label => {
+                    const text = label.dataset[lang];
+                    if (text) {
+                        label.textContent = text;
+                    }
+                });
+            }
+
+            // Label editing functionality
+            const labelEditModal = document.getElementById('labelEditModal');
+            const labelEditForm = document.querySelector('.label-edit-form');
+            const editCnLabel = document.getElementById('editCnLabel');
+            const editEnLabel = document.getElementById('editEnLabel');
+            const cancelEditBtn = document.getElementById('cancelEdit');
+            const closeEditBtn = document.querySelector('.label-edit-close');
+            let currentLabelElement = null;
+            
+            // Handle edit button clicks
+            document.querySelectorAll('.label-edit-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const labelElement = this.previousElementSibling;
+                    currentLabelElement = labelElement;
+                    
+                    // Populate modal with current values
+                    editCnLabel.value = labelElement.dataset.cn;
+                    editEnLabel.value = labelElement.dataset.en;
+                    
+                    // Show modal
+                    labelEditModal.style.display = 'block';
+                });
+            });
+            
+            // Handle form submission
+            labelEditForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                if (currentLabelElement) {
+                    // Update label data attributes
+                    currentLabelElement.dataset.cn = editCnLabel.value;
+                    currentLabelElement.dataset.en = editEnLabel.value;
+                    
+                    // Update visible text based on current language
+                    const currentLang = document.querySelector('.language-tab.active').dataset.lang;
+                    currentLabelElement.textContent = currentLabelElement.dataset[currentLang];
+                    
+                    // Close modal
+                    labelEditModal.style.display = 'none';
+                    
+                    showToast('字段名称已更新');
+                }
+            });
+            
+            // Handle modal close
+            function closeEditModal() {
+                labelEditModal.style.display = 'none';
+                currentLabelElement = null;
+            }
+            
+            cancelEditBtn.addEventListener('click', closeEditModal);
+            closeEditBtn.addEventListener('click', closeEditModal);
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', function(e) {
+                if (e.target === labelEditModal) {
+                    closeEditModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

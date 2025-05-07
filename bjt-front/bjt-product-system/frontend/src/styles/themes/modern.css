@@ -1,0 +1,266 @@
+/* 
+ * 现代科技风格主题
+ * 特点：简约、前卫、高科技感
+ * 设计理念：Future Forward
+ */
+
+:root.theme-modern {
+  /* 品牌主色调 - 静谧蓝黑 */
+  --primary-color: #0f172a;
+  --primary-light: #1e293b;
+  --primary-dark: #020617;
+  --primary-bg: #f1f5f9;
+  
+  /* 辅助色系 - 科技蓝 */
+  --secondary-color: #0284c7;
+  --secondary-light: #0ea5e9;
+  --secondary-dark: #0369a1;
+  
+  /* 强调色 - 霓虹紫 */
+  --accent-color: #7e22ce;
+  --accent-light: #a855f7;
+  --accent-dark: #6b21a8;
+  
+  /* 情境色彩 - 鲜明 */
+  --success-color: #16a34a;
+  --error-color: #dc2626;
+  --warning-color: #ea580c;
+  --info-color: #2563eb;
+  
+  /* 中性色调 - 纯净 */
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+  
+  /* 背景色 - 无暇 */
+  --bg-color: #ffffff;
+  --bg-card: #ffffff;
+  --bg-elevated: #f9fafb;
+  --bg-inset: #f3f4f6;
+  
+  /* 文本颜色 - 鲜明对比 */
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-tertiary: #6b7280;
+  --text-disabled: #9ca3af;
+  --text-on-primary: #ffffff;
+  --text-on-dark: #f9fafb;
+  
+  /* 边框 - 锐利 */
+  --border-color: #e5e7eb;
+  --border-light: #f3f4f6;
+  --border-focus: #2563eb;
+  
+  /* 阴影 - 精确 */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.05);
+  --shadow-hover: 0 25px 50px rgba(0, 0, 0, 0.08);
+  
+  /* 字体 - 无衬线 */
+  --font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-family-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+  
+  /* 圆角 - 精确 */
+  --border-radius-sm: 4px;
+  --border-radius-md: 6px;
+  --border-radius-lg: 8px;
+  --border-radius-xl: 12px;
+  --border-radius-full: 9999px;
+  
+  /* 特定组件样式 */
+  --header-height: 72px;
+  --navbar-bg: rgba(255, 255, 255, 0.8);
+  --navbar-blur: 16px;
+  --navbar-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+  --card-hover-transform: translateY(-8px);
+}
+
+/* 修复深色标题栏中的文本颜色 */
+.theme-modern h1 {
+  color: white;
+}
+
+/* 确保标题在深色背景上能正确显示为白色 */
+.theme-modern [style*="background-color:#0f172a"] h1,
+.theme-modern [style*="background-color: #0f172a"] h1,
+.theme-modern [style*="background: #0f172a"] h1,
+.theme-modern [style*="background-color:rgb(15, 23, 42)"] h1,
+.theme-modern [style*="background-color: rgb(15, 23, 42)"] h1,
+.theme-modern [style*="background:rgb(15, 23, 42)"] h1,
+.theme-modern [style*="background-color:#1e293b"] h1,
+.theme-modern [style*="background-color: #1e293b"] h1,
+.theme-modern [style*="background: #1e293b"] h1,
+.theme-modern [style*="background-color:rgb(30, 41, 59)"] h1,
+.theme-modern [style*="background-color: rgb(30, 41, 59)"] h1, 
+.theme-modern [style*="background:rgb(30, 41, 59)"] h1 {
+  color: white !important;
+}
+
+/* 特定组件设置 */
+.theme-modern .section-header {
+  font-size: 2.25rem;
+  font-weight: 700;
+  font-family: var(--font-family);
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.025em;
+}
+
+.theme-modern .btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+  font-family: var(--font-family);
+  font-weight: 500;
+  font-size: 0.875rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--border-radius-md);
+  border: none;
+  box-shadow: var(--shadow-md);
+  transition: all 0.2s ease;
+}
+
+.theme-modern .btn-primary:hover {
+  background-color: var(--primary-light);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-1px);
+}
+
+.theme-modern .btn-primary:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.theme-modern .card {
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-md);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-modern .card:hover {
+  transform: var(--card-hover-transform);
+  box-shadow: var(--shadow-xl);
+  border-color: var(--gray-200);
+}
+
+.theme-modern .product-link {
+  color: var(--secondary-color);
+  font-weight: 500;
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  position: relative;
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius-md);
+  background-color: rgba(14, 165, 233, 0.05);
+  margin-top: 1rem;
+}
+
+.theme-modern .product-link:hover {
+  color: var(--secondary-dark);
+  background-color: rgba(14, 165, 233, 0.1);
+}
+
+.theme-modern .product-link:hover svg {
+  transform: translateX(3px);
+}
+
+.theme-modern .product-link svg {
+  transition: transform 0.2s ease;
+}
+
+/* 表单元素 */
+.theme-modern input, .theme-modern select, .theme-modern textarea {
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 0.75rem 1rem;
+  font-family: var(--font-family);
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  background-color: var(--bg-inset);
+}
+
+.theme-modern input:focus, .theme-modern select:focus, .theme-modern textarea:focus {
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+  outline: none;
+}
+
+/* 进度组件 */
+.theme-modern .progress-bar {
+  height: 8px;
+  background-color: var(--gray-200);
+  border-radius: var(--border-radius-full);
+  overflow: hidden;
+}
+
+.theme-modern .progress-bar-fill {
+  height: 100%;
+  background-color: var(--secondary-color);
+  border-radius: var(--border-radius-full);
+  transition: width 0.3s ease;
+}
+
+/* 标签组件 */
+.theme-modern .tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  background-color: var(--primary-bg);
+  color: var(--primary-color);
+  border-radius: var(--border-radius-md);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.025em;
+}
+
+/* 表格样式 */
+.theme-modern table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 1rem;
+}
+
+.theme-modern table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background-color: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.theme-modern table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.theme-modern table tr:last-child td {
+  border-bottom: none;
+}
+
+.theme-modern table th:first-child {
+  border-top-left-radius: var(--border-radius-md);
+}
+
+.theme-modern table th:last-child {
+  border-top-right-radius: var(--border-radius-md);
+} 

@@ -1,0 +1,511 @@
+
+        /* Base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', '微软雅黑', sans-serif;
+        }
+        
+        body {
+            background-color: #f7f9fb;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Header Styles */
+        header {
+            background-color: #fff;
+            padding: 15px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo {
+            height: 40px;
+        }
+        
+        .logo-text {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1A365D;
+            margin-left: 10px;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+        }
+        
+        .nav-menu {
+            display: flex;
+            margin-right: 20px;
+        }
+        
+        .nav-item {
+            margin: 0 15px;
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .nav-item:hover {
+            color: #1a57a5;
+        }
+        
+        .language-selector {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #fff;
+            margin-right: 15px;
+        }
+        
+        .login-btn {
+            background-color: #1A365D;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .login-btn:hover {
+            background-color: #274785;
+        }
+        
+        /* 订单标题 */
+        .order-title {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .order-title h1 {
+            font-size: 24px;
+            color: #e74c3c;
+            margin-bottom: 10px;
+        }
+        
+        .order-title p {
+            font-size: 16px;
+            color: #e74c3c;
+        }
+        
+        /* 订单表格 */
+        .order-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .order-table th {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .order-table td {
+            padding: 15px 10px;
+            text-align: left;
+            vertical-align: middle;
+        }
+        
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            padding: 10px 0;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .order-item {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            background-color: white;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .order-item:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .item-checkbox {
+            flex: 0 0 40px;
+        }
+        
+        .item-checkbox input {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .item-image {
+            flex: 0 0 120px;
+            padding: 0 15px;
+        }
+        
+        .item-image img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            border-radius: 4px;
+            border: 1px solid #eee;
+            padding: 5px;
+        }
+        
+        .item-details {
+            flex: 1;
+            padding: 0 15px;
+            min-width: 200px;
+        }
+        
+        .item-model {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #002366;
+            display: flex;
+            align-items: center;
+        }
+        
+        .item-property {
+            margin: 8px 0;
+            color: #666;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .property-label {
+            flex: 0 0 80px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .property-value {
+            flex: 1;
+        }
+        
+        .item-actions {
+            display: flex;
+            margin-top: 10px;
+        }
+        
+        .item-action-btn {
+            background: none;
+            border: none;
+            color: #4285f4;
+            margin-right: 15px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .item-action-btn:hover {
+            text-decoration: underline;
+        }
+        
+        .item-quantity {
+            flex: 0 0 160px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+        
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .quantity-btn {
+            width: 32px;
+            height: 32px;
+            background-color: #f5f5f5;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .quantity-btn:hover {
+            background-color: #e5e5e5;
+        }
+        
+        .quantity-input {
+            width: 50px;
+            height: 32px;
+            padding: 0 5px;
+            text-align: center;
+            border: none;
+            border-left: 1px solid #ddd;
+            border-right: 1px solid #ddd;
+            font-size: 16px;
+        }
+        
+        .item-price {
+            flex: 0 0 150px;
+            text-align: right;
+            font-weight: bold;
+            color: #e74c3c;
+            font-size: 18px;
+        }
+        
+        .item-type-tag {
+            display: inline-block;
+            padding: 3px 8px;
+            font-size: 12px;
+            border-radius: 4px;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        
+        .tag-machine {
+            background-color: #e3f2fd;
+            color: #1565c0;
+        }
+        
+        .tag-accessory {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .tag-consumable {
+            background-color: #fff3e0;
+            color: #e65100;
+        }
+        
+        /* 提交按钮 */
+        .submit-btn {
+            display: block;
+            width: 100%;
+            max-width: 200px;
+            margin: 30px 0 30px auto;
+            padding: 12px 20px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .submit-btn:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* 选择框样式 */
+        .checkbox-custom {
+            display: block;
+            width: 24px;
+            height: 24px;
+            border: 2px solid #4285f4;
+            border-radius: 4px;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .checkbox-custom.checked::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 7px;
+            width: 6px;
+            height: 12px;
+            border: solid #4285f4;
+            border-width: 0 3px 3px 0;
+            transform: rotate(45deg);
+        }
+        
+        /* 价格区间样式 */
+        .price-tiers {
+            margin-top: 0;
+            border-top: none;
+            padding-top: 0;
+        }
+        
+        .price-tier {
+            margin-bottom: 5px;
+            color: #e74c3c;
+            font-weight: 500;
+        }
+        
+        .original-price {
+            text-decoration: line-through;
+            color: #888;
+            font-size: 0.9em;
+        }
+        
+        .current-price {
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        
+        /* Tooltip styles */
+        .info-tooltip {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            background-color: #1a57a5;
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        
+        .tooltip-content {
+            position: absolute;
+            top: -5px;
+            left: 30px;
+            width: 280px;
+            background-color: white;
+            border-radius: 6px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            padding: 15px;
+            z-index: 100;
+            font-size: 14px;
+            color: #333;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
+            transform: translateY(10px);
+            pointer-events: none;
+        }
+        
+        .info-tooltip:hover .tooltip-content {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .tooltip-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #1a57a5;
+            font-size: 16px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        
+        .tooltip-property {
+            margin-bottom: 5px;
+        }
+        
+        .tooltip-property-label {
+            font-weight: 600;
+            color: #555;
+            margin-right: 5px;
+        }
+        
+        .tooltip-section {
+            margin-bottom: 10px;
+        }
+        
+        .tooltip-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        
+        .tooltip-badge-high {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .tooltip-badge-medium {
+            background-color: #fff3e0;
+            color: #e65100;
+        }
+        
+        .tooltip-badge-low {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .item-image {
+                flex: 0 0 100px;
+            }
+            
+            .order-item {
+                flex-wrap: wrap;
+            }
+            
+            .item-quantity {
+                flex: 0 0 100%;
+                text-align: right;
+                margin-top: 10px;
+            }
+            
+            .tooltip-content {
+                width: 200px;
+                left: auto;
+                right: 0;
+            }
+        }
+        
+        /* Add order summary styling */
+        .order-summary {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+        }
+        
+        .summary-label {
+            color: #666;
+        }
+        
+        .summary-value {
+            font-weight: bold;
+            color: #e74c3c;
+        }
+ 

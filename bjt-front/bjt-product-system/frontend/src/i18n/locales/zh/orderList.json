@@ -1,0 +1,47 @@
+{
+  "title": "订单管理",
+  "loading": "正在加载订单...",
+  "fetchError": "获取订单失败",
+  "fetchErrorMessage": "无法加载订单，请稍后重试",
+  "noOrdersFound": "未找到订单",
+  "tryAdjustFilters": "尝试调整过滤条件或搜索条件",
+  
+  "tabs": {
+    "all": "全部订单",
+    "pending": "待付款",
+    "paid": "已付款",
+    "shipped": "已发货",
+    "completed": "已完成",
+    "cancelled": "已取消"
+  },
+  
+  "status": {
+    "pending": "待付款",
+    "paid": "已付款",
+    "shipped": "已发货",
+    "completed": "已完成",
+    "cancelled": "已取消"
+  },
+  
+  "orderNumber": "订单编号",
+  "orderDate": "下单日期",
+  "totalAmount": "订单金额",
+  "shippingInfo": "收货信息",
+  "paymentMethod": "支付方式",
+  
+  "viewItems": "查看商品",
+  "viewDetails": "查看详情",
+  "exportPO": "导出采购单",
+  "cancelOrder": "取消订单",
+  
+  "search": "搜索",
+  "searchPlaceholder": "搜索订单号或商品",
+  
+  "confirmCancel": "确定要取消订单 {{orderId}} 吗？",
+  "cancelSuccess": "订单 {{orderId}} 已取消",
+  "cancelError": "取消订单 {{orderId}} 失败",
+  
+  "exportingPO": "正在准备订单 {{orderId}} 的采购单...",
+  "exportSuccess": "订单 {{orderId}} 的采购单已准备好下载",
+  "exportError": "导出订单 {{orderId}} 的采购单失败"
+} 

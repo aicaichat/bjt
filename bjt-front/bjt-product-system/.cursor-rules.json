@@ -1,0 +1,453 @@
+{
+  "project": {
+    "name": "BJT Product System",
+    "type": "wordpress-plugin",
+    "scope": "bjt-product-admin"
+  },
+
+  "directories": {
+    "wordpress_plugin": "bjt-product-admin",
+    "frontend": "frontend",
+    "docs": "docs",
+    "tests": "tests",
+    "structure": {
+      "root": "bjt-product-system",
+      "frontend": {
+        "path": "frontend",
+        "src": {
+          "api": "src/api",
+          "components": "src/components",
+          "config": "src/config",
+          "hooks": "src/hooks",
+          "pages": "src/pages",
+          "styles": "src/styles",
+          "utils": "src/utils"
+        },
+        "public": "public",
+        "tests": "tests"
+      },
+      "backend": {
+        "path": "backend",
+        "plugins": "plugins",
+        "themes": "themes"
+      },
+      "docker": {
+        "path": "docker",
+        "dev": "dev",
+        "prod": "prod"
+      },
+      "nginx": "nginx",
+      "docs": "docs"
+    }
+  },
+
+  "file_organization": {
+    "frontend": {
+      "api_services": {
+        "location": "frontend/src/api",
+        "naming": "{service}Service.ts",
+        "examples": [
+          "authService.ts",
+          "machineService.ts"
+        ]
+      },
+      "components": {
+        "location": "frontend/src/components",
+        "naming": "{Component}.tsx",
+        "examples": [
+          "ProductCard.tsx",
+          "InventoryStatus.tsx"
+        ]
+      },
+      "config": {
+        "location": "frontend/src/config",
+        "naming": "{config}.ts",
+        "examples": [
+          "env.ts",
+          "constants.ts"
+        ]
+      }
+    },
+    "backend": {
+      "plugins": {
+        "location": "backend/plugins",
+        "naming": "bjt-{plugin}",
+        "examples": [
+          "bjt-product-admin",
+          "bjt-api"
+        ]
+      }
+    }
+  },
+
+  "minimal_modification_principle": {
+    "rules": [
+      "Before creating new files, check if they already exist",
+      "Before defining new types/interfaces, check for existing ones in shared types",
+      "Before implementing new functions, check for existing utilities",
+      "Reuse existing components and hooks when possible",
+      "Keep changes focused and minimal",
+      "Document any deviations from existing patterns"
+    ],
+    "check_steps": [
+      "1. Search for existing files with similar names",
+      "2. Check for similar functionality in existing code",
+      "3. Review shared types and utilities",
+      "4. Document why new code is necessary",
+      "5. Get approval for significant changes"
+    ],
+    "tools": {
+      "search_existing_code": "Use codebase_search tool",
+      "find_files": "Use file_search tool",
+      "check_contents": "Use read_file tool"
+    }
+  },
+
+  "naming_conventions": {
+    "php_classes": {
+      "prefix": "BJT_",
+      "pattern": "^BJT_[A-Z][a-zA-Z0-9_]*$",
+      "examples": [
+        "BJT_Product_Admin",
+        "BJT_API_Routes",
+        "BJT_Database_Upgrader"
+      ]
+    },
+    "php_functions": {
+      "prefix": "bjt_",
+      "pattern": "^bjt_[a-z][a-z0-9_]*$",
+      "examples": [
+        "bjt_get_product",
+        "bjt_update_inventory",
+        "bjt_check_permissions"
+      ]
+    },
+    "database_tables": {
+      "prefix": "wp_bjt_",
+      "pattern": "^wp_bjt_[a-z_]+$",
+      "examples": [
+        "wp_bjt_product_lines",
+        "wp_bjt_host_models",
+        "wp_bjt_accessories"
+      ]
+    },
+    "react_components": {
+      "pattern": "^[A-Z][a-zA-Z0-9]*$",
+      "directory": "src/components",
+      "examples": [
+        "ProductCard",
+        "InventoryStatus",
+        "PriceDisplay"
+      ]
+    },
+    "api_services": {
+      "pattern": "^[A-Z][a-zA-Z0-9]*Service$",
+      "directory": "src/api",
+      "examples": [
+        "AuthService",
+        "MachineService",
+        "ConsumableService"
+      ]
+    }
+  },
+
+  "code_organization": {
+    "php_files": {
+      "max_lines": 500,
+      "class_per_file": true,
+      "required_sections": [
+        "Class Documentation",
+        "Properties",
+        "Constructor",
+        "Public Methods",
+        "Private Methods",
+        "Hooks"
+      ]
+    },
+    "react_components": {
+      "max_lines": 300,
+      "required_sections": [
+        "Imports",
+        "Types/Interfaces",
+        "Component",
+        "Styles"
+      ]
+    },
+    "api_services": {
+      "max_lines": 300,
+      "required_sections": [
+        "Imports",
+        "Types/Interfaces",
+        "Service Class",
+        "Service Instance Export"
+      ],
+      "required_methods": [
+        "constructor",
+        "get methods",
+        "post methods",
+        "error handling"
+      ]
+    }
+  },
+
+  "documentation_rules": {
+    "php_classes": {
+      "required_tags": [
+        "@package BJT_Product_Admin",
+        "@since 2.0.0",
+        "@author BJT Team"
+      ],
+      "method_docs": {
+        "required_tags": [
+          "@param",
+          "@return",
+          "@since"
+        ]
+      }
+    },
+    "react_components": {
+      "required_comments": [
+        "Component description",
+        "Props interface",
+        "Usage example"
+      ]
+    },
+    "api_services": {
+      "required_comments": [
+        "Service description",
+        "Method descriptions",
+        "Interface descriptions",
+        "Error handling descriptions"
+      ]
+    }
+  },
+
+  "api_conventions": {
+    "rest_api": {
+      "namespace": "bjt/v1",
+      "response_format": {
+        "success": "boolean",
+        "data": "any",
+        "message": "string (optional)"
+      },
+      "endpoints_pattern": "/wp-json/bjt/v1/{resource}/{action}"
+    },
+    "frontend_api": {
+      "base_url": "/wp-json/bjt/v1",
+      "response_format": {
+        "success": "boolean",
+        "data": "any",
+        "message": "string (optional)",
+        "code": "number (optional)"
+      },
+      "error_handling": {
+        "401": "Redirect to login",
+        "403": "Show permission error",
+        "404": "Show not found error",
+        "500": "Show server error"
+      },
+      "required_headers": {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": "Bearer {token}"
+      }
+    }
+  },
+
+  "database_conventions": {
+    "field_types": {
+      "id": "bigint(20)",
+      "foreign_keys": "bigint(20)",
+      "titles": "varchar(255)",
+      "descriptions": "text",
+      "status": "varchar(20)",
+      "created_at": "datetime",
+      "updated_at": "datetime"
+    },
+    "required_fields": [
+      "id",
+      "status",
+      "created_at",
+      "updated_at"
+    ],
+    "index_rules": {
+      "required_indexes": [
+        "PRIMARY KEY (id)",
+        "KEY status (status)",
+        "KEY created_at (created_at)"
+      ]
+    }
+  },
+
+  "security_rules": {
+    "required_checks": {
+      "php": [
+        "nonce_verification",
+        "capability_check",
+        "input_sanitization",
+        "output_escaping"
+      ],
+      "react": [
+        "xss_prevention",
+        "api_error_handling",
+        "authentication_check"
+      ]
+    },
+    "forbidden_functions": [
+      "eval",
+      "mysql_*",
+      "exec",
+      "system"
+    ]
+  },
+
+  "performance_rules": {
+    "php": {
+      "max_sql_joins": 3,
+      "cache_required": [
+        "product_queries",
+        "inventory_checks",
+        "price_calculations"
+      ]
+    },
+    "react": {
+      "required_optimizations": [
+        "useMemo for expensive calculations",
+        "useCallback for event handlers",
+        "React.memo for pure components"
+      ],
+      "api_caching": {
+        "required": true,
+        "methods": [
+          "React Query",
+          "SWR",
+          "Custom hooks with cache"
+        ]
+      }
+    }
+  },
+
+  "i18n_rules": {
+    "php": {
+      "text_domain": "bjt-product-admin",
+      "required_functions": [
+        "__",
+        "_e",
+        "esc_html__",
+        "esc_html_e"
+      ]
+    },
+    "react": {
+      "required_hooks": [
+        "useTranslation",
+        "Trans component"
+      ],
+      "namespace": "bjt"
+    }
+  },
+
+  "git_conventions": {
+    "branch_naming": {
+      "pattern": "^(feature|bugfix|hotfix|release)/BJT-\\d+-.+$",
+      "examples": [
+        "feature/BJT-123-add-product-api",
+        "bugfix/BJT-456-fix-inventory-calculation"
+      ]
+    },
+    "commit_message": {
+      "pattern": "^(feat|fix|docs|style|refactor|test|chore)\\(BJT-\\d+\\): .+$",
+      "examples": [
+        "feat(BJT-123): implement product API",
+        "fix(BJT-456): correct inventory calculation"
+      ]
+    }
+  },
+
+  "testing_requirements": {
+    "php": {
+      "coverage_threshold": 80,
+      "required_test_types": [
+        "Unit Tests",
+        "Integration Tests",
+        "API Tests"
+      ],
+      "test_naming": "test_{method_name}_{scenario}"
+    },
+    "react": {
+      "coverage_threshold": 80,
+      "required_test_types": [
+        "Component Tests",
+        "Hook Tests",
+        "Integration Tests"
+      ],
+      "test_naming": "should_{expected_behavior}"
+    }
+  },
+
+  "custom_snippets": {
+    "php": {
+      "bjt-api-endpoint": {
+        "prefix": "bjt-api",
+        "body": [
+          "public function register_${1:endpoint}_endpoint() {",
+          "\tregister_rest_route(",
+          "\t\t'bjt/v1',",
+          "\t\t'/${2:resource}',",
+          "\t\tarray(",
+          "\t\t\t'methods' => WP_REST_Server::${3:READABLE},",
+          "\t\t\t'callback' => array(\\$this, 'handle_${1:endpoint}'),",
+          "\t\t\t'permission_callback' => array(\\$this, 'check_permission'),",
+          "\t\t)",
+          "\t);",
+          "}"
+        ]
+      },
+      "bjt-model-class": {
+        "prefix": "bjt-model",
+        "body": [
+          "class BJT_${1:Model_Name} {",
+          "\tprivate static \\$instance = null;",
+          "\tprivate \\$table_name;",
+          "",
+          "\tpublic static function get_instance() {",
+          "\t\tif (null === self::\\$instance) {",
+          "\t\t\tself::\\$instance = new self();",
+          "\t\t}",
+          "\t\treturn self::\\$instance;",
+          "\t}",
+          "",
+          "\tprivate function __construct() {",
+          "\t\tglobal \\$wpdb;",
+          "\t\t\\$this->table_name = \\$wpdb->prefix . 'bjt_${2:table_name}';",
+          "\t}",
+          "}"
+        ]
+      }
+    },
+    "react": {
+      "bjt-component": {
+        "prefix": "bjt-comp",
+        "body": [
+          "import React from 'react';",
+          "import { useTranslation } from 'react-i18next';",
+          "",
+          "interface ${1:ComponentName}Props {",
+          "\t${2:props}",
+          "}",
+          "",
+          "export const ${1:ComponentName}: React.FC<${1:ComponentName}Props> = ({",
+          "\t${3:destructured_props}",
+          "}) => {",
+          "\tconst { t } = useTranslation('bjt');",
+          "",
+          "\treturn (",
+          "\t\t<div className=\"bjt-${4:class-name}\">",
+          "\t\t\t$0",
+          "\t\t</div>",
+          "\t);",
+          "};"
+        ]
+      }
+    }
+  }
+} 

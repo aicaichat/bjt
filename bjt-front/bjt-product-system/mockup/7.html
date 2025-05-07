@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT 配件管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #f7f9fc;
+            color: #333;
+        }
+        .header {
+            background-color: #fff;
+            padding: 15px 25px;
+            border-bottom: 1px solid #e1e5eb;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: relative;
+            z-index: 10;
+        }
+        .logo {
+            height: 45px;
+        }
+        .container {
+            display: flex;
+            flex: 1;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        .sidebar {
+            width: 220px;
+            background-color: #1a3c70;
+            color: #fff;
+            padding: 15px 0;
+            overflow-y: auto;
+        }
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 8px;
+            margin: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow-y: auto;
+        }
+        .menu-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            font-size: 14px;
+        }
+        .menu-item:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        .menu-item.active {
+            background-color: rgba(255,255,255,0.15);
+            color: #fff;
+            border-left-color: #4dabf7;
+        }
+        .submenu {
+            margin-left: 0;
+            display: none;
+            background-color: rgba(0,0,0,0.15);
+        }
+        .submenu.active {
+            display: block;
+        }
+        .submenu .menu-item {
+            padding-left: 40px;
+            font-size: 13px;
+        }
+        .expandable::after {
+            content: "▶";
+            font-size: 10px;
+            margin-left: auto;
+            transition: transform 0.2s;
+        }
+        .expandable.active::after {
+            content: "▼";
+        }
+        h2 {
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: #1a3c70;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e1e5eb;
+        }
+        .section {
+            margin-bottom: 30px;
+            border: 1px solid #e1e5eb;
+            border-radius: 4px;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e1e5eb;
+        }
+        .section-header h3 {
+            margin: 0;
+            color: #1a3c70;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .filter-form {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-bottom: 1px solid #e1e5eb;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .form-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .form-group label {
+            font-size: 14px;
+            color: #495057;
+            font-weight: 500;
+        }
+        .form-group input, .form-group select {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 200px;
+        }
+        .btn {
+            padding: 8px 16px;
+            background-color: #1a3c70;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .btn:hover {
+            background-color: #15305b;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table th {
+            background-color: #f8f9fa;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 1px solid #e1e5eb;
+        }
+        table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e1e5eb;
+            vertical-align: middle;
+        }
+        table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        table tr:hover td {
+            background-color: #f1f8ff;
+        }
+        .actions {
+            display: flex;
+            gap: 5px;
+        }
+        .menu-icon {
+            margin-right: 10px;
+            opacity: 0.8;
+            font-size: 16px;
+        }
+        .note {
+            background-color: #fff8e1;
+            border-left: 4px solid #ffc107;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #333;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .toast.success {
+            background-color: #28a745;
+        }
+        .toast.error {
+            background-color: #dc3545;
+        }
+        .toast.show {
+            display: block;
+            opacity: 1;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+            padding: 10px 0;
+            border-top: 1px solid #e1e5eb;
+        }
+        .page-item {
+            display: inline-block;
+            min-width: 32px;
+            height: 32px;
+            text-align: center;
+            line-height: 32px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            margin: 0 3px;
+            color: #1a3c70;
+        }
+        .page-item:hover {
+            background-color: #e9ecef;
+        }
+        .page-item.active {
+            background-color: #1a3c70;
+            border-color: #1a3c70;
+            color: white;
+        }
+        .divider {
+            height: 1px;
+            background-color: #e1e5eb;
+            margin: 30px 0;
+        }
+        .status-icon {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .status-active {
+            background-color: #28a745;
+        }
+        .status-inactive {
+            background-color: #dc3545;
+        }
+        .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+        .btn-success {
+            background-color: #28a745;
+            color: #fff;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        .btn-info {
+            background-color: #17a2b8;
+        }
+        .btn-info:hover {
+            background-color: #138496;
+        }
+        .btn-group {
+            position: relative;
+            display: inline-flex;
+        }
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            z-index: 1000;
+            min-width: 120px;
+            padding: 5px 0;
+            margin: 2px 0 0;
+            background-color: #fff;
+            border: 1px solid rgba(0,0,0,0.15);
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .dropdown-menu.show {
+            display: block;
+        }
+        .dropdown-item {
+            display: block;
+            padding: 8px 15px;
+            color: #212529;
+            text-decoration: none;
+            white-space: nowrap;
+            background: none;
+            border: 0;
+            width: 100%;
+            text-align: left;
+            font-size: 14px;
+        }
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="/api/placeholder/200/40" alt="BJT Logo" class="logo">
+        <div style="margin-left: auto; display: flex; gap: 20px; align-items: center;">
+            <a href="#" style="color: #1a3c70; text-decoration: none; font-size: 14px; font-weight: 500;">文档</a>
+            <a href="#" style="color: #1a3c70; text-decoration: none; font-size: 14px; font-weight: 500;">支持</a>
+            <div style="display: flex; align-items: center; border: 1px solid #e1e5eb; border-radius: 4px; padding: 5px 10px;">
+                <span style="font-size: 13px; margin-right: 5px;">中文</span>
+                <span style="font-size: 10px;">▼</span>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="sidebar">
+            <a href="#" class="menu-item">
+                <span class="menu-icon">🏠</span>
+                <span>首页</span>
+            </a>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">📄</span>
+                <span>页面编辑</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">产品线1</a>
+                <a href="#" class="menu-item">产品线2</a>
+                <a href="#" class="menu-item">产品线3</a>
+                <a href="#" class="menu-item">产品线4</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">🛋️</span>
+                <span>气垫机</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">主机</a>
+                <a href="#" class="menu-item">配件</a>
+                <a href="#" class="menu-item">耗材</a>
+                <a href="#" class="menu-item">备件</a>
+            </div>
+            <a href="#" class="menu-item expandable active">
+                <span class="menu-icon">📃</span>
+                <span>纸机</span>
+            </a>
+            <div class="submenu active">
+                <a href="#" class="menu-item">主机</a>
+                <a href="#" class="menu-item active">配件</a>
+                <a href="#" class="menu-item">耗材</a>
+                <a href="#" class="menu-item">备件</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">🧵</span>
+                <span>胶带机</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">主机</a>
+                <a href="#" class="menu-item">配件</a>
+                <a href="#" class="menu-item">耗材</a>
+                <a href="#" class="menu-item">备件</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">💼</span>
+                <span>气柱袋</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">耗材</a>
+            </div>
+            <a href="#" class="menu-item">
+                <span class="menu-icon">👤</span>
+                <span>用户管理</span>
+            </a>
+            <a href="#" class="menu-item">
+                <span class="menu-icon">⚙️</span>
+                <span>系统设置</span>
+            </a>
+        </div>
+        
+        <div class="main-content">
+            <h2>配件管理</h2>
+            
+            <div class="note">
+                <i style="margin-right: 8px;">ℹ️</i> 请谨慎管理配件信息，修改后将立即在相关产品线中生效
+            </div>
+            
+            <!-- Model Table Section -->
+            <div class="section">
+                <div class="section-header">
+                    <h3>型号表</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="btn-group">
+                            <button class="btn btn-info dropdown-toggle" id="exportModelBtn">
+                                <span>导出</span>
+                                <span style="font-size: 10px; margin-left: 5px;">▼</span>
+                            </button>
+                            <div class="dropdown-menu" id="exportModelDropdown">
+                                <a href="#" class="dropdown-item" data-format="excel">Excel</a>
+                                <a href="#" class="dropdown-item" data-format="csv">CSV</a>
+                                <a href="#" class="dropdown-item" data-format="json">JSON</a>
+                            </div>
+                        </div>
+                        <label class="btn btn-success" style="margin: 0;">
+                            <span>导入</span>
+                            <input type="file" id="importModelFile" accept=".xlsx,.xls,.csv,.json" style="display: none;">
+                        </label>
+                        <button class="btn btn-primary">新增</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 60px;">No</th>
+                                <th>型号名称</th>
+                                <th style="width: 180px;">状态</th>
+                                <th style="width: 200px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>PT2001</td>
+                                <td><span class="status-icon status-active"></span>已上架</td>
+                                <td class="actions">
+                                    <button class="btn btn-sm">编辑</button>
+                                    <button class="btn btn-sm btn-warning toggle-status">下架</button>
+                                    <button class="btn btn-sm btn-danger">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>PT2002</td>
+                                <td><span class="status-icon status-active"></span>已上架</td>
+                                <td class="actions">
+                                    <button class="btn btn-sm">编辑</button>
+                                    <button class="btn btn-sm btn-warning toggle-status">下架</button>
+                                    <button class="btn btn-sm btn-danger">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>PT2003</td>
+                                <td><span class="status-icon status-inactive"></span>已下架</td>
+                                <td class="actions">
+                                    <button class="btn btn-sm">编辑</button>
+                                    <button class="btn btn-sm btn-success toggle-status">上架</button>
+                                    <button class="btn btn-sm btn-danger">删除</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <!-- Part Number Table Section -->
+            <div class="section">
+                <div class="section-header">
+                    <h3>料号表</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="btn-group">
+                            <button class="btn btn-info dropdown-toggle" id="exportPartBtn">
+                                <span>导出</span>
+                                <span style="font-size: 10px; margin-left: 5px;">▼</span>
+                            </button>
+                            <div class="dropdown-menu" id="exportPartDropdown">
+                                <a href="#" class="dropdown-item" data-format="excel">Excel</a>
+                                <a href="#" class="dropdown-item" data-format="csv">CSV</a>
+                                <a href="#" class="dropdown-item" data-format="json">JSON</a>
+                            </div>
+                        </div>
+                        <label class="btn btn-success" style="margin: 0;">
+                            <span>导入</span>
+                            <input type="file" id="importPartFile" accept=".xlsx,.xls,.csv,.json" style="display: none;">
+                        </label>
+                        <button class="btn btn-primary">新增</button>
+                    </div>
+                </div>
+                <div class="filter-form">
+                    <div class="form-group">
+                        <label for="modelFilter">型号：</label>
+                        <select id="modelFilter" class="form-control">
+                            <option value="">全部</option>
+                            <option value="PT2001">PT2001</option>
+                            <option value="PT2002">PT2002</option>
+                            <option value="PT2003">PT2003</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="partNumber">料号：</label>
+                        <input type="text" id="partNumber" placeholder="请输入料号">
+                    </div>
+                    <button class="btn">筛选</button>
+                    <button class="btn btn-secondary">重置</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 60px;">No</th>
+                                <th>型号</th>
+                                <th>料号</th>
+                                <th style="width: 180px;">状态</th>
+                                <th style="width: 200px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>PT2001</td>
+                                <td>14A00001</td>
+                                <td><span class="status-icon status-active"></span>已上架</td>
+                                <td class="actions">
+                                    <button class="btn btn-sm">编辑</button>
+                                    <button class="btn btn-sm btn-warning toggle-status">下架</button>
+                                    <button class="btn btn-sm btn-danger">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>PT2001</td>
+                                <td>14A00002</td>
+                                <td><span class="status-icon status-active"></span>已上架</td>
+                                <td class="actions">
+                                    <button class="btn btn-sm">编辑</button>
+                                    <button class="btn btn-sm btn-warning toggle-status">下架</button>
+                                    <button class="btn btn-sm btn-danger">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>PT2002</td>
+                                <td>14A00003</td>
+                                <td><span class="status-icon status-inactive"></span>已下架</td>
+                                <td class="actions">
+                                    <button class="btn btn-sm">编辑</button>
+                                    <button class="btn btn-sm btn-success toggle-status">上架</button>
+                                    <button class="btn btn-sm btn-danger">删除</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast notification -->
+    <div class="toast" id="toast">
+        <span id="toastMessage">操作成功</span>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Menu toggle functionality
+            document.querySelectorAll('.expandable').forEach(item => {
+                item.addEventListener('click', event => {
+                    const submenu = item.nextElementSibling;
+                    if (submenu && submenu.classList.contains('submenu')) {
+                        submenu.classList.toggle('active');
+                        item.classList.toggle('active');
+                    }
+                    event.preventDefault();
+                });
+            });
+
+            // Automatically expand submenus with active items
+            document.querySelectorAll('.submenu .menu-item.active').forEach(activeItem => {
+                const parentSubmenu = activeItem.closest('.submenu');
+                const parentExpandable = parentSubmenu.previousElementSibling;
+                
+                if (parentSubmenu && parentExpandable) {
+                    parentSubmenu.classList.add('active');
+                    parentExpandable.classList.add('active');
+                }
+            });
+            
+            // Delete confirmation
+            document.querySelectorAll('.btn-danger').forEach(button => {
+                button.addEventListener('click', function() {
+                    if (confirm('确定要删除这个项目吗？此操作无法撤销。')) {
+                        showToast('删除成功', 'success');
+                    }
+                });
+            });
+            
+            // Filter functionality
+            document.querySelector('.filter-form .btn').addEventListener('click', function() {
+                showToast('筛选应用成功', 'success');
+            });
+            
+            // Reset filter
+            document.querySelector('.filter-form .btn-secondary').addEventListener('click', function() {
+                document.getElementById('modelFilter').value = '';
+                document.getElementById('partNumber').value = '';
+                showToast('筛选条件已重置', 'success');
+            });
+            
+            // Add new item buttons
+            document.querySelectorAll('.section-header .btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    alert('新增功能将在这里实现');
+                });
+            });
+            
+            // Edit buttons
+            document.querySelectorAll('.btn:not(.btn-danger):not(.btn-secondary)').forEach(button => {
+                if (button.textContent.includes('编辑')) {
+                    button.addEventListener('click', function() {
+                        alert('编辑功能将在这里实现');
+                    });
+                }
+            });
+            
+            // Toast notification functionality
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            function showToast(message, type) {
+                toastMessage.textContent = message;
+                toast.className = 'toast ' + (type || '');
+                toast.classList.add('show');
+                
+                setTimeout(function() {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+
+            // Status toggle functionality
+            document.querySelectorAll('.toggle-status').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const row = this.closest('tr');
+                    const statusCell = row.querySelector('td:nth-child(3)');
+                    const statusIcon = statusCell.querySelector('.status-icon');
+                    const isActive = statusIcon.classList.contains('status-active');
+                    
+                    if (confirm(isActive ? '确定要下架吗？' : '确定要上架吗？')) {
+                        if (isActive) {
+                            statusIcon.classList.remove('status-active');
+                            statusIcon.classList.add('status-inactive');
+                            statusCell.childNodes[1].textContent = '已下架';
+                            this.classList.remove('btn-warning');
+                            this.classList.add('btn-success');
+                            this.textContent = '上架';
+                        } else {
+                            statusIcon.classList.remove('status-inactive');
+                            statusIcon.classList.add('status-active');
+                            statusCell.childNodes[1].textContent = '已上架';
+                            this.classList.remove('btn-success');
+                            this.classList.add('btn-warning');
+                            this.textContent = '下架';
+                        }
+                        
+                        showToast(isActive ? '下架成功' : '上架成功', 'success');
+                    }
+                });
+            });
+
+            // Export dropdown functionality
+            const exportModelBtn = document.getElementById('exportModelBtn');
+            const exportModelDropdown = document.getElementById('exportModelDropdown');
+            const exportPartBtn = document.getElementById('exportPartBtn');
+            const exportPartDropdown = document.getElementById('exportPartDropdown');
+
+            // Toggle model export dropdown
+            exportModelBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                exportModelDropdown.classList.toggle('show');
+                exportPartDropdown.classList.remove('show');
+            });
+
+            // Toggle part export dropdown
+            exportPartBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                exportPartDropdown.classList.toggle('show');
+                exportModelDropdown.classList.remove('show');
+            });
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!exportModelBtn.contains(e.target) && !exportModelDropdown.contains(e.target)) {
+                    exportModelDropdown.classList.remove('show');
+                }
+                if (!exportPartBtn.contains(e.target) && !exportPartDropdown.contains(e.target)) {
+                    exportPartDropdown.classList.remove('show');
+                }
+            });
+
+            // Handle export format selection
+            document.querySelectorAll('.dropdown-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const format = this.getAttribute('data-format');
+                    const type = this.closest('.dropdown-menu').id.includes('Model') ? '型号' : '料号';
+                    showToast(`${type}数据已导出为${format.toUpperCase()}格式`, 'success');
+                    this.closest('.dropdown-menu').classList.remove('show');
+                });
+            });
+
+            // Handle file import
+            document.getElementById('importModelFile').addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    showToast('正在导入型号数据...', 'info');
+                    setTimeout(() => showToast('型号数据导入成功', 'success'), 1500);
+                }
+            });
+
+            document.getElementById('importPartFile').addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    showToast('正在导入料号数据...', 'info');
+                    setTimeout(() => showToast('料号数据导入成功', 'success'), 1500);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

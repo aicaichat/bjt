@@ -1,0 +1,80 @@
+{
+  "title": "耗材产品",
+  "subtitle": "BJT气垫膜、缓冲包装袋及其他产品",
+  "filters": {
+    "machineModel": "设备型号",
+    "units": "单位",
+    "metric": "公制",
+    "imperial": "英制",
+    "shape": "形状",
+    "material": "材质",
+    "dimensions": {
+      "thickness": "厚度",
+      "weight": "重量",
+      "width": "宽度",
+      "length": "长度"
+    },
+    "reset": "重置",
+    "apply": "应用筛选",
+    "modelUsageGuide": "设备使用指南",
+    "modelUsagePrompt": "请选择一个具体的设备型号查看对应的使用指南。",
+    "modelUsageNote": "此分解图展示了所选{{model}}型号设备如何使用耗材。"
+  },
+  "compatibility": {
+    "title": "设备兼容性信息",
+    "models": {
+      "la-e4s": "仅支持标准气垫膜材料",
+      "mex-10-20": "支持所有系列材料，对不同规格有特定要求",
+      "lp-v1": "支持所有材料和规格"
+    }
+  },
+  "table": {
+    "image": "图片",
+    "productCode": "产品编码",
+    "specifications": "规格",
+    "price": "价格",
+    "inventory": "库存",
+    "actions": "操作",
+    "specs": {
+      "material": "材质",
+      "shape": "形状",
+      "thickness": "厚度",
+      "width": "宽度",
+      "length": "长度",
+      "rollLength": "卷长",
+      "compatibility": "兼容性"
+    }
+  },
+  "actions": {
+    "addToCart": "加入购物车",
+    "viewDetails": "查看详情",
+    "close": "关闭"
+  },
+  "pricing": {
+    "per": "每件",
+    "rangePricing": "区间定价"
+  },
+  "inventory": {
+    "inStock": "有货",
+    "lowStock": "库存不足",
+    "outOfStock": "无货",
+    "count": "库存：{{count}}"
+  },
+  "cart": {
+    "title": "购物车",
+    "added": "已加入购物车",
+    "total": "总计",
+    "checkout": "结算",
+    "items": "件商品",
+    "empty": "购物车为空",
+    "continue": "继续购物"
+  },
+  "loading": "正在加载耗材数据...",
+  "error": {
+    "title": "错误",
+    "retry": "重试",
+    "failedToLoad": "加载耗材数据失败",
+    "systemError": "系统错误，请稍后再试"
+  },
+  "quantity": "数量"
+} 

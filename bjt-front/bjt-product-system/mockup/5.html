@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT Product Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #f7f9fc;
+            color: #333;
+        }
+        .header {
+            background-color: #fff;
+            padding: 15px 25px;
+            border-bottom: 1px solid #e1e5eb;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: relative;
+            z-index: 10;
+        }
+        .logo {
+            height: 45px;
+        }
+        .container {
+            display: flex;
+            flex: 1;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        .sidebar {
+            width: 220px;
+            background-color: #1a3c70;
+            color: #fff;
+            padding: 15px 0;
+            overflow-y: auto;
+        }
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 8px;
+            margin: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow-y: auto;
+        }
+        .menu-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            font-size: 14px;
+        }
+        .menu-item:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        .menu-item.active {
+            background-color: rgba(255,255,255,0.15);
+            color: #fff;
+            border-left-color: #4dabf7;
+        }
+        .submenu {
+            margin-left: 0;
+            display: none;
+            background-color: rgba(0,0,0,0.15);
+        }
+        .submenu.active {
+            display: block;
+        }
+        .submenu .menu-item {
+            padding-left: 40px;
+            font-size: 13px;
+        }
+        .expandable::after {
+            content: "▶";
+            font-size: 10px;
+            margin-left: auto;
+            transition: transform 0.2s;
+        }
+        .expandable.active::after {
+            content: "▼";
+        }
+        h2 {
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: #1a3c70;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e1e5eb;
+        }
+        h3 {
+            font-weight: 500;
+            margin-bottom: 15px;
+            color: #1a3c70;
+            font-size: 16px;
+        }
+        .btn {
+            padding: 10px 18px;
+            background-color: #1a3c70;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .btn:hover {
+            background-color: #15305b;
+        }
+        .btn:active {
+            transform: translateY(1px);
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        .notice {
+            background-color: #fff8f8;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-left: 4px solid #ff6b6b;
+            border-radius: 0 4px 4px 0;
+            font-size: 14px;
+            color: #555;
+        }
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #333;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .toast.success {
+            background-color: #28a745;
+        }
+        .toast.error {
+            background-color: #dc3545;
+        }
+        .toast.show {
+            display: block;
+            opacity: 1;
+        }
+        /* Menu icons */
+        .menu-icon {
+            margin-right: 10px;
+            opacity: 0.8;
+            font-size: 16px;
+        }
+        /* Relationship management specific styles */
+        .relationship-header {
+            background-color: #f8f9fa;
+            border: 1px solid #e1e5eb;
+            padding: 15px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 4px;
+            transition: box-shadow 0.2s;
+        }
+        .relationship-header:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .relationship-header h3 {
+            margin: 0;
+            color: #495057;
+            font-weight: 600;
+        }
+        .relationship-level {
+            margin-bottom: 30px;
+            border: 1px solid #e1e5eb;
+            border-radius: 4px;
+            overflow: hidden;
+            transition: box-shadow 0.2s, transform 0.1s;
+        }
+        .relationship-level:hover {
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+        .relationship-level:active {
+            transform: translateY(1px);
+        }
+        .level-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f8f9fa;
+            padding: 12px 15px;
+            border-bottom: 1px solid #e1e5eb;
+        }
+        .level-title {
+            display: flex;
+            align-items: center;
+        }
+        .level-indicator {
+            display: inline-block;
+            background-color: #1a3c70;
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 10px;
+            transition: background-color 0.2s;
+        }
+        .level-2 {
+            background-color: #357ac1;
+        }
+        .level-3 {
+            background-color: #5896d2;
+        }
+        .level-4 {
+            background-color: #7bb3e4;
+        }
+        .level-5 {
+            background-color: #9dcff5;
+        }
+        .level-path {
+            color: #6c757d;
+            font-size: 13px;
+            padding: 8px 15px;
+            border-bottom: 1px solid #e1e5eb;
+            background-color: #fff;
+        }
+        .path-separator {
+            color: #adb5bd;
+            margin: 0 8px;
+        }
+        .table-container {
+            padding: 0;
+            overflow-x: auto;
+        }
+        .relationship-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .relationship-table th {
+            background-color: #f8f9fa;
+            padding: 10px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 1px solid #e1e5eb;
+        }
+        .relationship-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e1e5eb;
+            vertical-align: middle;
+            transition: background-color 0.15s;
+        }
+        .relationship-table tr:last-child td {
+            border-bottom: none;
+        }
+        .relationship-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .relationship-table tr:hover td {
+            background-color: #f1f8ff;
+        }
+        .relationship-table tr.selected {
+            background-color: #e3f2fd;
+        }
+        .relationship-table tr.selected:hover td {
+            background-color: #d6ecff;
+        }
+        .actions-container {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            padding: 12px 15px;
+            background-color: #f8f9fa;
+            border-top: 1px solid #e1e5eb;
+        }
+        .no-items {
+            padding: 15px;
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+        }
+        /* Highlight focus state for better accessibility */
+        button:focus, 
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.2);
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        /* Progress indicator for loading states */
+        .progress-indicator {
+            height: 3px;
+            width: 100%;
+            background-color: #f0f0f0;
+            position: relative;
+            overflow: hidden;
+            display: none;
+        }
+        .progress-indicator::after {
+            content: '';
+            position: absolute;
+            height: 100%;
+            width: 30%;
+            background-color: #4dabf7;
+            animation: progressAnimation 1.5s infinite ease-in-out;
+        }
+        @keyframes progressAnimation {
+            0% { left: -30%; }
+            100% { left: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="/api/placeholder/200/40" alt="BJT Logo" class="logo">
+        <div style="margin-left: auto; display: flex; gap: 20px; align-items: center;">
+            <a href="#" style="color: #1a3c70; text-decoration: none; font-size: 14px; font-weight: 500;">Documentation</a>
+            <a href="#" style="color: #1a3c70; text-decoration: none; font-size: 14px; font-weight: 500;">Support</a>
+            <div style="display: flex; align-items: center; border: 1px solid #e1e5eb; border-radius: 4px; padding: 5px 10px;">
+                <span style="font-size: 13px; margin-right: 5px;">English</span>
+                <span style="font-size: 10px;">▼</span>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="sidebar">
+            <a href="#" class="menu-item">
+                <span class="menu-icon">🏠</span>
+                <span>首页</span>
+            </a>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">📄</span>
+                <span>页面编辑</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item" data-product-line="1">产品线1</a>
+                <a href="#" class="menu-item" data-product-line="2">产品线2</a>
+                <a href="#" class="menu-item" data-product-line="3">产品线3</a>
+                <a href="#" class="menu-item" data-product-line="4">产品线4</a>
+            </div>
+            <a href="#" class="menu-item expandable active">
+                <span class="menu-icon">🛋️</span>
+                <span>气垫机</span>
+            </a>
+            <div class="submenu active">
+                <a href="#" class="menu-item">主机</a>
+                <a href="#" class="menu-item active">配件</a>
+                <a href="#" class="menu-item">耗材</a>
+                <a href="#" class="menu-item">备件</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">📃</span>
+                <span>纸机</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">主机</a>
+                <a href="#" class="menu-item">配件</a>
+                <a href="#" class="menu-item">耗材</a>
+                <a href="#" class="menu-item">备件</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">🧵</span>
+                <span>胶带机</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">主机</a>
+                <a href="#" class="menu-item">配件</a>
+                <a href="#" class="menu-item">耗材</a>
+                <a href="#" class="menu-item">备件</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">💼</span>
+                <span>气柱袋</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">耗材</a>
+            </div>
+            <a href="#" class="menu-item">
+                <span class="menu-icon">👤</span>
+                <span>用户管理</span>
+            </a>
+            <a href="#" class="menu-item">
+                <span class="menu-icon">⚙️</span>
+                <span>系统设置</span>
+            </a>
+        </div>
+        <div class="main-content">
+            <h2>配件关联关系管理</h2>
+            
+            <div class="notice">
+                <i style="margin-right: 8px; color: #ff6b6b;">ℹ️</i> 修改关联关系将直接影响产品显示和查询结果，请谨慎操作
+            </div>
+            
+            <div class="progress-indicator" id="loadingIndicator"></div>
+            
+            <!-- Level 1 Accessories -->
+            <div class="relationship-level fade-in">
+                <div class="level-header">
+                    <div class="level-title">
+                        <span class="level-indicator">一级</span>
+                        <h3>一级配件</h3>
+                    </div>
+                    <button class="btn">新增一级配件</button>
+                </div>
+                
+                <div class="level-path">
+                    <strong>路径：</strong> A200-Pro 气垫机
+                </div>
+                
+                <div class="table-container">
+                    <table class="relationship-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;"></th>
+                                <th style="width: 60px;">编号</th>
+                                <th>型号</th>
+                                <th>料号</th>
+                                <th style="width: 150px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="selected">
+                                <td><input type="radio" name="level1-accessory" checked></td>
+                                <td>201</td>
+                                <td>主板控制器 B100</td>
+                                <td>PN123456</td>
+                                <td>
+                                    <button class="btn btn-sm">编辑</button>
+                                    <button class="btn btn-sm btn-danger">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="radio" name="level1-accessory"></td>
+                                <td>202</td>
+                                <td>气泵模块 C300</td>
+                                <td>PN234567</td>
+                                <td>
+                                    <button class="btn btn-sm">编辑</button>
+                                    <button class="btn btn-sm btn-danger">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="radio" name="level1-accessory"></td>
+                                <td>203</td>
+                                <td>电源适配器 D150</td>
+                                <td>PN345678</td>
+                                <td>
+                                    <button class="btn btn-sm">编辑</button>
+                                    <button class="btn btn-sm btn-danger">删除</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="actions-container">
+                    <button class="btn" id="show-level2">显示下一级配件</button>
+                </div>
+            </div>
+            
+            <!-- Level 2 Accessories -->
+            <div class="relationship-level fade-in">
+                <div class="level-header">
+                    <div class="level-title">
+                        <span class="level-indicator level-2">二级</span>
+                        <h3>二级配件（归属于 主板控制器 B100）</h3>
+                    </div>
+                    <button class="btn">新增二级配件</button>
+                </div>
+                
+                <div class="level-path">
+                    <strong>路径：</strong> A200-Pro 气垫机 <span class="path-separator">></span> 主板控制器 B100
+                </div>
+                
+                <div class="table-container">
+                    <table class="relationship-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;"></th>
+                                <th style="width: 60px;">编号</th>
+                                <th>型号</th>
+                                <th>料号</th>
+                                <th style="width: 150px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="selected">
+                                <td><input type="radio" name="level2-accessory" checked></td>
+                                <td>301</td>
+                                <td>处理器芯片 E200</td>
+                                <td>PN456789</td>
+                                <td>
+                                    <button class="btn btn-sm">编辑</button>
+                                    <button class="btn btn-sm btn-danger">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="radio" name="level2-accessory"></td>
+                                <td>302</td>
+                                <td>存储模块 F150</td>
+                                <td>PN567890</td>
+                                <td>
+                                    <button class="btn btn-sm">编辑</button>
+                                    <button class="btn btn-sm btn-danger">删除</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="actions-container">
+                    <button class="btn" id="show-level3">显示下一级配件</button>
+                </div>
+            </div>
+            
+            <!-- Level 3 Accessories -->
+            <div class="relationship-level fade-in">
+                <div class="level-header">
+                    <div class="level-title">
+                        <span class="level-indicator level-3">三级</span>
+                        <h3>三级配件（归属于 处理器芯片 E200）</h3>
+                    </div>
+                    <button class="btn">新增三级配件</button>
+                </div>
+                
+                <div class="level-path">
+                    <strong>路径：</strong> A200-Pro 气垫机 <span class="path-separator">></span> 主板控制器 B100 <span class="path-separator">></span> 处理器芯片 E200
+                </div>
+                
+                <div class="table-container">
+                    <table class="relationship-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;"></th>
+                                <th style="width: 60px;">编号</th>
+                                <th>型号</th>
+                                <th>料号</th>
+                                <th style="width: 150px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="radio" name="level3-accessory"></td>
+                                <td>401</td>
+                                <td>运算单元 G100</td>
+                                <td>PN678901</td>
+                                <td>
+                                    <button class="btn btn-sm">编辑</button>
+                                    <button class="btn btn-sm btn-danger">删除</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="actions-container">
+                    <button class="btn btn-secondary" disabled>无更多下级配件</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast notification -->
+    <div class="toast" id="toast">
+        <span id="toastMessage">操作成功</span>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Menu toggle functionality
+            document.querySelectorAll('.expandable').forEach(item => {
+                item.addEventListener('click', event => {
+                    const submenu = item.nextElementSibling;
+                    if (submenu && submenu.classList.contains('submenu')) {
+                        submenu.classList.toggle('active');
+                        item.classList.toggle('active');
+                    }
+                    event.preventDefault();
+                });
+            });
+
+            // Row selection functionality
+            document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    // Remove selected class from all rows in this table
+                    const rows = this.closest('tbody').querySelectorAll('tr');
+                    rows.forEach(row => row.classList.remove('selected'));
+                    
+                    // Add selected class to parent row
+                    this.closest('tr').classList.add('selected');
+                });
+            });
+            
+            // Confirmation dialog for delete buttons
+            document.querySelectorAll('.btn-danger').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    if (!confirm('确定要删除这个配件吗？此操作无法撤销。')) {
+                        e.preventDefault();
+                    } else {
+                        // Simulate successful deletion
+                        showToast('配件已成功删除', 'success');
+                    }
+                });
+            });
+            
+            // Loading indicator functionality
+            function showLoading() {
+                document.getElementById('loadingIndicator').style.display = 'block';
+            }
+            
+            function hideLoading() {
+                document.getElementById('loadingIndicator').style.display = 'none';
+            }
+            
+            // Next level buttons functionality
+            document.getElementById('show-level2').addEventListener('click', function() {
+                // Show loading indicator
+                showLoading();
+                
+                // Simulate loading delay
+                setTimeout(function() {
+                    hideLoading();
+                    // In a real app, this would fetch the next level data
+                    showToast('已显示二级配件', 'success');
+                }, 500);
+            });
+            
+            document.getElementById('show-level3').addEventListener('click', function() {
+                showLoading();
+                
+                setTimeout(function() {
+                    hideLoading();
+                    showToast('已显示三级配件', 'success');
+                }, 500);
+            });
+            
+            // Toast notification functionality
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            function showToast(message, type) {
+                toastMessage.textContent = message;
+                toast.className = 'toast ' + (type || '');
+                toast.classList.add('show');
+                
+                setTimeout(function() {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html> 

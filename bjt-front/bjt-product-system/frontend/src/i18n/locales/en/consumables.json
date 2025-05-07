@@ -1,0 +1,80 @@
+{
+  "title": "Consumable Products",
+  "subtitle": "BJT Bubble Films, Cushioning Bags and Other Products",
+  "filters": {
+    "machineModel": "Machine Model",
+    "units": "Units",
+    "metric": "Metric",
+    "imperial": "Imperial",
+    "shape": "Shape",
+    "material": "Material",
+    "dimensions": {
+      "thickness": "Thickness",
+      "weight": "Weight",
+      "width": "Width",
+      "length": "Length"
+    },
+    "reset": "Reset",
+    "apply": "Apply Filters",
+    "modelUsageGuide": "Model Usage Guide",
+    "modelUsagePrompt": "Please select a specific machine model to view the corresponding usage guide.",
+    "modelUsageNote": "This exploded view shows how consumables are used with the selected {{model}} model."
+  },
+  "compatibility": {
+    "title": "Machine Compatibility Information",
+    "models": {
+      "la-e4s": "Only supports standard bubble film materials",
+      "mex-10-20": "Supports all series materials with specific requirements for different specifications",
+      "lp-v1": "Supports all materials and specifications"
+    }
+  },
+  "table": {
+    "image": "Image",
+    "productCode": "Product Code",
+    "specifications": "Specifications",
+    "price": "Price",
+    "inventory": "Inventory",
+    "actions": "Actions",
+    "specs": {
+      "material": "Material",
+      "shape": "Shape",
+      "thickness": "Thickness",
+      "width": "Width",
+      "length": "Length",
+      "rollLength": "Roll Length",
+      "compatibility": "Compatibility"
+    }
+  },
+  "actions": {
+    "addToCart": "Add to Cart",
+    "viewDetails": "View Details",
+    "close": "Close"
+  },
+  "pricing": {
+    "per": "per item",
+    "rangePricing": "Range pricing"
+  },
+  "inventory": {
+    "inStock": "In Stock",
+    "lowStock": "Low Stock",
+    "outOfStock": "Out of Stock",
+    "count": "Inventory: {{count}}"
+  },
+  "cart": {
+    "title": "Cart",
+    "added": "Added to cart",
+    "total": "Total",
+    "checkout": "Checkout",
+    "items": "Items",
+    "empty": "Your cart is empty",
+    "continue": "Continue Shopping"
+  },
+  "loading": "Loading consumables data...",
+  "error": {
+    "title": "Error",
+    "retry": "Retry",
+    "failedToLoad": "Failed to load consumables data",
+    "systemError": "System error, please try again later"
+  },
+  "quantity": "Quantity"
+} 

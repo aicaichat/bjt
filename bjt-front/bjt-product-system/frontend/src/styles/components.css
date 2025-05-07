@@ -1,0 +1,491 @@
+/* ====================================================================
+ * 组件样式库
+ * 为产品管理系统提供一致的、可重用的组件样式
+ * ==================================================================== */
+
+/* 导航栏 */
+.navbar {
+  @apply bg-white border-b border-gray-200 py-2 px-4 flex items-center justify-between;
+  box-shadow: var(--shadow-sm);
+}
+
+.navbar-brand {
+  @apply flex items-center;
+}
+
+.navbar-logo {
+  @apply h-10 mr-2;
+}
+
+.navbar-menu {
+  @apply hidden md:flex items-center space-x-1;
+}
+
+.navbar-item {
+  @apply px-3 py-2 rounded-md text-gray-600 hover:text-primary hover:bg-primary-bg transition-colors;
+}
+
+.navbar-item.active {
+  @apply bg-primary-bg text-primary font-medium;
+}
+
+.navbar-dropdown {
+  @apply relative;
+}
+
+.dropdown-menu {
+  @apply absolute top-full right-0 mt-1 py-2 bg-white rounded-md shadow-lg border border-gray-200 min-w-[200px] z-dropdown;
+  transform-origin: top right;
+  animation: dropdown-open 0.2s ease;
+}
+
+@keyframes dropdown-open {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.dropdown-item {
+  @apply block w-full text-left px-4 py-2 text-gray-600 hover:bg-primary-bg hover:text-primary;
+}
+
+/* 卡片组件 */
+.card {
+  @apply bg-white rounded-lg border border-gray-200 overflow-hidden;
+  box-shadow: var(--shadow-md);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.card-hover:hover {
+  @apply transform -translate-y-1;
+  box-shadow: var(--shadow-hover);
+}
+
+.card-header {
+  @apply px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50;
+}
+
+.card-title {
+  @apply text-xl font-semibold text-primary;
+}
+
+.card-subtitle {
+  @apply text-sm text-gray-600 mt-1;
+}
+
+.card-body {
+  @apply p-6;
+}
+
+.card-footer {
+  @apply px-6 py-4 border-t border-gray-200 bg-gray-50;
+}
+
+/* 按钮组件 */
+.btn {
+  @apply inline-flex items-center justify-center px-4 py-2 rounded-md font-medium text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors;
+}
+
+.btn-primary {
+  @apply bg-primary text-white hover:bg-primary-dark focus:ring-primary;
+}
+
+.btn-secondary {
+  @apply bg-secondary text-white hover:bg-secondary-dark focus:ring-secondary;
+}
+
+.btn-accent {
+  @apply bg-accent text-white hover:bg-accent-dark focus:ring-accent;
+}
+
+.btn-outline {
+  @apply border border-gray-300 bg-white text-primary hover:bg-gray-50 focus:ring-primary;
+}
+
+.btn-outline-primary {
+  @apply border border-primary text-primary hover:bg-primary-bg focus:ring-primary;
+}
+
+.btn-link {
+  @apply text-primary underline hover:text-primary-dark focus:ring-0;
+}
+
+.btn-sm {
+  @apply px-3 py-1 text-xs;
+}
+
+.btn-lg {
+  @apply px-5 py-3 text-base;
+}
+
+.btn-icon {
+  @apply p-2 rounded-full;
+}
+
+.btn-block {
+  @apply w-full;
+}
+
+/* 表单组件 */
+.form-group {
+  @apply mb-4;
+}
+
+.form-label {
+  @apply block text-sm font-medium text-primary mb-1;
+}
+
+.form-control {
+  @apply block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white text-gray-900;
+  @apply focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary;
+  @apply placeholder:text-gray-400;
+}
+
+.form-helper {
+  @apply mt-1 text-sm text-gray-600;
+}
+
+.form-error {
+  @apply mt-1 text-sm text-error;
+}
+
+/* 选择框 */
+.select-wrapper {
+  @apply relative;
+}
+
+.select-wrapper::after {
+  content: '';
+  @apply absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--text-secondary);
+}
+
+.select-control {
+  @apply appearance-none block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 pr-8 bg-white text-gray-900;
+  @apply focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary;
+}
+
+/* 复选框和单选框 */
+.form-checkbox, .form-radio {
+  @apply rounded border-gray-300 text-primary;
+}
+
+.form-radio {
+  @apply rounded-full;
+}
+
+/* 表格组件 */
+.table-container {
+  @apply w-full overflow-x-auto;
+}
+
+.table {
+  @apply min-w-full divide-y divide-gray-200;
+}
+
+.table-header {
+  @apply bg-gray-50;
+}
+
+.table-row {
+  @apply bg-white;
+}
+
+.table-row:hover {
+  @apply bg-primary-bg;
+}
+
+.table-cell {
+  @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
+}
+
+.table-cell-head {
+  @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+}
+
+/* 徽章 */
+.badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.badge-primary {
+  @apply bg-primary-bg text-primary;
+}
+
+.badge-success {
+  @apply bg-green-100 text-green-800;
+}
+
+.badge-error {
+  @apply bg-red-100 text-red-800;
+}
+
+.badge-warning {
+  @apply bg-yellow-100 text-yellow-800;
+}
+
+.badge-info {
+  @apply bg-blue-100 text-blue-800;
+}
+
+/* 提示信息、通知 */
+.alert {
+  @apply p-4 rounded-md mb-4 border-l-4;
+}
+
+.alert-info {
+  @apply bg-blue-50 border-info text-blue-700;
+}
+
+.alert-success {
+  @apply bg-green-50 border-success text-green-700;
+}
+
+.alert-warning {
+  @apply bg-yellow-50 border-warning text-yellow-700;
+}
+
+.alert-error {
+  @apply bg-red-50 border-error text-red-700;
+}
+
+/* 标签页 */
+.tabs {
+  @apply flex border-b border-gray-200;
+}
+
+.tab {
+  @apply py-2 px-4 text-gray-600 border-b-2 border-transparent cursor-pointer hover:text-primary hover:border-primary;
+  @apply transition-colors;
+}
+
+.tab.active {
+  @apply border-primary text-primary font-medium;
+}
+
+/* 产品组件 */
+.product-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+}
+
+.product-card {
+  @apply rounded-lg overflow-hidden border border-gray-200 bg-white transition-shadow;
+}
+
+.product-image {
+  @apply w-full h-48 object-cover;
+}
+
+.product-body {
+  @apply p-4;
+}
+
+.product-title {
+  @apply text-lg font-medium text-gray-900 mb-1;
+}
+
+.product-description {
+  @apply text-sm text-gray-600 mb-3;
+}
+
+.product-price {
+  @apply text-lg font-bold text-primary mb-2;
+}
+
+.product-meta {
+  @apply flex justify-between items-center;
+}
+
+.product-stock {
+  @apply text-xs font-medium rounded-full px-2 py-1;
+}
+
+.stock-available {
+  @apply bg-green-100 text-green-800;
+}
+
+.stock-low {
+  @apply bg-yellow-100 text-yellow-800;
+}
+
+.stock-unavailable {
+  @apply bg-red-100 text-red-800;
+}
+
+/* 购物车组件 */
+.cart-item {
+  @apply flex items-center p-4 border border-gray-200 rounded-md mb-3 bg-white;
+}
+
+.cart-item-image {
+  @apply w-16 h-16 object-cover rounded mr-4;
+}
+
+.cart-item-details {
+  @apply flex-grow;
+}
+
+.cart-item-title {
+  @apply text-base font-medium text-gray-900 mb-1;
+}
+
+.cart-item-price {
+  @apply text-primary font-bold;
+}
+
+.cart-item-quantity {
+  @apply flex items-center mt-2;
+}
+
+.quantity-btn {
+  @apply w-8 h-8 flex items-center justify-center bg-gray-100 rounded-md text-gray-600;
+  @apply hover:bg-gray-200 transition-colors;
+}
+
+.quantity-input {
+  @apply w-12 h-8 text-center mx-2 border border-gray-300 rounded-md;
+}
+
+.cart-item-actions {
+  @apply ml-4;
+}
+
+.cart-summary {
+  @apply p-4 border border-gray-200 rounded-md bg-gray-50;
+}
+
+.cart-total {
+  @apply flex justify-between mb-4 pb-4 border-b border-gray-200;
+  @apply text-lg font-bold;
+}
+
+/* 响应式工具类 */
+@media (max-width: 640px) {
+  .hidden-sm {
+    @apply hidden;
+  }
+}
+
+@media (max-width: 768px) {
+  .hidden-md {
+    @apply hidden;
+  }
+}
+
+@media (max-width: 1024px) {
+  .hidden-lg {
+    @apply hidden;
+  }
+}
+
+/* 加载和骨架屏 */
+.skeleton {
+  @apply bg-gray-200 animate-pulse rounded;
+}
+
+.skeleton-text {
+  @apply h-4 w-full mb-2;
+}
+
+.skeleton-circle {
+  @apply rounded-full;
+}
+
+/* 加载指示器 */
+.loader {
+  @apply relative w-8 h-8;
+}
+
+.loader:before, .loader:after {
+  content: '';
+  @apply absolute top-0 left-0 w-full h-full rounded-full;
+}
+
+.loader:before {
+  @apply bg-gray-200;
+}
+
+.loader:after {
+  @apply bg-primary;
+  animation: loader-animation 1s ease-in-out infinite;
+}
+
+@keyframes loader-animation {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+/* 模态框 */
+.modal-backdrop {
+  @apply fixed inset-0 bg-black bg-opacity-50 z-modal-backdrop;
+}
+
+.modal {
+  @apply fixed inset-0 flex items-center justify-center z-modal p-4;
+}
+
+.modal-content {
+  @apply bg-white rounded-lg shadow-xl w-full max-w-md mx-auto;
+  animation: modal-open 0.3s ease;
+}
+
+@keyframes modal-open {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-header {
+  @apply px-6 py-4 border-b border-gray-200 flex justify-between items-center;
+}
+
+.modal-title {
+  @apply text-xl font-semibold text-gray-900;
+}
+
+.modal-close {
+  @apply text-gray-500 hover:text-gray-700 text-2xl font-bold;
+}
+
+.modal-body {
+  @apply px-6 py-4;
+}
+
+.modal-footer {
+  @apply px-6 py-4 border-t border-gray-200 flex justify-end space-x-2;
+}
+
+/* 工具提示 */
+.tooltip {
+  @apply relative inline-block cursor-pointer;
+}
+
+.tooltip-content {
+  @apply absolute invisible opacity-0 bg-gray-900 text-white text-xs rounded py-1 px-2 z-tooltip;
+  @apply -translate-y-full top-0 left-1/2 transform -translate-x-1/2 mb-2;
+  @apply transition-opacity duration-300;
+}
+
+.tooltip:hover .tooltip-content {
+  @apply visible opacity-100;
+} 

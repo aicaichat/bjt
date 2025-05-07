@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT Product Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #f7f9fc;
+            color: #333;
+        }
+        .header {
+            background-color: #fff;
+            padding: 15px 25px;
+            border-bottom: 1px solid #e1e5eb;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: relative;
+            z-index: 10;
+        }
+        .logo {
+            height: 45px;
+        }
+        .container {
+            display: flex;
+            flex: 1;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        .sidebar {
+            width: 220px;
+            background-color: #1a3c70;
+            color: #fff;
+            padding: 15px 0;
+            overflow-y: auto;
+        }
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 8px;
+            margin: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow-y: auto;
+        }
+        .menu-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            font-size: 14px;
+        }
+        .menu-item:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        .menu-item.active {
+            background-color: rgba(255,255,255,0.15);
+            color: #fff;
+            border-left-color: #4dabf7;
+        }
+        .submenu {
+            margin-left: 0;
+            display: none;
+            background-color: rgba(0,0,0,0.15);
+        }
+        .submenu.active {
+            display: block;
+        }
+        .submenu .menu-item {
+            padding-left: 40px;
+            font-size: 13px;
+        }
+        .expandable::after {
+            content: "▶";
+            font-size: 10px;
+            margin-left: auto;
+            transition: transform 0.2s;
+        }
+        .expandable.active::after {
+            content: "▼";
+        }
+        h2 {
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: #1a3c70;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e1e5eb;
+        }
+        .form-group {
+            margin-bottom: 24px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #4dabf7;
+            box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.2);
+        }
+        textarea.form-control {
+            height: 120px;
+            resize: vertical;
+        }
+        .btn {
+            padding: 10px 18px;
+            background-color: #1a3c70;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .btn:hover {
+            background-color: #15305b;
+        }
+        .btn:active {
+            transform: translateY(1px);
+        }
+        .language-label {
+            display: inline-block;
+            width: 50px;
+            text-align: center;
+            background-color: #e9ecef;
+            padding: 3px 8px;
+            border-radius: 3px;
+            margin-left: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        /* Language tabs styles */
+        .language-tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 15px;
+        }
+        
+        .language-tab {
+            padding: 8px 20px;
+            cursor: pointer;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 4px 4px 0 0;
+            margin-right: 5px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6c757d;
+            position: relative;
+            bottom: -1px;
+        }
+        
+        .language-tab.active {
+            background-color: #fff;
+            color: #1a3c70;
+            border-bottom: 1px solid #fff;
+            font-weight: 600;
+        }
+        
+        .language-content {
+            display: none;
+            padding: 15px 0;
+        }
+        
+        .language-content.active {
+            display: block;
+        }
+        .image-upload-area {
+            border: 2px dashed #ced4da;
+            padding: 30px;
+            text-align: center;
+            background-color: #f8f9fa;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            transition: border-color 0.2s;
+            position: relative;
+        }
+        .image-upload-area:hover {
+            border-color: #4dabf7;
+        }
+        .image-upload-area.drag-over {
+            border-color: #4dabf7;
+            background-color: rgba(77, 171, 247, 0.05);
+        }
+        .notice {
+            background-color: #fff8f8;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-left: 4px solid #ff6b6b;
+            border-radius: 0 4px 4px 0;
+            font-size: 14px;
+            color: #555;
+        }
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .form-row .btn {
+            flex: 0 0 auto;
+        }
+        /* Icons for menu items */
+        .menu-icon {
+            margin-right: 10px;
+            opacity: 0.8;
+            font-size: 16px;
+        }
+        /* Progress bar styles */
+        .progress-container {
+            margin-top: 15px;
+            width: 100%;
+            height: 20px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            display: none;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #4dabf7;
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #333;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .toast.success {
+            background-color: #28a745;
+        }
+        .toast.error {
+            background-color: #dc3545;
+        }
+        .toast.show {
+            display: block;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="logo-1.webp" alt="BJT Logo" class="logo">
+        <div style="margin-left: auto; display: flex; gap: 20px; align-items: center;">
+            <a href="#" style="color: #1a3c70; text-decoration: none; font-size: 14px; font-weight: 500;">Documentation</a>
+            <a href="#" style="color: #1a3c70; text-decoration: none; font-size: 14px; font-weight: 500;">Support</a>
+            <div style="display: flex; align-items: center; border: 1px solid #e1e5eb; border-radius: 4px; padding: 5px 10px;">
+                <span style="font-size: 13px; margin-right: 5px;">English</span>
+                <span style="font-size: 10px;">▼</span>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="sidebar">
+            <a href="#" class="menu-item">
+                <span class="menu-icon">🏠</span>
+                <span>首页</span>
+            </a>
+            <a href="#" class="menu-item expandable active">
+                <span class="menu-icon">📄</span>
+                <span>页面编辑</span>
+            </a>
+            <div class="submenu active">
+                <a href="#" class="menu-item active" data-product-line="1">产品线1</a>
+                <a href="#" class="menu-item" data-product-line="2">产品线2</a>
+                <a href="#" class="menu-item" data-product-line="3">产品线3</a>
+                <a href="#" class="menu-item" data-product-line="4">产品线4</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">🛋️</span>
+                <span>气垫机</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">主机</a>
+                <a href="#" class="menu-item">配件</a>
+                <a href="#" class="menu-item">耗材</a>
+                <a href="#" class="menu-item">备件</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">📃</span>
+                <span>纸机</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">主机</a>
+                <a href="#" class="menu-item">配件</a>
+                <a href="#" class="menu-item">耗材</a>
+                <a href="#" class="menu-item">备件</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">🧵</span>
+                <span>胶带机</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">主机</a>
+                <a href="#" class="menu-item">配件</a>
+                <a href="#" class="menu-item">耗材</a>
+                <a href="#" class="menu-item">备件</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">💼</span>
+                <span>气柱袋</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">耗材</a>
+            </div>
+            <a href="#" class="menu-item">
+                <span class="menu-icon">👤</span>
+                <span>用户管理</span>
+            </a>
+            <a href="#" class="menu-item">
+                <span class="menu-icon">⚙️</span>
+                <span>系统设置</span>
+            </a>
+        </div>
+        <div class="main-content">
+            <h2>产品线1</h2>
+            <div class="notice">
+                <i style="margin-right: 8px; color: #ff6b6b;">ℹ️</i> 除图片外，多语言部分类同，不再重复罗列
+            </div>
+            <form id="productForm">
+                <div class="form-group">
+                    <label>标题：</label>
+                    <div class="language-tabs">
+                        <div class="language-tab active" data-lang="cn">中文</div>
+                        <div class="language-tab" data-lang="en">English</div>
+                    </div>
+                    <div class="language-content active" data-lang="cn">
+                        <input type="text" class="form-control" value="缓冲气垫机系统" name="title_cn">
+                    </div>
+                    <div class="language-content" data-lang="en">
+                        <input type="text" class="form-control" value="Air Cushioning System" name="title_en">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>说明：</label>
+                    <div class="language-tabs">
+                        <div class="language-tab active" data-lang="cn">中文</div>
+                        <div class="language-tab" data-lang="en">English</div>
+                    </div>
+                    <div class="language-content active" data-lang="cn">
+                        <div style="border: 1px solid #ced4da; border-radius: 4px; overflow: hidden;">
+                            <div style="padding: 8px 12px; background-color: #f8f9fa; border-bottom: 1px solid #ced4da; display: flex; gap: 10px;">
+                                <button type="button" style="background: none; border: none; font-weight: bold; cursor: pointer;">B</button>
+                                <button type="button" style="background: none; border: none; font-style: italic; cursor: pointer;">I</button>
+                                <button type="button" style="background: none; border: none; text-decoration: underline; cursor: pointer;">U</button>
+                                <span style="border-right: 1px solid #ced4da; margin: 0 5px;"></span>
+                                <button type="button" style="background: none; border: none; cursor: pointer;">⌨️</button>
+                            </div>
+                            <textarea class="form-control" style="border: none; border-radius: 0;" name="description_cn">产品介绍
+这是中文描述内容</textarea>
+                        </div>
+                    </div>
+                    <div class="language-content" data-lang="en">
+                        <div style="border: 1px solid #ced4da; border-radius: 4px; overflow: hidden;">
+                            <div style="padding: 8px 12px; background-color: #f8f9fa; border-bottom: 1px solid #ced4da; display: flex; gap: 10px;">
+                                <button type="button" style="background: none; border: none; font-weight: bold; cursor: pointer;">B</button>
+                                <button type="button" style="background: none; border: none; font-style: italic; cursor: pointer;">I</button>
+                                <button type="button" style="background: none; border: none; text-decoration: underline; cursor: pointer;">U</button>
+                                <span style="border-right: 1px solid #ced4da; margin: 0 5px;"></span>
+                                <button type="button" style="background: none; border: none; cursor: pointer;">⌨️</button>
+                            </div>
+                            <textarea class="form-control" style="border: none; border-radius: 0;" name="description_en">Introduction
+xxxxxxxxxxxx</textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>子项1：</label>
+                    <div class="language-tabs">
+                        <div class="language-tab active" data-lang="cn">中文</div>
+                        <div class="language-tab" data-lang="en">English</div>
+                    </div>
+                    <div class="language-content active" data-lang="cn">
+                        <input type="text" class="form-control" value="气垫机与配件" name="subitem1_cn">
+                    </div>
+                    <div class="language-content" data-lang="en">
+                        <input type="text" class="form-control" value="Air Cushion Machine & Accessories" name="subitem1_en">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>子项2：</label>
+                    <div class="language-tabs">
+                        <div class="language-tab active" data-lang="cn">中文</div>
+                        <div class="language-tab" data-lang="en">English</div>
+                    </div>
+                    <div class="language-content active" data-lang="cn">
+                        <input type="text" class="form-control" value="膜材选项" name="subitem2_cn">
+                    </div>
+                    <div class="language-content" data-lang="en">
+                        <input type="text" class="form-control" value="Film Option" name="subitem2_en">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>子项3：</label>
+                    <div class="language-tabs">
+                        <div class="language-tab active" data-lang="cn">中文</div>
+                        <div class="language-tab" data-lang="en">English</div>
+                    </div>
+                    <div class="language-content active" data-lang="cn">
+                        <input type="text" class="form-control" value="技术规格" name="subitem3_cn">
+                    </div>
+                    <div class="language-content" data-lang="en">
+                        <input type="text" class="form-control" value="Technical Specifications" name="subitem3_en">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>图片：</label>
+                    <div class="image-upload-area" id="dropArea">
+                        <img id="previewImage" src="/api/placeholder/320/200" alt="placeholder" />
+                        <div style="margin-top: 15px; color: #6c757d; font-size: 14px;">
+                            支持 .jpg, .png, .gif 格式，最大 5MB
+                        </div>
+                        <input type="file" id="fileInput" style="display: none;" accept=".jpg, .jpeg, .png, .gif">
+                        <div class="progress-container" id="progressContainer">
+                            <div class="progress-bar" id="progressBar"></div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <button type="button" class="btn" style="background-color: #6c757d;" id="selectFileBtn">选择</button>
+                        <button type="button" class="btn" id="uploadBtn">提交</button>
+                    </div>
+                </div>
+                <div style="margin-top: 30px; border-top: 1px solid #e1e5eb; padding-top: 20px; display: flex; justify-content: flex-end; gap: 15px;">
+                    <button type="button" class="btn" style="background-color: #6c757d;" id="cancelBtn">取消</button>
+                    <button type="button" class="btn" id="saveBtn">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Toast notification -->
+    <div class="toast" id="toast">
+        <span id="toastMessage">操作成功</span>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Menu toggle functionality
+            document.querySelectorAll('.expandable').forEach(item => {
+                item.addEventListener('click', event => {
+                    const submenu = item.nextElementSibling;
+                    if (submenu && submenu.classList.contains('submenu')) {
+                        submenu.classList.toggle('active');
+                        item.classList.toggle('active');
+                    }
+                    event.preventDefault();
+                });
+            });
+
+            // Product line data storage
+            const productLineData = {
+                "1": {
+                    title_cn: '缓冲气垫机系统',
+                    title_en: 'Air Cushioning System',
+                    description: 'Introduction\nxxxxxxxxxxxx',
+                    subitem1_cn: '气垫机与配件',
+                    subitem1_en: 'Air Cushion Machine & Accessories',
+                    subitem2_cn: '膜材选项',
+                    subitem2_en: 'Film Option',
+                    subitem3_cn: '技术规格',
+                    subitem3_en: 'Technical Specifications',
+                    image: '/api/placeholder/320/200'
+                },
+                "2": {
+                    title_cn: '包装纸机系统',
+                    title_en: 'Paper Packaging System',
+                    description: 'Introduction to Paper Packaging\nThe paper packaging system offers sustainable solutions.',
+                    subitem1_cn: '纸机主机',
+                    subitem1_en: 'Paper Machine & Components',
+                    subitem2_cn: '纸张选项',
+                    subitem2_en: 'Paper Options',
+                    subitem3_cn: '技术参数',
+                    subitem3_en: 'Technical Parameters',
+                    image: '/api/placeholder/320/200'
+                },
+                "3": {
+                    title_cn: '胶带封箱机系统',
+                    title_en: 'Tape Sealing System',
+                    description: 'Introduction to Tape Sealing\nAutomated tape sealing for high-volume operations.',
+                    subitem1_cn: '胶带机设备',
+                    subitem1_en: 'Tape Machine Equipment',
+                    subitem2_cn: '胶带材料',
+                    subitem2_en: 'Tape Materials',
+                    subitem3_cn: '技术规格',
+                    subitem3_en: 'Technical Specifications',
+                    image: '/api/placeholder/320/200'
+                },
+                "4": {
+                    title_cn: '气柱袋包装系统',
+                    title_en: 'Air Column Bag System',
+                    description: 'Introduction to Air Column\nShock-absorbent air column packaging for fragile items.',
+                    subitem1_cn: '气柱袋生产设备',
+                    subitem1_en: 'Air Column Production Equipment',
+                    subitem2_cn: '气柱袋规格',
+                    subitem2_en: 'Air Column Specifications',
+                    subitem3_cn: '性能参数',
+                    subitem3_en: 'Performance Parameters',
+                    image: '/api/placeholder/320/200'
+                }
+            };
+
+            // Product line switching
+            const productLineItems = document.querySelectorAll('.submenu a.menu-item[data-product-line]');
+            productLineItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active class from all product line items
+                    productLineItems.forEach(pl => pl.classList.remove('active'));
+                    
+                    // Add active class to clicked item
+                    this.classList.add('active');
+                    
+                    // Get product line number
+                    const productLineNum = this.getAttribute('data-product-line');
+                    
+                    // Update content title
+                    document.querySelector('.main-content h2').textContent = '产品线' + productLineNum;
+                    
+                    // Load data for this product line
+                    loadProductLineData(productLineNum);
+                });
+            });
+
+            // Function to load product line data into the form
+            function loadProductLineData(lineNum) {
+                const data = productLineData[lineNum];
+                if (!data) return;
+                
+                const form = document.getElementById('productForm');
+                
+                // Update form fields
+                form.elements['title_cn'].value = data.title_cn;
+                form.elements['title_en'].value = data.title_en;
+                form.elements['description_cn'].value = data.description.split('\n')[0];
+                form.elements['description_en'].value = data.description.split('\n')[1];
+                form.elements['subitem1_cn'].value = data.subitem1_cn;
+                form.elements['subitem1_en'].value = data.subitem1_en;
+                form.elements['subitem2_cn'].value = data.subitem2_cn;
+                form.elements['subitem2_en'].value = data.subitem2_en;
+                form.elements['subitem3_cn'].value = data.subitem3_cn;
+                form.elements['subitem3_en'].value = data.subitem3_en;
+                
+                // Update preview image
+                document.getElementById('previewImage').src = data.image;
+            }
+
+            // Image upload functionality
+            const dropArea = document.getElementById('dropArea');
+            const fileInput = document.getElementById('fileInput');
+            const selectFileBtn = document.getElementById('selectFileBtn');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const previewImage = document.getElementById('previewImage');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            
+            // Handle file selection button click
+            selectFileBtn.addEventListener('click', function() {
+                fileInput.click();
+            });
+            
+            // Handle file selection change
+            fileInput.addEventListener('change', function() {
+                handleFiles(this.files);
+            });
+            
+            // Prevent default behavior for drag events
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            // Handle drag enter/over events
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, highlight, false);
+            });
+            
+            // Handle drag leave/drop events
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                dropArea.classList.add('drag-over');
+            }
+            
+            function unhighlight() {
+                dropArea.classList.remove('drag-over');
+            }
+            
+            // Language tab functionality
+            document.querySelectorAll('.language-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Get the parent form group
+                    const formGroup = this.closest('.form-group');
+                    
+                    // Get the language
+                    const lang = this.getAttribute('data-lang');
+                    
+                    // Deactivate all tabs in this group
+                    formGroup.querySelectorAll('.language-tab').forEach(t => {
+                        t.classList.remove('active');
+                    });
+                    
+                    // Deactivate all content in this group
+                    formGroup.querySelectorAll('.language-content').forEach(c => {
+                        c.classList.remove('active');
+                    });
+                    
+                    // Activate clicked tab
+                    this.classList.add('active');
+                    
+                    // Activate corresponding content
+                    formGroup.querySelector(`.language-content[data-lang="${lang}"]`).classList.add('active');
+                });
+            });
+            
+            // Handle dropped files
+            dropArea.addEventListener('drop', function(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                handleFiles(files);
+            });
+            
+            // Process files for preview
+            function handleFiles(files) {
+                if (files.length === 0) return;
+                
+                const file = files[0];
+                
+                // Validate file type
+                const fileType = file.type;
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                
+                if (!validTypes.includes(fileType)) {
+                    showToast('错误: 请上传 JPG, PNG 或 GIF 格式的图片', 'error');
+                    return;
+                }
+                
+                // Validate file size (5MB max)
+                if (file.size > 5 * 1024 * 1024) {
+                    showToast('错误: 图片大小不能超过 5MB', 'error');
+                    return;
+                }
+                
+                // Preview image
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+            
+            // Handle upload button click
+            uploadBtn.addEventListener('click', function() {
+                if (!fileInput.files.length) {
+                    showToast('请先选择一个图片文件', 'error');
+                    return;
+                }
+                
+                uploadFile(fileInput.files[0]);
+            });
+            
+            // Upload file with progress simulation
+            function uploadFile(file) {
+                // Show progress bar
+                progressContainer.style.display = 'block';
+                progressBar.style.width = '0%';
+                
+                // Simulate upload progress (in a real app, this would be an actual upload)
+                let progress = 0;
+                const interval = setInterval(function() {
+                    progress += 5;
+                    progressBar.style.width = progress + '%';
+                    
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        
+                        // Hide progress bar after a delay
+                        setTimeout(function() {
+                            progressContainer.style.display = 'none';
+                            showToast('图片上传成功！', 'success');
+                            
+                            // Update the data model with the new image
+                            const activeProductLine = document.querySelector('.submenu a.menu-item.active').getAttribute('data-product-line');
+                            if (activeProductLine) {
+                                productLineData[activeProductLine].image = previewImage.src;
+                            }
+                        }, 500);
+                    }
+                }, 100);
+            }
+            
+            // Save button functionality
+            document.getElementById('saveBtn').addEventListener('click', function() {
+                // Get the active product line
+                const activeProductLine = document.querySelector('.submenu a.menu-item.active').getAttribute('data-product-line');
+                if (!activeProductLine) return;
+                
+                // Get form data
+                const form = document.getElementById('productForm');
+                
+                // Update data model
+                productLineData[activeProductLine] = {
+                    title_cn: form.elements['title_cn'].value,
+                    title_en: form.elements['title_en'].value,
+                    description: form.elements['description_cn'].value + '\n' + form.elements['description_en'].value,
+                    subitem1_cn: form.elements['subitem1_cn'].value,
+                    subitem1_en: form.elements['subitem1_en'].value,
+                    subitem2_cn: form.elements['subitem2_cn'].value,
+                    subitem2_en: form.elements['subitem2_en'].value,
+                    subitem3_cn: form.elements['subitem3_cn'].value,
+                    subitem3_en: form.elements['subitem3_en'].value,
+                    image: document.getElementById('previewImage').src
+                };
+                
+                // Show success message
+                showToast('产品线信息保存成功！', 'success');
+            });
+            
+            // Cancel button functionality
+            document.getElementById('cancelBtn').addEventListener('click', function() {
+                // Get the active product line
+                const activeProductLine = document.querySelector('.submenu a.menu-item.active').getAttribute('data-product-line');
+                if (!activeProductLine) return;
+                
+                // Reset form to saved data
+                loadProductLineData(activeProductLine);
+                
+                showToast('已取消编辑，恢复原始数据', 'error');
+            });
+            
+            // Toast notification functionality
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            function showToast(message, type) {
+                toastMessage.textContent = message;
+                toast.className = 'toast ' + (type || '');
+                toast.classList.add('show');
+                
+                setTimeout(function() {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT 耗材管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #f7f9fc;
+            color: #333;
+        }
+        .header {
+            background-color: #fff;
+            padding: 15px 25px;
+            border-bottom: 1px solid #e1e5eb;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: relative;
+            z-index: 10;
+        }
+        .logo {
+            height: 45px;
+        }
+        .container {
+            display: flex;
+            flex: 1;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        .sidebar {
+            width: 220px;
+            background-color: #1a3c70;
+            color: #fff;
+            padding: 15px 0;
+            overflow-y: auto;
+        }
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 8px;
+            margin: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow-y: auto;
+        }
+        .menu-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            font-size: 14px;
+        }
+        .menu-item:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        .menu-item.active {
+            background-color: rgba(255,255,255,0.15);
+            color: #fff;
+            border-left-color: #4dabf7;
+        }
+        .submenu {
+            margin-left: 0;
+            display: none;
+            background-color: rgba(0,0,0,0.15);
+        }
+        .submenu.active {
+            display: block;
+        }
+        .submenu .menu-item {
+            padding-left: 40px;
+            font-size: 13px;
+        }
+        .expandable::after {
+            content: "▶";
+            font-size: 10px;
+            margin-left: auto;
+            transition: transform 0.2s;
+        }
+        .expandable.active::after {
+            content: "▼";
+        }
+        h2 {
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: #1a3c70;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e1e5eb;
+        }
+        .section {
+            margin-bottom: 30px;
+            border: 1px solid #e1e5eb;
+            border-radius: 4px;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e1e5eb;
+        }
+        .section-header h3 {
+            margin: 0;
+            color: #1a3c70;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .filter-form {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-bottom: 1px solid #e1e5eb;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .form-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .form-group label {
+            font-size: 14px;
+            color: #495057;
+            font-weight: 500;
+        }
+        .form-group input {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 200px;
+        }
+        .btn {
+            padding: 8px 16px;
+            background-color: #1a3c70;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .btn:hover {
+            background-color: #15305b;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table th {
+            background-color: #f8f9fa;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 1px solid #e1e5eb;
+        }
+        table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e1e5eb;
+            vertical-align: middle;
+        }
+        table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        table tr:hover td {
+            background-color: #f1f8ff;
+        }
+        .actions {
+            display: flex;
+            gap: 5px;
+        }
+        .spec-tables {
+            margin-top: 15px;
+        }
+        .spec-table {
+            margin-bottom: 20px;
+        }
+        .spec-table h4 {
+            margin-bottom: 10px;
+            color: #1a3c70;
+            font-weight: 500;
+            padding-left: 15px;
+        }
+        .menu-icon {
+            margin-right: 10px;
+            opacity: 0.8;
+            font-size: 16px;
+        }
+        .note {
+            background-color: #fff8e1;
+            border-left: 4px solid #ffc107;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .btn-group {
+            position: relative;
+            display: inline-flex;
+            vertical-align: middle;
+        }
+        .dropdown-toggle {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            z-index: 1000;
+            display: none;
+            min-width: 160px;
+            padding: 5px 0;
+            margin: 2px 0 0;
+            font-size: 14px;
+            color: #212529;
+            text-align: left;
+            list-style: none;
+            background-color: #fff;
+            background-clip: padding-box;
+            border: 1px solid rgba(0,0,0,.15);
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,.1);
+        }
+        .dropdown-menu.show {
+            display: block;
+        }
+        .dropdown-item {
+            display: block;
+            width: 100%;
+            padding: 8px 16px;
+            clear: both;
+            font-weight: 400;
+            color: #212529;
+            text-align: inherit;
+            text-decoration: none;
+            white-space: nowrap;
+            background-color: transparent;
+            border: 0;
+            cursor: pointer;
+        }
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+        .status-icon {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-icon.status-active {
+            background-color: #28a745;
+        }
+        .status-icon.status-inactive {
+            background-color: #dc3545;
+        }
+        .btn-success {
+            background-color: #28a745;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+        .btn-info {
+            background-color: #17a2b8;
+        }
+        .btn-info:hover {
+            background-color: #138496;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #333;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .toast.success {
+            background-color: #28a745;
+        }
+        .toast.error {
+            background-color: #dc3545;
+        }
+        .toast.info {
+            background-color: #17a2b8;
+        }
+        .toast.show {
+            display: block;
+            opacity: 1;
+        }
+        .shape-image {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+            border: 1px solid #e1e5eb;
+            border-radius: 4px;
+            background-color: #fff;
+            padding: 5px;
+        }
+        .image-upload {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        .image-upload input[type="file"] {
+            display: none;
+        }
+        .image-upload label {
+            padding: 4px 8px;
+            background-color: #1a3c70;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+        .image-upload label:hover {
+            background-color: #15305b;
+        }
+        .image-preview {
+            position: relative;
+            display: inline-block;
+        }
+        .image-preview img {
+            max-width: 100px;
+            max-height: 100px;
+            object-fit: contain;
+        }
+        .image-preview .remove-image {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .image-preview:hover .remove-image {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="/api/placeholder/200/40" alt="BJT Logo" class="logo">
+        <div style="margin-left: auto; display: flex; gap: 20px; align-items: center;">
+            <a href="#" style="color: #1a3c70; text-decoration: none; font-size: 14px; font-weight: 500;">文档</a>
+            <a href="#" style="color: #1a3c70; text-decoration: none; font-size: 14px; font-weight: 500;">支持</a>
+            <div style="display: flex; align-items: center; border: 1px solid #e1e5eb; border-radius: 4px; padding: 5px 10px;">
+                <span style="font-size: 13px; margin-right: 5px;">中文</span>
+                <span style="font-size: 10px;">▼</span>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="sidebar">
+            <a href="#" class="menu-item">
+                <span class="menu-icon">🏠</span>
+                <span>首页</span>
+            </a>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">📄</span>
+                <span>页面编辑</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">产品线1</a>
+                <a href="#" class="menu-item">产品线2</a>
+                <a href="#" class="menu-item">产品线3</a>
+                <a href="#" class="menu-item">产品线4</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">🛋️</span>
+                <span>气垫机</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">主机</a>
+                <a href="#" class="menu-item">配件</a>
+                <a href="#" class="menu-item active">耗材</a>
+                <a href="#" class="menu-item">备件</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">📃</span>
+                <span>纸机</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">主机</a>
+                <a href="#" class="menu-item">配件</a>
+                <a href="#" class="menu-item">耗材</a>
+                <a href="#" class="menu-item">备件</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">🧵</span>
+                <span>胶带机</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">主机</a>
+                <a href="#" class="menu-item">配件</a>
+                <a href="#" class="menu-item">耗材</a>
+                <a href="#" class="menu-item">备件</a>
+            </div>
+            <a href="#" class="menu-item expandable">
+                <span class="menu-icon">💼</span>
+                <span>气柱袋</span>
+            </a>
+            <div class="submenu">
+                <a href="#" class="menu-item">耗材</a>
+            </div>
+            <a href="#" class="menu-item">
+                <span class="menu-icon">👤</span>
+                <span>用户管理</span>
+            </a>
+            <a href="#" class="menu-item">
+                <span class="menu-icon">⚙️</span>
+                <span>系统设置</span>
+            </a>
+        </div>
+        <div class="main-content">
+            <h2>耗材管理</h2>
+            
+            <div class="note">
+                <i style="margin-right: 8px;">ℹ️</i> 请谨慎管理耗材信息，修改后将立即在相关产品线中生效
+            </div>
+            
+            <!-- Part Number Table Section -->
+            <div class="section">
+                <div class="section-header">
+                    <h3>料号表</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="btn-group">
+                            <button class="btn btn-info dropdown-toggle" id="exportPartBtn">
+                                <span>导出</span>
+                                <span style="font-size: 10px;">▼</span>
+                            </button>
+                            <div class="dropdown-menu" id="exportPartDropdown">
+                                <a href="#" class="dropdown-item" data-format="excel">Excel</a>
+                                <a href="#" class="dropdown-item" data-format="csv">CSV</a>
+                                <a href="#" class="dropdown-item" data-format="json">JSON</a>
+                            </div>
+                        </div>
+                        <label class="btn btn-success" style="margin: 0;">
+                            <span>导入</span>
+                            <input type="file" id="importPartFile" accept=".xlsx,.xls,.csv,.json" style="display: none;">
+                        </label>
+                        <button class="btn">新增</button>
+                    </div>
+                </div>
+                <div class="filter-form">
+                    <div class="form-group">
+                        <label for="spec">规格：</label>
+                        <input type="text" id="spec" placeholder="请输入规格">
+                    </div>
+                    <div class="form-group">
+                        <label for="partNumber">料号：</label>
+                        <input type="text" id="partNumber" placeholder="请输入料号">
+                    </div>
+                    <button class="btn">筛选</button>
+                    <button class="btn btn-secondary">重置</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 60px;">No</th>
+                                <th>型号</th>
+                                <th>料号</th>
+                                <th style="width: 180px;">状态</th>
+                                <th style="width: 200px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>MEX-L-10-20-13</td>
+                                <td>13A00111</td>
+                                <td>
+                                    <span class="status-icon status-active"></span>
+                                    <span>已上架</span>
+                                </td>
+                                <td class="actions">
+                                    <button class="btn btn-sm">编辑</button>
+                                    <button class="btn btn-sm btn-warning toggle-status">下架</button>
+                                    <button class="btn btn-sm btn-danger">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>MEX-A-13-20-13</td>
+                                <td>13A00112</td>
+                                <td>
+                                    <span class="status-icon status-active"></span>
+                                    <span>已上架</span>
+                                </td>
+                                <td class="actions">
+                                    <button class="btn btn-sm">编辑</button>
+                                    <button class="btn btn-sm btn-warning toggle-status">下架</button>
+                                    <button class="btn btn-sm btn-danger">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>MEX-A-15-20-13</td>
+                                <td>13A00113</td>
+                                <td>
+                                    <span class="status-icon status-inactive"></span>
+                                    <span>已下架</span>
+                                </td>
+                                <td class="actions">
+                                    <button class="btn btn-sm">编辑</button>
+                                    <button class="btn btn-sm btn-success toggle-status">上架</button>
+                                    <button class="btn btn-sm btn-danger">删除</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Shape Table Section -->
+            <div class="section">
+                <div class="section-header">
+                    <h3>形状表</h3>
+                    <button class="btn">新增形状</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 60px;">No</th>
+                                <th>缩写</th>
+                                <th>名称</th>
+                                <th>图片1</th>
+                                <th>图片2</th>
+                                <th style="width: 150px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>MEX</td>
+                                <td>Air pillow</td>
+                                <td>
+                                    <div class="image-upload">
+                                        <div class="image-preview">
+                                            <img src="/api/placeholder/100/100" alt="Shape 1" class="shape-image">
+                                            <span class="remove-image">×</span>
+                                        </div>
+                                        <label for="image1-1">更换图片</label>
+                                        <input type="file" id="image1-1" accept="image/*">
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="image-upload">
+                                        <div class="image-preview">
+                                            <img src="/api/placeholder/100/100" alt="Shape 2" class="shape-image">
+                                            <span class="remove-image">×</span>
+                                        </div>
+                                        <label for="image2-1">更换图片</label>
+                                        <input type="file" id="image2-1" accept="image/*">
+                                    </div>
+                                </td>
+                                <td class="actions">
+                                    <button class="btn btn-sm">编辑</button>
+                                    <button class="btn btn-sm btn-danger">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>MFB</td>
+                                <td>Bubble</td>
+                                <td>
+                                    <div class="image-upload">
+                                        <div class="image-preview">
+                                            <img src="/api/placeholder/100/100" alt="Shape 1" class="shape-image">
+                                            <span class="remove-image">×</span>
+                                        </div>
+                                        <label for="image1-2">更换图片</label>
+                                        <input type="file" id="image1-2" accept="image/*">
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="image-upload">
+                                        <div class="image-preview">
+                                            <img src="/api/placeholder/100/100" alt="Shape 2" class="shape-image">
+                                            <span class="remove-image">×</span>
+                                        </div>
+                                        <label for="image2-2">更换图片</label>
+                                        <input type="file" id="image2-2" accept="image/*">
+                                    </div>
+                                </td>
+                                <td class="actions">
+                                    <button class="btn btn-sm">编辑</button>
+                                    <button class="btn btn-sm btn-danger">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>MFA</td>
+                                <td>Tube</td>
+                                <td>
+                                    <div class="image-upload">
+                                        <div class="image-preview">
+                                            <img src="/api/placeholder/100/100" alt="Shape 1" class="shape-image">
+                                            <span class="remove-image">×</span>
+                                        </div>
+                                        <label for="image1-3">更换图片</label>
+                                        <input type="file" id="image1-3" accept="image/*">
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="image-upload">
+                                        <div class="image-preview">
+                                            <img src="/api/placeholder/100/100" alt="Shape 2" class="shape-image">
+                                            <span class="remove-image">×</span>
+                                        </div>
+                                        <label for="image2-3">更换图片</label>
+                                        <input type="file" id="image2-3" accept="image/*">
+                                    </div>
+                                </td>
+                                <td class="actions">
+                                    <button class="btn btn-sm">编辑</button>
+                                    <button class="btn btn-sm btn-danger">删除</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Material Table Section -->
+            <div class="section">
+                <div class="section-header">
+                    <h3>材料表</h3>
+                    <button class="btn">新增材料</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 60px;">No</th>
+                                <th>缩写</th>
+                                <th>名称</th>
+                                <th>基材</th>
+                                <th style="width: 150px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>H</td>
+                                <td>HDPE</td>
+                                <td>PE</td>
+                                <td class="actions">
+                                    <button class="btn btn-sm">编辑</button>
+                                    <button class="btn btn-sm btn-danger">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>L</td>
+                                <td>LDPE</td>
+                                <td>PE</td>
+                                <td class="actions">
+                                    <button class="btn btn-sm">编辑</button>
+                                    <button class="btn btn-sm btn-danger">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>A</td>
+                                <td>PAPER+PE</td>
+                                <td>PAPER</td>
+                                <td class="actions">
+                                    <button class="btn btn-sm">编辑</button>
+                                    <button class="btn btn-sm btn-danger">删除</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Specification Tables Section -->
+            <div class="section">
+                <div class="section-header">
+                    <h3>规格尺寸表</h3>
+                    <div>
+                        <span style="color: #6c757d; font-size: 14px; margin-right: 10px;">用作新增/编辑用的选项</span>
+                        <span style="color: #6c757d; font-size: 14px;">也用于拼接成完整耗材规格，如 MEX-H-20-20-30</span>
+                    </div>
+                </div>
+                
+                <div class="spec-tables">
+                    <!-- Thickness Table -->
+                    <div class="spec-table">
+                        <div class="section-header" style="border-top: 1px solid #e1e5eb;">
+                            <h4>厚度</h4>
+                            <button class="btn">新增</button>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 60px;">No</th>
+                                        <th>数值(公制)</th>
+                                        <th>数值(英制)</th>
+                                        <th style="width: 150px;">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>10</td>
+                                        <td>4</td>
+                                        <td class="actions">
+                                            <button class="btn btn-sm">编辑</button>
+                                            <button class="btn btn-sm btn-danger">删除</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>13</td>
+                                        <td>5</td>
+                                        <td class="actions">
+                                            <button class="btn btn-sm">编辑</button>
+                                            <button class="btn btn-sm btn-danger">删除</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td>20</td>
+                                        <td>6</td>
+                                        <td class="actions">
+                                            <button class="btn btn-sm">编辑</button>
+                                            <button class="btn btn-sm btn-danger">删除</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Weight Table -->
+                    <div class="spec-table">
+                        <div class="section-header" style="border-top: 1px solid #e1e5eb;">
+                            <h4>克重</h4>
+                            <button class="btn">新增</button>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 60px;">No</th>
+                                        <th>数值(公制)</th>
+                                        <th>数值(英制)</th>
+                                        <th style="width: 150px;">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>25</td>
+                                        <td>0.9</td>
+                                        <td class="actions">
+                                            <button class="btn btn-sm">编辑</button>
+                                            <button class="btn btn-sm btn-danger">删除</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>30</td>
+                                        <td>1.1</td>
+                                        <td class="actions">
+                                            <button class="btn btn-sm">编辑</button>
+                                            <button class="btn btn-sm btn-danger">删除</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Width Table -->
+                    <div class="spec-table">
+                        <div class="section-header" style="border-top: 1px solid #e1e5eb;">
+                            <h4>宽度</h4>
+                            <button class="btn">新增</button>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 60px;">No</th>
+                                        <th>数值(公制)</th>
+                                        <th>数值(英制)</th>
+                                        <th style="width: 150px;">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>200</td>
+                                        <td>7.9</td>
+                                        <td class="actions">
+                                            <button class="btn btn-sm">编辑</button>
+                                            <button class="btn btn-sm btn-danger">删除</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>300</td>
+                                        <td>11.8</td>
+                                        <td class="actions">
+                                            <button class="btn btn-sm">编辑</button>
+                                            <button class="btn btn-sm btn-danger">删除</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Length Table -->
+                    <div class="spec-table">
+                        <div class="section-header" style="border-top: 1px solid #e1e5eb;">
+                            <h4>长度</h4>
+                            <button class="btn">新增</button>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 60px;">No</th>
+                                        <th>数值(公制)</th>
+                                        <th>数值(英制)</th>
+                                        <th style="width: 150px;">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>300</td>
+                                        <td>11.8</td>
+                                        <td class="actions">
+                                            <button class="btn btn-sm">编辑</button>
+                                            <button class="btn btn-sm btn-danger">删除</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>400</td>
+                                        <td>15.7</td>
+                                        <td class="actions">
+                                            <button class="btn btn-sm">编辑</button>
+                                            <button class="btn btn-sm btn-danger">删除</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast notification -->
+    <div class="toast" id="toast">
+        <span id="toastMessage">操作成功</span>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Menu toggle functionality
+            document.querySelectorAll('.expandable').forEach(item => {
+                item.addEventListener('click', event => {
+                    const submenu = item.nextElementSibling;
+                    if (submenu && submenu.classList.contains('submenu')) {
+                        submenu.classList.toggle('active');
+                        item.classList.toggle('active');
+                    }
+                    event.preventDefault();
+                });
+            });
+
+            // Automatically expand submenus with active items
+            document.querySelectorAll('.submenu .menu-item.active').forEach(activeItem => {
+                const parentSubmenu = activeItem.closest('.submenu');
+                const parentExpandable = parentSubmenu.previousElementSibling;
+                
+                if (parentSubmenu && parentExpandable) {
+                    parentSubmenu.classList.add('active');
+                    parentExpandable.classList.add('active');
+                }
+            });
+            
+            // Delete confirmation
+            document.querySelectorAll('.btn-danger').forEach(button => {
+                button.addEventListener('click', function() {
+                    if (confirm('确定要删除这个项目吗？此操作无法撤销。')) {
+                        showToast('删除成功', 'success');
+                    }
+                });
+            });
+            
+            // Filter functionality
+            document.querySelector('.filter-form .btn').addEventListener('click', function() {
+                showToast('筛选应用成功', 'success');
+            });
+            
+            // Reset filter
+            document.querySelector('.filter-form .btn-secondary').addEventListener('click', function() {
+                document.getElementById('spec').value = '';
+                document.getElementById('partNumber').value = '';
+                showToast('筛选条件已重置', 'success');
+            });
+            
+            // Add new item buttons
+            document.querySelectorAll('.section-header .btn').forEach(button => {
+                if (button.textContent.includes('新增')) {
+                    button.addEventListener('click', function() {
+                        alert('新增功能将在这里实现');
+                    });
+                }
+            });
+            
+            // Edit buttons
+            document.querySelectorAll('.btn:not(.btn-danger):not(.btn-secondary)').forEach(button => {
+                if (button.textContent.includes('编辑')) {
+                    button.addEventListener('click', function() {
+                        alert('编辑功能将在这里实现');
+                    });
+                }
+            });
+            
+            // Toast notification functionality
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            function showToast(message, type) {
+                toastMessage.textContent = message;
+                toast.className = 'toast ' + (type || '');
+                toast.classList.add('show');
+                
+                setTimeout(function() {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+
+            // Export dropdown functionality
+            const exportPartBtn = document.getElementById('exportPartBtn');
+            const exportPartDropdown = document.getElementById('exportPartDropdown');
+
+            // Toggle part export dropdown
+            exportPartBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                exportPartDropdown.classList.toggle('show');
+            });
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!exportPartBtn.contains(e.target) && !exportPartDropdown.contains(e.target)) {
+                    exportPartDropdown.classList.remove('show');
+                }
+            });
+
+            // Handle export format selection
+            document.querySelectorAll('.dropdown-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const format = this.getAttribute('data-format');
+                    showToast(`料号数据已导出为${format.toUpperCase()}格式`, 'success');
+                    exportPartDropdown.classList.remove('show');
+                });
+            });
+
+            // Handle file import
+            document.getElementById('importPartFile').addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    showToast('正在导入料号数据...', 'info');
+                    setTimeout(() => showToast('料号数据导入成功', 'success'), 1500);
+                }
+            });
+
+            // Status toggle functionality
+            document.querySelectorAll('.toggle-status').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const row = this.closest('tr');
+                    const statusCell = row.querySelector('td:nth-child(4)');
+                    const statusIcon = statusCell.querySelector('.status-icon');
+                    const statusText = statusCell.querySelector('span:last-child');
+                    const isActive = statusIcon.classList.contains('status-active');
+                    
+                    if (confirm(isActive ? '确定要下架吗？' : '确定要上架吗？')) {
+                        if (isActive) {
+                            statusIcon.classList.remove('status-active');
+                            statusIcon.classList.add('status-inactive');
+                            statusText.textContent = '已下架';
+                            this.classList.remove('btn-warning');
+                            this.classList.add('btn-success');
+                            this.textContent = '上架';
+                        } else {
+                            statusIcon.classList.remove('status-inactive');
+                            statusIcon.classList.add('status-active');
+                            statusText.textContent = '已上架';
+                            this.classList.remove('btn-success');
+                            this.classList.add('btn-warning');
+                            this.textContent = '下架';
+                        }
+                        
+                        showToast(isActive ? '下架成功' : '上架成功', 'success');
+                    }
+                });
+            });
+
+            // Image upload functionality
+            document.querySelectorAll('.image-upload input[type="file"]').forEach(input => {
+                input.addEventListener('change', function() {
+                    const file = this.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        const imagePreview = this.closest('.image-upload').querySelector('.image-preview img');
+                        
+                        reader.onload = function(e) {
+                            imagePreview.src = e.target.result;
+                            showToast('图片上传成功', 'success');
+                        };
+                        
+                        reader.readAsDataURL(file);
+                    }
+                });
+            });
+
+            // Image removal functionality
+            document.querySelectorAll('.remove-image').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const imagePreview = this.closest('.image-preview');
+                    const img = imagePreview.querySelector('img');
+                    img.src = '/api/placeholder/100/100';
+                    showToast('图片已移除', 'success');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

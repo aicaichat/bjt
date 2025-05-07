@@ -1,0 +1,8 @@
+/* 
+ * 主题集合文件
+ * 导入所有可用的主题样式
+ */
+
+@import './themes/modern.css';
+@import './themes/elegant.css';
+@import './themes/vibrant.css'; 

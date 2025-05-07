@@ -1,0 +1,134 @@
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  min-width: 300px;
+  max-width: 450px;
+  padding: 12px 16px;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: slide-in 0.3s ease-out forwards;
+  z-index: 1000;
+  background-color: white;
+}
+
+.notification-icon {
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.notification-content {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-right: 8px;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: #999;
+}
+
+.notification-close:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #666;
+}
+
+/* 不同类型的通知样式 */
+.notification-success {
+  border-left: 4px solid #52c41a;
+}
+
+.notification-success .notification-icon {
+  color: #52c41a;
+}
+
+.notification-error {
+  border-left: 4px solid #ff4d4f;
+}
+
+.notification-error .notification-icon {
+  color: #ff4d4f;
+}
+
+.notification-warning {
+  border-left: 4px solid #faad14;
+}
+
+.notification-warning .notification-icon {
+  color: #faad14;
+}
+
+.notification-info {
+  border-left: 4px solid #1890ff;
+}
+
+.notification-info .notification-icon {
+  color: #1890ff;
+}
+
+/* 动画效果 */
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .notification {
+    min-width: auto;
+    max-width: calc(100% - 40px);
+    width: calc(100% - 40px);
+    top: 10px;
+    right: 10px;
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .notification {
+    top: auto;
+    bottom: 10px;
+    max-width: calc(100% - 20px);
+    width: calc(100% - 20px);
+    right: 10px;
+    padding: 8px 10px;
+  }
+  
+  .notification-icon {
+    margin-right: 8px;
+  }
+  
+  .notification-content {
+    font-size: 13px;
+  }
+  
+  .notification-close {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .notification-close svg {
+    width: 16px;
+    height: 16px;
+  }
+} 

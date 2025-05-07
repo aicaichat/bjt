@@ -1,0 +1,385 @@
+{
+  "home": {
+    "introduction": "欢迎使用BJT产品管理系统",
+    "browseProducts": "浏览产品"
+  },
+  "loading": {
+    "products": "正在加载产品...",
+    "productDetails": "正在加载产品详情...",
+    "cart": "正在加载购物车...",
+    "order": "正在加载订单...",
+    "machines": "正在加载设备...",
+    "accessories": "正在加载配件..."
+  },
+  "errors": {
+    "failedToLoadProducts": "加载产品失败",
+    "productLineNotFound": "未找到产品线",
+    "authenticationFailed": "认证失败",
+    "loadingFailed": "加载失败",
+    "networkError": "网络错误",
+    "failedToLoadMachines": "获取设备列表失败，请稍后重试",
+    "systemError": "系统错误，请联系管理员",
+    "failedToAddToCart": "添加到购物车失败",
+    "failedToLoadAccessories": "获取配件失败，请稍后重试"
+  },
+  "messages": {
+    "loginRequired": "请登录后查看此页面",
+    "addedToCart": "已添加到购物车",
+    "noAccessoriesAvailable": "当前设备没有可用配件"
+  },
+  "buttons": {
+    "addToCart": "加入购物车",
+    "viewDetails": "查看详情",
+    "loadMore": "加载更多",
+    "checkout": "去购物车结算",
+    "close": "关闭"
+  },
+  "nav": {
+    "home": "首页",
+    "products": "产品",
+    "support": "支持",
+    "contactUs": "联系我们",
+    "login": "登录",
+    "account": "账户"
+  },
+  "header": {
+    "cart": "购物车",
+    "login": "登录",
+    "profile": "我的资料",
+    "orders": "我的订单",
+    "logout": "退出登录",
+    "account": "我的账户", 
+    "language": "语言"
+  },
+  "machines": {
+    "pageTitle": "设备选型",
+    "tableHeaders": {
+      "index": "序号",
+      "model": "设备型号",
+      "name": "设备名称",
+      "price": "价格",
+      "inventory": "库存",
+      "quantity": "数量",
+      "actions": "操作",
+      "selection": "选择",
+      "image": "图片",
+      "specs": "规格"
+    },
+    "stock": {
+      "outOfStock": "缺货",
+      "lowStock": "库存紧张",
+      "mediumStock": "库存适中",
+      "highStock": "库存充足"
+    },
+    "notification": {
+      "added": "已添加到购物车",
+      "quantity": "数量"
+    },
+    "accessory": {
+      "selectFor": "为所选设备选择配件",
+      "level": "级别"
+    },
+    "filters": {
+      "all": "全部",
+      "priceRange": "价格范围",
+      "region": "区域"
+    },
+    "voltage": "电压"
+  },
+  "menu": {
+    "Air Cushioning System": "气垫系统",
+    "Paper Cushioning System": "纸垫系统",
+    "Water Cushioning System": "湿水胶带系统",
+    "Air Cushion Machine & Accessory": "气垫机与配件",
+    "Film options": "气垫膜选项",
+    "Paper Cushion Machine & Accessory": "纸垫机与配件",
+    "Paper options": "纸张选项",
+    "Spare parts": "备件",
+    "Water Activated Tape Dispenser & Accessory": "湿水胶带分配器与配件",
+    "Water Activated Tape options": "湿水胶带选项",
+    "After-sales service": "售后服务",
+    "Document Download": "文档下载",
+    "FAQ": "常见问题"
+  },
+  "cart": {
+    "title": "购物车",
+    "empty": {
+      "message": "购物车中没有商品",
+      "continueShopping": "继续购物"
+    },
+    "controls": {
+      "selectAll": "全选",
+      "unselectAll": "取消全选",
+      "batchDelete": "批量删除",
+      "moveToFavorites": "移入收藏夹"
+    },
+    "productInfo": {
+      "sku": "料号",
+      "favorite": "收藏",
+      "delete": "删除",
+      "subtotal": "小计"
+    },
+    "summary": {
+      "selectedItems": "已选商品",
+      "count": "件",
+      "total": "合计",
+      "submitOrder": "提交订单"
+    },
+    "messages": {
+      "selectAtLeastOne": "请至少选择一个商品"
+    },
+    "notifications": {
+      "itemRemoved": "商品已移除",
+      "itemRemovedMessage": "商品已从购物车中移除",
+      "itemsRestored": "购物车已恢复",
+      "itemsRestoredMessage": "从订单页返回的商品已添加到购物车"
+    },
+    "errors": {
+      "title": "购物车错误",
+      "removeItemFailed": "移除商品失败，请重试",
+      "batchRemoveFailed": "批量移除商品失败，请重试"
+    }
+  },
+  "common": {
+    "loading": "加载中...",
+    "error": "错误",
+    "success": "成功",
+    "processing": "处理中..."
+  },
+  "order": {
+    "title": "确认订单",
+    "backToCart": "返回购物车",
+    "items": {
+      "title": "订单商品"
+    },
+    "shipping": {
+      "title": "收货信息",
+      "contactName": "联系人",
+      "contactNamePlaceholder": "请输入联系人姓名",
+      "phone": "电话",
+      "phonePlaceholder": "请输入联系电话",
+      "email": "邮箱",
+      "emailPlaceholder": "请输入电子邮箱",
+      "company": "公司名称",
+      "companyPlaceholder": "请输入公司名称",
+      "country": "国家/地区",
+      "address": "详细地址",
+      "addressPlaceholder": "请输入详细地址",
+      "city": "城市",
+      "state": "省/州",
+      "postalCode": "邮政编码",
+      "notes": "备注",
+      "notesPlaceholder": "可选：添加订单备注"
+    },
+    "summary": {
+      "title": "价格结算",
+      "subtotal": "商品总额",
+      "shipping": "运费",
+      "tax": "税费",
+      "discount": "折扣",
+      "total": "订单总额"
+    },
+    "steps": {
+      "cart": "购物车",
+      "confirmOrder": "确认订单",
+      "complete": "完成"
+    },
+    "details": {
+      "title": "订单明细"
+    },
+    "actions": {
+      "backToCart": "返回购物车",
+      "confirmSubmit": "确认提交"
+    },
+    "note": {
+      "inventory": "* 库存不足商品仅支持PO订单",
+      "po": "* PO订单将以PDF文件形式生成，可用于与销售人员沟通"
+    },
+    "submitOrder": "提交订单",
+    "errors": {
+      "loadingData": "加载订单数据失败",
+      "submitFailed": "提交订单失败",
+      "submitAlert": "提交订单失败，请稍后重试"
+    }
+  },
+  "orderList": {
+    "title": "订单历史",
+    "loading": "正在加载订单...",
+    "orderNumber": "订单编号",
+    "orderDate": "下单时间",
+    "totalAmount": "订单金额",
+    "paymentMethod": "支付方式",
+    "shippingInfo": "收货信息",
+    "status": {
+      "pending": "待付款",
+      "paid": "已付款",
+      "shipped": "已发货",
+      "completed": "已完成",
+      "cancelled": "已取消"
+    },
+    "viewItems": "查看商品",
+    "exportPO": "导出PO单",
+    "viewDetails": "查看详情",
+    "cancelOrder": "取消订单",
+    "goToPay": "去支付",
+    "confirmCancel": "确定要取消此订单吗？",
+    "cancelSuccess": "订单已成功取消",
+    "exportingPO": "正在导出PO单...",
+    "tabs": {
+      "all": "全部订单",
+      "pending": "待付款",
+      "paid": "已付款",
+      "shipped": "已发货",
+      "completed": "已完成",
+      "cancelled": "已取消"
+    },
+    "dateRange": "日期范围",
+    "to": "至",
+    "search": "搜索",
+    "searchPlaceholder": "搜索订单编号或商品名称",
+    "parseError": "解析保存的订单时出错",
+    "fetchError": "获取订单数据时出错",
+    "fetchErrorMessage": "获取订单数据失败，请重试",
+    "noOrdersFound": "未找到订单",
+    "tryAdjustFilters": "尝试调整筛选条件或搜索条件",
+    "orderCreatedSuccess": "订单创建成功",
+    "paymentMethod": {
+      "bankTransfer": "银行转账",
+      "creditCard": "信用卡",
+      "paypal": "PayPal",
+      "alipay": "支付宝",
+      "wechatPay": "微信支付"
+    }
+  },
+  "products": {
+    "model": "型号",
+    "sku": "料号",
+    "types": {
+      "machine": "主机",
+      "accessory": "配件",
+      "consumable": "耗材",
+      "spare": "备件",
+      "product": "产品"
+    },
+    "specs": {
+      "model": "型号",
+      "partNumber": "料号",
+      "voltage": "电压",
+      "frequency": "频率",
+      "palletSize": "托盘尺寸",
+      "palletQty": "托盘数量",
+      "size": "尺寸"
+    },
+    "quantity": "数量",
+    "detailInfo": "{{name}} 详细信息",
+    "sections": {
+      "公制规格": "公制规格",
+      "英制规格": "英制规格"
+    },
+    "properties": {
+      "料号": "料号",
+      "产品名称": "产品名称",
+      "托盘尺寸": "托盘尺寸",
+      "一托数量": "一托数量",
+      "型号": "型号",
+      "电压": "电压",
+      "频率": "频率",
+      "规格": "规格",
+      "材质": "材质",
+      "适配机型": "适配机型",
+      "包装尺寸": "包装尺寸",
+      "包装毛重": "包装毛重",
+      "打托后总高度": "打托后总高度",
+      "包装材质": "包装材质",
+      "厚度": "厚度",
+      "克重": "克重",
+      "膜宽": "膜宽",
+      "袋长": "袋长"
+    }
+  },
+  "countries": {
+    "china": "中国",
+    "usa": "美国",
+    "uk": "英国",
+    "germany": "德国",
+    "japan": "日本",
+    "australia": "澳大利亚"
+  },
+  "english": "英文",
+  "chinese": "中文",
+  "profile": "个人中心",
+  "myOrders": "我的订单",
+  "logout": "退出登录",
+  "spareParts": {
+    "title": "备件列表",
+    "filters": {
+      "label": {
+        "productType": "商品类型",
+        "model": "适用型号",
+        "partType": "备件类型"
+      },
+      "productType": {
+        "machine": "主机",
+        "accessory": "配件"
+      },
+      "partType": {
+        "consumable": "耗材",
+        "electronic": "非耗材",
+        "accessory": "配件备件"
+      },
+      "model": {
+        "allModels": "所有型号"
+      }
+    },
+    "table": {
+      "image": "图片",
+      "code": "产品编码",
+      "specs": "规格",
+      "price": "价格",
+      "inventory": "库存",
+      "actions": "操作",
+      "addToCart": "加入购物车",
+      "viewMore": "查看更多规格"
+    },
+    "specs": {
+      "packageSize": "包装尺寸 cm",
+      "packageSizeImperial": "包装尺寸 inch",
+      "weight": "单件净重 kg",
+      "weightImperial": "单件净重 lbs",
+      "serialNumber": "适配序列号",
+      "compatibleModels": "适用型号",
+      "specifications": "规格描述"
+    },
+    "inventory": {
+      "noInfo": "无库存信息",
+      "outOfStock": "无库存",
+      "lowStock": "库存紧张",
+      "inStock": "库存充足",
+      "highStock": "库存丰富"
+    },
+    "cart": {
+      "title": "购物车",
+      "empty": "购物车为空",
+      "total": "合计",
+      "clear": "清空购物车",
+      "checkout": "去结算",
+      "confirmClear": "清空购物车?",
+      "confirmClearMessage": "确定要移除购物车中的所有商品吗?",
+      "cancel": "取消",
+      "confirm": "清空",
+      "itemAdded": "已添加到购物车",
+      "cartCleared": "购物车已清空",
+      "sku": "料号"
+    },
+    "loading": "加载中...",
+    "error": {
+      "loadFailed": "加载备件数据失败，请稍后重试",
+      "noResults": "没有符合条件的备件",
+      "retry": "重试"
+    },
+    "defaultValues": {
+      "unknown": "未知",
+      "notAvailable": "无"
+    }
+  }
+} 

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <rect width="120" height="120" fill="#f0f0f0"/>
+  <rect x="25" y="25" width="70" height="70" fill="#dddddd" stroke="#cccccc" stroke-width="2"/>
+  <line x1="25" y1="25" x2="95" y2="95" stroke="#999999" stroke-width="2"/>
+  <line x1="95" y1="25" x2="25" y2="95" stroke="#999999" stroke-width="2"/>
+  <text x="60" y="60" font-family="Arial" font-size="12" text-anchor="middle" fill="#666666">图片不可用</text>
+</svg> 

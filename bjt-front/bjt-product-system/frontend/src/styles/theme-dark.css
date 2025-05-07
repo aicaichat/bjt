@@ -1,0 +1,306 @@
+/**
+ * 深色主题 - 现代科技风格
+ * 
+ * 特点：
+ * - 深色背景与高对比度文本
+ * - 蓝色与青色的强调色
+ * - 符合专业工业产品的视觉体验
+ */
+
+.theme-dark {
+  /* 基础色彩 */
+  --primary-color: #4dabf7;
+  --primary-light: #74c0fc;
+  --primary-dark: #339af0;
+  --primary-hover: #3795ed;
+  --primary-active: #2b86d9;
+  
+  --secondary-color: #228be6;
+  --secondary-light: #4dabf7;
+  --secondary-dark: #1c7ed6;
+  
+  --accent-color: #15aabf;
+  --accent-light: #22b8cf;
+  --accent-dark: #1098ad;
+  
+  /* 状态色彩 */
+  --success-color: #40c057;
+  --success-light: #69db7c;
+  --warning-color: #fab005;
+  --warning-light: #ffd43b;
+  --error-color: #fa5252;
+  --error-light: #ff8787;
+  --info-color: #4dabf7;
+  --info-light: #74c0fc;
+  
+  /* 中性色彩 */
+  --gray-50: #f8f9fa;
+  --gray-100: #f1f3f5;
+  --gray-200: #e9ecef;
+  --gray-300: #dee2e6;
+  --gray-400: #ced4da;
+  --gray-500: #adb5bd;
+  --gray-600: #868e96;
+  --gray-700: #495057;
+  --gray-800: #343a40;
+  --gray-900: #212529;
+  
+  /* 背景颜色 */
+  --bg-primary: #121212;
+  --bg-secondary: #1e1e1e;
+  --bg-tertiary: #252525;
+  --bg-card: #2a2a2a;
+  --bg-modal: #252525;
+  --bg-header: #121212;
+  --bg-footer: #121212;
+  
+  /* 文本颜色 */
+  --text-primary: rgba(255, 255, 255, 0.87);
+  --text-secondary: rgba(255, 255, 255, 0.6);
+  --text-muted: rgba(255, 255, 255, 0.38);
+  --text-light: rgba(255, 255, 255, 0.87);
+  --text-dim: rgba(255, 255, 255, 0.38);
+  --text-on-primary: rgba(0, 0, 0, 0.87);
+  
+  /* 边框颜色 */
+  --border-light: rgba(255, 255, 255, 0.12);
+  --border-medium: rgba(255, 255, 255, 0.24);
+  --border-dark: rgba(255, 255, 255, 0.38);
+  
+  /* 阴影 */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 2px 4px -1px rgba(0, 0, 0, 0.5), 0 1px 2px -1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.6), 0 2px 4px -1px rgba(0, 0, 0, 0.5);
+  
+  /* 字体设置 */
+  --font-family-sans: 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-family-headings: 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  
+  /* 组件 */
+  /* 按钮 */
+  --btn-primary-bg: var(--primary-color);
+  --btn-primary-border: var(--primary-dark);
+  --btn-primary-text: var(--gray-900);
+  --btn-primary-hover-bg: var(--primary-hover);
+  --btn-primary-active-bg: var(--primary-active);
+  
+  --btn-secondary-bg: var(--secondary-color);
+  --btn-secondary-border: var(--secondary-dark);
+  --btn-secondary-text: var(--gray-900);
+  --btn-secondary-hover-bg: #1c84dd;
+  --btn-secondary-active-bg: #1a78c7;
+  
+  /* 卡片 */
+  --card-bg: var(--bg-card);
+  --card-border: var(--border-light);
+  --card-shadow: var(--shadow-sm);
+  --card-border-radius: 4px;
+  
+  /* 产品项 */
+  --product-link-color: var(--primary-color);
+  --product-link-hover: var(--primary-light);
+  --product-image-border: rgba(255, 255, 255, 0.05);
+  --product-price-color: var(--primary-light);
+  
+  /* 输入框 */
+  --input-bg: rgba(255, 255, 255, 0.05);
+  --input-border: var(--border-medium);
+  --input-border-focus: var(--primary-color);
+  --input-shadow-focus: 0 0 0 2px rgba(77, 171, 247, 0.25);
+  --input-text: var(--text-primary);
+  --input-placeholder: var(--text-dim);
+  
+  /* 选项卡 */
+  --tab-active-bg: rgba(77, 171, 247, 0.1);
+  --tab-active-text: var(--primary-color);
+  --tab-inactive-bg: transparent;
+  --tab-inactive-text: var(--text-secondary);
+  --tab-border: var(--border-light);
+  --tab-hover-bg: rgba(77, 171, 247, 0.05);
+  
+  /* 标签 */
+  --tag-bg: rgba(255, 255, 255, 0.05);
+  --tag-text: var(--text-secondary);
+  --tag-border: var(--border-light);
+  --tag-primary-bg: rgba(77, 171, 247, 0.15);
+  --tag-primary-text: var(--primary-light);
+  --tag-primary-border: rgba(77, 171, 247, 0.3);
+  
+  /* 价格 */
+  --price-main-color: var(--primary-light);
+  --price-discount-color: var(--error-light);
+  --price-original-color: var(--text-dim);
+  
+  /* 表格 */
+  --table-border: var(--border-light);
+  --table-header-bg: var(--bg-tertiary);
+  --table-header-text: var(--text-secondary);
+  --table-row-odd-bg: var(--bg-secondary);
+  --table-row-even-bg: rgba(255, 255, 255, 0.03);
+  --table-hover-bg: rgba(77, 171, 247, 0.1);
+  
+  /* 状态标识 */
+  --status-available: var(--success-color);
+  --status-limited: var(--warning-color);
+  --status-unavailable: var(--error-color);
+  
+  /* 通知 */
+  --notification-info-bg: rgba(77, 171, 247, 0.1);
+  --notification-info-border: rgba(77, 171, 247, 0.3);
+  --notification-success-bg: rgba(64, 192, 87, 0.1);
+  --notification-success-border: rgba(64, 192, 87, 0.3);
+  --notification-warning-bg: rgba(250, 176, 5, 0.1);
+  --notification-warning-border: rgba(250, 176, 5, 0.3);
+  --notification-error-bg: rgba(250, 82, 82, 0.1);
+  --notification-error-border: rgba(250, 82, 82, 0.3);
+}
+
+/* 深色主题的基础样式 */
+.theme-dark body {
+  font-family: var(--font-family-sans);
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  line-height: 1.6;
+}
+
+.theme-dark h1, 
+.theme-dark h2, 
+.theme-dark h3, 
+.theme-dark h4, 
+.theme-dark h5, 
+.theme-dark h6 {
+  font-family: var(--font-family-headings);
+  color: var(--text-light);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.theme-dark a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.theme-dark a:hover {
+  color: var(--primary-light);
+}
+
+/* 主导航 */
+.theme-dark .main-nav {
+  background-color: var(--bg-header);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.theme-dark .nav-link {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.theme-dark .nav-link:hover {
+  color: var(--primary-color);
+}
+
+.theme-dark .nav-link.active {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+/* 按钮样式 */
+.theme-dark .btn-primary {
+  background-color: var(--btn-primary-bg);
+  border: none;
+  color: var(--btn-primary-text);
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  box-shadow: var(--shadow-sm);
+}
+
+.theme-dark .btn-primary:hover {
+  background-color: var(--btn-primary-hover-bg);
+  box-shadow: var(--shadow-md);
+}
+
+.theme-dark .btn-primary:active {
+  background-color: var(--btn-primary-active-bg);
+  box-shadow: none;
+}
+
+.theme-dark .btn-secondary {
+  background-color: var(--btn-secondary-bg);
+  border: none;
+  color: var(--btn-secondary-text);
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  box-shadow: var(--shadow-sm);
+}
+
+.theme-dark .btn-secondary:hover {
+  background-color: var(--btn-secondary-hover-bg);
+  box-shadow: var(--shadow-md);
+}
+
+.theme-dark .btn-outline {
+  background-color: transparent;
+  border: 1px solid var(--border-medium);
+  color: var(--text-secondary);
+  font-weight: 500;
+  border-radius: 4px;
+}
+
+.theme-dark .btn-outline:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  background-color: rgba(77, 171, 247, 0.05);
+}
+
+/* 卡片样式 */
+.theme-dark .card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--card-shadow);
+  padding: 1.25rem;
+}
+
+/* 表单输入 */
+.theme-dark input,
+.theme-dark select,
+.theme-dark textarea {
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--input-text);
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  transition: all 0.2s;
+  font-size: 0.875rem;
+}
+
+.theme-dark input:focus,
+.theme-dark select:focus,
+.theme-dark textarea:focus {
+  border-color: var(--input-border-focus);
+  box-shadow: var(--input-shadow-focus);
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.07);
+}
+
+.theme-dark input::placeholder {
+  color: var(--input-placeholder);
+}
+
+/* 产品列表样式 */
+.theme-dark .product-item {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  transition: all 0.3s;
+  box-shadow: var(--shadow-sm);
+}
+
+.theme-dark .product-item:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-dark);
+} 

@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # 前端服务器
+  frontend:
+    build:
+      context: docker/frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8081:80"
+    volumes:
+      - ../frontend:/usr/share/nginx/html:ro
+    depends_on:
+      - wordpress
+
+  # WordPress开发服务器
+  wordpress:
+    image: wordpress:php8.0
+    ports:
+      - "8082:80"
+    environment:
+      WORDPRESS_DB_HOST: mysql
+      WORDPRESS_DB_NAME: bjt_product
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+      WORDPRESS_DEBUG: 1
+    volumes:
+      - ../wordpress:/var/www/html
+      - ./plugins:/var/www/html/wp-content/plugins
+    depends_on:
+      - mysql
+
+  # MySQL数据库
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bjt_product
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+
+volumes:
+  mysql_data: 

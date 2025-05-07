@@ -1,0 +1,183 @@
+/* Accessibility enhancements for the Machines page */
+
+/* Screen reader only utility class */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Enhanced focus styles */
+:focus {
+  outline: 3px solid #0078d4;
+  outline-offset: 2px;
+}
+
+/* Focus visible only when using keyboard */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 3px solid #0078d4;
+  outline-offset: 2px;
+}
+
+/* Improved button focus state */
+button:focus, 
+a:focus, 
+input:focus, 
+select:focus, 
+textarea:focus {
+  outline: 3px solid #0078d4;
+  outline-offset: 2px;
+}
+
+/* Make sure clickable elements have clear focus state */
+.model-cell:focus,
+.notification-close:focus,
+.go-to-cart-btn:focus,
+.specification-link:focus,
+.more-info-link:focus,
+.qty-btn:focus,
+.btn-add:focus {
+  outline: 3px solid #0078d4;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.4);
+}
+
+/* Improved contrast for text */
+.machines-table th,
+.machines-table td,
+.notification-title,
+.notification-details,
+.price-title,
+.inventory-title,
+.region-label {
+  color: #000;
+  font-weight: 500;
+}
+
+/* Improved inventory status colors with better contrast */
+.inventory .inventory-low {
+  color: #c00000 !important; /* Red with sufficient contrast */
+}
+
+.inventory .inventory-medium {
+  color: #855a00 !important; /* Amber with sufficient contrast */
+}
+
+.inventory .inventory-high {
+  color: #006600 !important; /* Green with sufficient contrast */
+}
+
+/* Improved disabled state */
+button[disabled],
+input[disabled] {
+  cursor: not-allowed;
+  opacity: 0.6;
+  background-color: #f0f0f0;
+}
+
+/* Style for keyboard users - row selection */
+.machines-table tbody tr:focus {
+  outline: 2px solid #0078d4;
+  outline-offset: -2px;
+}
+
+/* Add visible focus style to the table rows */
+.machines-table tbody tr {
+  transition: background-color 0.2s;
+}
+
+.machines-table tbody tr:hover,
+.machines-table tbody tr:focus-within {
+  background-color: rgba(0, 120, 212, 0.1);
+}
+
+/* Improved selected state for rows */
+.machines-table .selected-row,
+.machines-table tbody tr[aria-selected="true"] {
+  background-color: rgba(0, 120, 212, 0.2);
+  border-left: 4px solid #0078d4;
+}
+
+/* Skip to main content link - hidden until focused */
+.skip-to-content {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  z-index: 9999;
+  padding: 1rem;
+  background: #fff;
+  color: #000;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.skip-to-content:focus {
+  left: 0;
+  top: 0;
+}
+
+/* Enhanced notification styling for accessibility */
+.cart-notification {
+  border: 2px solid #0078d4;
+  border-radius: 4px;
+}
+
+/* Make sure form controls have sufficient size for touch targets */
+.quantity-input, 
+.qty-btn {
+  min-height: 40px;
+  min-width: 40px;
+}
+
+/* Add focus ring to selected machine */
+.model-cell.selected-machine:focus {
+  box-shadow: 0 0 0 3px #0078d4;
+}
+
+/* Improve keyboard accessibility for interactive elements */
+[role="button"],
+[role="link"],
+[role="tab"] {
+  cursor: pointer;
+}
+
+/* Ensure all text has sufficient contrast against background */
+.machines-table,
+.machines-filter,
+.accessory-level,
+.cart-notification {
+  color: #000;
+  background-color: #fff;
+}
+
+/* Ensure error messages are visually distinct and accessible */
+.error-container {
+  border: 2px solid #c00000;
+  background-color: #fff8f8;
+  color: #c00000;
+  padding: 16px;
+  border-radius: 4px;
+}
+
+/* Improved loading indicator */
+.loading-container {
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ensure alt text is provided for all images */
+img:not([alt]) {
+  outline: 3px dashed #c00000;
+} 

@@ -1,0 +1,47 @@
+{
+  "title": "Order Management",
+  "loading": "Loading orders...",
+  "fetchError": "Failed to fetch orders",
+  "fetchErrorMessage": "Could not load orders. Please try again later.",
+  "noOrdersFound": "No orders found",
+  "tryAdjustFilters": "Try adjusting your filters or search criteria",
+  
+  "tabs": {
+    "all": "All Orders",
+    "pending": "Pending",
+    "paid": "Paid",
+    "shipped": "Shipped",
+    "completed": "Completed",
+    "cancelled": "Cancelled"
+  },
+  
+  "status": {
+    "pending": "Pending",
+    "paid": "Paid",
+    "shipped": "Shipped",
+    "completed": "Completed",
+    "cancelled": "Cancelled"
+  },
+  
+  "orderNumber": "Order Number",
+  "orderDate": "Order Date",
+  "totalAmount": "Total Amount",
+  "shippingInfo": "Shipping Information",
+  "paymentMethod": "Payment Method",
+  
+  "viewItems": "View Items",
+  "viewDetails": "View Details",
+  "exportPO": "Export PO",
+  "cancelOrder": "Cancel Order",
+  
+  "search": "Search",
+  "searchPlaceholder": "Search by order number or product",
+  
+  "confirmCancel": "Are you sure you want to cancel order {{orderId}}?",
+  "cancelSuccess": "Order {{orderId}} has been cancelled",
+  "cancelError": "Failed to cancel order {{orderId}}",
+  
+  "exportingPO": "Preparing PO for order {{orderId}}...",
+  "exportSuccess": "PO for order {{orderId}} ready for download",
+  "exportError": "Failed to export PO for order {{orderId}}"
+} 

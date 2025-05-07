@@ -1,0 +1,80 @@
+/* 
+ * 自动主题 - 根据系统设置自动切换
+ * 特点：与系统偏好保持一致
+ * 设计理念：Adaptive Experience
+ */
+
+:root.theme-auto {
+  /* 
+   * 自动主题本身不定义任何变量
+   * 它将根据系统设置自动应用其他主题
+   * JavaScript将负责在系统颜色模式改变时切换类名
+   */
+   
+  /* 在浅色模式下使用Modern主题的变量 */
+  color-scheme: light dark;
+}
+
+/* 浅色模式下的样式 */
+@media (prefers-color-scheme: light) {
+  :root.theme-auto {
+    /* 品牌主色调 - 静谧蓝黑 (来自Modern主题) */
+    --primary-color: #0f172a;
+    --primary-light: #1e293b;
+    --primary-dark: #020617;
+    --primary-bg: #f1f5f9;
+    
+    /* 辅助色系 - 科技蓝 */
+    --secondary-color: #0284c7;
+    --secondary-light: #0ea5e9;
+    --secondary-dark: #0369a1;
+    
+    /* 强调色 - 霓虹紫 */
+    --accent-color: #7e22ce;
+    --accent-light: #a855f7;
+    --accent-dark: #6b21a8;
+    
+    /* 背景色 - 无暇 */
+    --bg-color: #ffffff;
+    --bg-card: #ffffff;
+    --bg-elevated: #f9fafb;
+    --bg-inset: #f3f4f6;
+    
+    /* 文本颜色 - 鲜明对比 */
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --text-tertiary: #6b7280;
+  }
+}
+
+/* 深色模式下的样式 */
+@media (prefers-color-scheme: dark) {
+  :root.theme-auto {
+    /* 品牌主色调 - 科技蓝 (来自Tech主题) */
+    --primary-color: #3b82f6;
+    --primary-light: #60a5fa;
+    --primary-dark: #2563eb;
+    --primary-bg: #1e1e1e;
+    
+    /* 辅助色系 - 高科技绿 */
+    --secondary-color: #10b981;
+    --secondary-light: #34d399;
+    --secondary-dark: #059669;
+    
+    /* 强调色 - 霓虹粉 */
+    --accent-color: #ec4899;
+    --accent-light: #f472b6;
+    --accent-dark: #db2777;
+    
+    /* 背景色 - 深邃 */
+    --bg-color: #121212;
+    --bg-card: #1e1e1e;
+    --bg-elevated: #2d2d2d;
+    --bg-inset: #252525;
+    
+    /* 文本颜色 - 柔和对比 */
+    --text-primary: #f3f4f6;
+    --text-secondary: #d1d5db;
+    --text-tertiary: #9ca3af;
+  }
+} 
