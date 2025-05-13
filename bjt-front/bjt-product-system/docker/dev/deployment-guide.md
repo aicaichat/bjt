@@ -63,3 +63,28 @@ podman-compose -f docker/dev/docker-compose.podman.yml down
 # 进入容器
 podman exec -it <container_id> /bin/bash
 ``` 
+
+## 修改后的 docker-compose.podman.yml
+
+```yaml
+frontend:
+  build:
+    context: ../..
+    dockerfile: docker/dev/nginx/Dockerfile
+    args:
+      - VITE_USE_MOCK=true
+  environment:
+    - VITE_USE_MOCK=true 
+```
+
+## 修改后的 Dockerfile
+
+```dockerfile
+FROM node:18-alpine AS builder
+WORKDIR /app
+ARG VITE_USE_MOCK=false
+ENV VITE_USE_MOCK=${VITE_USE_MOCK}
+COPY ../../frontend/package*.json ./
+RUN npm install
+COPY ../../frontend ./
+RUN npm run build 
