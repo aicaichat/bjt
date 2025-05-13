@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Spin, message, Button, Select, InputNumber, Tabs, Tag, Pagination } from 'antd';
+import { Spin, message, Button, Select, InputNumber, Tabs, Tag, Pagination, Tooltip, Popover } from 'antd';
+import { ShoppingCartOutlined, InfoCircleOutlined, FilterOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart, PriceTier } from '../../contexts/CartContext';
 import Loading from '../../components/common/Loading';
@@ -75,13 +76,6 @@ const ConsumablesPage: React.FC = () => {
   const [selectedWidth, setSelectedWidth] = useState<string>('all');
   const [selectedLength, setSelectedLength] = useState<string>('all');
   const [showModelUsage, setShowModelUsage] = useState<boolean>(false);
-  
-  // 修改tooltip状态管理
-  const [showSpecTooltip, setShowSpecTooltip] = useState<boolean>(false);
-  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
-  const [activeItem, setActiveItem] = useState<ConsumableProduct | null>(null);
-  const [tooltipHovered, setTooltipHovered] = useState<boolean>(false);
-  const tooltipRef = useRef<HTMLDivElement>(null);
 
   // 获取用户区域
   const userRegion = user?.region || DEFAULT_REGION;
@@ -311,63 +305,258 @@ const ConsumablesPage: React.FC = () => {
     setCurrentPage(1);
   };
   
-  // 处理规格点击
-  const handleSpecClick = (e: React.MouseEvent, item: ConsumableProduct) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    setTooltipPosition({
-      top: rect.top + window.scrollY,
-      left: rect.left + window.scrollX
-    });
-    
-    setActiveItem(item);
-    setShowSpecTooltip(true);
+  // 渲染产品表格
+  const renderConsumablesTable = () => {
+    return (
+      <div className="grid grid-cols-1 gap-4">
+        {consumables.map((item) => (
+          <div 
+            key={item.id} 
+            className="bg-card rounded-lg shadow-md hover:shadow-lg transition-all duration-300 border border-border text-content"
+          >
+            <div className="flex flex-col md:flex-row p-4">
+              {/* 列1: 图片 */}
+              <div className="w-full md:w-1/6 flex items-center justify-center md:justify-start mb-4 md:mb-0">
+                <img 
+                  src={item.image_url || placeholderImage} 
+                  alt={item.name} 
+                  className="w-24 h-24 object-contain border border-border rounded bg-card-alt p-1 hover:border-brand-accent transition-colors"
+                />
+              </div>
+
+              {/* 列2: 信息与规格 */}
+              <div className="w-full md:w-3/6 md:px-4">
+                <div className="mb-1">
+                  <span className="inline-block bg-brand-primary text-gray-800 px-2 py-1 text-xs font-bold rounded">{item.code}</span>
+                  <h3 className="text-lg font-semibold text-title mt-1">{item.name}</h3>
+                  {item.model && (
+                    <div className="text-sm text-content-light">
+                      <span>({item.model})</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap gap-2 my-2">
+                  <span className="inline-flex items-center px-2 py-1 bg-background rounded text-xs">
+                    <strong className="text-label mr-1">材料:</strong> 
+                    <span className="text-content">{item.specs.material}</span>
+                  </span>
+                  <span className="inline-flex items-center px-2 py-1 bg-background rounded text-xs">
+                    <strong className="text-label mr-1">形状:</strong> 
+                    <span className="text-content">{item.specs.shape}</span>
+                  </span>
+                  {item.specs.thickness && (
+                    <span className="inline-flex items-center px-2 py-1 bg-background rounded text-xs">
+                      <strong className="text-label mr-1">厚度:</strong> 
+                      <span className="text-content">{item.specs.thickness}</span>
+                    </span>
+                  )}
+                </div>
+
+                <div className="bg-card-alt rounded-md p-3 mt-2">
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="flex">
+                      <strong className="w-20 text-label">宽度:</strong>
+                      <span className="text-content">{item.specs.width}</span>
+                    </div>
+                    <div className="flex">
+                      <strong className="w-20 text-label">长度:</strong>
+                      <span className="text-content">{item.specs.length}</span>
+                    </div>
+                    {item.specs.rollLength && (
+                      <div className="flex">
+                        <strong className="w-20 text-label">卷长:</strong>
+                        <span className="text-content">{item.specs.rollLength}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-3 flex gap-2">
+                  <Button 
+                    size="small"
+                    icon={<InfoCircleOutlined />}
+                    className="bg-secondary-light text-secondary hover:bg-secondary"
+                    onClick={() => {
+                      const pdfUrl = (item.specs as any).pdfUrl || '#'; // Add type assertion and placeholder
+                      if (pdfUrl !== '#') {
+                        window.open(pdfUrl, '_blank');
+                      }
+                    }}
+                    disabled={!(item.specs as any).pdfUrl} // Add type assertion
+                  >
+                    规格详情 (PDF)
+                  </Button>
+
+                  <Popover
+                    title={`${item.name} - 更多信息`}
+                    content={
+                      <div className="order-info-popover">
+                        {/* 材质信息 */}
+                        <div className="section">
+                          <h4>材质信息</h4>
+                          <div className="info-grid">
+                            <div>
+                              <strong>厚度/克重:</strong> 
+                              <span>{userRegion === 'na' || userRegion === 'au' ? ((item.specs as any).thicknessMil || 'N/A') : ((item.specs as any).thickness || 'N/A')} ({userRegion === 'na' || userRegion === 'au' ? 'mil/#' : 'um/gsm'})</span>
+                            </div>
+                            <div>
+                              <strong>膜宽:</strong> 
+                              <span>{userRegion === 'na' || userRegion === 'au' ? ((item.specs as any).filmWidthInch || 'N/A') : ((item.specs as any).filmWidthCm || 'N/A')} ({userRegion === 'na' || userRegion === 'au' ? 'inch' : 'cm'})</span>
+                            </div>
+                            <div>
+                              <strong>袋长:</strong> 
+                              <span>{userRegion === 'na' || userRegion === 'au' ? ((item.specs as any).bagLengthInch || 'N/A') : ((item.specs as any).bagLengthCm || 'N/A')} ({userRegion === 'na' || userRegion === 'au' ? 'inch' : 'cm'})</span>
+                            </div>
+                            <div>
+                              <strong>总长:</strong> 
+                              <span>{userRegion === 'na' || userRegion === 'au' ? ((item.specs as any).totalLengthFt || 'N/A') : ((item.specs as any).totalLengthM || 'N/A')} ({userRegion === 'na' || userRegion === 'au' ? 'ft' : 'm'})</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 包装属性 */}
+                        <div className="section">
+                          <h4>包装属性 (Package Info)</h4>
+                          <div className="info-grid">
+                             <div>
+                              <strong>包装方式:</strong> 
+                              <span>{((item.specs as any).packagingMethod || 'N/A')}</span>
+                            </div>
+                            <div>
+                              <strong>包装尺寸:</strong> 
+                              <span>{userRegion === 'na' || userRegion === 'au' ? ((item.specs as any).packageSizeInch || 'N/A') : ((item.specs as any).packageSizeCm || 'N/A')} ({userRegion === 'na' || userRegion === 'au' ? 'inch' : 'cm'})</span>
+                            </div>
+                            <div>
+                              <strong>单件净重:</strong> 
+                              <span>{userRegion === 'na' || userRegion === 'au' ? ((item.specs as any).netWeightLbs || 'N/A') : ((item.specs as any).netWeightKg || 'N/A')} ({userRegion === 'na' || userRegion === 'au' ? 'lbs' : 'kg'})</span>
+                            </div>
+                            <div>
+                              <strong>托盘尺寸:</strong> 
+                              <span>{userRegion === 'na' || userRegion === 'au' ? 'N/A' : (((item.specs as any).palletSizeCm || 'N/A'))} ({userRegion === 'na' || userRegion === 'au' ? 'inch' : 'cm'})</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 打托属性 */}
+                        <div className="section">
+                          <h4>打托属性 (Pallet Info)</h4>
+                          <div className="info-grid-pallet">
+                            {/* 一托卷数 A */}
+                            <div><strong>一托卷数A:</strong> <span>{((item.specs as any).rollsPerPalletA || 'N/A')}</span></div>
+                            <div>
+                              <strong>整托毛重A:</strong> 
+                              <span>{userRegion === 'na' || userRegion === 'au' ? (((item.specs as any).palletWeightALbs || 'N/A')) : (((item.specs as any).palletWeightAKg || 'N/A'))} ({userRegion === 'na' || userRegion === 'au' ? 'lbs' : 'kg'})</span>
+                            </div>
+                            <div>
+                              <strong>打托高度A:</strong> 
+                              <span>{userRegion === 'na' || userRegion === 'au' ? (((item.specs as any).palletHeightAInch || 'N/A')) : (((item.specs as any).palletHeightACm || 'N/A'))} ({userRegion === 'na' || userRegion === 'au' ? 'inch' : 'cm'})</span>
+                            </div>
+                            
+                            {/* 一托卷数 B */}
+                            <div><strong>一托卷数B:</strong> <span>{((item.specs as any).rollsPerPalletB || 'N/A')}</span></div>
+                            <div>
+                              <strong>整托毛重B:</strong> 
+                              <span>{userRegion === 'na' || userRegion === 'au' ? (((item.specs as any).palletWeightBLbs || 'N/A')) : (((item.specs as any).palletWeightBKg || 'N/A'))} ({userRegion === 'na' || userRegion === 'au' ? 'lbs' : 'kg'})</span>
+                            </div>
+                            <div>
+                              <strong>打托高度B:</strong> 
+                              <span>{userRegion === 'na' || userRegion === 'au' ? (((item.specs as any).palletHeightBInch || 'N/A')) : (((item.specs as any).palletHeightBCm || 'N/A'))} ({userRegion === 'na' || userRegion === 'au' ? 'inch' : 'cm'})</span>
+                            </div>
+                            
+                            {/* 一托卷数 C */}
+                            <div><strong>一托卷数C:</strong> <span>{((item.specs as any).rollsPerPalletC || 'N/A')}</span></div>
+                            <div>
+                              <strong>整托毛重C:</strong> 
+                              <span>{userRegion === 'na' || userRegion === 'au' ? (((item.specs as any).palletWeightCLbs || 'N/A')) : (((item.specs as any).palletWeightCKg || 'N/A'))} ({userRegion === 'na' || userRegion === 'au' ? 'lbs' : 'kg'})</span>
+                            </div>
+                            <div>
+                              <strong>打托高度C:</strong> 
+                              <span>{userRegion === 'na' || userRegion === 'au' ? (((item.specs as any).palletHeightCInch || 'N/A')) : (((item.specs as any).palletHeightCCm || 'N/A'))} ({userRegion === 'na' || userRegion === 'au' ? 'inch' : 'cm'})</span>
+                            </div>
+
+                            {/* 纸筒内径 */}
+                            <div className="full-width">
+                              <strong>纸筒内径:</strong> 
+                              <span>{userRegion === 'na' || userRegion === 'au' ? ((item.specs as any).tubeDiameterInch || 'N/A') : ((item.specs as any).tubeDiameterCm || 'N/A')} ({userRegion === 'na' || userRegion === 'au' ? 'inch' : 'cm'})</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    }
+                    trigger="hover"
+                    placement="right"
+                    overlayClassName="order-info-popover-container wide-popover"
+                  >
+                    <Button 
+                      size="small"
+                      icon={<InfoCircleOutlined />}
+                      className="bg-accent-light text-accent hover:bg-accent"
+                    >
+                      更多信息
+                    </Button>
+                  </Popover>
+                </div>
+              </div>
+
+              {/* 列3: 价格与操作 */}
+              <div className="w-full md:w-2/6 flex flex-col justify-between mt-4 md:mt-0 md:pl-4 md:border-l md:border-border">
+                <div>
+                  <h4 className="font-medium text-sm text-label mb-2">价格:</h4>
+                  <div className="space-y-1">
+                    {item.pricing.map((price, idx) => (
+                      <div key={idx} className="flex justify-between items-center bg-background rounded px-3 py-1 text-sm hover:bg-brand-light transition-colors">
+                        <span className="text-content-light">{price.range}:</span>
+                        <span className="font-semibold text-brand-primary">
+                          {getCurrencySymbolByRegion()}{getRegionalPrice(item, parseInt(price.range.replace(/[^0-9]/g, '') || '1')).toFixed(2)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* 库存信息（仅管理员/销售可见） */}
+                  {(user?.role === 'sales' || user?.role === 'admin') && (
+                    <div className="mt-3 bg-background p-2 rounded border border-border">
+                      <h4 className="font-medium text-sm text-label mb-1">库存:</h4>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        {Object.entries(item.inventory).map(([region, count]) => (
+                          <div key={region} className="flex justify-between items-center px-2 py-1 rounded border border-border">
+                            <span className="font-medium">{region.toUpperCase()}:</span>
+                            <span className={`font-medium ${count > 0 ? 'text-success' : 'text-error'}`}>
+                              {count}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="mt-4 flex items-center justify-between">
+                  <div className="w-20">
+                    <InputNumber
+                      min={1}
+                      value={quantities[item.id] || 1}
+                      onChange={(value) => handleQuantityChange(item.id, Number(value || 1))}
+                      className="w-full"
+                    />
+                  </div>
+                  <Button 
+                    type="primary"
+                    onClick={() => addToCart(item.id)}
+                    className="flex-grow ml-3 h-10"
+                    icon={<ShoppingCartOutlined />}
+                  >
+                    加入购物车
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   };
-  
-  // 鼠标进入提示框
-  const handleTooltipMouseEnter = () => {
-    setTooltipHovered(true);
-  };
-  
-  // 鼠标离开提示框
-  const handleTooltipMouseLeave = () => {
-    setTooltipHovered(false);
-    setTimeout(() => {
-      if (!tooltipHovered) closeTooltip();
-    }, 300);
-  };
-  
-  // 关闭提示框
-  const closeTooltip = () => {
-    setShowSpecTooltip(false);
-    setActiveItem(null);
-    setTooltipHovered(false);
-  };
-  
-  // 处理点击和键盘事件
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (showSpecTooltip && tooltipRef.current && !tooltipRef.current.contains(e.target as Node)) {
-        closeTooltip();
-      }
-    };
-    
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && showSpecTooltip) {
-        closeTooltip();
-      }
-    };
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleKeyDown);
-    
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [showSpecTooltip]);
   
   // 加载中状态显示
   if (loading) {
@@ -403,23 +592,57 @@ const ConsumablesPage: React.FC = () => {
             <h2>{t('title', 'Consumable Products')}</h2>
             <p>{t('subtitle', 'BJT Bubble Films, Cushioning Bags and Other Products')}</p>
           </div>
+          <div className="ml-auto flex items-center">
+            <Button
+              type="primary"
+              icon={<ShoppingCartOutlined />}
+              onClick={toggleCartModal}
+              className="flex items-center"
+            >
+              {t('button.cart', 'View Cart')}
+            </Button>
+          </div>
         </div>
         
         <div className="filter-container">
+          {/* 优化筛选区标题 */}
+          <div className="mb-4 flex items-center">
+            <FilterOutlined className="mr-2 text-brand-primary" />
+            <h3 className="text-lg font-semibold m-0 text-title">{t('filter.title', 'Product Filters')}</h3>
+            <Button 
+              type="text" 
+              icon={<ReloadOutlined />} 
+              onClick={handleResetFilters}
+              className="ml-auto text-sm"
+              size="small"
+            >
+              {t('button.reset', 'Reset')}
+            </Button>
+          </div>
+
           <div className="filter-section">
             <div className="filter-group">
-              <label>{t('filter.machine', 'Machine Model')}:</label>
-              <select value={selectedModel} onChange={handleModelChange}>
+              <label className="block text-sm font-medium mb-2 text-label">{t('filter.machine', 'Machine Model')}:</label>
+              <div className="flex items-center">
+                <Select 
+                  value={selectedModel} 
+                  onChange={(value) => setSelectedModel(value)}
+                  style={{ width: '100%', maxWidth: '300px' }}
+                  className="mr-2"
+                >
                 {models.map(model => (
-                  <option key={model.id} value={model.id}>{model.name}</option>
-                ))}
-              </select>
-              <button className="btn-help" onClick={() => setShowModelUsage(!showModelUsage)}>?</button>
+                    <Option key={model.id} value={model.id}>{model.name}</Option>
+                  ))}
+                </Select>
+                <Tooltip title={t('help.machineModel', 'Select the machine model to filter compatible consumables')}>
+                  <Button type="text" shape="circle" icon={<InfoCircleOutlined />} />
+                </Tooltip>
+              </div>
             </div>
           </div>
           
           <div className="filter-section">
-            <h3>{t('filter.shape', 'Shape')}</h3>
+            <h3 className="text-base font-medium mb-3 text-label">{t('filter.shape', 'Shape')}</h3>
             <div className="shape-selector">
               {shapes.map(shape => (
                 <div key={shape.id} className="shape-option">
@@ -430,9 +653,9 @@ const ConsumablesPage: React.FC = () => {
                     checked={selectedShape === shape.id}
                     onChange={() => handleShapeChange(shape.id)}
                   />
-                  <label htmlFor={`shape-${shape.id}`} className="shape-label">
-                    <img src={shape.image_url || shapePlaceholderImage} alt={shape.name} />
-                    <span>{shape.name}</span>
+                  <label htmlFor={`shape-${shape.id}`} className="shape-label bg-card shadow-sm hover:shadow-md transition-shadow">
+                    <img src={shape.image_url || shapePlaceholderImage} alt={shape.name} className="object-contain h-14 w-20" />
+                    <span className="mt-2 font-medium text-sm">{shape.name}</span>
                   </label>
                 </div>
               ))}
@@ -440,9 +663,9 @@ const ConsumablesPage: React.FC = () => {
           </div>
           
           <div className="filter-section">
-            <div className="filter-row">
+            <div className="filter-row mb-3">
               <div className="filter-group">
-                <label>{t('filter.material', 'Material')}:</label>
+                <label className="block text-sm font-medium mb-2 text-label">{t('filter.material', 'Material')}:</label>
                 <div className="material-selector">
                   {materials.map(material => (
                     <button 
@@ -458,230 +681,89 @@ const ConsumablesPage: React.FC = () => {
             </div>
             
             <div className="dimensions-container">
-              <div className="dimensions-filters">
+              <div className="dimensions-filters grid grid-cols-1 md:grid-cols-3 gap-4 w-full md:w-7/12">
                 <div className="filter-group vertical">
-                  <label>{selectedMaterial === 'paper_pe' ? t('filter.weight', 'Weight') : t('filter.thickness', 'Thickness')}:</label>
-                  <select 
+                  <label className="block text-sm font-medium mb-2 text-label">{selectedMaterial === 'paper_pe' ? t('filter.weight', 'Weight') : t('filter.thickness', 'Thickness')}:</label>
+                  <Select 
                     value={selectedMaterial === 'paper_pe' ? selectedWeight : selectedThickness}
-                    onChange={selectedMaterial === 'paper_pe' ? handleWeightChange : handleThicknessChange}
+                    onChange={selectedMaterial === 'paper_pe' ? (value) => setSelectedWeight(value) : (value) => setSelectedThickness(value)}
+                    style={{ width: '100%' }}
                   >
                     {(selectedMaterial === 'paper_pe' ? weights : thicknesses).map(item => (
-                      <option key={item.id} value={item.id}>{item.name}</option>
+                      <Option key={item.id} value={item.id}>{item.name}</Option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
                 
                 <div className="filter-group vertical">
-                  <label>{t('filter.width', 'Width')}:</label>
-                  <select value={selectedWidth} onChange={handleWidthChange}>
+                  <label className="block text-sm font-medium mb-2 text-label">{t('filter.width', 'Width')}:</label>
+                  <Select
+                    value={selectedWidth}
+                    onChange={(value) => setSelectedWidth(value)}
+                    style={{ width: '100%' }}
+                  >
                     {widths.map(width => (
-                      <option key={width.id} value={width.id}>{width.name}</option>
+                      <Option key={width.id} value={width.id}>{width.name}</Option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
                 
                 <div className="filter-group vertical">
-                  <label>{t('filter.length', 'Length')}:</label>
-                  <select value={selectedLength} onChange={handleLengthChange}>
+                  <label className="block text-sm font-medium mb-2 text-label">{t('filter.length', 'Length')}:</label>
+                  <Select
+                    value={selectedLength}
+                    onChange={(value) => setSelectedLength(value)}
+                    style={{ width: '100%' }}
+                  >
                     {lengths.map(length => (
-                      <option key={length.id} value={length.id}>{length.name}</option>
+                      <Option key={length.id} value={length.id}>{length.name}</Option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
               </div>
               
-              <div className="dimension-image">
+              <div className="dimension-image w-full md:w-5/12 flex justify-center items-center">
                 <img 
                   src={selectedModel && modelExplodedViews[selectedModel as keyof typeof modelExplodedViews] 
                       ? modelExplodedViews[selectedModel as keyof typeof modelExplodedViews] 
                       : dimensionGuidePlaceholder} 
                   alt={t('filter.dimensions', 'Product Dimensions')} 
+                  className="object-contain max-h-60 border border-border rounded p-2 bg-card"
                 />
               </div>
             </div>
           </div>
           
-          <div className="filter-actions">
-            <button className="btn-reset" onClick={handleResetFilters}>{t('button.reset', 'Reset')}</button>
-            <button className="btn-apply" onClick={handleApplyFilters}>{t('button.apply', 'Apply Filters')}</button>
+          <div className="filter-actions flex justify-end mt-4">
+            <Button 
+              type="primary" 
+              onClick={handleApplyFilters} 
+              className="btn-apply"
+            >
+              {t('button.apply', 'Apply Filters')}
+            </Button>
           </div>
         </div>
         
         <div className="products-container">
-          <table className="products-table">
-            <thead>
-              <tr>
-                <th>Image</th>
-                <th>Product Code</th>
-                <th>Specifications</th>
-                <th>Price</th>
-                {(user?.role === 'sales' || user?.role === 'admin') && <th>Inventory</th>}
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {consumables.map((item) => (
-                <tr key={item.id}>
-                  <td>
-                    <img src={item.image_url || placeholderImage} alt={item.name} className="product-image" />
-                  </td>
-                  <td>
-                    <div className="product-code">{item.code}</div>
-                    <div className="product-name">{item.name}</div>
-                    <div className="product-model">{item.model}</div>
-                  </td>
-                  <td>
-                    <div 
-                      className="specs-table" 
-                      onClick={(e) => handleSpecClick(e, item)}
-                    >
-                      <div className="specs-row">
-                        <div className="specs-label">Material:</div>
-                        <div className="specs-value">{item.specs.material}</div>
-                      </div>
-                      <div className="specs-row">
-                        <div className="specs-label">Shape:</div>
-                        <div className="specs-value">{item.specs.shape}</div>
-                      </div>
-                      <div className="specs-row">
-                        <div className="specs-label">Thickness:</div>
-                        <div className="specs-value">{item.specs.thickness || 'N/A'}</div>
-                      </div>
-                      <div className="specs-row">
-                        <div className="specs-label">Width:</div>
-                        <div className="specs-value">{item.specs.width}</div>
-                      </div>
-                      <div className="specs-row">
-                        <div className="specs-label">Length:</div>
-                        <div className="specs-value">{item.specs.length}</div>
-                      </div>
-                      {item.specs.rollLength && (
-                        <div className="specs-row">
-                          <div className="specs-label">Roll Length:</div>
-                          <div className="specs-value">{item.specs.rollLength}</div>
-                        </div>
-                      )}
-                      <div className="specs-row">
-                        <div className="specs-label">Compatible:</div>
-                        <div className="specs-value">{String(item.specs.compatibility)}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    {item.pricing.map((price, idx) => (
-                      <div key={idx} className="price-tier">
-                        <span className="price-range">{price.range}:</span>
-                        <span className="price-value">
-                          {getCurrencySymbolByRegion()}{getRegionalPrice(item, parseInt(price.range.replace(/[^0-9]/g, '') || '1')).toFixed(2)}
-                        </span>
-                      </div>
-                    ))}
-                  </td>
-                  {(user?.role === 'sales' || user?.role === 'admin') && (
-                    <td>
-                      {Object.entries(item.inventory).map(([region, count]) => (
-                        <div key={region}>{region.toUpperCase()}: {count}</div>
-                      ))}
-                    </td>
-                  )}
-                  <td>
-                    <div className="product-actions">
-                      <InputNumber
-                        min={1}
-                        value={quantities[item.id] || 1}
-                        onChange={(value) => handleQuantityChange(item.id, Number(value || 1))}
-                        className="quantity-input"
-                      />
-                      <Button 
-                        type="primary"
-                        onClick={() => addToCart(item.id)}
-                        className="btn-add"
-                      >
-                        Add
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {/* 表格式布局 */}
+          {renderConsumablesTable()}
           
-          {/* 移动设备卡片式布局 */}
-          <div className="mobile-cards">
-            {consumables.map((item) => (
-              <div key={item.id} className="product-card">
-                <div className="product-card-header">
-                  <img 
-                    src={item.image_url || placeholderImage} 
-                    alt={item.name} 
-                    className="product-card-image" 
-                  />
-                  <div className="product-card-title">
-                    <div className="product-card-code">{item.code}</div>
-                    <div className="product-card-name">{item.name}</div>
-                  </div>
-                </div>
-                
-                <div 
-                  className="product-card-specs"
-                  onClick={(e) => handleSpecClick(e, item)}
-                >
-                  <div className="product-card-spec">
-                    <span className="product-card-spec-label">Material:</span>
-                    <span>{item.specs.material}</span>
-                  </div>
-                  <div className="product-card-spec">
-                    <span className="product-card-spec-label">Shape:</span>
-                    <span>{item.specs.shape}</span>
-                  </div>
-                  <div className="product-card-spec">
-                    <span className="product-card-spec-label">Thickness:</span>
-                    <span>{item.specs.thickness || 'N/A'}</span>
-                  </div>
-                  <div className="product-card-spec">
-                    <span className="product-card-spec-label">Width:</span>
-                    <span>{item.specs.width}</span>
-                  </div>
-                  <div className="product-card-spec">
-                    <span className="product-card-spec-label">Length:</span>
-                    <span>{item.specs.length}</span>
-                  </div>
-                  <div className="product-card-spec">
-                    <span className="product-card-spec-label">Compatible:</span>
-                    <span>{String(item.specs.compatibility)}</span>
-                  </div>
-                </div>
-                
-                <div className="product-card-price">
-                  {item.pricing.map((price, idx) => (
-                    <div key={idx}>
-                      <span>{price.range}: </span>
-                      <span>{getCurrencySymbolByRegion()}{getRegionalPrice(item, parseInt(price.range.replace(/[^0-9]/g, '') || '1')).toFixed(2)}</span>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="product-card-actions">
-                  <InputNumber
-                    min={1}
-                    value={quantities[item.id] || 1}
-                    onChange={(value) => handleQuantityChange(item.id, Number(value || 1))}
-                    className="product-card-quantity"
-                  />
-                  <Button 
-                    type="primary"
-                    onClick={() => addToCart(item.id)}
-                    className="product-card-add"
-                  >
-                    Add
+          {consumables.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <svg className="h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              <h3 className="mt-4 text-lg font-medium text-title">{t('noProducts.title', '没有找到符合条件的产品')}</h3>
+              <p className="mt-2 text-content-light">{t('noProducts.message', '请尝试调整筛选条件')}</p>
+              <Button type="primary" onClick={handleResetFilters} className="mt-4">
+                {t('button.resetFilters', '重置筛选条件')}
                   </Button>
                 </div>
-              </div>
-            ))}
-          </div>
+          )}
           
           {totalPages > 1 && (
-            <div className="pagination-container">
+            <div className="flex justify-center mt-6">
               <Pagination
                 current={currentPage}
                 total={totalItems}
@@ -693,42 +775,6 @@ const ConsumablesPage: React.FC = () => {
           )}
         </div>
       </div>
-      
-      {showSpecTooltip && activeItem && (
-        <div 
-          className="spec-tooltip"
-          ref={tooltipRef}
-          style={{ 
-            top: tooltipPosition.top, 
-            left: tooltipPosition.left 
-          }}
-          onMouseEnter={handleTooltipMouseEnter}
-          onMouseLeave={handleTooltipMouseLeave}
-        >
-          <h4>
-            {activeItem.name} Specifications
-            <button className="tooltip-close" onClick={closeTooltip}>×</button>
-          </h4>
-          <div className="tooltip-content">
-            <div className="tooltip-section">
-              <h5>Product Specifications</h5>
-              <p><strong>Material:</strong> {activeItem.specs.material}</p>
-              <p><strong>Shape:</strong> {activeItem.specs.shape}</p>
-              <p><strong>Thickness (um/gsm):</strong> {activeItem.specs.thickness || 'N/A'}</p>
-              <p><strong>Width (cm):</strong> {(parseFloat(activeItem.specs.width || '0') / 10).toFixed(1)}</p>
-              <p><strong>Width (inch):</strong> {(parseFloat(activeItem.specs.width || '0') / 25.4).toFixed(2)}</p>
-              <p><strong>Length (cm):</strong> {(parseFloat(activeItem.specs.length || '0') / 10).toFixed(1)}</p>
-              <p><strong>Length (inch):</strong> {(parseFloat(activeItem.specs.length || '0') / 25.4).toFixed(2)}</p>
-              {activeItem.specs.rollLength && (
-                <>
-                  <p><strong>Roll Length (m):</strong> {activeItem.specs.rollLength}</p>
-                </>
-              )}
-              <p><strong>Compatible With:</strong> {String(activeItem.specs.compatibility)}</p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

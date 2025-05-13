@@ -50,20 +50,20 @@ header .container {
 .nav-item {
     margin: 0 15px;
     text-decoration: none;
-    color: #333;
+    color: var(--text-primary);
     font-weight: 500;
 }
 
 .nav-item:hover {
-    color: #1a57a5;
+    color: var(--primary-dark);
 }
 
 .language-selector {
     margin-right: 15px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-default);
     padding: 5px 10px;
     border-radius: 4px;
-    background-color: #fff;
+    background-color: var(--background-primary);
     min-width: 120px;
     cursor: pointer;
     font-size: 14px;
@@ -105,11 +105,11 @@ header .container {
 .user-info {
     display: flex;
     align-items: center;
-    background-color: #f5f5f5;
+    background-color: var(--gray-100);
     padding: 6px 12px;
     border-radius: 20px;
     cursor: pointer;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-default);
 }
 
 .user-avatar {
@@ -128,15 +128,15 @@ header .container {
     display: none;
     position: absolute;
     right: 0;
-    background-color: white;
+    background-color: var(--background-primary);
     min-width: 160px;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    box-shadow: var(--shadow-lg);
     z-index: 1000;
     border-radius: 4px;
 }
 
 .dropdown-content a {
-    color: black;
+    color: var(--text-primary);
     padding: 12px 16px;
     text-decoration: none;
     display: block;
@@ -144,7 +144,7 @@ header .container {
 }
 
 .dropdown-content a:hover {
-    background-color: #f1f1f1;
+    background-color: var(--gray-100);
 }
 
 .user-dropdown:hover .dropdown-content {
@@ -153,21 +153,21 @@ header .container {
 
 .breadcrumb {
     padding: 10px 0 20px;
-    color: #666;
+    color: var(--text-secondary);
     font-size: 14px;
 }
 
 .breadcrumb a {
-    color: #1a57a5;
+    color: var(--primary-dark);
     text-decoration: none;
 }
 
 .section-title {
     margin: 30px 0 20px;
     padding-bottom: 12px;
-    border-bottom: 1px dashed #ccc;
+    border-bottom: 1px dashed var(--border-light);
     font-size: 18px;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .product-list {
@@ -176,21 +176,21 @@ header .container {
 
 /* 更新产品项样式，采用 Consumables 的表格风格 */
 .product-item {
-    background-color: #fff;
-    border: 1px solid #e9ecef;
+    background-color: var(--background-card);
+    border: 1px solid var(--border-light);
     border-radius: 8px;
     padding: 20px;
     margin-bottom: 15px;
     display: flex;
     align-items: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    box-shadow: var(--shadow-sm);
     transition: all 0.25s ease;
 }
 
 .product-item:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    border-color: #c1d5ff;
+    box-shadow: var(--shadow-hover);
+    border-color: var(--primary-light);
 }
 
 .product-selector {
@@ -210,7 +210,7 @@ header .container {
     margin-right: 20px;
     border-radius: 4px;
     overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: var(--shadow-sm);
 }
 
 .product-image img {
@@ -235,14 +235,14 @@ header .container {
     font-size: 16px;
     font-weight: 600;
     margin-bottom: 5px;
-    color: #333;
+    color: var(--text-primary);
     display: flex;
     align-items: center;
 }
 
 .product-model-code {
-    background-color: #f1f6ff;
-    color: #1a57a5;
+    background-color: var(--primary-bg);
+    color: var(--primary-dark);
     padding: 2px 6px;
     border-radius: 4px;
     font-size: 13px;
@@ -1304,56 +1304,87 @@ header .container {
 .quantity-control {
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  background-color: var(--background-primary);
+  overflow: hidden;
+  width: auto;
+  max-width: 120px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .quantity-btn {
-  width: 28px;
-  height: 28px;
-  border: 1px solid #ced4da;
-  background-color: #f8f9fa;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: bold;
-  border-radius: 4px;
+  width: 30px !important;
+  height: 30px !important;
+  background-color: var(--background-secondary) !important;
+  border: none !important;
+  color: var(--text-primary) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  font-size: 16px !important;
+  font-weight: bold !important;
+  transition: all 0.2s ease !important;
+  margin: 0 !important;
 }
 
-.quantity-btn:hover {
-  background-color: #e9ecef;
+.quantity-btn:hover:not(:disabled) {
+  background-color: var(--primary-light) !important;
+  color: var(--primary) !important;
 }
 
 .quantity-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  color: var(--text-disabled) !important;
+  background-color: var(--background-disabled) !important;
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
 }
 
 .quantity-input {
-  width: 40px;
-  height: 28px;
-  text-align: center;
-  border: 1px solid #ced4da;
-  margin: 0 5px;
-  border-radius: 4px;
+  width: 40px !important;
+  height: 30px !important;
+  border: none !important;
+  border-left: 1px solid var(--border-light) !important;
+  border-right: 1px solid var(--border-light) !important;
+  text-align: center !important;
+  padding: 0 !important;
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+  background-color: var(--background-primary) !important;
+  box-shadow: none !important;
 }
 
-.add-to-cart-btn {
-  background-color: #1a57a5;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 6px 12px;
-  font-size: 14px;
-  cursor: pointer;
-  width: 100%;
-  transition: background-color 0.2s;
+.ant-input-number-handler-wrap {
+  display: none !important;
 }
 
-.add-to-cart-btn:hover {
-  background-color: #14447e;
+.flex.items-center.gap-2.mb-2 .ant-input-number.w-16 {
+  width: 40px !important;
+  min-width: 40px !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+}
+
+.ant-input-number-input {
+  height: 30px !important;
+  padding: 0 !important;
+  text-align: center !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: var(--text-primary) !important;
+}
+
+.product-item:hover .quantity-control button,
+.product-item:hover .flex.items-center.gap-2.mb-2 .ant-btn {
+  background-color: var(--background-secondary) !important;
+}
+
+.product-item:hover .quantity-control button:hover,
+.product-item:hover .flex.items-center.gap-2.mb-2 .ant-btn:hover {
+  background-color: var(--primary-light) !important;
 }
 
 /* 响应式调整 */

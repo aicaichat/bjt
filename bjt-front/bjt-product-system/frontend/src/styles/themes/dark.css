@@ -1,0 +1,77 @@
+/**
+ * 深蓝色暗黑主题 - Dark Blue Theme
+ */
+
+:root {
+  /* 页面背景和卡片颜色 */
+  --color-background: #131B29;
+  --color-card-bg: #1A2535;
+  --color-border: #2A3A4A;
+  --color-input-bg: #1D2A3A;
+  
+  /* 文本颜色 */
+  --color-text-content: #E0E0E0;
+  --color-text-label: #A0A0A0;
+  --color-text-title: #FFFFFF;
+  
+  /* 主要操作颜色 */
+  --color-primary: #4E9EFE;
+  --color-primary-dark: #2D7DE0;
+  --color-price: #A37CFD;
+  
+  /* 按钮颜色 */
+  --color-button-bg: #2A3A4A;
+  --color-secondary-button-bg: #2A3A4A;
+  --color-secondary-button-text: #8AC6FF;
+  --color-secondary-button-bg-hover: #3A4A5A;
+  
+  /* 数量控制按钮 */
+  --color-quantity-button-bg: #2A3A4A;
+  --color-quantity-button-border: #3A4A5A;
+  --color-quantity-button-text: #D1D5DB;
+  
+  /* 配件级别标签背景 */
+  --color-accessory-level-1-bg: #1A5A9A;
+  --color-accessory-level-2-bg: #1A8A6A;
+  --color-accessory-level-3-bg: #AA8A2A;
+  --color-accessory-level-4-bg: #AA5A2A;
+  --color-accessory-level-5-bg: #AA2A2A;
+  --color-accessory-tag-text: #FFFFFF;
+}
+
+.theme-dark {
+  /* 页面背景和卡片颜色 */
+  --color-background: #131B29;
+  --color-card-bg: #1A2535;
+  --color-border: #2A3A4A;
+  --color-input-bg: #1D2A3A;
+  
+  /* 文本颜色 */
+  --color-text-content: #E0E0E0;
+  --color-text-label: #A0A0A0;
+  --color-text-title: #FFFFFF;
+  
+  /* 主要操作颜色 */
+  --color-primary: #4E9EFE;
+  --color-primary-dark: #2D7DE0;
+  --color-price: #A37CFD;
+  
+  /* 按钮颜色 */
+  --color-button-bg: #2A3A4A;
+  --color-secondary-button-bg: #2A3A4A;
+  --color-secondary-button-text: #8AC6FF;
+  --color-secondary-button-bg-hover: #3A4A5A;
+  
+  /* 数量控制按钮 */
+  --color-quantity-button-bg: #2A3A4A;
+  --color-quantity-button-border: #3A4A5A;
+  --color-quantity-button-text: #D1D5DB;
+  
+  /* 配件级别标签背景 */
+  --color-accessory-level-1-bg: #1A5A9A;
+  --color-accessory-level-2-bg: #1A8A6A;
+  --color-accessory-level-3-bg: #AA8A2A;
+  --color-accessory-level-4-bg: #AA5A2A;
+  --color-accessory-level-5-bg: #AA2A2A;
+  --color-accessory-tag-text: #FFFFFF;
+} 

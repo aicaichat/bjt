@@ -115,6 +115,7 @@ const App: React.FC = () => {
                 <CartProvider>
                   <div className="App">
                     {/* 如果是开发环境并使用模拟数据则显示mock数据管理按钮 */}
+                    {/* The following block will be removed
                     {useMockData && import.meta.env.DEV && (
                       <button 
                         onClick={() => setIsMockManagerOpen(true)}
@@ -126,6 +127,7 @@ const App: React.FC = () => {
                         </svg>
                       </button>
                     )}
+                    */}
                     
                     {/* Mock数据管理组件 */}
                     <MockDataManager 

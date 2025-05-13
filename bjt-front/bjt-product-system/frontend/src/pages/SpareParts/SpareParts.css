@@ -1,9 +1,105 @@
-/* SpareParts page styles - Optimized */
+/* SpareParts page styles - Optimized with Tailwind-compatible classes */
 
 :root {
   --primary-color-rgb: 0, 102, 204; /* RGB values for primary color (#0066cc) */
+  --bg-card: var(--background-card, #ffffff);
+  --bg-card-alt: var(--background-secondary, #f8f9fa);
+  --bg-primary: var(--primary-bg, #e6f0ff);
+  --bg-background: var(--background-secondary, #f5f7fa);
+  --border-color: var(--border-light, #e0e0e0);
+  --text-primary: var(--brand-primary, #1a57a5);
+  --text-content: var(--text-primary, #1f2937);
+  --text-content-light: var(--text-secondary, #6b7280);
+  --text-title: var(--text-primary, #111827);
+  --text-label: var(--text-secondary, #4b5563);
+  --text-error: var(--error, #ef4444);
+  --text-success: var(--success, #10b981);
 }
 
+/* Tailwind-compatible utility classes */
+.bg-card {
+  background-color: var(--bg-card);
+}
+
+.bg-card-alt {
+  background-color: var(--bg-card-alt);
+}
+
+.bg-primary {
+  background-color: var(--primary-color, #0066cc);
+}
+
+.bg-primary-dark {
+  background-color: var(--primary-dark, #004c99);
+}
+
+.bg-background {
+  background-color: var(--bg-background);
+}
+
+.bg-brand-light {
+  background-color: var(--bg-primary);
+}
+
+.border-border {
+  border-color: var(--border-color);
+}
+
+.text-content {
+  color: var(--text-content);
+}
+
+.text-content-light {
+  color: var(--text-content-light);
+}
+
+.text-title {
+  color: var(--text-title);
+}
+
+.text-label {
+  color: var(--text-label);
+}
+
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-brand-primary {
+  color: var(--text-primary);
+}
+
+.text-error {
+  color: var(--text-error);
+}
+
+.text-success {
+  color: var(--text-success);
+}
+
+.text-brand-accent {
+  color: var(--brand-accent, #2c6cbc);
+}
+
+.bg-error\/20 {
+  background-color: rgba(239, 68, 68, 0.2);
+}
+
+.border-error\/20 {
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+/* Animation classes */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Original styles below */
 .spare-parts-container {
   padding: 0 20px; /* Add horizontal padding to the entire container */
   max-width: 1200px; /* Set a max width */

@@ -1,0 +1,198 @@
+.machine-table-container {
+  margin: 24px 0;
+  background-color: var(--background-card);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+}
+
+/* Table header styling */
+.machine-table-container .ant-table-thead > tr > th {
+  background-color: var(--background-secondary);
+  color: var(--text-primary);
+  font-weight: 600;
+  padding: 16px 12px;
+  border-bottom: 2px solid var(--border-light);
+}
+
+/* Table row styling */
+.machine-table-container .ant-table-tbody > tr > td {
+  padding: 16px 12px;
+  border-bottom: 1px solid var(--border-light);
+  transition: background-color 0.2s;
+}
+
+.machine-table-container .ant-table-tbody > tr:hover > td {
+  background-color: var(--background-hover);
+}
+
+.selected-row {
+  background-color: var(--primary-bg) !important;
+}
+
+.selected-row:hover > td {
+  background-color: var(--primary-bg-hover) !important;
+}
+
+/* Model cell styling */
+.model-cell {
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  display: inline-block;
+  font-weight: 500;
+}
+
+.model-cell:hover {
+  background-color: var(--primary-light);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.selected-machine {
+  background-color: var(--primary);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+.selected-machine:hover {
+  background-color: var(--primary-dark);
+}
+
+/* Price styling */
+.price {
+  font-weight: 600;
+  color: var(--price);
+  font-size: 15px;
+}
+
+/* Inventory status badges */
+.inventory {
+  display: inline-block;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.status-high {
+  background-color: #e6f7ee;
+  color: #0c6b58;
+}
+
+.status-medium {
+  background-color: #e6f7ff;
+  color: #1057bd;
+}
+
+.status-low {
+  background-color: #fff1f0;
+  color: #d4380d;
+}
+
+/* Actions column */
+.actions-column {
+  display: flex;
+  gap: 8px;
+  flex-direction: column;
+}
+
+.add-cart-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.details-btn {
+  color: var(--primary);
+}
+
+.details-btn:hover {
+  color: var(--primary-dark);
+}
+
+/* Quantity control styling */
+.quantity-control {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  background-color: var(--background-primary);
+  overflow: hidden;
+  width: 110px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  margin: 0 auto;
+}
+
+.quantity-btn {
+  width: 32px !important;
+  height: 32px !important;
+  background-color: var(--background-secondary) !important;
+  border: none !important;
+  color: var(--text-primary) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  font-size: 14px !important;
+  transition: all 0.2s ease !important;
+  margin: 0 !important;
+}
+
+.quantity-btn:hover:not(:disabled) {
+  background-color: var(--primary-light) !important;
+  color: var(--primary) !important;
+}
+
+.quantity-btn:disabled {
+  color: var(--text-disabled) !important;
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+}
+
+.quantity-input {
+  width: 46px !important;
+  height: 32px !important;
+  border: none !important;
+  border-left: 1px solid var(--border-light) !important;
+  border-right: 1px solid var(--border-light) !important;
+  text-align: center !important;
+  padding: 0 !important;
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+  background-color: var(--background-primary) !important;
+  box-shadow: none !important;
+  font-size: 14px !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .machine-table-container {
+    border-radius: 8px;
+    margin: 16px 0;
+  }
+  
+  .actions-column {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  
+  .add-cart-btn, .details-btn {
+    width: 100%;
+  }
+  
+  .quantity-control {
+    width: 100%;
+    max-width: 140px;
+  }
+} 

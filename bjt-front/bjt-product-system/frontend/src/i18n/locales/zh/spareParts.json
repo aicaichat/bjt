@@ -1,0 +1,67 @@
+{
+  "title": "备件列表",
+  "subtitle": "为您的设备提供正品原厂零部件",
+  "loading": "加载中...",
+  "type": "类型",
+  "consumable": "耗材",
+  "nonConsumable": "非耗材",
+  "productType": "产品类型",
+  "productTypes": {
+    "machine": "主机",
+    "accessory": "配件"
+  },
+  "table": {
+    "viewDetails": "查看详情"
+  },
+  "price": "价格",
+  "addToCart": "加入购物车",
+  "filters": {
+    "title": "筛选条件",
+    "label": {
+      "productType": "产品类型",
+      "model": "型号",
+      "partType": "部件类型"
+    },
+    "model": {
+      "allModels": "所有型号"
+    },
+    "partType": {
+      "allTypes": "所有类型",
+      "consumables": "耗材",
+      "nonConsumables": "非耗材"
+    },
+    "reset": "重置筛选条件"
+  },
+  "specs": {
+    "spec": "规格",
+    "pcsPerBox": "每盒数量",
+    "compatibleModels": "兼容型号"
+  },
+  "inventory": {
+    "noInfo": "无库存信息",
+    "outOfStock": "缺货",
+    "lowStock": "低库存",
+    "inStock": "有库存",
+    "highStock": "高库存"
+  },
+  "cart": {
+    "title": "购物车",
+    "viewCart": "查看购物车",
+    "empty": "购物车为空",
+    "total": "总计",
+    "clear": "清空购物车",
+    "checkout": "去结算",
+    "cartCleared": "购物车已清空",
+    "sku": "SKU"
+  },
+  "error": {
+    "noResults": "没有找到符合条件的备件",
+    "tryAgain": "请尝试调整筛选条件",
+    "retry": "重试"
+  },
+  "defaultValues": {
+    "unknown": "未知",
+    "notAvailable": "不可用"
+  },
+  "invalidInventory": "无效库存数据"
+} 

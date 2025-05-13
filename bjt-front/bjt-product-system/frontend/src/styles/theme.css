@@ -141,6 +141,70 @@
   --z-index-modal: 500;
   --z-index-popover: 600;
   --z-index-tooltip: 700;
+
+  /* 品牌色彩系统 - 基于logo色调 */
+  --brand-primary: #1a57a5;     /* 主要蓝色 - 主要操作、强调元素 */
+  --brand-secondary: #4386d4;   /* 次要蓝色 - 次要操作、悬停状态 */
+  --brand-accent: #2c6cbc;      /* 强调蓝色 - 强调、交互元素 */
+  --brand-light: #eef4ff;       /* 淡蓝色 - 背景、悬停状态 */
+
+  /* 中性色系统 - 配合品牌色彩 */
+  --neutral-50: #f9fafc;
+  --neutral-100: #f1f5f9;
+  --neutral-200: #e2e8f0;
+  --neutral-300: #cbd5e1;
+  --neutral-400: #94a3b8;
+  --neutral-500: #64748b;
+  --neutral-600: #475569;
+  --neutral-700: #334155;
+  --neutral-800: #1e293b;
+  --neutral-900: #0f172a;
+
+  /* 应用映射 - 确保在亮色和暗色主题中都能正确显示 */
+  .light-theme {
+    --background-card: var(--neutral-50);
+    --background-primary: #ffffff;
+    --background-secondary: var(--neutral-100);
+    --text-primary: var(--neutral-900);
+    --text-secondary: var(--neutral-600);
+    --text-tertiary: var(--neutral-500);
+    --text-onPrimary: #ffffff;
+    --border-light: var(--neutral-200);
+    --border-medium: var(--neutral-300);
+    
+    /* 添加品牌色彩映射 */
+    --color-primary: var(--brand-primary);
+    --color-primary-light: var(--brand-secondary);
+    --color-primary-bg: var(--brand-light);
+  }
+  
+  .dark-theme {
+    --background-card: var(--neutral-800);
+    --background-primary: var(--neutral-900);
+    --background-secondary: var(--neutral-800);
+    --text-primary: var(--neutral-100);
+    --text-secondary: var(--neutral-300);
+    --text-tertiary: var(--neutral-400);
+    --text-onPrimary: #ffffff;
+    --border-light: var(--neutral-700);
+    --border-medium: var(--neutral-600);
+    
+    /* 添加品牌色彩在暗色主题下的映射 */
+    --color-primary: #4986d9;
+    --color-primary-light: #1a57a5;
+    --color-primary-bg: rgba(26, 87, 165, 0.15);
+  }
+
+  /* 消耗品页面专用样式变量 */
+  --filter-bg: var(--background-card);
+  --shape-border-radius: 8px;
+  --shape-active-border: 2px;
+  --product-card-hover-transition: all 0.3s ease;
+  
+  /* 确保Tailwind样式能正确应用 */
+  --tw-text-opacity: 1;
+  --tw-bg-opacity: 1;
+  --tw-border-opacity: 1;
 }
 
 /* 支持透明度的RGB版本 */

@@ -43,7 +43,7 @@ type SparePartsFilterOptions = FilterOptions;
 
 const SparePartsPage = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t } = useTranslation(['spareParts', 'translation']);
   
   // Get cart context
   const { items, addItem, removeItem, clearCart, updateQuantity } = useContext(CartContext);
@@ -389,9 +389,9 @@ const SparePartsPage = () => {
     // 如果未找到产品，返回默认值
     return {
       image_url: 'https://via.placeholder.com/120x120?text=Unknown',
-      part_number: t('spareParts.defaultValues.unknown'),
-      app_sn: t('spareParts.defaultValues.unknown'),
-      package_size: t('spareParts.defaultValues.unknown'),
+      part_number: t('defaultValues.unknown', {ns: 'spareParts'}),
+      app_sn: t('defaultValues.unknown', {ns: 'spareParts'}),
+      package_size: t('defaultValues.unknown', {ns: 'spareParts'}),
       package_weight: 0,
       prices: { 
         original: 0,
@@ -435,7 +435,7 @@ const SparePartsPage = () => {
     addItem(cartItem as unknown as CartItem); // Use type assertion carefully
     
     // Show notification
-    showCartNotification(`已添加 ${quantity} 个 ${sparePart.name_en} 到购物车`);
+    showCartNotification(t('cart.cartCleared', {ns: 'spareParts'}));
   };
   
   // 显示购物车通知
@@ -548,11 +548,12 @@ const SparePartsPage = () => {
   
   // 更新数量输入框
   const handleQuantityChange = (
-    id: string,
+    id: string | number,
     event?: React.ChangeEvent<HTMLInputElement>,
     action?: 'increase' | 'decrease'
   ) => {
-    let newValue = quantities[id] || 1;
+    const stringId = String(id); // Convert id to string for consistent usage with quantities object
+    let newValue = quantities[stringId] || 1;
     
     if (action === 'increase') {
       newValue += 1;
@@ -565,7 +566,7 @@ const SparePartsPage = () => {
     
     setQuantities({
       ...quantities,
-      [id]: newValue
+      [stringId]: newValue
     });
   };
   
@@ -702,208 +703,217 @@ const SparePartsPage = () => {
     
     if (loading) {
       return (
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p>{t('spareParts.loading')}</p>
+        <div className="flex items-center justify-center p-10 bg-card rounded-lg shadow-md">
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-content font-medium">{t('loading', {ns: 'spareParts'})}</p>
+          </div>
         </div>
       );
     }
     
     if (error) {
       return (
-        <div className="error-container">
-          <p>{error}</p>
-          <button onClick={loadSparePartsData} className="retry-button">
-            {t('spareParts.error.retry')}
+        <div className="flex flex-col items-center justify-center p-10 bg-card rounded-lg shadow-md border border-error/20">
+          <div className="text-error text-3xl mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <p className="text-content-light mb-4">{error}</p>
+          <button onClick={loadSparePartsData} className="flex items-center px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+            </svg>
+            {t('error.retry', {ns: 'spareParts'})}
           </button>
         </div>
       );
     }
     
     if (filteredParts.length === 0) {
-      return <div className="no-results">{t('spareParts.error.noResults')}</div>;
+      return (
+        <div className="flex flex-col items-center justify-center py-16 text-center bg-card rounded-lg shadow-md">
+          <svg className="h-16 w-16 text-content-light" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+          <h3 className="mt-4 text-lg font-medium text-title">{t('error.noResults', {ns: 'spareParts'})}</h3>
+          <p className="mt-2 text-content-light">{t('error.tryAgain', {ns: 'spareParts'})}</p>
+          <button 
+            onClick={() => {
+              setSelectedModel('');
+              setSelectedIsConsumable(null);
+              // Reset other filters if any
+            }}
+            className="mt-4 px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors"
+          >
+            {t('filters.reset', {ns: 'spareParts'})}
+          </button>
+        </div>
+      );
     }
     
     return (
-      <>
-        <table className="spare-parts-table">
-          <thead>
-            <tr>
-              <th>{t('spareParts.table.image')}</th>
-              <th>{t('spareParts.table.code')}</th>
-              <th>{t('spareParts.table.specs')}</th>
-              <th>{t('spareParts.table.price')}</th>
-              {(user?.role === 'sales' || user?.role === 'admin') && <th>{t('spareParts.table.inventory')}</th>}
-              <th>{t('spareParts.table.actions')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredParts.map((part) => {
-              const finalPrice = calculateFinalPrice(part);
-              const prices = part.prices as unknown as Prices;
-              
-              return (
-                <tr
-                  key={part.id}
-                  className="spare-part-row"
-                  onClick={() => handlePartClick(part)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <td className="part-image-cell">
-                    <img src={part.image_url || '/images/spare-parts/default.svg'} alt={part.name_en} className="part-image" onError={handleImageError} />
-                  </td>
-                  <td className="part-code-cell">
-                    <div className="part-code">{part.part_number}</div>
-                    <div className="part-name">{part.name_en}</div>
-                  </td>
-                  <td 
-                    className="part-specs-cell" 
-                    onMouseEnter={(e) => handleSpecMouseEnter(e, part)}
-                    onMouseLeave={handleSpecMouseLeave}
-                  >
-                    <div className="spec-preview">
-                      <div className="spec-summary">
-                        <p><strong>{t('spareParts.specs.spec', 'Spec.')}:</strong> {part.spec}</p>
-                        <p><strong>{t('spareParts.specs.pcsPerBox', 'Pcs per Box')}:</strong> {part.pcs_per_box || t('spareParts.defaultValues.notAvailable', 'N/A')}</p>
-                        <p><strong>{t('spareParts.specs.compatibleModels', 'Compatible Models')}:</strong> {Array.isArray(part.app_model) ? part.app_model.join(', ') : part.app_model}</p>
+      <div className="grid grid-cols-1 gap-4">
+        {filteredParts.map((part) => {
+          const finalPrice = calculateFinalPrice(part);
+          const prices = part.prices as unknown as Prices;
+          
+          return (
+            <div
+              key={part.id}
+              className="bg-card rounded-lg shadow-md hover:shadow-lg transition-all duration-300 border border-border text-content"
+            >
+              <div className="flex flex-col md:flex-row p-4">
+                {/* Column 1: Image */}
+                <div className="w-full md:w-1/6 flex items-center justify-center md:justify-start mb-4 md:mb-0">
+                  <img 
+                    src={part.image_url || '/images/spare-parts/default.svg'} 
+                    alt={part.name_en} 
+                    className="w-24 h-24 object-contain border border-border rounded bg-card-alt p-1 hover:border-brand-accent transition-colors"
+                    onError={handleImageError}
+                  />
+                </div>
+
+                {/* Column 2: Information & Specifications */}
+                <div className="w-full md:w-3/6 md:px-4">
+                  <div className="mb-1">
+                    <span className="inline-block bg-brand-primary text-gray-800 px-2 py-1 text-xs font-bold rounded">{part.part_number}</span>
+                    <h3 className="text-lg font-semibold text-title mt-1">{part.name_en}</h3>
+                    {part.category && (
+                      <div className="text-sm text-content-light">
+                        <span>({part.category})</span>
                       </div>
-                      <span className="view-more">{t('spareParts.table.viewMore')}</span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 my-2">
+                    {part.is_consumable !== undefined && (
+                      <span className={`inline-flex items-center px-2 py-1 rounded text-xs ${part.is_consumable ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700'}`}>
+                        <strong className="mr-1">{t('type', {ns: 'spareParts'})}:</strong>
+                        <span>{part.is_consumable ? t('consumable', {ns: 'spareParts'}) : t('nonConsumable', {ns: 'spareParts'})}</span>
+                      </span>
+                    )}
+                    {part.product_type && (
+                      <span className="inline-flex items-center px-2 py-1 bg-background rounded text-xs">
+                        <strong className="text-label mr-1">{t('productType', {ns: 'spareParts'})}:</strong> 
+                        <span className="text-content">{t(`productTypes.${part.product_type}`, {ns: 'spareParts', defaultValue: part.product_type})}</span>
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="bg-card-alt rounded-md p-3 mt-2">
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="flex">
+                        <strong className="w-24 text-label">{t('specs.spec', {ns: 'spareParts'})}:</strong>
+                        <span className="text-content">{part.spec || t('defaultValues.notAvailable', {ns: 'spareParts'})}</span>
+                      </div>
+                      <div className="flex">
+                        <strong className="w-24 text-label">{t('specs.pcsPerBox', {ns: 'spareParts'})}:</strong>
+                        <span className="text-content">{part.pcs_per_box || t('defaultValues.notAvailable', {ns: 'spareParts'})}</span>
+                      </div>
+                      <div className="flex col-span-2">
+                        <strong className="w-24 text-label">{t('specs.compatibleModels', {ns: 'spareParts'})}:</strong>
+                        <span className="text-content">{Array.isArray(part.app_model) ? part.app_model.join(', ') : part.app_model}</span>
+                      </div>
                     </div>
-                  </td>
-                  <td className="part-price-cell">
-                    <div className="price-tiers">
-                      <div className="current-price">
-                        {getCurrencySymbol(currentUser.region)} {finalPrice.toFixed(2)}
-                      </div>
-                      {prices.tiers && prices.tiers.map((tier, index) => (
-                        <div key={index} className="price-tier">
-                          <span>{tier.range}: {getCurrencySymbol(currentUser.region)} {
-                            (user?.region === 'eu' && tier.eu ? tier.eu : 
-                             user?.region === 'na' && tier.na ? tier.na :
-                             user?.region === 'au' && tier.au ? tier.au :
-                             user?.region === 'cn' && tier.cn ? tier.cn : 
-                             tier.price).toFixed(2)
-                          }</span>
+                  </div>
+
+                  <div className="mt-3">
+                    <button 
+                      onClick={() => handlePartClick(part)} 
+                      className="text-sm inline-flex items-center text-primary hover:text-brand-accent transition-colors"
+                    >
+                      <span className="mr-1">{t('table.viewDetails', {ns: 'spareParts'})}</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Column 3: Price & Actions */}
+                <div className="w-full md:w-2/6 flex flex-col justify-between mt-4 md:mt-0 md:pl-4 md:border-l md:border-border">
+                  <div>
+                    <h4 className="font-medium text-sm text-label mb-2">{t('price', {ns: 'spareParts'})}:</h4>
+                    <div className="space-y-1">
+                      {prices.tiers && prices.tiers.map((tier, idx) => (
+                        <div key={idx} className="flex justify-between items-center bg-background rounded px-3 py-1 text-sm hover:bg-brand-light transition-colors">
+                          <span className="text-content-light">{tier.range}:</span>
+                          <span className="font-semibold text-brand-primary">
+                            {getCurrencySymbol(userRegion)}
+                            {userRegion === 'eu' && tier.eu ? formatPrice(tier.eu) : 
+                             userRegion === 'na' && tier.na ? formatPrice(tier.na) :
+                             userRegion === 'au' && tier.au ? formatPrice(tier.au) :
+                             userRegion === 'cn' && tier.cn ? formatPrice(tier.cn) : 
+                             formatPrice(tier.price)}
+                          </span>
                         </div>
                       ))}
                     </div>
-                  </td>
-                  {(user?.role === 'sales' || user?.role === 'admin') && (
-                    <td className="part-inventory-cell">
-                      <div className="inventory-info">
-                        {Array.isArray(part.inventory) ? (
-                          part.inventory.map((inv, idx) => (
-                            <div key={idx}>{inv.region}: {inv.quantity}</div>
-                          ))
-                        ) : (
-                          <p>Inventory data format unexpected</p>
-                        )}
+                    
+                    {/* Inventory information (only visible to admin/sales) */}
+                    {(user?.role === 'sales' || user?.role === 'admin') && (
+                      <div className="mt-3 bg-background p-2 rounded border border-border">
+                        <h4 className="font-medium text-sm text-label mb-1">{t('inventory')}:</h4>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          {Array.isArray(part.inventory) ? part.inventory.map((inv, idx) => (
+                            <div key={idx} className="flex justify-between items-center px-2 py-1 rounded border border-border">
+                              <span className="font-medium">{inv.region.toUpperCase()}:</span>
+                              <span className={`font-medium ${inv.quantity > 0 ? 'text-success' : 'text-error'}`}>
+                                {inv.quantity}
+                              </span>
+                            </div>
+                          )) : (
+                            <div className="col-span-2 text-center text-content-light">{t('invalidInventory', {ns: 'spareParts'})}</div>
+                          )}
+                        </div>
                       </div>
-                    </td>
-                  )}
-                  <td className="part-actions-cell">
-                    <div className="quantity-control">
+                    )}
+                  </div>
+                  
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="flex items-center border border-border rounded-md">
                       <button 
-                        className="quantity-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const newQty = Math.max(1, (quantities[part.id] || 1) - 1);
-                          setQuantities({...quantities, [part.id]: newQty});
-                        }}
-                        disabled={(quantities[part.id] || 1) <= 1}
+                        className="px-3 py-2 border-r border-border text-content hover:bg-background transition-colors"
+                        onClick={(e) => { e.stopPropagation(); handleQuantityChange(String(part.id), undefined, 'decrease'); }}
                       >
-                        -
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                        </svg>
                       </button>
-                      <input
-                        type="text"
-                        value={quantities[part.id] || 1}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                          const value = parseInt(e.target.value, 10);
-                          if (!isNaN(value) && value > 0) {
-                            setQuantities({...quantities, [part.id]: value});
-                          }
-                        }}
-                        className="quantity-input"
+                      <input 
+                        type="number" 
+                        min="1" 
+                        value={quantities[String(part.id)] || 1} 
+                        onChange={(e) => { e.stopPropagation(); handleQuantityChange(String(part.id), e); }}
+                        className="w-12 text-center border-none focus:ring-0"
                       />
                       <button 
-                        className="quantity-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const newQty = (quantities[part.id] || 1) + 1;
-                          setQuantities({...quantities, [part.id]: newQty});
-                        }}
+                        className="px-3 py-2 border-l border-border text-content hover:bg-background transition-colors"
+                        onClick={(e) => { e.stopPropagation(); handleQuantityChange(String(part.id), undefined, 'increase'); }}
                       >
-                        +
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
                       </button>
                     </div>
-                    <button
-                      className="add-to-cart-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        addToCart(part, quantities[part.id] || 1);
-                      }}
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); addToCart(part, quantities[String(part.id)] || 1); }}
+                      className="flex-grow ml-3 h-10 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors flex items-center justify-center"
                     >
-                      {t('spareParts.table.addToCart')}
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      {t('addToCart', {ns: 'spareParts'})}
                     </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-
-        {showTooltip && selectedPart && (() => {
-            console.log('Tooltip Data (before render):', selectedPart);
-            return (
-              <div 
-                ref={tooltipRef}
-                className={`spec-tooltip ${showTooltip ? 'show' : ''}`}
-                style={{ 
-                  top: tooltipPos.top, 
-                  left: tooltipPos.left 
-                }}
-                onMouseEnter={handleTooltipMouseEnter}
-                onMouseLeave={handleTooltipMouseLeave}
-              >
-                <h4>
-                  {selectedPart.name_en}
-                  <button className="tooltip-close" onClick={closeTooltip}>×</button>
-                </h4>
-                <div className="tooltip-content">
-                  {/* Conditional Package Size Display */}
-                  {currentUser.region === 'na' ? (
-                    <p>
-                      <strong>{t('spareParts.specs.packageSizeImperial', 'Package Size (inch)')}:</strong> 
-                      {selectedPart.package_size_inch || t('spareParts.defaultValues.notAvailable', 'N/A')}
-                    </p>
-                  ) : (
-                    <p>
-                      <strong>{t('spareParts.specs.packageSize', 'Package Size (cm)')}:</strong> 
-                      {selectedPart.package_size_cm || t('spareParts.defaultValues.notAvailable', 'N/A')}
-                    </p>
-                  )}
-                  {/* Conditional Weight Display */}
-                  {currentUser.region === 'na' ? (
-                    <p>
-                      <strong>{t('spareParts.specs.weightImperial', 'Net Weight (lbs)')}:</strong> 
-                      {selectedPart.net_weight_lbs ? `${selectedPart.net_weight_lbs} lbs` : t('spareParts.defaultValues.notAvailable', 'N/A')}
-                    </p>
-                  ) : (
-                    <p>
-                      <strong>{t('spareParts.specs.weight', 'Net Weight (kg)')}:</strong> 
-                      {selectedPart.net_weight_kg ? `${selectedPart.net_weight_kg} kg` : t('spareParts.defaultValues.notAvailable', 'N/A')}
-                    </p>
-                  )}
-                  {/* Other fields */}
-                  {/* <p><strong>{t('spareParts.specs.serialNumber', 'Serial Number')}:</strong> {selectedPart.app_sn || t('spareParts.defaultValues.notAvailable', 'N/A')}</p> */}
-                  <p><strong>{t('spareParts.specs.compatibleModels', 'Compatible Models')}:</strong> {Array.isArray(selectedPart.app_model) ? selectedPart.app_model.join(', ') : (selectedPart.app_model || t('spareParts.defaultValues.notAvailable', 'N/A'))}</p>
-                  <p><strong>{t('spareParts.specs.specifications', 'Specifications')}:</strong> {selectedPart.spec || t('spareParts.defaultValues.notAvailable', 'N/A')}</p>
+                  </div>
                 </div>
               </div>
-            );
-        })()}
-      </>
+            </div>
+          );
+        })}
+      </div>
     );
   };
   
@@ -913,7 +923,7 @@ const SparePartsPage = () => {
     let regionStock = 0;
     
     if (!part.inventory) {
-      return t('spareParts.inventory.noInfo');
+      return t('inventory.noInfo', {ns: 'spareParts'});
     }
     
     if (Array.isArray(part.inventory)) {
@@ -938,23 +948,23 @@ const SparePartsPage = () => {
       }
     }
     
-    if (regionStock <= 0) return t('spareParts.inventory.outOfStock');
-    if (regionStock < 5) return t('spareParts.inventory.lowStock');
-    if (regionStock < 20) return t('spareParts.inventory.inStock');
-    return t('spareParts.inventory.highStock');
+    if (regionStock <= 0) return t('inventory.outOfStock', {ns: 'spareParts'});
+    if (regionStock < 5) return t('inventory.lowStock', {ns: 'spareParts'});
+    if (regionStock < 20) return t('inventory.inStock', {ns: 'spareParts'});
+    return t('inventory.highStock', {ns: 'spareParts'});
   };
   
   // 处理确认清空购物车
   const handleConfirmClearCart = () => {
     clearCart();
     setShowConfirmClear(false);
-    showCartNotification(t('spareParts.cart.cartCleared'));
+    showCartNotification(t('cart.cartCleared', {ns: 'spareParts'}));
   };
   
   // 渲染购物车项
   const renderCartItems = () => {
     if (items.length === 0) {
-      return <div className="empty-cart-message">{t('spareParts.cart.empty')}</div>;
+      return <div className="empty-cart-message">{t('cart.empty', {ns: 'spareParts'})}</div>;
     }
     
     // Filter items to only show spare parts
@@ -963,7 +973,7 @@ const SparePartsPage = () => {
     );
     
     if (sparePartItems.length === 0) {
-      return <div className="empty-cart-message">{t('spareParts.cart.empty')}</div>;
+      return <div className="empty-cart-message">{t('cart.empty', {ns: 'spareParts'})}</div>;
     }
     
     return sparePartItems.map((item, index) => {
@@ -973,7 +983,7 @@ const SparePartsPage = () => {
             <img className="cart-item-img" src={item.image || '/images/spare-parts/default.svg'} alt={item.name} />
             <div className="cart-item-main">
               <div className="cart-item-name">{item.name}</div>
-              <div className="cart-item-sku">{t('spareParts.cart.sku', 'SKU')}: {item.code}</div>
+              <div className="cart-item-sku">{t('cart.sku', {ns: 'spareParts'})}: {item.code}</div>
               <div className="cart-item-price-tiers">
                 {item.priceTiers && item.priceTiers.length > 0 ? (
                   item.priceTiers.map((tier, tierIndex) => (
@@ -998,17 +1008,17 @@ const SparePartsPage = () => {
           <div className="cart-item-details">
             {item.properties?.spec && (
               <div className="cart-item-detail">
-                <strong>{t('spareParts.specs.spec', 'Spec.')}:</strong> {item.properties.spec}
+                <strong>{t('specs.spec', {ns: 'spareParts'})}:</strong> {item.properties.spec}
               </div>
             )}
             {item.properties?.pcsPerBox !== undefined && item.properties?.pcsPerBox !== null && (
               <div className="cart-item-detail">
-                <strong>{t('spareParts.specs.pcsPerBox', 'Pcs per Box')}:</strong> {item.properties.pcsPerBox}
+                <strong>{t('specs.pcsPerBox', {ns: 'spareParts'})}:</strong> {item.properties.pcsPerBox}
               </div>
             )}
             {item.properties?.model && (
               <div className="cart-item-detail">
-                <strong>{t('spareParts.specs.compatibleModels', 'Compatible Models')}:</strong> {item.properties.model}
+                <strong>{t('specs.compatibleModels', {ns: 'spareParts'})}:</strong> {item.properties.model}
               </div>
             )}
           </div>
@@ -1085,147 +1095,159 @@ const SparePartsPage = () => {
     }
   };
   
+  // Add a helper function at the top of the component
+  const formatPrice = (price: any): string => {
+    if (price === undefined || price === null) return '0.00';
+    return parseFloat(price).toFixed(2);
+  };
+  
   // 渲染主页面
   return (
-    <div className="spare-parts-container">
-      <div className="user-info-bar">
-        {/* ... existing code ... */}
+    <div className="bg-background min-h-screen p-6">
+      {/* Header */}
+      <div className="max-w-7xl mx-auto mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-card p-4 rounded-lg shadow-sm border border-border mb-6">
+          <div>
+            <h1 className="text-xl font-bold text-title">{t('title', {ns: 'spareParts'})}</h1>
+            <p className="text-sm text-content-light">{t('subtitle', {ns: 'spareParts'})}</p>
+          </div>
+          <div className="flex mt-3 sm:mt-0">
+            <button 
+              className="bg-primary text-white px-4 py-2 rounded-md flex items-center hover:bg-primary-dark transition-colors"
+              onClick={() => setShowCartModal(true)}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
+              </svg>
+              {t('cart.viewCart', {ns: 'spareParts'})} {items.length > 0 && `(${items.length})`}
+            </button>
+          </div>
+        </div>
+
+        {/* Filter Container */}
+        <div className="bg-card p-6 rounded-lg shadow-md mb-6">
+          <div className="flex items-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
+            </svg>
+            <h2 className="text-lg font-medium text-title">{t('filters.title', {ns: 'spareParts'})}</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-label mb-2">{t('filters.label.productType', {ns: 'spareParts'})}:</label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setCurrentProductType('machine')}
+                  className={`px-4 py-2 rounded text-sm ${currentProductType === 'machine' ? 'bg-primary text-white' : 'bg-background text-content border border-border hover:bg-brand-light'}`}
+                >
+                  {t('productTypes.machine', {ns: 'spareParts'})}
+                </button>
+                <button
+                  onClick={() => setCurrentProductType('accessory')}
+                  className={`px-4 py-2 rounded text-sm ${currentProductType === 'accessory' ? 'bg-primary text-white' : 'bg-background text-content border border-border hover:bg-brand-light'}`}
+                >
+                  {t('productTypes.accessory', {ns: 'spareParts'})}
+                </button>
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-label mb-2">{t('filters.label.model', {ns: 'spareParts'})}:</label>
+              <select
+                className="block w-full border border-border rounded-md bg-background px-3 py-2 text-sm"
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+              >
+                <option value="">{t('filters.model.allModels', {ns: 'spareParts'})}</option>
+                {currentProductType === 'machine' ? (
+                  hostModels.map((model, index) => (
+                    <option key={index} value={model}>
+                      {model}
+                    </option>
+                  ))
+                ) : (
+                  accessoryModels.map((model, index) => (
+                    <option key={index} value={model}>
+                      {model}
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-label mb-2">{t('filters.label.partType', {ns: 'spareParts'})}:</label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setSelectedIsConsumable(null)}
+                  className={`px-4 py-2 rounded text-sm ${selectedIsConsumable === null ? 'bg-primary text-white' : 'bg-background text-content border border-border hover:bg-brand-light'}`}
+                >
+                  {t('filters.partType.allTypes', {ns: 'spareParts'})}
+                </button>
+                <button
+                  onClick={() => setSelectedIsConsumable(true)}
+                  className={`px-4 py-2 rounded text-sm ${selectedIsConsumable === true ? 'bg-primary text-white' : 'bg-background text-content border border-border hover:bg-brand-light'}`}
+                >
+                  {t('filters.partType.consumables', {ns: 'spareParts'})}
+                </button>
+                <button
+                  onClick={() => setSelectedIsConsumable(false)}
+                  className={`px-4 py-2 rounded text-sm ${selectedIsConsumable === false ? 'bg-primary text-white' : 'bg-background text-content border border-border hover:bg-brand-light'}`}
+                >
+                  {t('filters.partType.nonConsumables', {ns: 'spareParts'})}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       
-      <div className="spare-parts-page">
-        <div className="page-header">
-          <h1>{t('spareParts.title')}</h1>
-        </div>
-
-        <div className="filter-container">
-          <div className="filter-row">
-            <span className="filter-label">{t('spareParts.filters.label.productType')}:</span>
-            <div className="product-type-buttons">
-              <button
-                className={currentProductType === 'machine' ? 'active' : ''}
-                onClick={() => {
-                  setCurrentProductType('machine');
-                  fetchModels('machine');
-                }}
-              >
-                {t('spareParts.filters.productType.machine')}
-              </button>
-              <button
-                className={currentProductType === 'accessory' ? 'active' : ''}
-                onClick={() => {
-                  setCurrentProductType('accessory');
-                  fetchModels('accessory');
-                }}
-              >
-                {t('spareParts.filters.productType.accessory')}
-              </button>
+      <div className="max-w-7xl mx-auto">
+        {/* Content */}
+        {renderSpareParts()}
+      </div>
+      
+      {/* Cart Modal */}
+      <div className={`cart-preview ${showCartModal ? 'active' : ''}`}>
+        <div className="cart-modal">
+          <div className="cart-modal-backdrop" onClick={() => setShowCartModal(false)}></div>
+          <div className="cart-modal-content">
+            <div className="cart-modal-header">
+              <h3>{t('cart.title', {ns: 'spareParts'})}</h3>
+              <button className="cart-modal-close" onClick={() => setShowCartModal(false)}>×</button>
             </div>
-          </div>
-          
-          <div className="filter-row">
-            <span className="filter-label">{t('spareParts.filters.label.model')}:</span>
-            <select
-              className="model-select"
-              value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value)}
-            >
-              <option value="">{t('spareParts.filters.model.allModels')}</option>
-              {currentProductType === 'machine' ? (
-                hostModels.map((model, index) => (
-                  <option key={index} value={model}>
-                    {model}
-                  </option>
-                ))
-              ) : (
-                accessoryModels.map((model, index) => (
-                  <option key={index} value={model}>
-                    {model}
-                  </option>
-                ))
-              )}
-            </select>
-          </div>
-          
-          <div className="filter-row">
-            <span className="filter-label">{t('spareParts.filters.label.partType')}:</span>
-            <div className="part-type-buttons">
-              <button
-                className={selectedIsConsumable === true ? 'active' : ''}
-                onClick={() => setSelectedIsConsumable(true)}
-              >
-                {t('spareParts.filters.partType.consumable', 'Consumable')}
-              </button>
-              <button
-                className={selectedIsConsumable === false ? 'active' : ''}
-                onClick={() => setSelectedIsConsumable(false)}
-              >
-                {/* Use existing key 'electronic' from zh.json, keep fallback as Non-Consumable */}
-                {t('spareParts.filters.partType.electronic', 'Non-Consumable')}
-              </button>
-              <button
-                className={selectedIsConsumable === null ? 'active' : ''}
-                onClick={() => setSelectedIsConsumable(null)}
-              >
-                {t('spareParts.filters.partType.all', 'All')}
-              </button>
+            <div className="cart-modal-body">
+              {renderCartItems()}
             </div>
-          </div>
-        </div>
-
-        <div className="spare-parts-list">
-          {renderSpareParts()}
-        </div>
-
-        {/* 购物车弹窗 */}
-        {showCartModal && (
-          <div className="cart-modal">
-            <div className="cart-modal-backdrop" onClick={() => setShowCartModal(false)}></div>
-            <div className="cart-modal-content">
-              <div className="cart-modal-header">
-                <h3>{t('spareParts.cart.title')}</h3>
-                <button className="cart-modal-close" onClick={() => setShowCartModal(false)}>×</button>
-              </div>
-              <div className="cart-modal-body">
-                {renderCartItems()}
-              </div>
-              {items.length > 0 && (
-                <div className="cart-modal-footer">
-                  <div className="cart-total-line">
-                    <span>{t('spareParts.cart.total')}:</span>
-                    <span className="cart-grand-total">¥{calculateCartTotal().toFixed(2)}</span>
-                  </div>
-                  <div className="cart-actions">
-                    <button className="cart-clear-btn" onClick={() => setShowConfirmClear(true)}>
-                      {t('spareParts.cart.clear')}
-                    </button>
-                    <button className="cart-checkout-btn" onClick={() => navigate('/checkout')}>
-                      {t('spareParts.cart.checkout')}
-                    </button>
-                  </div>
+            {items.length > 0 && (
+              <div className="cart-modal-footer">
+                <div className="cart-total-line">
+                  <span>{t('cart.total', {ns: 'spareParts'})}:</span>
+                  <span className="cart-grand-total">¥{calculateCartTotal().toFixed(2)}</span>
                 </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* 确认清空购物车 */}
-        {showConfirmClear && (
-          <div className="confirm-dialog">
-            <div className="confirm-dialog-backdrop"></div>
-            <div className="confirm-dialog-content">
-              <h4>{t('spareParts.cart.confirmClear')}</h4>
-              <p>{t('spareParts.cart.confirmClearMessage')}</p>
-              <div className="confirm-dialog-actions">
-                <button className="btn-cancel" onClick={() => setShowConfirmClear(false)}>
-                  {t('spareParts.cart.cancel')}
-                </button>
-                <button className="btn-confirm" onClick={handleConfirmClearCart}>
-                  {t('spareParts.cart.confirm')}
-                </button>
+                <div className="cart-actions">
+                  <button className="cart-clear-btn" onClick={() => setShowConfirmClear(true)}>
+                    {t('cart.clear', {ns: 'spareParts'})}
+                  </button>
+                  <button className="cart-checkout-btn" onClick={() => navigate('/checkout')}>
+                    {t('cart.checkout', {ns: 'spareParts'})}
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
           </div>
-        )}
+        </div>
+      </div>
+      
+      {/* Notifications */}
+      <div className={`cart-notification ${activeNotification ? 'show' : ''}`}>
+        {/* ... (existing notification code) */}
+      </div>
+      
+      {/* Confirmation Dialog */}
+      <div className={`cart-confirm ${showConfirmClear ? 'show' : ''}`}>
+        {/* ... (existing confirmation dialog code) */}
       </div>
     </div>
   );

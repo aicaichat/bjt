@@ -1,6 +1,6 @@
 import React from 'react';
-import { Table, Button, InputNumber, Tag, Spin } from 'antd';
-import { ShoppingCartOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { Table, Button, Spin } from 'antd';
+import { ShoppingCartOutlined, InfoCircleOutlined, MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import { MachineProduct } from '../../types/machines';
 import { useTranslation } from 'react-i18next';
 import './MachineTable.css';
@@ -10,13 +10,13 @@ interface MachineTableProps {
   loading: boolean;
   quantities: Record<string, number>;
   userRegion: string;
-  selectedMachine: string;
+  selectedMachine: number | string;
   isSales: boolean;
   isVIP: boolean;
-  handleQuantityChange: (productId: string, value: number) => void;
+  handleQuantityChange: (productId: string | number, value: number) => void;
   handleAddToCart: (product: MachineProduct) => void;
-  handleViewDetails: (machineId: string) => void;
-  handleMachineSelection: (machineId: string) => void;
+  handleViewDetails: (machineId: string | number) => void;
+  handleMachineSelection: (machineId: string | number) => void;
   formatPrice: (price: number) => string;
   getCurrencySymbol: (region: string) => string;
   getStockStatus: (amount: number) => { className: string; colorClass: string };
@@ -56,11 +56,11 @@ const MachineTable: React.FC<MachineTableProps> = ({
       key: 'model',
       render: (text: string, record: MachineProduct) => (
         <div 
-          className={`model-cell ${selectedMachine === record.id ? 'selected-machine' : ''}`}
+          className={`model-cell ${String(selectedMachine) === String(record.id) ? 'selected-machine' : ''}`}
           onClick={() => handleMachineSelection(record.id)}
           tabIndex={0}
           role="button"
-          aria-pressed={selectedMachine === record.id}
+          aria-pressed={String(selectedMachine) === String(record.id)}
           aria-label={`${t('machines.tableHeaders.model')}: ${text}`}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -84,12 +84,12 @@ const MachineTable: React.FC<MachineTableProps> = ({
       key: 'prices',
       render: (_: any, record: MachineProduct) => {
         // 根据用户角色和VIP状态显示不同价格
-        let price = record.prices.base;
+        let price = record.prices?.base || 0;
         if (isSales) {
-          price = record.prices.tier1;
+          price = record.prices?.tier1 || 0;
         }
         if (isVIP) {
-          price = record.prices.vip;
+          price = record.prices?.vip || 0;
         }
 
         return (
@@ -117,7 +117,7 @@ const MachineTable: React.FC<MachineTableProps> = ({
         return (
           <div className={`inventory ${status.colorClass}`}>
             <span 
-              className={status.className}
+              className={`status-badge ${status.className}`}
               aria-label={`${t('machines.tableHeaders.inventory')}: ${inventory <= 0 ? t('machines.stock.outOfStock') : inventory}, ${stockLabel}`}
             >
               {inventory <= 0 ? t('machines.stock.outOfStock') : inventory}
@@ -130,21 +130,49 @@ const MachineTable: React.FC<MachineTableProps> = ({
       title: t('machines.tableHeaders.quantity'),
       dataIndex: 'quantity',
       key: 'quantity',
-      width: 120,
-      render: (_: any, record: MachineProduct) => (
-        <InputNumber
-          min={1}
-          max={getRegionInventory(record, userRegion)}
-          value={quantities[record.id] || 1}
-          onChange={(value) => handleQuantityChange(record.id, value as number)}
-          size="small"
-          style={{ width: 60 }}
-          aria-label={`${t('machines.tableHeaders.quantity')} ${record.name}`}
-          aria-valuemin={1}
-          aria-valuemax={getRegionInventory(record, userRegion)}
-          aria-valuenow={quantities[record.id] || 1}
-        />
-      )
+      width: 150,
+      render: (_: any, record: MachineProduct) => {
+        const inventory = getRegionInventory(record, userRegion);
+        const currentQuantity = quantities[String(record.id)] || 1;
+        const isAtMinimum = currentQuantity <= 1;
+        const isAtMaximum = currentQuantity >= inventory;
+        
+        return (
+          <div className="quantity-control">
+            <Button
+              icon={<MinusOutlined />}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!isAtMinimum) {
+                  handleQuantityChange(record.id, currentQuantity - 1);
+                }
+              }}
+              disabled={isAtMinimum || inventory <= 0}
+              className="quantity-btn"
+              aria-label={t('buttons.decreaseQuantity')}
+            />
+            <input
+              className="quantity-input"
+              type="text"
+              value={String(currentQuantity)}
+              readOnly
+              aria-label={`${t('machines.tableHeaders.quantity')}: ${currentQuantity}`}
+            />
+            <Button
+              icon={<PlusOutlined />}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!isAtMaximum) {
+                  handleQuantityChange(record.id, currentQuantity + 1);
+                }
+              }}
+              disabled={isAtMaximum || inventory <= 0}
+              className="quantity-btn"
+              aria-label={t('buttons.increaseQuantity')}
+            />
+          </div>
+        );
+      }
     },
     {
       title: t('machines.tableHeaders.actions'),
@@ -162,6 +190,7 @@ const MachineTable: React.FC<MachineTableProps> = ({
               size="small"
               onClick={() => handleAddToCart(record)}
               disabled={isOutOfStock}
+              className="add-cart-btn"
               aria-label={`${t('buttons.addToCart')} ${record.name}`}
               aria-disabled={isOutOfStock}
             >
@@ -172,6 +201,7 @@ const MachineTable: React.FC<MachineTableProps> = ({
               icon={<InfoCircleOutlined />}
               size="small"
               onClick={() => handleViewDetails(record.id)}
+              className="details-btn"
               aria-label={`${t('buttons.viewDetails')} ${record.name}`}
             >
               {t('buttons.viewDetails')}
@@ -190,7 +220,7 @@ const MachineTable: React.FC<MachineTableProps> = ({
           columns={columns}
           rowKey="id"
           pagination={false}
-          rowClassName={(record) => selectedMachine === record.id ? 'selected-row' : ''}
+          rowClassName={(record) => String(selectedMachine) === String(record.id) ? 'selected-row' : ''}
           onRow={(record) => ({
             onClick: () => handleMachineSelection(record.id),
             onKeyDown: (e) => {
@@ -200,7 +230,7 @@ const MachineTable: React.FC<MachineTableProps> = ({
               }
             },
             tabIndex: 0,
-            'aria-selected': selectedMachine === record.id,
+            'aria-selected': String(selectedMachine) === String(record.id),
             role: 'row'
           })}
           aria-live="polite"

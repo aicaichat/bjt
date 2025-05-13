@@ -1,0 +1,67 @@
+{
+  "title": "Spare Parts",
+  "subtitle": "Original factory parts for your equipment",
+  "loading": "Loading spare parts...",
+  "type": "Type",
+  "consumable": "Consumable",
+  "nonConsumable": "Non-Consumable",
+  "productType": "Product Type",
+  "productTypes": {
+    "machine": "Machine",
+    "accessory": "Accessory"
+  },
+  "table": {
+    "viewDetails": "View Details"
+  },
+  "price": "Price",
+  "addToCart": "Add to Cart",
+  "filters": {
+    "title": "Filter Options",
+    "label": {
+      "productType": "Product Type",
+      "model": "Model",
+      "partType": "Part Type"
+    },
+    "model": {
+      "allModels": "All Models"
+    },
+    "partType": {
+      "allTypes": "All Types",
+      "consumables": "Consumables",
+      "nonConsumables": "Non-Consumables"
+    },
+    "reset": "Reset Filters"
+  },
+  "specs": {
+    "spec": "Specification",
+    "pcsPerBox": "Pieces per Box",
+    "compatibleModels": "Compatible Models"
+  },
+  "inventory": {
+    "noInfo": "No Inventory Info",
+    "outOfStock": "Out of Stock",
+    "lowStock": "Low Stock",
+    "inStock": "In Stock",
+    "highStock": "High Stock"
+  },
+  "cart": {
+    "title": "Shopping Cart",
+    "viewCart": "View Cart",
+    "empty": "Your cart is empty",
+    "total": "Total",
+    "clear": "Clear Cart",
+    "checkout": "Checkout",
+    "cartCleared": "Cart has been cleared",
+    "sku": "SKU"
+  },
+  "error": {
+    "noResults": "No spare parts found matching your criteria",
+    "tryAgain": "Please try adjusting your filters",
+    "retry": "Retry"
+  },
+  "defaultValues": {
+    "unknown": "Unknown",
+    "notAvailable": "N/A"
+  },
+  "invalidInventory": "Invalid inventory data"
+} 

@@ -11,6 +11,8 @@ import enOrderList from './locales/en/orderList.json';
 import zhOrderList from './locales/zh/orderList.json';
 import enPO from './locales/en/po.json';
 import zhPO from './locales/zh/po.json';
+import enSpareParts from './locales/en/spareParts.json';
+import zhSpareParts from './locales/zh/spareParts.json';
 
 i18n
   .use(LanguageDetector)
@@ -21,13 +23,15 @@ i18n
         translation: enTranslation,
         consumables: enConsumables,
         orderList: enOrderList,
-        po: enPO
+        po: enPO,
+        spareParts: enSpareParts
       },
       zh: {
         translation: zhTranslation,
         consumables: zhConsumables,
         orderList: zhOrderList,
-        po: zhPO
+        po: zhPO,
+        spareParts: zhSpareParts
       }
     },
     fallbackLng: 'en',
