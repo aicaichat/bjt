@@ -15,10 +15,11 @@ services:
       - NODE_ENV=development
       - VITE_API_URL=http://localhost:8080
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5173"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:5173 || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 20s
     networks:
       - bjt_network
     logging:
@@ -46,13 +47,13 @@ services:
     env_file:
       - ../../.env.development
     depends_on:
-      mysql:
-        condition: service_healthy
+      - mysql
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      test: ["CMD", "curl", "-f", "http://localhost:80/wp-admin/"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 20s
     networks:
       - bjt_network
     logging:
@@ -64,6 +65,8 @@ services:
   # MySQL数据库
   mysql:
     image: mysql:8.0
+    ports:
+      - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: bjt_product
@@ -75,12 +78,14 @@ services:
     env_file:
       - ../../.env.development
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - bjt_network
+    command: --default-authentication-plugin=mysql_native_password
     logging:
       driver: "json-file"
       options:

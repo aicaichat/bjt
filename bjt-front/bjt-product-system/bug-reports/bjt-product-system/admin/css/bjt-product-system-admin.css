@@ -1,0 +1,61 @@
+/**
+ * BJT Product System Admin CSS
+ */
+
+/* 管理页面通用样式 */
+.bjt-product-system-page {
+    margin-top: 20px;
+}
+
+/* API文档页面样式 */
+.api-docs-container {
+    margin-top: 20px;
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+}
+
+.api-docs-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #ccd0d4;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.api-docs-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.api-docs-content {
+    padding: 20px;
+}
+
+/* 产品线表单样式 */
+.bjt-form-table th {
+    width: 200px;
+}
+
+.bjt-form-table .required {
+    color: #f00;
+}
+
+#image_preview img {
+    max-width: 200px;
+    margin-top: 10px;
+}
+
+/* 冲突通知样式 */
+.bjt-conflict-notice {
+    padding: 15px;
+    background-color: #fff8e5;
+    border-left: 4px solid #ffb900;
+    margin: 15px 0;
+}
+
+.bjt-conflict-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+} 

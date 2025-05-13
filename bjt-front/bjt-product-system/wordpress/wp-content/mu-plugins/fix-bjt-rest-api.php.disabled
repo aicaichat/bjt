@@ -1,0 +1,334 @@
+<?php
+/**
+ * Plugin Name: BJT REST API Fix (Final)
+ * Description: 修复WordPress REST API问题并确保正确返回JSON响应
+ * Version: 1.1.0
+ * Author: BJT Team
+ */
+
+// 防止直接访问
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+class BJT_REST_API_Fix {
+    private static $instance = null;
+    private $is_rest_request = false;
+    
+    public static function get_instance() {
+        if (null === self::$instance) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+    
+    private function __construct() {
+        // 在初始化前检测并修复常量定义问题
+        $this->fix_rest_request_definition();
+        
+        // 检测是否是REST请求
+        $this->is_rest_request = $this->detect_rest_request();
+        
+        // 尽早开启输出缓冲，以防任何早期输出
+        ob_start();
+        
+        // 只在REST请求中执行以下操作
+        if ($this->is_rest_request) {
+            // 设置早期初始化
+            $this->early_initialization();
+            
+            // 设置各种钩子，确保REST API正常工作
+            $this->setup_hooks();
+        }
+    }
+    
+    /**
+     * 修复WordPress核心文件中的REST_REQUEST重复定义问题
+     */
+    private function fix_rest_request_definition() {
+        // WordPress核心文件路径
+        $rest_api_file = ABSPATH . 'wp-includes/rest-api.php';
+        
+        if (file_exists($rest_api_file) && is_writable($rest_api_file)) {
+            // 读取文件内容
+            $content = file_get_contents($rest_api_file);
+            
+            // 检查是否存在直接定义REST_REQUEST的代码
+            if (strpos($content, "define( 'REST_REQUEST', true );") !== false) {
+                // 替换定义为条件定义
+                $fixed_content = str_replace(
+                    "define( 'REST_REQUEST', true );",
+                    "if ( ! defined( 'REST_REQUEST' ) ) {\n\tdefine( 'REST_REQUEST', true );\n}",
+                    $content
+                );
+                
+                // 如果内容已更改，保存修改
+                if ($content !== $fixed_content) {
+                    // 创建备份
+                    copy($rest_api_file, $rest_api_file . '.bak.' . time());
+                    
+                    // 写入修复的内容
+                    file_put_contents($rest_api_file, $fixed_content);
+                    
+                    // 记录日志
+                    error_log('BJT REST API Fix: 修复了REST_REQUEST常量重复定义问题');
+                }
+            }
+        }
+    }
+    
+    /**
+     * 检测是否是REST API请求
+     */
+    private function detect_rest_request() {
+        if (empty($_SERVER['REQUEST_URI'])) {
+            return false;
+        }
+        
+        // WordPress的REST API通常使用/wp-json/前缀
+        $rest_prefix = 'wp-json';
+        return (strpos($_SERVER['REQUEST_URI'], '/' . $rest_prefix . '/') !== false);
+    }
+    
+    /**
+     * 早期初始化
+     */
+    private function early_initialization() {
+        // 注册关闭函数来捕获PHP错误
+        register_shutdown_function(array($this, 'handle_shutdown'));
+        
+        // 设置错误处理程序来捕获非致命错误
+        set_error_handler(array($this, 'handle_error'));
+        
+        // 设置异常处理程序
+        set_exception_handler(array($this, 'handle_exception'));
+    }
+    
+    /**
+     * 设置WordPress钩子
+     */
+    private function setup_hooks() {
+        // 在WordPress加载各个阶段添加钩子
+        add_action('muplugins_loaded', array($this, 'muplugins_loaded_handler'), -9999);
+        add_action('plugins_loaded', array($this, 'plugins_loaded_handler'), -9999);
+        add_action('rest_api_init', array($this, 'rest_api_init_handler'), -9999);
+        
+        // 防止其他插件或主题在REST请求期间输出HTML内容
+        add_filter('template_include', array($this, 'prevent_theme_output'), -9999);
+        
+        // 添加对REST API响应的处理
+        add_filter('rest_pre_serve_request', array($this, 'prevent_output_before_rest'), -9999);
+        add_filter('rest_pre_serve_request', array($this, 'set_rest_headers'), 9999, 4);
+    }
+    
+    /**
+     * 在must-use插件加载后执行
+     */
+    public function muplugins_loaded_handler() {
+        if ($this->is_rest_request) {
+            // 移除可能干扰REST响应的钩子
+            $this->remove_interfering_hooks();
+        }
+    }
+    
+    /**
+     * 在插件加载后执行
+     */
+    public function plugins_loaded_handler() {
+        if ($this->is_rest_request) {
+            // 清除所有可能的输出缓冲
+            $this->clear_all_buffers();
+        }
+    }
+    
+    /**
+     * 移除可能干扰REST响应的钩子
+     */
+    private function remove_interfering_hooks() {
+        // 移除theme_redirect钩子，它可能会导致输出HTML
+        remove_all_actions('template_redirect');
+        
+        // 移除wp_head和wp_footer钩子，它们通常输出HTML
+        remove_all_actions('wp_head');
+        remove_all_actions('wp_footer');
+        
+        // 移除the_content和the_excerpt过滤器，它们可能修改内容
+        remove_all_filters('the_content');
+        remove_all_filters('the_excerpt');
+        
+        // 移除可能影响REST API的其他钩子
+        remove_all_actions('wp_print_styles');
+        remove_all_actions('wp_print_scripts');
+    }
+    
+    /**
+     * 清除所有输出缓冲
+     */
+    private function clear_all_buffers() {
+        // 清除所有可能的输出缓冲
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+        
+        // 重新启动主输出缓冲，以确保我们可以控制输出
+        ob_start();
+    }
+    
+    /**
+     * 防止主题在REST请求期间输出内容
+     */
+    public function prevent_theme_output($template) {
+        // 对于REST请求，返回一个空模板以防止主题输出
+        if ($this->is_rest_request) {
+            return dirname(__FILE__) . '/empty-template.php';
+        }
+        return $template;
+    }
+    
+    /**
+     * 在REST API初始化时添加自定义路由
+     */
+    public function rest_api_init_handler() {
+        // 添加测试端点以验证REST API是否正常工作
+        register_rest_route('bjt-diag/v1', '/test', array(
+            'methods' => 'GET',
+            'callback' => function() {
+                return array(
+                    'success' => true,
+                    'message' => 'REST API正常工作！',
+                    'time' => current_time('mysql'),
+                    'php_version' => PHP_VERSION,
+                    'wp_version' => get_bloginfo('version'),
+                    'rest_request_fixed' => true
+                );
+            },
+            'permission_callback' => '__return_true'
+        ));
+    }
+    
+    /**
+     * 确保在REST响应前没有输出
+     */
+    public function prevent_output_before_rest($served) {
+        // 清除所有可能的输出缓冲
+        $this->clear_all_buffers();
+        return $served;
+    }
+    
+    /**
+     * 设置REST响应的头部
+     */
+    public function set_rest_headers($served, $result, $request, $server) {
+        // 清除所有可能的输出缓冲
+        $this->clear_all_buffers();
+        
+        // 确保没有之前的输出
+        if (!headers_sent()) {
+            // 设置内容类型为JSON
+            header('Content-Type: application/json; charset=utf-8');
+            
+            // 添加CORS头以允许跨域请求
+            header('Access-Control-Allow-Origin: *');
+            header('Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE');
+            header('Access-Control-Allow-Credentials: true');
+            header('Access-Control-Allow-Headers: Authorization, Content-Type, X-Requested-With');
+        }
+        
+        return $served;
+    }
+    
+    /**
+     * 处理PHP错误
+     */
+    public function handle_error($errno, $errstr, $errfile, $errline) {
+        // 忽略REST_REQUEST重定义的警告
+        if (strpos($errstr, 'Constant REST_REQUEST already defined') !== false) {
+            return true; // 处理错误，防止向上传播
+        }
+        
+        // 忽略header已发送的警告
+        if (strpos($errstr, 'Cannot modify header information') !== false) {
+            return true; // 处理错误，防止向上传播
+        }
+        
+        // 只在REST请求中处理
+        if ($this->is_rest_request) {
+            // 对于特定类型的错误，发送JSON响应
+            if (in_array($errno, array(E_ERROR, E_PARSE, E_COMPILE_ERROR, E_CORE_ERROR, E_USER_ERROR))) {
+                $this->send_error_json_response(array(
+                    'type' => $errno,
+                    'message' => $errstr,
+                    'file' => basename($errfile),
+                    'line' => $errline
+                ));
+                exit;
+            }
+        }
+        
+        // 返回false，让PHP处理其他错误
+        return false;
+    }
+    
+    /**
+     * 处理PHP异常
+     */
+    public function handle_exception($exception) {
+        // 只在REST请求中处理
+        if ($this->is_rest_request) {
+            $this->send_error_json_response(array(
+                'type' => 'Exception',
+                'message' => $exception->getMessage(),
+                'file' => basename($exception->getFile()),
+                'line' => $exception->getLine()
+            ));
+            exit;
+        }
+    }
+    
+    /**
+     * 处理PHP致命错误和其他异常
+     */
+    public function handle_shutdown() {
+        $error = error_get_last();
+        
+        // 只在REST请求和发生致命错误时处理
+        if ($this->is_rest_request && $error && in_array($error['type'], array(E_ERROR, E_PARSE, E_COMPILE_ERROR, E_CORE_ERROR))) {
+            $this->send_error_json_response(array(
+                'type' => $error['type'],
+                'message' => $error['message'],
+                'file' => basename($error['file']),
+                'line' => $error['line']
+            ));
+        }
+    }
+    
+    /**
+     * 发送JSON错误响应
+     */
+    private function send_error_json_response($error_details) {
+        // 清除所有输出
+        $this->clear_all_buffers();
+        
+        // 设置头部（如果还没有发送）
+        if (!headers_sent()) {
+            header('Content-Type: application/json; charset=utf-8');
+            http_response_code(500);
+        }
+        
+        // 发送JSON错误响应
+        echo json_encode(array(
+            'success' => false,
+            'message' => 'REST API处理过程中发生错误',
+            'error' => $error_details,
+            'code' => 500
+        ));
+    }
+}
+
+// 初始化插件实例
+BJT_REST_API_Fix::get_instance();
+
+// 创建空模板文件以防止主题输出
+if (!file_exists(dirname(__FILE__) . '/empty-template.php')) {
+    file_put_contents(dirname(__FILE__) . '/empty-template.php', '<?php // 空模板文件，用于防止主题输出 ?>');
+} 

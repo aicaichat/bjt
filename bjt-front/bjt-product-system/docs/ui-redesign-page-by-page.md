@@ -1,6 +1,34 @@
 # BJT产品管理系统 UI 重构 - 按页面维度工作清单
 
-以下是按照页面维度组织的UI重构任务清单，每个页面的具体工作内容和实现要点。
+## ⚠️ 路径规范重要提示
+
+**在实现UI重构过程中，必须严格遵循本文档中指定的文件路径和目录结构。**不正确的文件路径会导致页面无法正常加载、样式缺失或功能失效。
+
+### 路径命名规则
+
+1. **目录命名约定**：
+   - 使用连字符分隔的小写名称（如`host-models`，而非`host_models`或`hostmodels`）
+   - 主要页面类别使用复数形式（如`templates/admin/accessories/`）
+   - 确保目录名称准确反映功能（如`host-models`而非简单的`hosts`）
+
+2. **文件命名约定**：
+   - 主页面使用`list.php`（如`host-models/list.php`）
+   - 编辑页面使用`edit.php`（如`host-models/edit.php`）
+   - 新增页面使用`add.php`（如`host-models/add.php`）
+   - 详情页面使用`detail.php`（如`host-models/detail.php`）
+
+### 新旧路径对应关系
+
+⚠️ **特别注意**：以下是当前系统中可能存在的路径冲突，开发时必须使用"新路径"：
+
+| 功能 | 旧路径 | 新路径（必须使用） |
+|------|--------|-------------------|
+| 主机管理 | `templates/admin/hosts/` | `templates/admin/host-models/` |
+| 配件管理 | `templates/admin/parts/` | `templates/admin/accessories/` |
+| 备件管理 | `templates/admin/spares/` | `templates/admin/spare-parts/` |
+| 用户管理 | `templates/admin/user/` | `templates/admin/users/` |
+
+以下是 UI 重构按页面维度工作清单，每个页面的具体工作内容和实现要点。
 
 ## 0. 全局重构策略与目标
 
@@ -1026,4 +1054,3 @@
 - [ ] 导出格式选择（Excel、CSV）
 - [ ] 添加导出按钮
 - [ ] 实现导出进度实时反馈
-- [ ] 确保输出缓冲正确使用 

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT Product Management System</title>
+    <style>
+        /* General Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f7f9fb;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header Styles */
+        header {
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 0;
+        }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .logo img {
+            height: 42px;
+            display: block;
+        }
+        
+        .navigation {
+            display: flex;
+            align-items: center;
+            margin-left: 40px;
+            flex-grow: 1;
+        }
+        
+        .nav-menu {
+            list-style: none;
+            display: flex;
+            gap: 28px;
+        }
+        
+        .nav-link {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            font-size: 15px;
+            padding: 6px 0;
+            position: relative;
+            transition: color 0.2s;
+        }
+        
+        .nav-link:hover {
+            color: #1A365D;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 0;
+            background-color: #1A365D;
+            transition: width 0.2s;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+        }
+        
+        .language-select {
+            margin-right: 18px;
+            padding: 7px 12px;
+            border: 1px solid #eaeaea;
+            border-radius: 4px;
+            background-color: white;
+            cursor: pointer;
+            font-size: 14px;
+            color: #555;
+        }
+        
+        .language-select:focus {
+            outline: none;
+            border-color: #1A365D;
+        }
+        
+        .language-select option {
+            padding: 8px;
+            font-size: 14px;
+        }
+        
+        .login-btn {
+            background-color: #1A365D;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 9px 16px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            letter-spacing: 0.3px;
+            transition: background-color 0.2s;
+        }
+        
+        .login-btn:hover {
+            background-color: #274785;
+        }
+        
+        /* Main Content Styles */
+        main {
+            padding: 30px 0;
+        }
+        
+        .product-section {
+            background-color: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        
+        .section-header {
+            background-color: #1A365D;
+            color: white;
+            padding: 15px 20px;
+            font-size: 24px;
+            font-weight: 500;
+        }
+        
+        .section-content {
+            padding: 20px;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        
+        .section-text {
+            flex: 1;
+            min-width: 300px;
+            color: #555;
+            line-height: 1.6;
+            padding-right: 20px;
+        }
+        
+        .section-image {
+            flex: 0 0 auto;
+            max-width: 300px;
+        }
+        
+        .section-image img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .product-links {
+            margin-top: 20px;
+        }
+        
+        .product-link {
+            display: block;
+            color: #0066cc;
+            text-decoration: none;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        
+        .product-link::after {
+            content: "⚡";
+            margin-left: 8px;
+            font-size: 0.8em;
+        }
+        
+        .product-link:hover {
+            text-decoration: underline;
+        }
+        
+        /* Divider */
+        .divider {
+            height: 1px;
+            background-color: #eee;
+            margin: 15px 0;
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .section-content {
+                flex-direction: column;
+            }
+            
+            .section-text {
+                padding-right: 0;
+                margin-bottom: 20px;
+            }
+            
+            .section-image {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <img src="logo-1.webp" alt="BJT Logo">
+            </div>
+            <div class="navigation">
+                <nav>
+                    <ul class="nav-menu">
+                        <li><a href="#" class="nav-link">Home</a></li>
+                        <li><a href="#" class="nav-link">Products</a></li>
+                        <li><a href="#" class="nav-link">Documentation</a></li>
+                        <li><a href="#" class="nav-link">Support</a></li>
+                    </ul>
+                </nav>
+            </div>
+            <div class="header-right">
+                <select class="language-select">
+                    <option value="zh">中文</option>
+                    <option value="en">🇬🇧 English</option>
+                    <option value="ja">🇯🇵 日本語</option>
+                    <option value="ko">🇰🇷 한국어</option>
+                    <option value="fr">🇫🇷 français</option>
+                    <option value="de">🇩🇪 Deutsch</option>
+                    <option value="es">🇪🇸 Español</option>
+                    <option value="it">🇮🇹 italiano</option>
+                    <option value="ru">🇷🇺 русский</option>
+                    <option value="pt">🇵🇹 português</option>
+                    <option value="th">🇹🇭 ไทย</option>
+                    <option value="vi">🇻🇳 tiếng việt</option>
+                </select>
+                <button class="login-btn">Login</button>
+            </div>
+        </div>
+    </header>
+    
+    <main class="container">
+        <!-- Air Cushioning System -->
+        <div class="product-section">
+            <div class="section-header">
+                Air Cushioning System
+            </div>
+            <div class="section-content">
+                <div class="section-text">
+                    <p class="introduction">Introduction</p>
+                    <div class="divider"></div>
+                    <p>Our Air Cushioning System provides superior protection for your products during shipping. Designed for efficiency and versatility, this system creates customized air cushions that perfectly protect your items.</p>
+                    
+                    <div class="product-links">
+                        <a href="#" class="product-link">Air Cushion Machine & Accessory</a>
+                        <a href="#" class="product-link">Film optic</a>
+                        <a href="#" class="product-link">Spare pa</a>
+                    </div>
+                </div>
+                <div class="section-image">
+                    <img src="/api/placeholder/300/200" alt="Air Cushioning System">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Paper Cushioning System -->
+        <div class="product-section">
+            <div class="section-header">
+                Paper Cushioning System
+            </div>
+            <div class="section-content">
+                <div class="section-text">
+                    <p class="introduction">Introduction</p>
+                    <div class="divider"></div>
+                    <p>Our Paper Cushioning System offers an eco-friendly packaging solution that provides excellent protection. The system converts paper into a strong, flexible cushioning material ideal for various packaging needs.</p>
+                    
+                    <div class="product-links">
+                        <a href="#" class="product-link">Paper Cushion Machine & Accessorie</a>
+                        <a href="#" class="product-link">Paper Options</a>
+                        <a href="#" class="product-link">Spare parts</a>
+                    </div>
+                </div>
+                <div class="section-image">
+                    <img src="/api/placeholder/300/200" alt="Paper Cushioning System">
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        // Display login alert when clicking on product links
+        document.querySelectorAll('.product-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                alert('Please login to access this content.');
+            });
+        });
+        
+        // Redirect to login page when clicking login button
+        document.querySelector('.login-btn').addEventListener('click', function() {
+            // In a real application, redirect to the login page
+            alert('Redirecting to login page...');
+            // window.location.href = 'login.html';
+        });
+        
+        // Language selector functionality
+        document.querySelector('.language-select').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            alert('Language changed to: ' + selectedOption.text);
+        });
+    </script>
+</body>
+</html>

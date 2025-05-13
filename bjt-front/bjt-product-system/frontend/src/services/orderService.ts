@@ -1,4 +1,4 @@
-import { mockCartItems, defaultShippingInfo, generateMockOrderId } from '../mock/orderMock';
+import { mockCartItems, defaultShippingInfo, generateMockOrderId } from './mocks/orders.mocks';
 import { API_CONFIG } from '../config/appConfig';
 import { orderApi } from './api';
 

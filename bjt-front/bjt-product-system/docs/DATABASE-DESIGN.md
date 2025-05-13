@@ -501,3 +501,61 @@ DELETE FROM wp_bjt_inventory WHERE warehouse LIKE 'TEST_%';
 2. 定期更新数据库密码
 3. 限制远程访问
 4. 记录关键操作日志 
+
+
+
+
+基于init.sql中的数据库表结构，我对系统的理解如下：
+
+### 主要表结构及关系
+
+1. **产品线（wp_bjt_product_lines）**
+   - 核心表，所有产品都归属于特定产品线
+   - 通过`product_line_id`字段与其他表关联
+   - 包含中英文标题、描述等基本信息
+
+2. **型号表系列**
+   - `wp_bjt_host_models`（主机型号）
+   - `wp_bjt_accessory_models`（配件型号）
+   - `wp_bjt_spare_part_models`（备件型号）
+   - 这些表存储产品的"类型"信息，通过`product_line_id`和`model`字段建立关联
+
+3. **实例表系列**
+   - `wp_bjt_parts`（主机料号）
+   - `wp_bjt_accessories`（配件料号）
+   - `wp_bjt_consumables`（耗材）
+   - `wp_bjt_spare_parts`（备件料号）
+   - 这些表存储具体的产品实例，通过`product_line_id`和`model`字段与型号表关联
+
+4. **关系表（wp_bjt_relations）**
+   - 定义产品间的层级和关系
+   - 使用`parent_part_number`和`child_part_number`建立上下级关系
+   - 记录层级、数量和必选备件等信息
+
+5. **价格表（wp_bjt_prices）**
+   - 存储所有类型产品的价格
+   - 使用`target_type`（如'host'/'accessory'/'consumable'）和`target_id`指向具体产品
+   - 按区域（`region`）、数量范围（`min_quantity`/`max_quantity`）设置不同价格
+
+6. **库存表（wp_bjt_inventory）**
+   - 存储所有类型产品的库存
+   - 同样使用`target_type`和`target_id`指向具体产品
+   - 按区域和仓库记录库存和预留数量
+
+### 耗材特有表
+
+1. **耗材形状表（wp_bjt_shapes）**
+2. **耗材材料表（wp_bjt_materials）**
+3. **耗材规格表（wp_bjt_specifications）**
+4. **耗材主机适配表（wp_bjt_consumable_compatibility）**
+   - 这些表提供耗材的附加属性和兼容性信息
+
+### 关键关系
+
+- 所有实体通过`product_line_id`关联到产品线
+- 产品型号与具体实例通过`model`字段关联
+- 产品间的层级关系通过`wp_bjt_relations`表维护
+- 价格和库存通过`target_type`和`target_id`字段关联到具体产品
+- 备件与主机的兼容性通过`app_model`字段或专用的兼容性表表示
+
+在实现API时，特别是批量价格和库存查询，需要注意跨表联合查询，确保返回完整且符合预期格式的数据。同时，需要根据`model`和`part_number`的区别准确处理请求和响应。

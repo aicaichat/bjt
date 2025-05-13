@@ -1,19 +1,28 @@
 # 主机型号列表页面开发指南
 
+## ⚠️ 路径规范警告
+
+**严格遵循路径规范是确保项目顺利进行的关键**。请注意：
+
+- 此页面必须实现在 `templates/admin/host-models/list.php` 路径
+- 不要使用旧的 `templates/admin/hosts/list.php` 路径
+- 所有子页面也必须遵循 `host-models/` 目录结构
+- 参考 [路径映射规范](../rules/PATH-MAPPING.md) 获取更多详情
+
 ## 1. 页面基本信息
 
 - **页面名称**: 主机型号列表
-- **页面路径**: templates/admin/host-models/list.php
+- **📁 页面路径**: `templates/admin/host-models/list.php` (**必须严格遵循此路径**)
 - **对应 Mockup**: 主机管理页面 (2.html)
 - **优先级**: P0 (核心功能，必须实现)
 - **相关子页面**:
-  - **新增型号页面**: `host-models/add.php` (对应 Mockup: 3.html)
+  - **新增型号页面**: `templates/admin/host-models/add.php` (对应 Mockup: 3.html)
     - 功能: 创建新的主机型号，包含基础信息、多语言说明和图片上传
-  - **编辑型号页面**: `host-models/edit.php` (对应 Mockup: 3.html)
+  - **编辑型号页面**: `templates/admin/host-models/edit.php` (对应 Mockup: 3.html)
     - 功能: 编辑已有主机型号的信息，与新增页面结构相同但预填数据
-  - **新增料号页面**: `host-models/part-add.php` (对应 Mockup: 4.html)
+  - **新增料号页面**: `templates/admin/host-models/part-add.php` (对应 Mockup: 4.html)
     - 功能: 为选定型号创建新料号，包含基础信息、规格和物流参数
-  - **编辑料号页面**: `host-models/part-edit.php` (对应 Mockup: 4.html)
+  - **编辑料号页面**: `templates/admin/host-models/part-edit.php` (对应 Mockup: 4.html)
     - 功能: 编辑已有料号的详细信息，与新增页面结构相同但预填数据
 
 ## 2. 数据关系
@@ -493,10 +502,10 @@ function render_host_models_list() {
         include_once BJT_PLUGIN_DIR . 'templates/admin/host-models/edit.php';
     } elseif ($action === 'add-part') {
         // 包含添加料号模板
-        include_once BJT_PLUGIN_DIR . 'templates/admin/host-models/add-part.php';
+        include_once BJT_PLUGIN_DIR . 'templates/admin/host-models/part-add.php';
     } elseif ($action === 'edit-part' && isset($_GET['id'])) {
         // 包含编辑料号模板
-        include_once BJT_PLUGIN_DIR . 'templates/admin/host-models/edit-part.php';
+        include_once BJT_PLUGIN_DIR . 'templates/admin/host-models/part-edit.php';
     } else {
         // 默认显示列表页
         ?>

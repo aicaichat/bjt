@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT - 订单支付</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        :root {
+            --primary-color: #1a57a5;
+            --primary-light: #e5eef9;
+            --primary-lightest: #f2f7fd;
+            --secondary-color: #4a90e2;
+            --text-color: #333333;
+            --text-light: #666666;
+            --border-color: #e0e0e0;
+            --success-color: #34c759;
+            --warning-color: #f7b955;
+            --error-color: #ff3b30;
+            --background-color: #f7f9fc;
+        }
+        
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .header .order-number {
+            color: var(--text-light);
+            font-size: 18px;
+            background-color: var(--primary-lightest);
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        
+        .payment-container {
+            display: flex;
+            gap: 40px;
+        }
+        
+        /* Payment Methods Section */
+        .payment-methods {
+            flex: 6;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            transition: transform 0.3s ease;
+        }
+        
+        .payment-methods:hover {
+            transform: translateY(-5px);
+        }
+        
+        .section-title {
+            font-size: 22px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--primary-light);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .payment-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .payment-option {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .payment-option:hover {
+            border-color: var(--primary-color);
+            background-color: var(--primary-lightest);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .payment-option.selected {
+            border-color: var(--primary-color);
+            background-color: var(--primary-lightest);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .payment-option.selected::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 0 30px 30px 0;
+            border-color: transparent var(--primary-color) transparent transparent;
+        }
+        
+        .payment-option input[type="radio"] {
+            margin-right: 20px;
+            transform: scale(1.4);
+            accent-color: var(--primary-color);
+        }
+        
+        .payment-icon {
+            width: 50px;
+            height: 50px;
+            margin-right: 20px;
+            object-fit: contain;
+            background-color: white;
+            padding: 5px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .payment-details {
+            flex: 1;
+        }
+        
+        .payment-name {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 18px;
+        }
+        
+        .payment-description {
+            font-size: 15px;
+            color: var(--text-light);
+        }
+        
+        /* Order Summary Section */
+        .order-summary {
+            flex: 4;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            align-self: flex-start;
+            transition: transform 0.3s ease;
+        }
+        
+        .order-summary:hover {
+            transform: translateY(-5px);
+        }
+        
+        .order-items {
+            margin-bottom: 30px;
+        }
+        
+        .order-item {
+            display: flex;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            transition: transform 0.2s ease;
+        }
+        
+        .order-item:hover {
+            transform: translateY(-2px);
+        }
+        
+        .order-item:last-child {
+            margin-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .item-image {
+            width: 90px;
+            height: 90px;
+            background-color: var(--primary-lightest);
+            margin-right: 20px;
+            object-fit: contain;
+            border-radius: 8px;
+            padding: 5px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .item-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .item-name {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        
+        .item-quantity {
+            font-size: 15px;
+            color: var(--text-light);
+        }
+        
+        .price-details {
+            margin-top: 25px;
+            background-color: var(--primary-lightest);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .price-label {
+            color: var(--text-light);
+            font-size: 15px;
+        }
+        
+        .price-value {
+            font-weight: 500;
+            font-size: 15px;
+        }
+        
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid white;
+        }
+        
+        .total-label {
+            font-weight: 600;
+            font-size: 18px;
+        }
+        
+        .total-value {
+            font-weight: 700;
+            font-size: 28px;
+            color: var(--primary-color);
+        }
+        
+        .security-info {
+            display: flex;
+            align-items: center;
+            margin-top: 25px;
+            padding: 15px;
+            background-color: rgba(52, 199, 89, 0.1);
+            border-radius: 10px;
+            border: 1px solid rgba(52, 199, 89, 0.3);
+        }
+        
+        .security-icon {
+            font-size: 28px;
+            margin-right: 15px;
+            color: var(--success-color);
+        }
+        
+        .security-text {
+            font-size: 14px;
+            color: var(--text-light);
+            line-height: 1.5;
+        }
+        
+        /* Footer action buttons */
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            gap: 20px;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            flex: 2;
+            box-shadow: 0 5px 15px rgba(26, 87, 165, 0.3);
+        }
+        
+        .btn-primary:hover {
+            background-color: #154785;
+            transform: translateY(-3px);
+        }
+        
+        .btn-secondary {
+            background-color: white;
+            color: var(--text-color);
+            border: 2px solid var(--border-color);
+            flex: 1;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #f5f5f5;
+            transform: translateY(-3px);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .payment-container {
+                flex-direction: column;
+            }
+            
+            .order-summary {
+                margin-top: 30px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+                margin: 15px;
+            }
+            
+            .header h1 {
+                font-size: 26px;
+            }
+            
+            .header .order-number {
+                font-size: 16px;
+            }
+            
+            .section-title {
+                font-size: 20px;
+                margin-bottom: 20px;
+            }
+            
+            .payment-option {
+                padding: 15px;
+            }
+            
+            .payment-icon {
+                width: 40px;
+                height: 40px;
+                margin-right: 12px;
+            }
+            
+            .payment-name {
+                font-size: 16px;
+            }
+            
+            .payment-description {
+                font-size: 13px;
+            }
+            
+            .item-image {
+                width: 70px;
+                height: 70px;
+            }
+            
+            .total-value {
+                font-size: 24px;
+            }
+            
+            .actions {
+                flex-direction: column-reverse;
+            }
+            
+            .btn {
+                width: 100%;
+                padding: 14px;
+                margin-bottom: 10px;
+            }
+        }
+        
+        /* Animation effects */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .payment-methods, .order-summary {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        
+        .payment-option {
+            animation: fadeIn 0.3s ease-out forwards;
+            animation-delay: calc(0.1s * var(--i, 0));
+        }
+        
+        .order-item {
+            animation: fadeIn 0.3s ease-out forwards;
+            animation-delay: calc(0.1s * var(--i, 0));
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>订单支付</h1>
+            <div class="order-number">订单号: ORDER-202504-0123</div>
+        </div>
+        
+        <div class="payment-container">
+            <!-- Payment Methods Section -->
+            <div class="payment-methods">
+                <h2 class="section-title">请选择支付方式</h2>
+                
+                <div class="payment-options">
+                    <label class="payment-option">
+                        <input type="radio" name="payment-method" value="paypal" checked>
+                        <img src="/api/placeholder/40/40" alt="PayPal" class="payment-icon">
+                        <div class="payment-details">
+                            <div class="payment-name">PayPal</div>
+                            <div class="payment-description">安全快捷的国际支付方式</div>
+                        </div>
+                    </label>
+                    
+                    <label class="payment-option">
+                        <input type="radio" name="payment-method" value="credit-card">
+                        <img src="/api/placeholder/40/40" alt="Credit Card" class="payment-icon">
+                        <div class="payment-details">
+                            <div class="payment-name">信用卡</div>
+                            <div class="payment-description">支持Visa, MasterCard, American Express</div>
+                        </div>
+                    </label>
+                    
+                    <label class="payment-option">
+                        <input type="radio" name="payment-method" value="alipay">
+                        <img src="/api/placeholder/40/40" alt="Alipay" class="payment-icon">
+                        <div class="payment-details">
+                            <div class="payment-name">支付宝</div>
+                            <div class="payment-description">中国区用户首选支付方式</div>
+                        </div>
+                    </label>
+                    
+                    <label class="payment-option">
+                        <input type="radio" name="payment-method" value="wechat">
+                        <img src="/api/placeholder/40/40" alt="WeChat Pay" class="payment-icon">
+                        <div class="payment-details">
+                            <div class="payment-name">微信支付</div>
+                            <div class="payment-description">使用微信快速支付</div>
+                        </div>
+                    </label>
+                    
+                    <label class="payment-option">
+                        <input type="radio" name="payment-method" value="bank-transfer">
+                        <img src="/api/placeholder/40/40" alt="Bank Transfer" class="payment-icon">
+                        <div class="payment-details">
+                            <div class="payment-name">银行转账</div>
+                            <div class="payment-description">直接转账至公司账户</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Order Summary Section -->
+            <div class="order-summary">
+                <h2 class="section-title">订单摘要</h2>
+                
+                <div class="order-items">
+                    <div class="order-item">
+                        <img src="/api/placeholder/80/80" alt="Product Image" class="item-image">
+                        <div class="item-details">
+                            <div class="item-name">Void Fill Machine LP-V1</div>
+                            <div class="item-quantity">数量: 2</div>
+                        </div>
+                    </div>
+                    
+                    <div class="order-item">
+                        <img src="/api/placeholder/80/80" alt="Product Image" class="item-image">
+                        <div class="item-details">
+                            <div class="item-name">Floor Stand FS-01</div>
+                            <div class="item-quantity">数量: 2</div>
+                        </div>
+                    </div>
+                    
+                    <div class="order-item">
+                        <img src="/api/placeholder/80/80" alt="Product Image" class="item-image">
+                        <div class="item-details">
+                            <div class="item-name">HDPE Pillow Film</div>
+                            <div class="item-quantity">数量: 10</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="price-details">
+                    <div class="price-row">
+                        <div class="price-label">商品总额</div>
+                        <div class="price-value">¥24,260.00</div>
+                    </div>
+                    
+                    <div class="price-row">
+                        <div class="price-label">运费</div>
+                        <div class="price-value">¥500.00</div>
+                    </div>
+                    
+                    <div class="price-row">
+                        <div class="price-label">税费</div>
+                        <div class="price-value">¥1,577.90</div>
+                    </div>
+                    
+                    <div class="total-row">
+                        <div class="total-label">支付金额</div>
+                        <div class="total-value">¥26,337.90</div>
+                    </div>
+                </div>
+                
+                <div class="security-info">
+                    <div class="security-icon">🔒</div>
+                    <div class="security-text">您的支付信息受到加密保护。我们承诺提供安全的支付环境。</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="actions">
+            <button class="btn btn-secondary" onclick="goBack()">返回修改</button>
+            <button class="btn btn-primary" onclick="confirmPayment()">确认支付</button>
+        </div>
+    </div>
+    
+    <script>
+        // Highlight selected payment option
+        const paymentOptions = document.querySelectorAll('.payment-option');
+        
+        paymentOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                paymentOptions.forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+            });
+        });
+        
+        function goBack() {
+            window.history.back();
+        }
+        
+        function confirmPayment() {
+            const selectedMethod = document.querySelector('input[name="payment-method"]:checked').value;
+            alert(`正在使用 ${selectedMethod} 处理您的支付...`);
+            // 实际应用中这里会提交支付表单或调用支付API
+        }
+    </script>
+</body>
+</html>

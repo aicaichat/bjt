@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT 订单记录页面</title>
+    <style>
+        /* Base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', '微软雅黑', sans-serif;
+        }
+        
+        body {
+            background-color: #f7f9fb;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Header Styles */
+        header {
+            background-color: #fff;
+            padding: 15px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo {
+            height: 40px;
+        }
+        
+        .logo-text {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1A365D;
+            margin-left: 10px;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+        }
+        
+        .nav-menu {
+            display: flex;
+            margin-right: 20px;
+        }
+        
+        .nav-item {
+            margin: 0 15px;
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .nav-item:hover {
+            color: #1a57a5;
+        }
+        
+        .language-selector {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #fff;
+            margin-right: 15px;
+        }
+        
+        .login-btn {
+            background-color: #1A365D;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .login-btn:hover {
+            background-color: #274785;
+        }
+        
+        /* 订单标题 */
+        .order-title {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .order-title h1 {
+            font-size: 24px;
+            color: #e74c3c;
+            margin-bottom: 10px;
+        }
+        
+        .order-title p {
+            font-size: 16px;
+            color: #e74c3c;
+        }
+        
+        /* 订单表格 */
+        .order-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .order-table th {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .order-table td {
+            padding: 15px 10px;
+            text-align: left;
+            vertical-align: middle;
+        }
+        
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            padding: 10px 0;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .order-item {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            background-color: white;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .order-item:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .item-checkbox {
+            flex: 0 0 40px;
+        }
+        
+        .item-checkbox input {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .item-image {
+            flex: 0 0 120px;
+            padding: 0 15px;
+        }
+        
+        .item-image img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            border-radius: 4px;
+            border: 1px solid #eee;
+            padding: 5px;
+        }
+        
+        .item-details {
+            flex: 1;
+            padding: 0 15px;
+            min-width: 200px;
+        }
+        
+        .item-model {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #002366;
+            display: flex;
+            align-items: center;
+        }
+        
+        .item-property {
+            margin: 8px 0;
+            color: #666;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .property-label {
+            flex: 0 0 80px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .property-value {
+            flex: 1;
+        }
+        
+        .item-actions {
+            display: flex;
+            margin-top: 10px;
+        }
+        
+        .item-action-btn {
+            background: none;
+            border: none;
+            color: #4285f4;
+            margin-right: 15px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .item-action-btn:hover {
+            text-decoration: underline;
+        }
+        
+        .item-quantity {
+            flex: 0 0 160px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+        
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .quantity-btn {
+            width: 32px;
+            height: 32px;
+            background-color: #f5f5f5;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .quantity-btn:hover {
+            background-color: #e5e5e5;
+        }
+        
+        .quantity-input {
+            width: 50px;
+            height: 32px;
+            padding: 0 5px;
+            text-align: center;
+            border: none;
+            border-left: 1px solid #ddd;
+            border-right: 1px solid #ddd;
+            font-size: 16px;
+        }
+        
+        .item-price {
+            flex: 0 0 150px;
+            text-align: right;
+            font-weight: bold;
+            color: #e74c3c;
+            font-size: 18px;
+        }
+        
+        .item-type-tag {
+            display: inline-block;
+            padding: 3px 8px;
+            font-size: 12px;
+            border-radius: 4px;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        
+        .tag-machine {
+            background-color: #e3f2fd;
+            color: #1565c0;
+        }
+        
+        .tag-accessory {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .tag-consumable {
+            background-color: #fff3e0;
+            color: #e65100;
+        }
+        
+        /* 提交按钮 */
+        .submit-btn {
+            display: block;
+            width: 100%;
+            max-width: 200px;
+            margin: 30px 0 30px auto;
+            padding: 12px 20px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .submit-btn:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* 选择框样式 */
+        .checkbox-custom {
+            display: block;
+            width: 24px;
+            height: 24px;
+            border: 2px solid #4285f4;
+            border-radius: 4px;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .checkbox-custom.checked::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 7px;
+            width: 6px;
+            height: 12px;
+            border: solid #4285f4;
+            border-width: 0 3px 3px 0;
+            transform: rotate(45deg);
+        }
+        
+        /* 价格区间样式 */
+        .price-tiers {
+            margin-top: 0;
+            border-top: none;
+            padding-top: 0;
+        }
+        
+        .price-tier {
+            margin-bottom: 5px;
+            color: #e74c3c;
+            font-weight: 500;
+        }
+        
+        .original-price {
+            text-decoration: line-through;
+            color: #888;
+            font-size: 0.9em;
+        }
+        
+        .current-price {
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        
+        /* Tooltip styles */
+        .info-tooltip {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            background-color: #1a57a5;
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        
+        .tooltip-content {
+            position: absolute;
+            top: -5px;
+            left: 30px;
+            width: 280px;
+            background-color: white;
+            border-radius: 6px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            padding: 15px;
+            z-index: 100;
+            font-size: 14px;
+            color: #333;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
+            transform: translateY(10px);
+            pointer-events: none;
+        }
+        
+        .info-tooltip:hover .tooltip-content {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .tooltip-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #1a57a5;
+            font-size: 16px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        
+        .tooltip-property {
+            margin-bottom: 5px;
+        }
+        
+        .tooltip-property-label {
+            font-weight: 600;
+            color: #555;
+            margin-right: 5px;
+        }
+        
+        .tooltip-section {
+            margin-bottom: 10px;
+        }
+        
+        .tooltip-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        
+        .tooltip-badge-high {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .tooltip-badge-medium {
+            background-color: #fff3e0;
+            color: #e65100;
+        }
+        
+        .tooltip-badge-low {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .item-image {
+                flex: 0 0 100px;
+            }
+            
+            .order-item {
+                flex-wrap: wrap;
+            }
+            
+            .item-quantity {
+                flex: 0 0 100%;
+                text-align: right;
+                margin-top: 10px;
+            }
+            
+            .tooltip-content {
+                width: 200px;
+                left: auto;
+                right: 0;
+            }
+        }
+        
+        /* Add order summary styling */
+        .order-summary {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+        }
+        
+        .summary-label {
+            color: #666;
+        }
+        
+        .summary-value {
+            font-weight: bold;
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-left">
+                <img src="https://via.placeholder.com/150x40/1A365D/FFFFFF?text=BJT+Logo" alt="BJT Logo" class="logo">
+                <span class="logo-text">Hangzhou Bingjia Tech</span>
+            </div>
+            <div class="header-right">
+                <nav class="nav-menu">
+                    <a href="#" class="nav-item">Home</a>
+                    <a href="#" class="nav-item">Products</a>
+                    <a href="#" class="nav-item">Documentation</a>
+                    <a href="#" class="nav-item">Support</a>
+                </nav>
+                <select class="language-selector">
+                    <option value="zh">中文</option>
+                    <option value="en">English</option>
+                </select>
+                <button class="login-btn">Login</button>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="order-title">
+            <h1>保存订单记录</h1>
+            <p>超级管理员可看到所有账号的订单信息</p>
+        </div>
+        
+        <div class="order-list">
+            <div class="order-header">
+                <div style="flex: 0 0 40px;">
+                    <div class="checkbox-custom" id="select-all"></div>
+                </div>
+                <div style="flex: 1;">产品</div>
+                <div style="width: 160px; text-align: right;">数量</div>
+                <div style="width: 150px; text-align: right;">价格</div>
+            </div>
+            
+            <!-- 全选链接 -->
+            <div style="margin: 15px 0;">
+                <a href="#" id="select-all-link" style="color: #4285f4; text-decoration: none;">全选</a>
+            </div>
+            
+            <!-- 订单项1 - 主机 -->
+            <div class="order-item">
+                <div class="item-checkbox">
+                    <div class="checkbox-custom checked"></div>
+                </div>
+                <div class="item-image">
+                    <img src="https://via.placeholder.com/120x100?text=LA-E5P" alt="LA-E5P产品图片">
+                </div>
+                <div class="item-details">
+                    <div class="item-model">
+                        LA-E5P 
+                        <span class="item-type-tag tag-machine">主机</span>
+                        <div class="info-tooltip">i
+                            <div class="tooltip-content">
+                                <div class="tooltip-title">LA-E5P 详细信息</div>
+                                <div class="tooltip-section">
+                                    <div class="tooltip-property">
+                                        <span class="tooltip-property-label">包装尺寸:</span>
+                                        <span>120 × 80 × 80 cm</span>
+                                    </div>
+                                    <div class="tooltip-property">
+                                        <span class="tooltip-property-label">包装毛重:</span>
+                                        <span>130 kg</span>
+                                    </div>
+                                    <div class="tooltip-property">
+                                        <span class="tooltip-property-label">打托后总高度:</span>
+                                        <span>90 cm</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="item-property">
+                        <span class="property-label">料号:</span>
+                        <span class="property-value">BJT-LA-E5P-2023</span>
+                    </div>
+                    <div class="item-property">
+                        <span class="property-label">电压:</span>
+                        <span class="property-value">220V</span>
+                    </div>
+                    <div class="item-property">
+                        <span class="property-label">产品名称:</span>
+                        <span class="property-value">全自动高速包装机</span>
+                    </div>
+                    <div class="item-property">
+                        <span class="property-label">托盘尺寸:</span>
+                        <span class="property-value">120 × 80 × 80 cm</span>
+                    </div>
+                    <div class="item-property">
+                        <span class="property-label">一托数量:</span>
+                        <span class="property-value">1台</span>
+                    </div>
+                    <div class="item-actions">
+                        <button class="item-action-btn">
+                            <span style="margin-right: 5px;">📄</span> 规格说明
+                        </button>
+                        <button class="item-action-btn item-delete">
+                            <span style="margin-right: 5px;">🗑️</span> 删除
+                        </button>
+                    </div>
+                </div>
+                <div class="item-quantity">
+                    <div class="quantity-control">
+                        <button class="quantity-btn decrease">-</button>
+                        <input type="text" class="quantity-input" value="2">
+                        <button class="quantity-btn increase">+</button>
+                    </div>
+                </div>
+                <div class="item-price">
+                    <div class="price-tiers">
+                        <div class="price-tier">
+                            <span class="original-price">¥4,000.00</span>
+                            <span class="current-price">¥3,600.00</span> (1-5)
+                        </div>
+                        <div class="price-tier">¥3,400.00 (6-20)</div>
+                        <div class="price-tier">¥3,200.00 (>20)</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 订单项2 - 配件 -->
+            <div class="order-item">
+                <div class="item-checkbox">
+                    <div class="checkbox-custom"></div>
+                </div>
+                <div class="item-image">
+                    <img src="https://via.placeholder.com/120x100?text=EC2007" alt="EC2007产品图片">
+                </div>
+                <div class="item-details">
+                    <div class="item-model">
+                        EC2007 控制板 
+                        <span class="item-type-tag tag-accessory">配件</span>
+                        <div class="info-tooltip">i
+                            <div class="tooltip-content">
+                                <div class="tooltip-title">EC2007 控制板详细信息</div>
+                                <div class="tooltip-section">
+                                    <div class="tooltip-property">
+                                        <span class="tooltip-property-label">包装尺寸:</span>
+                                        <span>20 × 15 × 5 cm</span>
+                                    </div>
+                                    <div class="tooltip-property">
+                                        <span class="tooltip-property-label">包装毛重:</span>
+                                        <span>0.3 kg</span>
+                                    </div>
+                                    <div class="tooltip-property">
+                                        <span class="tooltip-property-label">打托后总高度:</span>
+                                        <span>60 cm</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="item-property">
+                        <span class="property-label">型号:</span>
+                        <span class="property-value">EC2007</span>
+                    </div>
+                    <div class="item-property">
+                        <span class="property-label">料号:</span>
+                        <span class="property-value">BJT-EC2007-2023</span>
+                    </div>
+                    <div class="item-property">
+                        <span class="property-label">产品名称:</span>
+                        <span class="property-value">高级控制面板</span>
+                    </div>
+                    <div class="item-property">
+                        <span class="property-label">电压:</span>
+                        <span class="property-value">220V/110V</span>
+                    </div>
+                    <div class="item-property">
+                        <span class="property-label">频率:</span>
+                        <span class="property-value">50Hz/60Hz</span>
+                    </div>
+                    <div class="item-property">
+                        <span class="property-label">兼容型号:</span>
+                        <span class="property-value">LA-E5P, LA-E4S</span>
+                    </div>
+                    <div class="item-property">
+                        <span class="property-label">托盘尺寸:</span>
+                        <span class="property-value">80 × 60 × 20 cm</span>
+                    </div>
+                    <div class="item-property">
+                        <span class="property-label">一托数量:</span>
+                        <span class="property-value">100个</span>
+                    </div>
+                    <div class="item-actions">
+                        <button class="item-action-btn">
+                            <span style="margin-right: 5px;">📄</span> 规格说明
+                        </button>
+                        <button class="item-action-btn item-delete">
+                            <span style="margin-right: 5px;">🗑️</span> 删除
+                        </button>
+                    </div>
+                </div>
+                <div class="item-quantity">
+                    <div class="quantity-control">
+                        <button class="quantity-btn decrease">-</button>
+                        <input type="text" class="quantity-input" value="1">
+                        <button class="quantity-btn increase">+</button>
+                    </div>
+                </div>
+                <div class="item-price">
+                    <div class="price-tiers">
+                        <div class="price-tier">
+                            <span class="original-price">¥450.00</span>
+                            <span class="current-price">¥420.00</span> (1-10)
+                        </div>
+                        <div class="price-tier">¥380.00 (11-100)</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 订单项3 - 耗材 -->
+            <div class="order-item">
+                <div class="item-checkbox">
+                    <div class="checkbox-custom checked"></div>
+                </div>
+                <div class="item-image">
+                    <img src="https://via.placeholder.com/120x100?text=SS" alt="SS产品图片">
+                </div>
+                <div class="item-details">
+                    <div class="item-model">
+                        填充气泡膜-SS 
+                        <span class="item-type-tag tag-consumable">耗材</span>
+                        <div class="info-tooltip">i
+                            <div class="tooltip-content">
+                                <div class="tooltip-title">填充气泡膜-SS 详细信息</div>
+                                <div class="tooltip-section">
+                                    <div class="tooltip-property">
+                                        <span class="tooltip-property-label">包装材质:</span>
+                                        <span>HDPE高密度聚乙烯</span>
+                                    </div>
+                                </div>
+                                <div class="tooltip-section">
+                                    <div class="tooltip-title">公制规格:</div>
+                                    <div class="tooltip-property">
+                                        <span class="tooltip-property-label">厚度:</span>
+                                        <span>0.05mm</span>
+                                    </div>
+                                    <div class="tooltip-property">
+                                        <span class="tooltip-property-label">克重:</span>
+                                        <span>45g/m²</span>
+                                    </div>
+                                    <div class="tooltip-property">
+                                        <span class="tooltip-property-label">膜宽:</span>
+                                        <span>300mm</span>
+                                    </div>
+                                    <div class="tooltip-property">
+                                        <span class="tooltip-property-label">袋长:</span>
+                                        <span>200m</span>
+                                    </div>
+                                </div>
+                                <div class="tooltip-section">
+                                    <div class="tooltip-title">英制规格:</div>
+                                    <div class="tooltip-property">
+                                        <span class="tooltip-property-label">厚度:</span>
+                                        <span>2 mil</span>
+                                    </div>
+                                    <div class="tooltip-property">
+                                        <span class="tooltip-property-label">克重:</span>
+                                        <span>1.3 oz/yd²</span>
+                                    </div>
+                                    <div class="tooltip-property">
+                                        <span class="tooltip-property-label">膜宽:</span>
+                                        <span>11.8 inch</span>
+                                    </div>
+                                    <div class="tooltip-property">
+                                        <span class="tooltip-property-label">袋长:</span>
+                                        <span>656 ft</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="item-property">
+                        <span class="property-label">适配机型:</span>
+                        <span class="property-value">ALL</span>
+                    </div>
+                    <div class="item-property">
+                        <span class="property-label">料号:</span>
+                        <span class="property-value">BJT-SS-2023</span>
+                    </div>
+                    <div class="item-property">
+                        <span class="property-label">规格:</span>
+                        <span class="property-value">300mm×200m</span>
+                    </div>
+                    <div class="item-property">
+                        <span class="property-label">材质:</span>
+                        <span class="property-value">HDPE</span>
+                    </div>
+                    <div class="item-actions">
+                        <button class="item-action-btn">
+                            <span style="margin-right: 5px;">📄</span> 规格说明
+                        </button>
+                        <button class="item-action-btn item-delete">
+                            <span style="margin-right: 5px;">🗑️</span> 删除
+                        </button>
+                    </div>
+                </div>
+                <div class="item-quantity">
+                    <div class="quantity-control">
+                        <button class="quantity-btn decrease">-</button>
+                        <input type="text" class="quantity-input" value="1">
+                        <button class="quantity-btn increase">+</button>
+                    </div>
+                </div>
+                <div class="item-price">
+                    <div class="price-tiers">
+                        <div class="price-tier">
+                            <span class="original-price">¥180.00</span>
+                            <span class="current-price">¥150.00</span> (1-10)
+                        </div>
+                        <div class="price-tier">¥130.00 (11-50)</div>
+                        <div class="price-tier">¥110.00 (>50)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 订单项4 - 备件 -->
+            <div class="order-item">
+                <div class="item-checkbox">
+                    <div class="checkbox-custom checked"></div>
+                </div>
+                <div class="item-image">
+                    <img src="https://via.placeholder.com/120x100?text=PR-001" alt="PR-001产品图片">
+                </div>
+                <div class="item-details">
+                    <div class="item-model">
+                        压力滚轮 PR-001
+                        <span class="item-type-tag tag-accessory">备件</span>
+                    </div>
+                    <div class="item-property">
+                        <span class="property-label">适配机型:</span>
+                        <span class="property-value">LP-V1, LP-F1</span>
+                    </div>
+                    <div class="item-property">
+                        <span class="property-label">料号:</span>
+                        <span class="property-value">BJT-PR-33-2023</span>
+                    </div>
+                    <div class="item-property">
+                        <span class="property-label">名称:</span>
+                        <span class="property-value">包装机压力滚轮</span>
+                    </div>
+                    <div class="item-property">
+                        <span class="property-label">适配序列号:</span>
+                        <span class="property-value">20001-30000</span>
+                    </div>
+                    <div class="item-property">
+                        <span class="property-label">包装尺寸:</span>
+                        <span class="property-value">30 × 10 × 10 cm</span>
+                    </div>
+                    <div class="item-property">
+                        <span class="property-label">包装毛重:</span>
+                        <span class="property-value">0.8 kg</span>
+                    </div>
+                    <div class="item-actions">
+                        <button class="item-action-btn">
+                            <span style="margin-right: 5px;">📄</span> 规格说明
+                        </button>
+                        <button class="item-action-btn item-delete">
+                            <span style="margin-right: 5px;">🗑️</span> 删除
+                        </button>
+                    </div>
+                </div>
+                <div class="item-quantity">
+                    <div class="quantity-control">
+                        <button class="quantity-btn decrease">-</button>
+                        <input type="text" class="quantity-input" value="2">
+                        <button class="quantity-btn increase">+</button>
+                    </div>
+                </div>
+                <div class="item-price">
+                    <div class="price-tiers">
+                        <div class="price-tier">
+                            <span class="original-price">¥170.00</span>
+                            <span class="current-price">¥150.00</span> (1-10)
+                        </div>
+                        <div class="price-tier">¥140.00 (11-100)</div>
+                        <div class="price-tier">¥130.00 (>100)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Order Summary Section -->
+        <div class="order-summary">
+            <div class="summary-row">
+                <div class="summary-label">已选商品:</div>
+                <div class="summary-value" id="selected-count">2 件</div>
+            </div>
+            <div class="summary-row">
+                <div class="summary-label">商品总额:</div>
+                <div class="summary-value" id="selected-total">¥ 3,750.00</div>
+            </div>
+        </div>
+        
+        <button class="submit-btn">提交订单</button>
+    </div>
+    
+    <script>
+        // 设置复选框功能
+        document.querySelectorAll('.checkbox-custom').forEach(checkbox => {
+            checkbox.addEventListener('click', function() {
+                this.classList.toggle('checked');
+                updateOrderSummary();
+            });
+        });
+        
+        // 全选功能
+        const selectAllCheckbox = document.getElementById('select-all');
+        const selectAllLink = document.getElementById('select-all-link');
+        
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('click', function() {
+                const isChecked = this.classList.toggle('checked');
+                document.querySelectorAll('.order-item .checkbox-custom').forEach(checkbox => {
+                    if (isChecked) {
+                        checkbox.classList.add('checked');
+                    } else {
+                        checkbox.classList.remove('checked');
+                    }
+                });
+                updateOrderSummary();
+            });
+        }
+        
+        if (selectAllLink) {
+            selectAllLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                const allChecked = areAllItemsChecked();
+                
+                document.querySelectorAll('.order-item .checkbox-custom').forEach(checkbox => {
+                    if (allChecked) {
+                        checkbox.classList.remove('checked');
+                    } else {
+                        checkbox.classList.add('checked');
+                    }
+                });
+                
+                if (selectAllCheckbox) {
+                    if (allChecked) {
+                        selectAllCheckbox.classList.remove('checked');
+                    } else {
+                        selectAllCheckbox.classList.add('checked');
+                    }
+                }
+                
+                updateOrderSummary();
+            });
+        }
+        
+        function areAllItemsChecked() {
+            const allCheckboxes = document.querySelectorAll('.order-item .checkbox-custom');
+            const checkedCheckboxes = document.querySelectorAll('.order-item .checkbox-custom.checked');
+            return allCheckboxes.length === checkedCheckboxes.length;
+        }
+        
+        // 数量增减功能
+        document.querySelectorAll('.quantity-btn.decrease').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const input = this.nextElementSibling;
+                let value = parseInt(input.value);
+                if (value > 1) {
+                    input.value = value - 1;
+                    updateOrderSummary();
+                }
+            });
+        });
+        
+        document.querySelectorAll('.quantity-btn.increase').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const input = this.previousElementSibling;
+                let value = parseInt(input.value);
+                input.value = value + 1;
+                updateOrderSummary();
+            });
+        });
+        
+        // 数量输入框变化监听
+        document.querySelectorAll('.quantity-input').forEach(input => {
+            input.addEventListener('change', function() {
+                let value = parseInt(this.value);
+                if (isNaN(value) || value < 1) {
+                    this.value = 1;
+                }
+                updateOrderSummary();
+            });
+        });
+        
+        // 删除商品
+        document.querySelectorAll('.item-delete').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (confirm('确定要删除此商品吗？')) {
+                    const item = this.closest('.order-item');
+                    item.style.height = '0';
+                    item.style.opacity = '0';
+                    item.style.margin = '0';
+                    item.style.padding = '0';
+                    item.style.overflow = 'hidden';
+                    
+                    setTimeout(() => {
+                        item.remove();
+                        updateOrderSummary();
+                    }, 300);
+                }
+            });
+        });
+        
+        // 更新订单摘要
+        function updateOrderSummary() {
+            let selectedCount = 0;
+            let totalPrice = 0;
+            
+            document.querySelectorAll('.order-item').forEach(item => {
+                const isChecked = item.querySelector('.checkbox-custom').classList.contains('checked');
+                if (isChecked) {
+                    const quantity = parseInt(item.querySelector('.quantity-input').value);
+                    
+                    // 获取当前价格层级
+                    const currentPrice = parseFloat(item.querySelector('.current-price').textContent.replace('¥', '').replace(',', ''));
+                    
+                    // 根据数量更新应用哪个价格层级
+                    const priceTiers = item.querySelectorAll('.price-tier');
+                    let appliedPrice = currentPrice; // 默认使用当前显示的价格
+                    
+                    // 检查是否应该使用不同的价格层级
+                    priceTiers.forEach(tier => {
+                        const tierText = tier.textContent.trim();
+                        const rangeMatch = tierText.match(/\(([^)]+)\)/);
+                        
+                        if (rangeMatch) {
+                            const range = rangeMatch[1];
+                            
+                            if (range.includes('-')) {
+                                // 区间格式: "1-10"
+                                const [min, max] = range.split('-').map(n => parseInt(n));
+                                if (quantity >= min && quantity <= max) {
+                                    // 获取这个层级的价格
+                                    const priceMatch = tierText.match(/¥([\d,]+\.\d+)/);
+                                    if (priceMatch) {
+                                        appliedPrice = parseFloat(priceMatch[1].replace(',', ''));
+                                    } else {
+                                        const currentPriceElement = tier.querySelector('.current-price');
+                                        if (currentPriceElement) {
+                                            appliedPrice = parseFloat(currentPriceElement.textContent.replace('¥', '').replace(',', ''));
+                                        }
+                                    }
+                                }
+                            } else if (range.includes('>')) {
+                                // 区间格式: ">100"
+                                const min = parseInt(range.replace('>', ''));
+                                if (quantity > min) {
+                                    // 获取这个层级的价格
+                                    const priceMatch = tierText.match(/¥([\d,]+\.\d+)/);
+                                    if (priceMatch) {
+                                        appliedPrice = parseFloat(priceMatch[1].replace(',', ''));
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    selectedCount += quantity;
+                    totalPrice += appliedPrice * quantity;
+                    
+                    // 更新显示的商品价格，高亮当前适用的价格层级
+                    highlightActivePriceTier(item, quantity);
+                }
+            });
+            
+            // Update the display
+            const selectedCountElement = document.getElementById('selected-count');
+            const selectedTotalElement = document.getElementById('selected-total');
+            
+            if (selectedCountElement) {
+                selectedCountElement.textContent = selectedCount + ' 件';
+            }
+            
+            if (selectedTotalElement) {
+                selectedTotalElement.textContent = '¥ ' + totalPrice.toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+        }
+        
+        // 高亮显示当前适用的价格层级
+        function highlightActivePriceTier(item, quantity) {
+            const priceTiers = item.querySelectorAll('.price-tier');
+            
+            // 首先移除所有高亮
+            priceTiers.forEach(tier => {
+                tier.style.fontWeight = 'normal';
+            });
+            
+            // 然后找到与数量匹配的层级并高亮
+            priceTiers.forEach(tier => {
+                const tierText = tier.textContent.trim();
+                const rangeMatch = tierText.match(/\(([^)]+)\)/);
+                
+                if (rangeMatch) {
+                    const range = rangeMatch[1];
+                    
+                    if (range.includes('-')) {
+                        // 区间格式: "1-10"
+                        const [min, max] = range.split('-').map(n => parseInt(n));
+                        if (quantity >= min && quantity <= max) {
+                            tier.style.fontWeight = 'bold';
+                        }
+                    } else if (range.includes('>')) {
+                        // 区间格式: ">100"
+                        const min = parseInt(range.replace('>', ''));
+                        if (quantity > min) {
+                            tier.style.fontWeight = 'bold';
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 初始化订单摘要
+        updateOrderSummary();
+        
+        // 为数量控制添加事件，每次改变时更新价格
+        document.querySelectorAll('.quantity-input').forEach(input => {
+            input.addEventListener('change', function() {
+                const item = this.closest('.order-item');
+                const quantity = parseInt(this.value);
+                highlightActivePriceTier(item, quantity);
+                updateOrderSummary();
+            });
+        });
+        
+        document.querySelectorAll('.quantity-btn.increase, .quantity-btn.decrease').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const item = this.closest('.order-item');
+                const input = item.querySelector('.quantity-input');
+                const quantity = parseInt(input.value);
+                highlightActivePriceTier(item, quantity);
+            });
+        });
+        
+        // 提交订单
+        document.querySelector('.submit-btn').addEventListener('click', function() {
+            const selectedItems = [];
+            
+            document.querySelectorAll('.order-item').forEach(item => {
+                const isChecked = item.querySelector('.checkbox-custom').classList.contains('checked');
+                if (isChecked) {
+                    const model = item.querySelector('.item-model').textContent.trim().split('\n')[0].trim();
+                    const quantity = item.querySelector('.quantity-input').value;
+                    const currentPrice = item.querySelector('.current-price').textContent;
+                    const sku = item.querySelector('.property-value').textContent;
+                    
+                    // 获取商品类型标签
+                    const typeTag = item.querySelector('.item-type-tag').textContent;
+                    
+                    selectedItems.push({
+                        model,
+                        sku,
+                        type: typeTag,
+                        quantity,
+                        price: currentPrice
+                    });
+                }
+            });
+            
+            if (selectedItems.length === 0) {
+                alert('请至少选择一件商品');
+                return;
+            }
+            
+            alert('已选择 ' + selectedItems.length + ' 种商品，准备提交订单');
+            console.log(selectedItems);
+        });
+    </script>
+</body>
+</html>

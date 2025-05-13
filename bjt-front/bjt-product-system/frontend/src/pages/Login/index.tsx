@@ -9,7 +9,7 @@ import logo from '../../assets/logo.svg';
 const { Title, Paragraph } = Typography;
 
 interface TestAccount {
-  email: string;
+  username: string;
   password: string;
   role: string;
   description: string;
@@ -25,43 +25,43 @@ const Login: React.FC = () => {
 
   const testAccounts: TestAccount[] = [
     {
-      email: 'admin@bjt.com',
-      password: 'admin123',
+      username: 'admin',
+      password: 'password',
       role: 'admin',
       description: '系统管理员 - 拥有所有功能、用户管理和系统设置的完全访问权限'
     },
     {
-      email: 'sales@bjt.com',
-      password: 'admin123',
+      username: 'sales_user',
+      password: 'sales123',
       role: 'sales',
       description: '销售经理 - 可以访问报表、库存管理和销售相关功能'
     },
     {
-      email: 'eu-vip@customer.com',
-      password: 'admin123',
+      username: 'euvip_customer',
+      password: 'customer123',
       role: 'customer',
       description: '欧洲VIP客户 - 查看欧洲区域产品和价格（欧元）'
     },
     {
-      email: 'au@customer.com',
-      password: 'admin123',
+      username: 'au_customer',
+      password: 'customer123',
       role: 'customer',
       description: '澳洲普通客户 - 查看澳洲区域产品和价格（澳元）'
     },
     {
-      email: 'northamerica@user.com',
-      password: 'admin123',
+      username: 'na_customer',
+      password: 'customer123',
       role: 'customer',
       description: '北美客户 - 查看北美区域产品和价格（美元）'
     }
   ];
 
-  const handleSubmit = async (values: { email: string; password: string }) => {
+  const handleSubmit = async (values: { username: string; password: string }) => {
     setLoading(true);
     setErrorMsg('');
 
     try {
-      await login(values.email, values.password);
+      await login(values.username, values.password);
       message.success('Login successful!');
       navigate('/home');
     } catch (error: any) {
@@ -74,7 +74,7 @@ const Login: React.FC = () => {
 
   const fillTestAccount = (account: TestAccount) => {
     form.setFieldsValue({
-      email: account.email,
+      username: account.username,
       password: account.password,
     });
   };
@@ -117,13 +117,12 @@ const Login: React.FC = () => {
           className="login-form"
         >
           <Form.Item
-            name="email"
+            name="username"
             rules={[
-              { required: true, message: 'Please input your Email!' },
-              { type: 'email', message: 'Please enter a valid email address!' }
+              { required: true, message: 'Please input your Username!' },
             ]}
           >
-            <Input prefix={<UserOutlined />} placeholder="Email" size="large" />
+            <Input prefix={<UserOutlined />} placeholder="Username" size="large" />
           </Form.Item>
           <Form.Item
             name="password"
@@ -171,7 +170,7 @@ const Login: React.FC = () => {
                     >
                       <div className="account-info">
                         <Badge count={getRoleIcon(account.role)} offset={[0, 3]}>
-                          <span className="account-email">{account.email}</span>
+                          <span className="account-email">{account.username}</span>
                         </Badge>
                         <Tag color={
                           account.role === 'admin' ? 'red' : 

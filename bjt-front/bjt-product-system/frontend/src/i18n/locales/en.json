@@ -253,7 +253,7 @@
     "filters": {
       "label": {
         "productType": "Product Type",
-        "model": "Model",
+        "model": "Applicable Model",
         "partType": "Part Type"
       },
       "productType": {
@@ -262,8 +262,9 @@
       },
       "partType": {
         "consumable": "Consumable",
-        "electronic": "Non-consumable",
-        "accessory": "Accessory Parts"
+        "electronic": "Non-Consumable",
+        "accessory": "Accessory Part",
+        "all": "All"
       },
       "model": {
         "allModels": "All Models"
@@ -277,16 +278,18 @@
       "inventory": "Inventory",
       "actions": "Actions",
       "addToCart": "Add to Cart",
-      "viewMore": "View More"
+      "viewMore": "View More Specs"
     },
     "specs": {
-      "packageSize": "Package Size (cm)",
-      "packageSizeImperial": "Package Size (inch)",
-      "weight": "Net Weight (kg)",
-      "weightImperial": "Net Weight (lbs)",
+      "packageSize": "Package Size cm",
+      "packageSizeImperial": "Package Size inch",
+      "weight": "Net Weight kg",
+      "weightImperial": "Net Weight lbs",
       "serialNumber": "Serial Number",
       "compatibleModels": "Compatible Models",
-      "specifications": "Specifications"
+      "specifications": "Specifications",
+      "spec": "Spec.",
+      "pcsPerBox": "Pcs per Box"
     },
     "inventory": {
       "noInfo": "No inventory information",

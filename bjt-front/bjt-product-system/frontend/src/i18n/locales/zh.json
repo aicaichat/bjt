@@ -325,7 +325,8 @@
       "partType": {
         "consumable": "耗材",
         "electronic": "非耗材",
-        "accessory": "配件备件"
+        "accessory": "配件备件",
+        "all": "全部"
       },
       "model": {
         "allModels": "所有型号"
@@ -346,9 +347,11 @@
       "packageSizeImperial": "包装尺寸 inch",
       "weight": "单件净重 kg",
       "weightImperial": "单件净重 lbs",
-      "serialNumber": "适配序列号",
+      "serialNumber": "序列号",
       "compatibleModels": "适用型号",
-      "specifications": "规格描述"
+      "specifications": "规格描述",
+      "spec": "规格",
+      "pcsPerBox": "单箱数量"
     },
     "inventory": {
       "noInfo": "无库存信息",

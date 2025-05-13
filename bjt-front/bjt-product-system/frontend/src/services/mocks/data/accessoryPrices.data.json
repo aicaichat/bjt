@@ -1,0 +1,7 @@
+[
+  { "id": 9, "product_line_id": 1, "target_type": "accessory", "target_id": 1, "region": "CN", "currency": "CNY", "base_price": 200.00, "min_quantity": 1, "max_quantity": 10, "discount_rate": 0.0500, "status": "active" },
+  { "id": 10, "product_line_id": 1, "target_type": "accessory", "target_id": 1, "region": "US", "currency": "USD", "base_price": 32.00, "min_quantity": 1, "max_quantity": 10, "discount_rate": 0.0500, "status": "active" },
+  { "id": 11, "product_line_id": 1, "target_type": "accessory", "target_id": 1, "region": "EU", "currency": "EUR", "base_price": 30.00, "min_quantity": 1, "max_quantity": 10, "discount_rate": 0.0500, "status": "active" },
+  { "id": 12, "product_line_id": 1, "target_type": "accessory", "target_id": 1, "region": "AU", "currency": "AUD", "base_price": 50.00, "min_quantity": 1, "max_quantity": 10, "discount_rate": 0.0500, "status": "active" },
+  { "id": 13, "product_line_id": 1, "target_type": "accessory", "target_id": 5, "region": "CN", "currency": "CNY", "base_price": 50.00, "min_quantity": 1, "max_quantity": null, "discount_rate": 0.0500, "status": "active" }
+] 

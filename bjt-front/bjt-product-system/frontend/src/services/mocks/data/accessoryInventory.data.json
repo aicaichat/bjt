@@ -1,0 +1,4 @@
+[
+  { "id": 3, "product_line_id": 1, "target_type": "accessory", "target_id": 1, "region": "CN", "warehouse": "WH-SH-01", "quantity": 200, "reserved": 20, "status": "active" },
+  { "id": 4, "product_line_id": 1, "target_type": "accessory", "target_id": 5, "region": "CN", "warehouse": "WH-SH-01", "quantity": 150, "reserved": 10, "status": "active" }
+] 

@@ -1,0 +1,795 @@
+<?php
+/**
+ * 购物车控制器
+ */
+class BJT_Cart_Controller extends BJT_API_Controller {
+    protected $resource_name = 'cart';
+    protected $table_name;
+    protected $rest_base = 'cart'; // Base for cart routes
+
+    // Note: Cart doesn't map directly to a single table like others.
+    // It interacts with wp_bjt_cart_items based on the current user.
+
+    public function __construct() {
+        global $wpdb;
+        // Define the custom table name
+        $this->table_name = $wpdb->prefix . 'bjt_cart_items'; 
+        $this->namespace = 'bjt/v1'; // Ensure namespace is set
+        parent::__construct();
+        error_log("BJT_Cart_Controller initialized.");
+    }
+
+    /**
+     * Register the routes for the objects of the controller.
+     */
+    public function register_routes() {
+        // Get Cart Contents
+        register_rest_route($this->namespace, '/' . $this->rest_base, [
+            [
+                'methods' => WP_REST_Server::READABLE,
+                'callback' => [$this, 'get_cart_contents'],
+                'permission_callback' => [$this, 'check_user_logged_in_permission'], // Must be logged in
+                'args' => [
+                    'context' => $this->get_context_param(['default' => 'view']),
+                    // Add lang/region if needed for price/inventory lookup later
+                     'region' => [
+                        'description'       => __('Region for price/inventory lookup.'),
+                        'type'              => 'string',
+                        'sanitize_callback' => 'sanitize_key',
+                        'validate_callback' => 'rest_validate_request_arg',
+                    ],
+                     'lang' => [
+                        'description'       => __('Language for product names.'),
+                        'type'              => 'string',
+                         'default'           => 'zh',
+                        'sanitize_callback' => 'sanitize_key',
+                        'validate_callback' => 'rest_validate_request_arg',
+                         'enum'              => ['zh', 'en'],
+                    ],
+                ],
+            ],
+             'schema' => [$this, 'get_public_cart_schema'], // Schema for the overall cart response
+        ]);
+
+        // Add Item to Cart
+        register_rest_route($this->namespace, '/' . $this->rest_base . '/items', [
+            [
+                'methods' => WP_REST_Server::CREATABLE, // POST
+                'callback' => [$this, 'add_item_to_cart'],
+                'permission_callback' => [$this, 'check_user_logged_in_permission'],
+                'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::CREATABLE), // Use item schema for args
+            ],
+             'schema' => [$this, 'get_public_item_schema'], // Schema for the item being added/returned
+        ]);
+
+        // Update Cart Item Quantity
+        register_rest_route($this->namespace, '/' . $this->rest_base . '/items/(?P<item_id>[\d]+)', [
+             [
+                'methods' => WP_REST_Server::EDITABLE, // PUT/PATCH
+                'callback' => [$this, 'update_cart_item'],
+                'permission_callback' => [$this, 'check_user_logged_in_permission'],
+                'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::EDITABLE), // Use item schema for args
+             ],
+             'schema' => [$this, 'get_public_item_schema'], // Schema for the item being updated/returned
+        ]);
+
+        // Remove Item from Cart
+        register_rest_route($this->namespace, '/' . $this->rest_base . '/items/(?P<item_id>[\d]+)', [
+             [
+                'methods' => WP_REST_Server::DELETABLE, // DELETE
+                'callback' => [$this, 'delete_cart_item'],
+                'permission_callback' => [$this, 'check_user_logged_in_permission'],
+                'args' => [
+                    'item_id' => [
+                        'description' => __('Unique identifier for the cart item.'),
+                        'type' => 'integer',
+                        'required' => true,
+                        'validate_callback' => 'rest_validate_request_arg',
+                    ],
+                    // 'force' is not typically needed for cart item removal
+                ],
+             ],
+             'schema' => [$this, 'get_public_item_schema'], // Schema for the deleted item representation
+        ]);
+        
+        // Clear Cart
+        register_rest_route($this->namespace, '/' . $this->rest_base . '/clear', [
+            [
+                'methods' => WP_REST_Server::CREATABLE, // POST to /clear
+                'callback' => [$this, 'clear_cart'],
+                'permission_callback' => [$this, 'check_user_logged_in_permission'],
+                // No specific args needed beyond authentication
+            ],
+            // No specific schema needed for a clear confirmation usually
+        ]);
+    }
+    
+    /**
+     * Schema for a single cart item.
+     */
+    public function get_item_schema() {
+         if ($this->schema) {
+            // return $this->add_additional_fields_schema($this->schema); // Don't add WP standard fields automatically here
+             return $this->schema;
+        }
+
+        $schema = [
+            '$schema'    => 'http://json-schema.org/draft-04/schema#',
+            'title'      => 'cart_item',
+            'type'       => 'object',
+            'properties' => [
+                'item_id' => [ // This is the ID from the wp_bjt_cart_items table
+                    'description' => __('Unique identifier for the cart item itself.'),
+                    'type'        => 'integer',
+                    'context'     => ['view', 'edit', 'embed'],
+                    'readonly'    => true,
+                ],
+                'product_type' => [
+                    'description' => __('Type of the product (host, accessory, consumable, spare_part).'),
+                    'type'        => 'string',
+                    'enum'        => ['host', 'accessory', 'consumable', 'spare_part'],
+                    'context'     => ['view', 'edit', 'embed'],
+                    'required'    => true, // Required when adding item
+                ],
+                'product_id' => [ // This is the ID from the original product table
+                    'description' => __('Identifier for the product in its original table.'),
+                    'type'        => 'integer', // Assuming IDs are integers
+                    'context'     => ['view', 'edit', 'embed'],
+                     // 'required' is implicitly true via part_number lookup maybe? Or required on add.
+                ],
+                 'part_number' => [
+                    'description' => __('Specific part number added to the cart.'),
+                    'type'        => 'string',
+                    'context'     => ['view', 'edit', 'embed'],
+                    'required'    => true, // Required when adding item
+                 ],
+                'quantity' => [
+                    'description' => __('Quantity of the item in the cart.'),
+                    'type'        => 'integer',
+                    'context'     => ['view', 'edit', 'embed'],
+                    'required'    => true, // Required when adding/updating
+                    'minimum'     => 1,    // Must have at least 1
+                ],
+                'name' => [ // Added dynamically based on lang
+                    'description' => __('Product name (language specific).'),
+                    'type'        => 'string',
+                    'context'     => ['view', 'embed'],
+                    'readonly'    => true,
+                ],
+                 'image_url' => [ // Added dynamically
+                    'description' => __('Product image URL.'),
+                    'type'        => 'string',
+                    'format'      => 'uri',
+                    'context'     => ['view', 'embed'],
+                    'readonly'    => true,
+                ],
+                 'unit_price' => [ // Added dynamically based on region/user
+                    'description' => __('Price per unit for the user/region.'),
+                    'type'        => 'number',
+                    'format'      => 'float',
+                    'context'     => ['view', 'embed'],
+                    'readonly'    => true,
+                ],
+                 'currency' => [ // Added dynamically
+                    'description' => __('Currency code for the unit price.'),
+                    'type'        => 'string',
+                    'context'     => ['view', 'embed'],
+                    'readonly'    => true,
+                ],
+                'line_total' => [ // Calculated
+                    'description' => __('Total price for this line item (unit_price * quantity).'),
+                    'type'        => 'number',
+                     'format'      => 'float',
+                    'context'     => ['view', 'embed'],
+                    'readonly'    => true,
+                ],
+                 'inventory_status' => [ // Added dynamically based on region
+                    'description' => __('Inventory status (e.g., in_stock, low_stock, out_of_stock).'),
+                    'type'        => 'string',
+                    'context'     => ['view', 'embed'],
+                    'readonly'    => true,
+                 ],
+                 'added_at' => [
+                     'description' => __( 'The date the item was added to the cart.' ),
+                     'type'        => 'string',
+                     'format'      => 'date-time',
+                     'context'     => ['view', 'edit', 'embed'],
+                     'readonly'    => true,
+                 ],
+            ],
+        ];
+        
+        // We cache the base schema. Dynamic fields like price, name, image are added during response preparation.
+        $this->schema = $schema; 
+
+        return $this->schema;
+    }
+    
+    /**
+     * Schema for the overall cart response (GET /cart).
+     */
+     public function get_public_cart_schema() {
+         $cart_schema = [
+            '$schema'    => 'http://json-schema.org/draft-04/schema#',
+            'title'      => 'cart',
+            'type'       => 'object',
+            'properties' => [
+                'items' => [
+                    'description' => __('Array of items currently in the cart.'),
+                    'type'        => 'array',
+                    'items'       => $this->get_item_schema(), // Reference the single item schema
+                    'context'     => ['view', 'edit', 'embed'],
+                ],
+                'item_count' => [
+                    'description' => __('Total number of unique items in the cart.'),
+                    'type'        => 'integer',
+                    'context'     => ['view', 'edit', 'embed'],
+                    'readonly'    => true,
+                ],
+                'total_quantity' => [
+                     'description' => __('Total number of units across all items in the cart.'),
+                    'type'        => 'integer',
+                    'context'     => ['view', 'edit', 'embed'],
+                    'readonly'    => true,
+                ],
+                'cart_total' => [
+                    'description' => __('Estimated total price for all items in the cart.'),
+                    'type'        => 'number',
+                     'format'      => 'float',
+                    'context'     => ['view', 'edit', 'embed'],
+                    'readonly'    => true,
+                ],
+                 'currency' => [
+                    'description' => __('The currency code for the cart total (assumes a single currency for simplicity).'),
+                    'type'        => 'string',
+                    'context'     => ['view', 'edit', 'embed'],
+                    'readonly'    => true,
+                 ],
+                 // Could add other fields like applied discounts, shipping estimates etc. later
+            ],
+         ];
+         return $cart_schema;
+     }
+
+    // --- Placeholder methods ---
+
+    public function get_cart_contents(WP_REST_Request $request) {
+        global $wpdb;
+        $user_id = get_current_user_id();
+        if (!$user_id) {
+             return new WP_Error('rest_not_logged_in', __('User not logged in.'), ['status' => 401]);
+        }
+        
+        // Get region and language for fetching details
+        $region = sanitize_key($request->get_param('region'));
+        $lang = sanitize_key($request->get_param('lang') ?? 'zh');
+        $name_column = ($lang === 'en') ? 'name_en' : 'name_zh';
+        // For models table (accessories, spare parts)
+        $title_column = ($lang === 'en') ? 'title_en' : 'title_zh';
+
+        // Fetch basic cart items from the cart table
+        $cart_items_db = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM {$this->table_name} WHERE user_id = %d ORDER BY added_at ASC",
+            $user_id
+        ));
+
+        $formatted_items = [];
+        $total_quantity = 0;
+        $cart_total = 0.0;
+        $cart_currency = '' ; // Determine currency based on region or first item
+
+        if ($cart_items_db) {
+            // We need to fetch details (name, price, image, etc.) for each item
+            // This often involves joining or making separate queries per item type
+            // For efficiency, we could group items by type and query in batches
+
+            // --- Data Fetching Logic --- 
+            // This part is complex and requires knowing how prices/inventory/names are stored.
+            // We will make assumptions based on previous controllers.
+            
+            // Example: Fetching details requires joining/querying:
+            // - wp_bjt_parts, wp_bjt_accessories, wp_bjt_consumables, wp_bjt_spare_parts for base info (using part_number)
+            // - Potentially wp_bjt_host_models, wp_bjt_accessory_models, wp_bjt_spare_part_models for names/images (using model if needed)
+            // - wp_bjt_prices for price (using part_number, region)
+            // - wp_bjt_inventory for stock (using part_number, region)
+            
+            // --- Simplified Approach for Now --- 
+            // We'll iterate and use the prepare_item_for_response placeholder which adds dummy data.
+            // In a real implementation, prepare_item_for_response would contain the complex data fetching logic.
+
+            foreach ($cart_items_db as $item_db) {
+                // Prepare the basic item structure
+                $prepared_item = $this->prepare_item_for_response($item_db, $request);
+                $item_data = $prepared_item->get_data();
+                
+                // --- TODO: Replace Placeholder Logic with Real Data Fetching --- 
+                $item_price_info = $this->get_product_price($item_db->part_number, $region);
+                $item_inventory_info = $this->get_product_inventory($item_db->part_number, $region);
+                $item_name_image = $this->get_product_name_image($item_db->part_number, $item_db->product_type, $lang);
+                
+                // Update the item_data with real fetched values
+                $item_data['name'] = $item_name_image['name'] ?? 'Name N/A';
+                $item_data['image_url'] = $item_name_image['image_url'] ?? '/images/placeholder.png';
+                $item_data['unit_price'] = $item_price_info['price'] ?? 0.0;
+                $item_data['currency'] = $item_price_info['currency'] ?? 'N/A';
+                $item_data['line_total'] = $item_data['unit_price'] * $item_data['quantity'];
+                $item_data['inventory_status'] = $item_inventory_info['status'] ?? 'unknown';
+                // --- End TODO ---
+                
+                // Update cart totals
+                $total_quantity += $item_data['quantity'];
+                $cart_total += $item_data['line_total'];
+                if (empty($cart_currency) && !empty($item_data['currency']) && $item_data['currency'] !== 'N/A') {
+                    $cart_currency = $item_data['currency'];
+                }
+                
+                // We need to ensure the final item data respects the schema context
+                $context = ! empty( $request['context'] ) ? $request['context'] : 'view';
+                $final_item_data = $this->filter_response_by_context($item_data, $this->get_item_schema()['properties'], $context);
+                $formatted_items[] = $final_item_data;
+            }
+        }
+
+        // Prepare the final cart response object
+        $cart_data = [
+            'items' => $formatted_items,
+            'item_count' => count($formatted_items),
+            'total_quantity' => $total_quantity,
+            'cart_total' => round($cart_total, 2), // Round to 2 decimal places
+            'currency' => $cart_currency,
+        ];
+
+        $response = new WP_REST_Response($cart_data, 200);
+        return $response;
+    }
+
+    // --- Helper Stubs for Dynamic Data (Needs Implementation) --- 
+
+    protected function get_product_price($part_number, $region) {
+        global $wpdb;
+        // TODO: Query wp_bjt_prices table based on part_number and region
+        // Consider user roles/tiers if pricing is complex
+        $price_table = $wpdb->prefix . 'bjt_prices';
+         $price_row = $wpdb->get_row($wpdb->prepare(
+            "SELECT price, currency FROM {$price_table} WHERE part_number = %s AND region = %s LIMIT 1", // Simplistic price lookup
+            $part_number, $region
+         ));
+         if ($price_row) {
+             return ['price' => (float) $price_row->price, 'currency' => $price_row->currency];
+         }
+        return ['price' => 0.0, 'currency' => 'N/A']; // Default if not found
+    }
+
+    protected function get_product_inventory($part_number, $region) {
+        global $wpdb;
+        // TODO: Query wp_bjt_inventory table based on part_number and region
+        $inventory_table = $wpdb->prefix . 'bjt_inventory';
+         $inv_row = $wpdb->get_row($wpdb->prepare(
+            "SELECT quantity, status FROM {$inventory_table} WHERE part_number = %s AND region = %s LIMIT 1",
+            $part_number, $region
+         ));
+        if ($inv_row) {
+             $status = 'in_stock';
+             if ($inv_row->status !== 'active' && $inv_row->status !== 'in_stock') { // Assuming 'active' means available
+                 $status = $inv_row->status; // e.g., out_of_stock, discontinued
+             } elseif ($inv_row->quantity <= 0) {
+                 $status = 'out_of_stock';
+             } elseif ($inv_row->quantity < 10) { // Example threshold for low stock
+                 $status = 'low_stock';
+             }
+             return ['quantity' => (int) $inv_row->quantity, 'status' => $status];
+        }
+        return ['quantity' => 0, 'status' => 'unknown']; // Default if not found
+    }
+
+    protected function get_product_name_image($part_number, $product_type, $lang = 'zh') {
+        global $wpdb;
+        $name_col = ($lang === 'en') ? 'name_en' : 'name_zh';
+        $table_name = '';
+        $image_col = 'image_url'; // Default image column name
+        
+        // Determine table and potentially specific name/image columns based on type
+         switch ($product_type) {
+            case 'host':
+                $table_name = $wpdb->prefix . 'bjt_parts';
+                break;
+            case 'accessory':
+                $table_name = $wpdb->prefix . 'bjt_accessories';
+                break;
+            case 'consumable':
+                $table_name = $wpdb->prefix . 'bjt_consumables';
+                break;
+            case 'spare_part':
+                $table_name = $wpdb->prefix . 'bjt_spare_parts';
+                break;
+            default: return ['name' => 'Invalid Type', 'image_url' => null];
+        }
+
+        $product = $wpdb->get_row($wpdb->prepare(
+            "SELECT {$name_col}, {$image_col} FROM {$table_name} WHERE part_number = %s",
+            $part_number
+        ));
+        
+        if ($product) {
+             return [
+                 'name' => $product->$name_col ?? 'Name N/A', 
+                 'image_url' => $product->$image_col ?? null
+             ];
+        } 
+        return ['name' => 'Not Found', 'image_url' => null];
+    }
+
+    public function add_item_to_cart(WP_REST_Request $request) {
+        global $wpdb;
+        $user_id = get_current_user_id();
+        if (!$user_id) {
+            return new WP_Error('rest_not_logged_in', __('User not logged in.'), ['status' => 401]);
+        }
+
+        $params = $request->get_json_params();
+        if (null === $params) $params = $request->get_body_params();
+
+        // Validate required parameters from item schema
+        $item_schema = $this->get_item_schema();
+        $required_fields = [];
+        foreach ($item_schema['properties'] as $key => $props) {
+            if (!empty($props['required']) && $key !== 'item_id' && !isset($props['readonly'])) {
+                $required_fields[] = $key;
+            }
+        }
+        
+        foreach ($required_fields as $field) {
+            if (!isset($params[$field])) {
+                return $this->error_response("Missing required field: {$field}", 'missing_field', 400);
+            }
+        }
+
+        $part_number = sanitize_text_field(strtoupper(trim($params['part_number'])));
+        $quantity = absint($params['quantity']);
+        $product_type = sanitize_key($params['product_type']);
+        // product_id can be derived or passed. For now, assume it might be passed or we'll need to fetch it.
+        $product_id = isset($params['product_id']) ? absint($params['product_id']) : 0;
+
+
+        if ($quantity <= 0) {
+            return $this->error_response('Quantity must be at least 1.', 'invalid_quantity', 400);
+        }
+
+        // 1. Validate Product Existence and get product_id if not provided
+        // This part needs to query the respective product table based on product_type and part_number
+        // For simplicity, we assume part_number is globally unique for now, or product_id is provided.
+        // If product_id is 0, we should attempt to find it.
+        if ($product_id === 0) {
+            $product_details = $this->get_product_details_by_part_number($part_number, $product_type);
+            if (is_wp_error($product_details)) {
+                return $product_details;
+            }
+            $product_id = $product_details['id'];
+        }
+        // At this point, product_id should be valid.
+
+        // 2. Check if item already exists in the user's cart
+        $existing_cart_item = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$this->table_name} WHERE user_id = %d AND part_number = %s",
+            $user_id,
+            $part_number
+        ));
+
+        $current_time = current_time('mysql', 1);
+
+        if ($existing_cart_item) {
+            // Update quantity
+            $new_quantity = $existing_cart_item->quantity + $quantity;
+            $result = $wpdb->update(
+                $this->table_name,
+                ['quantity' => $new_quantity, 'updated_at' => $current_time],
+                ['id' => $existing_cart_item->id, 'user_id' => $user_id],
+                ['%d', '%s'], // format for data
+                ['%d', '%d']  // format for where
+            );
+            if ($result === false) {
+                error_log('BJT_Cart_Controller DB Update Error (add_item_to_cart): ' . $wpdb->last_error);
+                return $this->error_response('Failed to update cart item quantity. DB Error.', 'db_error', 500);
+            }
+            $cart_item_id = $existing_cart_item->id;
+        } else {
+            // Insert new item
+            $data_to_insert = [
+                'user_id' => $user_id,
+                'product_type' => $product_type,
+                'product_id' => $product_id,
+                'part_number' => $part_number,
+                'quantity' => $quantity,
+                'added_at' => $current_time,
+                'updated_at' => $current_time,
+            ];
+            $result = $wpdb->insert($this->table_name, $data_to_insert);
+            if ($result === false) {
+                error_log('BJT_Cart_Controller DB Insert Error (add_item_to_cart): ' . $wpdb->last_error);
+                return $this->error_response('Failed to add item to cart. DB Error.', 'db_error', 500);
+            }
+            $cart_item_id = $wpdb->insert_id;
+        }
+
+        // Fetch the created/updated cart item for response
+        $cart_item_db = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$this->table_name} WHERE id = %d AND user_id = %d",
+            $cart_item_id,
+            $user_id
+        ));
+
+        if (!$cart_item_db) {
+            return $this->error_response('Failed to retrieve cart item after operation.', 'retrieve_error', 500);
+        }
+        
+        // Return the single cart item, not the whole cart for this endpoint.
+        $response_data = $this->prepare_item_for_response($cart_item_db, $request);
+        $response = rest_ensure_response($response_data);
+        $response->set_status($existing_cart_item ? 200 : 201); // 200 if updated, 201 if created
+        
+        // Optionally, could return the whole cart:
+        // return $this->get_cart_contents($request); 
+        return $response;
+    }
+
+    // Helper function to get product details (simplified)
+    protected function get_product_details_by_part_number($part_number, $product_type) {
+        global $wpdb;
+        $table_name = '';
+        // This mapping needs to be accurate based on your DB schema
+        switch ($product_type) {
+            case 'host':
+                $table_name = $wpdb->prefix . 'bjt_parts'; // Assuming 'bjt_parts' stores hosts by part_number
+                break;
+            case 'accessory':
+                $table_name = $wpdb->prefix . 'bjt_accessories';
+                break;
+            case 'consumable':
+                $table_name = $wpdb->prefix . 'bjt_consumables';
+                break;
+            case 'spare_part':
+                $table_name = $wpdb->prefix . 'bjt_spare_parts';
+                break;
+            default:
+                return $this->error_response('Invalid product type.', 'invalid_product_type', 400);
+        }
+
+        $product = $wpdb->get_row($wpdb->prepare("SELECT id FROM {$table_name} WHERE part_number = %s", $part_number));
+        
+        if (!$product || !$product->id) {
+            return $this->error_response("Product with part number '{$part_number}' of type '{$product_type}' not found.", 'product_not_found', 404);
+        }
+        return ['id' => $product->id]; // Return an array with id, more details if needed
+    }
+
+    public function update_cart_item(WP_REST_Request $request) {
+        global $wpdb;
+        $user_id = get_current_user_id();
+        if (!$user_id) {
+            return new WP_Error('rest_not_logged_in', __('User not logged in.'), ['status' => 401]);
+        }
+
+        $item_id = absint($request['item_id']);
+        if ($item_id <= 0) {
+            return $this->error_response('Invalid cart item ID.', 'invalid_item_id', 400);
+        }
+
+        $params = $request->get_json_params();
+        if (null === $params) $params = $request->get_body_params();
+
+        // Only quantity should be updatable here
+        if (!isset($params['quantity'])) {
+             return $this->error_response('Missing required field: quantity', 'missing_field', 400);
+        }
+
+        $new_quantity = absint($params['quantity']);
+        if ($new_quantity <= 0) {
+            // If quantity is 0 or less, treat it as a delete request? 
+            // Or return error? For now, return error.
+             return $this->error_response('Quantity must be at least 1. To remove an item, use the DELETE endpoint.', 'invalid_quantity', 400);
+             // Alternative: Call delete_cart_item method if $new_quantity <= 0
+             // $delete_request = new WP_REST_Request('DELETE', $request->get_route());
+             // $delete_request->set_url_params(['item_id' => $item_id]);
+             // return $this->delete_cart_item($delete_request);
+        }
+
+        // Verify the item exists and belongs to the current user before updating
+        $cart_item = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$this->table_name} WHERE id = %d AND user_id = %d",
+            $item_id,
+            $user_id
+        ));
+
+        if (!$cart_item) {
+             return $this->error_response('Cart item not found or does not belong to the current user.', 'cart_item_not_found', 404);
+        }
+        
+        // Update the quantity
+        $current_time = current_time('mysql', 1);
+        $result = $wpdb->update(
+            $this->table_name,
+            ['quantity' => $new_quantity, 'updated_at' => $current_time],
+            ['id' => $item_id, 'user_id' => $user_id], // Redundant user_id check, but safe
+            ['%d', '%s'], // format for data
+            ['%d', '%d']  // format for where
+        );
+
+        if ($result === false) {
+            error_log('BJT_Cart_Controller DB Update Error (update_cart_item): ' . $wpdb->last_error);
+            return $this->error_response('Failed to update cart item quantity. DB Error.', 'db_error', 500);
+        }
+
+        // Fetch the updated cart item for response
+        $updated_cart_item_db = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$this->table_name} WHERE id = %d AND user_id = %d",
+            $item_id,
+            $user_id
+        ));
+
+        if (!$updated_cart_item_db) {
+            // Should not happen if update was successful, but check anyway
+            return $this->error_response('Failed to retrieve cart item after update.', 'retrieve_error', 500);
+        }
+        
+        $response_data = $this->prepare_item_for_response($updated_cart_item_db, $request);
+        $response = rest_ensure_response($response_data);
+        $response->set_status(200);
+        return $response;
+    }
+
+    public function delete_cart_item(WP_REST_Request $request) {
+        global $wpdb;
+        $user_id = get_current_user_id();
+        if (!$user_id) {
+            return new WP_Error('rest_not_logged_in', __('User not logged in.'), ['status' => 401]);
+        }
+
+        $item_id = absint($request['item_id']);
+        if ($item_id <= 0) {
+            return $this->error_response('Invalid cart item ID.', 'invalid_item_id', 400);
+        }
+
+        // Verify the item exists and belongs to the current user before deleting
+        $item_to_delete = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$this->table_name} WHERE id = %d AND user_id = %d",
+            $item_id,
+            $user_id
+        ));
+
+        if (!$item_to_delete) {
+            return $this->error_response('Cart item not found or does not belong to the current user.', 'cart_item_not_found', 404);
+        }
+
+        // Prepare the item for the 'previous' part of the response, as per WP REST API standards
+        $previous_item_data = $this->prepare_item_for_response($item_to_delete, $request)->get_data();
+
+        $result = $wpdb->delete(
+            $this->table_name,
+            ['id' => $item_id, 'user_id' => $user_id], // Ensure deleting only for this user
+            ['%d', '%d']  // format for where
+        );
+
+        if ($result === false) {
+            error_log('BJT_Cart_Controller DB Delete Error (delete_cart_item): ' . $wpdb->last_error);
+            return $this->error_response('Failed to delete cart item. DB Error.', 'db_error', 500);
+        }
+        
+        // $wpdb->delete returns the number of rows affected.
+        if ($result === 0) {
+            // This case should be rare given the existence check above, but good to handle.
+            return $this->error_response("Cart item with ID {$item_id} could not be deleted (it may have been deleted by another process).", 'delete_failed_not_found', 404);
+        }
+
+        $response = new WP_REST_Response();
+        $response->set_data([
+            'deleted'  => true,
+            'previous' => $previous_item_data,
+        ]);
+        $response->set_status(200);
+        return $response;
+    }
+
+    public function clear_cart(WP_REST_Request $request) {
+        global $wpdb;
+        $user_id = get_current_user_id();
+        if (!$user_id) {
+            return new WP_Error('rest_not_logged_in', __('User not logged in.'), ['status' => 401]);
+        }
+
+        // Get items being deleted to potentially return in 'previous'
+        // This might be resource-intensive for large carts, could be omitted
+        $items_to_delete = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM {$this->table_name} WHERE user_id = %d",
+            $user_id
+        ));
+        
+        $previous_items = [];
+        if ($items_to_delete) {
+             foreach($items_to_delete as $item) {
+                 // Use a simpler context like 'embed' or just basic data if needed
+                 $item_request = clone $request;
+                 $item_request->set_param('context', 'embed'); 
+                 $previous_items[] = $this->prepare_item_for_response($item, $item_request)->get_data();
+             }
+        }
+
+        $result = $wpdb->delete(
+            $this->table_name,
+            ['user_id' => $user_id],
+            ['%d'] // format for where
+        );
+
+        if ($result === false) {
+            error_log('BJT_Cart_Controller DB Delete Error (clear_cart): ' . $wpdb->last_error);
+            return $this->error_response('Failed to clear the cart. DB Error.', 'db_error', 500);
+        }
+
+        // $result contains the number of rows deleted. If 0, the cart was already empty.
+        $message = ($result > 0) ? __('Cart cleared successfully.') : __('Cart was already empty.');
+        
+        // Standard response is often just 200 OK with maybe a confirmation
+        // Including the deleted items might be too verbose, but possible
+        $response = new WP_REST_Response();
+        $response->set_data([
+             'cleared' => true,
+             'deleted_count' => (int)$result,
+             // 'previous' => $previous_items // Optional: include previously deleted items
+         ]);
+        $response->set_status(200);
+        return $response;
+    }
+    
+    /**
+     * Permission check: Ensure the user is logged in.
+     */
+    public function check_user_logged_in_permission(WP_REST_Request $request) {
+        if (!is_user_logged_in()) {
+            return new WP_Error(
+                'rest_not_logged_in',
+                __('You are not currently logged in.'),
+                ['status' => 401]
+            );
+        }
+        // Optional: Add capability checks here if needed (e.g., 'can_shop')
+        // if (!current_user_can('some_capability')) {
+        //     return new WP_Error('rest_forbidden', __('Sorry, you cannot access the cart.'), ['status' => 403]);
+        // }
+        return true;
+    }
+    
+    // --- Helper Methods (To be implemented/refined) ---
+    
+    // Need helper to map request params to DB columns for add/update
+    // protected function map_request_to_db(WP_REST_Request $request, $is_update = false) { ... }
+
+    // Need helper to format a DB row into the API response structure (including fetching dynamic data)
+    // protected function format_item_for_response($item_db_object, $request) { ... }
+
+    // Reuse prepare_item_for_response from parent/WP standard if applicable
+     public function prepare_item_for_response( $item, $request ) {
+         // This method now mainly formats the basic cart item data from wp_bjt_cart_items table.
+         // Dynamic data (price, name, image) is fetched and added in get_cart_contents.
+         $data = (array) $item; 
+         
+         // Ensure correct types from DB
+         $data['quantity'] = (int)$data['quantity'];
+         $data['product_id'] = (int)$data['product_id'];
+         $data['user_id'] = (int)$data['user_id']; // Keep user_id internal?
+
+         // Rename DB id to item_id for API response
+         if(isset($data['id'])) {
+            $data['item_id'] = (int) $data['id'];
+            unset($data['id']);
+         }
+
+        // We remove user_id before sending response, unless context demands it (unlikely)
+        unset($data['user_id']); 
+
+        // Context filtering will be applied *after* dynamic data is added in get_cart_contents
+        // Return the basic structure here.
+        $response = rest_ensure_response( $data );
+        return $response;
+	}
+
+}
+?> 

@@ -8,7 +8,7 @@
  */
 export const API_CONFIG = {
   BASE_URL: import.meta.env.VITE_API_URL || 'https://api.bjt-packaging.com',
-  USE_MOCK_DATA: import.meta.env.VITE_USE_MOCK === 'true' || true,
+  USE_MOCK_DATA: import.meta.env.VITE_USE_MOCK_DATA === 'true',
   TIMEOUT: 8000, // 请求超时时间（毫秒）
   RETRY_COUNT: 2, // 请求失败重试次数
   VERSION: 'v1',  // API版本

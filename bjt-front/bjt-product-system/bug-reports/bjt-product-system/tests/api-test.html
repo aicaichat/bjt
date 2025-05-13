@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT Product System API 测试页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        .left-panel {
+            flex: 1;
+        }
+        .right-panel {
+            flex: 1;
+        }
+        .panel {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .panel h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .message.info {
+            background-color: #e6f7ff;
+            border: 1px solid #91d5ff;
+        }
+        .message.success {
+            background-color: #f6ffed;
+            border: 1px solid #b7eb8f;
+        }
+        .message.error {
+            background-color: #fff2f0;
+            border: 1px solid #ffccc7;
+        }
+        button {
+            background-color: #1890ff;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #40a9ff;
+        }
+        button.delete-btn {
+            background-color: #ff4d4f;
+        }
+        button.delete-btn:hover {
+            background-color: #ff7875;
+        }
+        .product-line-item {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .product-line-item h3 {
+            margin-top: 0;
+        }
+        .actions {
+            margin-top: 10px;
+        }
+        form {
+            margin-top: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .form-buttons {
+            margin-top: 20px;
+        }
+        .host-model-item {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .host-model-item h3 {
+            margin-top: 0;
+        }
+        #host-models-container {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 20px;
+            z-index: 1000;
+            max-width: 80%;
+            max-height: 80%;
+            overflow: auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .close-btn {
+            float: right;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #999;
+        }
+        .close-btn:hover {
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>BJT Product System API 测试页面</h1>
+    
+    <div id="messages"></div>
+    
+    <div class="container">
+        <div class="left-panel">
+            <div class="panel">
+                <h2>产品线列表</h2>
+                <button id="add-product-line-btn">添加产品线</button>
+                <div id="product-lines-list">
+                    <p>加载中...</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <div class="panel" id="product-line-form" style="display: none;">
+                <h2 id="form-title">添加产品线</h2>
+                <form id="product-line-form">
+                    <input type="hidden" id="product-line-id">
+                    
+                    <div class="form-group">
+                        <label for="title-zh">中文标题 *</label>
+                        <input type="text" id="title-zh" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="title-en">英文标题 *</label>
+                        <input type="text" id="title-en" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="code">代码 *</label>
+                        <input type="text" id="code" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description-zh">中文描述</label>
+                        <textarea id="description-zh" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description-en">英文描述</label>
+                        <textarea id="description-en" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="status">状态</label>
+                        <select id="status">
+                            <option value="publish">发布</option>
+                            <option value="draft">草稿</option>
+                            <option value="trash">回收站</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-buttons">
+                        <button type="submit" id="submit-btn">添加</button>
+                        <button type="button" id="cancel-btn">取消</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div id="host-models-container">
+        <button class="close-btn" id="close-host-models-btn">&times;</button>
+        <div id="host-models-list"></div>
+    </div>
+    
+    <script src="api-js-client.js"></script>
+</body>
+</html> 

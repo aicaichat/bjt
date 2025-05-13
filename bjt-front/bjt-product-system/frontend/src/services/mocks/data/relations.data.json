@@ -1,0 +1,7 @@
+[
+  { "id": 1, "product_line_id": 1, "parent_part_number": "13A00001", "child_part_number": "A10001", "child_type": "accessory", "level": 1, "quantity": 1, "required_parts": null, "required_quantity": null, "sort_order": 10, "status": "publish" },
+  { "id": 2, "product_line_id": 1, "parent_part_number": "A10001", "child_part_number": "A40001", "child_type": "accessory", "level": 2, "quantity": 1, "required_parts": null, "required_quantity": null, "sort_order": 20, "status": "publish" },
+  { "id": 7, "product_line_id": 2, "parent_part_number": "23P00001", "child_part_number": "B10001", "child_type": "accessory", "level": 1, "quantity": 1, "required_parts": null, "required_quantity": null, "sort_order": 10, "status": "publish" },
+  { "id": 13, "product_line_id": 3, "parent_part_number": "33T00001", "child_part_number": "C10001", "child_type": "accessory", "level": 1, "quantity": 1, "required_parts": null, "required_quantity": null, "sort_order": 10, "status": "publish" },
+  { "id": 19, "product_line_id": 4, "parent_part_number": "43B00001", "child_part_number": "D10001", "child_type": "accessory", "level": 1, "quantity": 1, "required_parts": null, "required_quantity": null, "sort_order": 10, "status": "publish" }
+] 

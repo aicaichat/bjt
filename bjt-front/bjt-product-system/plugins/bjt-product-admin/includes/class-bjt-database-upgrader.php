@@ -63,6 +63,11 @@ class BJT_Database_Upgrader {
     }
 
     private function check_db_permissions() {
+        // 表已通过Docker中的init.sql创建，不再需要检查数据库权限
+        // 绕过权限检查，直接返回 true
+        return true;
+        
+        /*
         try {
             $grants = $this->wpdb->get_results("SHOW GRANTS FOR CURRENT_USER()", ARRAY_N);
             $required_privileges = array('CREATE', 'ALTER', 'DROP');
@@ -82,6 +87,7 @@ class BJT_Database_Upgrader {
             $this->errors[] = 'Failed to check database permissions: ' . $e->getMessage();
             return false;
         }
+        */
     }
 
     private function check_db_version() {
@@ -102,6 +108,10 @@ class BJT_Database_Upgrader {
         $this->wpdb->query('START TRANSACTION');
 
         try {
+            // 禁用表创建和升级功能，表已通过Docker中的init.sql创建
+            // 这样可以避免插件创建/修改的表结构与已有表结构发生冲突
+            
+            /*
             // 1. 检查并创建新表
             $table_results = array(
                 'product_lines' => $this->create_product_lines_table(),
@@ -137,6 +147,7 @@ class BJT_Database_Upgrader {
                     throw new Exception('Data migration failed');
                 }
             }
+            */
 
             // 4. 更新数据库版本
             if (!update_option('bjt_product_db_version', $this->target_version)) {

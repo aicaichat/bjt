@@ -51,7 +51,6 @@ const SparePartsPage = () => {
   // 状态管理
   const [showCartModal, setShowCartModal] = useState(false);
   const [showConfirmClear, setShowConfirmClear] = useState(false);
-  const [currentPartType, setCurrentPartType] = useState('consumable');
   const [currentProductType, setCurrentProductType] = useState('machine');
   const [selectedModel, setSelectedModel] = useState('');
   const [activeNotification, setActiveNotification] = useState<HTMLDivElement | null>(null);
@@ -76,6 +75,7 @@ const SparePartsPage = () => {
   const [hostModels, setHostModels] = useState<string[]>([]);
   const [accessoryModels, setAccessoryModels] = useState<string[]>([]);
   const [filterOptions, setFilterOptions] = useState<SparePartsFilterOptions | null>(null);
+  const [selectedIsConsumable, setSelectedIsConsumable] = useState<boolean | null>(null);
   
   // 添加tooltip状态管理
   const [showTooltip, setShowTooltip] = useState(false);
@@ -145,11 +145,11 @@ const SparePartsPage = () => {
   // 在筛选条件变化时重新加载数据
   useEffect(() => {
     loadSparePartsData();
-  }, [currentPartType, currentProductType, selectedModel]);
+  }, [selectedIsConsumable, currentProductType, selectedModel]);
   
   // 加载备件数据
   const loadSparePartsData = async () => {
-    console.log("Starting loadSparePartsData with filters:", { currentPartType, currentProductType, selectedModel });
+    console.log("Starting loadSparePartsData with filters:", { selectedIsConsumable, currentProductType, selectedModel });
     setLoading(true);
     setError(null);
     
@@ -176,16 +176,16 @@ const SparePartsPage = () => {
         throw new Error('Invalid API response format: data is not an array');
       }
       
-      const data = response.data;
+      const data: SparePart[] = response.data;
       console.log(`Received ${data.length} spare parts items`);
       
       // 本地过滤数据
       let filteredData = [...data];
       
-      // 根据部件类型筛选 (consumable, electronic, mechanical)
-      if (currentPartType && currentPartType !== 'all') {
-        filteredData = filteredData.filter(part => part.type === currentPartType);
-        console.log(`Filtered by part type '${currentPartType}': ${filteredData.length} items remaining`);
+      // 根据部件类型筛选 (使用 is_consumable boolean)
+      if (selectedIsConsumable !== null) {
+        filteredData = filteredData.filter(part => part.is_consumable === selectedIsConsumable);
+        console.log(`Filtered by is_consumable=${selectedIsConsumable}: ${filteredData.length} items remaining`);
       }
       
       // 根据产品类型筛选
@@ -380,7 +380,7 @@ const SparePartsPage = () => {
   // 获取产品详细信息
   const getProductDetails = (productId: string) => {
     // 在所有数据中查找产品
-    let product = spareParts.find(p => p.id === productId);
+    let product = spareParts.find(p => p.id.toString() === productId);
     
     if (product) {
       return product; // 返回完整的产品对象，包括prices属性
@@ -405,36 +405,37 @@ const SparePartsPage = () => {
   const addToCart = (sparePart: SparePart, quantity = 1) => {
     // Create a cart item from the spare part
     const cartItem = {
-      id: sparePart.id,
-      name: sparePart.name,
-      code: sparePart.part_number,
+      id: sparePart.id.toString(), // Ensure id is string for CartItem
+      name: sparePart.name_en, // Use name_en from canonical type
+      code: sparePart.part_number, // Use part_number from canonical type
       partNumber: sparePart.part_number,
-      image: sparePart.image_url,
-      category: sparePart.category || 'spare part',
-      productId: Number(sparePart.id),
-      price: (sparePart.prices as unknown as Prices).base,
+      image: sparePart.image_url || '/images/spare-parts/default.svg', // Provide default for null image
+      category: sparePart.product_type === 'machine' ? 'Machine Parts' : 'Accessory Parts', // Use product_type
+      productId: sparePart.id, // Keep as number for productId
+      price: calculateFinalPrice(sparePart), // Use the calculated final price
       quantity: quantity,
       selected: true,
-      priceTiers: [
-        {
-          min: 1,
-          max: 99999,
-          price: (sparePart.prices as unknown as Prices).base
-        }
-      ],
-      properties: { 
-        type: sparePart.type,
-        productType: sparePart.product_type,
-        model: Array.isArray(sparePart.app_model) ? sparePart.app_model[0] : String(sparePart.app_model || '')
+      priceTiers: sparePart.prices.map(p => ({ // Map from common.PriceTier to CartContext.PriceTier
+        min: p.tiers[0].min_quantity, // Changed from minQuantity to min
+        max: p.tiers[0].max_quantity || null, // Changed from maxQuantity to max
+        price: p.tiers[0].base_price
+        // originalPrice: p.tiers[0].original_price, // Optional: if needed by CartContext.PriceTier
+      })),
+      currentPrice: calculateFinalPrice(sparePart),
+      properties: {
+        spec: sparePart.spec,
+        pcsPerBox: sparePart.pcs_per_box,
+        model: Array.isArray(sparePart.app_model) ? sparePart.app_model.join(', ') : sparePart.app_model || '',
+        // Ensure 'type' and 'productType' are NOT here if they cause the old tags to show
       },
       specs: {}
     };
 
     // Add to cart context
-    addItem(cartItem);
+    addItem(cartItem as unknown as CartItem); // Use type assertion carefully
     
     // Show notification
-    showCartNotification(`已添加 ${quantity} 个 ${sparePart.name} 到购物车`);
+    showCartNotification(`已添加 ${quantity} 个 ${sparePart.name_en} 到购物车`);
   };
   
   // 显示购物车通知
@@ -749,7 +750,7 @@ const SparePartsPage = () => {
                   style={{ cursor: 'pointer' }}
                 >
                   <td className="part-image-cell">
-                    <img src={part.image_url} alt={part.name_en} className="part-image" onError={handleImageError} />
+                    <img src={part.image_url || '/images/spare-parts/default.svg'} alt={part.name_en} className="part-image" onError={handleImageError} />
                   </td>
                   <td className="part-code-cell">
                     <div className="part-code">{part.part_number}</div>
@@ -762,9 +763,9 @@ const SparePartsPage = () => {
                   >
                     <div className="spec-preview">
                       <div className="spec-summary">
-                        <p><strong>Spec.:</strong> {part.spec}</p>
-                        <p><strong>{t('spareParts.specs.serialNumber')}:</strong> {part.app_sn}</p>
-                        <p><strong>{t('products.specs.palletQty')}:</strong> {part.box_quantity || t('spareParts.defaultValues.notAvailable')}</p>
+                        <p><strong>{t('spareParts.specs.spec', 'Spec.')}:</strong> {part.spec}</p>
+                        <p><strong>{t('spareParts.specs.pcsPerBox', 'Pcs per Box')}:</strong> {part.pcs_per_box || t('spareParts.defaultValues.notAvailable', 'N/A')}</p>
+                        <p><strong>{t('spareParts.specs.compatibleModels', 'Compatible Models')}:</strong> {Array.isArray(part.app_model) ? part.app_model.join(', ') : part.app_model}</p>
                       </div>
                       <span className="view-more">{t('spareParts.table.viewMore')}</span>
                     </div>
@@ -792,15 +793,10 @@ const SparePartsPage = () => {
                       <div className="inventory-info">
                         {Array.isArray(part.inventory) ? (
                           part.inventory.map((inv, idx) => (
-                            <div key={idx}>{inv.region}: {inv.amount}</div>
+                            <div key={idx}>{inv.region}: {inv.quantity}</div>
                           ))
                         ) : (
-                          <>
-                            <div>EU: {(part.inventory as unknown as Inventory).eu}</div>
-                            <div>NA: {(part.inventory as unknown as Inventory).na}</div>
-                            <div>AU: {(part.inventory as unknown as Inventory).au}</div>
-                            <div>CN: {(part.inventory as unknown as Inventory).cn}</div>
-                          </>
+                          <p>Inventory data format unexpected</p>
                         )}
                       </div>
                     </td>
@@ -857,32 +853,56 @@ const SparePartsPage = () => {
           </tbody>
         </table>
 
-        {showTooltip && selectedPart && (
-          <div 
-            ref={tooltipRef}
-            className="spec-tooltip" 
-            style={{ 
-              top: tooltipPos.top, 
-              left: tooltipPos.left 
-            }}
-            onMouseEnter={handleTooltipMouseEnter}
-            onMouseLeave={handleTooltipMouseLeave}
-          >
-            <h4>
-              {selectedPart.name_en}
-              <button className="tooltip-close" onClick={closeTooltip}>×</button>
-            </h4>
-            <div className="tooltip-content">
-              <p><strong>{t('spareParts.specs.packageSize')}:</strong> {selectedPart.package_size}</p>
-              <p><strong>{t('spareParts.specs.packageSizeImperial')}:</strong> {selectedPart.package_size_imperial || t('spareParts.defaultValues.notAvailable')}</p>
-              <p><strong>{t('spareParts.specs.weight')}:</strong> {selectedPart.package_weight || t('spareParts.defaultValues.notAvailable')}</p>
-              <p><strong>{t('spareParts.specs.weightImperial')}:</strong> {selectedPart.package_weight ? (selectedPart.package_weight * 2.20462).toFixed(2) : t('spareParts.defaultValues.notAvailable')}</p>
-              <p><strong>{t('spareParts.specs.serialNumber')}:</strong> {selectedPart.app_sn}</p>
-              <p><strong>{t('spareParts.specs.compatibleModels')}:</strong> {selectedPart.app_model}</p>
-              <p><strong>{t('spareParts.specs.specifications')}:</strong> {selectedPart.spec}</p>
-            </div>
-          </div>
-        )}
+        {showTooltip && selectedPart && (() => {
+            console.log('Tooltip Data (before render):', selectedPart);
+            return (
+              <div 
+                ref={tooltipRef}
+                className={`spec-tooltip ${showTooltip ? 'show' : ''}`}
+                style={{ 
+                  top: tooltipPos.top, 
+                  left: tooltipPos.left 
+                }}
+                onMouseEnter={handleTooltipMouseEnter}
+                onMouseLeave={handleTooltipMouseLeave}
+              >
+                <h4>
+                  {selectedPart.name_en}
+                  <button className="tooltip-close" onClick={closeTooltip}>×</button>
+                </h4>
+                <div className="tooltip-content">
+                  {/* Conditional Package Size Display */}
+                  {currentUser.region === 'na' ? (
+                    <p>
+                      <strong>{t('spareParts.specs.packageSizeImperial', 'Package Size (inch)')}:</strong> 
+                      {selectedPart.package_size_inch || t('spareParts.defaultValues.notAvailable', 'N/A')}
+                    </p>
+                  ) : (
+                    <p>
+                      <strong>{t('spareParts.specs.packageSize', 'Package Size (cm)')}:</strong> 
+                      {selectedPart.package_size_cm || t('spareParts.defaultValues.notAvailable', 'N/A')}
+                    </p>
+                  )}
+                  {/* Conditional Weight Display */}
+                  {currentUser.region === 'na' ? (
+                    <p>
+                      <strong>{t('spareParts.specs.weightImperial', 'Net Weight (lbs)')}:</strong> 
+                      {selectedPart.net_weight_lbs ? `${selectedPart.net_weight_lbs} lbs` : t('spareParts.defaultValues.notAvailable', 'N/A')}
+                    </p>
+                  ) : (
+                    <p>
+                      <strong>{t('spareParts.specs.weight', 'Net Weight (kg)')}:</strong> 
+                      {selectedPart.net_weight_kg ? `${selectedPart.net_weight_kg} kg` : t('spareParts.defaultValues.notAvailable', 'N/A')}
+                    </p>
+                  )}
+                  {/* Other fields */}
+                  {/* <p><strong>{t('spareParts.specs.serialNumber', 'Serial Number')}:</strong> {selectedPart.app_sn || t('spareParts.defaultValues.notAvailable', 'N/A')}</p> */}
+                  <p><strong>{t('spareParts.specs.compatibleModels', 'Compatible Models')}:</strong> {Array.isArray(selectedPart.app_model) ? selectedPart.app_model.join(', ') : (selectedPart.app_model || t('spareParts.defaultValues.notAvailable', 'N/A'))}</p>
+                  <p><strong>{t('spareParts.specs.specifications', 'Specifications')}:</strong> {selectedPart.spec || t('spareParts.defaultValues.notAvailable', 'N/A')}</p>
+                </div>
+              </div>
+            );
+        })()}
       </>
     );
   };
@@ -901,7 +921,7 @@ const SparePartsPage = () => {
       const regionInventory = part.inventory.find(
         item => item.region.toLowerCase() === currentUser.region.toLowerCase()
       );
-      regionStock = regionInventory?.amount || 0;
+      regionStock = regionInventory?.quantity || 0;
     } else if (typeof part.inventory === 'object') {
       // 对象格式的库存
       const region = currentUser.region.toLowerCase();
@@ -939,7 +959,7 @@ const SparePartsPage = () => {
     
     // Filter items to only show spare parts
     const sparePartItems = items.filter(item => 
-      item.category === 'spare part' || item.properties?.productType === 'machine' || item.properties?.productType === 'accessory'
+      item.category === 'Machine Parts' || item.category === 'Accessory Parts' || item.properties?.productType === 'machine' || item.properties?.productType === 'accessory'
     );
     
     if (sparePartItems.length === 0) {
@@ -948,21 +968,49 @@ const SparePartsPage = () => {
     
     return sparePartItems.map((item, index) => {
       return (
-        <div className="cart-item" key={index}>
+        <div className="cart-item" key={item.id}>
           <div className="cart-item-top">
-            <img className="cart-item-img" src={item.image} alt={item.name} />
+            <img className="cart-item-img" src={item.image || '/images/spare-parts/default.svg'} alt={item.name} />
             <div className="cart-item-main">
               <div className="cart-item-name">{item.name}</div>
-              <div className="cart-item-sku">{t('spareParts.cart.sku')}: {item.partNumber}</div>
-              <div className="cart-item-price">
-                {getCurrencySymbol(userRegion)} {(item.price * item.quantity).toFixed(2)}
+              <div className="cart-item-sku">{t('spareParts.cart.sku', 'SKU')}: {item.code}</div>
+              <div className="cart-item-price-tiers">
+                {item.priceTiers && item.priceTiers.length > 0 ? (
+                  item.priceTiers.map((tier, tierIndex) => (
+                    <div key={tierIndex} className="cart-price-tier-entry">
+                      <span>
+                        {tier.min} 
+                        {(tier.max && tier.max > tier.min) ? `-${tier.max}` : '+'}
+                        : {getCurrencySymbol(userRegion)} {tier.price.toFixed(2)}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="cart-item-price">
+                    {getCurrencySymbol(userRegion)} {(item.price * item.quantity).toFixed(2)}
+                  </div>
+                )}
               </div>
+              {/* Tiered Price Display END */}
+
             </div>
           </div>
           <div className="cart-item-details">
-            <div className="cart-item-detail">{t('spareParts.specs.serialNumber')}: {item.properties?.serialNumber || '-'}</div>
-            <div className="cart-item-detail">{t('spareParts.specs.packageSize')}: {item.properties?.packageSize || '-'}</div>
-            <div className="cart-item-detail">{t('spareParts.specs.model')}: {item.properties?.model || '-'}</div>
+            {item.properties?.spec && (
+              <div className="cart-item-detail">
+                <strong>{t('spareParts.specs.spec', 'Spec.')}:</strong> {item.properties.spec}
+              </div>
+            )}
+            {item.properties?.pcsPerBox !== undefined && item.properties?.pcsPerBox !== null && (
+              <div className="cart-item-detail">
+                <strong>{t('spareParts.specs.pcsPerBox', 'Pcs per Box')}:</strong> {item.properties.pcsPerBox}
+              </div>
+            )}
+            {item.properties?.model && (
+              <div className="cart-item-detail">
+                <strong>{t('spareParts.specs.compatibleModels', 'Compatible Models')}:</strong> {item.properties.model}
+              </div>
+            )}
           </div>
           <div className="cart-item-controls">
             <div className="cart-item-qty">
@@ -1058,11 +1106,6 @@ const SparePartsPage = () => {
                 onClick={() => {
                   setCurrentProductType('machine');
                   fetchModels('machine');
-                  // If current part type is 'accessory', reset it to 'consumable' since accessory parts
-                  // are only available for accessory product type
-                  if (currentPartType === 'accessory') {
-                    setCurrentPartType('consumable');
-                  }
                 }}
               >
                 {t('spareParts.filters.productType.machine')}
@@ -1107,16 +1150,23 @@ const SparePartsPage = () => {
             <span className="filter-label">{t('spareParts.filters.label.partType')}:</span>
             <div className="part-type-buttons">
               <button
-                className={currentPartType === 'consumable' ? 'active' : ''}
-                onClick={() => setCurrentPartType('consumable')}
+                className={selectedIsConsumable === true ? 'active' : ''}
+                onClick={() => setSelectedIsConsumable(true)}
               >
-                {t('spareParts.filters.partType.consumable')}
+                {t('spareParts.filters.partType.consumable', 'Consumable')}
               </button>
               <button
-                className={currentPartType === 'electronic' ? 'active' : ''}
-                onClick={() => setCurrentPartType('electronic')}
+                className={selectedIsConsumable === false ? 'active' : ''}
+                onClick={() => setSelectedIsConsumable(false)}
               >
-                {t('spareParts.filters.partType.electronic')}
+                {/* Use existing key 'electronic' from zh.json, keep fallback as Non-Consumable */}
+                {t('spareParts.filters.partType.electronic', 'Non-Consumable')}
+              </button>
+              <button
+                className={selectedIsConsumable === null ? 'active' : ''}
+                onClick={() => setSelectedIsConsumable(null)}
+              >
+                {t('spareParts.filters.partType.all', 'All')}
               </button>
             </div>
           </div>

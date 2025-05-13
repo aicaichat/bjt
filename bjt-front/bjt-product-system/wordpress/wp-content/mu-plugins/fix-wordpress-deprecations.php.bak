@@ -1,0 +1,118 @@
+<?php
+/**
+ * Plugin Name: WordPress 6.4.0 Deprecation Fix
+ * Description: 修复WordPress 6.4.0中废弃函数的警告
+ * Version: 1.0.0
+ * Author: BJT Team
+ */
+
+// 如果直接访问此文件，则中止访问
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+// 设置错误处理，抑制WordPress 6.4.0废弃函数警告
+if (version_compare(PHP_VERSION, '8.0.0', '>=')) {
+    set_error_handler(function($errno, $errstr, $errfile, $errline) {
+        // 检查是否是我们要抑制的特定警告
+        if (strpos($errstr, 'Function print_emoji_styles is deprecated') !== false ||
+            strpos($errstr, 'Function wp_admin_bar_header is deprecated') !== false) {
+            return true; // 抑制警告
+        }
+        // 返回false以使用PHP默认的错误处理
+        return false;
+    }, E_DEPRECATED | E_USER_DEPRECATED);
+} else {
+    // PHP 7.x兼容
+    set_error_handler(function($errno, $errstr, $errfile, $errline) {
+        if (strpos($errstr, 'Function print_emoji_styles is deprecated') !== false ||
+            strpos($errstr, 'Function wp_admin_bar_header is deprecated') !== false) {
+            return true;
+        }
+        return false;
+    }, E_DEPRECATED);
+}
+
+/**
+ * 修复WordPress 6.4.0废弃函数的方法类
+ */
+class WordPress_64_Deprecation_Fix {
+    
+    /**
+     * 初始化类
+     */
+    public static function init() {
+        // 只在WP 6.4.0及以上版本运行修复
+        if (!self::needs_fix()) {
+            return;
+        }
+        
+        // 早期处理废弃函数
+        add_action('init', array(__CLASS__, 'fix_deprecated_functions'), 0);
+        
+        // 添加替代函数
+        self::provide_replacements();
+    }
+    
+    /**
+     * 检查是否需要修复
+     */
+    private static function needs_fix() {
+        global $wp_version;
+        return version_compare($wp_version, '6.4.0', '>=');
+    }
+    
+    /**
+     * 提供替代函数
+     */
+    private static function provide_replacements() {
+        // 替换 print_emoji_styles
+        if (!function_exists('print_emoji_styles')) {
+            function print_emoji_styles() {
+                wp_enqueue_emoji_styles();
+            }
+        }
+        
+        // 替换 wp_admin_bar_header
+        if (!function_exists('wp_admin_bar_header')) {
+            function wp_admin_bar_header() {
+                wp_enqueue_admin_bar_header_styles();
+            }
+        }
+    }
+    
+    /**
+     * 修复废弃函数
+     */
+    public static function fix_deprecated_functions() {
+        // 移除默认的 print_emoji_styles 钩子
+        remove_action('wp_print_styles', 'print_emoji_styles');
+        add_action('wp_print_styles', 'wp_enqueue_emoji_styles');
+        
+        // 移除默认的 wp_admin_bar_header 钩子
+        remove_action('admin_print_styles', 'wp_admin_bar_header');
+        add_action('admin_print_styles', 'wp_enqueue_admin_bar_header_styles');
+        
+        // 移除废弃函数警告
+        add_filter('deprecated_function_trigger_error', array(__CLASS__, 'suppress_specific_deprecation_notice'), 10, 3);
+    }
+    
+    /**
+     * 抑制特定废弃函数的通知
+     */
+    public static function suppress_specific_deprecation_notice($trigger, $function = '', $replacement = '') {
+        $suppress_functions = array(
+            'print_emoji_styles',
+            'wp_admin_bar_header'
+        );
+        
+        if (!empty($function) && in_array($function, $suppress_functions)) {
+            return false; // 不触发错误
+        }
+        
+        return $trigger; // 保持原来的值
+    }
+}
+
+// 初始化修复
+WordPress_64_Deprecation_Fix::init(); 

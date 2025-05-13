@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT Admin Login</title>
+    <style>
+        /* General Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f7f9fb;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        /* Login Container */
+        .login-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            padding: 30px;
+            position: relative;
+        }
+        
+        /* Language Selector */
+        .language-select {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        /* Logo Area */
+        .logo-area {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .logo-area img {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 10px;
+        }
+        
+        /* Login Form */
+        .login-form h1 {
+            color: #1A365D;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .input-group input:focus {
+            border-color: #1A365D;
+            outline: none;
+        }
+        
+        /* Login Button */
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #1A365D;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+        
+        .login-btn:hover {
+            background-color: #274785;
+        }
+        
+        /* Note */
+        .note {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        
+        <div class="logo-area">
+            <img src="logo-1.webp" alt="BJT Logo">
+        </div>
+        
+        <form class="login-form">
+            <h1>Admin Login</h1>
+            
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter your username">
+            </div>
+            
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password">
+            </div>
+            
+            <button type="submit" class="login-btn">Log In</button>
+        </form>
+        
+        <div class="note">
+            This login is for administrative users only.
+        </div>
+    </div>
+  
+    <script>
+        // Simple form validation
+        document.querySelector('.login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (!username || !password) {
+                alert('Please enter both username and password.');
+                return;
+            }
+            
+            // In a real application, this would send a request to the server
+            alert('Login attempt with username: ' + username);
+            // Normally would redirect to dashboard or show error
+        });
+        
+        // Language selector functionality
+        document.querySelector('.language-select').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            alert('Language changed to: ' + selectedOption.text);
+        });
+    </script>
+</body>
+</html>

@@ -1,9 +1,10 @@
 import axios, { AxiosResponse } from 'axios';
 import { useMockData } from '../config/env';
 import { mockProductLines } from './mockService';
+import { API_BASE_URL as BJT_API_BASE_URL } from '../api/config'; // Import the base URL
 
-// WordPress API配置
-const API_BASE_URL = import.meta.env?.VITE_API_URL || 
+// WordPress API配置 (This local const might be overridden or become confusing)
+const API_BASE_URL_LOCAL_UNUSED = import.meta.env?.VITE_API_URL || 
                     (window as any).ENV_API_URL || 
                     'https://api.bjt-system.com/wp-json/wp/v2';
 
@@ -11,18 +12,12 @@ const API_BASE_URL = import.meta.env?.VITE_API_URL ||
 export interface ProductLine {
   id: number;
   title_en: string;
-  title_cn: string;
+  title_zh: string;
   description_en: string;
-  description_cn: string;
-  subitem1_en: string;
-  subitem1_cn: string;
-  subitem2_en: string;
-  subitem2_cn: string;
-  subitem3_en: string;
-  subitem3_cn: string;
+  description_zh: string;
   image_url: string;
   status: string;
-  menu_order: number;
+  sort_order: number;
 }
 
 // 产品接口
@@ -75,9 +70,28 @@ export interface User {
   role: string;
 }
 
+// Backend user structure from /auth/login endpoint
+export interface BackendUser {
+  id: number;
+  name: string;
+  email: string;
+  roles: string[];
+}
+
+// Login response structure from backend
+interface LoginApiResponse {
+  success: boolean;
+  message: string;
+  data: {
+    token: string;
+    expires_in?: number;
+    user: BackendUser;
+  } | null;
+}
+
 // 创建axios实例
 const api = axios.create({
-  baseURL: 'http://localhost:3000/api', // 根据实际后端API地址调整
+  baseURL: BJT_API_BASE_URL, // Use the imported base URL from config.ts
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -139,16 +153,17 @@ const apiService = {
       }
       
       // Use real API
-      console.log('Using real API for product lines');
-      const response = await axios.get(`${API_BASE_URL}/product-lines`, {
+      console.log('Using real API for product lines: /product-lines');
+      // Uses the 'api' instance, so baseURL is http://localhost:8080/wp-json/bjt/v1
+      // The backend controller for product-lines uses 'sort_order ASC, id DESC' by default.
+      // Parameters 'orderby' and 'order' are not used by the backend for this endpoint.
+      const productLinesData: ProductLine[] = await api.get('/product-lines', {
         params: {
           status: 'publish',
-          orderby: 'menu_order',
-          order: 'asc',
-          per_page: 100
+          per_page: 100 // Fetch up to 100 items, pagination UI can be added later
         }
       });
-      return response.data;
+      return productLinesData;
     } catch (error) {
       console.error('Failed to fetch product lines:', error);
       throw error;
@@ -158,8 +173,8 @@ const apiService = {
   // 获取单个产品线
   getProductLine: async (id: number): Promise<ProductLine> => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/product-lines/${id}`);
-      return response.data;
+      const response: ProductLine = await api.get(`/product-lines/${id}`); // Changed to use 'api' instance
+      return response;
     } catch (error) {
       console.error(`Failed to fetch product line with ID ${id}:`, error);
       throw error;
@@ -174,7 +189,7 @@ const apiService = {
     per_page?: number
   } = {}): Promise<Product[]> => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/products`, {
+      const response = await axios.get(`${API_BASE_URL_LOCAL_UNUSED}/products`, {
         params: {
           ...params,
           status: 'publish',
@@ -193,13 +208,46 @@ const apiService = {
   // 获取单个产品
   getProduct: async (id: number): Promise<Product> => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/products/${id}`);
+      const response = await axios.get(`${API_BASE_URL_LOCAL_UNUSED}/products/${id}`);
       return response.data;
     } catch (error) {
       console.error(`Failed to fetch product with ID ${id}:`, error);
       throw error;
     }
   }
+};
+
+// Authentication API service
+export const authApi = {
+  login: async (username: string, password: string): Promise<{ user: BackendUser, token: string }> => {
+    try {
+      const axiosFullResponse = await api.post<LoginApiResponse>('/auth/login', { username, password });
+      
+      const effectivePayload = axiosFullResponse.data as any as { token: string; expires_in?: number; user: BackendUser; success?: boolean; message?: string };
+
+      console.log('[DEBUG] authApi.login: effectivePayload (axiosFullResponse.data):', JSON.stringify(effectivePayload, null, 2));
+      if (effectivePayload) {
+        console.log('[DEBUG] authApi.login: effectivePayload.token:', effectivePayload.token);
+        console.log('[DEBUG] authApi.login: effectivePayload.user (type):', typeof effectivePayload.user);
+        console.log('[DEBUG] authApi.login: effectivePayload.success (if present):', effectivePayload.success);
+        console.log('[DEBUG] authApi.login: effectivePayload.message (if present):', effectivePayload.message);
+      } else {
+        console.log('[DEBUG] authApi.login: effectivePayload is null or undefined');
+      }
+
+      if (effectivePayload && effectivePayload.token && effectivePayload.user) {
+        localStorage.setItem('token', effectivePayload.token);
+        return { user: effectivePayload.user, token: effectivePayload.token };
+      } else {
+        throw new Error(effectivePayload?.message || 'Login failed: Processed response did not contain token or user data.');
+      }
+    } catch (error: any) {
+      const errorMessage = error.message || error.response?.data?.message || 'An unknown login error occurred';
+      console.error('Login API call failed:', errorMessage, error.response?.data);
+      throw new Error(errorMessage);
+    }
+  },
+  // TODO: Add other auth methods like logout, register if they hit the backend
 };
 
 // 为兼容旧代码，导出产品相关API
@@ -284,29 +332,6 @@ export const orderApi = {
   // 重新下单
   reorder: (orderId: string) => {
     return api.post(`/orders/${orderId}/reorder`);
-  }
-};
-
-// 认证相关API
-export const authApi = {
-  // 登录
-  login: (username: string, password: string): Promise<{user: User, token: string}> => {
-    return api.post('/auth/login', { username, password });
-  },
-  
-  // 登出
-  logout: (): Promise<void> => {
-    return api.post('/auth/logout');
-  },
-  
-  // 获取当前用户信息
-  getCurrentUser: (): Promise<User> => {
-    return api.get('/auth/me');
-  },
-  
-  // 刷新token
-  refreshToken: (): Promise<{token: string}> => {
-    return api.post('/auth/refresh-token');
   }
 };
 

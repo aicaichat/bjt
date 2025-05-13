@@ -37,7 +37,7 @@ i18n
     },
     keySeparator: '.',
     nsSeparator: false,
-    returnObjects: true // 允许返回对象类型的翻译
+    returnObjects: false // Ensure t() returns strings, not objects
   });
 
 export default i18n;

@@ -11,9 +11,9 @@
 | 主机管理 | 主机管理页面 (2.html) | [host-models-page.md](./host-models-page.md) | ✅ 已完成 | P0 |
 | 配件管理 | 配件管理页面 (7.html) | [accessories-page.md](./accessories-page.md) | ✅ 已完成 | P0 |
 | 用户管理 | 用户管理界面 (5.html) | [user-management-page.md](./user-management-page.md) | ✅ 已完成 | P1 |
-| 关联关系管理 | 关联关系管理页面 (5.html) | [relations-page.md](./relations-page.md) | 📝 已规划 | P1 |
-| 耗材管理 | 耗材管理页面 (10.html) | [consumables-page.md](./consumables-page.md) | 📝 已规划 | P1 |
-| 备件管理 | 备件管理页面 (12.html) | [spare-parts-page.md](./spare-parts-page.md) | 📝 已规划 | P1 |
+| 关联关系管理 | 关联关系管理页面 (5.html) | [relations-page.md](./relations-page.md) | ⚠️ 开发中 | P1 |
+| 耗材管理 | 耗材管理页面 (10.html) | [consumables-page.md](./consumables-page.md) | ⚠️ 开发中 | P1 |
+| 备件管理 | 备件管理页面 (12.html) | [spare-parts-page.md](./spare-parts-page.md) | ⚠️ 开发中 | P1 |
 | 系统设置 | 无专用mockup | [system-settings-page.md](./system-settings-page.md) | 📝 已规划 | P2 |
 | 售后管理 | 无专用mockup | [after-sales-page.md](./after-sales-page.md) | 📝 已规划 | P2 |
 | 数据导出 | 无专用mockup | [data-export-page.md](./data-export-page.md) | 📝 已规划 | P2 |
@@ -110,32 +110,46 @@
 
 - **Mockup**: 关联关系管理页面 (5.html)
 - **开发指南**: ✅ 已完成
-- **实现状态**: 📝 已规划
-- **待实现组件**:
+- **实现状态**: ⚠️ 开发中
+- **已实现组件**:
   - 当前机型和料号显示区域
-  - 一级配件区域
-  - 二至五级配件区域
+  - 一级配件区域（表格、新增按钮）
+  - 二级配件区域（动态显示）
+  - 新增配件关联页面
+- **待实现组件**:
+  - 三至五级配件区域（动态创建）
+  - 删除确认功能的完善
+  - AJAX请求的错误处理
 
 ### 7. 耗材管理
 
 - **Mockup**: 耗材管理页面 (10.html)
 - **开发指南**: ✅ 已完成
-- **实现状态**: 📝 已规划
+- **实现状态**: ⚠️ 开发中
+- **已实现组件**:
+  - 料号表区域（表格、筛选、新增按钮）
+  - 形状表区域（表格、新增按钮）
+  - 材料表区域（表格、新增按钮）
+  - 规格尺寸表区域（分类标签）
+  - 编辑页面的实现
 - **待实现组件**:
-  - 料号表
-  - 形状表
-  - 材料表
-  - 规格尺寸表
+  - 新增形状/材料功能
+  - 导入/导出功能
 
 ### 8. 备件管理
 
 - **Mockup**: 备件管理页面 (12.html)
 - **开发指南**: ✅ 已完成
-- **实现状态**: 📝 已规划
-- **待实现组件**:
+- **实现状态**: ⚠️ 开发中
+- **已实现组件**:
+  - 备件列表页面
+  - 备件编辑页面
   - 筛选功能
-  - 料号表
   - 分页功能
+- **待实现组件**:
+  - 导入/导出功能
+  - 备件关联功能
+  - 序列号管理功能
 
 ### 9. 系统设置
 
@@ -168,3 +182,4 @@
   - 导出范围设置
   - 导出格式选择
   - 进度显示功能 
+ 

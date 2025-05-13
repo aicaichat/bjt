@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "title_en": "Packaging Machines",
+    "title_zh": "包装机械",
+    "description_en": "High-quality packaging machines for various industrial applications.",
+    "description_zh": "适用于各种工业应用的高质量包装机械。",
+    "image_url": "/images/product-lines/packaging-machines.jpg",
+    "status": "publish",
+    "sort_order": 1
+  },
+  {
+    "id": 2,
+    "title_en": "Filling Solutions",
+    "title_zh": "灌装解决方案",
+    "description_en": "Efficient filling solutions for liquids, powders and pastes.",
+    "description_zh": "液体、粉末和膏状物的高效灌装解决方案。",
+    "image_url": "/images/product-lines/filling-solutions.jpg",
+    "status": "publish",
+    "sort_order": 2
+  },
+  {
+    "id": 3,
+    "title_en": "Labeling Systems",
+    "title_zh": "标签系统",
+    "description_en": "Precise labeling systems for product identification and branding.",
+    "description_zh": "用于产品标识和品牌推广的精确标签系统。",
+    "image_url": "/images/product-lines/labeling-systems.jpg",
+    "status": "publish",
+    "sort_order": 3
+  }
+] 

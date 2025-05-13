@@ -94,8 +94,8 @@ class BJT_Product_Line_Management {
             $is_zh = strpos($lang, 'zh') !== false;
             $product_line['title'] = $is_zh ? $product_line['title_zh'] : $product_line['title_en'];
             $product_line['description'] = $is_zh ? $product_line['description_zh'] : $product_line['description_en'];
-            $product_line['consumables'] = $is_zh ? $product_line['consumables_zh'] : $product_line['consumables_en'];
-            $product_line['parts'] = $is_zh ? $product_line['parts_zh'] : $product_line['parts_en'];
+            $product_line['consumables'] = $is_zh ? (isset($product_line['consumables_zh']) ? $product_line['consumables_zh'] : null) : (isset($product_line['consumables_en']) ? $product_line['consumables_en'] : null);
+            $product_line['parts'] = $is_zh ? (isset($product_line['parts_zh']) ? $product_line['parts_zh'] : null) : (isset($product_line['parts_en']) ? $product_line['parts_en'] : null);
         }
         
         return $product_line;
@@ -248,35 +248,35 @@ class BJT_Product_Line_Management {
         }
 
         // 准备数据
-        $save_data = array(
+        $db_data = array(
             'code' => $data['code'],
             'title_zh' => $data['title_zh'],
             'title_en' => $data['title_en'],
-            'description_zh' => $data['description_zh'],
-            'description_en' => $data['description_en'],
-            'consumables_zh' => $data['consumables_zh'],
-            'consumables_en' => $data['consumables_en'],
-            'parts_zh' => $data['parts_zh'],
-            'parts_en' => $data['parts_en'],
-            'image_url' => $data['image_url'],
-            'status' => $data['status'],
-            'sort_order' => $data['sort_order']
+            'description_zh' => isset($data['description_zh']) ? $data['description_zh'] : null,
+            'description_en' => isset($data['description_en']) ? $data['description_en'] : null,
+            // 'consumables_zh' => isset($data['consumables_zh']) ? $data['consumables_zh'] : null, // Commented out
+            // 'consumables_en' => isset($data['consumables_en']) ? $data['consumables_en'] : null, // Commented out
+            // 'parts_zh' => isset($data['parts_zh']) ? $data['parts_zh'] : null,                   // Commented out
+            // 'parts_en' => isset($data['parts_en']) ? $data['parts_en'] : null,                   // Commented out
+            'image_url' => isset($data['image_url']) ? $data['image_url'] : null,
+            'status' => isset($data['status']) ? $data['status'] : 'draft',
+            'sort_order' => isset($data['sort_order']) ? intval($data['sort_order']) : 0,
         );
 
         // 更新或插入
         if (!empty($data['id'])) {
             $result = $wpdb->update(
                 $this->table_name,
-                $save_data,
+                $db_data,
                 array('id' => absint($data['id'])),
-                array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d'),
+                array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d'),
                 array('%d')
             );
         } else {
             $result = $wpdb->insert(
                 $this->table_name,
-                $save_data,
-                array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d')
+                $db_data,
+                array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d')
             );
         }
 

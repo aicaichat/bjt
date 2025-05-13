@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>心无挂碍 - 单页仪式 App</title>
+  <!-- React & Tailwind -->
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Framer Motion -->
+  <script src="https://unpkg.com/framer-motion/dist/framer-motion.umd.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    body{margin:0;font-family:'Noto Serif SC',serif;background:#F9F6F0;color:#333}
+    @keyframes breathe{0%,100%{transform:scale(1);opacity:0.8}50%{transform:scale(1.05);opacity:1}}
+    .breathing-circle{animation:breathe 8s infinite ease-in-out}
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center}
+    .heart-seal{box-shadow:0 0 30px rgba(158,106,82,0.2)}
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+    const { motion, AnimatePresence } = window['framerMotion'];
+
+    // Hooks
+    const useBreathAnimation = isActive => {
+      const [scale,setScale] = useState(1);
+      useEffect(()=>{
+        if(!isActive) return;
+        let growing=true;
+        const iv=setInterval(()=>{
+          setScale(prev=>{
+            if(growing){
+              const ns=prev+0.02;
+              if(ns>=1.2) growing=false;
+              return ns;
+            } else {
+              const ns=prev-0.02;
+              if(ns<=1) growing=true;
+              return ns;
+            }
+          });
+        },100);
+        return ()=>clearInterval(iv);
+      },[isActive]);
+      return scale;
+    };
+    const useInkEffect = () => {
+      const [drops,setDrops] = useState([]);
+      const addInkDrop = (x,y)=>{
+        const newDrop={id:Date.now(),x,y,size:Math.random()*60+40,opacity:0.6+Math.random()*0.4,rotation:Math.random()*360};
+        setDrops(prev=>[...prev,newDrop]);
+        setTimeout(()=>setDrops(prev=>prev.filter(d=>d.id!==newDrop.id)),4000);
+      };
+      return { drops, addInkDrop };
+    };
+
+    function App(){
+      const [page,setPage]=useState('home');
+      const [stage,setStage]=useState(0);
+      const [worry,setWorry]=useState('');
+      const [custom,setCustom]=useState('');
+      const [count,setCount]=useState(0);
+      const [sessions,setSessions]=useState(()=>parseInt(localStorage.getItem('sessions')||'0'));
+      const [inkDrops,addInkDrop]=useInkEffect();
+      const breathScale=useBreathAnimation(stage===2);
+      const [litChars,setLitChars]=useState(()=>JSON.parse(localStorage.getItem('litChars')||'["空","无"]'));
+      const [blessList,setBlessList]=useState([]);
+      const [bless,setBless]=useState('');
+      const [char,setChar]=useState('');
+      const bellRef=useRef(),breathRef=useRef(),ambientRef=useRef();
+      const worryOpts=['工作压力','人际关系','健康问题','财务困扰','未来不确定性','自我怀疑','家庭矛盾','时间管理'];
+      const sutraChars=['空','无','色','不','异','真','如','是','故','相','即','度','苦','厄'];
+
+      useEffect(()=>{
+        fetch('/api/blessings').then(r=>r.json()).then(setBlessList);
+        localStorage.setItem('sessions',sessions);
+      },[sessions]);
+      useEffect(()=>localStorage.setItem('litChars',JSON.stringify(litChars)),[litChars]);
+      useEffect(()=>{ambientRef.current=new Audio('/sounds/ambient.mp3');ambientRef.current.loop=true;ambientRef.current.volume=0.3;ambientRef.current.play().catch(()=>{});},[]);
+
+      const play=(ref)=>{if(ref.current){ref.current.currentTime=0;ref.current.play().catch(()=>{})}};
+      const handleHeart=e=>{const r=e.currentTarget.getBoundingClientRect();addInkDrop(e.clientX,e.clientY);setStage(1);play(bellRef);};
+      const startMedit=(w)=>{setWorry(w);setStage(2);breathRef.current=new Audio('/sounds/breathing.mp3');breathRef.current.loop=true;play(breathRef);};
+      const handleCustom=()=>{if(custom.trim()){startMedit(custom);setCustom('')}};
+      const randomChar=()=>{const un=sutraChars.filter(c=>!litChars.includes(c));return un.length?un[Math.floor(Math.random()*un.length)]:null;};
+      const createPetals=()=>{/* omitted petals for brevity */};
+      const nextStage=()=>{
+        if(stage===2){breathRef.current.pause();const c=randomChar();if(c)setLitChars(prev=>[...prev,c]);createPetals();setStage(3);play(bellRef);} 
+        else if(stage<5){setStage(stage+1);play(bellRef);} 
+        else{setStage(0);setSessions(sessions+1);}      };
+      const handleBreath=()=>{play(bellRef);if(count<7)setCount(c=>c+1);else{setCount(0);nextStage()}};
+
+      // Renderers
+      const Ink = ()=>inkDrops.map(d=><div key={d.id} style={{position:'absolute',left:d.x,top:d.y,width:d.size,height:d.size,opacity:d.opacity,transform:`translate(-50%,-50%) rotate(${d.rotation}deg)`}}><svg viewBox="0 0 100 100"><path d="M50,0 C60,30 90,50 50,100 C10,50 40,30 50,0" fill="rgba(142,71,65,0.7)"/></svg></div>);
+      const Home=()=> (<motion.div initial={{opacity:0}} animate={{opacity:1}} className="flex flex-col items-center justify-center min-h-screen relative">{Ink()}<h1 className="text-5xl text-stone-red mb-4">心无挂碍</h1><p>今日已冥想{sessions}天</p><motion.div whileTap={{scale:0.9}} className="heart-seal w-48 h-48 bg-white rounded-full flex items-center justify-center mt-6" onClick={handleHeart}><i className="fas fa-heart text-4xl text-stone-red"/></motion.div></motion.div>);
+
+      return (<><AnimatePresence>{page==='home'&&<Home key="home"/>}</AnimatePresence></>);
+    }
+    ReactDOM.render(<App/>,document.getElementById('root'));
+  </script>
+</body>
+</html>

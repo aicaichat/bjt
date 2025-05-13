@@ -1,0 +1,39 @@
+"Refactor Frontend Mock Data Handling to Use JSON Files
+Goal: Improve maintainability and clarity of frontend mock data by separating raw data from processing logic.
+Current Structure: Mock data (arrays/objects) is currently hardcoded within TypeScript files located in frontend/src/services/mocks/ (e.g., consumables.mocks.ts, machines.mocks.ts, prices.mocks.ts, inventory.mocks.ts, consumableFilterOptions.mocks.ts).
+Required Changes:
+Create Data Directory: Create a new directory: frontend/src/services/mocks/data/.
+Extract Data to JSON:
+Identify all hardcoded mock data arrays and objects within the existing .mocks.ts files (including data for consumables, machine parts, accessories, relations, prices, inventory, filter options, etc.).
+Move this raw data into separate, appropriately named .json files within the new frontend/src/services/mocks/data/ directory (e.g., consumables.data.json, prices.data.json, parts.data.json, relations.data.json, filterOptions.data.json).
+Ensure all created files are valid JSON.
+Modify .mocks.ts Files:
+Update each relevant .mocks.ts file (e.g., consumables.mocks.ts, machines.mocks.ts, etc.).
+Remove the original hardcoded data declarations.
+Import the raw data from their corresponding new .json files using standard ES module imports (e.g., import rawConsumablesData from './data/consumables.data.json';).
+Keep all existing logic within these .mocks.ts files: data processing, transformation functions (like combining consumables with prices/inventory), filtering, pagination, and any helper functions. These functions should now operate on the data imported from the JSON files.
+Ensure the functions exported by these .mocks.ts files (e.g., getMockConsumables, getMockMachineAccessories) retain their original signatures and continue to provide the correctly processed and structured mock data as before.
+No Changes to Service Files: The service files (frontend/src/services/consumablesService.ts, frontend/src/services/machinesService.ts, etc.) should not be modified. They must continue to import and use the functions exported by the .mocks.ts files.
+TypeScript Configuration: Verify that the tsconfig.app.json file under compilerOptions includes "resolveJsonModule": true and "esModuleInterop": true.
+Outcome: The application's mock data functionality should remain unchanged, but the underlying data source will be JSON files, and the .mocks.ts files will focus solely on processing logic and simulating API behavior."
+
+
+"重构前端 Mock 数据处理以使用 JSON 文件
+目标: 通过将原始数据与处理逻辑分离，提高前端 Mock 数据的可维护性和清晰度。
+当前结构: Mock 数据（数组/对象）目前硬编码在位于 frontend/src/services/mocks/ 目录下的 TypeScript 文件中（例如 consumables.mocks.ts, machines.mocks.ts, prices.mocks.ts, inventory.mocks.ts, consumableFilterOptions.mocks.ts）。
+要求变更:
+创建数据目录: 创建一个新目录：frontend/src/services/mocks/data/。
+提取数据到 JSON:
+识别现有 .mocks.ts 文件中所有硬编码的 Mock 数据数组和对象（包括耗材、机器部件、配件、关联关系、价格、库存、筛选选项等数据）。
+将这些原始数据移动到 frontend/src/services/mocks/data/ 目录下的、命名恰当的独立 .json 文件中（例如 consumables.data.json, prices.data.json, parts.data.json, relations.data.json, filterOptions.data.json）。
+确保所有创建的文件都是有效的 JSON 格式。
+修改 .mocks.ts 文件:
+更新每个相关的 .mocks.ts 文件（例如 consumables.mocks.ts, machines.mocks.ts 等）。
+移除原始的硬编码数据声明。
+使用标准的 ES 模块导入语句从对应的新的 .json 文件导入原始数据（例如 import rawConsumablesData from './data/consumables.data.json';）。
+保留这些 .mocks.ts 文件中所有现有的逻辑：数据处理、转换函数（如合并耗材与价格/库存）、筛选、分页以及任何辅助函数。这些函数现在应该操作从 JSON 文件导入的数据。
+确保这些 .mocks.ts 文件导出的函数（例如 getMockConsumables, getMockMachineAccessories）保持其原始签名，并继续按预期提供经过正确处理和结构化的 Mock 数据。
+服务文件不变: 服务文件（frontend/src/services/consumablesService.ts, frontend/src/services/machinesService.ts 等）不应被修改。它们必须继续导入并使用由 .mocks.ts 文件导出的函数。
+TypeScript 配置: 验证 tsconfig.app.json 文件在 compilerOptions 下包含 "resolveJsonModule": true 和 "esModuleInterop": true。
+结果: 应用的 Mock 数据功能应保持不变，但底层数据源将变为 JSON 文件，并且 .mocks.ts 文件将仅专注于处理逻辑和模拟 API 行为。"
+

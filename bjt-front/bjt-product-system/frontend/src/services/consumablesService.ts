@@ -1,12 +1,10 @@
-import axios from 'axios';
-import { API_BASE_URL } from '../config/env';
-import { APIResponse, PaginatedResponse } from '../types/common';
-import { API_CONFIG, ASSETS } from '../config/appConfig';
+import HttpServiceInstance, { ApiResponse } from './apiService';
+import { ASSETS } from '../config/appConfig';
+import { getMockConsumables as getBaseMockConsumables, getMockConsumableById as getBaseMockConsumableById } from './mocks/consumables.mocks';
+import { Consumable as CentralConsumable, ConsumablePriceTier as CentralConsumablePriceTier, ConsumableInventory as CentralConsumableInventory, ConsumableFilterOptions as CentralConsumableFilterOptions } from '../types/consumables';
+import { delay } from '../utils/delay';
 
-// Destructure for clarity and to avoid property access issues
-const { USE_MOCK_DATA } = API_CONFIG;
-
-// 耗材接口定义
+// 耗材接口定义 (LOCAL TO THIS SERVICE)
 export interface ConsumableProduct {
   id: string;
   name: string;
@@ -36,8 +34,9 @@ export interface ConsumableProduct {
   inventory: Record<string, number>;
 }
 
-// 筛选参数接口
+// 筛选参数接口 (LOCAL TO THIS SERVICE)
 export interface ConsumableFilters {
+  productLineId?: number | string; // Added from previous attempt, keep if API/mock needs it
   model?: string;
   shape?: string;
   material?: string;
@@ -49,115 +48,39 @@ export interface ConsumableFilters {
   page_size?: number;
   region?: string;
   lang?: string;
+  category_id?: number; // Keep if used
+  filters?: Record<string, any>; // Added from previous attempt, for more generic filters
 }
 
-// 模拟耗材数据
-const mockConsumables: ConsumableProduct[] = [
-  {
-    id: '1',
-    name: 'Standard Bubble Film',
-    code: 'PL-001',
-    model: 'MEX-10-20-10',
-    image_url: ASSETS.getUrl('/images/products/consumables/PL-001.jpg'),
-    specs: {
-      material: 'HDPE',
-      shape: 'Pillow',
-      thickness: '0.05mm',
-      width: '200mm',
-      length: '300mm',
-      rollLength: '500m',
-      compatibility: 'E5P/E4S'
-    },
-    pricing: [
-      { 
-        range: '1-10', 
-        price: 100,
-        regionalPrices: { eu: 120, na: 100, au: 130, cn: 650 } 
-      },
-      { 
-        range: '11-100', 
-        price: 90,
-        regionalPrices: { eu: 100, na: 90, au: 110, cn: 580 } 
-      },
-      { 
-        range: '> 100', 
-        price: 50,
-        regionalPrices: { eu: 60, na: 50, au: 65, cn: 320 } 
-      }
-    ],
-    inventory: { us: 1, au: 2, eu: 3, cn: 50 }
-  },
-  {
-    id: '2',
-    name: 'Cushioning Bubble Film',
-    code: 'PL-002',
-    model: 'MEX-10-20-13',
-    image_url: ASSETS.getUrl('/images/products/consumables/PL-002.jpg'),
-    specs: {
-      material: 'HDPE',
-      shape: 'Pillow',
-      thickness: '0.08mm',
-      width: '300mm',
-      length: '400mm',
-      rollLength: '600m',
-      compatibility: 'E5P/E4S'
-    },
-    pricing: [
-      { 
-        range: '1-10', 
-        price: 95,
-        regionalPrices: { eu: 115, na: 95, au: 125, cn: 620 } 
-      },
-      { 
-        range: '11-100', 
-        price: 85,
-        regionalPrices: { eu: 95, na: 85, au: 105, cn: 550 } 
-      },
-      { 
-        range: '> 100', 
-        price: 45,
-        regionalPrices: { eu: 55, na: 45, au: 60, cn: 290 } 
-      }
-    ],
-    inventory: { us: 2, au: 3, eu: 5, cn: 38 }
-  },
-  {
-    id: '3',
-    name: 'Anti-shock Bubble Film',
-    code: 'PL-003',
-    model: 'MEX-10-20-15',
-    image_url: ASSETS.getUrl('/images/products/consumables/PL-003.jpg'),
-    specs: {
-      material: 'HDPE',
-      shape: 'Pillow',
-      thickness: '0.10mm',
-      width: '300mm',
-      length: '450mm',
-      rollLength: '450m',
-      compatibility: 'E5P/E4S'
-    },
-    pricing: [
-      { 
-        range: '1-10', 
-        price: 110,
-        regionalPrices: { eu: 130, na: 110, au: 140, cn: 700 } 
-      },
-      { 
-        range: '11-100', 
-        price: 100,
-        regionalPrices: { eu: 120, na: 100, au: 130, cn: 650 } 
-      },
-      { 
-        range: '> 100', 
-        price: 60,
-        regionalPrices: { eu: 70, na: 60, au: 75, cn: 390 } 
-      }
-    ],
-    inventory: { us: 3, au: 2, eu: 4, cn: 26 }
-  }
-];
+// 定义耗材列表数据结构 (LOCAL TO THIS SERVICE)
+export interface ConsumableListData {
+  items: ConsumableProduct[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+  filterOptions: FilterOptionsType;
+}
 
-// 选项数据
+// 新增: FilterOptionItem and FilterOptionsType
+export interface FilterOptionItem {
+  id: string;
+  name: string;
+  image_url?: string;
+}
+
+export interface FilterOptionsType {
+  shapes: FilterOptionItem[];
+  materials: FilterOptionItem[];
+  models: FilterOptionItem[];
+  thicknesses: FilterOptionItem[];
+  weights: FilterOptionItem[];
+  widths: FilterOptionItem[];
+  lengths: FilterOptionItem[];
+  modelExplodedViews?: Record<string, string>;
+}
+
+// 选项数据 (LOCAL TO THIS SERVICE)
 export const consumableOptions = {
   shapes: [
     { id: 'pillow', name: 'Pillow', image_url: ASSETS.getUrl('/images/icons/shape-pillow.svg') },
@@ -208,114 +131,224 @@ export const consumableOptions = {
   }
 };
 
-// 延迟函数，用于模拟网络请求
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+// 模拟API调用 (LOCAL - This function now fetches base mock data and transforms it)
+const mockGetConsumables_local = async (filters: ConsumableFilters): Promise<ConsumableListData> => {
+  await delay(500); 
+  
+  // Call the imported base mock function
+  const baseMockData = getBaseMockConsumables({
+      productLineId: filters.productLineId,
+      region: filters.region,
+      lang: filters.lang,
+      page: filters.page, // Pass page and pageSize for base mock to handle if it can
+      pageSize: filters.page_size,
+      filters: filters.filters || { // Pass sub-filters if they exist
+        app_model: filters.model === 'all' ? undefined : filters.model, 
+        bag_type: filters.shape === 'all' ? undefined : filters.shape, 
+        material: filters.material === 'all' ? undefined : filters.material,
+        // TODO: map thickness, weight, width, length filters if needed by base mock
+      }
+  }); 
+  let sourceConsumables: CentralConsumable[] = baseMockData.items;
 
-// 模拟API调用
-const mockGetConsumables = async (filters: ConsumableFilters): Promise<PaginatedResponse<ConsumableProduct>> => {
-  await delay(500); // 模拟网络延迟
-  
-  // 筛选逻辑
-  let filteredProducts = [...mockConsumables];
-  
+  // LOCAL FILTERING (if base mock doesn't do it all or for properties not in CentralConsumable)
+  // This local filtering can be reduced if getBaseMockConsumables handles more filters
   if (filters.material && filters.material !== 'all') {
-    filteredProducts = filteredProducts.filter(product => 
-      product.specs.material.toLowerCase() === filters.material!.toLowerCase()
+    sourceConsumables = sourceConsumables.filter(product => 
+      product.material?.trim().toLowerCase() === filters.material!.trim().toLowerCase()
     );
   }
-  
   if (filters.shape && filters.shape !== 'all') {
-    filteredProducts = filteredProducts.filter(product => 
-      product.specs.shape.toLowerCase() === filters.shape!.toLowerCase()
+    sourceConsumables = sourceConsumables.filter(product => 
+      product.bag_type?.trim().toLowerCase() === filters.shape!.trim().toLowerCase() 
     );
   }
-  
-  if (filters.thickness && filters.thickness !== 'all') {
-    filteredProducts = filteredProducts.filter(product => 
-      product.specs.thickness === filters.thickness
-    );
-  }
-  
-  if (filters.weight && filters.weight !== 'all') {
-    filteredProducts = filteredProducts.filter(product => 
-      product.specs.weight === filters.weight
-    );
-  }
-  
-  if (filters.width && filters.width !== 'all') {
-    filteredProducts = filteredProducts.filter(product => 
-      product.specs.width === filters.width
-    );
-  }
-  
-  if (filters.length && filters.length !== 'all') {
-    filteredProducts = filteredProducts.filter(product => 
-      product.specs.length === filters.length
-    );
-  }
-  
   if (filters.model && filters.model !== 'all') {
-    filteredProducts = filteredProducts.filter(product => 
-      product.specs.compatibility.includes(filters.model!)
+    sourceConsumables = sourceConsumables.filter(product =>
+      product.app_model?.toLowerCase().split(',').map((m: string) => m.trim()).includes(filters.model!.toLowerCase())
     );
   }
-  
-  // 分页处理
+  // Add other local filters (thickness, weight, width, length) if not handled by base mock
+
+  // Data Transformation to ConsumableProduct interface
+  const transformedProducts: ConsumableProduct[] = sourceConsumables.map((product: CentralConsumable) => {
+    const name = product.model || product.part_number; 
+    const productModelString = product.model;
+
+    return {
+      id: String(product.id),
+      name: name,
+      code: product.part_number,
+      model: productModelString,
+      image_url: ASSETS.getUrl(product.image_url || '/images/placeholder.jpg'), 
+      specs: {
+        material: product.material || '',
+        shape: product.bag_type || '',
+        thickness: product.thickness_met ? `${product.thickness_met}um` : (product.thickness_imp ? `${product.thickness_imp}mil` : undefined),
+        weight: undefined, // Placeholder, CentralConsumable doesn't have direct weight field for specs
+        width: product.width_met ? `${product.width_met}cm` : (product.width_imp ? `${product.width_imp}inch` : ''),
+        length: product.length_met ? `${product.length_met}cm` : (product.length_imp ? `${product.length_imp}inch` : ''),
+        rollLength: product.total_length_met ? `${product.total_length_met}m` : (product.total_length_imp ? `${product.total_length_imp}ft` : undefined),
+        compatibility: product.app_model || '',
+      },
+      pricing: product.prices.map((p: CentralConsumablePriceTier) => ({
+        range: `${p.tiers[0].min_quantity}${p.tiers[0].max_quantity ? '-'+p.tiers[0].max_quantity : '+'}`,
+        price: p.tiers[0].price,
+        regionalPrices: { // This mapping is very specific, adjust if CentralConsumablePriceTier changes
+          eu: p.region === 'EU' ? p.tiers[0].price : 0,
+          na: p.region === 'US' ? p.tiers[0].price : 0,
+          au: p.region === 'AU' ? p.tiers[0].price : 0,
+          cn: p.region === 'CN' ? p.tiers[0].price : 0,
+        }
+      })),
+      inventory: product.inventory.reduce((acc: Record<string, number>, inv: CentralConsumableInventory) => {
+        acc[inv.region] = inv.quantity;
+        return acc;
+      }, {} as Record<string, number>)
+    };
+  });
+
+  // Paginate the transformed results locally - this might be redundant if getBaseMockConsumables handles pagination
   const page = filters.page || 1;
   const pageSize = filters.page_size || 10;
-  const startIndex = (page - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
-  
+  // If getBaseMockConsumables provides total, use that. Otherwise, use transformedProducts.length before local pagination.
+  const totalItems = baseMockData.total; 
+  const totalPages = Math.ceil(totalItems / pageSize);
+  // If base mock already paginated, transformedProducts are already the items for the page.
+  // If not, then slice transformedProducts. For now, assume base mock paginates.
+  const paginatedItems = transformedProducts; 
+
   return {
-    success: true,
-    data: {
-      items: paginatedProducts,
-      total: filteredProducts.length,
-      page: page,
-      page_size: pageSize,
-      total_pages: Math.ceil(filteredProducts.length / pageSize)
-    }
+    items: paginatedItems, // These are already ConsumableProduct[]
+    total: totalItems,
+    page: baseMockData.page, // Use page info from base mock
+    page_size: baseMockData.page_size, // Use page_size info from base mock
+    total_pages: baseMockData.total_pages, // Use total_pages info from base mock
+    filterOptions: baseMockData.filterOptions as FilterOptionsType // Pass through filterOptions
   };
 };
 
 // 实际API调用
-const apiGetConsumables = async (filters: ConsumableFilters): Promise<PaginatedResponse<ConsumableProduct>> => {
-  try {
-    const params = new URLSearchParams();
-    
-    // 添加所有筛选参数
-    if (filters.model && filters.model !== 'all') params.append('model', filters.model);
-    if (filters.shape && filters.shape !== 'all') params.append('shape', filters.shape);
-    if (filters.material && filters.material !== 'all') params.append('material', filters.material);
-    if (filters.thickness && filters.thickness !== 'all') params.append('thickness', filters.thickness);
-    if (filters.weight && filters.weight !== 'all') params.append('weight', filters.weight);
-    if (filters.width && filters.width !== 'all') params.append('width', filters.width);
-    if (filters.length && filters.length !== 'all') params.append('length', filters.length);
-    
-    // 添加分页参数
-    params.append('page', String(filters.page || 1));
-    params.append('page_size', String(filters.page_size || 10));
-    
-    // 添加语言和区域参数
-    if (filters.lang) params.append('lang', filters.lang);
-    if (filters.region) params.append('region', filters.region);
-    
-    const response = await axios.get(`${API_BASE_URL}/consumables`, { params });
-    return response.data;
-  } catch (error) {
-    console.error('Failed to fetch consumables:', error);
-    throw error;
-  }
+const apiGetConsumables_local = async (filters: ConsumableFilters): Promise<ConsumableListData> => {
+  // Map ConsumableFilters to the API's expected query parameters
+  const apiParams: Record<string, any> = {
+    page: filters.page,
+    page_size: filters.page_size,
+    region: filters.region,
+    lang: filters.lang,
+    product_line_id: filters.productLineId,
+    category_id: filters.category_id,
+    // Map other filters like model, shape, material if API supports them directly
+    model: filters.model === 'all' ? undefined : filters.model,
+    bag_type: filters.shape === 'all' ? undefined : filters.shape,
+    material: filters.material === 'all' ? undefined : filters.material,
+    // Pass generic filters if any
+    ...(filters.filters || {})
+  };
+  // Remove undefined params
+  Object.keys(apiParams).forEach(key => apiParams[key] === undefined && delete apiParams[key]);
+
+  const response = await HttpServiceInstance.get<ConsumableListData>('/consumables', { params: apiParams });
+  // Here, ConsumableListData is the local one. API must return data matching ConsumableProduct.
+  // If API returns CentralConsumable[], transformation will be needed here too.
+  // For now, assume API returns data matching local ConsumableProduct for simplicity.
+  return response.data;
 };
 
-// 导出服务
-const consumablesService = {
-  // 获取耗材列表
-  getConsumables: async (filters: ConsumableFilters): Promise<PaginatedResponse<ConsumableProduct>> => {
-    return USE_MOCK_DATA ? mockGetConsumables(filters) : apiGetConsumables(filters);
+// Helper function to transform CentralConsumable to local ConsumableProduct
+const transformCentralConsumableToLocal = (product?: CentralConsumable): ConsumableProduct | undefined => {
+    if (!product) return undefined;
+    const name = product.model || product.part_number;
+    const productModelString = product.model;
+    return {
+      id: String(product.id),
+      name: name,
+      code: product.part_number,
+      model: productModelString,
+      image_url: ASSETS.getUrl(product.image_url || '/images/placeholder.jpg'),
+      specs: {
+        material: product.material || '',
+        shape: product.bag_type || '',
+        thickness: product.thickness_met ? `${product.thickness_met}um` : (product.thickness_imp ? `${product.thickness_imp}mil` : undefined),
+        weight: undefined,
+        width: product.width_met ? `${product.width_met}cm` : (product.width_imp ? `${product.width_imp}inch` : ''),
+        length: product.length_met ? `${product.length_met}cm` : (product.length_imp ? `${product.length_imp}inch` : ''),
+        rollLength: product.total_length_met ? `${product.total_length_met}m` : (product.total_length_imp ? `${product.total_length_imp}ft` : undefined),
+        compatibility: product.app_model || '',
+      },
+      pricing: product.prices.map((p: CentralConsumablePriceTier) => ({
+        range: `${p.tiers[0].min_quantity}${p.tiers[0].max_quantity ? '-'+p.tiers[0].max_quantity : '+'}`,
+        price: p.tiers[0].price,
+        regionalPrices: {
+          eu: p.region === 'EU' ? p.tiers[0].price : 0,
+          na: p.region === 'US' ? p.tiers[0].price : 0,
+          au: p.region === 'AU' ? p.tiers[0].price : 0,
+          cn: p.region === 'CN' ? p.tiers[0].price : 0,
+        }
+      })),
+      inventory: product.inventory.reduce((acc: Record<string, number>, inv: CentralConsumableInventory) => {
+        acc[inv.region] = inv.quantity;
+        return acc;
+      }, {} as Record<string, number>)
+    };
+}
+
+export const consumablesService = {
+  /**
+   * 获取耗材列表
+   */
+  getConsumables: async (filters: ConsumableFilters): Promise<ConsumableListData> => {
+    if (import.meta.env.VITE_USE_MOCK_DATA === 'true') {
+      return mockGetConsumables_local(filters);
+    }
+    return apiGetConsumables_local(filters);
   },
-  
+
+  /**
+   * 获取单个耗材详情
+   */
+  getConsumable: async (consumableId: string, params: { region?: string; lang?: string; productLineId?: number | string; } = {}): Promise<ConsumableProduct | undefined> => {
+    if (import.meta.env.VITE_USE_MOCK_DATA === 'true') {
+      await delay(300);
+      const centralConsumable = getBaseMockConsumableById(consumableId); // Gets CentralConsumable
+      return transformCentralConsumableToLocal(centralConsumable); // Transform to local ConsumableProduct
+    } else {
+      try {
+        // Assuming API returns a single item that can be transformed or matches ConsumableProduct
+        // If API returns CentralConsumable, it needs transformation
+        const response: ApiResponse<CentralConsumable> = await HttpServiceInstance.get<CentralConsumable>(`/consumables/${consumableId}`, params);
+        return transformCentralConsumableToLocal(response.data);
+      } catch (error: any) {
+        if (error.response && error.response.status === 404) {
+          return undefined;
+        }
+        console.error("Error fetching consumable:", error);
+        throw error;
+      }
+    }
+  },
+
+  /**
+   * 获取耗材过滤选项 (Optional: Fetch dynamically or use static mock)
+   * This example assumes the options are returned with the list data in getConsumables.
+   * If you need a separate endpoint, implement it here.
+   */
+  // getConsumableFilters: async (params: {
+  //   region?: string;
+  //   lang?: string;
+  //   productLineId?: number | string;
+  // } = {}): Promise<ConsumableFilterOptions> => {
+  //   if (import.meta.env.VITE_USE_MOCK_DATA === 'true') {
+  //     await delay(100);
+  //     // You might need a specific mock function for filters if not included in list data
+  //     const mockListData = getMockConsumables({ productLineId: params.productLineId }); 
+  //     return mockListData.filterOptions || {}; 
+  //   } else {
+  //     const response: ApiResponse<ConsumableFilterOptions> = await HttpServiceInstance.get(`/consumables/filters`, params);
+  //     return response.data;
+  //   }
+  // },
+
   // 获取筛选选项
   getConsumableOptions: () => {
     return consumableOptions;

@@ -804,3 +804,4 @@ function render_user_management_list() {
   - 确保所有用户可见文本都使用WordPress国际化函数包装
   - 为所有支持的语言提供适当的翻译
   - 确保错误消息和提示在所有支持的语言中都清晰可读 
+ 

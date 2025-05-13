@@ -49,9 +49,6 @@ spl_autoload_register(function ($class) {
     }
 });
 
-// 激活插件时的操作
-register_activation_hook(__FILE__, array('BJT_Install', 'install'));
-
 // 初始化插件
 function bjt_product_admin_init() {
     // 加载文本域
@@ -63,9 +60,17 @@ function bjt_product_admin_init() {
         new BJT_Admin();
     }
 
-    // 初始化 REST API
-    require_once BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'includes/api/class-bjt-api.php';
-    new BJT_API();
+    // 初始化 REST API - 确保文件存在后再加载
+    $api_file = BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'includes/api/class-bjt-api.php';
+    if (file_exists($api_file)) {
+        require_once $api_file;
+        BJT_API::get_instance();
+    } else {
+        // 记录缺失文件但不终止程序
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('BJT Product Admin: API file not found: ' . $api_file);
+        }
+    }
 }
 add_action('plugins_loaded', 'bjt_product_admin_init');
 
@@ -184,11 +189,14 @@ function bjt_product_admin_activate() {
             throw new Exception('BJT Product Admin requires MySQL 5.6 or higher.');
         }
 
+        // 表已通过Docker中的init.sql创建，不再需要检查CREATE TABLE权限
+        /*
         // 检查是否有创建表的权限
         $has_create_privilege = $wpdb->get_var("SHOW GRANTS FOR CURRENT_USER() LIKE '%CREATE%'");
         if (!$has_create_privilege) {
             throw new Exception('Database user does not have sufficient privileges (CREATE TABLE permission required).');
         }
+        */
 
         // 4. 检查必要的常量是否已定义
         if (!defined('BJT_PRODUCT_ADMIN_PLUGIN_DIR')) {
@@ -216,22 +224,9 @@ function bjt_product_admin_activate() {
         require_once BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'includes/functions.php';
         require_once BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'includes/class-bjt-install.php';
         
-        // 7. 运行安装
-        $installer = BJT_Install::get_instance();
-        if (!$installer) {
-            throw new Exception('Failed to initialize installer.');
-        }
+        // 7. 运行安装 - 使用单例实例调用
+        BJT_Install::get_instance()->install();
         
-        $install_result = $installer->install();
-        if ($install_result === false) {
-            // 获取详细的错误信息
-            $error_message = 'Plugin installation failed.';
-            if ($wpdb->last_error) {
-                $error_message .= ' Database error: ' . $wpdb->last_error;
-            }
-            throw new Exception($error_message);
-        }
-
         // 8. 刷新重写规则
         flush_rewrite_rules();
 

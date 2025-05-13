@@ -17,10 +17,16 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     // 请求前刷新认证头，确保使用最新的令牌
-    config.headers = {
-      ...config.headers,
-      ...getAuthHeaders()
-    };
+    const authHeaders = getAuthHeaders(); // Get auth headers
+    for (const key in authHeaders) { // Iterate and assign
+      if (authHeaders.hasOwnProperty(key)) {
+        config.headers[key] = authHeaders[key as keyof typeof authHeaders];
+      }
+    }
+    // Ensure Content-Type is set if not already, or override if needed
+    if (!config.headers['Content-Type']) {
+        config.headers['Content-Type'] = 'application/json';
+    }
     return config;
   },
   (error) => {
@@ -34,10 +40,12 @@ axiosInstance.interceptors.response.use(
     return response;
   },
   (error: AxiosError) => {
+    console.error('[DEBUG] Axios Interceptor Raw Error:', JSON.stringify(error, null, 2));
     // 处理响应错误
     if (error.response) {
       // 服务器响应了，但是状态码不在2xx范围
       const status = error.response.status;
+      console.error(`[DEBUG] Axios Interceptor: Error with response. Status: ${status}`, error.response.data);
       
       // 如果返回401未授权，可以在这里处理登出逻辑
       if (status === 401) {
@@ -57,13 +65,14 @@ axiosInstance.interceptors.response.use(
         data: error.response.data
       });
     } else if (error.request) {
-      // 请求已发出，但没有收到响应
+      console.error('[DEBUG] Axios Interceptor: No response received. error.request:', error.request);
       return Promise.reject({
         message: 'No response received from server.',
         status: 0
       });
     } else {
       // 在设置请求时发生了错误
+      console.error('[DEBUG] Axios Interceptor: Error setting up request. error.message:', error.message);
       return Promise.reject({
         message: error.message,
         status: 0

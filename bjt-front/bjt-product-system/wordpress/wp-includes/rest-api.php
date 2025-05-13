@@ -411,7 +411,655 @@ function rest_api_loaded() {
 	 * @since 4.4.0
 	 * @var bool
 	 */
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
+	if ( ! defined( 'REST_REQUEST' ) ) {
 	define( 'REST_REQUEST', true );
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
 
 	// Initialize the server.
 	$server = rest_get_server();

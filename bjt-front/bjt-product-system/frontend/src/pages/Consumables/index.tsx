@@ -1,15 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Spin, message, Button, Select, InputNumber, Tabs, Tag, Pagination } from 'antd';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart, PriceTier } from '../../contexts/CartContext';
 import Loading from '../../components/common/Loading';
 import ErrorMessage from '../../components/common/ErrorMessage';
-import consumablesService, { 
-  ConsumableProduct, 
+import {
+  consumablesService,
+  ConsumableProduct,
   ConsumableFilters,
-  consumableOptions
+  ConsumableListData,
+  FilterOptionsType
 } from '../../services/consumablesService';
 import { DEFAULT_REGION } from '../../config/env';
 import { REGIONS, getCurrencySymbol } from '../../config/constants';
@@ -50,6 +52,7 @@ const ConsumablesPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { addItem } = useCart();
+  const [searchParams] = useSearchParams();
   
   // 状态定义
   const [consumables, setConsumables] = useState<ConsumableProduct[]>([]);
@@ -61,10 +64,10 @@ const ConsumablesPage: React.FC = () => {
   const [totalItems, setTotalItems] = useState<number>(0);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [filterOptions, setFilterOptions] = useState<FilterOptionsType | null>(null);
   
   // 筛选条件状态
   const [selectedModel, setSelectedModel] = useState<string>('all');
-  const [selectedUnit, setSelectedUnit] = useState<string>('metric');
   const [selectedShape, setSelectedShape] = useState<string>('pillow');
   const [selectedMaterial, setSelectedMaterial] = useState<string>('hdpe');
   const [selectedThickness, setSelectedThickness] = useState<string>('all');
@@ -90,6 +93,8 @@ const ConsumablesPage: React.FC = () => {
         setLoading(true);
         setError(null);
         
+        const categoryFilter = searchParams.get('category') ? parseInt(searchParams.get('category')!) : undefined;
+
         // 构建筛选参数
         const filters: ConsumableFilters = {
           model: selectedModel,
@@ -102,28 +107,30 @@ const ConsumablesPage: React.FC = () => {
           page: currentPage,
           page_size: 10,
           region: userRegion,
-          lang: navigator.language.startsWith('zh') ? 'zh' : 'en'
+          lang: navigator.language.startsWith('zh') ? 'zh' : 'en',
+          category_id: categoryFilter
         };
         
-        const response = await consumablesService.getConsumables(filters);
+        const consumableData = await consumablesService.getConsumables(filters);
+        console.log('ConsumableData received in Page:', JSON.stringify(consumableData, null, 2));
         
-        if (response.success) {
-          setConsumables(response.data.items);
-          setTotalItems(response.data.total);
-          setTotalPages(response.data.total_pages);
-          
-          // 初始化数量状态
-          const initialQuantities: Record<string, number> = {};
-          response.data.items.forEach(item => {
-            initialQuantities[item.id] = 1;
-          });
-          setQuantities(initialQuantities);
-        } else {
-          setError(t('error.failedToLoad'));
-        }
+        setConsumables(consumableData.items);
+        setTotalItems(consumableData.total);
+        setTotalPages(consumableData.total_pages);
+        setCurrentPage(consumableData.page);
+        setFilterOptions(consumableData.filterOptions);
+        
+        // 初始化数量状态
+        const initialQuantities: Record<string, number> = {};
+        consumableData.items.forEach(item => {
+          initialQuantities[item.id] = 1;
+        });
+        setQuantities(initialQuantities);
+
       } catch (err) {
+        const errorMessage = (err instanceof Error) ? err.message : t('error.systemError');
         console.error('Failed to fetch consumables:', err);
-        setError(t('error.systemError'));
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -131,7 +138,7 @@ const ConsumablesPage: React.FC = () => {
     
     fetchConsumables();
   }, [selectedModel, selectedShape, selectedMaterial, selectedThickness, 
-      selectedWeight, selectedWidth, selectedLength, currentPage, userRegion, t]);
+      selectedWeight, selectedWidth, selectedLength, currentPage, userRegion, t, searchParams]);
   
   // 获取购物车数据
   useEffect(() => {
@@ -254,11 +261,6 @@ const ConsumablesPage: React.FC = () => {
     setSelectedModel(event.target.value);
   };
   
-  // 处理单位变更
-  const handleUnitChange = (value: string) => {
-    setSelectedUnit(value);
-  };
-  
   // 处理形状变更
   const handleShapeChange = (value: string) => {
     setSelectedShape(value);
@@ -292,7 +294,6 @@ const ConsumablesPage: React.FC = () => {
   // 重置筛选
   const handleResetFilters = () => {
     setSelectedModel('all');
-    setSelectedUnit('metric');
     setSelectedShape('pillow');
     setSelectedMaterial('hdpe');
     setSelectedThickness('all');
@@ -385,7 +386,14 @@ const ConsumablesPage: React.FC = () => {
   }
   
   // 获取筛选选项
-  const { shapes, materials, models, thicknesses, weights, widths, lengths, modelExplodedViews } = consumableOptions;
+  const shapes = filterOptions?.shapes || [];
+  const materials = filterOptions?.materials || [];
+  const models = filterOptions?.models || [];
+  const thicknesses = filterOptions?.thicknesses || [];
+  const weights = filterOptions?.weights || [];
+  const widths = filterOptions?.widths || [];
+  const lengths = filterOptions?.lengths || [];
+  const modelExplodedViews = filterOptions?.modelExplodedViews || {};
   
   return (
     <div className="consumables-page">
@@ -407,24 +415,6 @@ const ConsumablesPage: React.FC = () => {
                 ))}
               </select>
               <button className="btn-help" onClick={() => setShowModelUsage(!showModelUsage)}>?</button>
-            </div>
-            
-            <div className="filter-group">
-              <label>{t('filter.units')}:</label>
-              <div className="unit-selector">
-                <button 
-                  className={`unit-btn ${selectedUnit === 'metric' ? 'active' : ''}`}
-                  onClick={() => handleUnitChange('metric')}
-                >
-                  {t('units.metric', 'Metric')}
-                </button>
-                <button 
-                  className={`unit-btn ${selectedUnit === 'imperial' ? 'active' : ''}`}
-                  onClick={() => handleUnitChange('imperial')}
-                >
-                  {t('units.imperial', 'Imperial')}
-                </button>
-              </div>
             </div>
           </div>
           
@@ -725,9 +715,6 @@ const ConsumablesPage: React.FC = () => {
               <p><strong>Material:</strong> {activeItem.specs.material}</p>
               <p><strong>Shape:</strong> {activeItem.specs.shape}</p>
               <p><strong>Thickness (um/gsm):</strong> {activeItem.specs.thickness || 'N/A'}</p>
-              <p><strong>Thickness (mil/#):</strong> {selectedUnit === 'imperial' ? 
-                (parseFloat(activeItem.specs.thickness || '0') * 0.03937).toFixed(3) + ' mil' : 
-                (activeItem.specs.thickness || 'N/A')}</p>
               <p><strong>Width (cm):</strong> {(parseFloat(activeItem.specs.width || '0') / 10).toFixed(1)}</p>
               <p><strong>Width (inch):</strong> {(parseFloat(activeItem.specs.width || '0') / 25.4).toFixed(2)}</p>
               <p><strong>Length (cm):</strong> {(parseFloat(activeItem.specs.length || '0') / 10).toFixed(1)}</p>
@@ -735,7 +722,6 @@ const ConsumablesPage: React.FC = () => {
               {activeItem.specs.rollLength && (
                 <>
                   <p><strong>Roll Length (m):</strong> {activeItem.specs.rollLength}</p>
-                  <p><strong>Roll Length (ft):</strong> {(parseFloat(activeItem.specs.rollLength || '0') * 3.28084).toFixed(0)}</p>
                 </>
               )}
               <p><strong>Compatible With:</strong> {String(activeItem.specs.compatibility)}</p>

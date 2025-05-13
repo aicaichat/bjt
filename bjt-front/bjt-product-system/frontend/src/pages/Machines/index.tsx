@@ -9,10 +9,11 @@ import { useTranslation } from 'react-i18next';
 
 // 导入API服务
 import machinesService from '../../services/machinesService';
-import { MachineProduct } from '../../types/machines';
+import { MachineProduct, MachineListData, MachineAccessory, MachinePart, MachinePartListData } from '../../types/machines';
 import { useMockData, DEFAULT_REGION } from '../../config/env';
 import { REGIONS, getDefaultVoltageByRegion, getStockStatus, getCurrencySymbol } from '../../config/constants';
 import { safeToLocaleString } from '../../utils/priceUtils';
+import { delay } from '../../utils/delay';
 
 import './Machines.css';
 import './accessibility.css';
@@ -21,13 +22,13 @@ const { Option } = Select;
 const { TabPane } = Tabs;
 
 const MachinesPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { addItem } = useCart();
   
   // 产品和过滤相关状态
-  const [machines, setMachines] = useState<MachineProduct[]>([]);
+  const [machines, setMachines] = useState<MachinePart[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<string>('all');
@@ -43,14 +44,14 @@ const MachinesPage: React.FC = () => {
   const [cartCount, setCartCount] = useState<number>(0);
   
   // 配件相关状态
-  const [accessories, setAccessories] = useState<any[]>([]);
+  const [accessories, setAccessories] = useState<MachineAccessory[]>([]);
   const [accessoriesLoading, setAccessoriesLoading] = useState<boolean>(false);
   const [selectedAccessories, setSelectedAccessories] = useState<Record<string, string>>({});
   const [selectedAccessoryNames, setSelectedAccessoryNames] = useState<Record<string, string>>({});
-  const [level2Accessories, setLevel2Accessories] = useState<any[]>([]);
-  const [level3Accessories, setLevel3Accessories] = useState<any[]>([]);
-  const [level4Accessories, setLevel4Accessories] = useState<any[]>([]);
-  const [level5Accessories, setLevel5Accessories] = useState<any[]>([]);
+  const [level2Accessories, setLevel2Accessories] = useState<MachineAccessory[]>([]);
+  const [level3Accessories, setLevel3Accessories] = useState<MachineAccessory[]>([]);
+  const [level4Accessories, setLevel4Accessories] = useState<MachineAccessory[]>([]);
+  const [level5Accessories, setLevel5Accessories] = useState<MachineAccessory[]>([]);
   const [level2Loading, setLevel2Loading] = useState<boolean>(false);
   const [level3Loading, setLevel3Loading] = useState<boolean>(false);
   const [level4Loading, setLevel4Loading] = useState<boolean>(false);
@@ -65,6 +66,18 @@ const MachinesPage: React.FC = () => {
   // 修改默认视图为表格模式
   const [viewMode, setViewMode] = useState<'card' | 'table'>('table');
   
+  const currentLanguage = i18n.language.startsWith('zh') ? 'zh' : 'en';
+
+  const getMachineName = (machine: MachinePart): string => {
+    const name = currentLanguage === 'zh' ? machine.name_zh : machine.name_en;
+    return name || machine.model || 'N/A';
+  };
+
+  const getMachineDescription = (machine: MachinePart): string => {
+    const desc = currentLanguage === 'zh' ? machine.model_description_zh : machine.model_description_en;
+    return desc || '';
+  };
+
   // 从API获取设备列表
   useEffect(() => {
     const fetchMachines = async () => {
@@ -72,32 +85,42 @@ const MachinesPage: React.FC = () => {
         setLoading(true);
         setError(null);
         
-        const response = await machinesService.getMachines({
+        // Fetch MachinePartListData object for Product Line 1
+        const machineListData: MachinePartListData = await machinesService.getMachines({
           region: userRegion,
-          lang: 'zh'
+          product_line_id: 1 // Filter for Product Line 1
         });
-        
-        if (response.success) {
-          setMachines(response.data.items);
-          
-          // 初始化数量状态
+      
+        // Check if data and items exist
+        if (machineListData && Array.isArray(machineListData.items)) {
+          const machinesArray = machineListData.items;
+          setMachines(machinesArray);
           const initialQuantities: Record<string, number> = {};
-          response.data.items.forEach(machine => {
-            initialQuantities[machine.id] = 1;
+          // Iterate over MachinePart[] from items property
+          machinesArray.forEach((machine: MachinePart) => { 
+            initialQuantities[machine.id.toString()] = 1;
           });
           setQuantities(initialQuantities);
           
-          // 如果有数据，默认选中第一个机器
-          if (response.data.items.length > 0) {
-            setSelectedMachine(response.data.items[0].id);
+          if (machinesArray.length > 0) {
+            setSelectedMachine(machinesArray[0].id.toString());
+            // Potentially set pagination state here if you add pagination controls
+            // setTotalMachines(machineListData.total);
+            // setCurrentPage(machineListData.page);
+            // setTotalPages(machineListData.total_pages);
           }
         } else {
-          setError(t('errors.failedToLoadMachines'));
-          message.error(t('errors.failedToLoadMachines'));
+          // Handle the case where data or items is not as expected
+          console.warn('Received unexpected data structure from getMachines:', machineListData);
+          setMachines([]); // Set to empty array to avoid further errors
+          setQuantities({});
+          // Optionally set an error state here if appropriate
+          // setError(t('errors.invalidData')); 
         }
-      } catch (err) {
-        setError(t('errors.systemError'));
-        message.error(t('errors.systemError'));
+
+      } catch (err: any) {
+        setError(err.message || t('errors.systemError'));
+        message.error(err.message || t('errors.systemError'));
         console.error('Failed to fetch machines:', err);
       } finally {
         setLoading(false);
@@ -105,20 +128,20 @@ const MachinesPage: React.FC = () => {
     };
     
     fetchMachines();
-  }, [userRegion, t]);
+  }, [userRegion, t, i18n.language]);
   
   // 过滤产品
   const filteredMachines = React.useMemo(() => {
     if (filterType === 'all') {
       return machines;
     }
-    
     return machines.filter(machine => {
-      // 根据实际数据结构调整过滤逻辑
-      return machine.model.toLowerCase().includes(filterType) || 
-             machine.name.toLowerCase().includes(filterType);
+      const name = getMachineName(machine).toLowerCase();
+      const identifier = machine.part_number.toLowerCase();
+      return identifier.includes(filterType.toLowerCase()) || 
+             name.includes(filterType.toLowerCase());
     });
-  }, [machines, filterType]);
+  }, [machines, filterType, currentLanguage]);
   
   // 格式化日期
   const formatDate = () => {
@@ -134,9 +157,9 @@ const MachinesPage: React.FC = () => {
   };
   
   // 获取区域库存
-  const getRegionInventory = (product: MachineProduct, region: string): number => {
-    const regionInventory = product.inventory.find(inv => inv.region === region);
-    return regionInventory ? regionInventory.amount : 0;
+  const getRegionInventory = (product: MachinePart, region: string): number => {
+    const regionInventory = product.inventory?.find(inv => inv.region === region);
+    return regionInventory ? regionInventory.quantity : 0;
   };
   
   // 处理数量变更
@@ -195,85 +218,131 @@ const MachinesPage: React.FC = () => {
   };
   
   // 添加到购物车
-  const handleAddToCart = async (product: MachineProduct) => {
+  const handleAddToCart = async (product: MachinePart | MachineAccessory, productType: 'machine' | 'accessory' = 'machine') => {
     try {
-      const quantity = quantities[product.id] || 1;
-      
-      // 调用API将产品添加到购物车
-      const response = await machinesService.addToCart({
-        product_id: product.id,
-        product_type: 'machine',
-        quantity: quantity,
-        voltage: selectedVoltage,
-        properties: { 
-          ...product.specs,
+      const quantity = quantities[product.id.toString()] || 1;
+      const isMachineProduct = (p: MachinePart | MachineAccessory): p is MachinePart => productType === 'machine';
+
+      let properties: Record<string, any> = {};
+      let itemSpecs: Record<string, any> | undefined = undefined;
+
+      if (isMachineProduct(product)) {
+        properties = {
+          '料号': product.part_number,
+          '型号': product.model,
+          '电压': product.voltage,
+          '规格': product.spec,
+          '规格(英制)': product.spec_imperial,
           '选择的电压': selectedVoltage
+        };
+        itemSpecs = {
+          '料号': product.part_number,
+          '型号': product.model,
+          '电压': product.voltage,
+          '规格': product.spec,
+          '规格(英制)': product.spec_imperial,
+          '净重(kg)': product.net_weight_kg,
+        };
+      } else {
+        const partSpecs = product.parts?.[0]?.specs;
+        if (partSpecs) {
+          properties = { ...partSpecs };
+          itemSpecs = partSpecs;
         }
+      }
+
+      const cartResponse = await machinesService.addToCart({
+        product_id: product.id.toString(),
+        product_type: productType,
+        quantity: quantity,
+        voltage: productType === 'machine' ? selectedVoltage : undefined,
+        properties: properties
+      });
+
+      const productName = isMachineProduct(product) ? getMachineName(product) : product.title;
+      const productCode = isMachineProduct(product) ? product.part_number : product.model;
+      const productImage = product.image_url || '';
+      const productCategory = productType === 'machine' ? '设备' : '配件';
+      const productIdNum = typeof product.id === 'number' ? product.id : parseInt(product.id, 10);
+      
+      let price = 0;
+      let priceTiers: any[] = [];
+
+      if (isMachineProduct(product)) {
+        if (product.prices && product.prices.length > 0 && product.prices[0].tiers && product.prices[0].tiers.length > 0) {
+          price = product.prices[0].tiers[0].base_price;
+          priceTiers = product.prices[0].tiers.map(t => ({ 
+            min: t.min_quantity, 
+            max: t.max_quantity, 
+            price: t.base_price,
+            discount_rate: t.discount_rate
+          }));
+        } else {
+          price = 0; 
+          priceTiers = [];
+        }
+      } else {
+        const accessoryPrices = product.parts?.[0]?.prices;
+        if (accessoryPrices) {
+          price = accessoryPrices.base || 0;
+          priceTiers = [
+            { min: 1, max: 4, price: accessoryPrices.base },
+            { min: 5, max: 9, price: accessoryPrices.tier1 },
+            { min: 10, max: null, price: accessoryPrices.tier2 }
+          ];
+        } else {
+          price = 0;
+          priceTiers = [];
+        }
+      }
+
+      addItem({
+        id: product.id.toString(),
+        name: productName,
+        code: productCode,
+        partNumber: productCode || '',
+        image: productImage,
+        category: productCategory,
+        productId: productIdNum,
+        price: price,
+        quantity,
+        selected: true,
+        priceTiers: priceTiers,
+        properties: properties,
+        specs: itemSpecs || {}
       });
       
-      if (response.success) {
-        // 同时添加到前端购物车上下文
-        addItem({
-          id: product.id.toString(),
-          name: product.name,
-          code: product.model,
-          partNumber: product.model || '',
-          image: product.image_url,
-          category: '设备',
-          productId: Number(product.id),
-          price: product.prices ? product.prices.base : 0,
-          quantity,
-          selected: true,
-          priceTiers: [
-            {
-              min: 1,
-              max: 4,
-              price: product.prices ? product.prices.base : 0
-            },
-            {
-              min: 5,
-              max: 9,
-              price: product.prices ? product.prices.tier1 : 0
-            },
-            {
-              min: 10,
-              max: null,
-              price: product.prices ? product.prices.tier2 : 0
-            }
-          ],
-          properties: { 
-            ...product.specs,
-            '选择的电压': selectedVoltage
-          },
-          specs: {}
-        });
-        
-        // 显示通知
-        setNotificationProduct(product.name);
-        setNotificationQuantity(quantity);
-        setShowNotification(true);
-        
-        // 延迟关闭通知
-        setTimeout(hideCartNotification, 3000);
-        
-        message.success(t('messages.addedToCart'));
-      } else {
-        message.error(t('errors.failedToAddToCart'));
-      }
-    } catch (err) {
-      message.error(t('errors.systemError'));
+      setNotificationProduct(productName);
+      setNotificationQuantity(quantity);
+      setShowNotification(true);
+      setTimeout(hideCartNotification, 3000);
+      message.success(t('messages.addedToCart'));
+
+    } catch (err: any) {
+      message.error(err.message || t('errors.systemError'));
       console.error('Error adding to cart:', err);
     }
   };
   
   // 处理机器选择
-  const handleMachineSelection = async (machineId: string) => {
-    // 设置选中的机器
-    setSelectedMachine(machineId);
-    
-    // 清空选中的配件
+  const handleMachineSelection = async (machineId: string | number) => {
+    const currentMachineIdStr = typeof machineId === 'number' ? machineId.toString() : machineId;
+    setSelectedMachine(currentMachineIdStr);
     setSelectedAccessories({});
     
+    // Find the selected machine object from the state to get its part_number
+    const selectedMachineObject = machines.find(m => m.id.toString() === currentMachineIdStr);
+
+    if (!selectedMachineObject) {
+      console.error(`Machine with ID ${currentMachineIdStr} not found in state.`);
+      message.error(t('errors.productNotFound'));
+      setAccessoriesLoading(false); // Ensure loading stops
+      return; // Stop execution if machine not found
+    }
+
+    const parentPartNumber = selectedMachineObject.part_number;
+    console.log(`[handleMachineSelection] Found part number: ${parentPartNumber} for machine ID: ${currentMachineIdStr}`); // Log the part number
+
     // 隐藏所有配件层级
     for (let i = 1; i <= 5; i++) {
       const accessoryDiv = document.getElementById(`accessory-level-${i}`);
@@ -286,42 +355,30 @@ const MachinesPage: React.FC = () => {
     setAccessoriesLoading(true);
     
     try {
-      // 获取所选机器的配件
-      const response = await machinesService.getMachineAccessories(machineId, {
-        level: 1
-      });
+      // Use the found parentPartNumber to fetch accessories
+      const accessoriesData = await machinesService.getMachineAccessories(parentPartNumber, { level: 1 });
       
-      if (response.success) {
-        // 更新配件列表
-        setAccessories(response.data.items);
-        
-        // 清空其他级别配件
-        setLevel2Accessories([]);
-        setLevel3Accessories([]);
-        setLevel4Accessories([]);
-        setLevel5Accessories([]);
-        
-        // 设置上下文消息
-        const contextMessage = document.getElementById('level1-context-message');
-        if (contextMessage) {
-          const machine = machines.find(m => m.id === machineId);
-          contextMessage.textContent = `${t('machines.accessory.selectFor')} ${machine?.name || ''}`;
-        }
-        
-        // 显示一级配件界面
-        const level1Div = document.getElementById('accessory-level-1');
-        if (level1Div && response.data.items.length > 0) {
-          level1Div.style.display = 'block';
-        } else if (level1Div) {
-          // 如果没有配件，显示一条消息
-          message.info(t('messages.noAccessoriesAvailable'));
-        }
-      } else {
-        message.error(t('errors.failedToLoadAccessories'));
+      setAccessories(accessoriesData.items);
+      setLevel2Accessories([]);
+      setLevel3Accessories([]);
+      setLevel4Accessories([]);
+      setLevel5Accessories([]);
+      
+      const contextMessage = document.getElementById('level1-context-message');
+      if (contextMessage) {
+        const machine = machines.find(m => m.id.toString() === currentMachineIdStr);
+        contextMessage.textContent = `${t('machines.accessory.selectFor')} ${machine ? getMachineName(machine) : ''}`;
       }
-    } catch (err) {
-      console.error('Failed to fetch accessories:', err);
-      message.error(t('errors.systemError'));
+      
+      const level1Div = document.getElementById('accessory-level-1');
+      if (level1Div && accessoriesData.items.length > 0) {
+        level1Div.style.display = 'block';
+      } else if (level1Div) {
+        message.info(t('messages.noAccessoriesAvailable'));
+      }
+    } catch (err: any) {
+      console.error('Failed to fetch accessories for part number:', parentPartNumber, err);
+      message.error(err.message || t('errors.systemError'));
     } finally {
       setAccessoriesLoading(false);
     }
@@ -365,158 +422,136 @@ const MachinesPage: React.FC = () => {
         </thead>
         <tbody>
           {filteredMachines.map(machine => (
-            <tr key={machine.id} tabIndex={0} aria-selected={selectedMachine === machine.id}>
+            <tr key={machine.id} tabIndex={0} aria-selected={selectedMachine === machine.id.toString()}>
               <td className="selection-cell">
                 <input 
                   type="radio" 
                   name="machine" 
                   id={`machine-select-${machine.id}`}
-                  checked={selectedMachine === machine.id}
+                  checked={selectedMachine === machine.id.toString()}
                   onChange={() => handleMachineSelection(machine.id)}
-                  aria-label={`${t('machines.tableHeaders.selection')} ${machine.name}`}
+                  aria-label={`${t('machines.tableHeaders.selection')} ${getMachineName(machine)}`}
                 />
                 <label htmlFor={`machine-select-${machine.id}`} className="sr-only">
-                  {t('machines.tableHeaders.selection')} {machine.name}
+                  {t('machines.tableHeaders.selection')} {getMachineName(machine)}
                 </label>
               </td>
               <td className="machine-image-cell">
                 <img 
                   className="machine-image" 
-                  src={machine.image_url} 
-                  alt={machine.name} 
+                  src={machine.image_url || '/images/placeholder.jpg'}
+                  alt={getMachineName(machine)}
                   aria-labelledby={`machine-name-${machine.id}`}
                 />
               </td>
               <td className="machine-info-cell">
                 <div className="machine-header">
-                  <span className="machine-code">{machine.model}</span>
-                  <span className="machine-name" id={`machine-name-${machine.id}`}>{machine.name}</span>
-                  <span className="machine-model">{machine.subtitle}</span>
+                  <span className="machine-code" title="Part Number">{machine.part_number}</span>
+                  <span className="machine-name" id={`machine-name-${machine.id}`}>{getMachineName(machine)}</span>
+                  <span className="machine-model" title="Model">({machine.model})</span>
+                  <span className="machine-type">{machine.model_type || 'N/A'}</span>
                 </div>
                 
                 <div className="accessory-specs-container">
-                  {machine.specs && Object.entries(machine.specs).map(([key, value]: [string, any]) => (
-                    <span className="accessory-spec-item" key={key}>
-                      <strong>{key}:</strong> {String(value)}
-                    </span>
-                  ))}
+                  <span className="accessory-spec-item"><strong>电压:</strong> {machine.voltage || 'N/A'}</span>
+                  <span className="accessory-spec-item"><strong>规格:</strong> {machine.spec || 'N/A'}</span>
                 </div>
                 
                 <div className="more-info-section">
                   <button 
                     className="specification-link" 
-                    onClick={() => handleViewDetails(machine.id)}
-                    aria-label={`${t('buttons.viewDetails')} ${machine.name}`}
+                    onClick={() => handleViewDetails(machine.id.toString())}
+                    aria-label={`${t('buttons.viewDetails')} ${getMachineName(machine)}`}
                   >
                     规格详情
                   </button>
                   <button 
                     className="more-info-link" 
-                    onClick={() => handleViewDetails(machine.id)}
-                    aria-label={`${t('buttons.viewDetails')} ${machine.name}`}
+                    onClick={() => handleViewDetails(machine.id.toString())}
+                    aria-label={`${t('buttons.viewDetails')} ${getMachineName(machine)}`}
                   >
                     更多信息
                   </button>
+                  {machine.model_explosion_diagram_pdf && (
+                    <a
+                      href={machine.model_explosion_diagram_pdf}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="pdf-download-link"
+                      aria-label={`${t('buttons.downloadPdf')} ${getMachineName(machine)}`}
+                    >
+                      PDF资料下载
+                    </a>
+                  )}
                 </div>
               </td>
               <td className="specs-cell">
-                <table className="specs-table" aria-label={`${t('machines.tableHeaders.specs')} ${machine.name}`}>
+                <table className="specs-table" aria-label={`${t('machines.tableHeaders.specs')} ${getMachineName(machine)}`}>
                   <tbody>
-                    {machine.specs && Object.entries(machine.specs).map(([key, value]: [string, any]) => (
-                      <tr key={key} className="specs-row">
-                        <th className="specs-label" scope="row">{key}:</th>
-                        <td className="specs-value">{String(value)}</td>
-                      </tr>
-                    ))}
+                    <tr className="specs-row"><th className="specs-label" scope="row">料号:</th><td className="specs-value">{machine.part_number}</td></tr>
+                    <tr className="specs-row"><th className="specs-label" scope="row">型号:</th><td className="specs-value">{machine.model}</td></tr>
+                    <tr className="specs-row"><th className="specs-label" scope="row">电压:</th><td className="specs-value">{machine.voltage || 'N/A'}</td></tr>
+                    <tr className="specs-row"><th className="specs-label" scope="row">规格:</th><td className="specs-value">{machine.spec || 'N/A'}</td></tr>
+                    <tr className="specs-row"><th className="specs-label" scope="row">规格(英制):</th><td className="specs-value">{machine.spec_imperial || 'N/A'}</td></tr>
+                    <tr className="specs-row"><th className="specs-label" scope="row">包装(cm):</th><td className="specs-value">{machine.package_size_cm || 'N/A'}</td></tr>
+                    <tr className="specs-row"><th className="specs-label" scope="row">净重(kg):</th><td className="specs-value">{machine.net_weight_kg !== null && machine.net_weight_kg !== undefined ? machine.net_weight_kg : 'N/A'}</td></tr>
+                    <tr className="specs-row"><th className="specs-label" scope="row">净重(lbs):</th><td className="specs-value">{machine.net_weight_lbs !== null && machine.net_weight_lbs !== undefined ? machine.net_weight_lbs : 'N/A'}</td></tr>
+                    <tr className="specs-row"><th className="specs-label" scope="row">每箱数量:</th><td className="specs-value">{machine.pcs_per_box !== null && machine.pcs_per_box !== undefined ? machine.pcs_per_box : 'N/A'}</td></tr>
+                    <tr className="specs-row"><th className="specs-label" scope="row">托盘尺寸(cm):</th><td className="specs-value">{machine.pallet_size_cm || 'N/A'}</td></tr>
+                    <tr className="specs-row"><th className="specs-label" scope="row">托盘尺寸(inch):</th><td className="specs-value">{machine.pallet_size_inch || 'N/A'}</td></tr>
+                    <tr className="specs-row"><th className="specs-label" scope="row">每托盘数量:</th><td className="specs-value">{machine.pcs_per_pallet !== null && machine.pcs_per_pallet !== undefined ? machine.pcs_per_pallet : 'N/A'}</td></tr>
+                    <tr className="specs-row"><th className="specs-label" scope="row">托盘高度(cm):</th><td className="specs-value">{machine.pallet_height_cm !== null && machine.pallet_height_cm !== undefined ? machine.pallet_height_cm : 'N/A'}</td></tr>
+                    <tr className="specs-row"><th className="specs-label" scope="row">托盘高度(inch):</th><td className="specs-value">{machine.pallet_height_inch !== null && machine.pallet_height_inch !== undefined ? machine.pallet_height_inch : 'N/A'}</td></tr>
+                    <tr className="specs-row"><th className="specs-label" scope="row">托盘毛重(kg):</th><td className="specs-value">{machine.pallet_gross_weight_kg !== null && machine.pallet_gross_weight_kg !== undefined ? machine.pallet_gross_weight_kg : 'N/A'}</td></tr>
+                    <tr className="specs-row"><th className="specs-label" scope="row">托盘毛重(lbs):</th><td className="specs-value">{machine.pallet_gross_weight_lbs !== null && machine.pallet_gross_weight_lbs !== undefined ? machine.pallet_gross_weight_lbs : 'N/A'}</td></tr>
                   </tbody>
                 </table>
               </td>
               <td className="price-cell">
-                <div className="price-tiers" aria-label={`${t('machines.tableHeaders.price')} ${machine.name}`}>
-                  <div className="price-title" id={`price-title-${machine.id}`}>{t('machines.tableHeaders.price')}</div>
-                  {machine.prices && (
-                    <>
-                      <div className="price-tier">
-                        <span className="price-range">单价 (1-4台)</span>
-                        <span className="price-value">{getCurrencySymbol(userRegion)}{formatPrice(machine.prices.base)}</span>
+                {(machine.prices && machine.prices.length > 0 && machine.prices[0].tiers && machine.prices[0].tiers.length > 0) ? (
+                  <div className="price-tiers" aria-label={`${t('machines.tableHeaders.price')} ${getMachineName(machine)}`}>
+                    <div className="price-title" id={`price-title-${machine.id}`}>
+                      {t('machines.tableHeaders.price')} ({machine.prices[0].currency})
+                    </div>
+                    {machine.prices[0].tiers.map((tier, index) => (
+                      <div className="price-tier" key={index}>
+                        <span className="price-range">{`数量 ${tier.min_quantity}${tier.max_quantity ? '-' + tier.max_quantity : '+'}` }</span>
+                        <span className="price-value">
+                          {getCurrencySymbol(machine.prices[0].region)}{formatPrice(tier.base_price)}
+                        </span>
                       </div>
-                      <div className="price-tier">
-                        <span className="price-range">批发价 (5-9台)</span>
-                        <span className="price-value">{getCurrencySymbol(userRegion)}{formatPrice(machine.prices.tier1)}</span>
-                      </div>
-                      <div className="price-tier">
-                        <span className="price-range">批发价 (10+台)</span>
-                        <span className="price-value">{getCurrencySymbol(userRegion)}{formatPrice(machine.prices.tier2)}</span>
-                      </div>
-                    </>
-                  )}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <span>{t('machines.priceInDetailView', '-')}</span>
+                )}
               </td>
               {isSales ? (
                 <td className="inventory-cell">
                   <div className="inventory-tiers" aria-labelledby={`inventory-title-${machine.id}`}>
                     <div className="inventory-title" id={`inventory-title-${machine.id}`}>{t('machines.tableHeaders.inventory')}</div>
-                    <div className="inventory-region">
-                      <span className="region-label">
-                        {REGIONS.CN.nameCn}
-                      </span>
-                      <span>
-                        <span 
-                          className={`region-value ${getStockStatus(getRegionInventory(machine, 'CN')).className}`}
-                          aria-label={`${REGIONS.CN.nameCn} ${getRegionInventory(machine, 'CN')}`}
-                        >
-                          {getRegionInventory(machine, 'CN')}
+                    {(Object.keys(REGIONS) as Array<keyof typeof REGIONS>).map((regionKey) => (
+                      <div className="inventory-region" key={regionKey}>
+                        <span className="region-label">{REGIONS[regionKey].nameCn}</span>
+                        <span>
+                          <span 
+                            className={`region-value ${getStockStatus(getRegionInventory(machine, regionKey)).className}`}
+                            aria-label={`${REGIONS[regionKey].nameCn} ${getRegionInventory(machine, regionKey)}`}
+                          >
+                            {getRegionInventory(machine, regionKey)}
+                          </span>
                         </span>
-                      </span>
-                    </div>
-                    <div className="inventory-region">
-                      <span className="region-label">
-                        {REGIONS.NA.nameCn}
-                      </span>
-                      <span>
-                        <span 
-                          className={`region-value ${getStockStatus(getRegionInventory(machine, 'NA')).className}`}
-                          aria-label={`${REGIONS.NA.nameCn} ${getRegionInventory(machine, 'NA')}`}
-                        >
-                          {getRegionInventory(machine, 'NA')}
-                        </span>
-                      </span>
-                    </div>
-                    <div className="inventory-region">
-                      <span className="region-label">
-                        {REGIONS.EU.nameCn}
-                      </span>
-                      <span>
-                        <span 
-                          className={`region-value ${getStockStatus(getRegionInventory(machine, 'EU')).className}`}
-                          aria-label={`${REGIONS.EU.nameCn} ${getRegionInventory(machine, 'EU')}`}
-                        >
-                          {getRegionInventory(machine, 'EU')}
-                        </span>
-                      </span>
-                    </div>
-                    <div className="inventory-region">
-                      <span className="region-label">
-                        {REGIONS.AU.nameCn}
-                      </span>
-                      <span>
-                        <span 
-                          className={`region-value ${getStockStatus(getRegionInventory(machine, 'AU')).className}`}
-                          aria-label={`${REGIONS.AU.nameCn} ${getRegionInventory(machine, 'AU')}`}
-                        >
-                          {getRegionInventory(machine, 'AU')}
-                        </span>
-                      </span>
-                    </div>
+                      </div>
+                    ))}
                   </div>
                 </td>
               ) : null}
               <td className="actions-cell">
-                <div className="quantity-selector" role="group" aria-label={`${t('machines.tableHeaders.quantity')} ${machine.name}`}>
+                <div className="quantity-selector" role="group" aria-label={`${t('machines.tableHeaders.quantity')} ${getMachineName(machine)}`}>
                   <button 
                     className="qty-btn" 
-                    onClick={() => handleQuantityChange(machine.id, (quantities[machine.id] || 1) - 1)}
-                    disabled={(quantities[machine.id] || 1) <= 1}
+                    onClick={() => handleQuantityChange(machine.id.toString(), (quantities[machine.id.toString()] || 1) - 1)}
+                    disabled={(quantities[machine.id.toString()] || 1) <= 1}
                     aria-label={t('decrease quantity')}
                   >
                     <MinusOutlined aria-hidden="true" />
@@ -528,24 +563,24 @@ const MachinesPage: React.FC = () => {
                     id={`quantity-input-${machine.id}`}
                     type="number"
                     min="1"
-                    value={quantities[machine.id] || 1} 
-                    onChange={(e) => handleQuantityChange(machine.id, parseInt(e.target.value) || 1)}
+                    value={quantities[machine.id.toString()] || 1} 
+                    onChange={(e) => handleQuantityChange(machine.id.toString(), parseInt(e.target.value) || 1)}
                     className="quantity-input"
-                    aria-label={`${t('machines.tableHeaders.quantity')} ${machine.name}`}
+                    aria-label={`${t('machines.tableHeaders.quantity')} ${getMachineName(machine)}`}
                   />
                   <button 
                     className="qty-btn" 
-                    onClick={() => handleQuantityChange(machine.id, (quantities[machine.id] || 1) + 1)}
+                    onClick={() => handleQuantityChange(machine.id.toString(), (quantities[machine.id.toString()] || 1) + 1)}
                     aria-label={t('increase quantity')}
                   >
                     <PlusOutlined aria-hidden="true" />
                   </button>
                 </div>
                 <button 
-                  onClick={() => handleAddToCart(machine)} 
+                  onClick={() => handleAddToCart(machine, 'machine')}
                   className="btn-add"
                   disabled={getRegionInventory(machine, userRegion) <= 0}
-                  aria-label={`${t('buttons.addToCart')} ${machine.name}`}
+                  aria-label={`${t('buttons.addToCart')} ${getMachineName(machine)}`}
                 >
                   <ShoppingCartOutlined aria-hidden="true" /> {t('buttons.addToCart')}
                 </button>
@@ -559,132 +594,114 @@ const MachinesPage: React.FC = () => {
 
   // 处理配件选择
   const handleAccessorySelection = async (level: number, accessoryId: string, accessoryName: string) => {
-    // 更新选中配件
     setSelectedAccessories(prev => ({
       ...prev,
       [`level${level}`]: accessoryId
     }));
-    
-    // 存储当前选中的配件名称，用于显示在下一级上下文中
     setSelectedAccessoryNames(prev => ({
       ...prev,
       [`level${level}`]: accessoryName
     }));
-    
-    // 确保所选配件层级显示，其他更高级别隐藏
+
     for (let i = 1; i <= 5; i++) {
       const accessoryDiv = document.getElementById(`accessory-level-${i}`);
       if (accessoryDiv) {
         if (i <= level) {
-          accessoryDiv.style.display = 'block';
+          // accessoryDiv.style.display = 'block'; // Keep current level visible
         } else if (i === level + 1) {
-          // 下一级将在API返回后显示
+          // Next level will be shown after API call, hide for now to prevent old data flashing
+          accessoryDiv.style.display = 'none'; 
         } else {
           accessoryDiv.style.display = 'none';
         }
       }
     }
     
-    // 清空已选的更高级别配件
     setSelectedAccessories(prev => {
       const newState = { ...prev };
       for (let i = level + 1; i <= 5; i++) {
         if (newState[`level${i}`]) delete newState[`level${i}`];
+        // Also clear UI for higher levels that might have been manually opened
+        const higherLevelDiv = document.getElementById(`accessory-level-${i}`);
+        if (higherLevelDiv) higherLevelDiv.style.display = 'none';
       }
       return newState;
     });
     
-    // 更新上下文消息
     const nextLevel = level + 1;
     if (nextLevel <= 5) {
       const contextMessage = document.getElementById(`level${nextLevel}-context-message`);
       if (contextMessage) {
-        // 构建上下文消息，显示选择路径
         let contextText = `${accessoryName} 的适配配件`;
-        
-        // 添加配件层级导航提示
-        if (level > 1) {
-          contextText = `${level}级配件 ${accessoryName} 的下级适配件`;
-        }
-        
+        if (level > 1) contextText = `${level}级配件 ${accessoryName} 的下级适配件`;
         contextMessage.textContent = contextText;
       }
     }
-    
+
+    // --- Find the part_number of the selected accessory --- START
+    let parentPartNumber: string | undefined;
+    let currentLevelAccessories: MachineAccessory[] = [];
+
+    if (level === 1) currentLevelAccessories = accessories;
+    else if (level === 2) currentLevelAccessories = level2Accessories;
+    else if (level === 3) currentLevelAccessories = level3Accessories;
+    else if (level === 4) currentLevelAccessories = level4Accessories;
+    // Level 5 doesn't need to fetch children
+
+    const selectedAccessoryObject = currentLevelAccessories.find(acc => acc.id === accessoryId);
+
+    if (selectedAccessoryObject && selectedAccessoryObject.parts.length > 0) {
+      // Use the part_number of the first part as the identifier for fetching children
+      parentPartNumber = selectedAccessoryObject.parts[0].part_number;
+      console.log(`[handleAccessorySelection] Found parentPartNumber: ${parentPartNumber} for accessoryId: ${accessoryId}`);
+    } else {
+      console.error(`Could not find selected accessory object or its parts for ID: ${accessoryId} at level ${level}`);
+      message.error(t('errors.productNotFound'));
+      // Optionally reset loading states if applicable
+      return; // Stop if we can't find the part number
+    }
+    // --- Find the part_number of the selected accessory --- END
+
+    let setLoadingState: React.Dispatch<React.SetStateAction<boolean>> = () => {};
+    if (level === 1) setLoadingState = setLevel2Loading; 
+    else if (level === 2) setLoadingState = setLevel3Loading;
+    else if (level === 3) setLoadingState = setLevel4Loading;
+    else if (level === 4) setLoadingState = setLevel5Loading;
+
     try {
-      // 根据 level 设置不同的 loading 状态
-      switch (level) {
-        case 1: setLevel2Loading(true); break;
-        case 2: setLevel3Loading(true); break;
-        case 3: setLevel4Loading(true); break;
-        case 4: setLevel5Loading(true); break;
-      }
-      
-      // 调用API获取下一级配件
-      const response = await machinesService.getAccessories({
-        parent_id: accessoryId,
+      setLoadingState(true);
+      // Use the found parentPartNumber for the API call
+      const accessoriesData = await machinesService.getAccessories({
+        parent_id: parentPartNumber, // Pass the correct part_number
         machine_id: selectedMachine,
         level: level + 1
       });
-      
-      if (response.success) {
-        // 更新对应的配件列表
-        switch (level) {
-          case 1:
-            setLevel2Accessories(response.data.items);
-            // 如果有配件，显示下一级界面
-            if (response.data.items.length > 0) {
-              const level2Div = document.getElementById('accessory-level-2');
-              if (level2Div) level2Div.style.display = 'block';
-            } else {
-              message.info(`${accessoryName} 没有下级配件`);
-            }
-            break;
-          case 2:
-            setLevel3Accessories(response.data.items);
-            // 如果有配件，显示下一级界面
-            if (response.data.items.length > 0) {
-              const level3Div = document.getElementById('accessory-level-3');
-              if (level3Div) level3Div.style.display = 'block';
-            } else {
-              message.info(`${accessoryName} 没有下级配件`);
-            }
-            break;
-          case 3:
-            setLevel4Accessories(response.data.items);
-            // 如果有配件，显示下一级界面
-            if (response.data.items.length > 0) {
-              const level4Div = document.getElementById('accessory-level-4');
-              if (level4Div) level4Div.style.display = 'block';
-            } else {
-              message.info(`${accessoryName} 没有下级配件`);
-            }
-            break;
-          case 4:
-            setLevel5Accessories(response.data.items);
-            // 如果有配件，显示下一级界面
-            if (response.data.items.length > 0) {
-              const level5Div = document.getElementById('accessory-level-5');
-              if (level5Div) level5Div.style.display = 'block';
-            } else {
-              message.info(`${accessoryName} 没有下级配件`);
-            }
-            break;
+
+      let setNextLevelAccessories: React.Dispatch<React.SetStateAction<MachineAccessory[]>> = () => {};
+      let nextLevelDivId = '';
+
+      if (level === 1) { setNextLevelAccessories = setLevel2Accessories; nextLevelDivId = 'accessory-level-2'; }
+      else if (level === 2) { setNextLevelAccessories = setLevel3Accessories; nextLevelDivId = 'accessory-level-3'; }
+      else if (level === 3) { setNextLevelAccessories = setLevel4Accessories; nextLevelDivId = 'accessory-level-4'; }
+      else if (level === 4) { setNextLevelAccessories = setLevel5Accessories; nextLevelDivId = 'accessory-level-5'; }
+
+      if (setNextLevelAccessories && nextLevelDivId) {
+        setNextLevelAccessories(accessoriesData.items);
+        const nextDiv = document.getElementById(nextLevelDivId);
+        if (nextDiv) {
+          if (accessoriesData.items.length > 0) {
+            nextDiv.style.display = 'block';
+          } else {
+            nextDiv.style.display = 'none'; // Hide if no items
+            message.info(`${accessoryName} 没有下级配件`);
+          }
         }
-      } else {
-        message.error('获取配件失败，请稍后重试');
       }
-    } catch (err) {
-      console.error('Failed to fetch accessories:', err);
-      message.error('系统错误，请联系管理员');
+    } catch (err: any) {
+      message.error(err.message || '获取配件失败');
+      console.error(`Failed to fetch level ${level + 1} accessories for parent part ${parentPartNumber}:`, err);
     } finally {
-      // 重置 loading 状态
-      switch (level) {
-        case 1: setLevel2Loading(false); break;
-        case 2: setLevel3Loading(false); break;
-        case 3: setLevel4Loading(false); break;
-        case 4: setLevel5Loading(false); break;
-      }
+      setLoadingState(false);
     }
   };
 
@@ -718,11 +735,9 @@ const MachinesPage: React.FC = () => {
   // 显示加载中状态
   const showLoading = () => {
     return (
-      <div className="loading-container" role="status" aria-live="polite">
-        <Spin>
-          <div className="loading-content">
-            <p>{t('loading.machines')}</p>
-          </div>
+      <div className="loading-container" style={{ textAlign: 'center', padding: '50px' }}>
+        <Spin size="large" tip={t('loading')}>
+          <div style={{ height: '50px' }} />
         </Spin>
       </div>
     );
@@ -813,7 +828,6 @@ const MachinesPage: React.FC = () => {
             </button>
           </div>
           <div className="accessory-content">
-            {/* 添加导航路径 */}
             {renderAccessoryPath(2)}
             
             {level2Loading ? (
@@ -861,7 +875,6 @@ const MachinesPage: React.FC = () => {
             </button>
           </div>
           <div className="accessory-content">
-            {/* 添加导航路径 */}
             {renderAccessoryPath(3)}
             
             {level3Loading ? (
@@ -909,7 +922,6 @@ const MachinesPage: React.FC = () => {
             </button>
           </div>
           <div className="accessory-content">
-            {/* 添加导航路径 */}
             {renderAccessoryPath(4)}
             
             {level4Loading ? (
@@ -957,7 +969,6 @@ const MachinesPage: React.FC = () => {
             </button>
           </div>
           <div className="accessory-content">
-            {/* 添加导航路径 */}
             {renderAccessoryPath(5)}
             
             {level5Loading ? (
@@ -996,90 +1007,56 @@ const MachinesPage: React.FC = () => {
     );
   };
 
-  // 渲染单个产品卡片
-  const renderProduct = (product: MachineProduct) => {
-    return (
-      <div className="product-card" key={product.id}>
-        <div className="product-inner">
-          <div className="product-header">
-            <h3>{product.name}</h3>
-            {product.subtitle && <p className="product-subtitle">{product.subtitle}</p>}
-          </div>
-          <div className="product-body">
-            <div className="product-image">
-              <img src={product.image_url} alt={product.name} />
-            </div>
-            <div className="product-specs">
-              {Object.entries(product.specs || {}).map(([key, value]: [string, any]) => (
-                <div className="spec-item" key={key}>
-                  <span className="spec-label">{key}:</span>
-                  <span className="spec-value">{String(value)}</span>
-                </div>
-              ))}
-            </div>
-            {isSales && (
-              <div className="product-inventory">
-                <div className="inventory-regions">
-                  <div className="product-inventory-title">库存状态</div>
-                  <div className="inventory-region">
-                    <span className="region-label">EU</span>
-                    <span className={`region-value ${getStockStatus(getRegionInventory(product, 'EU')).className}`}>
-                      {getRegionInventory(product, 'EU')}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   // 渲染配件部分
-  const renderAccessory = (accessory: any, level: number) => {
+  const renderAccessory = (accessory: MachineAccessory, level: number) => {
+    const accessoryPart = accessory.parts?.[0];
+    const partSpecs = accessoryPart?.specs;
+    const partPrices = accessoryPart?.prices;
+    const partInventory = accessoryPart?.inventory;
+
     return (
       <tr key={accessory.id}>
         <td className="selection-cell">
           <input 
             type="radio" 
             name={`accessory-level-${level}`}
-            checked={selectedAccessories[`level${level}`] === accessory.id}
-            onChange={() => handleAccessorySelection(level, accessory.id, accessory.name)}
+            checked={selectedAccessories[`level${level}`] === accessory.id.toString()}
+            onChange={() => handleAccessorySelection(level, accessory.id.toString(), accessory.title)}
           />
         </td>
         <td className="accessory-image-cell">
           <img 
             className="accessory-image" 
-            src={accessory.image_url} 
-            alt={accessory.name} 
+            src={accessory.image_url || '/images/placeholder.jpg'} 
+            alt={accessory.title}
           />
         </td>
         <td className="accessory-info-cell">
           <div className="accessory-header">
-            <span className="accessory-code">{accessory.code}</span>
-            <span className="accessory-name">{accessory.name}</span>
+            <span className="accessory-code">{accessory.model}</span>
+            <span className="accessory-name">{accessory.title}</span>
           </div>
           <div className="accessory-specs-container">
-            {accessory.specs && Object.entries(accessory.specs).map(([key, value]: [string, any]) => (
+            {partSpecs && Object.keys(partSpecs).length > 0 ? Object.entries(partSpecs).map(([key, value]: [string, any]) => (
               <span className="accessory-spec-item" key={key}>
                 <strong>{key}:</strong> {String(value)}
               </span>
-            ))}
+            )) : <p>{t('machines.specsNotAvailable')}</p>}
           </div>
           <div className="more-info-section">
-            <a className="specification-link" onClick={() => handleViewAccessory(accessory.id)}>规格详情</a>
+            {/* <a className="specification-link" onClick={() => handleViewAccessory(accessory.id)}>规格详情</a> */}
+            {/* Placeholder: Implement accessory detail view or PDF link if available */}
           </div>
         </td>
         {isSales ? (
           <td className="inventory-cell">
             <div className="inventory-status">
               <div className="inventory-regions">
-                {['CN', 'NA', 'EU', 'AU'].map((region: string) => (
-                  <div className="inventory-region" key={region}>
-                    <span className="region-label">{REGIONS[region as keyof typeof REGIONS].nameCn}</span>
-                    <span className={`region-value ${getStockStatus(accessory.inventory ? accessory.inventory.find((i: any) => i.region === region)?.amount || 0 : 0).className}`}>
-                      {accessory.inventory ? accessory.inventory.find((i: any) => i.region === region)?.amount || 0 : 0}
+                {(Object.keys(REGIONS) as Array<keyof typeof REGIONS>).map((regionKey) => (
+                  <div className="inventory-region" key={regionKey}>
+                    <span className="region-label">{REGIONS[regionKey].nameCn}</span>
+                    <span className={`region-value ${getStockStatus(partInventory?.find(i => i.region === regionKey)?.amount || 0).className}`}>
+                      {partInventory?.find(i => i.region === regionKey)?.amount || 0}
                     </span>
                   </div>
                 ))}
@@ -1091,7 +1068,7 @@ const MachinesPage: React.FC = () => {
           <div className="price-info">
             <div className="price-title">价格：</div>
             <div className="price-value">
-              {getCurrencySymbol(userRegion)}{formatPrice(accessory.price || 0)}
+              {getCurrencySymbol(userRegion)}{formatPrice(partPrices?.base || 0)}
             </div>
           </div>
         </td>
@@ -1099,27 +1076,27 @@ const MachinesPage: React.FC = () => {
           <div className="quantity-selector">
             <button 
               className="qty-btn" 
-              onClick={() => handleQuantityChange(accessory.id, (quantities[accessory.id] || 1) - 1)}
-              disabled={(quantities[accessory.id] || 1) <= 1}
+              onClick={() => handleQuantityChange(accessory.id.toString(), (quantities[accessory.id.toString()] || 1) - 1)}
+              disabled={(quantities[accessory.id.toString()] || 1) <= 1}
             >
               <MinusOutlined />
             </button>
             <input
               type="number"
               min="1"
-              value={quantities[accessory.id] || 1} 
-              onChange={(e) => handleQuantityChange(accessory.id, parseInt(e.target.value) || 1)}
+              value={quantities[accessory.id.toString()] || 1} 
+              onChange={(e) => handleQuantityChange(accessory.id.toString(), parseInt(e.target.value) || 1)}
               className="quantity-input"
             />
             <button 
               className="qty-btn"
-              onClick={() => handleQuantityChange(accessory.id, (quantities[accessory.id] || 1) + 1)}
+              onClick={() => handleQuantityChange(accessory.id.toString(), (quantities[accessory.id.toString()] || 1) + 1)}
             >
               <PlusOutlined />
             </button>
           </div>
-          <button onClick={() => handleAddToCart(accessory)} className="btn-add">
-            <ShoppingCartOutlined /> 加入购物车
+          <button onClick={() => handleAddToCart(accessory, 'accessory')} className="btn-add">
+            <ShoppingCartOutlined aria-hidden="true" /> 加入购物车
           </button>
         </td>
       </tr>

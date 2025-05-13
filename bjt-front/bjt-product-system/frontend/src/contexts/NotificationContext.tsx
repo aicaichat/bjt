@@ -1,13 +1,18 @@
 import React, { createContext, useContext, ReactNode, useState, useCallback, useEffect } from 'react';
 import './Notification.css';
 
-// 通知类型
-type NotificationType = 'success' | 'error' | 'warning' | 'info';
+// 通知类型 - Changed to enum and exported
+export enum NotificationType {
+  SUCCESS = 'success',
+  ERROR = 'error',
+  WARNING = 'warning',
+  INFO = 'info',
+}
 
 // 通知接口
 interface Notification {
   id: string;
-  type: NotificationType;
+  type: NotificationType; // Uses the enum now
   title?: string;
   message: string;
   duration?: number;
@@ -16,10 +21,10 @@ interface Notification {
 // 通知上下文接口
 interface NotificationContextType {
   notifications: Notification[];
-  success: (message: string, title?: string) => void;
-  error: (message: string, title?: string) => void;
-  warning: (message: string, title?: string) => void;
-  info: (message: string, title?: string) => void;
+  success: (message: string, title?: string) => void; // Changed return to void
+  error: (message: string, title?: string) => void;   // Changed return to void
+  warning: (message: string, title?: string) => void; // Changed return to void
+  info: (message: string, title?: string) => void;    // Changed return to void
   removeNotification: (id: string) => void;
 }
 
@@ -38,20 +43,18 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
   };
 
-  // 添加通知
-  const addNotification = useCallback((type: NotificationType, message: string, title?: string, duration?: number) => {
+  // Changed return type to void to match NotificationContextType
+  const addNotification = useCallback((type: NotificationType, message: string, title?: string, duration?: number): void => {
     const id = generateId();
     const notification: Notification = {
       id,
-      type,
+      type, // type is already NotificationType enum
       title,
       message,
       duration: duration || DEFAULT_NOTIFICATION_DURATION
     };
-
     setNotifications(prev => [...prev, notification]);
-
-    return id;
+    // No longer returning id
   }, []);
 
   // 移除通知
@@ -59,33 +62,32 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     setNotifications(prev => prev.filter(notification => notification.id !== id));
   }, []);
 
-  // 成功通知
+  // These now correctly match the void return in NotificationContextType
   const success = useCallback((message: string, title?: string) => {
-    return addNotification('success', message, title);
+    addNotification(NotificationType.SUCCESS, message, title);
   }, [addNotification]);
 
-  // 错误通知
   const error = useCallback((message: string, title?: string) => {
-    return addNotification('error', message, title);
+    addNotification(NotificationType.ERROR, message, title);
   }, [addNotification]);
 
-  // 警告通知
   const warning = useCallback((message: string, title?: string) => {
-    return addNotification('warning', message, title);
+    addNotification(NotificationType.WARNING, message, title);
   }, [addNotification]);
 
-  // 信息通知
   const info = useCallback((message: string, title?: string) => {
-    return addNotification('info', message, title);
+    addNotification(NotificationType.INFO, message, title);
   }, [addNotification]);
 
   // 自动移除通知
   useEffect(() => {
     // 检查是否有需要自动移除的通知
     const timers = notifications.map(notification => {
+      // Ensure notification.duration is always a number
+      const currentDuration = notification.duration || DEFAULT_NOTIFICATION_DURATION;
       return setTimeout(() => {
         removeNotification(notification.id);
-      }, notification.duration);
+      }, currentDuration);
     });
 
     // 清理定时器

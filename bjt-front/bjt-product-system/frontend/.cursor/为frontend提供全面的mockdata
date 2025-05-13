@@ -1,0 +1,12 @@
+为frontend提供全面的mockdata
+
+目标：为frontend提供全面的mockdata，frontend 是bjt的前端项目，我们使用mockdata来替代后端api，并且修复前端页面的显示问题，然后build成功后进行部署
+信息：
+Readme是整个项目的解释
+frontend-requirement.md 是前端代码的主要功能
+mockup.sql 是后端数据库
+init.sql 是数据库表结构
+
+要求：梳理当前frontend mockdata的使用方式，最小化改动
+
+请向我提问关键问题，制定计划，尽快完成

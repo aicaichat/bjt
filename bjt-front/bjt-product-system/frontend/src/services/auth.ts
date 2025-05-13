@@ -16,8 +16,8 @@ interface LoginResponse {
 export const login = async (email: string, password: string): Promise<LoginResponse> => {
   try {
     // Replace with actual API endpoint when available
-    const response = await axios.post('http://localhost:3000/api/auth/login', {
-      email,
+    const response = await axios.post('http://localhost:8080/wp-json/bjt/v1/auth/login', {
+      username: email,
       password
     });
     

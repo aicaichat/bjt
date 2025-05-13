@@ -2,50 +2,16 @@ import axios from 'axios';
 import { API_CONFIG } from '../config/appConfig';
 import { message } from 'antd';
 import { SparePartsMockService, shouldUseMockData } from '../services/mockService';
+// Import canonical type
+import { SparePart as CanonicalSparePart } from '../types/spareParts';
 
 // Destructure for clarity and to avoid property access issues
 const { BASE_URL } = API_CONFIG;
 
 /**
- * 备件接口定义
+ * Use the canonical SparePart type by re-exporting or using it directly
  */
-export interface SparePart {
-  id: string;
-  name: string;
-  name_en: string;
-  code: string;
-  part_number: string;
-  description: string;
-  type: string;
-  image_url: string;
-  product_type: string;
-  app_model: string[] | string;
-  app_sn?: string;
-  package_size?: string;
-  package_size_imperial?: string;
-  package_weight?: number;
-  box_quantity?: number;
-  spec?: string;
-  specs?: {[key: string]: string};
-  category: string;
-  compatibility?: string[];
-  prices: {
-    currency: string;
-    original_price: number;
-    current_price: number;
-    discount?: number;
-    tiers?: {
-      quantity: number;
-      price: number;
-    }[];
-  };
-  inventory: {
-    eu: number;
-    na: number;
-    au: number;
-    cn: number;
-  } | { region: string; amount: number; }[];
-}
+export type SparePart = CanonicalSparePart;
 
 /**
  * 备件筛选选项接口

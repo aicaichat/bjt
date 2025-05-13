@@ -4,9 +4,14 @@
  * 提供统一的接口获取模拟数据，便于未来替换为真实API
  */
 import { API_CONFIG, ASSETS } from '../config/appConfig';
-import { mockMachines, mockAccessories, mockSpareParts } from '../mock/machinesMock';
-import { sparePartsMock, accessoryModels, getSparePartsFilterOptions as getFilterOptions } from '../mock/sparePartsMock';
+import { 
+  getMockMachineParts, 
+  getMockMachineAccessories
+} from '../services/mocks/machines.mocks';
+import { getAllMockSpareParts } from "../services/mocks/spareParts.mocks";
 import { ProductLine } from './api';
+import { SparePartFilterOptions } from '../types/spareParts';
+import { MachinePartListData, MachinePart, MachineAccessory } from '../types/machines';
 
 // Destructure for clarity and to avoid property access issues
 const { USE_MOCK_DATA } = API_CONFIG;
@@ -16,50 +21,32 @@ export const mockProductLines: ProductLine[] = [
   {
     id: 1,
     title_en: 'Packaging Machines',
-    title_cn: '包装机械',
+    title_zh: '包装机械',
     description_en: 'High-quality packaging machines for various industrial applications.',
-    description_cn: '适用于各种工业应用的高质量包装机械。',
-    subitem1_en: 'Machines',
-    subitem1_cn: '设备',
-    subitem2_en: 'Consumables',
-    subitem2_cn: '耗材',
-    subitem3_en: 'Spare Parts',
-    subitem3_cn: '备件',
+    description_zh: '适用于各种工业应用的高质量包装机械。',
     image_url: '/images/product-lines/packaging-machines.jpg',
     status: 'publish',
-    menu_order: 1
+    sort_order: 1
   },
   {
     id: 2,
     title_en: 'Filling Solutions',
-    title_cn: '灌装解决方案',
+    title_zh: '灌装解决方案',
     description_en: 'Efficient filling solutions for liquids, powders and pastes.',
-    description_cn: '液体、粉末和膏状物的高效灌装解决方案。',
-    subitem1_en: 'Machines',
-    subitem1_cn: '设备',
-    subitem2_en: 'Consumables',
-    subitem2_cn: '耗材',
-    subitem3_en: 'Spare Parts',
-    subitem3_cn: '备件',
+    description_zh: '液体、粉末和膏状物的高效灌装解决方案。',
     image_url: '/images/product-lines/filling-solutions.jpg',
     status: 'publish',
-    menu_order: 2
+    sort_order: 2
   },
   {
     id: 3,
     title_en: 'Labeling Systems',
-    title_cn: '标签系统',
+    title_zh: '标签系统',
     description_en: 'Precise labeling systems for product identification and branding.',
-    description_cn: '用于产品标识和品牌推广的精确标签系统。',
-    subitem1_en: 'Machines',
-    subitem1_cn: '设备',
-    subitem2_en: 'Consumables',
-    subitem2_cn: '耗材',
-    subitem3_en: 'Spare Parts',
-    subitem3_cn: '备件',
+    description_zh: '用于产品标识和品牌推广的精确标签系统。',
     image_url: '/images/product-lines/labeling-systems.jpg',
     status: 'publish',
-    menu_order: 3
+    sort_order: 3
   }
 ];
 
@@ -77,8 +64,7 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
  * @returns Promise对象
  */
 const randomDelay = (minMs = 100, maxMs = 800) => {
-  const delayTime = Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
-  return delay(delayTime);
+  return delay(Math.random() * (maxMs - minMs) + minMs);
 };
 
 // Export to be used outside this module
@@ -98,33 +84,28 @@ export const shouldUseMockData = (): boolean => {
  * @param errorTypes 可能的错误类型
  * @returns 如果触发错误则抛出异常
  */
-const simulateRandomError = (errorRate = 0.02, errorTypes = ['network', 'server', 'timeout', 'auth']) => {
+const simulateRandomError = (errorRate = 0.0) => {
   if (Math.random() < errorRate) {
-    const errorType = errorTypes[Math.floor(Math.random() * errorTypes.length)];
-    let error: Error & { status?: number; code?: string } = new Error('模拟API错误');
-    
-    switch (errorType) {
+    const errorTypes = ['network', 'server', 'timeout', 'auth'];
+    const randomErrorType = errorTypes[Math.floor(Math.random() * errorTypes.length)];
+    let error: Error & { status?: number } = new Error('服务器错误');
+    switch (randomErrorType) {
       case 'network':
-        error.message = '网络连接错误';
-        error.code = 'NETWORK_ERROR';
-        throw error;
+        error = new Error('网络连接失败，请检查您的网络');
+        break;
       case 'server':
-        error.message = '服务器错误';
+        error = new Error('服务器内部错误，请稍后重试');
         error.status = 500;
-        error.code = 'SERVER_ERROR';
-        throw error;
+        break;
       case 'timeout':
-        error.message = '请求超时';
-        error.code = 'TIMEOUT';
-        throw error;
+        error = new Error('请求超时，请重试');
+        break;
       case 'auth':
-        error.message = '授权已过期';
+        error = new Error('认证失败，请重新登录');
         error.status = 401;
-        error.code = 'AUTH_EXPIRED';
-        throw error;
-      default:
-        throw error;
+        break;
     }
+    throw error;
   }
 };
 
@@ -154,9 +135,12 @@ export const MachinesMockService = {
     await randomDelay();
     simulateRandomError();
     
-    // 返回标准格式的响应
-    return wrapResponse(mockMachines, {
-      count: mockMachines.length,
+    const machinePartData = getMockMachineParts(params);
+    return wrapResponse(machinePartData.items, {
+      total: machinePartData.total,
+      page: machinePartData.page,
+      pageSize: machinePartData.page_size,
+      totalPages: machinePartData.total_pages,
       params
     });
   },
@@ -168,7 +152,8 @@ export const MachinesMockService = {
     await randomDelay(200, 500);
     simulateRandomError();
     
-    const machine = mockMachines.find(machine => machine.id === id);
+    const numericId = parseInt(id, 10);
+    const machine = getMockMachineParts({}).items.find(machine => machine.id === numericId);
     if (!machine) {
       const error: Error & { status?: number } = new Error(`找不到ID为${id}的机器`);
       error.status = 404;
@@ -185,16 +170,20 @@ export const MachinesMockService = {
     await randomDelay();
     simulateRandomError();
     
-    const machine = mockMachines.find(machine => machine.id === machineId);
+    const numericMachineId = parseInt(machineId, 10);
+    const machine = getMockMachineParts({}).items.find(machine => machine.id === numericMachineId);
     if (!machine) {
       const error: Error & { status?: number } = new Error(`找不到ID为${machineId}的机器`);
       error.status = 404;
       throw error;
     }
     
-    return wrapResponse(mockAccessories, {
+    // Use the new function to get accessories based on the machine's part number
+    const accessories = getMockMachineAccessories(machine.part_number);
+    
+    return wrapResponse(accessories, {
       machineId,
-      count: mockAccessories.length,
+      count: accessories.length,
       params
     });
   }
@@ -212,41 +201,47 @@ export const SparePartsMockService = {
     await randomDelay();
     simulateRandomError();
     
-    let filteredParts = [...sparePartsMock];
+    let parts = getAllMockSpareParts();
     
-    // 应用筛选条件
-    if (params.type) {
-      filteredParts = filteredParts.filter(part => part.type === params.type);
-    }
-    
-    if (params.product_type) {
-      filteredParts = filteredParts.filter(part => part.product_type === params.product_type);
-    }
-    
+    // Filter based on available SparePart properties
+    // Remove filters for non-existent properties: type, product_type, category
+
+    // Keep filtering by compatible model (app_model)
     if (params.model) {
-      filteredParts = filteredParts.filter(part => 
-        Array.isArray(part.app_model) && part.app_model.includes(params.model)
+      parts = parts.filter(part => 
+        part.app_model?.toLowerCase().split(',').map(m => m.trim()).includes(params.model.toLowerCase())
       );
     }
     
-    if (params.category) {
-      filteredParts = filteredParts.filter(part => part.category === params.category);
+    // Add filtering by is_consumable if needed (example)
+    if (typeof params.is_consumable === 'boolean') {
+      parts = parts.filter(part => part.is_consumable === params.is_consumable);
     }
-    
-    // 应用分页
+
+    // Add filtering by search text (example on name or part number)
+    if (params.searchText) {
+      const searchTextLower = params.searchText.toLowerCase();
+      parts = parts.filter(part => 
+        part.name_en.toLowerCase().includes(searchTextLower) ||
+        part.part_number.toLowerCase().includes(searchTextLower)
+      );
+    }
+
+    // Apply分页
     const page = parseInt(params.page) || 1;
     const pageSize = parseInt(params.pageSize) || 10;
     const startIndex = (page - 1) * pageSize;
     const endIndex = startIndex + pageSize;
     
-    const paginatedParts = filteredParts.slice(startIndex, endIndex);
+    const paginatedParts = parts.slice(startIndex, endIndex);
     
+    // Note: Returning filter options here might be better suited for getSparePartsFilterOptions
     return wrapResponse(paginatedParts, {
-      total: filteredParts.length,
+      total: parts.length,
       page,
       pageSize,
-      totalPages: Math.ceil(filteredParts.length / pageSize),
-      params
+      totalPages: Math.ceil(parts.length / pageSize),
+      params 
     });
   },
 
@@ -257,7 +252,8 @@ export const SparePartsMockService = {
     await randomDelay(200, 500);
     simulateRandomError();
     
-    const part = sparePartsMock.find(part => part.id === id);
+    // Ensure comparison is string vs string
+    const part = getAllMockSpareParts().find(part => String(part.id) === id);
     if (!part) {
       const error: Error & { status?: number } = new Error(`找不到ID为${id}的备件`);
       error.status = 404;
@@ -271,39 +267,40 @@ export const SparePartsMockService = {
    * 获取备件筛选选项
    */
   getSparePartsFilterOptions: async () => {
-    await randomDelay(100, 300);
+    await randomDelay(50, 200);
     simulateRandomError();
-    
-    // 从模拟数据中提取机器型号（LA-开头的）
-    const machineModels = [...new Set(
-      sparePartsMock
-        .filter(part => part.product_type === 'machine')
-        .flatMap(part => Array.isArray(part.app_model) ? part.app_model : [])
-    )];
-    
-    // 使用从sparePartsMock导入的accessoryModels和getFilterOptions
-    // 提取所有唯一的类别
-    const uniqueCategories = [...new Set(
-      sparePartsMock.map(part => part.category)
-    )];
-    
-    const filterOptions = {
-      hostModels: machineModels,
-      accessoryModels: accessoryModels.map((model: { value: string; label: string }) => model.value),
-      partTypes: [
-        { id: "electrical", name: "电气零件" },
-        { id: "mechanical", name: "机械零件" },
-        { id: "electronic", name: "电子零件" },
-        { id: "consumable", name: "耗材" },
-        { id: "accessory", name: "配件" }
-      ],
-      categories: uniqueCategories.map(category => ({
-        id: category,
-        name: category.charAt(0).toUpperCase() + category.slice(1)
-      }))
+
+    const allParts = getAllMockSpareParts(); 
+
+    const hostModelsSet = new Set<string>();
+    const accessoryModelsSet = new Set<string>();
+
+    allParts.forEach(part => {
+      const models = part.app_model?.split(',').map(m => m.trim()).filter(Boolean) || [];
+      if (part.product_type === 'machine') {
+        models.forEach(model => hostModelsSet.add(model));
+      } else if (part.product_type === 'accessory') {
+        models.forEach(model => accessoryModelsSet.add(model));
+      }
+      // Consider if a model could belong to both or if product_type can be other values.
+    });
+
+    // Define partTypes options, this should match the structure expected by FilterOptions in sparePartsApi.ts
+    const partTypeOptions = [
+      { id: 'true', name: 'Consumable' }, // Name should be the display text
+      { id: 'false', name: 'Standard' }
+    ];
+
+    // Construct filter options to match the FilterOptions interface from sparePartsApi.ts
+    // This object's type should effectively be FilterOptions
+    const structuredFilterOptions = {
+      hostModels: Array.from(hostModelsSet).sort(), 
+      accessoryModels: Array.from(accessoryModelsSet).sort(), 
+      partTypes: partTypeOptions,
+      // categories: [] // Add this if FilterOptions in sparePartsApi.ts includes categories and they are needed.
     };
-    
-    return wrapResponse(filterOptions);
+
+    return wrapResponse(structuredFilterOptions);
   }
 };
 
@@ -325,7 +322,8 @@ const mockConsumables = [
       width: '200mm',
       length: '300mm',
       rollLength: '500m',
-      compatibility: 'E5P/E4S'
+      compatibility: 'E5P/E4S',
+      weight: '50g/m²'
     },
     pricing: [
       { 
@@ -359,7 +357,8 @@ const mockConsumables = [
       width: '300mm',
       length: '400mm',
       rollLength: '600m',
-      compatibility: 'E5P/E4S'
+      compatibility: 'E5P/E4S',
+      weight: '75g/m²'
     },
     pricing: [
       { 
@@ -393,7 +392,8 @@ const mockConsumables = [
       width: '300mm',
       length: '450mm',
       rollLength: '450m',
-      compatibility: 'E5P/E4S'
+      compatibility: 'E5P/E4S',
+      weight: '100g/m²'
     },
     pricing: [
       { 
@@ -500,12 +500,6 @@ export const ConsumablesMockService = {
       );
     }
     
-    if (filters.weight && filters.weight !== 'all') {
-      filteredProducts = filteredProducts.filter(product => 
-        product.specs.weight === filters.weight
-      );
-    }
-    
     if (filters.width && filters.width !== 'all') {
       filteredProducts = filteredProducts.filter(product => 
         product.specs.width === filters.width
@@ -521,6 +515,12 @@ export const ConsumablesMockService = {
     if (filters.model && filters.model !== 'all') {
       filteredProducts = filteredProducts.filter(product => 
         product.specs.compatibility.includes(filters.model)
+      );
+    }
+    
+    if (filters.weight && filters.weight !== 'all') {
+      filteredProducts = filteredProducts.filter(product => 
+        product.specs.weight === filters.weight
       );
     }
     
@@ -757,7 +757,39 @@ const mockService = {
   wrapResponse,
   ConsumablesMockService,
   CartMockService,
-  OrderMockService
+  OrderMockService,
+  getMachines: async (filters: any = {}, page: number = 1, perPage: number = 10): Promise<MachinePartListData> => {
+    console.log('[Mock] Fetching machines with filters:', filters, 'page:', page, 'perPage:', perPage);
+    
+    // Simulate API delay
+    await randomDelay(); // Use the existing randomDelay helper
+    simulateRandomError(); // Use the existing simulateRandomError helper
+
+    // Call getMockMachineParts with filters and pagination parameters
+    const machinePartData = getMockMachineParts({ ...filters, page, page_size: perPage });
+
+    // The getMockMachineParts function already returns data in MachinePartListData format,
+    // including items, total, page, page_size, and total_pages.
+    // So, no need to re-calculate pagination here.
+    return machinePartData;
+  },
+  getMachine: async (id: string | number): Promise<MachinePart | undefined> => {
+    console.log('[Mock] Fetching machine part with ID:', id);
+    const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+    // Corrected: Find the part by its ID in the .items array
+    const part = getMockMachineParts({}).items.find((p: MachinePart) => p.id === numericId);
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    return part;
+  },
+  getAccessories: async (machineId: string): Promise<MachineAccessory[]> => {
+    console.log('[Mock] Fetching accessories for machine ID:', machineId);
+    // TODO: Implement logic to get accessories based on machineId/part_number using relations
+    await new Promise(resolve => setTimeout(resolve, 200));
+    return getMockMachineAccessories(machineId); // Return placeholder for now
+  }
 };
 
 export default mockService; 

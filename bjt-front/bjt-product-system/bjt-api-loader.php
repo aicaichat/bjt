@@ -1,0 +1,373 @@
+<?php
+/**
+ * Plugin Name: BJT API Loader
+ * Description: 加载BJT产品管理系统API控制器
+ * Version: 1.0.0
+ * Author: BJT Team
+ */
+
+// 防止直接访问
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+// 定义插件路径常量
+define('BJT_API_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('BJT_API_PLUGIN_URL', plugin_dir_url(__FILE__));
+
+// 加载API控制器基类
+require_once dirname(__FILE__) . '/includes/class-bjt-api-controller.php';
+
+// 加载各种控制器
+require_once dirname(__FILE__) . '/controllers/class-bjt-machines-controller.php';
+require_once dirname(__FILE__) . '/controllers/class-bjt-accessories-controller.php';
+require_once dirname(__FILE__) . '/controllers/class-bjt-consumables-controller.php';
+require_once dirname(__FILE__) . '/controllers/class-bjt-spare-parts-controller.php';
+
+// 初始化API
+function bjt_init_api() {
+    // 注册控制器实例
+    $machine_controller = new BJT_Machines_Controller();
+    $machine_controller->register_routes();
+    
+    $accessories_controller = new BJT_Accessories_Controller();
+    $accessories_controller->register_routes();
+    
+    $consumables_controller = new BJT_Consumables_Controller();
+    $consumables_controller->register_routes();
+    
+    $spare_parts_controller = new BJT_Spare_Parts_Controller();
+    $spare_parts_controller->register_routes();
+    
+    // 添加身份验证接口
+    register_rest_route('bjt/v1', '/auth/login', [
+        'methods' => 'POST',
+        'callback' => 'bjt_auth_login',
+        'permission_callback' => '__return_true',
+    ]);
+    
+    register_rest_route('bjt/v1', '/auth/refresh', [
+        'methods' => 'POST',
+        'callback' => 'bjt_auth_refresh',
+        'permission_callback' => '__return_true',
+    ]);
+    
+    register_rest_route('bjt/v1', '/auth/logout', [
+        'methods' => 'POST',
+        'callback' => 'bjt_auth_logout',
+        'permission_callback' => 'bjt_check_auth',
+    ]);
+    
+    register_rest_route('bjt/v1', '/auth/me', [
+        'methods' => 'GET',
+        'callback' => 'bjt_auth_me',
+        'permission_callback' => 'bjt_check_auth',
+    ]);
+}
+add_action('rest_api_init', 'bjt_init_api');
+
+// 身份验证相关函数
+function bjt_auth_login($request) {
+    $data = $request->get_json_params();
+    $username = isset($data['username']) ? sanitize_text_field($data['username']) : '';
+    $password = isset($data['password']) ? $data['password'] : '';
+    
+    if (empty($username) || empty($password)) {
+        return [
+            'success' => false,
+            'message' => '用户名和密码不能为空',
+            'code' => 1001
+        ];
+    }
+    
+    // 模拟用户验证 - 实际项目应使用WordPress用户系统
+    if ($username == 'admin' && $password == 'password') {
+        // 创建JWT token
+        $issued_at = time();
+        $expiration = $issued_at + 86400; // 24小时有效期
+        
+        $payload = [
+            'iss' => get_site_url(),
+            'iat' => $issued_at,
+            'exp' => $expiration,
+            'user' => [
+                'id' => 1,
+                'username' => $username,
+                'role' => 'administrator'
+            ]
+        ];
+        
+        // 使用简单的JWT token生成
+        $secret = get_option('bjt_jwt_secret', 'bjt_secret_key');
+        $token = generate_simple_jwt($payload, $secret);
+        
+        return [
+            'success' => true,
+            'data' => [
+                'token' => $token,
+                'expires_in' => 86400,
+                'user' => [
+                    'id' => 1,
+                    'username' => $username,
+                    'email' => 'admin@example.com',
+                    'name' => 'Admin User',
+                    'role' => 'ADMIN',
+                    'region' => 'CN',
+                    'vipLevel' => 3,
+                    'type' => 'admin'
+                ]
+            ]
+        ];
+    }
+    
+    // 销售用户模拟
+    if ($username == 'sales' && $password == 'password') {
+        // 创建JWT token
+        $issued_at = time();
+        $expiration = $issued_at + 86400; // 24小时有效期
+        
+        $payload = [
+            'iss' => get_site_url(),
+            'iat' => $issued_at,
+            'exp' => $expiration,
+            'user' => [
+                'id' => 2,
+                'username' => $username,
+                'role' => 'sales'
+            ]
+        ];
+        
+        // 使用简单的JWT token生成
+        $secret = get_option('bjt_jwt_secret', 'bjt_secret_key');
+        $token = generate_simple_jwt($payload, $secret);
+        
+        return [
+            'success' => true,
+            'data' => [
+                'token' => $token,
+                'expires_in' => 86400,
+                'user' => [
+                    'id' => 2,
+                    'username' => $username,
+                    'email' => 'sales@example.com',
+                    'name' => 'Sales User',
+                    'role' => 'SALES',
+                    'region' => 'CN',
+                    'vipLevel' => 2,
+                    'type' => 'vip'
+                ]
+            ]
+        ];
+    }
+    
+    return [
+        'success' => false,
+        'message' => '用户名或密码错误',
+        'code' => 1001
+    ];
+}
+
+function bjt_auth_refresh($request) {
+    $headers = $request->get_headers();
+    
+    if (!isset($headers['authorization'][0])) {
+        return [
+            'success' => false,
+            'message' => '缺少授权头信息',
+            'code' => 1002
+        ];
+    }
+    
+    $auth_header = $headers['authorization'][0];
+    $token = str_replace('Bearer ', '', $auth_header);
+    
+    // 验证token
+    $secret = get_option('bjt_jwt_secret', 'bjt_secret_key');
+    $payload = decode_simple_jwt($token, $secret);
+    
+    if (!$payload) {
+        return [
+            'success' => false,
+            'message' => '无效的token',
+            'code' => 1003
+        ];
+    }
+    
+    // 创建新token
+    $issued_at = time();
+    $expiration = $issued_at + 86400; // 24小时有效期
+    
+    $new_payload = [
+        'iss' => get_site_url(),
+        'iat' => $issued_at,
+        'exp' => $expiration,
+        'user' => $payload['user']
+    ];
+    
+    $new_token = generate_simple_jwt($new_payload, $secret);
+    
+    return [
+        'success' => true,
+        'data' => [
+            'token' => $new_token,
+            'expires_in' => 86400
+        ]
+    ];
+}
+
+function bjt_auth_logout($request) {
+    // 实际项目中可以将token加入黑名单
+    return [
+        'success' => true,
+        'message' => '已成功登出'
+    ];
+}
+
+function bjt_auth_me($request) {
+    $headers = $request->get_headers();
+    
+    if (!isset($headers['authorization'][0])) {
+        return [
+            'success' => false,
+            'message' => '缺少授权头信息',
+            'code' => 1002
+        ];
+    }
+    
+    $auth_header = $headers['authorization'][0];
+    $token = str_replace('Bearer ', '', $auth_header);
+    
+    // 验证token
+    $secret = get_option('bjt_jwt_secret', 'bjt_secret_key');
+    $payload = decode_simple_jwt($token, $secret);
+    
+    if (!$payload || !isset($payload['user'])) {
+        return [
+            'success' => false,
+            'message' => '无效的token',
+            'code' => 1003
+        ];
+    }
+    
+    $user = $payload['user'];
+    
+    // 根据用户角色返回不同信息
+    if ($user['role'] == 'administrator') {
+        return [
+            'success' => true,
+            'data' => [
+                'id' => $user['id'],
+                'username' => $user['username'],
+                'email' => 'admin@example.com',
+                'name' => 'Admin User',
+                'role' => 'ADMIN',
+                'region' => 'CN',
+                'vipLevel' => 3,
+                'type' => 'admin',
+                'permissions' => [
+                    'view_prices',
+                    'view_inventory',
+                    'add_to_cart',
+                    'manage_products',
+                    'manage_users'
+                ]
+            ]
+        ];
+    }
+    
+    if ($user['role'] == 'sales') {
+        return [
+            'success' => true,
+            'data' => [
+                'id' => $user['id'],
+                'username' => $user['username'],
+                'email' => 'sales@example.com',
+                'name' => 'Sales User',
+                'role' => 'SALES',
+                'region' => 'CN',
+                'vipLevel' => 2,
+                'type' => 'vip',
+                'permissions' => [
+                    'view_prices',
+                    'view_inventory',
+                    'add_to_cart'
+                ]
+            ]
+        ];
+    }
+    
+    return [
+        'success' => false,
+        'message' => '未知用户类型',
+        'code' => 1004
+    ];
+}
+
+// 验证身份的通用函数
+function bjt_check_auth($request) {
+    $headers = $request->get_headers();
+    
+    if (!isset($headers['authorization'][0])) {
+        return false;
+    }
+    
+    $auth_header = $headers['authorization'][0];
+    
+    if (strpos($auth_header, 'Bearer ') !== 0) {
+        return false;
+    }
+    
+    $token = str_replace('Bearer ', '', $auth_header);
+    
+    // 验证token
+    $secret = get_option('bjt_jwt_secret', 'bjt_secret_key');
+    $payload = decode_simple_jwt($token, $secret);
+    
+    if (!$payload) {
+        return false;
+    }
+    
+    // 检查token是否过期
+    if (isset($payload['exp']) && $payload['exp'] < time()) {
+        return false;
+    }
+    
+    return true;
+}
+
+// 简单的JWT实现
+function generate_simple_jwt($payload, $secret) {
+    $header = [
+        'typ' => 'JWT',
+        'alg' => 'HS256'
+    ];
+    
+    $header_encoded = rtrim(strtr(base64_encode(json_encode($header)), '+/', '-_'), '=');
+    $payload_encoded = rtrim(strtr(base64_encode(json_encode($payload)), '+/', '-_'), '=');
+    
+    $signature = hash_hmac('sha256', $header_encoded . '.' . $payload_encoded, $secret, true);
+    $signature_encoded = rtrim(strtr(base64_encode($signature), '+/', '-_'), '=');
+    
+    return $header_encoded . '.' . $payload_encoded . '.' . $signature_encoded;
+}
+
+function decode_simple_jwt($token, $secret) {
+    $parts = explode('.', $token);
+    
+    if (count($parts) != 3) {
+        return false;
+    }
+    
+    list($header_encoded, $payload_encoded, $signature_encoded) = $parts;
+    
+    $signature = hash_hmac('sha256', $header_encoded . '.' . $payload_encoded, $secret, true);
+    $signature_check = rtrim(strtr(base64_encode($signature), '+/', '-_'), '=');
+    
+    if ($signature_encoded !== $signature_check) {
+        return false;
+    }
+    
+    $payload = json_decode(base64_decode(strtr($payload_encoded, '-_', '+/')), true);
+    
+    return $payload;
+} 

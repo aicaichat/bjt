@@ -1,0 +1,2754 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT Products</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        header {
+            background-color: #fff;
+            padding: 15px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo {
+            height: 40px;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .nav-menu {
+            display: flex;
+            margin-right: 20px;
+        }
+        
+        .nav-item {
+            margin: 0 15px;
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .nav-item:hover {
+            color: #1a57a5;
+        }
+        
+        .language-selector {
+            margin-right: 15px;
+            border: 1px solid #ddd;
+            padding: 5px 10px;
+            border-radius: 4px;
+            background-color: #fff;
+            min-width: 120px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .language-selector option {
+            padding: 5px;
+        }
+        
+        /* Responsive Header */
+        @media (max-width: 768px) {
+            .header-right {
+                justify-content: center;
+                margin-top: 10px;
+            }
+            
+            .nav-menu {
+                margin-right: 0;
+                margin-bottom: 10px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .nav-item {
+                margin: 5px 10px;
+            }
+            
+            .language-selector {
+                margin-bottom: 10px;
+            }
+        }
+        
+        /* User dropdown styles */
+        .user-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            background-color: #f5f5f5;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            border: 1px solid #ddd;
+        }
+        
+        .user-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .user-name {
+            font-weight: 500;
+            margin-right: 5px;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: white;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1000;
+            border-radius: 4px;
+        }
+        
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            text-align: left;
+        }
+        
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+        
+        .user-dropdown:hover .dropdown-content {
+            display: block;
+        }
+        
+        .breadcrumb {
+            padding: 15px 0;
+            color: #666;
+        }
+        
+        .breadcrumb a {
+            color: #1a57a5;
+            text-decoration: none;
+        }
+        
+        .section-title {
+            margin: 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #ccc;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            cursor: pointer;
+        }
+        
+        .tab.active {
+            background-color: #1a57a5;
+            color: white;
+            border-color: #1a57a5;
+        }
+        
+        .product-list {
+            margin-bottom: 30px;
+        }
+        
+        .product-item {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .product-selector {
+            margin-right: 15px;
+        }
+        
+        .product-info {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        
+        .product-code {
+            width: 100px;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        .product-details {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 8px;
+            font-size: 13px;
+        }
+        
+        .product-detail-item {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 3px 8px;
+            margin-right: 8px;
+            margin-bottom: 6px;
+            color: #495057;
+            transition: all 0.2s ease;
+        }
+        
+        .product-detail-item strong {
+            color: #1a57a5;
+            font-weight: 500;
+        }
+        
+        .product-description {
+            flex: 1;
+            margin-right: 15px;
+            padding-bottom: 8px;
+        }
+        
+        .product-description > div:first-of-type {
+            margin-bottom: 8px;
+        }
+        
+        .product-inventory {
+            width: 150px;
+            color: #666;
+        }
+        
+        .product-pricing {
+            width: 150px;
+        }
+        
+        .product-image {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+            margin: 0 15px;
+        }
+        
+        .product-actions {
+            display: flex;
+            align-items: center;
+        }
+        
+        .quantity-input {
+            width: 50px;
+            text-align: center;
+            margin: 0 5px;
+            padding: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .btn-add {
+            background-color: #1a57a5;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        
+        .specification-link, .more-info-link {
+            display: inline-flex;
+            align-items: center;
+            background-color: #f1f6ff;
+            padding: 5px 12px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            color: #1a57a5;
+            text-decoration: none;
+            border: 1px solid #e1ebff;
+            margin-right: 8px;
+            margin-top: 8px;
+        }
+        
+        .specification-link:hover, .more-info-link:hover {
+            background-color: #e1ebff;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(26, 87, 165, 0.15);
+        }
+        
+        .specification-link:before {
+            content: "📄";
+            margin-right: 5px;
+            font-size: 14px;
+        }
+        
+        .more-info-link:before {
+            content: "ℹ️";
+            margin-right: 5px;
+            font-size: 14px;
+        }
+        
+        /* Accessory Styles */
+        .accessory-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px dashed #ccc;
+            display: none; /* Initially hidden */
+        }
+        
+        .accessory-section.visible {
+            display: block;
+        }
+        
+        /* Nested accessories */
+        .accessory-level-2,
+        .accessory-level-3,
+        .accessory-level-4,
+        .accessory-level-5 {
+            margin-left: 20px;
+            padding-left: 15px;
+            border-left: 3px solid #1a57a5;
+            margin-top: 15px;
+            display: none; /* Initially hidden */
+        }
+        
+        .accessory-level-2.visible,
+        .accessory-level-3.visible,
+        .accessory-level-4.visible,
+        .accessory-level-5.visible {
+            display: block;
+        }
+        
+        .voltage-options {
+            margin: 20px 0;
+        }
+        
+        .voltage-option {
+            margin-right: 20px;
+        }
+        
+        /* Cart Styles */
+        .cart-floating {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #1a57a5;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+            z-index: 900;
+        }
+        
+        .cart-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: red;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background-color: #fff;
+            width: 80%;
+            max-width: 500px;
+            margin: 100px auto;
+            padding: 20px;
+            border-radius: 8px;
+            position: relative;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+            border: none;
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            cursor: pointer;
+            background-color: #f1f6ff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .modal-close:hover {
+            background-color: #e1ebff;
+            transform: rotate(90deg);
+        }
+        
+        .modal h3 {
+            color: #1a57a5;
+            margin-bottom: 15px;
+            font-weight: 600;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        .dynamic-note {
+            color: #d9534f;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        
+        .level-indicator {
+            font-size: 12px;
+            background-color: #1a57a5;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 5px;
+        }
+        
+        /* New style for dynamic note */
+        .dynamic-note {
+            display: inline-block;
+            font-size: 13px;
+            color: #555;
+            background-color: #f1f6ff;
+            border: 1px solid #d9e6ff;
+            border-radius: 4px;
+            padding: 3px 8px;
+            margin-left: 10px;
+            font-weight: normal;
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .product-info {
+                flex-direction: column;
+            }
+            
+            .product-code, .product-description, .product-inventory, .product-pricing {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            
+            .product-actions {
+                width: 100%;
+                justify-content: flex-end;
+                margin-top: 10px;
+            }
+            
+            .tabs {
+                overflow-x: auto;
+                white-space: nowrap;
+                margin-bottom: 15px;
+            }
+            
+            .tab {
+                display: inline-block;
+            }
+            
+            .accessory-level-2,
+            .accessory-level-3,
+            .accessory-level-4,
+            .accessory-level-5 {
+                margin-left: 10px;
+                padding-left: 10px;
+            }
+        }
+        
+        /* 配件展示样式优化 */
+        .accessory-specs {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 8px;
+            gap: 6px;
+        }
+        
+        .accessory-spec-item {
+            background-color: #f1f6ff;
+            border: 1px solid #d9e6ff;
+            border-radius: 4px;
+            padding: 3px 8px;
+            color: #495057;
+            font-size: 13px;
+            flex-grow: 1;
+            min-width: 110px;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+        
+        .accessory-spec-item strong {
+            color: #1a57a5;
+            font-weight: 500;
+            margin-right: 4px;
+            min-width: 55px;
+            display: inline-block;
+        }
+        
+        /* New style for frequency spec */
+        .frequency-spec {
+            background-color: #daeeff;
+            border: 2px solid #2b87db;
+            border-radius: 4px;
+            padding: 5px 12px;
+            color: #0055aa;
+            font-size: 14px;
+            font-weight: 600;
+            flex-grow: 1;
+            min-width: 110px;
+            display: flex;
+            align-items: center;
+            order: -1; /* Make it appear first */
+            margin-right: 8px;
+            margin-bottom: 6px;
+            box-shadow: 0 2px 8px rgba(0,102,204,0.2);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .frequency-spec:hover {
+            background-color: #c5e1ff;
+            box-shadow: 0 3px 10px rgba(0,102,204,0.3);
+            transform: translateY(-1px);
+        }
+        
+        .frequency-spec:after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 20px;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(43,135,219,0) 0%, rgba(43,135,219,0.15) 100%);
+        }
+        
+        .frequency-spec strong {
+            color: #0055aa;
+            font-weight: 700;
+            margin-right: 8px;
+            min-width: 55px;
+            display: inline-block;
+            text-shadow: 0 0 1px rgba(0,85,170,0.2);
+        }
+        
+        .accessory-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .more-info-section {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        
+        /* 悬停提示样式 */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .tooltip .tooltip-content {
+            visibility: hidden;
+            width: 280px;
+            background-color: white;
+            color: #333;
+            text-align: left;
+            border-radius: 6px;
+            padding: 15px;
+            position: absolute;
+            z-index: 1001;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -140px;
+            opacity: 0;
+            transition: opacity 0.3s, visibility 0.3s;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.15);
+            border: 1px solid #eaeaea;
+            font-size: 13px;
+            line-height: 1.5;
+            pointer-events: none;
+        }
+        
+        .tooltip:hover .tooltip-content {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .tooltip .tooltip-content::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -8px;
+            border-width: 8px;
+            border-style: solid;
+            border-color: white transparent transparent transparent;
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
+        }
+        
+        .tooltip-title {
+            font-weight: 600;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+            color: #1a57a5;
+        }
+        
+        .tooltip-row {
+            display: flex;
+            margin-bottom: 6px;
+        }
+        
+        .tooltip-label {
+            font-weight: 500;
+            min-width: 110px;
+            color: #555;
+        }
+        
+        /* 改进视觉效果 */
+        .product-detail-item:hover, .accessory-spec-item:hover {
+            background-color: #e1ebff;
+            transform: translateY(-1px);
+            box-shadow: 0 1px 3px rgba(26, 87, 165, 0.1);
+        }
+        
+        /* 购物车样式优化 */
+        .cart-item {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .cart-item-image {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            margin-right: 12px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+        
+        .cart-item-info {
+            flex: 1;
+        }
+        
+        .cart-item-title {
+            font-weight: 600;
+            margin-bottom: 3px;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .cart-item-specs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+        
+        .cart-item-spec {
+            font-size: 12px;
+            color: #666;
+            background-color: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        
+        .cart-item-price {
+            margin-top: 5px;
+            font-weight: 500;
+            color: #1a57a5;
+        }
+        
+        .cart-item-actions {
+            display: flex;
+            align-items: center;
+            margin-left: 12px;
+        }
+        
+        .cart-qty {
+            width: 40px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 3px;
+            margin: 0 5px;
+        }
+        
+        .cart-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #1a57a5;
+            font-size: 18px;
+            padding: 0 5px;
+        }
+        
+        .cart-btn:hover {
+            color: #0d4a8f;
+        }
+        
+        .cart-btn-delete {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-left: 8px;
+            padding: 3px 6px;
+            background-color: #fff0f0;
+            border-radius: 3px;
+            border: 1px solid #ffd5d5;
+        }
+        
+        .cart-btn-delete:hover {
+            background-color: #ffe0e0;
+            color: #c0392b;
+        }
+        
+        .cart-type-heading {
+            font-weight: 600;
+            color: #1a57a5;
+            padding: 8px;
+            background-color: #f1f6ff;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        
+        .cart-summary {
+            margin-top: 15px;
+            border-top: 2px solid #eee;
+            padding-top: 15px;
+        }
+        
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .cart-checkout-btn {
+            background-color: #1a57a5;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            width: 100%;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .cart-checkout-btn:hover {
+            background-color: #0d4a8f;
+        }
+        
+        /* Add style for empty accessory message */
+        .empty-accessory-message {
+            width: 100%;
+            padding: 30px;
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            background-color: #f9f9f9;
+            border: 1px dashed #ddd;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        /* Responsive Styles */
+        
+        /* 添加购物车通知样式 */
+        .cart-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #1A365D;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 9999;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: opacity 0.3s, transform 0.3s;
+            max-width: 320px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .cart-notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .cart-notification-content {
+            display: flex;
+            align-items: center;
+        }
+        
+        .cart-notification-icon {
+            background-color: rgba(255,255,255,0.2);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+        }
+        
+        .cart-notification-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .cart-notification-close {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.6);
+            font-size: 16px;
+            cursor: pointer;
+            margin-left: 15px;
+            padding: 0 5px;
+        }
+        
+        .cart-notification-close:hover {
+            color: white;
+        }
+        
+        .cart-notification-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background-color: rgba(255,255,255,0.4);
+            border-radius: 0 0 6px 6px;
+            width: 100%;
+        }
+        
+        /* 清空购物车确认样式 */
+        .cart-confirm {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.97);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 6px;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        .cart-confirm.show {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .cart-confirm-icon {
+            width: 48px;
+            height: 48px;
+            background-color: #ffebee;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        
+        .cart-confirm-icon svg {
+            color: #e53935;
+        }
+        
+        .cart-confirm-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .cart-confirm-text {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+            text-align: center;
+            max-width: 80%;
+        }
+        
+        .cart-confirm-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .cart-confirm-button {
+            padding: 8px 20px;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        
+        .cart-confirm-cancel {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .cart-confirm-cancel:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .cart-confirm-proceed {
+            background-color: #e53935;
+            color: white;
+        }
+        
+        .cart-confirm-proceed:hover {
+            background-color: #c62828;
+        }
+    </style>
+    <script>
+        // Language switching function
+        function changeLanguage(lang) {
+            console.log('Language changed to: ' + lang);
+            // Here you would implement the actual language change logic
+            // For example, storing the selected language in a cookie or localStorage
+            // and then reloading the page or updating UI elements
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add event listener to language selector
+            const langSelector = document.querySelector('.language-selector');
+            if (langSelector) {
+                langSelector.addEventListener('change', function(e) {
+                    changeLanguage(e.target.value);
+                });
+            }
+            
+            // 不需要在这里重复购物车初始化
+        });
+    </script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-left">
+                <img src="logo-1.webp" alt="BJT Logo" class="logo">
+            </div>
+            <div class="header-right">
+                <nav class="nav-menu">
+                    <a href="#" class="nav-item">Home</a>
+                    <a href="#" class="nav-item">Products</a>
+                    <a href="#" class="nav-item">Documentation</a>
+                    <a href="#" class="nav-item">Support</a>
+                </nav>
+                <select class="language-selector" aria-label="Select language">
+                    <option value="zh">中文</option>
+                    <option value="en">🇬🇧 English</option>
+                    <option value="ja">🇯🇵 日本語</option>
+                    <option value="ko">🇰🇷 한국어</option>
+                    <option value="fr">🇫🇷 français</option>
+                    <option value="de">🇩🇪 Deutsch</option>
+                    <option value="es">🇪🇸 Español</option>
+                    <option value="it">🇮🇹 italiano</option>
+                    <option value="ru">🇷🇺 русский</option>
+                    <option value="pt">🇵🇹 português</option>
+                    <option value="th">🇹🇭 ไทย</option>
+                    <option value="vi">🇻🇳 tiếng việt</option>
+                </select>
+                <div class="user-dropdown">
+                    <div class="user-info">
+                        <img src="user-avatar.jpg" alt="User Avatar" class="user-avatar">
+                        <span class="user-name">已登录用户</span>
+                    </div>
+                    <div class="dropdown-content">
+                        <a href="#">Profile</a>
+                        <a href="#">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Floating Cart Button -->
+    <div class="cart-floating" onclick="showModal('cart-modal')">
+        <span>🛒</span>
+        <div class="cart-count" id="cartCount">0</div>
+    </div>
+    
+    <!-- Info Modals -->
+    <div id="info-modal-1" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="hideModal('info-modal-1')">×</span>
+            <h3>LP-V1 详细信息</h3>
+            <div style="margin-top: 15px; line-height: 1.6;">
+                <p><strong>包装尺寸:</strong> 60 × 40 × 35 cm</p>
+                <p><strong>包装毛重:</strong> 15 kg</p>
+                <p><strong>打托后总高度:</strong> 190 cm</p>
+                <p><strong>其他规格参数:</strong> 详见规格PDF</p>
+            </div>
+        </div>
+    </div>
+    
+    <div id="info-modal-2" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="hideModal('info-modal-2')">×</span>
+            <h3>LP-F1 详细信息</h3>
+            <div style="margin-top: 15px; line-height: 1.6;">
+                <p><strong>包装尺寸:</strong> 55 × 35 × 30 cm</p>
+                <p><strong>包装毛重:</strong> 12 kg</p>
+                <p><strong>打托后总高度:</strong> 180 cm</p>
+                <p><strong>其他规格参数:</strong> 详见规格PDF</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Accessory Info Modals (Examples) -->
+    <div id="accessory-info-1" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="hideModal('accessory-info-1')">×</span>
+            <h3>Floor Stand 详细信息</h3>
+            <div style="margin-top: 15px; line-height: 1.6;">
+                <p><strong>包装尺寸:</strong> 120 × 30 × 20 cm</p>
+                <p><strong>包装毛重:</strong> 8 kg</p>
+                <p><strong>材质:</strong> 钢制</p>
+                <p><strong>高度:</strong> 100 cm (可调)</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- More accessory info modals would be defined here -->
+    
+    <!-- Cart Modal -->
+    <div id="cart-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="hideModal('cart-modal')">×</span>
+            <h3>购物车</h3>
+            <div id="cart-items" style="margin-top: 15px;">
+                <!-- Cart items will be dynamically added here -->
+                <div style="padding: 20px; text-align: center; color: #666;">
+                    购物车为空
+                </div>
+            </div>
+            <div id="cart-total" style="display: none;"></div>
+            <div class="cart-actions" style="display: flex; justify-content: space-between; margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;">
+                <button id="clear-cart-btn" class="btn-secondary" style="background-color: transparent; color: #e53935; border: 1px solid #e53935; padding: 8px 15px; border-radius: 4px; cursor: pointer; transition: all 0.2s;">
+                    <span style="display: flex; align-items: center;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        清空购物车
+                    </span>
+                </button>
+                <button class="cart-checkout-btn" style="padding: 8px 20px;">
+                    <span style="display: flex; align-items: center;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                        结算
+                    </span>
+                </button>
+            </div>
+            
+            <!-- 清空购物车确认面板 -->
+            <div id="cart-confirm" class="cart-confirm">
+                <div class="cart-confirm-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                </div>
+                <div class="cart-confirm-title">确认清空购物车</div>
+                <div class="cart-confirm-text">清空购物车后，所有商品将被移除且无法恢复。确定要继续吗？</div>
+                <div class="cart-confirm-buttons">
+                    <button id="cart-confirm-cancel" class="cart-confirm-button cart-confirm-cancel">取消</button>
+                    <button id="cart-confirm-proceed" class="cart-confirm-button cart-confirm-proceed">确认清空</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="#">首页</a> > <a href="#">产品分类</a> > <span>包装机</span>
+        </div>
+        
+        <h1 class="section-title">Machine</h1>
+        
+        <div class="tabs">
+            <div class="tab active">Void Fill</div>
+            <div class="tab">Cushioning</div>
+            <div class="tab">Wrapping</div>
+        </div>
+        
+        
+        <!-- Product List -->
+        <div class="product-list">
+            <!-- Product 1 -->
+            <div class="product-item" data-product="LP-V1">
+                <div class="product-selector">
+                    <input type="radio" name="product" id="product1" class="product-radio" data-product="LP-V1" checked>
+                </div>
+                <div class="product-info">
+                    <div class="product-code">LP-V1</div>
+                    <div class="product-description">
+                        <strong>描述</strong>
+                        <div>部分属性展示</div>
+                        <div class="product-details">
+                            <span class="product-detail-item"><strong>料号:</strong> BJT-LP-V1-2024</span>
+                            <span class="product-detail-item"><strong>托盘尺寸:</strong> 120 × 80 × 160 cm</span>
+                            <span class="product-detail-item"><strong>一拖数量:</strong> 24件</span>
+                        </div>
+                        <div class="more-info-section">
+                            <a href="#" class="specification-link">Specification pdf</a>
+                            <span class="tooltip">
+                                <a href="#" class="more-info-link">More info</a>
+                                <div class="tooltip-content">
+                                    <div class="tooltip-title">LP-V1 详细信息</div>
+                                    <div class="tooltip-row">
+                                        <span class="tooltip-label">包装尺寸:</span>
+                                        <span>60 × 40 × 35 cm</span>
+                                    </div>
+                                    <div class="tooltip-row">
+                                        <span class="tooltip-label">包装毛重:</span>
+                                        <span>15 kg</span>
+                                    </div>
+                                    <div class="tooltip-row">
+                                        <span class="tooltip-label">打托后总高度:</span>
+                                        <span>190 cm</span>
+                                    </div>
+                                    <div class="tooltip-row">
+                                        <span class="tooltip-label">其他规格参数:</span>
+                                        <span>详见规格PDF</span>
+                                    </div>
+                                </div>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="product-inventory">
+                        <div>库存：EU20</div>
+                        <div>AU20</div>
+                        <div>DE10</div>
+                    </div>
+                    <div class="product-pricing">
+                        <div>价格：100 (1-10)</div>
+                        <div>90 (11-100)</div>
+                        <div>50 (>100)</div>
+                    </div>
+                </div>
+                <img src="https://via.placeholder.com/100x100?text=Product" alt="Product Image" class="product-image">
+                <div class="product-actions">
+                    <span>X</span>
+                    <input type="number" class="quantity-input" value="1" min="1">
+                    <button class="btn-add" onclick="addMachineToCart('LP-V1', 100)">Add</button>
+                </div>
+            </div>
+            
+            <!-- Product 2 -->
+            <div class="product-item" data-product="LP-F1">
+                <div class="product-selector">
+                    <input type="radio" name="product" id="product2" class="product-radio" data-product="LP-F1">
+                </div>
+                <div class="product-info">
+                    <div class="product-code">LP-F1</div>
+                    <div class="product-description">
+                        <strong>Des.</strong>
+                        <div>部分属性展示</div>
+                        <div class="product-details">
+                            <span class="product-detail-item"><strong>料号:</strong> BJT-LP-F1-2024</span>
+                            <span class="product-detail-item"><strong>托盘尺寸:</strong> 110 × 75 × 145 cm</span>
+                            <span class="product-detail-item"><strong>一拖数量:</strong> 20件</span>
+                        </div>
+                        <div class="more-info-section">
+                            <a href="#" class="specification-link">Specification pdf</a>
+                            <span class="tooltip">
+                                <a href="#" class="more-info-link">More info</a>
+                                <div class="tooltip-content">
+                                    <div class="tooltip-title">LP-F1 详细信息</div>
+                                    <div class="tooltip-row">
+                                        <span class="tooltip-label">包装尺寸:</span>
+                                        <span>55 × 35 × 30 cm</span>
+                                    </div>
+                                    <div class="tooltip-row">
+                                        <span class="tooltip-label">包装毛重:</span>
+                                        <span>12 kg</span>
+                                    </div>
+                                    <div class="tooltip-row">
+                                        <span class="tooltip-label">打托后总高度:</span>
+                                        <span>180 cm</span>
+                                    </div>
+                                    <div class="tooltip-row">
+                                        <span class="tooltip-label">其他规格参数:</span>
+                                        <span>详见规格PDF</span>
+                                    </div>
+                                </div>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="product-inventory">
+                        <div>库存：EU15</div>
+                        <div>AU15</div>
+                        <div>DE8</div>
+                    </div>
+                    <div class="product-pricing">
+                        <div>价格：120 (1-10)</div>
+                        <div>110 (11-100)</div>
+                        <div>95 (>100)</div>
+                    </div>
+                </div>
+                <img src="https://via.placeholder.com/100x100?text=Product" alt="Product Image" class="product-image">
+                <div class="product-actions">
+                    <span>X</span>
+                    <input type="number" class="quantity-input" value="1" min="1">
+                    <button class="btn-add" onclick="addMachineToCart('LP-F1', 120)">Add</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Voltage Selection Section -->
+        <div class="voltage-options" id="voltageOptions">
+            <span>Voltage:</span>
+            <label class="voltage-option">
+                <input type="radio" name="voltage" id="voltage220" class="voltage-radio" value="220" checked> 220
+            </label>
+            <label class="voltage-option">
+                <input type="radio" name="voltage" id="voltage110" class="voltage-radio" value="110"> 110
+            </label>
+        
+        </div>
+        
+        <!-- Level 1 Accessory Section -->
+        <div class="accessory-section" id="accessory-level-1">
+            <h2 class="section-title">Accessory #1 <span class="level-indicator">Level 1</span>
+                <span id="level1-context-message" class="dynamic-note">请先选择上方的主机型号</span>
+            </h2>
+            
+            <!-- Accessory List Level 1 -->
+            <div class="product-list">
+                <!-- Accessory 1-1 -->
+                <div class="product-item" data-accessory="Floor-Stand">
+                    <div class="product-selector">
+                        <input type="radio" name="accessory1" id="accessory1-1" class="accessory-radio level-1" data-accessory="Floor-Stand">
+                    </div>
+                    <div class="product-info">
+                        <div class="product-code">Floor Stand</div>
+                        <div class="product-description">
+                            <div class="accessory-name">地面支架组件</div>
+                            <div class="accessory-specs">
+                                <span class="frequency-spec" style="transition: all 0.3s ease; background-color: #daeeff;"><strong>频率:</strong> <span style="font-weight: 700; color: #0066cc;">50Hz</span></span>
+                                <span class="accessory-spec-item"><strong>料号:</strong> BJT-FS-V2-2024</span>
+                                <span class="accessory-spec-item"><strong>电压:</strong> 220V</span>
+                                <span class="accessory-spec-item"><strong>托盘尺寸:</strong> 90×70×120cm</span>
+                                <span class="accessory-spec-item"><strong>一托数量:</strong> 36件</span>
+                            </div>
+                            <div class="more-info-section">
+                                <a href="#" class="specification-link">Specification pdf</a>
+                                <span class="tooltip">
+                                    <a href="#" class="more-info-link">More info</a>
+                                    <div class="tooltip-content">
+                                        <div class="tooltip-title">Floor Stand 详细信息</div>
+                                        <div class="tooltip-row">
+                                            <span class="tooltip-label">包装尺寸:</span>
+                                            <span>120 × 30 × 20 cm</span>
+                                        </div>
+                                        <div class="tooltip-row">
+                                            <span class="tooltip-label">包装毛重:</span>
+                                            <span>8 kg</span>
+                                        </div>
+                                        <div class="tooltip-row">
+                                            <span class="tooltip-label">材质:</span>
+                                            <span>钢制</span>
+                                        </div>
+                                        <div class="tooltip-row">
+                                            <span class="tooltip-label">高度:</span>
+                                            <span>100 cm (可调)</span>
+                                        </div>
+                                    </div>
+                                </span>
+                            </div>
+                            <div class="product-inventory">
+                                <div>库存：EU12</div>
+                                <div>AU10</div>
+                                <div>DE8</div>
+                            </div>
+                            <div class="product-pricing">
+                                <div>价格：80 (1-5)</div>
+                                <div>70 (6-20)</div>
+                                <div>60 (>20)</div>
+                            </div>
+                        </div>
+                        <img src="https://via.placeholder.com/100x100?text=Product" alt="Accessory Image" class="product-image">
+                        <div class="product-actions">
+                            <span>X</span>
+                            <input type="number" class="quantity-input" value="1" min="1">
+                            <button class="btn-add" onclick="addAccessoryToCart('Floor-Stand', 80)">Add</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Accessory 1-2 -->
+                    <div class="product-item" data-parent="Floor-Stand" data-accessory="Table-Stand">
+                        <div class="product-selector">
+                            <input type="radio" name="accessory1" id="accessory1-2" class="accessory-radio level-1" data-accessory="Table-Stand">
+                        </div>
+                        <div class="product-info">
+                            <div class="product-code">Table Stand</div>
+                            <div class="product-description">
+                                <div class="accessory-name">桌面支架组件</div>
+                                <div class="accessory-specs">
+                                    <span class="frequency-spec" style="transition: all 0.3s ease; background-color: #daeeff;"><strong>频率:</strong> <span style="font-weight: 700; color: #0066cc;">50Hz</span></span>
+                                    <span class="accessory-spec-item"><strong>料号:</strong> BJT-TS-V1-2024</span>
+                                    <span class="accessory-spec-item"><strong>电压:</strong> 220V</span>
+                                    <span class="accessory-spec-item"><strong>托盘尺寸:</strong> 80×60×110cm</span>
+                                    <span class="accessory-spec-item"><strong>一托数量:</strong> 20件</span>
+                                </div>
+                                <div class="more-info-section">
+                                    <a href="#" class="specification-link">Specification pdf</a>
+                                    <span class="tooltip">
+                                        <a href="#" class="more-info-link">More info</a>
+                                        <div class="tooltip-content">
+                                            <div class="tooltip-title">Table Stand 详细信息</div>
+                                            <div class="tooltip-row">
+                                                <span class="tooltip-label">包装尺寸:</span>
+                                                <span>90 × 25 × 18 cm</span>
+                                            </div>
+                                            <div class="tooltip-row">
+                                                <span class="tooltip-label">包装毛重:</span>
+                                                <span>6.5 kg</span>
+                                            </div>
+                                            <div class="tooltip-row">
+                                                <span class="tooltip-label">材质:</span>
+                                                <span>铝合金</span>
+                                            </div>
+                                            <div class="tooltip-row">
+                                                <span class="tooltip-label">高度:</span>
+                                                <span>75 cm (固定)</span>
+                                            </div>
+                                        </div>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="product-inventory">
+                                <div>库存：EU15</div>
+                                <div>AU12</div>
+                                <div>DE10</div>
+                            </div>
+                            <div class="product-pricing">
+                                <div>价格：75 (1-5)</div>
+                                <div>65 (6-20)</div>
+                                <div>55 (>20)</div>
+                            </div>
+                        </div>
+                        <img src="https://via.placeholder.com/100x100?text=Product" alt="Accessory Image" class="product-image">
+                        <div class="product-actions">
+                            <span>X</span>
+                            <input type="number" class="quantity-input" value="1" min="1">
+                            <button class="btn-add" onclick="addAccessoryToCart('Table-Stand', 75)">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Level 2 Accessory Section -->
+        <div class="accessory-level-2" id="accessory-level-2">
+            <h2 class="section-title">Accessory #2 <span class="level-indicator">Level 2</span>
+                <span id="level2-context-message" class="dynamic-note"></span>
+            </h2>
+            
+            <!-- Accessory List Level 2 -->
+            <div class="product-list">
+                <!-- Accessory 2-1 -->
+                <div class="product-item" data-parent="Floor-Stand" data-accessory="Cable-Holder">
+                    <div class="product-selector">
+                        <input type="radio" name="accessory2" id="accessory2-1" class="accessory-radio level-2" data-accessory="Cable-Holder">
+                    </div>
+                    <div class="product-info">
+                        <div class="product-code">Cable Holder</div>
+                        <div class="product-description">
+                            <div class="accessory-name">线缆管理组件</div>
+                            <div class="accessory-specs">
+                                <span class="frequency-spec"><strong>频率:</strong> <span style="font-weight: 700; color: #0066cc;">50Hz</span></span>
+                                <span class="accessory-spec-item"><strong>料号:</strong> BJT-CH-V1-2024</span>
+                                <span class="accessory-spec-item"><strong>电压:</strong> 220V</span>
+                                <span class="accessory-spec-item"><strong>托盘尺寸:</strong> 60×45×30cm</span>
+                                <span class="accessory-spec-item"><strong>一托数量:</strong> 36件</span>
+                            </div>
+                            <div class="more-info-section">
+                                <a href="#" class="specification-link">Specification pdf</a>
+                                <span class="tooltip">
+                                    <a href="#" class="more-info-link">More info</a>
+                                    <div class="tooltip-content">
+                                        <div class="tooltip-title">Cable Holder 详细信息</div>
+                                        <div class="tooltip-row">
+                                            <span class="tooltip-label">包装尺寸:</span>
+                                            <span>65 × 40 × 25 cm</span>
+                                        </div>
+                                        <div class="tooltip-row">
+                                            <span class="tooltip-label">包装毛重:</span>
+                                            <span>5.2 kg</span>
+                                        </div>
+                                        <div class="tooltip-row">
+                                            <span class="tooltip-label">材质:</span>
+                                            <span>高强度塑料</span>
+                                        </div>
+                                        <div class="tooltip-row">
+                                            <span class="tooltip-label">兼容性:</span>
+                                            <span>所有Floor Stand型号</span>
+                                        </div>
+                                    </div>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="product-inventory">
+                            <div>库存：EU20</div>
+                            <div>AU15</div>
+                            <div>DE10</div>
+                        </div>
+                        <div class="product-pricing">
+                            <div>价格：30 (1-10)</div>
+                            <div>25 (11-50)</div>
+                            <div>20 (>50)</div>
+                        </div>
+                    </div>
+                    <img src="https://via.placeholder.com/100x100?text=Product" alt="Accessory Image" class="product-image">
+                    <div class="product-actions">
+                        <span>X</span>
+                        <input type="number" class="quantity-input" value="1" min="1">
+                        <button class="btn-add" onclick="addAccessoryToCart('Cable-Holder', 30)">Add</button>
+                    </div>
+                </div>
+                
+                <!-- Accessory 2-2 -->
+                <div class="product-item" data-parent="Floor-Stand" data-accessory="Shelf-Attachment">
+                    <div class="product-selector">
+                        <input type="radio" name="accessory2" id="accessory2-2" class="accessory-radio level-2" data-accessory="Shelf-Attachment">
+                    </div>
+                    <div class="product-info">
+                        <div class="product-code">Shelf Attachment</div>
+                        <div class="product-description">
+                            <div class="accessory-name">额外存储架</div>
+                            <div class="accessory-specs">
+                                <span class="frequency-spec"><strong>频率:</strong> N/A</span>
+                                <span class="accessory-spec-item"><strong>料号:</strong> BJT-SA-V1-2024</span>
+                                <span class="accessory-spec-item"><strong>电压:</strong> N/A</span>
+                                <span class="accessory-spec-item"><strong>托盘尺寸:</strong> 75×50×40cm</span>
+                                <span class="accessory-spec-item"><strong>一托数量:</strong> 28件</span>
+                            </div>
+                            <div class="more-info-section">
+                                <a href="#" class="specification-link">Specification pdf</a>
+                                <a href="#" class="more-info-link" onclick="showModal('accessory-info-4')">more info</a>
+                            </div>
+                        </div>
+                        <div class="product-inventory">
+                            <div>库存：EU18</div>
+                            <div>AU14</div>
+                            <div>DE9</div>
+                        </div>
+                        <div class="product-pricing">
+                            <div>价格：40 (1-10)</div>
+                            <div>35 (11-50)</div>
+                            <div>30 (>50)</div>
+                        </div>
+                    </div>
+                    <img src="https://via.placeholder.com/100x100?text=Product" alt="Accessory Image" class="product-image">
+                    <div class="product-actions">
+                        <span>X</span>
+                        <input type="number" class="quantity-input" value="1" min="1">
+                        <button class="btn-add" onclick="addAccessoryToCart('Shelf-Attachment', 40)">Add</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Level 3 Accessory Section -->
+        <div class="accessory-level-3" id="accessory-level-3">
+            <h2 class="section-title">Accessory #3 <span class="level-indicator">Level 3</span>
+                <span id="level3-context-message" class="dynamic-note"></span>
+            </h2>
+            
+            <!-- Accessory List Level 3 -->
+            <div class="product-list">
+                <!-- Accessory 3-1 -->
+                <div class="product-item" data-parent="Cable-Holder" data-accessory="Extension-Cable">
+                    <div class="product-selector">
+                        <input type="radio" name="accessory3" id="accessory3-1" class="accessory-radio level-3" data-accessory="Extension-Cable">
+                    </div>
+                    <div class="product-info">
+                        <div class="product-code">Extension Cable</div>
+                        <div class="product-description">
+                            <div class="accessory-name">延长电缆</div>
+                            <div class="accessory-specs">
+                                <span class="frequency-spec"><strong>频率:</strong> 50Hz</span>
+                                <span class="accessory-spec-item"><strong>料号:</strong> BJT-EC-V1-2024</span>
+                                <span class="accessory-spec-item"><strong>电压:</strong> 220V</span>
+                                <span class="accessory-spec-item"><strong>托盘尺寸:</strong> 50×40×30cm</span>
+                                <span class="accessory-spec-item"><strong>一托数量:</strong> 50件</span>
+                            </div>
+                            <div class="more-info-section">
+                                <a href="#" class="specification-link">Specification pdf</a>
+                                <a href="#" class="more-info-link" onclick="showModal('accessory-info-6')">more info</a>
+                            </div>
+                        </div>
+                        <div class="product-inventory">
+                            <div>库存：EU30</div>
+                            <div>AU25</div>
+                            <div>DE20</div>
+                        </div>
+                        <div class="product-pricing">
+                            <div>价格：25 (1-10)</div>
+                            <div>20 (11-50)</div>
+                            <div>15 (>50)</div>
+                        </div>
+                    </div>
+                    <img src="https://via.placeholder.com/100x100?text=Product" alt="Accessory Image" class="product-image">
+                    <div class="product-actions">
+                        <span>X</span>
+                        <input type="number" class="quantity-input" value="1" min="1">
+                        <button class="btn-add" onclick="addAccessoryToCart('Extension-Cable', 25)">Add</button>
+                    </div>
+                </div>
+                
+                <!-- Accessory 3-2 for Shelf-Attachment -->
+                <div class="product-item" data-parent="Shelf-Attachment" data-accessory="Extra-Divider">
+                    <div class="product-selector">
+                        <input type="radio" name="accessory3" id="accessory3-2" class="accessory-radio level-3" data-accessory="Extra-Divider">
+                    </div>
+                    <div class="product-info">
+                        <div class="product-code">Extra Divider</div>
+                        <div class="product-description">
+                            <div class="accessory-name">隔板组件</div>
+                            <div class="accessory-specs">
+                                <span class="frequency-spec"><strong>频率:</strong> N/A</span>
+                                <span class="accessory-spec-item"><strong>料号:</strong> BJT-ED-V1-2024</span>
+                                <span class="accessory-spec-item"><strong>电压:</strong> N/A</span>
+                                <span class="accessory-spec-item"><strong>托盘尺寸:</strong> 45×35×25cm</span>
+                                <span class="accessory-spec-item"><strong>一托数量:</strong> 60件</span>
+                            </div>
+                            <div class="more-info-section">
+                                <a href="#" class="specification-link">Specification pdf</a>
+                                <a href="#" class="more-info-link" onclick="showModal('accessory-info-7')">more info</a>
+                            </div>
+                        </div>
+                        <div class="product-inventory">
+                            <div>库存：EU40</div>
+                            <div>AU35</div>
+                            <div>DE25</div>
+                        </div>
+                        <div class="product-pricing">
+                            <div>价格：15 (1-10)</div>
+                            <div>12 (11-50)</div>
+                            <div>10 (>50)</div>
+                        </div>
+                    </div>
+                    <img src="https://via.placeholder.com/100x100?text=Product" alt="Accessory Image" class="product-image">
+                    <div class="product-actions">
+                        <span>X</span>
+                        <input type="number" class="quantity-input" value="1" min="1">
+                        <button class="btn-add" onclick="addAccessoryToCart('Extra-Divider', 15)">Add</button>
+                    </div>
+                </div>
+                
+                <!-- Accessory for Rotating Base -->
+                <div class="product-item" data-parent="Rotating-Base" data-accessory="Locking-Mechanism">
+                    <div class="product-selector">
+                        <input type="radio" name="accessory3" id="accessory3-3" class="accessory-radio level-3" data-accessory="Locking-Mechanism">
+                    </div>
+                    <div class="product-info">
+                        <div class="product-code">Locking Mechanism</div>
+                        <div class="product-description">
+                            <div class="accessory-name">锁定机构</div>
+                            <div class="accessory-specs">
+                                <span class="frequency-spec"><strong>频率:</strong> N/A</span>
+                                <span class="accessory-spec-item"><strong>料号:</strong> BJT-LM-V1-2024</span>
+                                <span class="accessory-spec-item"><strong>电压:</strong> N/A</span>
+                                <span class="accessory-spec-item"><strong>托盘尺寸:</strong> 40×30×20cm</span>
+                                <span class="accessory-spec-item"><strong>一托数量:</strong> 75件</span>
+                            </div>
+                            <div class="more-info-section">
+                                <a href="#" class="specification-link">Specification pdf</a>
+                                <a href="#" class="more-info-link" onclick="showModal('accessory-info-8')">more info</a>
+                            </div>
+                        </div>
+                        <div class="product-inventory">
+                            <div>库存：EU22</div>
+                            <div>AU18</div>
+                            <div>DE15</div>
+                        </div>
+                        <div class="product-pricing">
+                            <div>价格：20 (1-10)</div>
+                            <div>18 (11-50)</div>
+                            <div>15 (>50)</div>
+                        </div>
+                    </div>
+                    <img src="https://via.placeholder.com/100x100?text=Product" alt="Accessory Image" class="product-image">
+                    <div class="product-actions">
+                        <span>X</span>
+                        <input type="number" class="quantity-input" value="1" min="1">
+                        <button class="btn-add" onclick="addAccessoryToCart('Locking-Mechanism', 20)">Add</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Level 4 Accessory Section -->
+        <div class="accessory-level-4" id="accessory-level-4">
+            <h2 class="section-title">Accessory #4 <span class="level-indicator">Level 4</span>
+                <span id="level4-context-message" class="dynamic-note"></span>
+            </h2>
+            
+            <!-- Accessory List Level 4 -->
+            <div class="product-list">
+                <!-- Accessory 4-1 -->
+                <div class="product-item" data-parent="Extension-Cable" data-accessory="International-Adapter">
+                    <div class="product-selector">
+                        <input type="radio" name="accessory4" id="accessory4-1" class="accessory-radio level-4" data-accessory="International-Adapter">
+                    </div>
+                    <div class="product-info">
+                        <div class="product-code">International Adapter</div>
+                        <div class="product-description">
+                            <div class="accessory-name">国际转换插头</div>
+                            <div class="accessory-specs">
+                                <span class="frequency-spec"><strong>频率:</strong> 50/60Hz</span>
+                                <span class="accessory-spec-item"><strong>料号:</strong> BJT-IA-V1-2024</span>
+                                <span class="accessory-spec-item"><strong>电压:</strong> 100-240V</span>
+                                <span class="accessory-spec-item"><strong>托盘尺寸:</strong> 35×25×15cm</span>
+                                <span class="accessory-spec-item"><strong>一托数量:</strong> 100件</span>
+                            </div>
+                            <div class="more-info-section">
+                                <a href="#" class="specification-link">Specification pdf</a>
+                                <a href="#" class="more-info-link" onclick="showModal('accessory-info-9')">more info</a>
+                            </div>
+                        </div>
+                        <div class="product-inventory">
+                            <div>库存：EU50</div>
+                            <div>AU45</div>
+                            <div>DE35</div>
+                        </div>
+                        <div class="product-pricing">
+                            <div>价格：18 (1-10)</div>
+                            <div>15 (11-50)</div>
+                            <div>12 (>50)</div>
+                        </div>
+                    </div>
+                    <img src="https://via.placeholder.com/100x100?text=Product" alt="Accessory Image" class="product-image">
+                    <div class="product-actions">
+                        <span>X</span>
+                        <input type="number" class="quantity-input" value="1" min="1">
+                        <button class="btn-add" onclick="addAccessoryToCart('International-Adapter', 18)">Add</button>
+                    </div>
+                </div>
+                
+                <!-- Accessory 4-2 for Extra Divider -->
+                <div class="product-item" data-parent="Extra-Divider" data-accessory="Label-Kit">
+                    <div class="product-selector">
+                        <input type="radio" name="accessory4" id="accessory4-2" class="accessory-radio level-4" data-accessory="Label-Kit">
+                    </div>
+                    <div class="product-info">
+                        <div class="product-code">Label Kit</div>
+                        <div class="product-description">
+                            <div class="accessory-name">标签套装</div>
+                            <div class="accessory-specs">
+                                <span class="frequency-spec"><strong>频率:</strong> N/A</span>
+                                <span class="accessory-spec-item"><strong>料号:</strong> BJT-LK-V1-2024</span>
+                                <span class="accessory-spec-item"><strong>电压:</strong> N/A</span>
+                                <span class="accessory-spec-item"><strong>托盘尺寸:</strong> 30×20×15cm</span>
+                                <span class="accessory-spec-item"><strong>一托数量:</strong> 200件</span>
+                            </div>
+                            <div class="more-info-section">
+                                <a href="#" class="specification-link">Specification pdf</a>
+                                <a href="#" class="more-info-link" onclick="showModal('accessory-info-10')">more info</a>
+                            </div>
+                        </div>
+                        <div class="product-inventory">
+                            <div>库存：EU55</div>
+                            <div>AU50</div>
+                            <div>DE45</div>
+                        </div>
+                        <div class="product-pricing">
+                            <div>价格：10 (1-10)</div>
+                            <div>8 (11-50)</div>
+                            <div>5 (>50)</div>
+                        </div>
+                    </div>
+                    <img src="https://via.placeholder.com/100x100?text=Product" alt="Accessory Image" class="product-image">
+                    <div class="product-actions">
+                        <span>X</span>
+                        <input type="number" class="quantity-input" value="1" min="1">
+                        <button class="btn-add" onclick="addAccessoryToCart('Label-Kit', 10)">Add</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Level 5 Accessory Section -->
+        <div class="accessory-level-5" id="accessory-level-5">
+            <h2 class="section-title">Accessory #5 <span class="level-indicator">Level 5</span>
+                <span id="level5-context-message" class="dynamic-note"></span>
+            </h2>
+            
+            <!-- Accessory List Level 5 -->
+            <div class="product-list">
+                <!-- Accessory 5-1 -->
+                <div class="product-item" data-parent="International-Adapter" data-accessory="Surge-Protector">
+                    <div class="product-selector">
+                        <input type="radio" name="accessory5" id="accessory5-1" class="accessory-radio level-5" data-accessory="Surge-Protector">
+                    </div>
+                    <div class="product-info">
+                        <div class="product-code">Surge Protector</div>
+                        <div class="product-description">
+                            <div class="accessory-name">电涌保护器</div>
+                            <div class="accessory-specs">
+                                <span class="frequency-spec"><strong>频率:</strong> 50/60Hz</span>
+                                <span class="accessory-spec-item"><strong>料号:</strong> BJT-SP-V1-2024</span>
+                                <span class="accessory-spec-item"><strong>电压:</strong> 100-240V</span>
+                                <span class="accessory-spec-item"><strong>托盘尺寸:</strong> 25×20×15cm</span>
+                                <span class="accessory-spec-item"><strong>一托数量:</strong> 250件</span>
+                            </div>
+                            <div class="more-info-section">
+                                <a href="#" class="specification-link">Specification pdf</a>
+                                <a href="#" class="more-info-link" onclick="showModal('accessory-info-11')">more info</a>
+                            </div>
+                        </div>
+                        <div class="product-inventory">
+                            <div>库存：EU60</div>
+                            <div>AU55</div>
+                            <div>DE45</div>
+                        </div>
+                        <div class="product-pricing">
+                            <div>价格：15 (1-10)</div>
+                            <div>12 (11-50)</div>
+                            <div>10 (>50)</div>
+                        </div>
+                    </div>
+                    <img src="https://via.placeholder.com/100x100?text=Product" alt="Accessory Image" class="product-image">
+                    <div class="product-actions">
+                        <span>X</span>
+                        <input type="number" class="quantity-input" value="1" min="1">
+                        <button class="btn-add" onclick="addAccessoryToCart('Surge-Protector', 15)">Add</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer style="margin-top: 50px; text-align: center; padding: 20px; background-color: #f0f0f0; color: #666;">
+        <div class="container">
+            Copyright@Hangzhou Bingjia Tech. Co., Ltd.
+        </div>
+    </footer>
+    
+    <script>
+        // Cart management
+        let cart = [];
+        let cartTotal = 0;
+        
+        // Initialize cart from localStorage when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // 首先清空并重置购物车计数显示
+            const cartCountDisplay = document.getElementById('cartCount');
+            if (cartCountDisplay) {
+                cartCountDisplay.textContent = "0";
+            }
+            
+            // 尝试从localStorage加载购物车
+            try {
+                const savedCart = localStorage.getItem('bjt_cart');
+                if (savedCart && savedCart !== "undefined" && savedCart !== "null") {
+                    const parsedCart = JSON.parse(savedCart);
+                    // 检查购物车数据是否有效
+                    if (Array.isArray(parsedCart) && parsedCart.length > 0) {
+                        cart = parsedCart;
+                        updateCartDisplay();
+                    } else {
+                        // 购物车为空或无效，重置localStorage
+                        localStorage.removeItem('bjt_cart');
+                        cart = [];
+                    }
+                } else {
+                    // localStorage中没有购物车或数据无效，重置
+                    localStorage.removeItem('bjt_cart');
+                    cart = [];
+                }
+            } catch (e) {
+                console.error("Error loading cart from localStorage:", e);
+                // 发生错误时重置购物车
+                localStorage.removeItem('bjt_cart');
+                cart = [];
+            }
+            
+            // 为清空购物车相关的按钮添加事件监听器
+            setupClearCartListeners();
+            
+            // 隐藏频率和电压为N/A的规格项
+            hideNASpecifications();
+        });
+        
+        function addToCart(productName, price, type, specs) {
+            const quantityInput = event.target.previousElementSibling;
+            const quantity = parseInt(quantityInput.value);
+            
+            if (quantity > 0) {
+                // Check if product already exists in cart
+                const existingItem = cart.find(item => item.name === productName);
+                
+                if (existingItem) {
+                    existingItem.quantity += quantity;
+                    existingItem.subtotal = existingItem.quantity * existingItem.price;
+                } else {
+                    cart.push({
+                        name: productName,
+                        price: price,
+                        quantity: quantity,
+                        subtotal: price * quantity,
+                        type: type || 'accessory', // 'machine' 或 'accessory'
+                        specs: specs || {}
+                    });
+                }
+                
+                updateCartDisplay(); // 这会自动保存到localStorage
+                
+                // 显示添加到购物车的通知，而不是使用alert
+                showCartNotification(`${quantity} x ${productName} 已添加到购物车`);
+                
+                quantityInput.value = 1;
+            }
+        }
+        
+        function updateCartCount(delta, index) {
+            const item = cart[index];
+            const newQty = item.quantity + delta;
+            
+            if (newQty > 0) {
+                item.quantity = newQty;
+                item.subtotal = item.quantity * item.price;
+                updateCartDisplay();
+            }
+        }
+        
+        function updateCartDisplay() {
+            const cartItemsContainer = document.getElementById('cart-items');
+            const cartCountDisplay = document.getElementById('cartCount');
+            const cartTotalDisplay = document.getElementById('cart-total');
+            
+            // 确保cart是数组
+            if (!Array.isArray(cart)) {
+                cart = [];
+                localStorage.removeItem('bjt_cart');
+            }
+            
+            // 更新购物车计数
+            const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
+            if (cartCountDisplay) {
+                cartCountDisplay.textContent = totalItems;
+            }
+            
+            // 更新购物车总金额
+            cartTotal = cart.reduce((total, item) => total + item.subtotal, 0);
+            if (cartTotalDisplay) {
+                cartTotalDisplay.textContent = `¥${cartTotal.toLocaleString()}`;
+            }
+            
+            // 保存购物车状态到localStorage
+            if (cart.length > 0) {
+                localStorage.setItem('bjt_cart', JSON.stringify(cart));
+            } else {
+                // 如果购物车为空，则清除本地存储
+                localStorage.removeItem('bjt_cart');
+            }
+            
+            // 清空购物车项容器
+            if (cartItemsContainer) {
+                cartItemsContainer.innerHTML = '';
+                
+                if (cart.length === 0) {
+                    cartItemsContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">购物车为空</div>';
+                    return;
+                }
+                
+                // 分类显示主机和配件
+                const machines = cart.filter(item => item.type === 'machine');
+                const accessories = cart.filter(item => item.type === 'accessory');
+                
+                // 添加主机
+                if (machines.length > 0) {
+                    const machineHeading = document.createElement('div');
+                    machineHeading.className = 'cart-type-heading';
+                    machineHeading.textContent = '主机产品';
+                    cartItemsContainer.appendChild(machineHeading);
+                    
+                    machines.forEach((item, index) => {
+                        addCartItemToDisplay(item, cartItemsContainer, cart.indexOf(item));
+                    });
+                }
+                
+                // 添加配件
+                if (accessories.length > 0) {
+                    const accessoryHeading = document.createElement('div');
+                    accessoryHeading.className = 'cart-type-heading';
+                    accessoryHeading.textContent = '配件产品';
+                    cartItemsContainer.appendChild(accessoryHeading);
+                    
+                    accessories.forEach((item, index) => {
+                        addCartItemToDisplay(item, cartItemsContainer, cart.indexOf(item));
+                    });
+                }
+                
+                // 添加结算区
+                const summaryDiv = document.createElement('div');
+                summaryDiv.className = 'cart-summary';
+                
+                const totalDiv = document.createElement('div');
+                totalDiv.className = 'cart-total';
+                totalDiv.innerHTML = `<span>总计:</span><span>¥${cartTotal.toLocaleString()}</span>`;
+                
+                const checkoutBtn = document.createElement('button');
+                checkoutBtn.className = 'cart-checkout-btn';
+                checkoutBtn.textContent = '结算';
+                
+                summaryDiv.appendChild(totalDiv);
+                summaryDiv.appendChild(checkoutBtn);
+                cartItemsContainer.appendChild(summaryDiv);
+            }
+        }
+        
+        function addCartItemToDisplay(item, container, index) {
+            const itemElement = document.createElement('div');
+            itemElement.className = 'cart-item';
+            
+            // 产品图片
+            const imgElement = document.createElement('img');
+            imgElement.src = 'https://via.placeholder.com/100x100?text=' + encodeURIComponent(item.name);
+            imgElement.alt = item.name;
+            imgElement.className = 'cart-item-image';
+            
+            // 产品信息
+            const infoElement = document.createElement('div');
+            infoElement.className = 'cart-item-info';
+            
+            // 产品标题
+            const titleElement = document.createElement('div');
+            titleElement.className = 'cart-item-title';
+            titleElement.textContent = item.name;
+            
+            // 产品规格
+            const specsElement = document.createElement('div');
+            specsElement.className = 'cart-item-specs';
+            
+            // 根据产品类型显示不同的规格
+            if (item.type === 'machine') {
+                // 主机：料号，产品名称，托盘尺寸，一拖数量
+                if (item.specs) {
+                    appendSpec(specsElement, '料号', item.specs.partNumber);
+                    appendSpec(specsElement, '产品名称', item.specs.productName);
+                    appendSpec(specsElement, '托盘尺寸', item.specs.palletSize);
+                    appendSpec(specsElement, '一拖数量', item.specs.palletQty);
+                }
+            } else {
+                // 配件：型号，料号，产品名称，电压，频率，托盘尺寸，一托数量
+                if (item.specs) {
+                    appendSpec(specsElement, '型号', item.specs.model);
+                    appendSpec(specsElement, '料号', item.specs.partNumber);
+                    appendSpec(specsElement, '产品名称', item.specs.productName);
+                    appendSpec(specsElement, '电压', item.specs.voltage);
+                    appendSpec(specsElement, '频率', item.specs.frequency);
+                    appendSpec(specsElement, '托盘尺寸', item.specs.palletSize);
+                    appendSpec(specsElement, '一托数量', item.specs.palletQty);
+                }
+            }
+            
+            // 产品价格
+            const priceElement = document.createElement('div');
+            priceElement.className = 'cart-item-price';
+            priceElement.textContent = `¥${item.price} × ${item.quantity} = ¥${item.subtotal}`;
+            
+            infoElement.appendChild(titleElement);
+            infoElement.appendChild(specsElement);
+            infoElement.appendChild(priceElement);
+            
+            // 产品操作
+            const actionsElement = document.createElement('div');
+            actionsElement.className = 'cart-item-actions';
+            
+            const minusBtn = document.createElement('button');
+            minusBtn.className = 'cart-btn';
+            minusBtn.textContent = '-';
+            minusBtn.onclick = () => updateCartCount(-1, index);
+            
+            const qtyInput = document.createElement('input');
+            qtyInput.type = 'text';
+            qtyInput.className = 'cart-qty';
+            qtyInput.value = item.quantity;
+            qtyInput.readOnly = true;
+            
+            const plusBtn = document.createElement('button');
+            plusBtn.className = 'cart-btn';
+            plusBtn.textContent = '+';
+            plusBtn.onclick = () => updateCartCount(1, index);
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'cart-btn-delete';
+            deleteBtn.textContent = '删除';
+            deleteBtn.onclick = function() {
+                removeFromCart(index);
+            };
+            
+            actionsElement.appendChild(minusBtn);
+            actionsElement.appendChild(qtyInput);
+            actionsElement.appendChild(plusBtn);
+            actionsElement.appendChild(deleteBtn);
+            
+            itemElement.appendChild(imgElement);
+            itemElement.appendChild(infoElement);
+            itemElement.appendChild(actionsElement);
+            
+            container.appendChild(itemElement);
+        }
+        
+        function appendSpec(container, label, value) {
+            if (value) {
+                const specElement = document.createElement('span');
+                specElement.className = 'cart-item-spec';
+                specElement.textContent = `${label}: ${value}`;
+                container.appendChild(specElement);
+            }
+        }
+        
+        function removeFromCart(index) {
+            // Remove the item from the cart array
+            cart.splice(index, 1);
+            
+            // Save the updated cart to localStorage
+            localStorage.setItem('bjt_cart', JSON.stringify(cart));
+            
+            // Update the cart UI
+            updateCartDisplay();
+        }
+        
+        // Modal management
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+        
+        function hideModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = "none";
+            }
+        }
+        
+        // 清空购物车函数
+        function clearCart() {
+            // 清空购物车数组
+            cart = [];
+            
+            // 清除localStorage中的购物车数据
+            localStorage.removeItem('bjt_cart');
+            
+            // 更新显示
+            updateCartDisplay();
+            
+            // 显示通知
+            showCartNotification('购物车已清空');
+            
+            // 隐藏确认面板
+            hideClearCartConfirmation();
+        }
+        
+        // 设置清空购物车相关按钮的事件监听器
+        function setupClearCartListeners() {
+            // 清空购物车按钮
+            const clearCartBtn = document.getElementById('clear-cart-btn');
+            if (clearCartBtn) {
+                clearCartBtn.addEventListener('click', showClearCartConfirmation);
+            }
+            
+            // 确认面板的取消按钮
+            const cancelBtn = document.getElementById('cart-confirm-cancel');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', hideClearCartConfirmation);
+            }
+            
+            // 确认面板的确认按钮
+            const confirmBtn = document.getElementById('cart-confirm-proceed');
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', clearCart);
+            }
+        }
+        
+        // 显示清空购物车确认面板
+        function showClearCartConfirmation() {
+            const confirmPanel = document.getElementById('cart-confirm');
+            if (confirmPanel) {
+                confirmPanel.classList.add('show');
+                
+                // 添加点击事件监听，点击面板外部关闭确认
+                document.addEventListener('click', handleOutsideClick);
+            }
+        }
+        
+        // 隐藏清空购物车确认面板
+        function hideClearCartConfirmation() {
+            const confirmPanel = document.getElementById('cart-confirm');
+            if (confirmPanel) {
+                confirmPanel.classList.remove('show');
+                
+                // 移除点击事件监听
+                document.removeEventListener('click', handleOutsideClick);
+            }
+        }
+        
+        // 处理点击确认面板外部事件
+        function handleOutsideClick(event) {
+            const confirmPanel = document.getElementById('cart-confirm');
+            // 检查点击是否在确认面板外部
+            if (confirmPanel && !confirmPanel.contains(event.target) && 
+                event.target.id !== 'clear-cart-btn' && !event.target.closest('#clear-cart-btn')) {
+                hideClearCartConfirmation();
+            }
+        }
+        
+        // Accessory hierarchy management
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initial state: hide all accessory sections
+            hideAllAccessorySections();
+            
+            // Product selection handling
+            const productRadios = document.querySelectorAll('.product-radio');
+            productRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.checked) {
+                        // Get selected product name
+                        const selectedProduct = this.getAttribute('data-product');
+                        
+                        // Hide all accessory sections first
+                        hideAllAccessorySections();
+                        
+                        // Reset radio selections in accessories
+                        resetAccessorySelections();
+                        
+                        // Update context message for level 1
+                        updateContextMessage(1, selectedProduct);
+                        
+                        // Explicitly restore the original content before checking
+                        restoreAccessoryList(1);
+                        
+                        // Check if this product has any level 1 accessories
+                        const hasAccessories = checkIfProductHasAccessories(selectedProduct, 1);
+                        
+                        // Only show the accessory section if there are accessories
+                        if (hasAccessories) {
+                            document.getElementById('accessory-level-1').classList.add('visible');
+                            
+                            // Make all level 1 accessories visible
+                            const level1Items = document.querySelectorAll('#accessory-level-1 .product-item');
+                            level1Items.forEach(item => {
+                                // In our design, level 1 items don't use data-parent for machine dependency
+                                // but we'll include this check for future flexibility
+                                if (!item.hasAttribute('data-parent') || 
+                                    item.getAttribute('data-parent') === selectedProduct) {
+                                    item.style.display = 'flex';
+                                } else {
+                                    item.style.display = 'none';
+                                }
+                            });
+                        } else {
+                            // Show the accessory section but with empty content
+                            document.getElementById('accessory-level-1').classList.add('visible');
+                            document.getElementById('level1-context-message').textContent = `该主机 ${selectedProduct} 没有适配件`;
+                        }
+                    }
+                });
+            });
+            
+            // Level 1 accessory selection handling
+            const level1Accessories = document.querySelectorAll('.accessory-radio.level-1');
+            level1Accessories.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.checked) {
+                        const selectedAccessory = this.getAttribute('data-accessory');
+                        
+                        // Show level 2 accessories and hide deeper levels
+                        hideAccessorySectionsFrom(2);
+                        document.getElementById('accessory-level-2').classList.add('visible');
+                        
+                        // Show only relevant level 2 accessories based on parent
+                        showRelevantAccessories(2, selectedAccessory);
+                        
+                        // Reset radio selections in level 2-5
+                        resetAccessorySelectionsFrom(2);
+                        
+                        // Update context message for level 2
+                        updateContextMessage(2, selectedAccessory);
+                        
+                        // Check if this accessory has any level 2 accessories
+                        const hasAccessories = checkIfAccessoryHasChildAccessories(selectedAccessory, 2);
+                        if (!hasAccessories) {
+                            document.getElementById('level2-context-message').textContent = `该配件 ${selectedAccessory} 没有下级适配件`;
+                        }
+                    }
+                });
+            });
+            
+            // Level 2 accessory selection handling
+            const level2Accessories = document.querySelectorAll('.accessory-radio.level-2');
+            level2Accessories.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.checked) {
+                        const selectedAccessory = this.getAttribute('data-accessory');
+                        
+                        // Show level 3 accessories and hide deeper levels
+                        hideAccessorySectionsFrom(3);
+                        document.getElementById('accessory-level-3').classList.add('visible');
+                        
+                        // Show only relevant level 3 accessories based on parent
+                        showRelevantAccessories(3, selectedAccessory);
+                        
+                        // Reset radio selections in level 3-5
+                        resetAccessorySelectionsFrom(3);
+                        
+                        // Update context message for level 3
+                        updateContextMessage(3, selectedAccessory);
+                        
+                        // Check if this accessory has any level 3 accessories
+                        const hasAccessories = checkIfAccessoryHasChildAccessories(selectedAccessory, 3);
+                        if (!hasAccessories) {
+                            document.getElementById('level3-context-message').textContent = `该配件 ${selectedAccessory} 没有下级适配件`;
+                        }
+                    }
+                });
+            });
+            
+            // Level 3 accessory selection handling
+            const level3Accessories = document.querySelectorAll('.accessory-radio.level-3');
+            level3Accessories.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.checked) {
+                        const selectedAccessory = this.getAttribute('data-accessory');
+                        
+                        // Show level 4 accessories and hide deeper levels
+                        hideAccessorySectionsFrom(4);
+                        document.getElementById('accessory-level-4').classList.add('visible');
+                        
+                        // Show only relevant level 4 accessories based on parent
+                        showRelevantAccessories(4, selectedAccessory);
+                        
+                        // Reset radio selections in level 4-5
+                        resetAccessorySelectionsFrom(4);
+                        
+                        // Update context message for level 4
+                        updateContextMessage(4, selectedAccessory);
+                        
+                        // Check if this accessory has any level 4 accessories
+                        const hasAccessories = checkIfAccessoryHasChildAccessories(selectedAccessory, 4);
+                        if (!hasAccessories) {
+                            document.getElementById('level4-context-message').textContent = `该配件 ${selectedAccessory} 没有下级适配件`;
+                        }
+                    }
+                });
+            });
+            
+            // Level 4 accessory selection handling
+            const level4Accessories = document.querySelectorAll('.accessory-radio.level-4');
+            level4Accessories.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.checked) {
+                        const selectedAccessory = this.getAttribute('data-accessory');
+                        
+                        // Show level 5 accessories
+                        document.getElementById('accessory-level-5').classList.add('visible');
+                        
+                        // Show only relevant level 5 accessories based on parent
+                        showRelevantAccessories(5, selectedAccessory);
+                        
+                        // Reset radio selections in level 5
+                        resetAccessorySelectionsFrom(5);
+                        
+                        // Update context message for level 5
+                        updateContextMessage(5, selectedAccessory);
+                        
+                        // Check if this accessory has any level 5 accessories
+                        const hasAccessories = checkIfAccessoryHasChildAccessories(selectedAccessory, 5);
+                        if (!hasAccessories) {
+                            document.getElementById('level5-context-message').textContent = `该配件 ${selectedAccessory} 没有下级适配件`;
+                        }
+                    }
+                });
+            });
+            
+            // Tab switching
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+            
+            // Voltage switching
+            const voltageRadios = document.querySelectorAll('.voltage-radio');
+            voltageRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    // In a real application, this would filter compatible accessories
+                    console.log(`Voltage switched to: ${this.value}`);
+                });
+            });
+            
+            // Default selection: Select first product to show first level accessories
+            if (productRadios[0]) {
+                const defaultProduct = productRadios[0].getAttribute('data-product');
+                productRadios[0].checked = true;
+                
+                // Check if default product has accessories
+                const hasAccessories = checkIfProductHasAccessories(defaultProduct, 1);
+                
+                // Show first level accessory section
+                document.getElementById('accessory-level-1').classList.add('visible');
+                
+                // Update context message for default selection
+                if (hasAccessories) {
+                    updateContextMessage(1, defaultProduct);
+                    
+                    // Make sure all accessories for this product are displayed
+                    const level1Items = document.querySelectorAll('#accessory-level-1 .product-item');
+                    level1Items.forEach(item => {
+                        // If the item doesn't have a data-parent, it's a top-level accessory
+                        // or if its parent attribute matches the selected product
+                        // In our UI structure, level 1 items don't have data-parent set this way, 
+                        // but we'll leave this logic for future flexibility
+                        if (!item.hasAttribute('data-parent') || 
+                            item.getAttribute('data-parent') === defaultProduct) {
+                            item.style.display = 'flex';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                } else {
+                    document.getElementById('level1-context-message').textContent = `该主机 ${defaultProduct} 没有适配件`;
+                }
+            }
+        });
+        
+        function hideAllAccessorySections() {
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById(`accessory-level-${i}`).classList.remove('visible');
+            }
+        }
+        
+        function hideAccessorySectionsFrom(level) {
+            for (let i = level; i <= 5; i++) {
+                document.getElementById(`accessory-level-${i}`).classList.remove('visible');
+            }
+        }
+        
+        function resetAccessorySelections() {
+            const allAccessoryRadios = document.querySelectorAll('.accessory-radio');
+            allAccessoryRadios.forEach(radio => {
+                radio.checked = false;
+            });
+        }
+        
+        function resetAccessorySelectionsFrom(level) {
+            for (let i = level; i <= 5; i++) {
+                const radios = document.querySelectorAll(`.accessory-radio.level-${i}`);
+                radios.forEach(radio => {
+                    radio.checked = false;
+                });
+            }
+        }
+        
+        // 检查产品是否有配件
+        function checkIfProductHasAccessories(productName, level) {
+            // For level 1, check if there are accessories for this product
+            if (level === 1) {
+                let hasAccessories = false;
+                
+                // Explicitly check each product
+                switch(productName) {
+                    case 'LP-V1':
+                        // LP-V1 has accessories
+                        hasAccessories = true;
+                        break;
+                    case 'LP-F1':
+                        // LP-F1 has no accessories in this demo
+                        hasAccessories = false;
+                        break;
+                    default:
+                        // Default to no accessories for unknown products
+                        hasAccessories = false;
+                }
+                
+                // If no accessories, clear the level 1 accessory list
+                if (!hasAccessories) {
+                    clearAccessoryList(1);
+                } else {
+                    // If there are accessories, make sure the list is restored
+                    restoreAccessoryList(1);
+                }
+                
+                return hasAccessories;
+            }
+            return false;
+        }
+        
+        // 检查配件是否有子配件
+        function checkIfAccessoryHasChildAccessories(accessoryName, level) {
+            // Check if accessory has child accessories
+            const childAccessories = document.querySelectorAll(`.product-item[data-parent="${accessoryName}"]`);
+            const hasChildren = childAccessories.length > 0;
+            
+            // If no child accessories, clear the accessory list at that level
+            if (!hasChildren) {
+                clearAccessoryList(level);
+            }
+            
+            return hasChildren;
+        }
+        
+        // 清空指定层级的配件列表
+        function clearAccessoryList(level) {
+            const accessoryContainer = document.querySelector(`#accessory-level-${level} .product-list`);
+            
+            // Only save the original content if it hasn't been saved already
+            if (!accessoryContainer.getAttribute('data-original-content')) {
+                accessoryContainer.setAttribute('data-original-content', accessoryContainer.innerHTML);
+            }
+            
+            // Clear the content and show empty message with CSS class
+            accessoryContainer.innerHTML = '<div class="empty-accessory-message">没有适配组件</div>';
+        }
+        
+        // 恢复指定层级的配件列表原始内容
+        function restoreAccessoryList(level) {
+            const accessoryContainer = document.querySelector(`#accessory-level-${level} .product-list`);
+            const originalContent = accessoryContainer.getAttribute('data-original-content');
+            
+            // Check if the current content is the empty message
+            const hasEmptyMessage = accessoryContainer.querySelector('.empty-accessory-message');
+            
+            // Only restore if we have original content and currently showing the empty message
+            if (originalContent && hasEmptyMessage) {
+                accessoryContainer.innerHTML = originalContent;
+                
+                // Make sure all items are visible after restore
+                const items = accessoryContainer.querySelectorAll('.product-item');
+                items.forEach(item => {
+                    item.style.display = 'flex';
+                });
+                
+                return true;
+            }
+            
+            return false;
+        }
+        
+        // 更新showRelevantAccessories函数以处理没有相关配件的情况
+        function showRelevantAccessories(level, parentAccessory) {
+            // First restore the original content for this level
+            restoreAccessoryList(level);
+            
+            // Get all accessories at this level
+            const accessories = document.querySelectorAll(`#accessory-level-${level} .product-item`);
+            
+            // Count matching accessories
+            let matchCount = 0;
+            
+            // Hide/show accessories based on parent
+            accessories.forEach(item => {
+                // Check if this item is a direct child of the parent accessory
+                if (item.getAttribute('data-parent') === parentAccessory) {
+                    item.style.display = 'flex';
+                    matchCount++;
+                } else {
+                    // Hide items that don't match the parent
+                    item.style.display = 'none';
+                }
+            });
+            
+            // If no accessories match the parent, display empty message
+            if (matchCount === 0) {
+                clearAccessoryList(level);
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // 更新配件层级的上下文消息
+        function updateContextMessage(level, selectedItem) {
+            const contextMessageElement = document.getElementById(`level${level}-context-message`);
+            
+            if (level === 1) {
+                if (selectedItem) {
+                    contextMessageElement.textContent = `下方列出的是 ${selectedItem} 的适配件`;
+                } else {
+                    contextMessageElement.textContent = '请先选择上方的主机型号';
+                }
+            } else {
+                if (selectedItem) {
+                    contextMessageElement.textContent = `下方列出的是 ${selectedItem} 的下级适配件`;
+                } else {
+                    contextMessageElement.textContent = '';
+                }
+            }
+        }
+        
+        // 商品添加到购物车时，提供详细信息
+        function addMachineToCart(productName, price) {
+            const quantityInput = event.target.previousElementSibling;
+            const quantity = parseInt(quantityInput.value);
+            
+            // 获取主机的规格信息
+            let specs = {};
+            
+            if (productName === 'LP-V1') {
+                specs = {
+                    partNumber: 'BJT-LP-V1-2024',
+                    productName: '气垫机 V1型',
+                    palletSize: '120 × 80 × 160 cm',
+                    palletQty: '24件'
+                };
+            } else if (productName === 'LP-F1') {
+                specs = {
+                    partNumber: 'BJT-LP-F1-2024',
+                    productName: '气垫机 F1型',
+                    palletSize: '110 × 75 × 145 cm',
+                    palletQty: '20件'
+                };
+            }
+            
+            addToCart(productName, price, 'machine', specs);
+        }
+        
+        function addAccessoryToCart(productName, price) {
+            const quantityInput = event.target.previousElementSibling;
+            const quantity = parseInt(quantityInput.value);
+            
+            // 获取配件的规格信息
+            let specs = {};
+            
+            if (productName === 'Floor-Stand') {
+                specs = {
+                    model: 'FS-V2',
+                    partNumber: 'BJT-FS-V2-2024',
+                    productName: '地面支架组件',
+                    voltage: 'N/A',
+                    frequency: 'N/A',
+                    palletSize: '90 × 70 × 120 cm',
+                    palletQty: '16件'
+                };
+            } else if (productName === 'Table-Stand') {
+                specs = {
+                    model: 'TS-V1',
+                    partNumber: 'BJT-TS-V1-2024',
+                    productName: '桌面支架组件',
+                    voltage: 'N/A',
+                    frequency: 'N/A',
+                    palletSize: '80 × 60 × 110 cm',
+                    palletQty: '20件'
+                };
+            } else if (productName === 'Cable-Holder') {
+                specs = {
+                    model: 'CH-V1',
+                    partNumber: 'BJT-CH-V1-2024',
+                    productName: '线缆管理组件',
+                    voltage: '220V',
+                    frequency: '50Hz',
+                    palletSize: '60 × 45 × 30 cm',
+                    palletQty: '36件'
+                };
+            }
+            
+            addToCart(productName, price, 'accessory', specs);
+        }
+    </script>
+    
+    <script>
+        // 通知系统
+        let activeNotification = null;
+        let notificationTimeout = null;
+        
+        // 显示购物车通知
+        function showCartNotification(message, duration = 3000) {
+            // 如果已经有通知在显示，先清除它
+            if (activeNotification) {
+                document.body.removeChild(activeNotification);
+                clearTimeout(notificationTimeout);
+                activeNotification = null;
+            }
+            
+            // 创建通知元素
+            const notification = document.createElement('div');
+            notification.className = 'cart-notification';
+            
+            // 通知内容
+            const content = document.createElement('div');
+            content.className = 'cart-notification-content';
+            
+            const icon = document.createElement('div');
+            icon.className = 'cart-notification-icon';
+            icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>';
+            
+            const text = document.createElement('div');
+            text.className = 'cart-notification-text';
+            text.textContent = message;
+            
+            content.appendChild(icon);
+            content.appendChild(text);
+            
+            // 关闭按钮
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'cart-notification-close';
+            closeBtn.innerHTML = '×';
+            closeBtn.addEventListener('click', () => {
+                closeNotification(notification);
+            });
+            
+            // 进度条
+            const progress = document.createElement('div');
+            progress.className = 'cart-notification-progress';
+            
+            // 添加到通知元素
+            notification.appendChild(content);
+            notification.appendChild(closeBtn);
+            notification.appendChild(progress);
+            
+            // 添加到文档
+            document.body.appendChild(notification);
+            
+            // 添加进度条动画
+            progress.style.transition = `width ${duration}ms linear`;
+            
+            // 强制重绘
+            notification.offsetHeight;
+            
+            // 开始进度条动画
+            requestAnimationFrame(() => {
+                notification.classList.add('show');
+                progress.style.width = '0%';
+            });
+            
+            // 设置自动关闭
+            notificationTimeout = setTimeout(() => {
+                closeNotification(notification);
+            }, duration);
+            
+            // 保存当前通知引用
+            activeNotification = notification;
+            
+            return notification;
+        }
+        
+        // 关闭通知
+        function closeNotification(notification) {
+            if (!notification) return;
+            
+            notification.classList.remove('show');
+            
+            // 移除元素
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+                if (activeNotification === notification) {
+                    activeNotification = null;
+                }
+            }, 300);
+        }
+        
+        // 当页面加载时，隐藏N/A规格
+        document.addEventListener('DOMContentLoaded', function() {
+            // 隐藏频率和电压为N/A的规格项
+            hideNASpecifications();
+            
+            function hideNASpecifications() {
+                // 处理频率规格
+                document.querySelectorAll('.frequency-spec').forEach(element => {
+                    const text = element.textContent.trim();
+                    if (text.includes('N/A') || text.endsWith(':')) {
+                        element.style.display = 'none';
+                    }
+                });
+                
+                // 处理电压规格
+                document.querySelectorAll('.accessory-spec-item').forEach(element => {
+                    if (element.querySelector('strong') && 
+                        element.querySelector('strong').textContent.includes('电压:')) {
+                        const text = element.textContent.trim();
+                        if (text.includes('N/A') || text.endsWith(':')) {
+                            element.style.display = 'none';
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

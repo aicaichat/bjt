@@ -1,0 +1,326 @@
+1. consumable 页面的展示逻辑
+
+1.1 筛选项：
+适用机型
+袋型
+材质
+"厚度/克重 um/gsm"	
+"厚度/克重 mil/#"	
+"膜宽 cm"
+"膜宽 inch"
+"袋长 cm"
+"袋长 inch"
+
+1.2购物车/列表展示：
+"产品图片 袋型实物"
+料号	
+型号
+型号(英制)
+Spec.
+Spec.(英制)
+"泡径 cm"
+"泡径 inch"
+productId
+单箱数量
+
+
+1.3tooltip展示：
+材质
+"厚度/克重 um/gsm"
+"厚度/克重 mil/#"
+"膜宽 cm"	
+"膜宽 inch"	
+"袋长 cm"
+"袋长 inch"
+"总长 m"
+"总长 ft"	
+
+包装属性
+Package Info
+包装方式	
+"包装尺寸 cm"	
+"包装尺寸 inch"
+"单件净重 kg"
+"单件净重 lbs"
+包装实物图片
+"托盘尺寸 cm"
+
+打托属性
+Pallet Info
+
+一托卷数A	
+"整托毛重A kg"	
+"整托毛重A lbs"
+"打托高度A cm"
+"打托高度A inch" 
+一托卷数B	
+"整盘毛重 kg"	
+"整盘毛重B lbs"
+"打托高度 cm"	
+"打托高度B inch"	
+一托卷数C
+"整托毛重 kg"
+"整托毛重C lbs"
+"打托高度C cm"
+"打托高度C inch"
+"纸筒内径 cm"
+"纸筒内径 inch"
+
+购物车展示：
+
+
+CREATE TABLE IF NOT EXISTS `wp_bjt_consumables` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `product_line_id` bigint(20) NOT NULL COMMENT '产品线ID',
+  `model` varchar(100) NOT NULL COMMENT '型号',
+  `model_imperial` varchar(100) COMMENT '型号(英制)',
+  `part_number` varchar(100) NOT NULL COMMENT '料号',
+  `spec` varchar(255) COMMENT '规格参数(公制)',
+  `spec_imperial` varchar(255) COMMENT '规格参数(英制)',
+  `brand` varchar(100) COMMENT '品牌',
+  `app_model` varchar(255) COMMENT '适用机型',
+  `bag_type` varchar(100) COMMENT '袋型',
+  `material` varchar(100) COMMENT '材质',
+  `thickness_met` decimal(10,2) COMMENT '厚度/克重(um/gsm)',
+  `thickness_imp` decimal(10,2) COMMENT '厚度/克重(mil/#)',
+  `width_met` decimal(10,2) COMMENT '膜宽(cm)',
+  `width_imp` decimal(10,2) COMMENT '膜宽(inch)',
+  `length_met` decimal(10,2) COMMENT '袋长(cm)',
+  `length_imp` decimal(10,2) COMMENT '袋长(inch)',
+  `bubble_diameter_met` decimal(10,2) COMMENT '泡径(cm)',
+  `bubble_diameter_imp` decimal(10,2) COMMENT '泡径(inch)',
+  `total_length_met` decimal(10,2) COMMENT '总长(m)',
+  `total_length_imp` decimal(10,2) COMMENT '总长(ft)',
+  `package_type` varchar(100) COMMENT '包装方式',
+  `package_size_cm` varchar(100) COMMENT '包装尺寸(cm)',
+  `package_size_inch` varchar(100) COMMENT '包装尺寸(inch)',
+  `net_weight_kg` decimal(10,2) COMMENT '单件净重(kg)',
+  `net_weight_lbs` decimal(10,2) COMMENT '单件净重(lbs)',
+  `gross_weight_kg` decimal(10,2) COMMENT '包装毛重(kg)',
+  `gross_weight_lbs` decimal(10,2) COMMENT '包装毛重(lbs)',
+  `pcs_per_box` int(11) COMMENT '单箱数量',
+  `image_url` varchar(255) COMMENT '产品图片(袋型实物)',
+  `package_image_url` varchar(255) COMMENT '包装实物图片',
+  `pallet_size_cm` varchar(100) COMMENT '托盘尺寸(cm)',
+  `pallet_size_inch` varchar(100) COMMENT '托盘尺寸(inch)',
+  `pcs_per_pallet_a` int(11) COMMENT '一托卷数A',
+  `pallet_gross_weight_a_kg` decimal(10,2) COMMENT '整托毛重A(kg)',
+  `pallet_gross_weight_a_lbs` decimal(10,2) COMMENT '整托毛重A(lbs)',
+  `pallet_height_a_cm` decimal(10,2) COMMENT '打托高度A(cm)',
+  `pallet_height_a_inch` decimal(10,2) COMMENT '打托高度A(inch)',
+  `pcs_per_pallet_b` int(11) COMMENT '一托卷数B',
+  `pallet_gross_weight_b_kg` decimal(10,2) COMMENT '整托毛重B(kg)',
+  `pallet_gross_weight_b_lbs` decimal(10,2) COMMENT '整托毛重B(lbs)',
+  `pallet_height_b_cm` decimal(10,2) COMMENT '打托高度B(cm)',
+  `pallet_height_b_inch` decimal(10,2) COMMENT '打托高度B(inch)',
+  `pcs_per_pallet_c` int(11) COMMENT '一托卷数C',
+  `pallet_gross_weight_c_kg` decimal(10,2) COMMENT '整托毛重C(kg)',
+  `pallet_gross_weight_c_lbs` decimal(10,2) COMMENT '整托毛重C(lbs)',
+  `pallet_height_c_cm` decimal(10,2) COMMENT '打托高度C(cm)',
+  `pallet_height_c_inch` decimal(10,2) COMMENT '打托高度C(inch)',
+  `tube_inner_diameter_cm` decimal(10,2) COMMENT '纸筒内径(cm)',
+  `tube_inner_diameter_inch` decimal(10,2) COMMENT '纸筒内径(inch)',
+  `status` varchar(20) NOT NULL DEFAULT 'publish',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_part_number` (`product_line_id`, `part_number`),
+  KEY `idx_product_line_id` (`product_line_id`),
+  KEY `idx_model` (`product_line_id`, `model`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='耗材表';
+
+
+2. 备件页面的展示逻辑
+
+2.1 筛选项：
+主机或者配件
+适用机型
+是否易损 
+
+2.2购物车/列表展示：
+适配机型
+产品图片	
+料号	 
+名称	
+Spec.	
+适配序列号	
+单箱数量	
+
+
+2.3tooltip展示：
+"包装尺寸 cm"	
+"包装尺寸 inch"	
+"单件净重 kg"	
+"单件净重 lbs"	
+
+-- Spare Parts Table
+CREATE TABLE IF NOT EXISTS `wp_bjt_spare_parts` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `product_line_id` bigint(20) NOT NULL COMMENT '产品线ID',
+  `app_model` varchar(255) COMMENT '适配机型',
+  `is_consumable` tinyint(1) DEFAULT 0 COMMENT '是否易损',
+  `image_url` varchar(255) COMMENT '产品图片',
+  `part_number` varchar(100) NOT NULL COMMENT '料号',
+  `name_zh` varchar(255) NOT NULL COMMENT '中文名称',
+  `name_en` varchar(255) NOT NULL COMMENT '英文名称',
+  `spec` varchar(255) COMMENT '规格参数(公制)',
+  `spec_imperial` varchar(255) COMMENT '规格参数(英制)',
+  `app_sn` varchar(255) COMMENT '适配序列号',
+  `package_size_cm` varchar(100) COMMENT '包装尺寸(cm)',
+  `package_size_inch` varchar(100) COMMENT '包装尺寸(inch)',
+  `net_weight_kg` decimal(10,2) COMMENT '单件净重(kg)',
+  `net_weight_lbs` decimal(10,2) COMMENT '单件净重(lbs)',
+  `gross_weight_kg` decimal(10,2) COMMENT '包装毛重(kg)',
+  `gross_weight_lbs` decimal(10,2) COMMENT '包装毛重(lbs)',
+  `pcs_per_box` int(11) COMMENT '单箱数量',
+  `required_parts` text COMMENT '必选备件料号，多个用逗号分隔',
+  `required_quantity` text COMMENT '必选备件数量，多个用逗号分隔，与必选备件料号一一对应',
+  `status` varchar(20) NOT NULL DEFAULT 'publish',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_part_number` (`product_line_id`, `part_number`),
+  KEY `idx_product_line_id` (`product_line_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='备件料号表';
+
+
+3.machine页面展示逻辑
+3.1筛选项：
+主机列表展示可以选择筛选
+电压
+
+3.2 列表展示项
+产品图片
+型号
+料号
+产品名称
+PRODUCTID
+"电压 V"
+"频率 Hz"
+单箱数量
+"托盘尺寸 cm"
+"托盘尺寸 inch"
+一托数量
+
+3.2.2 购物车展示项
+产品图片
+型号
+料号
+产品名称
+PRODUCTID
+"电压 V"
+"频率 Hz"
+单箱数量
+一托数量
+
+3.3 tooltip
+
+"包装尺寸 cm"	
+"包装尺寸 inch"	
+"单件净重 kg"	
+"单件净重 lbs"
+"打托高度 cm"	
+"打托高度 inch"	
+"整托毛重 kg"	
+"整托毛重 lbs"
+
+
+
+
+
+
+
+产品线：4条（气垫机、纸机、胶带机、气柱袋）
+每个产品线下有3-4个主机型号
+每个主机型号有7-10个配件型号
+多级配件要支持到五级
+每个主机型号有2-3个主机料号
+每个配件型号有1-2个配件料号
+每个主机/配件/耗材/备件都要有价格、库存、图片、规格等
+关联关系：主要是主机与配件、配件与配件有关联关系，
+展示逻辑如下：当用户选择产品后，展开一级配件，一级配件也可选择，按照产品图片，型号，料号，产品名称，电压，频率，托盘尺寸，一托数量，和产品展示一样的展示逻辑，展示阶梯价格，销售可以看到库存，展示描述和产品照片，有更多信息浮层显示，包装尺寸，包装毛重，打托后总高度，浮层显示有产品规格可以通过PDF文件下载，用户可以添加到购物车，确保价格显示正确的货币符号和单位制（公制/英制）。当用户选择一级配件后，自动展开二级配件，二级配件展示同一级配件，需要根据配件的具体情况来展示，最多展示五级
+配件与备件、主机与耗材、耗材与主机等关联是通过表格的model字段进行关联的
+我希望页面筛选项能全部有数据可选
+
+
+
+BJT 产品管理系统 Demo 数据生成规则文档
+1. 产品线（wp_bjt_product_lines）
+共4条：气垫机、纸机、胶带机、气柱袋。
+每条产品线有唯一 code、中文/英文名、描述、图片等。
+2. 主机型号（wp_bjt_host_models）
+每个产品线下有3-4个主机型号。
+字段包括：型号编码、中文/英文名、描述、主图/副图、爆炸图PDF、类型、排序等。
+每个主机型号有2-3个主机料号。
+3. 配件型号（wp_bjt_accessory_models）
+每个主机型号下有7-10个配件型号。
+支持多级配件（最多五级嵌套），即配件下还可以有配件。
+字段包括：型号、名称、描述、图片、类型、层级、排序等。
+每个配件型号有1-2个配件料号。
+4. 主机料号（wp_bjt_parts）
+每个主机型号有2-3个主机料号。
+字段包括：型号、料号、名称、品牌、规格、图片、包装尺寸、重量、状态等。
+5. 配件料号（wp_bjt_accessories）
+每个配件型号有1-2个配件料号。
+字段包括：型号、料号、名称、品牌、规格、图片、包装尺寸、重量、状态等。
+6. 耗材（wp_bjt_consumables）
+每个产品线下有3-5个耗材，覆盖所有袋型、材料、厚度、宽度、长度等筛选项。
+字段包括：型号、料号、规格、品牌、适用机型（app_model，逗号分隔）、袋型、材料、厚度、宽度、长度、图片、包装图片、状态等。
+适用机型通过app_model字段与主机型号关联（多对多）。
+7. 备件（wp_bjt_spare_parts）
+每个主机/配件有2-3个备件。
+字段包括：适配机型（app_model，逗号分隔，可为主机或配件型号）、料号、名称、规格、图片、包装尺寸、重量、状态等。
+适用机型通过app_model字段与主机/配件型号关联（多对多）。
+必选备件：部分备件的required_parts字段填写其他备件料号，required_quantity填写数量（逗号分隔），表示选购该备件时必须同时选购哪些备件及数量。
+8. 关联关系（wp_bjt_relations）
+只做主机-配件、配件-配件（多级嵌套）树状结构。
+字段包括：父料号、子料号、子类型（accessory/spare_part）、层级、必选备件（required_parts/required_quantity）、排序等。
+不涉及耗材和备件的适配。
+必选备件：部分主机/配件的relations记录里，required_parts字段填入1-2个备件料号，required_quantity填数量。
+9. 价格（wp_bjt_prices）
+每个主机/配件/耗材/备件都有价格，支持多区域（CN/EU/US/AU等）、多币种（CNY/EUR/USD/AUD等）、阶梯价（min_quantity/max_quantity/discount_rate）。
+字段包括：目标类型、目标ID、区域、币种、基础价格、数量区间、折扣率、状态等。
+10. 库存（wp_bjt_inventory）
+每个主机/配件/耗材/备件都有库存，支持多区域、多个仓库。
+字段包括：目标类型、目标ID、区域、仓库、数量、预留数量、状态等。
+11. 形状/袋型（wp_bjt_shapes）
+仅有3种：pillow、bubble、tube。
+字段包括：code、英文名、中文名、图片、排序等。
+demo数据中所有袋型字段只引用这三种。
+12. 材料（wp_bjt_materials）
+仅有4种：HDPE、LDPE、Nylon、PAPER+PE。
+字段包括：code、英文名、中文名、图片、排序等。
+demo数据中所有材料字段只引用这四种。
+13. 规格（wp_bjt_specifications）
+每个产品线有多条规格，覆盖厚度、宽度、长度、重量等所有筛选项。
+字段包括：规格类型、数值、单位、状态、排序等。
+14. 耗材兼容性（wp_bjt_consumable_compatibility）
+记录耗材与主机型号的适配关系。
+字段包括：耗材料号、主机型号、状态等。
+但实际适配关系主要通过耗材表的app_model字段实现。
+15. 图片分配规则
+所有图片字段都引用真实图片目录 /frontend/public/images/shop 下的文件，按业务语义合理分配。
+袋型图片：pillow→MFB25.jpg，bubble→MEX.JPG，tube→MFC.jpg
+材料图片：HDPE→HDPE.jpg，LDPE→LDPE.jpg，Nylon→MPR.jpg，PAPER+PE→MFA.jpg
+产品/主机/配件/耗材/备件图片：用 LA-E4S.jpg、LA-E5P.jpg、MFB-A-26-80-33-L.jpg、MPE.jpg、MPR.jpg、MPV.jpg、PAPE-1.jpg、MFB25.jpg、MFC.jpg、MEX.JPG、MEY.jpg、MFA.jpg、EC2005.jpg、FR8003.jpg、LT9002.jpg、ET2002.jpg、ET1003.jpg 等，按业务语义分配。
+包装图片、实物图片等：用 MFA.jpg、PAPE-1.jpg、MFB25.jpg 等。
+16. 其他说明
+demo数据要保证每个筛选项、每个展示项、tooltip、购物车等页面功能都能查到数据。
+价格、库存、规格、图片、PDF等字段都要有数据，且能被页面筛选项覆盖。
+货币符号和单位制（公制/英制）要覆盖。
+所有多对多适配关系（如耗材/备件适配多个主机/配件）通过app_model字段（逗号分隔）实现。
+业务关系图（简化版）
+产品线 → 主机型号 → 配件型号（多级）→ 配件料号
+主机型号 → 主机料号
+主机/配件/耗材/备件 → 价格、库存、图片、规格
+主机-配件、配件-配件（多级）通过relations表树状结构
+主机/配件/耗材/备件的适配通过各自表的app_model字段
+必选备件通过relations表和备件表的required_parts/required_quantity字段
+袋型/材料字段只引用固定选项，图片字段用真实图片
+如需补充或修正，请直接指出。
+如已确认，请回复“确认”，我将严格按此文档生成全链路 demo SQL 脚本！
+确认
+
+非常感谢你的确认！
+你所有的业务规则、字段要求、图片分配、适配关系、必选备件、多级配件
+ 

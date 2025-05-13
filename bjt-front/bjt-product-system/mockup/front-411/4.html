@@ -1,0 +1,2301 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT Consumables</title>
+    <style>
+        /* 通用样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        /* 顶部导航 */
+        header {
+            background-color: #fff;
+            padding: 15px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-bottom: 1px solid #eee;
+        }
+        
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo {
+            height: 40px;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .nav-menu {
+            display: flex;
+            margin-right: 20px;
+        }
+        
+        .nav-item {
+            margin: 0 15px;
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .nav-item:hover {
+            color: #1a57a5;
+        }
+        
+        .language-selector {
+            margin-right: 15px;
+            border: 1px solid #ddd;
+            padding: 5px 10px;
+            border-radius: 4px;
+            background-color: #fff;
+            min-width: 120px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .language-selector option {
+            padding: 5px;
+        }
+        
+        /* User dropdown styles */
+        .user-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            background-color: #f5f5f5;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            border: 1px solid #ddd;
+        }
+        
+        .user-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .user-name {
+            font-weight: 500;
+            margin-right: 5px;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: white;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1000;
+            border-radius: 4px;
+        }
+        
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            text-align: left;
+        }
+        
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+        
+        .user-dropdown:hover .dropdown-content {
+            display: block;
+        }
+        
+        /* Responsive Header */
+        @media (max-width: 768px) {
+            .header-right {
+                justify-content: center;
+                margin-top: 10px;
+            }
+            
+            .nav-menu {
+                margin-right: 0;
+                margin-bottom: 10px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .nav-item {
+                margin: 5px 10px;
+            }
+            
+            .language-selector {
+                margin-bottom: 10px;
+            }
+        }
+        
+        .breadcrumb {
+            padding: 15px 0;
+            color: #666;
+        }
+        
+        .breadcrumb a {
+            color: #1a57a5;
+            text-decoration: none;
+        }
+        
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        
+        .section-title {
+            margin: 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #ccc;
+        }
+        
+        .filter-section {
+            background-color: #fff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        
+        .filter-label {
+            width: 120px;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        .filter-options {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .filter-select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-width: 200px;
+            margin-right: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .shape-option {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            margin-right: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .shape-image {
+            width: 80px;
+            height: 60px;
+            object-fit: contain;
+            margin-bottom: 5px;
+            border: 1px solid #ddd;
+            padding: 5px;
+        }
+        
+        .material-option {
+            margin-right: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .filter-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 15px;
+        }
+        
+        .btn-filter {
+            background-color: #1a57a5;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            cursor: pointer;
+            margin-left: 10px;
+            border-radius: 4px;
+        }
+        
+        .btn-reset {
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            padding: 8px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        
+        .product-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            background-color: #fff;
+        }
+        
+        .product-table th {
+            background-color: #f0f0f0;
+            padding: 12px 8px;
+            text-align: left;
+            border-bottom: 2px solid #ddd;
+            font-weight: bold;
+            color: #1a57a5;
+        }
+        
+        .product-table td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #ddd;
+            vertical-align: middle;
+        }
+        
+        .product-table tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .product-image {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            padding: 4px;
+        }
+        
+        .quantity-input {
+            width: 50px;
+            text-align: center;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .btn-add {
+            background-color: #1a57a5;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        
+        .tooltip {
+            color: #1a57a5;
+            text-decoration: none;
+            border-bottom: 1px dashed;
+            cursor: help;
+            position: relative;
+        }
+        
+        .tooltip-content {
+            display: none;
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: white;
+            width: 300px;
+            padding: 15px;
+            border-radius: 6px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            z-index: 1000;
+            font-weight: normal;
+        }
+        
+        .tooltip:hover .tooltip-content {
+            display: block;
+        }
+        
+        .tooltip-content:after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -10px;
+            border-width: 10px;
+            border-style: solid;
+            border-color: white transparent transparent transparent;
+        }
+        
+        .tooltip-header {
+            font-weight: bold;
+            color: #1a57a5;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .tooltip-section {
+            margin-bottom: 8px;
+        }
+        
+        .tooltip-section-title {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 3px;
+        }
+        
+        .tooltip-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+        
+        .tooltip-table th, .tooltip-table td {
+            padding: 5px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .tooltip-table th {
+            color: #666;
+            font-weight: normal;
+        }
+        
+        /* Cart Styles */
+        .cart-floating {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #1a57a5;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+        }
+        
+        .cart-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: red;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        /* 添加购物车通知样式 */
+        .cart-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #1a57a5;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 9999;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: opacity 0.3s, transform 0.3s;
+            max-width: 320px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .cart-notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .cart-notification-content {
+            display: flex;
+            align-items: center;
+        }
+        
+        .cart-notification-icon {
+            background-color: rgba(255,255,255,0.2);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+        }
+        
+        .cart-notification-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .cart-notification-close {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.6);
+            font-size: 16px;
+            cursor: pointer;
+            margin-left: 15px;
+            padding: 0 5px;
+        }
+        
+        .cart-notification-close:hover {
+            color: white;
+        }
+        
+        .cart-notification-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background-color: rgba(255,255,255,0.4);
+            border-radius: 0 0 6px 6px;
+            width: 100%;
+        }
+        
+        /* 清空购物车确认样式 */
+        .cart-confirm {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.97);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 6px;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        .cart-confirm.show {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .cart-confirm-icon {
+            width: 48px;
+            height: 48px;
+            background-color: #ffebee;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        
+        .cart-confirm-icon svg {
+            color: #e53935;
+        }
+        
+        .cart-confirm-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .cart-confirm-text {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+            text-align: center;
+            max-width: 80%;
+        }
+        
+        .cart-confirm-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .cart-confirm-button {
+            padding: 8px 20px;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        
+        .cart-confirm-cancel {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .cart-confirm-cancel:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .cart-confirm-proceed {
+            background-color: #e53935;
+            color: white;
+        }
+        
+        .cart-confirm-proceed:hover {
+            background-color: #c62828;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background-color: #fff;
+            width: 80%;
+            max-width: 500px;
+            margin: 100px auto;
+            padding: 20px;
+            border-radius: 5px;
+            position: relative;
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        
+        .chinese-note {
+            color: #d9534f;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .filter-label {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            
+            .filter-select {
+                width: 100%;
+                margin-right: 0;
+            }
+            
+            .filter-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .filter-options {
+                width: 100%;
+            }
+            
+            .product-table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .btn-filter, .btn-reset {
+                padding: 8px 15px;
+            }
+        }
+        
+        /* 添加model示例图片区域样式 */
+        .model-usage-section {
+            background-color: #fff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+            display: none; /* 默认隐藏，当选择model时显示 */
+        }
+        
+        .model-usage-image {
+            max-width: 100%;
+            max-height: 300px;
+            margin: 0 auto;
+            display: block;
+        }
+        
+        .model-usage-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #1a57a5;
+        }
+        
+        .model-usage-description {
+            color: #666;
+            margin-bottom: 15px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.5;
+        }
+        
+        /* 添加shape尺寸示意图样式 */
+        .shape-dimension-guide {
+            margin-left: 20px;
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            padding: 5px;
+            border-radius: 4px;
+            display: none; /* 默认隐藏 */
+        }
+        
+        .shape-dimension-guide img {
+            max-width: 150px;
+            max-height: 100px;
+            display: block;
+        }
+    </style>
+    <script>
+        // Language switching function
+        function changeLanguage(lang) {
+            console.log('Language changed to: ' + lang);
+            // Here you would implement the actual language change logic
+            // For example, storing the selected language in a cookie or localStorage
+            // and then reloading the page or updating UI elements
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add event listener to language selector
+            const langSelector = document.querySelector('.language-selector');
+            if (langSelector) {
+                langSelector.addEventListener('change', function(e) {
+                    changeLanguage(e.target.value);
+                });
+            }
+            
+            // Existing document ready code would go here
+        });
+    </script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-left">
+                <img src="logo-1.webp" alt="BJT Logo" class="logo">
+            </div>
+            <div class="header-right">
+                <nav class="nav-menu">
+                    <a href="#" class="nav-item">Home</a>
+                    <a href="#" class="nav-item">Products</a>
+                    <a href="#" class="nav-item">Documentation</a>
+                    <a href="#" class="nav-item">Support</a>
+                </nav>
+                <select class="language-selector" aria-label="Select language">
+                    <option value="zh">中文</option>
+                    <option value="en">🇬🇧 English</option>
+                    <option value="ja">🇯🇵 日本語</option>
+                    <option value="ko">🇰🇷 한국어</option>
+                    <option value="fr">🇫🇷 français</option>
+                    <option value="de">🇩🇪 Deutsch</option>
+                    <option value="es">🇪🇸 Español</option>
+                    <option value="it">🇮🇹 italiano</option>
+                    <option value="ru">🇷🇺 русский</option>
+                    <option value="pt">🇵🇹 português</option>
+                    <option value="th">🇹🇭 ไทย</option>
+                    <option value="vi">🇻🇳 tiếng việt</option>
+                </select>
+                <div class="user-dropdown">
+                    <div class="user-info">
+                        <img src="user-avatar.jpg" alt="User Avatar" class="user-avatar">
+                        <span class="user-name">已登录用户</span>
+                    </div>
+                    <div class="dropdown-content">
+                        <a href="#">Profile</a>
+                        <a href="#">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="#">首页</a> > <a href="#">耗材分类</a> > <span>包装耗材</span>
+        </div>
+        
+        <h1 class="section-title">包装耗材选择</h1>
+        
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div class="filter-row">
+                <div class="filter-label">Model:</div>
+                <div class="filter-options">
+                    <select class="filter-select">
+                        <option value="all">ALL</option>
+                        <option value="model1">LA-E4S</option>
+                        <option value="model2">MEX-10-20</option>
+                        <option value="model3">LP-V1</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="filter-row">
+                <div class="filter-label">Unit:</div>
+                <div class="filter-options">
+                    <label class="material-option">
+                        <input type="radio" name="unit" checked> Metric
+                    </label>
+                    <label class="material-option">
+                        <input type="radio" name="unit"> Imperial
+                    </label>
+                </div>
+            </div>
+            
+            <div class="filter-row">
+                <div class="filter-label">Shape:</div>
+                <div class="filter-options">
+                    <label class="shape-option">
+                        <img src="https://via.placeholder.com/80x60?text=Pillow" alt="Pillow Shape" class="shape-image">
+                        <input type="radio" name="shape" checked> Pillow
+                    </label>
+                    <label class="shape-option">
+                        <img src="https://via.placeholder.com/80x60?text=Bubble" alt="Bubble Shape" class="shape-image">
+                        <input type="radio" name="shape"> Bubble
+                    </label>
+                    <label class="shape-option">
+                        <img src="https://via.placeholder.com/80x60?text=Tube" alt="Tube Shape" class="shape-image">
+                        <input type="radio" name="shape"> Tube
+                    </label>
+                </div>
+            </div>
+            
+            <div class="chinese-note">
+                选择Shape后，更新该shape下有的material，如选择了Bubble，遍历所有Bubble的转材，列出具备的material选项，下同。
+            </div>
+            
+            <div class="filter-row">
+                <div class="filter-label">Material:</div>
+                <div class="filter-options">
+                    <label class="material-option">
+                        <input type="radio" name="material" value="hdpe" checked> HDPE
+                    </label>
+                    <label class="material-option">
+                        <input type="radio" name="material" value="ldpe"> LDPE
+                    </label>
+                    <label class="material-option">
+                        <input type="radio" name="material" value="nylon"> Nylon
+                    </label>
+                    <label class="material-option">
+                        <input type="radio" name="material" value="paper_pe"> PAPER+PE
+                    </label>
+                </div>
+            </div>
+            
+            <div class="filter-row" id="thickness-filter">
+                <div class="filter-label">Thickness:</div>
+                <div class="filter-options">
+                    <select class="filter-select">
+                        <option value="all">ALL</option>
+                        <option value="thickness1">0.05mm</option>
+                        <option value="thickness2">0.08mm</option>
+                        <option value="thickness3">0.10mm</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="filter-row" id="weight-filter" style="display: none;">
+                <div class="filter-label">Weight:</div>
+                <div class="filter-options">
+                    <select class="filter-select">
+                        <option value="all">ALL</option>
+                        <option value="weight1">50g/m²</option>
+                        <option value="weight2">75g/m²</option>
+                        <option value="weight3">100g/m²</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="filter-row">
+                <div class="filter-label">W (Width):</div>
+                <div class="filter-options">
+                    <select class="filter-select">
+                        <option value="all">ALL</option>
+                        <option value="width1">200mm</option>
+                        <option value="width2">250mm</option>
+                        <option value="width3">300mm</option>
+                    </select>
+                </div>
+                <!-- 添加shape尺寸示意图区域 -->
+                <div id="shape-dimension-guide" class="shape-dimension-guide">
+                    <img id="shape-dimension-image" src="" alt="Shape Dimension Guide">
+                </div>
+            </div>
+            
+            <div class="filter-row">
+                <div class="filter-label">L (Length):</div>
+                <div class="filter-options">
+                    <select class="filter-select">
+                        <option value="all">ALL</option>
+                        <option value="length1">300mm</option>
+                        <option value="length2">350mm</option>
+                        <option value="length3">400mm</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="filter-actions">
+                <button class="btn-reset">Reset</button>
+                <button class="btn-filter">Filter</button>
+            </div>
+        </div>
+        
+        <!-- 移动model示例图片区域到这里 - 表格上方 -->
+        <div id="model-usage-section" class="model-usage-section">
+            <h2 class="model-usage-title" id="model-usage-title">物料使用示例</h2>
+            <p class="model-usage-description" id="model-usage-description">选择一个产品型号以查看该型号的包装耗材使用示例。</p>
+            <img id="model-usage-image" class="model-usage-image" src="" alt="物料使用示例">
+        </div>
+        
+        <!-- Product Table -->
+        <table class="product-table">
+            <thead>
+                <tr>
+                    <th>编号</th>
+                    <th>产品名称</th>
+                    <th>产品图片</th>
+                    <th>料号</th>
+                    <th>规格型号</th>
+                    <th>Spec</th>
+                    <th>阶梯价格</th>
+                    <th>库存</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>填充气泡膜</td>
+                    <td><img src="https://via.placeholder.com/80x80?text=MEX-10-20-10" alt="MEX-10-20-10" class="product-image"></td>
+                    <td>PL-001</td>
+                    <td>MEX-10-20-10</td>
+                    <td>
+                        HDPE, Pillow<br>
+                        <span class="tooltip">
+                            <a href="#" class="tooltip-trigger">更多信息</a>
+                            <div class="tooltip-content">
+                                <div class="tooltip-header">MEX-10-20-10 详细信息</div>
+                                
+                                <div class="tooltip-section">
+                                    <div class="tooltip-section-title">基本信息</div>
+                                    <div><strong>包装材质:</strong> HDPE</div>
+                                    <div><strong>形状:</strong> Pillow</div>
+                                    <div><strong>适配型号:</strong> E5P/E4S</div>
+                                    <div><strong>颜色:</strong> 透明</div>
+                                </div>
+                                
+                                <div class="tooltip-section">
+                                    <div class="tooltip-section-title">尺寸规格</div>
+                                    <table class="tooltip-table">
+                                        <tr>
+                                            <th></th>
+                                            <th>公制</th>
+                                            <th>英制</th>
+                                        </tr>
+                                        <tr>
+                                            <td>厚度/克重</td>
+                                            <td>0.08mm</td>
+                                            <td>0.0031in</td>
+                                        </tr>
+                                        <tr>
+                                            <td>膜宽</td>
+                                            <td>250mm</td>
+                                            <td>9.84in</td>
+                                        </tr>
+                                        <tr>
+                                            <td>袋长</td>
+                                            <td>350mm</td>
+                                            <td>13.78in</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                
+                                <div class="tooltip-section">
+                                    <div class="tooltip-section-title">包装信息</div>
+                                    <table class="tooltip-table">
+                                        <tr>
+                                            <td>卷长</td>
+                                            <td>500m</td>
+                                            <td>1640.42ft</td>
+                                        </tr>
+                                        <tr>
+                                            <td>包装方式</td>
+                                            <td colspan="2">纸箱包装</td>
+                                        </tr>
+                                        <tr>
+                                            <td>产品外包装尺寸</td>
+                                            <td colspan="2">350×250×300mm</td>
+                                        </tr>
+                                        <tr>
+                                            <td>单箱数量</td>
+                                            <td colspan="2">4卷/箱</td>
+                                        </tr>
+                                        <tr>
+                                            <td>纸筒内径</td>
+                                            <td colspan="2">76mm</td>
+                                        </tr>
+                                        <tr>
+                                            <td>卷径</td>
+                                            <td colspan="2">245mm</td>
+                                        </tr>
+                                    </table>
+                                </div>
+
+                                <div class="tooltip-section">
+                                    <div class="tooltip-section-title">托盘信息</div>
+                                    <table class="tooltip-table">
+                                        <tr>
+                                            <th>托盘类型</th>
+                                            <th>尺寸</th>
+                                            <th>数量</th>
+                                            <th>毛重</th>
+                                            <th>高度</th>
+                                        </tr>
+                                        <tr>
+                                            <td>托盘A</td>
+                                            <td>1200×1000mm</td>
+                                            <td>24卷</td>
+                                            <td>280kg</td>
+                                            <td>1850mm</td>
+                                        </tr>
+                                        <tr>
+                                            <td>托盘B</td>
+                                            <td>1100×1100mm</td>
+                                            <td>30卷</td>
+                                            <td>320kg</td>
+                                            <td>2000mm</td>
+                                        </tr>
+                                        <tr>
+                                            <td>托盘C</td>
+                                            <td>1000×1200mm</td>
+                                            <td>20卷</td>
+                                            <td>240kg</td>
+                                            <td>1650mm</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </span>
+                    </td>
+                    <td>
+                        100 (1-10)<br>
+                        90 (11-100)<br>
+                        50 (>100)
+                    </td>
+                    <td>us:1, au:2, eu:3</td>
+                    <td>
+                        <div style="display: flex; align-items: center;">
+                            <span>X</span>
+                            <input type="number" class="quantity-input" value="1" min="1">
+                            <button class="btn-add">Add</button>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>缓冲气泡膜</td>
+                    <td><img src="https://via.placeholder.com/80x80?text=MEX-10-20-13" alt="MEX-10-20-13" class="product-image"></td>
+                    <td>PL-002</td>
+                    <td>MEX-10-20-13</td>
+                    <td>
+                        HDPE, Pillow<br>
+                        <span class="tooltip">
+                            <a href="#" class="tooltip-trigger">更多信息</a>
+                            <div class="tooltip-content">
+                                <div class="tooltip-header">MEX-10-20-13 详细信息</div>
+                                
+                                <div class="tooltip-section">
+                                    <div class="tooltip-section-title">基本信息</div>
+                                    <div><strong>包装材质:</strong> HDPE</div>
+                                    <div><strong>形状:</strong> Pillow</div>
+                                    <div><strong>适配型号:</strong> E5P/E4S</div>
+                                    <div><strong>颜色:</strong> 透明</div>
+                                </div>
+                                
+                                <div class="tooltip-section">
+                                    <div class="tooltip-section-title">尺寸规格</div>
+                                    <table class="tooltip-table">
+                                        <tr>
+                                            <th></th>
+                                            <th>公制</th>
+                                            <th>英制</th>
+                                        </tr>
+                                        <tr>
+                                            <td>厚度/克重</td>
+                                            <td>0.08mm</td>
+                                            <td>0.0031in</td>
+                                        </tr>
+                                        <tr>
+                                            <td>膜宽</td>
+                                            <td>300mm</td>
+                                            <td>11.81in</td>
+                                        </tr>
+                                        <tr>
+                                            <td>袋长</td>
+                                            <td>400mm</td>
+                                            <td>15.75in</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                
+                                <div class="tooltip-section">
+                                    <div class="tooltip-section-title">包装信息</div>
+                                    <table class="tooltip-table">
+                                        <tr>
+                                            <td>卷长</td>
+                                            <td>600m</td>
+                                            <td>1968.50ft</td>
+                                        </tr>
+                                        <tr>
+                                            <td>包装方式</td>
+                                            <td colspan="2">塑料膜包装</td>
+                                        </tr>
+                                        <tr>
+                                            <td>产品外包装尺寸</td>
+                                            <td colspan="2">400×300×350mm</td>
+                                        </tr>
+                                        <tr>
+                                            <td>单箱数量</td>
+                                            <td colspan="2">3卷/箱</td>
+                                        </tr>
+                                        <tr>
+                                            <td>纸筒内径</td>
+                                            <td colspan="2">76mm</td>
+                                        </tr>
+                                        <tr>
+                                            <td>卷径</td>
+                                            <td colspan="2">265mm</td>
+                                        </tr>
+                                    </table>
+                                </div>
+
+                                <div class="tooltip-section">
+                                    <div class="tooltip-section-title">托盘信息</div>
+                                    <table class="tooltip-table">
+                                        <tr>
+                                            <th>托盘类型</th>
+                                            <th>尺寸</th>
+                                            <th>数量</th>
+                                            <th>毛重</th>
+                                            <th>高度</th>
+                                        </tr>
+                                        <tr>
+                                            <td>托盘A</td>
+                                            <td>1200×1000mm</td>
+                                            <td>20卷</td>
+                                            <td>260kg</td>
+                                            <td>1750mm</td>
+                                        </tr>
+                                        <tr>
+                                            <td>托盘B</td>
+                                            <td>1100×1100mm</td>
+                                            <td>24卷</td>
+                                            <td>290kg</td>
+                                            <td>1900mm</td>
+                                        </tr>
+                                        <tr>
+                                            <td>托盘C</td>
+                                            <td>1000×1200mm</td>
+                                            <td>16卷</td>
+                                            <td>220kg</td>
+                                            <td>1550mm</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </span>
+                    </td>
+                    <td>
+                        95 (1-10)<br>
+                        85 (11-100)<br>
+                        45 (>100)
+                    </td>
+                    <td>us:2, au:3, eu:5</td>
+                    <td>
+                        <div style="display: flex; align-items: center;">
+                            <span>X</span>
+                            <input type="number" class="quantity-input" value="1" min="1">
+                            <button class="btn-add">Add</button>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>防震气泡膜</td>
+                    <td><img src="https://via.placeholder.com/80x80?text=MEX-10-20-15" alt="MEX-10-20-15" class="product-image"></td>
+                    <td>PL-003</td>
+                    <td>MEX-10-20-15</td>
+                    <td>
+                        HDPE, Pillow<br>
+                        <span class="tooltip">
+                            <a href="#" class="tooltip-trigger">更多信息</a>
+                            <div class="tooltip-content">
+                                <div class="tooltip-header">MEX-10-20-15 详细信息</div>
+                                
+                                <div class="tooltip-section">
+                                    <div class="tooltip-section-title">基本信息</div>
+                                    <div><strong>包装材质:</strong> HDPE</div>
+                                    <div><strong>形状:</strong> Pillow</div>
+                                    <div><strong>适配型号:</strong> E5P/E4S</div>
+                                    <div><strong>颜色:</strong> 透明</div>
+                                </div>
+                                
+                                <div class="tooltip-section">
+                                    <div class="tooltip-section-title">尺寸规格</div>
+                                    <table class="tooltip-table">
+                                        <tr>
+                                            <th></th>
+                                            <th>公制</th>
+                                            <th>英制</th>
+                                        </tr>
+                                        <tr>
+                                            <td>厚度/克重</td>
+                                            <td>0.10mm</td>
+                                            <td>0.0039in</td>
+                                        </tr>
+                                        <tr>
+                                            <td>膜宽</td>
+                                            <td>300mm</td>
+                                            <td>11.81in</td>
+                                        </tr>
+                                        <tr>
+                                            <td>袋长</td>
+                                            <td>450mm</td>
+                                            <td>17.72in</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                
+                                <div class="tooltip-section">
+                                    <div class="tooltip-section-title">包装信息</div>
+                                    <table class="tooltip-table">
+                                        <tr>
+                                            <td>卷长</td>
+                                            <td>450m</td>
+                                            <td>1476.38ft</td>
+                                        </tr>
+                                        <tr>
+                                            <td>包装方式</td>
+                                            <td colspan="2">真空包装</td>
+                                        </tr>
+                                        <tr>
+                                            <td>产品外包装尺寸</td>
+                                            <td colspan="2">460×310×320mm</td>
+                                        </tr>
+                                        <tr>
+                                            <td>单箱数量</td>
+                                            <td colspan="2">2卷/箱</td>
+                                        </tr>
+                                        <tr>
+                                            <td>纸筒内径</td>
+                                            <td colspan="2">76mm</td>
+                                        </tr>
+                                        <tr>
+                                            <td>卷径</td>
+                                            <td colspan="2">280mm</td>
+                                        </tr>
+                                    </table>
+                                </div>
+
+                                <div class="tooltip-section">
+                                    <div class="tooltip-section-title">托盘信息</div>
+                                    <table class="tooltip-table">
+                                        <tr>
+                                            <th>托盘类型</th>
+                                            <th>尺寸</th>
+                                            <th>数量</th>
+                                            <th>毛重</th>
+                                            <th>高度</th>
+                                        </tr>
+                                        <tr>
+                                            <td>托盘A</td>
+                                            <td>1200×1000mm</td>
+                                            <td>30卷</td>
+                                            <td>320kg</td>
+                                            <td>1950mm</td>
+                                        </tr>
+                                        <tr>
+                                            <td>托盘B</td>
+                                            <td>1100×1100mm</td>
+                                            <td>36卷</td>
+                                            <td>380kg</td>
+                                            <td>2100mm</td>
+                                        </tr>
+                                        <tr>
+                                            <td>托盘C</td>
+                                            <td>1000×1200mm</td>
+                                            <td>24卷</td>
+                                            <td>270kg</td>
+                                            <td>1750mm</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </span>
+                    </td>
+                    <td>
+                        90 (1-10)<br>
+                        80 (11-100)<br>
+                        40 (>100)
+                    </td>
+                    <td>us:0, au:1, eu:2</td>
+                    <td>
+                        <div style="display: flex; align-items: center;">
+                            <span>X</span>
+                            <input type="number" class="quantity-input" value="1" min="1">
+                            <button class="btn-add">Add</button>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>牛皮纸缓冲填充</td>
+                    <td><img src="https://via.placeholder.com/80x80?text=PAP-10-20" alt="PAP-10-20" class="product-image"></td>
+                    <td>PP-001</td>
+                    <td>PAP-10-20</td>
+                    <td>
+                        PAPER+PE, Pillow<br>
+                        <span class="tooltip">
+                            <a href="#" class="tooltip-trigger">更多信息</a>
+                            <div class="tooltip-content">
+                                <div class="tooltip-header">PAP-10-20 详细信息</div>
+                                
+                                <div class="tooltip-section">
+                                    <div class="tooltip-section-title">基本信息</div>
+                                    <div><strong>包装材质:</strong> PAPER+PE</div>
+                                    <div><strong>形状:</strong> Pillow</div>
+                                    <div><strong>适配型号:</strong> LP-V1/LP-F1</div>
+                                    <div><strong>颜色:</strong> 本色</div>
+                                </div>
+                                
+                                <div class="tooltip-section">
+                                    <div class="tooltip-section-title">尺寸规格</div>
+                                    <table class="tooltip-table">
+                                        <tr>
+                                            <th></th>
+                                            <th>公制</th>
+                                            <th>英制</th>
+                                        </tr>
+                                        <tr>
+                                            <td>克重</td>
+                                            <td>75g/m²</td>
+                                            <td>2.2oz/yd²</td>
+                                        </tr>
+                                        <tr>
+                                            <td>膜宽</td>
+                                            <td>300mm</td>
+                                            <td>11.81in</td>
+                                        </tr>
+                                        <tr>
+                                            <td>袋长</td>
+                                            <td>400mm</td>
+                                            <td>15.75in</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                
+                                <div class="tooltip-section">
+                                    <div class="tooltip-section-title">包装信息</div>
+                                    <table class="tooltip-table">
+                                        <tr>
+                                            <td>卷长</td>
+                                            <td>800m</td>
+                                            <td>2624.67ft</td>
+                                        </tr>
+                                        <tr>
+                                            <td>包装方式</td>
+                                            <td colspan="2">牛皮纸包装</td>
+                                        </tr>
+                                        <tr>
+                                            <td>产品外包装尺寸</td>
+                                            <td colspan="2">410×320×380mm</td>
+                                        </tr>
+                                        <tr>
+                                            <td>单箱数量</td>
+                                            <td colspan="2">6卷/箱</td>
+                                        </tr>
+                                        <tr>
+                                            <td>纸筒内径</td>
+                                            <td colspan="2">76mm</td>
+                                        </tr>
+                                        <tr>
+                                            <td>卷径</td>
+                                            <td colspan="2">225mm</td>
+                                        </tr>
+                                    </table>
+                                </div>
+
+                                <div class="tooltip-section">
+                                    <div class="tooltip-section-title">托盘信息</div>
+                                    <table class="tooltip-table">
+                                        <tr>
+                                            <th>托盘类型</th>
+                                            <th>尺寸</th>
+                                            <th>数量</th>
+                                            <th>毛重</th>
+                                            <th>高度</th>
+                                        </tr>
+                                        <tr>
+                                            <td>托盘A</td>
+                                            <td>1200×1000mm</td>
+                                            <td>36卷</td>
+                                            <td>360kg</td>
+                                            <td>2050mm</td>
+                                        </tr>
+                                        <tr>
+                                            <td>托盘B</td>
+                                            <td>1100×1100mm</td>
+                                            <td>42卷</td>
+                                            <td>410kg</td>
+                                            <td>2200mm</td>
+                                        </tr>
+                                        <tr>
+                                            <td>托盘C</td>
+                                            <td>1000×1200mm</td>
+                                            <td>30卷</td>
+                                            <td>310kg</td>
+                                            <td>1850mm</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </span>
+                    </td>
+                    <td>
+                        85 (1-10)<br>
+                        75 (11-100)<br>
+                        55 (>100)
+                    </td>
+                    <td>us:5, au:4, eu:8</td>
+                    <td>
+                        <div style="display: flex; align-items: center;">
+                            <span>X</span>
+                            <input type="number" class="quantity-input" value="1" min="1">
+                            <button class="btn-add">Add</button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <!-- Floating Cart Button -->
+        <div class="cart-floating" onclick="showModal('cart-modal')">
+            <span>🛒</span>
+            <div class="cart-count">1</div>
+        </div>
+        
+        <!-- Cart Modal -->
+        <div id="cart-modal" class="modal">
+            <div class="modal-content">
+                <span class="modal-close" onclick="hideModal('cart-modal')">×</span>
+                <h3>购物车</h3>
+                <div id="cart-items" style="margin-top: 15px;">
+                    <!-- Cart items will be dynamically added here -->
+                    <div style="padding: 20px; text-align: center; color: #666;">
+                        购物车为空
+                    </div>
+                </div>
+                <div id="cart-total" style="display: none;"></div>
+                <!-- Add Clear Cart Button -->
+                <div id="cart-actions" style="margin-top: 15px; text-align: right;">
+                    <button id="clear-cart-btn" class="btn-reset">清空购物车</button>
+                </div>
+                <!-- Cart Confirm Panel -->
+                <div id="cart-confirm" class="cart-confirm">
+                    <div class="cart-confirm-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                    </div>
+                    <div class="cart-confirm-title">确认清空购物车</div>
+                    <div class="cart-confirm-text">此操作将清空购物车中所有商品，且无法恢复。</div>
+                    <div class="cart-confirm-buttons">
+                        <button id="cart-confirm-cancel" class="cart-confirm-button cart-confirm-cancel">取消</button>
+                        <button id="cart-confirm-proceed" class="cart-confirm-button cart-confirm-proceed">确认清空</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer style="margin-top: 50px; text-align: center; padding: 20px; background-color: #f0f0f0; color: #666;">
+        <div class="container">
+            Copyright@Hangzhou Bingjia Tech. Co., Ltd.
+        </div>
+    </footer>
+    
+    <script>
+        // Cart management
+        let cart = [];
+        let cartTotal = 0;
+        
+        // Initialize cart from localStorage when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // 首先清空并重置购物车计数显示
+            const cartCountDisplay = document.querySelector('.cart-count');
+            if (cartCountDisplay) {
+                cartCountDisplay.textContent = "0";
+            }
+            
+            // 尝试从localStorage加载购物车
+            try {
+                const savedCart = localStorage.getItem('bjt_cart');
+                if (savedCart && savedCart !== "undefined" && savedCart !== "null") {
+                    const parsedCart = JSON.parse(savedCart);
+                    // 检查购物车数据是否有效
+                    if (Array.isArray(parsedCart) && parsedCart.length > 0) {
+                        cart = parsedCart;
+                        updateCartDisplay();
+                        updateCartCount();
+                    } else {
+                        // 购物车为空或无效，重置localStorage
+                        localStorage.removeItem('bjt_cart');
+                        cart = [];
+                    }
+                } else {
+                    // localStorage中没有购物车或数据无效，重置
+                    localStorage.removeItem('bjt_cart');
+                    cart = [];
+                }
+            } catch (e) {
+                console.error("Error loading cart from localStorage:", e);
+                // 发生错误时重置购物车
+                localStorage.removeItem('bjt_cart');
+                cart = [];
+            }
+            
+            // Set up event handlers for Add buttons
+            setupAddToCartButtons();
+            
+            // 为清空购物车相关的按钮添加事件监听器
+            setupClearCartListeners();
+            
+            // Toggle between Weight and Thickness based on material selection
+            const materialRadios = document.querySelectorAll('input[name="material"]');
+            const thicknessFilter = document.getElementById('thickness-filter');
+            const weightFilter = document.getElementById('weight-filter');
+            
+            // Function to toggle filters based on selected material
+            function toggleFilters() {
+                const selectedMaterial = document.querySelector('input[name="material"]:checked').value;
+                
+                if (selectedMaterial === 'paper_pe') {
+                    // For paper-related materials, show Weight
+                    thicknessFilter.style.display = 'none';
+                    weightFilter.style.display = 'flex';
+                } else {
+                    // For other materials, show Thickness
+                    thicknessFilter.style.display = 'flex';
+                    weightFilter.style.display = 'none';
+                }
+            }
+            
+            // Add change event listeners to all material radio buttons
+            materialRadios.forEach(radio => {
+                radio.addEventListener('change', toggleFilters);
+            });
+            
+            // Initial setup based on default selection
+            toggleFilters();
+            
+            // 添加Model选择的事件监听器
+            const modelSelect = document.querySelector('.filter-row:first-child .filter-select');
+            if (modelSelect) {
+                modelSelect.addEventListener('change', updateModelUsageImage);
+                
+                // 初始化时检查是否已选择model
+                if (modelSelect.value !== 'all') {
+                    updateModelUsageImage();
+                }
+            }
+            
+            // 添加Shape选择的事件监听器
+            const shapeRadios = document.querySelectorAll('input[name="shape"]');
+            if (shapeRadios.length > 0) {
+                shapeRadios.forEach(radio => {
+                    radio.addEventListener('change', updateShapeDimensionGuide);
+                });
+                
+                // 初始化时根据默认选择的shape显示尺寸示意图
+                updateShapeDimensionGuide();
+            }
+            
+            // Add event prevention for tooltip links
+            const tooltipTriggers = document.querySelectorAll('.tooltip-trigger');
+            tooltipTriggers.forEach(trigger => {
+                trigger.addEventListener('click', function(e) {
+                    e.preventDefault(); // Prevent default link behavior
+                });
+            });
+            
+            // Setup unit toggle
+            const unitRadios = document.querySelectorAll('input[name="unit"]');
+            unitRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const isMetric = document.querySelector('input[name="unit"]:checked').value !== 'imperial';
+                    updateMeasurementDisplay(isMetric);
+                });
+            });
+            
+            // Add initial value to unit radio buttons
+            document.querySelector('input[name="unit"]').value = 'metric';
+            document.querySelectorAll('input[name="unit"]')[1].value = 'imperial';
+        });
+        
+        function setupAddToCartButtons() {
+            const addButtons = document.querySelectorAll('.btn-add');
+            
+            addButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const row = this.closest('tr');
+                    if (!row) return;
+                    
+                    // Get data from the updated table structure
+                    const productNumber = row.cells[0].textContent.trim();
+                    const productName = row.cells[1].textContent.trim();
+                    const productImage = row.cells[2].querySelector('img').src;
+                    const partNumber = row.cells[3].textContent.trim();
+                    const model = row.cells[4].textContent.trim();
+                    const specsText = row.cells[5].textContent.split('\n')[0].trim();
+                    
+                    // Extract tiered pricing from the cell
+                    const pricingText = row.cells[6].textContent.trim();
+                    const priceTiers = parsePriceTiers(pricingText);
+                    
+                    // Get base price (first tier)
+                    const basePrice = priceTiers[0].price;
+                    
+                    const inventory = row.cells[7].textContent.trim();
+                    const quantity = parseInt(row.querySelector('.quantity-input').value);
+                    
+                    // Find compatible models - this might be in a separate cell or data attribute
+                    // For now, we'll assume it's "ALL" or get it from a data attribute if available
+                    const compatibleModels = row.dataset.compatibleModels || row.cells[8]?.textContent.trim() || "ALL";
+                    
+                    // Get more detailed specs from tooltip
+                    let detailedSpecs = {};
+                    try {
+                        const tooltipContent = row.cells[5].querySelector('.tooltip-content');
+                        if (tooltipContent) {
+                            // Get material
+                            const materialText = tooltipContent.querySelector('.tooltip-section:first-child').textContent;
+                            const material = materialText.includes('PAPER') ? 'PAPER+PE' : 'HDPE';
+                            
+                            // Get dimensions based on the unit selection
+                            const isMetric = document.querySelector('input[name="unit"]:checked').value !== 'imperial';
+                            const measurementTable = tooltipContent.querySelector('.tooltip-table');
+                            const rows = measurementTable.querySelectorAll('tr');
+                            
+                            // First row contains headers, skip it
+                            const valueIdx = isMetric ? 1 : 2; // 1 for metric, 2 for imperial
+                            
+                            const dimensions = {};
+                            // Extract measurements from the table
+                            for (let i = 1; i < rows.length; i++) {
+                                const cells = rows[i].querySelectorAll('td');
+                                const name = cells[0].textContent.trim();
+                                const value = cells[valueIdx].textContent.trim();
+                                dimensions[name] = value;
+                            }
+                            
+                            detailedSpecs = {
+                                material: material,
+                                dimensions: dimensions
+                            };
+                        }
+                    } catch (e) {
+                        console.error('Error extracting detailed specs:', e);
+                    }
+                    
+                    // For consumables, add specific fields required for display
+                    addToCart(productName, basePrice, quantity, 'consumable', {
+                        partNumber: partNumber,
+                        model: model,
+                        specifications: specsText,  // 规格型号
+                        spec: model,                // 规格说明
+                        image: productImage,
+                        inventory: inventory,
+                        compatibleModels: compatibleModels,
+                        detailedSpecs: detailedSpecs,
+                        priceTiers: priceTiers // Add price tiers to the specs
+                    });
+                });
+            });
+        }
+        
+        // Parse price tiers from the text content of the price cell
+        function parsePriceTiers(pricingText) {
+            const tiers = [];
+            const lines = pricingText.split('\n');
+            
+            lines.forEach(line => {
+                const match = line.match(/(\d+)\s*\(([^)]+)\)/);
+                if (match) {
+                    const price = parseInt(match[1]);
+                    const rangeText = match[2].trim();
+                    
+                    let min = 1;
+                    let max = Infinity;
+                    
+                    if (rangeText.includes('-')) {
+                        // Format: "90 (11-100)"
+                        const rangeParts = rangeText.split('-');
+                        min = parseInt(rangeParts[0]);
+                        max = parseInt(rangeParts[1]);
+                    } else if (rangeText.includes('>')) {
+                        // Format: "50 (>100)"
+                        min = parseInt(rangeText.replace('>', '')) + 1;
+                    } else {
+                        // Format: "100 (1-10)" or something else
+                        const rangeParts = rangeText.split('-');
+                        if (rangeParts.length === 2) {
+                            min = parseInt(rangeParts[0]);
+                            max = parseInt(rangeParts[1]);
+                        }
+                    }
+                    
+                    tiers.push({
+                        price: price,
+                        min: min,
+                        max: max,
+                        rangeText: rangeText
+                    });
+                }
+            });
+            
+            // Sort tiers by min value to ensure proper order
+            tiers.sort((a, b) => a.min - b.min);
+            
+            return tiers;
+        }
+        
+        function addToCart(productName, basePrice, quantity, type, specs) {
+            if (quantity > 0) {
+                // Get price tiers if available
+                const priceTiers = specs.priceTiers || [{ price: basePrice, min: 1, max: Infinity, rangeText: "1+" }];
+                
+                // Check if product already exists in cart
+                const existingItem = cart.find(item => item.name === productName);
+                
+                if (existingItem) {
+                    // Update quantity
+                    existingItem.quantity += quantity;
+                    
+                    // Update current price tier based on new quantity
+                    const newTier = findPriceTier(priceTiers, existingItem.quantity);
+                    existingItem.currentTier = newTier;
+                    
+                    // Update subtotal with tier price
+                    existingItem.subtotal = existingItem.quantity * newTier.price;
+                } else {
+                    // Find the appropriate price tier based on quantity
+                    const initialTier = findPriceTier(priceTiers, quantity);
+                    
+                    cart.push({
+                        name: productName,
+                        basePrice: basePrice,
+                        currentTier: initialTier,
+                        quantity: quantity,
+                        subtotal: quantity * initialTier.price,
+                        type: type || 'consumable',
+                        specs: specs || {}
+                    });
+                }
+                
+                // Save to localStorage
+                localStorage.setItem('bjt_cart', JSON.stringify(cart));
+                
+                // Update UI
+                updateCartDisplay();
+                updateCartCount();
+                
+                // 显示添加到购物车的通知，而不是使用alert
+                showCartNotification(`${quantity} x ${productName} 已添加到购物车`);
+            }
+        }
+        
+        // Find the appropriate price tier based on quantity
+        function findPriceTier(priceTiers, quantity) {
+            // Default to first tier if no tiers are available
+            if (!priceTiers || priceTiers.length === 0) {
+                return { price: 100, min: 1, max: Infinity, rangeText: "1+" };
+            }
+            
+            // Find the tier where the quantity falls within the min-max range
+            for (const tier of priceTiers) {
+                if (quantity >= tier.min && quantity <= tier.max) {
+                    return tier;
+                }
+            }
+            
+            // Default to the last tier if no match is found
+            return priceTiers[priceTiers.length - 1];
+        }
+        
+        function updateCartCount() {
+            const cartCountDisplay = document.querySelector('.cart-count');
+            if (cartCountDisplay) {
+                const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
+                cartCountDisplay.textContent = totalItems;
+            }
+        }
+        
+        function updateCartDisplay() {
+            const cartItemsContainer = document.getElementById('cart-items');
+            const cartTotalDisplay = document.getElementById('cart-total');
+            
+            // 确保cart是数组
+            if (!Array.isArray(cart)) {
+                cart = [];
+                localStorage.removeItem('bjt_cart');
+            }
+            
+            // Calculate total
+            cartTotal = cart.reduce((total, item) => total + item.subtotal, 0);
+            
+            // Update cart total if element exists
+            if (cartTotalDisplay) {
+                cartTotalDisplay.textContent = `¥${cartTotal.toLocaleString()}`;
+            }
+            
+            // 保存购物车状态到localStorage
+            if (cart.length > 0) {
+                localStorage.setItem('bjt_cart', JSON.stringify(cart));
+            } else {
+                // 如果购物车为空，则清除本地存储
+                localStorage.removeItem('bjt_cart');
+            }
+            
+            // Clear cart items container
+            if (cartItemsContainer) {
+                cartItemsContainer.innerHTML = '';
+                
+                if (cart.length === 0) {
+                    cartItemsContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">购物车为空</div>';
+                    return;
+                }
+                
+                // Add items to cart preview
+                cart.forEach((item, index) => {
+                    const cartItemElement = document.createElement('div');
+                    cartItemElement.className = 'cart-item';
+                    cartItemElement.style.display = 'flex';
+                    cartItemElement.style.justifyContent = 'space-between';
+                    cartItemElement.style.padding = '10px';
+                    cartItemElement.style.borderBottom = '1px solid #eee';
+                    
+                    // Prepare image element if available
+                    let imageHtml = '';
+                    if (item.specs && item.specs.image) {
+                        imageHtml = `<img src="${item.specs.image}" alt="${item.name}" style="width:50px;height:50px;object-fit:contain;margin-right:10px;">`;
+                    }
+                    
+                    const itemInfo = document.createElement('div');
+                    itemInfo.style.display = 'flex';
+                    itemInfo.style.flex = '1';
+                    
+                    // Show image if available
+                    if (imageHtml) {
+                        const imageDiv = document.createElement('div');
+                        imageDiv.innerHTML = imageHtml;
+                        itemInfo.appendChild(imageDiv);
+                    }
+                    
+                    // Get current price from tier
+                    const currentPrice = item.currentTier ? item.currentTier.price : (item.basePrice || item.price);
+                    const tierText = item.currentTier ? ` (${item.currentTier.rangeText})` : '';
+                    
+                    // Create tiered pricing display
+                    let tieredPricingHtml = '';
+                    if (item.specs && item.specs.priceTiers && item.specs.priceTiers.length > 0) {
+                        tieredPricingHtml = '<div style="font-size: 12px; color: #666; margin-top: 5px;">阶梯价格: ';
+                        
+                        item.specs.priceTiers.forEach((tier, i) => {
+                            // Highlight the current tier
+                            const isCurrentTier = item.currentTier && item.currentTier.min === tier.min;
+                            const style = isCurrentTier ? 'color: #1a57a5; font-weight: bold;' : '';
+                            
+                            tieredPricingHtml += `<span style="${style}">¥${tier.price} (${tier.rangeText})</span>`;
+                            
+                            // Add separator between tiers, except the last one
+                            if (i < item.specs.priceTiers.length - 1) {
+                                tieredPricingHtml += ' | ';
+                            }
+                        });
+                        
+                        tieredPricingHtml += '</div>';
+                    }
+                    
+                    // Item details
+                    const detailsDiv = document.createElement('div');
+                    detailsDiv.style.flex = '1';
+                    
+                    // 根据商品类型显示不同的信息
+                    if (item.type === 'consumable') {
+                        // 耗材展示信息：适配机型，产品图片（已在前面处理），料号，规格型号，spec
+                        detailsDiv.innerHTML = `
+                            <strong>${item.name}</strong>
+                            <div>当前单价: ¥${currentPrice}${tierText}</div>
+                            ${tieredPricingHtml}
+                            ${item.specs.compatibleModels ? `<div>适配机型: ${item.specs.compatibleModels}</div>` : ''}
+                            ${item.specs.partNumber ? `<div>料号: ${item.specs.partNumber}</div>` : ''}
+                            ${item.specs.specifications ? `<div>规格型号: ${item.specs.specifications}</div>` : ''}
+                            ${item.specs.spec ? `<div>规格说明: ${item.specs.spec}</div>` : ''}
+                        `;
+                    } else if (item.type === 'spare') {
+                        // 备件展示：适配机型，料号，名称，适配序列号，包装尺寸，包装毛重
+                        detailsDiv.innerHTML = `
+                            <strong>${item.name}</strong>
+                            <div>当前单价: ¥${currentPrice}${tierText}</div>
+                            ${tieredPricingHtml}
+                            ${item.specs.compatibleModels ? `<div>适配机型: ${item.specs.compatibleModels}</div>` : ''}
+                            ${item.specs.partNumber ? `<div>料号: ${item.specs.partNumber}</div>` : ''}
+                            ${item.specs.serialRange ? `<div>适配序列号: ${item.specs.serialRange}</div>` : ''}
+                            ${item.specs.dimensions ? `<div>包装尺寸: ${item.specs.dimensions}</div>` : ''}
+                            ${item.specs.weight ? `<div>包装毛重: ${item.specs.weight}</div>` : ''}
+                        `;
+                    } else if (item.type === 'accessory') {
+                        // 配件展示：型号，料号，产品名称，电压，频率，托盘尺寸，一托数量
+                        detailsDiv.innerHTML = `
+                            <strong>${item.name}</strong>
+                            <div>当前单价: ¥${currentPrice}${tierText}</div>
+                            ${tieredPricingHtml}
+                            ${item.specs.model ? `<div>型号: ${item.specs.model}</div>` : ''}
+                            ${item.specs.partNumber ? `<div>料号: ${item.specs.partNumber}</div>` : ''}
+                            ${item.specs.voltage ? `<div>电压: ${item.specs.voltage}</div>` : ''}
+                            ${item.specs.frequency ? `<div>频率: ${item.specs.frequency}</div>` : ''}
+                            ${item.specs.palletSize ? `<div>托盘尺寸: ${item.specs.palletSize}</div>` : ''}
+                            ${item.specs.palletQty ? `<div>一托数量: ${item.specs.palletQty}</div>` : ''}
+                        `;
+                    } else {
+                        // 主机展示：料号，产品名称，托盘尺寸，一托数量
+                        detailsDiv.innerHTML = `
+                            <strong>${item.name}</strong>
+                            <div>当前单价: ¥${currentPrice}${tierText}</div>
+                            ${tieredPricingHtml}
+                            ${item.specs.partNumber ? `<div>料号: ${item.specs.partNumber}</div>` : ''}
+                            ${item.specs.productName ? `<div>产品名称: ${item.specs.productName}</div>` : ''}
+                            ${item.specs.palletSize ? `<div>托盘尺寸: ${item.specs.palletSize}</div>` : ''}
+                            ${item.specs.palletQty ? `<div>一托数量: ${item.specs.palletQty}</div>` : ''}
+                        `;
+                    }
+                    
+                    itemInfo.appendChild(detailsDiv);
+                    
+                    const itemActions = document.createElement('div');
+                    itemActions.innerHTML = `
+                        <div>数量: 
+                            <button class="cart-qty-btn" style="border:none;background:none;cursor:pointer;" onclick="updateCartQuantity(${index}, -1)">-</button>
+                            <span>${item.quantity}</span>
+                            <button class="cart-qty-btn" style="border:none;background:none;cursor:pointer;" onclick="updateCartQuantity(${index}, 1)">+</button>
+                            <button style="margin-left:5px;color:red;border:none;background:none;cursor:pointer;" onclick="removeFromCart(${index})">×</button>
+                        </div>
+                        <div>小计: ¥${item.subtotal}</div>
+                    `;
+                    
+                    cartItemElement.appendChild(itemInfo);
+                    cartItemElement.appendChild(itemActions);
+                    cartItemsContainer.appendChild(cartItemElement);
+                });
+                
+                // Add checkout section
+                const checkoutSection = document.createElement('div');
+                checkoutSection.style.marginTop = '20px';
+                checkoutSection.style.display = 'flex';
+                checkoutSection.style.justifyContent = 'space-between';
+                checkoutSection.innerHTML = `
+                    <div><strong>总计:</strong> ¥${cartTotal}</div>
+                    <button class="btn-add">结算</button>
+                `;
+                cartItemsContainer.appendChild(checkoutSection);
+            }
+        }
+        
+        function updateCartQuantity(index, change) {
+            const item = cart[index];
+            const newQuantity = item.quantity + change;
+            
+            if (newQuantity <= 0) {
+                removeFromCart(index);
+            } else {
+                item.quantity = newQuantity;
+                
+                // Update the price tier based on the new quantity
+                if (item.specs && item.specs.priceTiers) {
+                    const newTier = findPriceTier(item.specs.priceTiers, newQuantity);
+                    item.currentTier = newTier;
+                    item.subtotal = item.quantity * newTier.price;
+                } else {
+                    // Fall back to base price if no tiers are available
+                    item.subtotal = item.quantity * (item.basePrice || item.price);
+                }
+                
+                // Save to localStorage
+                localStorage.setItem('bjt_cart', JSON.stringify(cart));
+                
+                // Update UI
+                updateCartDisplay();
+                updateCartCount();
+            }
+        }
+        
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            
+            // Save to localStorage
+            localStorage.setItem('bjt_cart', JSON.stringify(cart));
+            
+            // Update UI
+            updateCartDisplay();
+            updateCartCount();
+        }
+        
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+        
+        function hideModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = "none";
+            }
+        }
+        
+        // Function to toggle displayed measurements based on unit selection
+        function updateMeasurementDisplay(isMetric) {
+            const tooltipTables = document.querySelectorAll('.tooltip-table');
+            tooltipTables.forEach(table => {
+                const metricCells = table.querySelectorAll('tr td:nth-child(2)');
+                const imperialCells = table.querySelectorAll('tr td:nth-child(3)');
+                
+                metricCells.forEach(cell => {
+                    cell.style.fontWeight = isMetric ? 'bold' : 'normal';
+                });
+                
+                imperialCells.forEach(cell => {
+                    cell.style.fontWeight = isMetric ? 'normal' : 'bold';
+                });
+            });
+        }
+        
+        // 根据选择的model更新示例图片
+        function updateModelUsageImage() {
+            const modelSelect = document.querySelector('.filter-row:first-child .filter-select');
+            const modelUsageSection = document.getElementById('model-usage-section');
+            const modelUsageImage = document.getElementById('model-usage-image');
+            const modelUsageTitle = document.getElementById('model-usage-title');
+            const modelUsageDescription = document.getElementById('model-usage-description');
+            
+            if (!modelSelect || !modelUsageSection || !modelUsageImage) return;
+            
+            const selectedModel = modelSelect.value;
+            
+            // 如果选择了"ALL"，隐藏示例图片区域
+            if (selectedModel === 'all') {
+                modelUsageSection.style.display = 'none';
+                return;
+            }
+            
+            // 根据不同model显示不同的使用示例图片和描述
+            let imageUrl = '';
+            let title = '';
+            let description = '';
+            
+            switch (selectedModel) {
+                case 'model1': // LA-E4S
+                    imageUrl = 'https://via.placeholder.com/800x400?text=LA-E4S+Usage+Example';
+                    title = 'LA-E4S 包装耗材使用示例';
+                    description = 'LA-E4S 型号设备的包装耗材主要用于保护精密零件不受震动和碰撞伤害。推荐使用气泡膜和防震填充物，确保设备在运输过程中的安全。';
+                    break;
+                    
+                case 'model2': // MEX-10-20
+                    imageUrl = 'https://via.placeholder.com/800x400?text=MEX-10-20+Usage+Example';
+                    title = 'MEX-10-20 包装耗材使用示例';
+                    description = 'MEX-10-20 型号由于其较大尺寸和重量，需要特殊的填充气泡膜和牛皮纸缓冲填充。正确使用这些耗材可以有效减少运输损坏风险。';
+                    break;
+                    
+                case 'model3': // LP-V1
+                    imageUrl = 'https://via.placeholder.com/800x400?text=LP-V1+Usage+Example';
+                    title = 'LP-V1 包装耗材使用示例';
+                    description = 'LP-V1 型号适用于较轻薄的包装需求，推荐使用PAPER+PE材质的包装耗材。图中展示了正确的包装方式和折叠技巧，以确保最佳保护效果。';
+                    break;
+                    
+                default:
+                    imageUrl = 'https://via.placeholder.com/800x400?text=Generic+Usage+Example';
+                    title = '包装耗材使用示例';
+                    description = '选择适合您设备型号的包装耗材，根据设备尺寸、重量和脆弱程度选择合适的材质和厚度。';
+            }
+            
+            // 更新图片和文本内容
+            modelUsageImage.src = imageUrl;
+            modelUsageImage.alt = title;
+            modelUsageTitle.textContent = title;
+            modelUsageDescription.textContent = description;
+            
+            // 显示示例图片区域
+            modelUsageSection.style.display = 'block';
+        }
+        
+        // 根据选择的shape类型更新尺寸示意图
+        function updateShapeDimensionGuide() {
+            const shapeGuide = document.getElementById('shape-dimension-guide');
+            const shapeImage = document.getElementById('shape-dimension-image');
+            
+            if (!shapeGuide || !shapeImage) return;
+            
+            // 获取当前选择的shape
+            const selectedShape = document.querySelector('input[name="shape"]:checked');
+            if (!selectedShape) return;
+            
+            const shapeType = selectedShape.labels[0].textContent.trim();
+            let imageUrl = '';
+            
+            // 根据不同的shape类型设置不同的示意图
+            switch (shapeType) {
+                case 'Pillow':
+                    imageUrl = 'https://via.placeholder.com/150x100?text=Pillow+Dimensions';
+                    break;
+                case 'Bubble':
+                    imageUrl = 'https://via.placeholder.com/150x100?text=Bubble+Dimensions';
+                    break;
+                case 'Tube':
+                    imageUrl = 'https://via.placeholder.com/150x100?text=Tube+Dimensions';
+                    break;
+                default:
+                    imageUrl = 'https://via.placeholder.com/150x100?text=Shape+Dimensions';
+            }
+            
+            // 更新图片
+            shapeImage.src = imageUrl;
+            shapeImage.alt = `${shapeType} Dimension Guide`;
+            
+            // 显示示意图区域
+            shapeGuide.style.display = 'block';
+        }
+        
+        // 清空购物车函数
+        function clearCart() {
+            // 清空购物车数组
+            cart = [];
+            
+            // 清除localStorage中的购物车数据
+            localStorage.removeItem('bjt_cart');
+            
+            // 更新显示
+            updateCartDisplay();
+            updateCartCount();
+            
+            // 显示通知
+            showCartNotification('购物车已清空');
+            
+            // 隐藏确认面板
+            hideClearCartConfirmation();
+        }
+        
+        // 设置清空购物车相关按钮的事件监听器
+        function setupClearCartListeners() {
+            // 清空购物车按钮
+            const clearCartBtn = document.getElementById('clear-cart-btn');
+            if (clearCartBtn) {
+                clearCartBtn.addEventListener('click', showClearCartConfirmation);
+            }
+            
+            // 确认面板的取消按钮
+            const cancelBtn = document.getElementById('cart-confirm-cancel');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', hideClearCartConfirmation);
+            }
+            
+            // 确认面板的确认按钮
+            const confirmBtn = document.getElementById('cart-confirm-proceed');
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', clearCart);
+            }
+        }
+        
+        // 显示清空购物车确认面板
+        function showClearCartConfirmation() {
+            const confirmPanel = document.getElementById('cart-confirm');
+            if (confirmPanel) {
+                confirmPanel.classList.add('show');
+                
+                // 添加点击事件监听，点击面板外部关闭确认
+                document.addEventListener('click', handleOutsideClick);
+            }
+        }
+        
+        // 隐藏清空购物车确认面板
+        function hideClearCartConfirmation() {
+            const confirmPanel = document.getElementById('cart-confirm');
+            if (confirmPanel) {
+                confirmPanel.classList.remove('show');
+                
+                // 移除点击事件监听
+                document.removeEventListener('click', handleOutsideClick);
+            }
+        }
+        
+        // 处理点击确认面板外部事件
+        function handleOutsideClick(event) {
+            const confirmPanel = document.getElementById('cart-confirm');
+            // 检查点击是否在确认面板外部
+            if (confirmPanel && !confirmPanel.contains(event.target) && 
+                event.target.id !== 'clear-cart-btn' && !event.target.closest('#clear-cart-btn')) {
+                hideClearCartConfirmation();
+            }
+        }
+        
+        // 通知系统
+        let activeNotification = null;
+        let notificationTimeout = null;
+        
+        // 显示购物车通知
+        function showCartNotification(message, duration = 3000) {
+            // 如果已经有通知在显示，先清除它
+            if (activeNotification) {
+                document.body.removeChild(activeNotification);
+                clearTimeout(notificationTimeout);
+                activeNotification = null;
+            }
+            
+            // 创建通知元素
+            const notification = document.createElement('div');
+            notification.className = 'cart-notification';
+            
+            // 通知内容
+            const content = document.createElement('div');
+            content.className = 'cart-notification-content';
+            
+            const icon = document.createElement('div');
+            icon.className = 'cart-notification-icon';
+            icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>';
+            
+            const text = document.createElement('div');
+            text.className = 'cart-notification-text';
+            text.textContent = message;
+            
+            content.appendChild(icon);
+            content.appendChild(text);
+            
+            // 关闭按钮
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'cart-notification-close';
+            closeBtn.innerHTML = '×';
+            closeBtn.addEventListener('click', () => {
+                closeNotification(notification);
+            });
+            
+            // 进度条
+            const progress = document.createElement('div');
+            progress.className = 'cart-notification-progress';
+            
+            // 添加到通知元素
+            notification.appendChild(content);
+            notification.appendChild(closeBtn);
+            notification.appendChild(progress);
+            
+            // 添加到文档
+            document.body.appendChild(notification);
+            
+            // 添加进度条动画
+            progress.style.transition = `width ${duration}ms linear`;
+            
+            // 强制重绘
+            notification.offsetHeight;
+            
+            // 开始进度条动画
+            requestAnimationFrame(() => {
+                notification.classList.add('show');
+                progress.style.width = '0%';
+            });
+            
+            // 设置自动关闭
+            notificationTimeout = setTimeout(() => {
+                closeNotification(notification);
+            }, duration);
+            
+            // 保存当前通知引用
+            activeNotification = notification;
+            
+            return notification;
+        }
+        
+        // 关闭通知
+        function closeNotification(notification) {
+            if (!notification) return;
+            
+            notification.classList.remove('show');
+            
+            // 移除元素
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+                if (activeNotification === notification) {
+                    activeNotification = null;
+                }
+            }, 300);
+        }
+    </script>
+</body>
+</html>

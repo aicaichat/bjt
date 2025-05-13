@@ -1,0 +1,133 @@
+{
+  "shapes": [
+    {
+      "id": "pillow",
+      "name": "pillow",
+      "image_url": "/images/shop/MFB25.jpg"
+    },
+    {
+      "id": "bubble",
+      "name": "bubble",
+      "image_url": "/images/shop/MEX.JPG"
+    },
+    {
+      "id": "tube",
+      "name": "tube",
+      "image_url": "/images/shop/MFC.jpg"
+    }
+  ],
+  "materials": [
+    {
+      "id": "HDPE",
+      "name": "High-Density Polyethylene"
+    },
+    {
+      "id": "LDPE",
+      "name": "Low-Density Polyethylene"
+    },
+    {
+      "id": "Nylon",
+      "name": "Nylon"
+    },
+    {
+      "id": "PAPER+PE",
+      "name": "Paper+Polyethylene"
+    }
+  ],
+  "models": [
+    {
+      "id": "all",
+      "name": "ALL"
+    },
+    {
+      "id": "LA-E4S",
+      "name": "LA-E4S"
+    },
+    {
+      "id": "LA-E5P",
+      "name": "LA-E5P"
+    },
+    {
+      "id": "LA-E6L",
+      "name": "LA-E6L"
+    },
+    {
+        "id": "PM-100",
+        "name": "PM-100"
+      },
+      {
+        "id": "PM-200",
+        "name": "PM-200"
+      },
+      {
+        "id": "PM-300",
+        "name": "PM-300"
+      },
+      {
+        "id": "TM-200",
+        "name": "TM-200"
+      },
+      {
+        "id": "TM-300",
+        "name": "TM-300"
+      },
+      {
+        "id": "TM-400",
+        "name": "TM-400"
+      }
+
+  ],
+  "thicknesses": [
+    {
+      "id": "all",
+      "name": "ALL"
+    },
+    {
+      "id": "25um",
+      "name": "25 um"
+    },
+    {
+      "id": "50um",
+      "name": "50 um"
+    }
+  ],
+  "weights": [
+    {
+      "id": "all",
+      "name": "ALL"
+    }
+  ],
+  "widths": [
+    {
+      "id": "all",
+      "name": "ALL"
+    },
+    {
+      "id": "20cm",
+      "name": "20 cm"
+    },
+    {
+      "id": "40cm",
+      "name": "40 cm"
+    }
+  ],
+  "lengths": [
+    {
+      "id": "all",
+      "name": "ALL"
+    },
+    {
+      "id": "100m",
+      "name": "100 m"
+    },
+    {
+      "id": "200m",
+      "name": "200 m"
+    }
+  ],
+  "modelExplodedViews": {
+    "LA-E4S": "/pdfs/models/LA-E4S.pdf",
+    "LA-E5P": "/pdfs/models/LA-E5P.pdf",
+    "LA-E6L": "/pdfs/models/LA-E6L.pdf"
+  }
+} 

@@ -41,7 +41,7 @@ const Home: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   
   // 当前语言，基于i18n.language
-  const currentLanguage = i18n.language.startsWith('zh') ? 'cn' : 'en';
+  const currentLanguage = i18n.language.startsWith('zh') ? 'zh' : 'en';
   
   // 检查用户是否已登录，如果需要认证但未登录则重定向
   useEffect(() => {
@@ -125,16 +125,11 @@ const Home: React.FC = () => {
   };
 
   // 根据当前语言获取标题
-  const getTitle = (line: ProductLine) => currentLanguage === 'en' ? line.title_en : line.title_cn;
+  const getTitle = (line: ProductLine) => currentLanguage === 'en' ? line.title_en : line.title_zh;
   
   // 根据当前语言获取描述
-  const getDescription = (line: ProductLine) => currentLanguage === 'en' ? line.description_en : line.description_cn;
+  const getDescription = (line: ProductLine) => currentLanguage === 'en' ? line.description_en : line.description_zh;
   
-  // 根据当前语言获取子项
-  const getSubitem1 = (line: ProductLine) => currentLanguage === 'en' ? line.subitem1_en : line.subitem1_cn;
-  const getSubitem2 = (line: ProductLine) => currentLanguage === 'en' ? line.subitem2_en : line.subitem2_cn;
-  const getSubitem3 = (line: ProductLine) => currentLanguage === 'en' ? line.subitem3_en : line.subitem3_cn;
-
   // 使用统一的加载组件
   if (loading) {
     return <Loading fullPage={true} />;
@@ -165,21 +160,21 @@ const Home: React.FC = () => {
                     className="product-link" 
                     onClick={(e) => handleProductLinkClick(e, `${ROUTES.MACHINES}?category=${line.id}`)}
                   >
-                    {getSubitem1(line)}
+                    {t('home.links.machines', 'View Machines')} 
                   </Link>
                   <Link 
                     to={`${ROUTES.CONSUMABLES}?category=${line.id}`} 
                     className="product-link" 
                     onClick={(e) => handleProductLinkClick(e, `${ROUTES.CONSUMABLES}?category=${line.id}`)}
                   >
-                    {getSubitem2(line)}
+                    {t('home.links.consumables', 'View Consumables')}
                   </Link>
                   <Link 
                     to={`${ROUTES.SPARE_PARTS}?category=${line.id}`} 
                     className="product-link" 
                     onClick={(e) => handleProductLinkClick(e, `${ROUTES.SPARE_PARTS}?category=${line.id}`)}
                   >
-                    {getSubitem3(line)}
+                    {t('home.links.spareParts', 'View Spare Parts')}
                   </Link>
                 </div>
               </div>

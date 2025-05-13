@@ -821,3 +821,4 @@ function bjt_api_delete_relation($request) {
   - 实现配件选择的记忆功能，避免页面刷新后丢失选择状态
   - 使用事件委托优化事件处理，提高性能
 </rewritten_file> 
+ 

@@ -1,0 +1,161 @@
+ # BJT产品管理系统 API 测试工具集
+
+这个仓库包含用于测试BJT产品管理系统API的自动化测试工具和脚本。
+
+## 目录
+
+1. [测试工具概述](#测试工具概述)
+2. [环境要求](#环境要求)
+3. [快速开始](#快速开始)
+4. [详细使用说明](#详细使用说明)
+5. [API文档](#api文档)
+6. [贡献指南](#贡献指南)
+
+## 测试工具概述
+
+本仓库提供以下测试工具和脚本：
+
+- **test-api-comprehensive.sh**: 完整的API自动化测试脚本，覆盖了所有端点
+- **test-swagger-generator.js**: 生成标准OpenAPI/Swagger文档的Node.js脚本
+- **bjt-api-test-postman.json**: 可导入Postman的测试集合
+- **test-bjt-api.sh**: 简化版测试脚本，主要用于基本功能验证
+
+## 环境要求
+
+要使用这些测试工具，您需要：
+
+- **基本要求**:
+  - Bash 环境 (Linux, macOS 或 Windows WSL)
+  - Docker 和 docker-compose (用于运行WordPress容器)
+  - Node.js v16+ (用于运行Swagger生成器)
+  - jq (用于处理JSON数据，可通过`apt-get install jq`或`brew install jq`安装)
+
+- **可选工具**:
+  - Postman (用于导入和运行Postman集合)
+  - 现代浏览器 (用于查看Swagger文档)
+
+## 快速开始
+
+### 1. 克隆仓库并进入目录
+
+```bash
+git clone <repository-url>
+cd bjt-product-system
+```
+
+### 2. 启动API服务
+
+确保Docker正在运行，然后启动开发环境：
+
+```bash
+docker-compose -f docker/dev/docker-compose.nginx.yml up -d
+```
+
+### 3. 运行基本测试
+
+执行基本API测试脚本：
+
+```bash
+chmod +x test-bjt-api.sh
+./test-bjt-api.sh
+```
+
+### 4. 运行全面测试
+
+执行全面API测试脚本：
+
+```bash
+chmod +x test-api-comprehensive.sh
+./test-api-comprehensive.sh
+```
+
+### 5. 生成API文档
+
+生成Swagger文档：
+
+```bash
+node test-swagger-generator.js
+```
+
+然后在浏览器中打开生成的`api-docs-viewer.html`文件。
+
+### 6. 在Postman中测试
+
+1. 打开Postman
+2. 导入`bjt-api-test-postman.json`文件
+3. 创建环境变量并设置`baseUrl`为您的API服务URL (默认为`http://localhost:8080/wp-json/bjt/v1`)
+
+## 详细使用说明
+
+### test-api-comprehensive.sh
+
+这个脚本对所有API端点进行全面测试，并提供测试结果报告。
+
+脚本特性:
+- 自动设置JWT密钥
+- 支持测试通过时的计数
+- 详细的测试结果输出
+- 错误处理和响应验证
+
+使用方法：
+
+```bash
+./test-api-comprehensive.sh
+```
+
+### test-swagger-generator.js
+
+这个Node.js脚本生成标准的OpenAPI/Swagger文档，可以在任何支持OpenAPI的工具中使用。
+
+使用方法：
+
+```bash
+node test-swagger-generator.js
+```
+
+生成的文件:
+- `swagger-api-docs.json`: 标准OpenAPI JSON文件
+- `api-docs-viewer.html`: 可在浏览器中直接查看的文档页面
+
+### bjt-api-test-postman.json
+
+Postman集合文件，包含对所有API端点的测试。
+
+使用方法:
+1. 在Postman中导入集合
+2. 创建环境并设置变量:
+   - `baseUrl`: API服务的基础URL
+   - `token`: JWT认证令牌
+3. 运行集合或单个请求测试
+
+### test-bjt-api.sh
+
+简化版测试脚本，主要用于快速验证API功能。
+
+使用方法：
+
+```bash
+./test-bjt-api.sh
+```
+
+## API文档
+
+完整的API文档请参考以下资源:
+
+1. 运行`node test-swagger-generator.js`生成的Swagger文档
+2. `frontend/src/API 接口文档.ini`文件中的详细API描述
+3. Postman集合中的请求描述
+
+## 贡献指南
+
+欢迎贡献和改进这些测试工具！如果您想贡献:
+
+1. Fork这个仓库
+2. 创建您的功能分支 (`git checkout -b feature/amazing-feature`)
+3. 提交您的更改 (`git commit -m 'Add some amazing feature'`)
+4. 推送到分支 (`git push origin feature/amazing-feature`)
+5. 创建一个Pull Request
+
+---
+
+**BJT产品管理系统团队** - 2025

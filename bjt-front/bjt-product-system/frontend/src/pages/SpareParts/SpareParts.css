@@ -344,13 +344,12 @@
 
 .spec-tooltip {
   position: absolute;
-    background-color: white;
-    border-radius: 8px;
+  background-color: white; 
+  border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   padding: 0;
   z-index: 1000;
-  min-width: 300px;
-  max-width: 400px;
+  width: 50vw; /* Tooltip takes up half the viewport width */
   border: 1px solid #ddd;
   overflow: hidden;
   transition: opacity 0.3s ease, transform 0.3s ease;
