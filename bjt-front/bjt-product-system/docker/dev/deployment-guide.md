@@ -26,7 +26,7 @@ cd bjt/bjt-front/bjt-product-system
 podman pod rm -f dev
 
 # 使用 podman-compose 启动服务
-podman-compose -f docker/dev/docker-compose.podman.yml up
+podman-compose -f docker/dev/docker-compose.nginx-podman.yml up
 ```
 
 ### 3. 常见问题及解决方案
@@ -88,3 +88,32 @@ COPY ../../frontend/package*.json ./
 RUN npm install
 COPY ../../frontend ./
 RUN npm run build 
+```
+
+## 创建pod，指定所有端口映射
+podman pod create --name=dev --share=net -p 80:80 -p 8080:8080 -p 3306:3306
+
+# 构建和运行前端
+podman build -t local/frontend -f docker/dev/nginx/Dockerfile .
+podman run --pod=dev --name=frontend -v ./docker/dev/nginx/frontend.conf:/etc/nginx/conf.d/default.conf -e VITE_USE_MOCK=true -d local/frontend
+
+# 运行MySQL
+podman run --pod=dev --name=mysql -v mysql_data:/var/lib/mysql \
+  -v ./docker/dev/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql \
+  -e MYSQL_ROOT_PASSWORD=root \
+  -e MYSQL_DATABASE=bjt_product \
+  -e MYSQL_USER=wordpress \
+  -e MYSQL_PASSWORD=wordpress \
+  -d mysql:8.0 --default-authentication-plugin=mysql_native_password
+
+# 构建和运行WordPress
+podman build -t local/wordpress -f docker/dev/wordpress/Dockerfile.nginx .
+podman run --pod=dev --name=wordpress \
+  -v ./wordpress:/var/www/html \
+  -v ./plugins:/var/www/html/wp-content/plugins \
+  -e WORDPRESS_DB_HOST=localhost \
+  -e WORDPRESS_DB_USER=wordpress \
+  -e WORDPRESS_DB_PASSWORD=wordpress \
+  -e WORDPRESS_DB_NAME=bjt_product \
+  -e WORDPRESS_DEBUG=1 \
+  -d local/wordpress 
