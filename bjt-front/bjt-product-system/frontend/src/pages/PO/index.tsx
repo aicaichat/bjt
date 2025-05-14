@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { Form, Input, Button, Spin, Space, Drawer, Table, message } from 'antd';
 import { useAuth } from '../../contexts/AuthContext';
 import { safeToLocaleString } from '../../utils/priceUtils';
+import logo from '../../assets/logo.svg';
 
 // 定义类型
 export interface POProduct {
@@ -396,8 +397,8 @@ const POPage: React.FC = () => {
           <tbody>
             {/* 顶部标题行 */}
             <tr>
-              <td colSpan={2} style={{border: "1px solid #000", color: "red", padding: "10px"}}>
-                {t('logoPrompt')}
+              <td colSpan={2} style={{border: "1px solid #000", padding: "10px"}}>
+                <img src={logo} alt="BJT Logo" style={{maxWidth: "150px"}} />
               </td>
               <td colSpan={2} style={{border: "1px solid #000", textAlign: "center", padding: "10px"}}>
                 <div style={{fontSize: "24px", fontWeight: "bold"}}>PURCHASE ORDER</div>
@@ -407,52 +408,56 @@ const POPage: React.FC = () => {
             {/* Buyer行 */}
             <tr>
               <td style={{border: "1px solid #000", padding: "10px", fontWeight: "bold"}}>Buyer</td>
-              <td style={{border: "1px solid #000", color: "red", padding: "10px"}}>
-                {t('buyerPrompt')}
+              <td style={{border: "1px solid #000", padding: "10px"}}>
+                {customerInfo.companyName}
               </td>
               <td style={{border: "1px solid #000", padding: "10px", textAlign: "right", fontWeight: "bold"}}>
                 Purchase Order Number:
               </td>
-              <td style={{border: "1px solid #000", padding: "10px", color: "red"}}>
-                {t('poNumberPrompt')}
+              <td style={{border: "1px solid #000", padding: "10px"}}>
+                {poNumber}
               </td>
             </tr>
             
             {/* 公司名字行 */}
             <tr>
               <td style={{border: "1px solid #000", padding: "10px"}}>公司名字</td>
-              <td style={{border: "1px solid #000", padding: "10px", height: "30px"}}></td>
+              <td style={{border: "1px solid #000", padding: "10px", height: "30px"}}>
+                {customerInfo.companyName}
+              </td>
               <td style={{border: "1px solid #000", padding: "10px", textAlign: "right", fontWeight: "bold"}}>
                 Date:
               </td>
-              <td style={{border: "1px solid #000", padding: "10px", color: "red"}}>
-                {t('datePrompt')}
+              <td style={{border: "1px solid #000", padding: "10px"}}>
+                {poDate}
               </td>
             </tr>
             
             {/* 地址行 */}
             <tr>
               <td style={{border: "1px solid #000", padding: "10px"}}>地址</td>
-              <td style={{border: "1px solid #000", padding: "10px", height: "60px"}}></td>
+              <td style={{border: "1px solid #000", padding: "10px", height: "60px"}}>
+                {customerInfo.address}
+              </td>
               <td style={{border: "1px solid #000", padding: "10px", textAlign: "right", fontWeight: "bold"}}>
                 Payment Method:
               </td>
-              <td style={{border: "1px solid #000", padding: "10px", color: "red"}}>
-                {t('paymentPrompt')}
+              <td style={{border: "1px solid #000", padding: "10px"}}>
+                {paymentMethod}
               </td>
             </tr>
             
             {/* Vendor行 */}
             <tr>
               <td style={{border: "1px solid #000", padding: "10px", fontWeight: "bold"}}>Vendor</td>
-              <td style={{border: "1px solid #000", color: "red", padding: "10px"}}>
-                {t('vendorPrompt')}
+              <td style={{border: "1px solid #000", padding: "10px"}}>
+                {vendorAddress.companyName}
               </td>
               <td style={{border: "1px solid #000", padding: "10px", fontWeight: "bold"}}>
                 Ship to 
               </td>
-              <td style={{border: "1px solid #000", color: "red", padding: "10px"}}>
-                {t('shipToPrompt')}
+              <td style={{border: "1px solid #000", padding: "10px"}}>
+                {shippingInfo.address}
               </td>
             </tr>
             
@@ -460,47 +465,55 @@ const POPage: React.FC = () => {
             <tr>
               <td style={{border: "1px solid #000", padding: "10px"}}>BJT Pack, Inc.</td>
               <td style={{border: "1px solid #000", padding: "10px"}}></td>
-              <td style={{border: "1px solid #000", padding: "10px", color: "red"}}>
+              <td style={{border: "1px solid #000", padding: "10px"}}>
                 公司名字
               </td>
-              <td style={{border: "1px solid #000", padding: "10px"}}></td>
+              <td style={{border: "1px solid #000", padding: "10px"}}>
+                {customerInfo.companyName}
+              </td>
             </tr>
             
             {/* 地址行1 */}
             <tr>
-              <td style={{border: "1px solid #000", padding: "10px"}}>5275 Naiman Parkway, Suite B,</td>
+              <td style={{border: "1px solid #000", padding: "10px"}}>{vendorAddress.address}</td>
               <td style={{border: "1px solid #000", padding: "10px"}}></td>
-              <td style={{border: "1px solid #000", padding: "10px", color: "red"}}>
+              <td style={{border: "1px solid #000", padding: "10px"}}>
                 地址
               </td>
-              <td style={{border: "1px solid #000", padding: "10px"}}></td>
+              <td style={{border: "1px solid #000", padding: "10px"}}>
+                {shippingInfo.address}
+              </td>
             </tr>
             
             {/* 地址行2 */}
             <tr>
-              <td style={{border: "1px solid #000", padding: "10px"}}>Solon, Ohio 44139</td>
+              <td style={{border: "1px solid #000", padding: "10px"}}>{vendorAddress.city}</td>
               <td style={{border: "1px solid #000", padding: "10px"}}></td>
-              <td style={{border: "1px solid #000", padding: "10px", color: "red"}}>
+              <td style={{border: "1px solid #000", padding: "10px"}}>
                 联系人/电话
               </td>
-              <td style={{border: "1px solid #000", padding: "10px"}}></td>
+              <td style={{border: "1px solid #000", padding: "10px"}}>
+                {shippingInfo.contactName} / {shippingInfo.phone}
+              </td>
             </tr>
             
             {/* 备注行 */}
             <tr>
               <td style={{border: "1px solid #000", padding: "10px"}}></td>
               <td style={{border: "1px solid #000", padding: "10px"}}></td>
-              <td style={{border: "1px solid #000", padding: "10px", color: "red"}}>
+              <td style={{border: "1px solid #000", padding: "10px"}}>
                 备注
               </td>
-              <td style={{border: "1px solid #000", padding: "10px"}}></td>
+              <td style={{border: "1px solid #000", padding: "10px"}}>
+                {shippingInfo.notes}
+              </td>
             </tr>
             
             {/* 页码水印 */}
             <tr>
               <td colSpan={4} style={{border: "1px solid #000", textAlign: "center", height: "45px", position: "relative"}}>
                 <div style={{position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", opacity: "0.3", fontSize: "22px"}}>
-                  {t('page')} 1 {t('pageOf')} 1 {t('pages')}
+                  {t('page')} {currentPage} {t('pageOf')} {totalPages} {t('pages')}
                 </div>
               </td>
             </tr>
@@ -525,28 +538,22 @@ const POPage: React.FC = () => {
             {/* 产品表头 - 8列表格 */}
             <tr>
               <th style={{border: "1px solid #000", padding: "6px", backgroundColor: "#f2f2f2", textAlign: "center"}}>
-                Part No. #<br/>
-                <span style={{color: "red", fontSize: "10px", fontWeight: "normal"}}>（商城中的料号属性）</span>
+                Part No. #
               </th>
               <th style={{border: "1px solid #000", padding: "6px", backgroundColor: "#f2f2f2", textAlign: "center"}}>
-                Item<br/>
-                <span style={{color: "red", fontSize: "10px", fontWeight: "normal"}}>（商城中的名称属性）</span>
+                Item
               </th>
               <th style={{border: "1px solid #000", padding: "6px", backgroundColor: "#f2f2f2", textAlign: "center"}}>
-                Model<br/>
-                <span style={{color: "red", fontSize: "10px", fontWeight: "normal"}}>（商城中的型号属性，耗材是公英制）</span>
+                Model
               </th>
               <th style={{border: "1px solid #000", padding: "6px", backgroundColor: "#f2f2f2", textAlign: "center"}}>
-                Item description<br/>
-                <span style={{color: "red", fontSize: "10px", fontWeight: "normal"}}>（商城中的Spec.属性，公英制）</span>
+                Item description
               </th>
               <th style={{border: "1px solid #000", padding: "6px", backgroundColor: "#f2f2f2", textAlign: "center"}}>
-                Brand Name<br/>
-                <span style={{color: "red", fontSize: "10px", fontWeight: "normal"}}>（商城中的品牌属性）</span>
+                Brand Name
               </th>
               <th style={{border: "1px solid #000", padding: "6px", backgroundColor: "#f2f2f2", textAlign: "center"}}>
-                Quantity<br/>
-                <span style={{color: "red", fontSize: "10px", fontWeight: "normal"}}>(pcs)</span>
+                Quantity
               </th>
               <th style={{border: "1px solid #000", padding: "6px", backgroundColor: "#f2f2f2", textAlign: "center"}}>
                 Unit Price
@@ -556,20 +563,43 @@ const POPage: React.FC = () => {
               </th>
             </tr>
             
-            {/* 样例产品行 */}
-            <tr>
-              <td style={{textAlign: "center", padding: "8px", border: "1px solid #000"}}>60E01009</td>
-              <td style={{padding: "8px", border: "1px solid #000"}}>Gummed Tape Dispenser</td>
-              <td style={{padding: "8px", border: "1px solid #000"}}></td>
-              <td style={{padding: "8px", border: "1px solid #000"}}>EG100 220V</td>
-              <td style={{padding: "8px", border: "1px solid #000"}}></td>
-              <td style={{textAlign: "center", padding: "8px", border: "1px solid #000"}}>5</td>
-              <td style={{textAlign: "center", padding: "8px", border: "1px solid #000"}}>$100.00</td>
-              <td style={{textAlign: "right", padding: "8px", border: "1px solid #000"}}>$500.00</td>
-            </tr>
+            {/* 产品行 */}
+            {getCurrentPageProducts().map((product, index) => (
+              <tr key={`product-${index}`}>
+                <td style={{textAlign: "center", padding: "8px", border: "1px solid #000"}}>
+                  {product.code || product.sku || '-'}
+                </td>
+                <td style={{padding: "8px", border: "1px solid #000"}}>
+                  {getProductName(product)}
+                </td>
+                <td style={{padding: "8px", border: "1px solid #000"}}>
+                  {product.model || '-'}
+                </td>
+                <td style={{padding: "8px", border: "1px solid #000"}}>
+                  {typeof product.specs === 'string' 
+                    ? product.specs 
+                    : product.specs 
+                      ? objectToString(product.specs)
+                      : '-'
+                  }
+                </td>
+                <td style={{padding: "8px", border: "1px solid #000"}}>
+                  {product.brand || '-'}
+                </td>
+                <td style={{textAlign: "center", padding: "8px", border: "1px solid #000"}}>
+                  {product.quantity}
+                </td>
+                <td style={{textAlign: "center", padding: "8px", border: "1px solid #000"}}>
+                  {formatCurrency(product.price)}
+                </td>
+                <td style={{textAlign: "right", padding: "8px", border: "1px solid #000"}}>
+                  {formatCurrency(product.price * product.quantity)}
+                </td>
+              </tr>
+            ))}
             
             {/* 空行填充 */}
-            {Array.from({length: 5}).map((_, index) => (
+            {Array.from({length: Math.max(0, 10 - getCurrentPageProducts().length)}).map((_, index) => (
               <tr key={`empty-${index}`}>
                 <td style={{border: "1px solid #000", height: "30px"}}>&nbsp;</td>
                 <td style={{border: "1px solid #000"}}>&nbsp;</td>
@@ -587,12 +617,12 @@ const POPage: React.FC = () => {
               <td style={{fontWeight: "bold", padding: "8px", border: "1px solid #000", textAlign: "left"}}>
                 Remarks:
               </td>
-              <td colSpan={5} style={{padding: "8px", border: "1px solid #000"}}></td>
+              <td colSpan={5} style={{padding: "8px", border: "1px solid #000"}}>{shippingInfo.notes}</td>
               <td style={{textAlign: "right", padding: "8px", border: "1px solid #000", backgroundColor: "#f2f2f2", whiteSpace: "nowrap"}}>
                 Total
               </td>
               <td style={{textAlign: "right", padding: "8px", border: "1px solid #000", backgroundColor: "#f2f2f2"}}>
-                500.00
+                {formatCurrency(summary.subtotal)}
               </td>
             </tr>
             
@@ -603,7 +633,7 @@ const POPage: React.FC = () => {
                 Freight charge
               </td>
               <td style={{textAlign: "right", padding: "8px", border: "1px solid #000"}}>
-                100.00
+                {formatCurrency(summary.shipping)}
               </td>
             </tr>
             
@@ -614,7 +644,7 @@ const POPage: React.FC = () => {
                 Total amount
               </td>
               <td style={{textAlign: "right", fontWeight: "bold", padding: "8px", border: "1px solid #000", backgroundColor: "#f2f2f2"}}>
-                600.00
+                {formatCurrency(summary.total)}
               </td>
             </tr>
           </tbody>

@@ -142,7 +142,7 @@ interface LoginApiResponse {
   message: string;
   data: {
     token: string;
-    expires_in?: number;
+    expires_in: number;
     user: BackendUser;
   } | null;
 }
@@ -239,24 +239,23 @@ export const authApi = {
     try {
       const axiosFullResponse = await api.post<LoginApiResponse>('/auth/login', { username, password });
       
-      const effectivePayload = axiosFullResponse.data as any as { token: string; expires_in?: number; user: BackendUser; success?: boolean; message?: string };
-
-      console.log('[DEBUG] authApi.login: effectivePayload (axiosFullResponse.data):', JSON.stringify(effectivePayload, null, 2));
-      if (effectivePayload) {
-        console.log('[DEBUG] authApi.login: effectivePayload.token:', effectivePayload.token);
-        console.log('[DEBUG] authApi.login: effectivePayload.user (type):', typeof effectivePayload.user);
-        console.log('[DEBUG] authApi.login: effectivePayload.success (if present):', effectivePayload.success);
-        console.log('[DEBUG] authApi.login: effectivePayload.message (if present):', effectivePayload.message);
-      } else {
-        console.log('[DEBUG] authApi.login: effectivePayload is null or undefined');
+      // 处理服务器返回的响应格式: {success, message, data}
+      const response = axiosFullResponse.data;
+      console.log('[DEBUG] authApi.login: response:', JSON.stringify(response, null, 2));
+      
+      if (response.success && response.data) {
+        const { token, user } = response.data;
+        console.log('[DEBUG] authApi.login: token:', token);
+        console.log('[DEBUG] authApi.login: user:', JSON.stringify(user, null, 2));
+        
+        if (token && user) {
+          localStorage.setItem('token', token);
+          return { user, token };
+        }
       }
-
-      if (effectivePayload && effectivePayload.token && effectivePayload.user) {
-        localStorage.setItem('token', effectivePayload.token);
-        return { user: effectivePayload.user, token: effectivePayload.token };
-      } else {
-        throw new Error(effectivePayload?.message || 'Login failed: Processed response did not contain token or user data.');
-      }
+      
+      // 如果响应不包含需要的数据或success为false
+      throw new Error(response.message || 'Login failed: Invalid response format');
     } catch (error: any) {
       const errorMessage = error.message || error.response?.data?.message || 'An unknown login error occurred';
       console.error('Login API call failed:', errorMessage, error.response?.data);
