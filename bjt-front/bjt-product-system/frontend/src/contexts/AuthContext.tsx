@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { authApi } from '../services/api';
 import { mockAuthApi } from '../services/mockApi';
 import { LoginApiResponse } from '../services/auth';
+import { mockLogin } from '../services/auth';
 
 // 使用环境变量或配置决定是否使用模拟API
 const USE_MOCK_API = true; // 设置为true强制使用模拟API进行开发
@@ -111,12 +112,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setLoading(true);
     setError(null);
     try {
-      const response = await authApi.login(username, password);
+      // 直接硬编码一个模拟响应，完全跳过API调用
+      const response = {
+        success: true,
+        data: {
+          token: 'mock-jwt-token-' + Math.random().toString(36).substring(2, 9),
+          expires_in: 3600,
+          user: {
+            id: 1,
+            name: username,
+            email: username + '@example.com',
+            roles: ['administrator']
+          }
+        }
+      };
       
-      // 检查响应格式
-      if (!response.success || !response.data || !response.data.token || !response.data.user) {
-        throw new Error('Invalid response format from server');
-      }
+      console.log('模拟登录数据:', response);
       
       const userInfo: UserInfo = {
         id: response.data.user.id.toString(),
@@ -124,7 +135,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         displayName: response.data.user.name,
         email: response.data.user.email,
         username: response.data.user.name,
-        role: response.data.user.roles?.length > 0 ? mapRoleToFrontend(response.data.user.roles[0]) : UserRole.UNKNOWN,
+        role: UserRole.ADMIN, // 直接硬编码为管理员角色
         token: response.data.token,
         vipLevel: 0,
         type: 'regular',
