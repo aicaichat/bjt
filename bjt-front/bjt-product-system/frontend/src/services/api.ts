@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import { API_BASE_URL, API_TIMEOUT, useMockData } from '../config/env';
 import { mockProductLines } from './mockService';
+import { login, LoginApiResponse } from './auth';
 
 // 临时变量，最终会被移除，防止代码出错
 const API_BASE_URL_LOCAL_UNUSED = API_BASE_URL; 
@@ -130,21 +131,12 @@ export interface User {
   role: string;
 }
 
+// Back-end user interface (may not match our front-end UserInfo format)
 export interface BackendUser {
   id: number;
   name: string;
   email: string;
   roles: string[];
-}
-
-interface LoginApiResponse {
-  success: boolean;
-  message: string;
-  data: {
-    token: string;
-    expires_in: number;
-    user: BackendUser;
-  } | null;
 }
 
 // 主API服务对象
@@ -235,32 +227,8 @@ const apiService = {
 
 // Authentication API service
 export const authApi = {
-  login: async (username: string, password: string): Promise<{ user: BackendUser, token: string }> => {
-    try {
-      const axiosFullResponse = await api.post<LoginApiResponse>('/auth/login', { username, password });
-      
-      // 处理服务器返回的响应格式: {success, message, data}
-      const response = axiosFullResponse.data;
-      console.log('[DEBUG] authApi.login: response:', JSON.stringify(response, null, 2));
-      
-      if (response.success && response.data) {
-        const { token, user } = response.data;
-        console.log('[DEBUG] authApi.login: token:', token);
-        console.log('[DEBUG] authApi.login: user:', JSON.stringify(user, null, 2));
-        
-        if (token && user) {
-          localStorage.setItem('token', token);
-          return { user, token };
-        }
-      }
-      
-      // 如果响应不包含需要的数据或success为false
-      throw new Error(response.message || 'Login failed: Invalid response format');
-    } catch (error: any) {
-      const errorMessage = error.message || error.response?.data?.message || 'An unknown login error occurred';
-      console.error('Login API call failed:', errorMessage, error.response?.data);
-      throw new Error(errorMessage);
-    }
+  login: async (username: string, password: string): Promise<LoginApiResponse> => {
+    return login(username, password);
   },
   // TODO: Add other auth methods like logout, register if they hit the backend
 };

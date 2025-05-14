@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authApi, BackendUser } from '../services/api';
+import { authApi } from '../services/api';
 import { mockAuthApi } from '../services/mockApi';
+import { LoginApiResponse } from '../services/auth';
 
 // 使用环境变量或配置决定是否使用模拟API
-const USE_MOCK_API = false; // 设置为true强制使用模拟API进行开发
+const USE_MOCK_API = true; // 设置为true强制使用模拟API进行开发
 
 // 根据配置选择使用真实API还是模拟API
 const apiService = {
@@ -31,7 +32,18 @@ export interface UserInfo {
   vipLevel?: number; // VIP级别
   type?: string; // 用户类型，如'vip', 'regular'等
   region?: string; // 区域
+  token?: string;
 }
+
+// 将后端角色映射到前端UserRole枚举
+const mapRoleToFrontend = (backendRole: string): UserRole => {
+  const role = backendRole.toLowerCase();
+  if (role === 'administrator') return UserRole.ADMIN;
+  if (role === 'editor') return UserRole.SALES;
+  if (role === 'author') return UserRole.PARTNER;
+  if (role === 'contributor' || role === 'subscriber') return UserRole.CUSTOMER;
+  return UserRole.UNKNOWN;
+};
 
 // 中英文用户名映射
 const userNameMap: Record<string, string> = {
@@ -75,7 +87,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.log('[AuthContext] useEffect checkAuth starting...');
       try {
         // 从本地存储获取用户信息
-        const storedUser = localStorage.getItem('user');
+        const storedUser = localStorage.getItem('authUser');
         if (storedUser) {
           console.log('[AuthContext] Found user in localStorage');
           const parsedUser = JSON.parse(storedUser);
@@ -96,56 +108,38 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // 登录函数
   const login = async (username: string, password: string): Promise<UserInfo> => {
-    console.log('[AuthContext] login called');
     setLoading(true);
     setError(null);
     try {
-      // Actual API call
-      // Explicitly assert the type of the response when USE_MOCK_API is false
-      const loggedInResponse = await apiService.auth.login(username, password) as { user: BackendUser, token: string };
-
-      // Map BackendUser to UserInfo
-      const mapBackendUserToUserInfo = (backendUser: BackendUser): UserInfo => {
-        let userRole = UserRole.UNKNOWN;
-        if (backendUser.roles && backendUser.roles.length > 0) {
-          const roleName = backendUser.roles[0].toLowerCase();
-          if (roleName === 'administrator') userRole = UserRole.ADMIN;
-          else if (roleName === 'editor') userRole = UserRole.SALES; // Example mapping
-          else if (roleName === 'author') userRole = UserRole.PARTNER; // Example mapping
-          else if (roleName === 'contributor') userRole = UserRole.CUSTOMER; // Example mapping
-          else if (roleName === 'subscriber') userRole = UserRole.CUSTOMER; // Example mapping
-        }
-
-        // Use the updated fields from BackendUser (name, email)
-        // Keep user_login for username for now if needed, or use name directly.
-        return {
-          id: backendUser.id.toString(),
-          name: backendUser.name, // Use the direct 'name' field
-          displayName: backendUser.name, // Can use 'name' for displayName too, or leave if not critical
-          email: backendUser.email, // Use the direct 'email' field
-          username: backendUser.name, // Use 'name' as username, or map differently if login needs a specific 'user_login' format
-          role: userRole,
-          // avatar, vipLevel, type, region can be fetched later or set to defaults
-          avatar: undefined, 
-          vipLevel: 0,
-          type: 'regular',
-          region: 'CN' // Default region, can be updated later
-        };
+      const response = await authApi.login(username, password);
+      
+      // 检查响应格式
+      if (!response.success || !response.data || !response.data.token || !response.data.user) {
+        throw new Error('Invalid response format from server');
+      }
+      
+      const userInfo: UserInfo = {
+        id: response.data.user.id.toString(),
+        name: response.data.user.name,
+        displayName: response.data.user.name,
+        email: response.data.user.email,
+        username: response.data.user.name,
+        role: response.data.user.roles?.length > 0 ? mapRoleToFrontend(response.data.user.roles[0]) : UserRole.UNKNOWN,
+        token: response.data.token,
+        vipLevel: 0,
+        type: 'regular',
+        region: 'CN'
       };
       
-      const userInfo = mapBackendUserToUserInfo(loggedInResponse.user);
-
-      console.log('[AuthContext] login success, setting user:', userInfo);
-      localStorage.setItem('user', JSON.stringify(userInfo));
+      localStorage.setItem('authUser', JSON.stringify(userInfo));
       setUser(userInfo);
       return userInfo;
-
-    } catch (err: any) {
-      console.log('[AuthContext] login error:', err);
-      setError(err.message || 'Login failed. Please try again.');
-      throw err;
+    } catch (error) {
+      console.error('Login error:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Login failed. Please try again.';
+      setError(errorMsg);
+      throw error;
     } finally {
-      console.log('[AuthContext] login finished, setting loading to false.');
       setLoading(false);
     }
   };
@@ -160,7 +154,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       console.log('[AuthContext] logout success, setting user to null');
       // 清除本地存储
-      localStorage.removeItem('user');
+      localStorage.removeItem('authUser');
       setUser(null);
     } catch (err: any) {
       console.log('[AuthContext] logout error:', err);
@@ -190,7 +184,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       };
       
       // 自动登录新注册的用户
-      localStorage.setItem('user', JSON.stringify(mockUser));
+      localStorage.setItem('authUser', JSON.stringify(mockUser));
       setUser(mockUser);
       return mockUser;
     } catch (err: any) {
@@ -243,7 +237,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       if (user) {
         const updatedUser = { ...user, ...data };
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+        localStorage.setItem('authUser', JSON.stringify(updatedUser));
         setUser(updatedUser);
       }
     } catch (err: any) {

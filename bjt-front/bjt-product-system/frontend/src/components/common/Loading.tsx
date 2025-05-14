@@ -1,5 +1,5 @@
 import React from 'react';
-import { Spin, Progress } from 'antd';
+import { Spin, Progress, SpinProps } from 'antd';
 import { useTranslation } from 'react-i18next';
 import './common.css';
 
@@ -56,21 +56,23 @@ const Loading: React.FC<LoadingProps> = ({
     return null;
   }
 
-  // 只有在fullPage或nested时才使用tip属性
-  // Ant Design's Spin 组件的tip属性在非嵌套模式下会显示警告
-  const isFullPageOrNested = fullPage || nested;
-  
-  const spinProps = {
+  // 根据Ant Design文档，tip只能在fullScreen模式或嵌套模式下使用
+  const spinProps: SpinProps = {
     size,
-    ...(fullPage || nested ? { tip: isFullPageOrNested ? loadingTip : undefined } : {}),
   };
+
+  // 只有在全屏模式或嵌套模式下才使用tip属性
+  if (fullPage || nested) {
+    spinProps.tip = loadingTip;
+  }
 
   return (
     <div className={`loading-container ${fullPage ? 'full-page' : ''} ${nested ? 'nested' : ''} ${className}`}>
       <div className="loading-content">
         <Spin {...spinProps} />
         
-        {!isFullPageOrNested && loadingTip && (
+        {/* 非全屏/非嵌套模式下，手动显示提示文本 */}
+        {!(fullPage || nested) && loadingTip && (
           <div className="loading-tip">{loadingTip}</div>
         )}
         
