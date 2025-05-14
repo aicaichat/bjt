@@ -38,12 +38,12 @@ const Card: React.FC<CardProps> = ({
       case 'none':
         return '';
       case 'sm':
-        return 'var(--shadow-sm)';
+        return 'shadow-sm';
       case 'lg':
-        return 'var(--shadow-lg)';
+        return 'shadow-lg';
       case 'md':
       default:
-        return 'var(--shadow-md)';
+        return 'shadow-md';
     }
   };
 
@@ -51,8 +51,8 @@ const Card: React.FC<CardProps> = ({
   const cardClasses = [
     'bg-white rounded-lg',
     bordered ? 'border border-gray-200' : '',
-    elevation !== 'none' ? `shadow-[${getShadowClass()}]` : '',
-    hoverable ? 'transition-all duration-200 hover:translate-y-[-2px] hover:shadow-[var(--shadow-hover)]' : '',
+    getShadowClass(),
+    hoverable ? 'transition-all duration-200 hover:translate-y-[-2px] hover:shadow-lg' : '',
     className
   ].filter(Boolean).join(' ');
 

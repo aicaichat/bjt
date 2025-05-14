@@ -1,0 +1,9 @@
+{
+  "links": {
+    "machines": "查看设备",
+    "consumables": "查看耗材",
+    "spareParts": "查看备件"
+  },
+  "introduction": "欢迎使用BJT产品管理系统",
+  "browseProducts": "浏览产品"
+} 

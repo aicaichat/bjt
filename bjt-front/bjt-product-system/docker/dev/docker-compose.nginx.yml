@@ -33,6 +33,7 @@ services:
       dockerfile: Dockerfile.nginx
     ports:
       - "8080:80"
+      - "80:80"  # 添加80端口映射，直接提供WordPress中的Nginx服务
     environment:
       WORDPRESS_DB_HOST: mysql
       WORDPRESS_DB_USER: wordpress
@@ -46,6 +47,7 @@ services:
       - ../../.env.development
     depends_on:
       - mysql
+      - frontend
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/wp-admin/"]
       interval: 30s

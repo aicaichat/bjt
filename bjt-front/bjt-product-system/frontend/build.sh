@@ -9,7 +9,7 @@ echo "使用mock数据构建，跳过TypeScript检查..."
 if [ -f ".env.production.mock" ]; then
     echo "检查到.env.production.mock文件，确保VITE_BASE_URL正确..."
     # 确保VITE_BASE_URL与vite.config.js一致
-    grep -q "VITE_BASE_URL=/bjt/" .env.production.mock || echo "VITE_BASE_URL=/bjt/" >> .env.production.mock
+    grep -q "VITE_BASE_URL=/" .env.production.mock || echo "VITE_BASE_URL=/" >> .env.production.mock
 fi
 
 # 执行构建

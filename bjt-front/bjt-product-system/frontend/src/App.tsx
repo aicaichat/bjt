@@ -44,13 +44,6 @@ import ErrorBoundary from './components/ErrorBoundary';
 // 导入安全渲染包装器
 import SafeRenderWrapper from './components/SafeRenderWrapper';
 
-// 处理Router的basename
-const getBaseName = () => {
-  // 删除开头和结尾的斜杠，以符合React Router要求
-  const baseName = BASE_URL.replace(/^\//,'').replace(/\/$/,'');
-  return baseName || undefined;
-};
-
 // 路由保护组件
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -111,24 +104,9 @@ const App: React.FC = () => {
         <NotificationProvider>
           <ErrorBoundary>
             <SafeRenderWrapper>
-              <Router basename={getBaseName()}>
+              <Router>
                 <CartProvider>
                   <div className="App">
-                    {/* 如果是开发环境并使用模拟数据则显示mock数据管理按钮 */}
-                    {/* The following block will be removed
-                    {useMockData && import.meta.env.DEV && (
-                      <button 
-                        onClick={() => setIsMockManagerOpen(true)}
-                        className="fixed bottom-4 right-4 bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-full shadow-lg z-50"
-                        title="打开Mock数据管理器"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
-                        </svg>
-                      </button>
-                    )}
-                    */}
-                    
                     {/* Mock数据管理组件 */}
                     <MockDataManager 
                       isOpen={isMockManagerOpen} 

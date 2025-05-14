@@ -13,6 +13,8 @@ import enPO from './locales/en/po.json';
 import zhPO from './locales/zh/po.json';
 import enSpareParts from './locales/en/spareParts.json';
 import zhSpareParts from './locales/zh/spareParts.json';
+import enHome from './locales/en/home.json';
+import zhHome from './locales/zh/home.json';
 
 i18n
   .use(LanguageDetector)
@@ -24,14 +26,16 @@ i18n
         consumables: enConsumables,
         orderList: enOrderList,
         po: enPO,
-        spareParts: enSpareParts
+        spareParts: enSpareParts,
+        home: enHome
       },
       zh: {
         translation: zhTranslation,
         consumables: zhConsumables,
         orderList: zhOrderList,
         po: zhPO,
-        spareParts: zhSpareParts
+        spareParts: zhSpareParts,
+        home: zhHome
       }
     },
     fallbackLng: 'en',
@@ -41,7 +45,9 @@ i18n
     },
     keySeparator: '.',
     nsSeparator: false,
-    returnObjects: false // Ensure t() returns strings, not objects
+    returnObjects: true, // Allow returning objects for nested translations
+    defaultNS: 'translation',
+    ns: ['translation', 'home', 'consumables', 'orderList', 'po', 'spareParts']
   });
 
 export default i18n;

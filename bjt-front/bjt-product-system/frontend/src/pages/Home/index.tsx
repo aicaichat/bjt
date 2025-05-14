@@ -30,7 +30,8 @@ interface PaginatedData<T> {
 }
 
 const Home: React.FC = () => {
-  const { t, i18n } = useTranslation();
+  // 明确指定使用'home'命名空间并回退到'translation'
+  const { t, i18n } = useTranslation('home');
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -78,7 +79,7 @@ const Home: React.FC = () => {
             setProductLines(data);
             setTotalPages(1); // 假设真实API不支持分页
           } catch (apiError) {
-            setError(t('errors.failedToLoadProducts'));
+            setError(t('errors.failedToLoadProducts', { ns: 'translation' }));
             console.error('API error:', apiError);
           }
         }
@@ -91,16 +92,16 @@ const Home: React.FC = () => {
           // 根据错误码显示不同的错误信息
           switch (code) {
             case 1001:
-              setError(t('errors.authenticationFailed'));
+              setError(t('errors.authenticationFailed', { ns: 'translation' }));
               break;
             case 2001:
-              setError(t('errors.productLineNotFound'));
+              setError(t('errors.productLineNotFound', { ns: 'translation' }));
               break;
             default:
-              setError(message || t('errors.loadingFailed'));
+              setError(message || t('errors.loadingFailed', { ns: 'translation' }));
           }
         } else {
-          setError(t('errors.networkError'));
+          setError(t('errors.networkError', { ns: 'translation' }));
         }
       } finally {
         setLoading(false);
@@ -150,7 +151,7 @@ const Home: React.FC = () => {
             </div>
             <div className="section-content">
               <div className="section-text">
-                <p className="introduction">{t('home.introduction')}</p>
+                <p className="introduction">{t('introduction')}</p>
                 <div className="divider"></div>
                 <p>{getDescription(line)}</p>
                 
@@ -160,21 +161,21 @@ const Home: React.FC = () => {
                     className="product-link" 
                     onClick={(e) => handleProductLinkClick(e, `${ROUTES.MACHINES}?category=${line.id}`)}
                   >
-                    {t('home.links.machines', 'View Machines')} 
+                    {t('links.machines')} 
                   </Link>
                   <Link 
                     to={`${ROUTES.CONSUMABLES}?category=${line.id}`} 
                     className="product-link" 
                     onClick={(e) => handleProductLinkClick(e, `${ROUTES.CONSUMABLES}?category=${line.id}`)}
                   >
-                    {t('home.links.consumables', 'View Consumables')}
+                    {t('links.consumables')}
                   </Link>
                   <Link 
                     to={`${ROUTES.SPARE_PARTS}?category=${line.id}`} 
                     className="product-link" 
                     onClick={(e) => handleProductLinkClick(e, `${ROUTES.SPARE_PARTS}?category=${line.id}`)}
                   >
-                    {t('home.links.spareParts', 'View Spare Parts')}
+                    {t('links.spareParts')}
                   </Link>
                 </div>
               </div>

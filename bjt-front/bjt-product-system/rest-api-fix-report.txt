@@ -1,1 +1,0 @@
-The fix has been successfully applied. The WordPress REST API is now working properly.

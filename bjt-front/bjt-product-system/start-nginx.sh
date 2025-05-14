@@ -49,7 +49,7 @@ echo -e "${YELLOW}停止可能正在运行的容器...${NC}"
 docker-compose -f docker/dev/docker-compose.dev.yml down
 
 # 启动Nginx环境
-echo -e "${YELLOW}启动Nginx环境...${NC}"
+echo -e "${YELLOW}启动单实例Nginx环境...${NC}"
 docker-compose -f docker/dev/docker-compose.nginx.yml up --build -d
 
 # 等待服务启动
@@ -209,10 +209,11 @@ FRONTEND_READY=$(docker-compose -f docker/dev/docker-compose.nginx.yml ps | grep
 
 if [ $MYSQL_HEALTHY -gt 0 ] && [ $WP_READY -gt 0 ] && [ $FRONTEND_READY -gt 0 ]; then
     echo -e "${GREEN}所有服务已成功启动!${NC}"
-    echo -e "${GREEN}前端访问地址: ${NC}http://localhost:5173"
+    echo -e "${GREEN}前端访问地址: ${NC}http://localhost (通过WordPress的Nginx)"
+    echo -e "${GREEN}前端直接访问: ${NC}http://localhost:5173"
     echo -e "${GREEN}WordPress前台将重定向到React前端: ${NC}http://localhost:8080/ -> http://localhost:5173"
-    echo -e "${GREEN}WordPress管理后台: ${NC}http://localhost:8080/wp-admin/"
-    echo -e "${GREEN}WordPress REST API: ${NC}http://localhost:8080/wp-json/"
+    echo -e "${GREEN}WordPress管理后台: ${NC}http://localhost:8080/wp-admin/ 或 http://localhost/wp-admin/"
+    echo -e "${GREEN}WordPress REST API: ${NC}http://localhost:8080/wp-json/ 或 http://localhost/wp-json/"
     echo -e "${GREEN}WordPress用户名: ${NC}admin"
     echo -e "${GREEN}WordPress密码: ${NC}password"
     echo -e "${GREEN}MySQL数据库: ${NC}bjt_product"
@@ -221,9 +222,13 @@ if [ $MYSQL_HEALTHY -gt 0 ] && [ $WP_READY -gt 0 ] && [ $FRONTEND_READY -gt 0 ];
     echo -e "${GREEN}MySQL Root密码: ${NC}root"
 else
     echo -e "${YELLOW}一些服务可能尚未完全启动，但应该很快就会可用。${NC}"
-    echo -e "${GREEN}前端访问地址: ${NC}http://localhost:5173"
-    echo -e "${GREEN}WordPress管理后台: ${NC}http://localhost:8080/wp-admin/"
-    echo -e "${GREEN}WordPress REST API: ${NC}http://localhost:8080/wp-json/"
+    echo -e "MySQL状态: $([ $MYSQL_HEALTHY -gt 0 ] && echo "${GREEN}健康${NC}" || echo "${RED}未就绪${NC}")"
+    echo -e "WordPress状态: $([ $WP_READY -gt 0 ] && echo "${GREEN}运行中${NC}" || echo "${RED}未就绪${NC}")"
+    echo -e "前端状态: $([ $FRONTEND_READY -gt 0 ] && echo "${GREEN}运行中${NC}" || echo "${RED}未就绪${NC}")"
+    
+    echo -e "${GREEN}前端访问地址: ${NC}http://localhost (WordPress Nginx) 或 http://localhost:5173 (直接访问)"
+    echo -e "${GREEN}WordPress管理后台: ${NC}http://localhost:8080/wp-admin/ 或 http://localhost/wp-admin/"
+    echo -e "${GREEN}WordPress REST API: ${NC}http://localhost:8080/wp-json/ 或 http://localhost/wp-json/"
     echo -e "${GREEN}WordPress用户名: ${NC}admin"
     echo -e "${GREEN}WordPress密码: ${NC}password"
 fi 

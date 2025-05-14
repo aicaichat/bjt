@@ -1,14 +1,78 @@
-import axios, { AxiosResponse } from 'axios';
-import { useMockData } from '../config/env';
+import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
+import { API_BASE_URL, API_TIMEOUT, useMockData } from '../config/env';
 import { mockProductLines } from './mockService';
-import { API_BASE_URL as BJT_API_BASE_URL } from '../api/config'; // Import the base URL
 
-// WordPress API配置 (This local const might be overridden or become confusing)
-const API_BASE_URL_LOCAL_UNUSED = import.meta.env?.VITE_API_URL || 
-                    (window as any).ENV_API_URL || 
-                    'https://api.bjt-system.com/wp-json/wp/v2';
+// 临时变量，最终会被移除，防止代码出错
+const API_BASE_URL_LOCAL_UNUSED = API_BASE_URL; 
 
-// 产品线接口
+// 拦截器处理函数
+const responseSuccessInterceptor = (response: AxiosResponse) => {
+  // 针对WordPress REST API的特殊处理
+  if (response.data && response.data.success === false) {
+    // 这是业务逻辑错误，将其转换为正确的错误处理流程
+    return Promise.reject(new Error(response.data.message || 'API Error'));
+  }
+  
+  // 返回数据，可以根据项目需求做进一步处理
+  return response.data;
+};
+
+const responseErrorInterceptor = (error: any) => {
+  if (error.response) {
+    // The request was made and the server responded with a status code
+    // that falls out of the range of 2xx
+    console.error('API Error:', {
+      status: error.response.status,
+      data: error.response.data,
+      headers: error.response.headers,
+    });
+  } else if (error.request) {
+    // The request was made but no response was received
+    console.error('API Error: No response received', error.request);
+  } else {
+    // Something happened in setting up the request that triggered an Error
+    console.error('API Error:', error.message);
+  }
+  
+  // 将错误对象传递给后续的 catch 处理
+  return Promise.reject(error);
+};
+
+// 创建API实例
+const api: AxiosInstance = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: API_TIMEOUT,
+  headers: {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+  },
+});
+
+// 添加请求拦截器 - 例如添加认证令牌
+api.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    // 尝试从本地存储获取令牌
+    const token = localStorage.getItem('token');
+    
+    // 如果存在令牌，则添加到请求头
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// 添加响应拦截器
+api.interceptors.response.use(
+  responseSuccessInterceptor,
+  responseErrorInterceptor
+);
+
+// API服务
 export interface ProductLine {
   id: number;
   title_en: string;
@@ -20,7 +84,6 @@ export interface ProductLine {
   sort_order: number;
 }
 
-// 产品接口
 export interface Product {
   id: number;
   title_en: string;
@@ -39,7 +102,6 @@ export interface Product {
   status: string;
 }
 
-// 购物车规格类型
 export interface CartItemSpecs {
   model?: string;
   partNumber?: string;
@@ -50,7 +112,6 @@ export interface CartItemSpecs {
   palletQty?: string;
 }
 
-// 购物车项类型
 export interface CartItem {
   id: string;
   name: string;
@@ -61,7 +122,6 @@ export interface CartItem {
   image?: string;
 }
 
-// 用户接口类型
 export interface User {
   id: string;
   username: string;
@@ -70,7 +130,6 @@ export interface User {
   role: string;
 }
 
-// Backend user structure from /auth/login endpoint
 export interface BackendUser {
   id: number;
   name: string;
@@ -78,7 +137,6 @@ export interface BackendUser {
   roles: string[];
 }
 
-// Login response structure from backend
 interface LoginApiResponse {
   success: boolean;
   message: string;
@@ -89,70 +147,17 @@ interface LoginApiResponse {
   } | null;
 }
 
-// 创建axios实例
-const api = axios.create({
-  baseURL: BJT_API_BASE_URL, // Use the imported base URL from config.ts
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  }
-});
-
-// 请求拦截器
-api.interceptors.request.use(
-  config => {
-    // 在发送请求前做些什么，例如添加token
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  error => {
-    return Promise.reject(error);
-  }
-);
-
-// 响应拦截器
-api.interceptors.response.use(
-  response => {
-    return response.data;
-  },
-  error => {
-    // 处理响应错误
-    if (error.response) {
-      // 服务器返回错误码
-      console.error('API Error:', error.response.status, error.response.data);
-      
-      // 处理401未授权错误
-      if (error.response.status === 401) {
-        // 可以在这里处理登出逻辑
-        localStorage.removeItem('token');
-        window.location.href = '/login';
-      }
-    } else if (error.request) {
-      // 请求已发出但未收到响应
-      console.error('No response received:', error.request);
-    } else {
-      // 请求设置时发生错误
-      console.error('Request error:', error.message);
-    }
-    return Promise.reject(error);
-  }
-);
-
-// API服务
+// 主API服务对象
 const apiService = {
-  // 获取所有产品线
+  // 获取产品线列表
   getProductLines: async (): Promise<ProductLine[]> => {
     try {
-      // Check if we should use mock data
       if (useMockData) {
         console.log('Using mock data for product lines');
         return mockProductLines;
       }
       
-      // Use real API
+      // Use real API - 只有useMockData为false时才会执行以下代码
       console.log('Using real API for product lines: /product-lines');
       // Uses the 'api' instance, so baseURL is http://localhost:8080/wp-json/bjt/v1
       // The backend controller for product-lines uses 'sort_order ASC, id DESC' by default.
@@ -165,6 +170,11 @@ const apiService = {
       });
       return productLinesData;
     } catch (error) {
+      // 如果在使用模拟数据模式下依然到达这里，返回模拟数据作为备选方案
+      if (useMockData) {
+        console.warn('Error occurred but using mock data as fallback', error);
+        return mockProductLines;
+      }
       console.error('Failed to fetch product lines:', error);
       throw error;
     }
@@ -173,6 +183,12 @@ const apiService = {
   // 获取单个产品线
   getProductLine: async (id: number): Promise<ProductLine> => {
     try {
+      if (useMockData) {
+        const line = mockProductLines.find(line => line.id === id);
+        if (line) return line;
+        throw new Error(`Mock product line with ID ${id} not found`);
+      }
+
       const response: ProductLine = await api.get(`/product-lines/${id}`); // Changed to use 'api' instance
       return response;
     } catch (error) {

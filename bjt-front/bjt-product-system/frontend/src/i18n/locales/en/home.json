@@ -1,0 +1,9 @@
+{
+  "links": {
+    "machines": "View Machines",
+    "consumables": "View Consumables",
+    "spareParts": "View Spare Parts"
+  },
+  "introduction": "Welcome to BJT Product Management System",
+  "browseProducts": "Browse Products"
+} 
