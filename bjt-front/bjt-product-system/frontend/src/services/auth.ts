@@ -16,7 +16,9 @@ export interface LoginApiResponse {
 }
 
 export const login = async (email: string, password: string): Promise<LoginApiResponse> => {
+  return mockLogin(email, password);
   try {
+    
     const response = await axios.post<LoginApiResponse>('/wp-json/bjt/v1/auth/login', {
       username: email,
       password
