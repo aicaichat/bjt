@@ -142,7 +142,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         region: 'CN'
       };
       
-      localStorage.setItem('authUser', JSON.stringify(userInfo));
+      localStorage.setItem('user', JSON.stringify(userInfo));
       setUser(userInfo);
       return userInfo;
     } catch (error) {
@@ -165,7 +165,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       console.log('[AuthContext] logout success, setting user to null');
       // 清除本地存储
-      localStorage.removeItem('authUser');
+      localStorage.removeItem('user');
       setUser(null);
     } catch (err: any) {
       console.log('[AuthContext] logout error:', err);

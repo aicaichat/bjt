@@ -78,17 +78,36 @@ const SparePartsPage = () => {
   const [selectedIsConsumable, setSelectedIsConsumable] = useState<boolean | null>(null);
   
   // 添加tooltip状态管理
-  const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipPos, setTooltipPos] = useState({ left: 0, top: 0 });
-  const [selectedPart, setSelectedPart] = useState<SparePart | null>(null);
-  const [tooltipHovered, setTooltipHovered] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [selectedSparePartForTooltip, setSelectedSparePartForTooltip] = useState<SparePart | null>(null);
+  const [isMouseTracking, setIsMouseTracking] = useState(false);
+  const [isTooltipHovered, setIsTooltipHovered] = useState(false);
   const tooltipRef = useRef<HTMLDivElement>(null);
   
   const authContext = useContext(AuthContext);
   // Handle the case where context might be undefined
   const user = authContext?.user || null;
-  const userRole = user?.role || 'customer';
+  // 增强userRole获取逻辑，优先从authContext获取，如果不存在则从localStorage获取
+  let userRole = user?.role || 'customer';
   const userRegion = user?.region || 'EU';
+  
+  // 从localStorage再次验证用户角色，确保权限一致
+  useEffect(() => {
+    try {
+      const authData = localStorage.getItem('user');
+      if (authData) {
+        const userData = JSON.parse(authData);
+        if (userData && userData.role && userData.role !== userRole) {
+          console.log(`用户角色不一致: AuthContext=${userRole}, localStorage=${userData.role}`);
+          // 优先使用localStorage中的角色，因为它可能是最新的
+          userRole = userData.role;
+        }
+      }
+    } catch (err) {
+      console.error('Error validating user role from localStorage:', err);
+    }
+  }, []);
   
   // 检查用户身份验证
   useEffect(() => {
@@ -589,47 +608,46 @@ const SparePartsPage = () => {
     return 'low';
   };
   
-  // 处理规格悬浮提示
-  const handleSpecMouseEnter = (e: React.MouseEvent, part: SparePart) => {
-    e.preventDefault();
-    const rect = e.currentTarget.getBoundingClientRect();
+  // 处理规格鼠标进入事件
+  const handleSpecMouseEnter = (e: React.MouseEvent, sparePart: SparePart) => {
+    setSelectedSparePartForTooltip(sparePart);
     setTooltipPos({
-      left: rect.left + window.scrollX,
-      top: rect.bottom + window.scrollY + 5
+      left: e.clientX + 10,
+      top: e.clientY + 10
     });
-    setSelectedPart(part);
+    setIsMouseTracking(true);
     setShowTooltip(true);
   };
-  
+
+  // 处理规格鼠标离开事件
   const handleSpecMouseLeave = () => {
-    setShowTooltip(false);
-    // 添加短延迟以便更平滑地处理从单元格到工具提示的移动
     setTimeout(() => {
-      if (!tooltipHovered) {
-        setSelectedPart(null);
+      if (!isTooltipHovered) {
+        setShowTooltip(false);
+        setIsMouseTracking(false);
       }
-    }, 300);
+    }, 100);
   };
   
   // 处理鼠标进入工具提示
   const handleTooltipMouseEnter = () => {
-    setTooltipHovered(true);
+    setIsTooltipHovered(true);
   };
   
   // 处理鼠标离开工具提示
   const handleTooltipMouseLeave = () => {
-    setTooltipHovered(false);
+    setIsTooltipHovered(false);
     setShowTooltip(false);
-    setSelectedPart(null);
+    setSelectedSparePartForTooltip(null);
   };
   
   // 关闭当前tooltip
   const closeTooltip = () => {
     setShowTooltip(false);
-    setSelectedPart(null);
+    setSelectedSparePartForTooltip(null);
   };
   
-  // 点击外部关闭tooltip
+  // 在现有useEffect后添加新的useEffect以监听鼠标移动
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (showTooltip && tooltipRef.current && !tooltipRef.current.contains(e.target as Node)) {
@@ -651,6 +669,24 @@ const SparePartsPage = () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [showTooltip]);
+
+  // 添加新的useEffect用于鼠标移动跟踪
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isMouseTracking && showTooltip) {
+        setTooltipPos({
+          left: e.clientX + 10,
+          top: e.clientY + 10
+        });
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [isMouseTracking, showTooltip]);
   
   // Calculate the final price based on the user's region and the quantity
   const calculateFinalPrice = (part: SparePart): number => {
@@ -698,6 +734,7 @@ const SparePartsPage = () => {
     }
   };
   
+  // 渲染产品表格
   const renderSpareParts = (): React.ReactNode => {
     const filteredParts = getFilteredParts();
     
@@ -755,164 +792,192 @@ const SparePartsPage = () => {
     
     return (
       <div className="grid grid-cols-1 gap-4">
-        {filteredParts.map((part) => {
-          const finalPrice = calculateFinalPrice(part);
-          const prices = part.prices as unknown as Prices;
-          
-          return (
-            <div
-              key={part.id}
-              className="bg-card rounded-lg shadow-md hover:shadow-lg transition-all duration-300 border border-border text-content"
-            >
-              <div className="flex flex-col md:flex-row p-4">
-                {/* Column 1: Image */}
-                <div className="w-full md:w-1/6 flex items-center justify-center md:justify-start mb-4 md:mb-0">
-                  <img 
-                    src={part.image_url || '/images/spare-parts/default.svg'} 
-                    alt={part.name_en} 
-                    className="w-24 h-24 object-contain border border-border rounded bg-card-alt p-1 hover:border-brand-accent transition-colors"
-                    onError={handleImageError}
-                  />
+        {filteredParts.map((part) => (
+          <div 
+            key={part.id} 
+            className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 border border-gray-200 overflow-hidden"
+          >
+            {/* 产品标题区 */}
+            <div className="bg-gray-50 p-4 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <div>
+                  <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 text-xs font-bold rounded">{part.part_number}</span>
+                  <h3 className="text-xl font-semibold text-gray-800 mt-1">{part.name_en}</h3>
                 </div>
-
-                {/* Column 2: Information & Specifications */}
-                <div className="w-full md:w-3/6 md:px-4">
-                  <div className="mb-1">
-                    <span className="inline-block bg-brand-primary text-gray-800 px-2 py-1 text-xs font-bold rounded">{part.part_number}</span>
-                    <h3 className="text-lg font-semibold text-title mt-1">{part.name_en}</h3>
-                    {part.category && (
-                      <div className="text-sm text-content-light">
-                        <span>({part.category})</span>
-                      </div>
-                    )}
+                <div>
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${part.is_consumable ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}`}>
+                    {part.is_consumable ? '耗材' : '非耗材'}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            {/* 产品内容区 */}
+            <div className="p-4 flex flex-col md:flex-row gap-6">
+              {/* 左侧：图片 */}
+              <div className="w-full md:w-1/6 flex items-center justify-center">
+                <img 
+                  src={part.image_url || '/images/spare-parts/default.svg'} 
+                  alt={part.name_en} 
+                  className="w-28 h-28 object-contain border border-gray-200 rounded bg-gray-50 p-2"
+                  onError={handleImageError}
+                />
+              </div>
+              
+              {/* 中间：规格信息 */}
+              <div className="w-full md:w-3/6">
+                <h4 className="text-sm font-semibold text-gray-700 mb-3">产品规格</h4>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                  <div className="bg-gray-50 p-2 rounded border border-gray-100">
+                    <div className="text-xs text-gray-500">规格</div>
+                    <div className="font-medium">{part.spec || '暂无数据'}</div>
                   </div>
-
-                  <div className="flex flex-wrap gap-2 my-2">
-                    {part.is_consumable !== undefined && (
-                      <span className={`inline-flex items-center px-2 py-1 rounded text-xs ${part.is_consumable ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700'}`}>
-                        <strong className="mr-1">{t('type', {ns: 'spareParts'})}:</strong>
-                        <span>{part.is_consumable ? t('consumable', {ns: 'spareParts'}) : t('nonConsumable', {ns: 'spareParts'})}</span>
-                      </span>
-                    )}
-                    {part.product_type && (
-                      <span className="inline-flex items-center px-2 py-1 bg-background rounded text-xs">
-                        <strong className="text-label mr-1">{t('productType', {ns: 'spareParts'})}:</strong> 
-                        <span className="text-content">{t(`productTypes.${part.product_type}`, {ns: 'spareParts', defaultValue: part.product_type})}</span>
-                      </span>
-                    )}
+                  <div className="bg-gray-50 p-2 rounded border border-gray-100">
+                    <div className="text-xs text-gray-500">装箱数量</div>
+                    <div className="font-medium">{part.pcs_per_box || '暂无数据'}</div>
                   </div>
-
-                  <div className="bg-card-alt rounded-md p-3 mt-2">
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="flex">
-                        <strong className="w-24 text-label">{t('specs.spec', {ns: 'spareParts'})}:</strong>
-                        <span className="text-content">{part.spec || t('defaultValues.notAvailable', {ns: 'spareParts'})}</span>
-                      </div>
-                      <div className="flex">
-                        <strong className="w-24 text-label">{t('specs.pcsPerBox', {ns: 'spareParts'})}:</strong>
-                        <span className="text-content">{part.pcs_per_box || t('defaultValues.notAvailable', {ns: 'spareParts'})}</span>
-                      </div>
-                      <div className="flex col-span-2">
-                        <strong className="w-24 text-label">{t('specs.compatibleModels', {ns: 'spareParts'})}:</strong>
-                        <span className="text-content">{Array.isArray(part.app_model) ? part.app_model.join(', ') : part.app_model}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-3">
-                    <button 
-                      onClick={() => handlePartClick(part)} 
-                      className="text-sm inline-flex items-center text-primary hover:text-brand-accent transition-colors"
-                    >
-                      <span className="mr-1">{t('table.viewDetails', {ns: 'spareParts'})}</span>
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                      </svg>
-                    </button>
+                  <div className="bg-gray-50 p-2 rounded border border-gray-100 sm:col-span-2">
+                    <div className="text-xs text-gray-500">适用型号</div>
+                    <div className="font-medium">{Array.isArray(part.app_model) ? part.app_model.join(', ') : part.app_model || '暂无数据'}</div>
                   </div>
                 </div>
-
-                {/* Column 3: Price & Actions */}
-                <div className="w-full md:w-2/6 flex flex-col justify-between mt-4 md:mt-0 md:pl-4 md:border-l md:border-border">
-                  <div>
-                    <h4 className="font-medium text-sm text-label mb-2">{t('price', {ns: 'spareParts'})}:</h4>
-                    <div className="space-y-1">
-                      {prices.tiers && prices.tiers.map((tier, idx) => (
-                        <div key={idx} className="flex justify-between items-center bg-background rounded px-3 py-1 text-sm hover:bg-brand-light transition-colors">
-                          <span className="text-content-light">{tier.range}:</span>
-                          <span className="font-semibold text-brand-primary">
-                            {getCurrencySymbol(userRegion)}
-                            {userRegion === 'eu' && tier.eu ? formatPrice(tier.eu) : 
-                             userRegion === 'na' && tier.na ? formatPrice(tier.na) :
-                             userRegion === 'au' && tier.au ? formatPrice(tier.au) :
-                             userRegion === 'cn' && tier.cn ? formatPrice(tier.cn) : 
-                             formatPrice(tier.price)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    {/* Inventory information (only visible to admin/sales) */}
-                    {(user?.role === 'sales' || user?.role === 'admin') && (
-                      <div className="mt-3 bg-background p-2 rounded border border-border">
-                        <h4 className="font-medium text-sm text-label mb-1">{t('inventory')}:</h4>
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                          {Array.isArray(part.inventory) ? part.inventory.map((inv, idx) => (
-                            <div key={idx} className="flex justify-between items-center px-2 py-1 rounded border border-border">
-                              <span className="font-medium">{inv.region.toUpperCase()}:</span>
-                              <span className={`font-medium ${inv.quantity > 0 ? 'text-success' : 'text-error'}`}>
-                                {inv.quantity}
-                              </span>
-                            </div>
-                          )) : (
-                            <div className="col-span-2 text-center text-content-light">{t('invalidInventory', {ns: 'spareParts'})}</div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                
+                <button 
+                  className="text-xs inline-flex items-center px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 transition-colors cursor-help"
+                  onMouseEnter={(e) => handleSpecMouseEnter(e, part)}
+                  onMouseLeave={handleSpecMouseLeave}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  更多规格详情
+                </button>
+              </div>
+              
+              {/* 右侧：价格和操作 */}
+              <div className="w-full md:w-2/6 flex flex-col">
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3">价格:</h4>
+                  {/* 阶梯价格展示 - 改为灰色背景独立行项目 */}
+                  {part.prices && Array.isArray(part.prices) && part.prices
+                    .filter(priceItem => priceItem.region.toLowerCase() === currentUser.region.toLowerCase())
+                    .map((priceItem, priceIndex) => (
+                      priceItem.tiers && priceItem.tiers.map((tier, tierIndex) => {
+                        // 计算价格显示
+                        const basePrice = tier.base_price;
+                        // 应用用户折扣
+                        const finalPrice = basePrice * currentUser.discount;
+                        
+                        // 创建价格区间显示字符串
+                        const rangeText = tier.max_quantity 
+                          ? `${tier.min_quantity}-${tier.max_quantity}` 
+                          : `${tier.min_quantity}+`;
+                        
+                        return (
+                          <div 
+                            key={`${priceIndex}-${tierIndex}`} 
+                            className="flex justify-between items-center bg-gray-100 rounded p-3 text-sm mb-2"
+                          >
+                            <span className="text-gray-600">{rangeText}:</span>
+                            <span className="font-bold text-black text-lg">
+                              {getCurrencySymbol(currentUser.region)}{finalPrice.toFixed(2)}
+                            </span>
+                          </div>
+                        );
+                      })
+                    ))
+                  }
                   
-                  <div className="mt-4 flex items-center justify-between">
-                    <div className="flex items-center border border-border rounded-md">
-                      <button 
-                        className="px-3 py-2 border-r border-border text-content hover:bg-background transition-colors"
-                        onClick={(e) => { e.stopPropagation(); handleQuantityChange(String(part.id), undefined, 'decrease'); }}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                        </svg>
-                      </button>
+                  {/* 如果没有价格数据，显示默认信息 */}
+                  {(!part.prices || !Array.isArray(part.prices) || part.prices.length === 0) && (
+                    <div className="bg-gray-100 p-3 text-center text-gray-500 rounded mb-4">价格信息暂无</div>
+                  )}
+
+                  {/* 库存信息 - 仅对管理员和销售角色显示 */}
+                  {(userRole === 'admin' || userRole === 'sales') && part.inventory && (
+                    <div className="mt-4">
+                      <h4 className="text-sm font-semibold text-gray-700 mb-3">库存:</h4>
+                      <div className="bg-gray-100 p-3 rounded">
+                        {/* 处理库存可能是对象或数组的情况 */}
+                        {Array.isArray(part.inventory) ? (
+                          // 处理库存数组格式
+                          <div className="space-y-2">
+                            {part.inventory.map((item, index) => (
+                              <div key={index} className="flex justify-between">
+                                <span>{item.region.toUpperCase()}:</span>
+                                <span className="text-green-500 font-medium">{item.quantity}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          // 处理库存对象格式
+                          <div className="space-y-2">
+                            {typeof (part.inventory as Inventory).cn !== 'undefined' && (
+                              <div className="flex justify-between">
+                                <span>CN:</span>
+                                <span className="text-green-500 font-medium">
+                                  {(part.inventory as Inventory).cn}
+                                </span>
+                              </div>
+                            )}
+                            {typeof (part.inventory as Inventory).na !== 'undefined' && (
+                              <div className="flex justify-between">
+                                <span>US:</span>
+                                <span className="text-green-500 font-medium">
+                                  {(part.inventory as Inventory).na}
+                                </span>
+                              </div>
+                            )}
+                            {typeof (part.inventory as Inventory).eu !== 'undefined' && (
+                              <div className="flex justify-between">
+                                <span>EU:</span>
+                                <span className="text-green-500 font-medium">
+                                  {(part.inventory as Inventory).eu}
+                                </span>
+                              </div>
+                            )}
+                            {typeof (part.inventory as Inventory).au !== 'undefined' && (
+                              <div className="flex justify-between">
+                                <span>AU:</span>
+                                <span className="text-green-500 font-medium">
+                                  {(part.inventory as Inventory).au}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="mt-auto pt-4 border-t border-gray-100">
+                  <div className="flex items-center">
+                    <div className="flex-none w-1/3 pr-2">
                       <input 
                         type="number" 
                         min="1" 
                         value={quantities[String(part.id)] || 1} 
                         onChange={(e) => { e.stopPropagation(); handleQuantityChange(String(part.id), e); }}
-                        className="w-12 text-center border-none focus:ring-0"
+                        className="w-full text-center border border-gray-300 rounded-md py-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                       />
-                      <button 
-                        className="px-3 py-2 border-l border-border text-content hover:bg-background transition-colors"
-                        onClick={(e) => { e.stopPropagation(); handleQuantityChange(String(part.id), undefined, 'increase'); }}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                      </button>
                     </div>
                     <button 
                       onClick={(e) => { e.stopPropagation(); addToCart(part, quantities[String(part.id)] || 1); }}
-                      className="flex-grow ml-3 h-10 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors flex items-center justify-center"
+                      className="flex-grow py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
-                      {t('addToCart', {ns: 'spareParts'})}
+                      加入购物车
                     </button>
                   </div>
                 </div>
               </div>
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
     );
   };
@@ -948,10 +1013,11 @@ const SparePartsPage = () => {
       }
     }
     
-    if (regionStock <= 0) return t('inventory.outOfStock', {ns: 'spareParts'});
-    if (regionStock < 5) return t('inventory.lowStock', {ns: 'spareParts'});
-    if (regionStock < 20) return t('inventory.inStock', {ns: 'spareParts'});
-    return t('inventory.highStock', {ns: 'spareParts'});
+    // 确保返回字符串而不是对象
+    if (regionStock <= 0) return String(t('inventory.outOfStock', {ns: 'spareParts'}));
+    if (regionStock < 5) return String(t('inventory.lowStock', {ns: 'spareParts'}));
+    if (regionStock < 20) return String(t('inventory.inStock', {ns: 'spareParts'}));
+    return String(t('inventory.highStock', {ns: 'spareParts'}));
   };
   
   // 处理确认清空购物车
@@ -1098,7 +1164,34 @@ const SparePartsPage = () => {
   // Add a helper function at the top of the component
   const formatPrice = (price: any): string => {
     if (price === undefined || price === null) return '0.00';
+    if (typeof price === 'string') {
+      // 尝试解析字符串为数字
+      try {
+        return parseFloat(price).toFixed(2);
+      } catch (e) {
+        return '0.00';
+      }
+    }
+    if (typeof price === 'object') {
+      // 如果是对象，返回默认值
+      return '0.00';
+    }
     return parseFloat(price).toFixed(2);
+  };
+  
+  // 安全渲染函数 - 确保渲染的总是字符串，而不是对象
+  const safeRender = (content: any): string => {
+    if (content === null || content === undefined) return '';
+    if (typeof content === 'string') return content;
+    if (typeof content === 'number' || typeof content === 'boolean') return String(content);
+    if (typeof content === 'object') return JSON.stringify(content);
+    return String(content);
+  };
+
+  // 用于渲染库存状态的函数
+  const renderStockStatus = (status: any): string => {
+    // 无论输入是什么，都返回简单的文本
+    return t('inventory.inStock', {ns: 'spareParts', defaultValue: 'In Stock'});
   };
   
   // 渲染主页面
@@ -1249,6 +1342,78 @@ const SparePartsPage = () => {
       <div className={`cart-confirm ${showConfirmClear ? 'show' : ''}`}>
         {/* ... (existing confirmation dialog code) */}
       </div>
+      
+      {/* Tooltip component */}
+      {showTooltip && selectedSparePartForTooltip && (
+        <div 
+          ref={tooltipRef}
+          className="fixed bg-white shadow-lg rounded-lg p-4 z-[1000] border border-gray-200 min-w-[250px] max-w-[350px] pointer-events-auto"
+          style={{ 
+            left: `${tooltipPos.left}px`, 
+            top: `${tooltipPos.top}px`, 
+            transform: 'translate(0, 0)',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+          }}
+          onMouseEnter={handleTooltipMouseEnter}
+          onMouseLeave={handleTooltipMouseLeave}
+        >
+          <h4 className="text-md font-semibold mb-2">{selectedSparePartForTooltip.name_en}</h4>
+          <div className="text-sm grid grid-cols-2 gap-x-4 gap-y-2">
+            {/* 根据用户区域选择显示英制或公制单位 */}
+            {currentUser.region === 'na' || currentUser.region === 'au' ? (
+              // 显示英制单位 (NA, AU区域)
+              <>
+                {selectedSparePartForTooltip.package_size_inch && (
+                  <>
+                    <div className="text-gray-600">包装尺寸:</div>
+                    <div>{selectedSparePartForTooltip.package_size_inch} (inch)</div>
+                  </>
+                )}
+                {selectedSparePartForTooltip.net_weight_lbs !== null && (
+                  <>
+                    <div className="text-gray-600">单件净重:</div>
+                    <div>{selectedSparePartForTooltip.net_weight_lbs} (lbs)</div>
+                  </>
+                )}
+                {selectedSparePartForTooltip.gross_weight_lbs !== null && (
+                  <>
+                    <div className="text-gray-600">单件毛重:</div>
+                    <div>{selectedSparePartForTooltip.gross_weight_lbs} (lbs)</div>
+                  </>
+                )}
+              </>
+            ) : (
+              // 显示公制单位 (CN, EU等其他区域)
+              <>
+                {selectedSparePartForTooltip.package_size_cm && (
+                  <>
+                    <div className="text-gray-600">包装尺寸:</div>
+                    <div>{selectedSparePartForTooltip.package_size_cm} (cm)</div>
+                  </>
+                )}
+                {selectedSparePartForTooltip.net_weight_kg !== null && (
+                  <>
+                    <div className="text-gray-600">单件净重:</div>
+                    <div>{selectedSparePartForTooltip.net_weight_kg} (kg)</div>
+                  </>
+                )}
+                {selectedSparePartForTooltip.gross_weight_kg !== null && (
+                  <>
+                    <div className="text-gray-600">单件毛重:</div>
+                    <div>{selectedSparePartForTooltip.gross_weight_kg} (kg)</div>
+                  </>
+                )}
+              </>
+            )}
+            {selectedSparePartForTooltip.pcs_per_box !== null && (
+              <>
+                <div className="text-gray-600">装箱数量:</div>
+                <div>{selectedSparePartForTooltip.pcs_per_box}</div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
