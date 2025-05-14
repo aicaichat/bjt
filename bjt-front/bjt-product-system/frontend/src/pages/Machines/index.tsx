@@ -525,9 +525,21 @@ const MachinesPage: React.FC = () => {
                     title={`${getMachineName(machine)} - 详细信息`}
                     content={
                       <div className="max-w-xs">
-                        <p><strong>包装尺寸:</strong> {machine.package_size_cm || 'N/A'}</p>
-                        <p><strong>净重(kg):</strong> {machine.net_weight_kg !== null ? machine.net_weight_kg : 'N/A'}</p>
-                        <p><strong>净重(lbs):</strong> {machine.net_weight_lbs !== null ? machine.net_weight_lbs : 'N/A'}</p>
+                        {userRegion === 'US' || userRegion === 'UK' ? (
+                          <>
+                            <p><strong>包装尺寸 inch:</strong> {machine.package_size_inch || 'N/A'}</p>
+                            <p><strong>单件净重 lbs:</strong> {machine.net_weight_lbs !== null ? machine.net_weight_lbs : 'N/A'}</p>
+                            <p><strong>打托高度 inch:</strong> {machine.pallet_height_inch || 'N/A'}</p>
+                            <p><strong>整托毛重 lbs:</strong> {machine.pallet_gross_weight_lbs || 'N/A'}</p>
+                          </>
+                        ) : (
+                          <>
+                            <p><strong>包装尺寸 cm:</strong> {machine.package_size_cm || 'N/A'}</p>
+                            <p><strong>单件净重 kg:</strong> {machine.net_weight_kg !== null ? machine.net_weight_kg : 'N/A'}</p>
+                            <p><strong>打托高度 cm:</strong> {machine.pallet_height_cm || 'N/A'}</p>
+                            <p><strong>整托毛重 kg:</strong> {machine.pallet_gross_weight_kg || 'N/A'}</p>
+                          </>
+                        )}
                       </div>
                     }
                     trigger="hover"

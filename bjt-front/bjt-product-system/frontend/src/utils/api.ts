@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { message } from 'antd';
 
-const baseURL = process.env.VITE_API_URL || '/wp-json/bjt/v1';
+// 使用相对路径，确保请求通过Nginx代理
+const baseURL = '/wp-json/bjt/v1';
 
 const api = axios.create({
   baseURL,
