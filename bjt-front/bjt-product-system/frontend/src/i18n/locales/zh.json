@@ -144,7 +144,11 @@
     "loading": "加载中...",
     "error": "错误",
     "success": "成功",
-    "processing": "处理中..."
+    "processing": "处理中...",
+    "login": "登录",
+    "cancel": "取消",
+    "loginRequired": "需要登录",
+    "loginPrompt": "您需要登录后才能访问此内容。是否前往登录页面？"
   },
   "order": {
     "title": "确认订单",

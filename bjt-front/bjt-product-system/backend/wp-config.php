@@ -108,6 +108,11 @@ $table_prefix = getenv_docker('WORDPRESS_TABLE_PREFIX', 'wp_');
  * @link https://wordpress.org/documentation/article/debugging-in-wordpress/
  */
 define( 'WP_DEBUG', !!getenv_docker('WORDPRESS_DEBUG', '') );
+define( 'WP_DEBUG_LOG', true );
+define( 'WP_DEBUG_DISPLAY', false );
+@ini_set( 'display_errors', 0 );
+define( 'SCRIPT_DEBUG', true );
+define( 'SAVEQUERIES', true );
 
 /* Add any custom values between this line and the "stop editing" line. */
 
@@ -131,3 +136,4 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /** Sets up WordPress vars and included files. */
 require_once ABSPATH . 'wp-settings.php';
+// CORS support is now a plugin in wp-content/plugins/bjt-cors/

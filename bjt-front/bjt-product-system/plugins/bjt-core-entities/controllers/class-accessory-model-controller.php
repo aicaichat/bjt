@@ -4,7 +4,7 @@
  */
 class BJT_Accessory_Model_Controller extends BJT_API_Controller {
 
-    protected $resource_name = 'accessory-models';
+    public $resource_name = 'accessory-models';
     protected $table_name;
 
     // Columns in wp_bjt_accessory_models that can be filled via API

@@ -1,8 +1,14 @@
 <?php
 /**
- * BJT Product Admin Main Class
+ * BJT管理界面类
+ * 
+ * 用于创建和管理WordPress管理界面
+ * 
+ * @package BJT_Product_Admin
+ * @since 1.0.0
  */
 
+// 如果直接访问此文件，则中止访问
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -23,7 +29,7 @@ class BJT_Admin {
      */
     private function init_hooks() {
         // 添加菜单
-        add_action('admin_menu', array($this, 'add_admin_menu'));
+        add_action('admin_menu', array($this, 'add_admin_menus'));
         
         // 加载资源
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
@@ -42,82 +48,87 @@ class BJT_Admin {
     /**
      * 添加管理菜单
      */
-    public function add_admin_menu() {
+    public function add_admin_menus() {
+        // 主菜单
         add_menu_page(
-            __('BJT Products', 'bjt-product-admin'),
-            __('BJT Products', 'bjt-product-admin'),
+            __('BJT产品管理系统', 'bjt-product-admin'),
+            __('BJT产品管理', 'bjt-product-admin'),
             'manage_options',
             'bjt-product-admin',
-            array($this, 'render_admin_page'),
+            array($this, 'render_dashboard_page'),
             'dashicons-products',
             30
         );
-
-        // 添加子菜单
-        $this->add_submenu_pages();
-    }
-
-    /**
-     * 添加子菜单页面
-     */
-    private function add_submenu_pages() {
-        // 产品线管理
+        
+        // 仪表盘子菜单
         add_submenu_page(
             'bjt-product-admin',
-            __('Product Lines', 'bjt-product-admin'),
-            __('Product Lines', 'bjt-product-admin'),
+            __('仪表盘', 'bjt-product-admin'),
+            __('仪表盘', 'bjt-product-admin'),
+            'manage_options',
+            'bjt-product-admin',
+            array($this, 'render_dashboard_page')
+        );
+        
+        // 产品线管理子菜单
+        add_submenu_page(
+            'bjt-product-admin',
+            __('产品线管理', 'bjt-product-admin'),
+            __('产品线管理', 'bjt-product-admin'),
             'manage_options',
             'bjt-product-lines',
             array($this, 'render_product_lines_page')
         );
-
-        // 主机管理
+        
+        // 主机管理子菜单
         add_submenu_page(
             'bjt-product-admin',
-            __('Host Models', 'bjt-product-admin'),
-            __('Host Models', 'bjt-product-admin'),
+            __('主机管理', 'bjt-product-admin'),
+            __('主机管理', 'bjt-product-admin'),
             'manage_options',
             'bjt-host-models',
             array($this, 'render_host_models_page')
         );
-
-        // 配件管理
+        
+        // 配件管理子菜单
         add_submenu_page(
             'bjt-product-admin',
-            __('Accessories', 'bjt-product-admin'),
-            __('Accessories', 'bjt-product-admin'),
+            __('配件管理', 'bjt-product-admin'),
+            __('配件管理', 'bjt-product-admin'),
             'manage_options',
             'bjt-accessories',
             array($this, 'render_accessories_page')
         );
-
-        // 耗材管理
+        
+        // 关系管理子菜单
         add_submenu_page(
             'bjt-product-admin',
-            __('Consumables', 'bjt-product-admin'),
-            __('Consumables', 'bjt-product-admin'),
+            __('关系管理', 'bjt-product-admin'),
+            __('关系管理', 'bjt-product-admin'),
             'manage_options',
-            'bjt-consumables',
-            array($this, 'render_consumables_page')
+            'bjt-relationships',
+            array($this, 'render_relationships_page')
         );
-
-        // 备件管理
+        
+        // 组件测试子菜单（开发环境中使用）
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            add_submenu_page(
+                'bjt-product-admin',
+                __('组件测试', 'bjt-product-admin'),
+                __('组件测试', 'bjt-product-admin'),
+                'manage_options',
+                'bjt-component-test',
+                array($this, 'render_component_test_page')
+            );
+        }
+        
+        // 设置子菜单
         add_submenu_page(
             'bjt-product-admin',
-            __('Parts', 'bjt-product-admin'),
-            __('Parts', 'bjt-product-admin'),
+            __('设置', 'bjt-product-admin'),
+            __('设置', 'bjt-product-admin'),
             'manage_options',
-            'bjt-parts',
-            array($this, 'render_parts_page')
-        );
-
-        // 设置页面
-        add_submenu_page(
-            'bjt-product-admin',
-            __('Settings', 'bjt-product-admin'),
-            __('Settings', 'bjt-product-admin'),
-            'manage_options',
-            'bjt-settings',
+            'bjt-product-settings',
             array($this, 'render_settings_page')
         );
     }
@@ -161,59 +172,89 @@ class BJT_Admin {
     }
 
     /**
-     * 渲染主页面
+     * 渲染仪表盘页面
      */
-    public function render_admin_page() {
-        // 检查权限
-        if (!current_user_can('manage_options')) {
-            wp_die(__('You do not have sufficient permissions to access this page.', 'bjt-product-admin'));
-        }
-
-        // 加载主页面模板
-        include BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'templates/admin/main.php';
+    public function render_dashboard_page() {
+        echo '<div class="wrap">';
+        echo '<h1>' . esc_html__('BJT产品管理系统仪表盘', 'bjt-product-admin') . '</h1>';
+        echo '<p>' . esc_html__('欢迎使用BJT产品管理系统。', 'bjt-product-admin') . '</p>';
+        
+        // 仪表盘内容
+        echo '<div class="bjt-dashboard-widgets">';
+        
+        // 统计信息
+        echo '<div class="bjt-dashboard-widget">';
+        echo '<h2>' . esc_html__('统计信息', 'bjt-product-admin') . '</h2>';
+        echo '<div class="bjt-dashboard-stats">';
+        echo '<div class="bjt-stat-item"><span class="bjt-stat-value">0</span><span class="bjt-stat-label">' . esc_html__('产品线', 'bjt-product-admin') . '</span></div>';
+        echo '<div class="bjt-stat-item"><span class="bjt-stat-value">0</span><span class="bjt-stat-label">' . esc_html__('主机型号', 'bjt-product-admin') . '</span></div>';
+        echo '<div class="bjt-stat-item"><span class="bjt-stat-value">0</span><span class="bjt-stat-label">' . esc_html__('配件', 'bjt-product-admin') . '</span></div>';
+        echo '<div class="bjt-stat-item"><span class="bjt-stat-value">0</span><span class="bjt-stat-label">' . esc_html__('关系', 'bjt-product-admin') . '</span></div>';
+        echo '</div>';
+        echo '</div>';
+        
+        // 快速链接
+        echo '<div class="bjt-dashboard-widget">';
+        echo '<h2>' . esc_html__('快速操作', 'bjt-product-admin') . '</h2>';
+        echo '<div class="bjt-dashboard-actions">';
+        echo '<a href="' . admin_url('admin.php?page=bjt-product-lines') . '" class="button">' . esc_html__('管理产品线', 'bjt-product-admin') . '</a>';
+        echo '<a href="' . admin_url('admin.php?page=bjt-host-models') . '" class="button">' . esc_html__('管理主机型号', 'bjt-product-admin') . '</a>';
+        echo '<a href="' . admin_url('admin.php?page=bjt-accessories') . '" class="button">' . esc_html__('管理配件', 'bjt-product-admin') . '</a>';
+        echo '<a href="' . admin_url('admin.php?page=bjt-relationships') . '" class="button">' . esc_html__('管理关系', 'bjt-product-admin') . '</a>';
+        echo '</div>';
+        echo '</div>';
+        
+        echo '</div>'; // .bjt-dashboard-widgets
+        
+        echo '</div>'; // .wrap
     }
 
     /**
-     * 渲染产品线页面
+     * 渲染产品线管理页面
      */
     public function render_product_lines_page() {
-        // 检查权限
-        if (!current_user_can('manage_options')) {
-            wp_die(__('You do not have sufficient permissions to access this page.', 'bjt-product-admin'));
-        }
-
         // 获取当前操作
         $action = isset($_GET['action']) ? sanitize_text_field($_GET['action']) : 'list';
-
-        // 加载相应的模板
+        
+        // 根据操作加载相应的模板
         switch ($action) {
-            case 'new':
             case 'edit':
-                include BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'templates/admin/product-lines/edit.php';
+            case 'add':
+                // 加载编辑/添加模板
+                include(BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'templates/admin/product-lines/edit.php');
                 break;
+            
             default:
-                include BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'templates/admin/product-lines/list.php';
+                // 加载列表模板
+                include(BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'templates/admin/product-lines/list.php');
                 break;
         }
     }
 
     /**
-     * 渲染主机管理页面
+     * 渲染主机型号管理页面
      */
     public function render_host_models_page() {
-        if (!current_user_can('manage_options')) {
-            wp_die(__('You do not have sufficient permissions to access this page.', 'bjt-product-admin'));
-        }
-
+        // 获取当前操作
         $action = isset($_GET['action']) ? sanitize_text_field($_GET['action']) : 'list';
-
+        
+        // 根据操作加载相应的模板
         switch ($action) {
-            case 'new':
             case 'edit':
-                include BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'templates/admin/machines/edit.php';
+            case 'add':
+                // 加载主机型号编辑/添加模板
+                include(BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'templates/admin/host-models/edit.php');
                 break;
+            
+            case 'edit-part':
+            case 'add-part':
+                // 加载料号编辑/添加模板
+                include(BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'templates/admin/host-models/part-edit.php');
+                break;
+            
             default:
-                include BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'templates/admin/machines/list.php';
+                // 加载列表模板
+                include(BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'templates/admin/host-models/list.php');
                 break;
         }
     }
@@ -222,74 +263,71 @@ class BJT_Admin {
      * 渲染配件管理页面
      */
     public function render_accessories_page() {
-        if (!current_user_can('manage_options')) {
-            wp_die(__('You do not have sufficient permissions to access this page.', 'bjt-product-admin'));
-        }
-
+        // 获取当前操作
         $action = isset($_GET['action']) ? sanitize_text_field($_GET['action']) : 'list';
-
+        
+        // 根据操作加载相应的模板
         switch ($action) {
-            case 'new':
             case 'edit':
-                include BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'templates/admin/accessories/edit.php';
+            case 'add':
+                // 加载编辑/添加模板
+                include(BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'templates/admin/accessories/edit.php');
                 break;
+            
             default:
-                include BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'templates/admin/accessories/list.php';
+                // 加载列表模板
+                include(BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'templates/admin/accessories/list.php');
                 break;
         }
     }
 
     /**
-     * 渲染耗材管理页面
+     * 渲染关系管理页面
      */
-    public function render_consumables_page() {
-        if (!current_user_can('manage_options')) {
-            wp_die(__('You do not have sufficient permissions to access this page.', 'bjt-product-admin'));
-        }
-
+    public function render_relationships_page() {
+        // 获取action参数，默认为list
         $action = isset($_GET['action']) ? sanitize_text_field($_GET['action']) : 'list';
-
+        
+        // 根据action加载相应的模板
         switch ($action) {
-            case 'new':
             case 'edit':
-                include BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'templates/admin/consumables/edit.php';
+            case 'add':
+                // 加载编辑模板
+                include_once plugin_dir_path(dirname(__FILE__)) . 'templates/admin/relationships/edit.php';
                 break;
+            
             default:
-                include BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'templates/admin/consumables/list.php';
+                // 加载列表模板
+                include_once plugin_dir_path(dirname(__FILE__)) . 'templates/admin/relationships/list.php';
                 break;
         }
     }
 
     /**
-     * 渲染备件管理页面
+     * 渲染组件测试页面
      */
-    public function render_parts_page() {
-        if (!current_user_can('manage_options')) {
-            wp_die(__('You do not have sufficient permissions to access this page.', 'bjt-product-admin'));
-        }
-
-        $action = isset($_GET['action']) ? sanitize_text_field($_GET['action']) : 'list';
-
-        switch ($action) {
-            case 'new':
-            case 'edit':
-                include BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'templates/admin/parts/edit.php';
-                break;
-            default:
-                include BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'templates/admin/parts/list.php';
-                break;
-        }
+    public function render_component_test_page() {
+        require_once BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'includes/pages/test-page.php';
+        bjt_product_admin_render_test_page();
     }
 
     /**
      * 渲染设置页面
      */
     public function render_settings_page() {
-        if (!current_user_can('manage_options')) {
-            wp_die(__('You do not have sufficient permissions to access this page.', 'bjt-product-admin'));
+        echo '<div class="wrap">';
+        echo '<h1>' . esc_html__('BJT产品管理系统设置', 'bjt-product-admin') . '</h1>';
+        
+        // 检查设置页面是否已加载
+        if (!class_exists('BJT_Settings_Page')) {
+            require_once BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'includes/class-bjt-settings.php';
+            $settings_page = new BJT_Settings_Page();
+            $settings_page->render();
+        } else {
+            echo '<div class="notice notice-error"><p>' . esc_html__('无法加载设置页面。', 'bjt-product-admin') . '</p></div>';
         }
-
-        include BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'templates/admin/settings.php';
+        
+        echo '</div>'; // .wrap
     }
 
     /**

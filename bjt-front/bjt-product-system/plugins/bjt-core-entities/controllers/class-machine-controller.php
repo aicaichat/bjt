@@ -7,10 +7,14 @@ class BJT_Machine_Controller extends BJT_API_Controller {
      * 构造函数
      */
     public function __construct() {
-        parent::__construct(); // Restored
-        error_log("BJT_API_MACHINE: Constructor for BJT_Machine_Controller CALLED. Namespace: " . $this->namespace . ", Resource: " . $this->resource_name); // Restored
+        // Define controller-specific properties first
         global $wpdb;
         $this->table_name = $wpdb->prefix . 'bjt_host_models'; // Changed from bjt_machines
+        $this->resource_name = 'machines'; // Explicitly set resource_name
+        
+        // Call the parent constructor
+        parent::__construct();
+        error_log("BJT_API_MACHINE: Constructor for BJT_Machine_Controller CALLED. Namespace: " . $this->namespace . ", Resource: " . $this->resource_name);
     }
 
     /**
@@ -18,7 +22,7 @@ class BJT_Machine_Controller extends BJT_API_Controller {
      *
      * @var string
      */
-    protected $resource_name = 'machines';
+    public $resource_name = 'machines';
     
     protected $fillable_fields = [
         'product_line_id', 
@@ -42,6 +46,8 @@ class BJT_Machine_Controller extends BJT_API_Controller {
      */
     public function register_routes() {
         error_log("BJT_API_MACHINE: BJT_Machine_Controller::register_routes() CALLED. Namespace: " . $this->namespace . ", Resource: " . $this->resource_name);
+        
+        // Register original 'machines' routes
         register_rest_route($this->namespace, '/' . $this->resource_name, [
             [
                 'methods' => WP_REST_Server::READABLE,
@@ -112,6 +118,59 @@ class BJT_Machine_Controller extends BJT_API_Controller {
                         'validate_callback' => function($value) {
                             return is_numeric($value) && $value >= 1 && $value <= 5;
                         }
+                    ]
+                ]
+            ]
+        ]);
+        
+        // Add host-models routes that map to the same controller methods
+        register_rest_route($this->namespace, '/host-models', [
+            [
+                'methods' => WP_REST_Server::READABLE,
+                'callback' => [$this, 'get_items'],
+                'permission_callback' => [$this, 'check_read_permission'],
+                'args' => $this->get_pagination_arg_definitions(),
+            ],
+            [
+                'methods' => WP_REST_Server::CREATABLE,
+                'callback' => [$this, 'create_item'],
+                'permission_callback' => [$this, 'check_write_permission'],
+                'args' => $this->get_item_schema(),
+            ]
+        ]);
+        
+        register_rest_route($this->namespace, '/host-models/(?P<id>[\d]+)', [
+            [
+                'methods' => WP_REST_Server::READABLE,
+                'callback' => [$this, 'get_item'],
+                'permission_callback' => [$this, 'check_read_permission'],
+                'args' => [
+                    'id' => [
+                        'required' => true,
+                        'validate_callback' => function($value, $request, $param) {
+                            return is_numeric($value) && (int)$value > 0;
+                        },
+                        'sanitize_callback' => 'absint'
+                    ]
+                ]
+            ],
+            [
+                'methods' => WP_REST_Server::EDITABLE,
+                'callback' => [$this, 'update_item'],
+                'permission_callback' => [$this, 'check_write_permission'],
+                'args' => $this->get_item_schema()
+            ],
+            [
+                'methods' => WP_REST_Server::DELETABLE,
+                'callback' => [$this, 'delete_item'],
+                'permission_callback' => [$this, 'check_write_permission'],
+                'args' => [
+                    'id' => [
+                        'required' => true,
+                        'validate_callback' => function($value, $request, $param) {
+                            return is_numeric($value) && (int)$value > 0;
+                        },
+                        'sanitize_callback' => 'absint'
                     ]
                 ]
             ]

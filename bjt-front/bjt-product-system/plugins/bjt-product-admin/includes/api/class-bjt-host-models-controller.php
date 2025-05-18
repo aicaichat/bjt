@@ -7,10 +7,13 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class BJT_Host_Models_Controller extends BJT_API_Controller {
+class BJT_Host_Models_Controller extends BJT_Product_API_Controller {
     public function __construct() {
         parent::__construct();
         $this->rest_base = 'host-models';
+        
+        // 直接在构造函数中添加rest_api_init钩子以确保路由注册
+        add_action('rest_api_init', array($this, 'register_routes'));
     }
 
     /**
@@ -27,7 +30,7 @@ class BJT_Host_Models_Controller extends BJT_API_Controller {
         $where_values = array();
 
         if ($product_line_id) {
-            $where_clauses[] = "product_line_id = %d";
+            $where_clauses[] = "h.product_line_id = %d";
             $where_values[] = $product_line_id;
         }
 
@@ -332,6 +335,7 @@ class BJT_Host_Models_Controller extends BJT_API_Controller {
             $host_model_name = isset($item['name_en']) ? $item['name_en'] : '';    // Use name_en for English
         }
 
+        // 修复语言映射，当lang为zh时，正确映射到cn
         $product_line_name_key = 'product_line_name_' . ($lang === 'zh' ? 'cn' : $lang);
 
         $data = array(

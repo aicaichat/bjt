@@ -19,6 +19,7 @@ import Order from './pages/Order';
 import PO from './pages/PO';
 import OrderList from './pages/OrderList';
 import Profile from './pages/Profile';
+import DashboardPage from './pages/DashboardPage';
 // 导入示例组件
 import OrderListExample from './examples/OrderListExample';
 // 其他页面组件（占位符）
@@ -43,6 +44,9 @@ import { useMockData, BASE_URL } from './config/env';
 import ErrorBoundary from './components/ErrorBoundary';
 // 导入安全渲染包装器
 import SafeRenderWrapper from './components/SafeRenderWrapper';
+
+// 导入管理后台路由
+import AdminRoutes from './admin/routes';
 
 // 路由保护组件
 interface ProtectedRouteProps {
@@ -114,12 +118,25 @@ const App: React.FC = () => {
                     />
                     
                     <Routes>
+                      {/* 管理后台路由 - MOVED TO TOP FOR TESTING */}
+                      <Route path="/admin/*" element={<AdminRoutes />} />
+
                       {/* 首页 - 公开访问 */}
                       <Route
                         path="/"
                         element={
                           <MainLayout>
                             <Home />
+                          </MainLayout>
+                        }
+                      />
+                      
+                      {/* Dashboard页面 */}
+                      <Route
+                        path="/dashboard"
+                        element={
+                          <MainLayout>
+                            <DashboardPage />
                           </MainLayout>
                         }
                       />
@@ -291,6 +308,18 @@ const App: React.FC = () => {
                       
                       {/* 登录页面 */}
                       <Route path="/login" element={<Login />} />
+                      
+                      {/* 产品详情页面 */}
+                      <Route
+                        path="/product/:id"
+                        element={
+                          <ProtectedRoute>
+                            <MainLayout>
+                              <ProductDetail />
+                            </MainLayout>
+                          </ProtectedRoute>
+                        }
+                      />
                       
                       {/* 404页面 */}
                       <Route

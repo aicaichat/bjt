@@ -1,7 +1,7 @@
 /* Home页面特定样式 */
 
 .home-page {
-  padding-top: 84px; /* 64px header height + 20px spacing */
+  padding-top: 0; /* 移除顶部填充，依赖MainLayout的padding */
   min-height: 100vh;
   background-color: var(--bg-color, #f8f9fa);
 }
@@ -12,166 +12,249 @@
   padding: 0 24px;
 }
 
-/* Main Content Styles */
-.product-section {
-  margin-bottom: 3rem;
-  background-color: var(--bg-card, #ffffff);
-  border-radius: var(--border-radius-lg, 8px);
-  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
-  overflow: hidden;
-  transition: transform var(--transition-fast, 0.2s), box-shadow var(--transition-fast, 0.2s);
-}
-
-.product-section:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-md, 0 4px 6px rgba(0, 0, 0, 0.1));
-}
-
-.section-header {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: white;
-  padding: 1rem 1.5rem;
+/* 顶部横幅区域 */
+.hero {
   background-color: var(--primary-color, #1A365D);
-  margin: 0;
+  color: white;
+  padding: 4rem 2rem;
+  text-align: center;
+  margin-bottom: 3rem;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('/images/hero-bg.jpg');
+  background-size: cover;
+  background-position: center;
 }
 
-.section-header h1,
-.section-header h2,
-.section-header h3,
-.section-header h4,
-.section-header h5,
-.section-header h6,
-.section-header span,
-.section-header div {
-  color: white !important;
+.hero-content {
+  max-width: 800px;
+  margin: 0 auto;
 }
 
-.section-content {
-  display: flex;
-  gap: 2rem;
-  padding: 1.5rem;
-}
-
-.section-text {
-  flex: 1;
-  min-width: 0; /* 防止flex子项溢出 */
-}
-
-.section-text p {
-  color: var(--text-secondary, #4a5568);
-  line-height: 1.6;
+.hero h1 {
+  font-size: 2.5rem;
   margin-bottom: 1rem;
+  color: white;
 }
 
-.introduction {
-  font-weight: 500;
-  color: var(--text-primary, #2d3748);
-  font-size: 1.1rem;
-  margin-bottom: 1rem;
+.hero p {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  color: rgba(255, 255, 255, 0.85);
 }
 
-.divider {
-  height: 2px;
-  width: 40px;
-  background-color: var(--accent-color, #3182ce);
-  margin: 1rem 0;
-}
-
-.product-links {
+.hero-buttons {
   display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
+  justify-content: center;
+  gap: 1rem;
 }
 
-.product-link {
+.btn {
   display: inline-flex;
   align-items: center;
-  color: var(--primary-color, #1A365D);
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--border-radius-md, 6px);
   font-weight: 500;
+  transition: all 0.2s;
   text-decoration: none;
-  padding: 0.5rem 0;
-  transition: color var(--transition-fast, 0.2s);
-}
-
-.product-link:hover {
-  color: var(--primary-dark, #2c5282);
-  text-decoration: underline;
-}
-
-.section-image {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 0; /* 防止flex子项溢出 */
-}
-
-.section-image img {
-  max-width: 100%;
-  height: auto;
-  border-radius: var(--border-radius-md, 6px);
-  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
-  transition: transform var(--transition-fast, 0.2s);
-}
-
-.section-image img:hover {
-  transform: scale(1.02);
-}
-
-/* 分页样式 */
-.pagination {
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-top: 2rem;
-  margin-bottom: 2rem;
-}
-
-.pagination-button {
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--border-color, #e2e8f0);
-  background-color: white;
-  border-radius: var(--border-radius-md, 6px);
   cursor: pointer;
-  transition: all var(--transition-fast, 0.2s);
 }
 
-.pagination-button:hover {
-  background-color: var(--bg-hover, #f7fafc);
-}
-
-.pagination-button.active {
+.btn-primary {
   background-color: var(--primary-color, #1A365D);
   color: white;
+  border: 1px solid var(--primary-color, #1A365D);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-dark, #152A4A);
+  border-color: var(--primary-dark, #152A4A);
+}
+
+.btn-secondary {
+  background-color: white;
+  color: var(--primary-color, #1A365D);
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.btn-secondary:hover {
+  background-color: var(--bg-hover, #f7fafc);
   border-color: var(--primary-color, #1A365D);
 }
 
-/* 响应式布局 */
-@media (max-width: 768px) {
-  .home-page {
-    padding-top: 64px;
-  }
+.btn-large {
+  padding: 0.9rem 2rem;
+  font-size: 1.1rem;
+}
 
-  .section-content {
-    flex-direction: column;
-    padding: 1rem;
-  }
+.btn-outline {
+  background-color: transparent;
+  color: var(--primary-color, #1A365D);
+  border: 1px solid var(--primary-color, #1A365D);
+}
 
-  .section-image {
-    order: -1;
-    margin-bottom: 1rem;
-  }
+.btn-outline:hover {
+  background-color: var(--primary-color, #1A365D);
+  color: white;
+}
 
-  .section-header {
-    font-size: 1.25rem;
-    padding: 0.75rem 1rem;
-  }
+/* 产品线卡片区域 */
+.product-line-section {
+  margin-bottom: 3rem;
+  padding: 2rem 0;
+}
 
-  .product-links {
-    margin-top: 1rem;
-  }
+.section-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text-primary, #2d3748);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.product-line-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
+}
+
+.product-line-card {
+  background-color: white;
+  border-radius: var(--border-radius-md, 8px);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.product-line-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md, 0 4px 6px rgba(0, 0, 0, 0.1));
+}
+
+.product-line-image {
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+}
+
+.product-line-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.product-line-card:hover .product-line-image img {
+  transform: scale(1.05);
+}
+
+.product-line-content {
+  padding: 1.5rem;
+}
+
+.product-line-content h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+  color: var(--text-primary, #2d3748);
+}
+
+.product-line-content p {
+  color: var(--text-secondary, #4a5568);
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.view-products-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background-color: var(--primary-color, #1A365D);
+  color: white;
+  border-radius: var(--border-radius-sm, 4px);
+  text-decoration: none;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.view-products-btn:hover {
+  background-color: var(--primary-dark, #152A4A);
+}
+
+.no-product-lines {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 2rem;
+  background-color: var(--bg-card, #ffffff);
+  border-radius: var(--border-radius-md, 6px);
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
+}
+
+/* 特色功能区域 */
+.feature-section {
+  margin-bottom: 3rem;
+  padding: 3rem 0;
+  background-color: var(--bg-alt, #f1f5f9);
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.feature-card {
+  background-color: white;
+  padding: 2rem;
+  border-radius: var(--border-radius-md, 8px);
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
+  transition: transform 0.2s;
+  text-align: center;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+}
+
+.feature-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.feature-card h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+  color: var(--text-primary, #2d3748);
+}
+
+.feature-card p {
+  color: var(--text-secondary, #4a5568);
+  line-height: 1.5;
+}
+
+/* 关于区域 */
+.about-section {
+  margin-bottom: 4rem;
+  padding: 2rem 0;
+}
+
+.about-content {
+  background-color: white;
+  padding: 2rem;
+  border-radius: var(--border-radius-md, 8px);
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
+  text-align: center;
+}
+
+.about-content p {
+  max-width: 800px;
+  margin: 0 auto 2rem;
+  line-height: 1.6;
+  color: var(--text-secondary, #4a5568);
+}
+
+.about-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
 }
 
 /* 加载和错误状态 */
@@ -191,4 +274,50 @@
   background-color: var(--error-bg, #fff5f5);
   border-radius: var(--border-radius-md, 6px);
   border: 1px solid var(--error-border, #feb2b2);
+}
+
+/* 响应式样式 */
+@media (max-width: 768px) {
+  .hero {
+    padding: 3rem 1rem;
+  }
+  
+  .hero h1 {
+    font-size: 2rem;
+  }
+  
+  .hero-buttons {
+    flex-direction: column;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+  
+  .product-line-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .about-buttons {
+    flex-direction: column;
+    max-width: 250px;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero h1 {
+    font-size: 1.75rem;
+  }
+  
+  .hero p {
+    font-size: 1rem;
+  }
+  
+  .section-title {
+    font-size: 1.5rem;
+  }
+  
+  .feature-card {
+    padding: 1.5rem;
+  }
 } 

@@ -1,6 +1,6 @@
 // src/pages/Machines/index.tsx
 import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
 import { Spin, message, Button, Select, InputNumber, Tabs, Tag, Popover, Empty } from 'antd';
@@ -8,7 +8,7 @@ import { ShoppingCartOutlined, InfoCircleOutlined, PlusOutlined, MinusOutlined, 
 import { useTranslation } from 'react-i18next';
 
 // 导入API服务
-import machinesService from '../../services/machinesService';
+import { machineService, accessoryService, cartService } from '../../api/services';
 import { MachineProduct, MachineListData, MachineAccessory, MachinePart, MachinePartListData } from '../../types/machines';
 import { useMockData, DEFAULT_REGION } from '../../config/env';
 import { REGIONS, getDefaultVoltageByRegion, getStockStatus, getCurrencySymbol } from '../../config/constants';
@@ -89,39 +89,71 @@ const MachinesPage: React.FC = () => {
         setLoading(true);
         setError(null);
         
-        // Fetch MachinePartListData object for Product Line 1
-        const machineListData: MachinePartListData = await machinesService.getMachines({
-          region: userRegion,
+        // Fetch machines for Product Line 1
+        const response = await machineService.getMachines({
           product_line_id: 1 // Filter for Product Line 1
         });
       
-        // Check if data and items exist
-        if (machineListData && Array.isArray(machineListData.items)) {
-          const machinesArray = machineListData.items;
-          setMachines(machinesArray);
-          const initialQuantities: Record<string, number> = {};
-          // Iterate over MachinePart[] from items property
-          machinesArray.forEach((machine: MachinePart) => { 
-            initialQuantities[machine.id.toString()] = 1;
-          });
-          setQuantities(initialQuantities);
-          
-          if (machinesArray.length > 0) {
-            setSelectedMachine(machinesArray[0].id.toString());
-            // Potentially set pagination state here if you add pagination controls
-            // setTotalMachines(machineListData.total);
-            // setCurrentPage(machineListData.page);
-            // setTotalPages(machineListData.total_pages);
-          }
-        } else {
-          // Handle the case where data or items is not as expected
-          console.warn('Received unexpected data structure from getMachines:', machineListData);
-          setMachines([]); // Set to empty array to avoid further errors
-          setQuantities({});
-          // Optionally set an error state here if appropriate
-          // setError(t('errors.invalidData')); 
+        // 转换API返回的数据为页面所需的MachinePart格式
+        const machinesArray: MachinePart[] = response && response.items ? response.items.map(machine => ({
+          id: machine.id,
+          part_number: machine.code,
+          name_zh: machine.title_zh,
+          name_en: machine.title_en,
+          model_description_zh: machine.description_zh || '',
+          model_description_en: machine.description_en || '',
+          image_url: machine.image_url || '',
+          // 填充MachinePart所需的其他字段
+          brand: '',
+          spec: '',
+          spec_imperial: '',
+          package_size_cm: '',
+          package_size_inch: '',
+          net_weight_kg: 0,
+          net_weight_lbs: 0,
+          gross_weight_kg: 0,
+          gross_weight_lbs: 0,
+          pcs_per_box: 0,
+          pallet_size_cm: '',
+          pallet_size_inch: '',
+          pcs_per_pallet: 0,
+          pallet_height_cm: 0,
+          pallet_height_inch: 0,
+          pallet_gross_weight_kg: 0,
+          pallet_gross_weight_lbs: 0,
+          status: machine.status || 'draft',
+          unit: '',
+          model: machine.code,
+          model_title_zh: machine.title_zh,
+          model_title_en: machine.title_en,
+          model_type: machine.type || '',
+          model_image1_url: machine.image_url || '',
+          model_image2_url: '',
+          model_explosion_diagram_pdf: '',
+          voltage: '',
+          frequency: '',
+          product_line_id: machine.product_line_id || 1,
+          prices: [],
+          inventory: []
+        })) : [];
+        
+        setMachines(machinesArray);
+        const initialQuantities: Record<string, number> = {};
+        
+        // Iterate over machines array
+        machinesArray.forEach((machine) => { 
+          initialQuantities[machine.id.toString()] = 1;
+        });
+        
+        setQuantities(initialQuantities);
+        
+        if (machinesArray.length > 0) {
+          setSelectedMachine(machinesArray[0].id.toString());
+          // Potentially set pagination state here if you add pagination controls
+          // setTotalMachines(response.total);
+          // setCurrentPage(response.page);
+          // setTotalPages(response.total_pages);
         }
-
       } catch (err: any) {
         setError(err.message || t('errors.systemError'));
         message.error(err.message || t('errors.systemError'));
@@ -166,9 +198,37 @@ const MachinesPage: React.FC = () => {
           
           try {
             // 使用找到的parentPartNumber获取配件
-            const accessoriesData = await machinesService.getMachineAccessories(parentPartNumber, { level: 1 });
+            const accessoriesData = await accessoryService.getMachineAccessories(parentPartNumber, { level: 1 });
             
-            setAccessories(accessoriesData.items);
+            // 转换Accessory[]为MachineAccessory[]格式
+            const convertedAccessories: MachineAccessory[] = accessoriesData.items.map(accessory => ({
+              id: accessory.id.toString(),
+              model: accessory.model || '',
+              title: accessory.name_zh || accessory.name_en || accessory.part_number,
+              level: 1,
+              image_url: accessory.image_url || '',
+              parts: [{
+                id: accessory.id.toString(),
+                part_number: accessory.part_number,
+                title: accessory.name_zh || accessory.name_en || '',
+                specs: {
+                  spec: accessory.spec || '',
+                  voltage: accessory.voltage || '',
+                  frequency: accessory.frequency || ''
+                },
+                spec: accessory.spec || '',
+                spec_imperial: '',
+                prices: {
+                  base: 0,
+                  tier1: 0,
+                  tier2: 0,
+                  vip: 0
+                },
+                inventory: []
+              }]
+            }));
+            
+            setAccessories(convertedAccessories);
             setLevel2Accessories([]);
             setLevel3Accessories([]);
             setLevel4Accessories([]);
@@ -180,7 +240,7 @@ const MachinesPage: React.FC = () => {
             }
             
             const level1Div = document.getElementById('accessory-level-1');
-            if (level1Div && accessoriesData.items.length > 0) {
+            if (level1Div && convertedAccessories.length > 0) {
               level1Div.style.display = 'block'; // 自动显示一级配件
               setAutoLoadedAccessories(true);
               
@@ -188,7 +248,7 @@ const MachinesPage: React.FC = () => {
               if (!autoLoadedAccessories) {
                 message.info(`已为您自动加载 ${getMachineName(selectedMachineObject)} 的配件`);
               }
-            } else if (accessoriesData.items.length === 0) {
+            } else if (convertedAccessories.length === 0) {
               setAutoLoadedAccessories(false);
               message.info(`${getMachineName(selectedMachineObject)} 暂无配件信息`);
             }
@@ -303,34 +363,34 @@ const MachinesPage: React.FC = () => {
 
       if (isMachineProduct(product)) {
         properties = {
-          '料号': product.part_number,
-          '型号': product.model,
-          '电压': product.voltage,
-          '规格': product.spec,
-          '规格(英制)': product.spec_imperial,
-          '选择的电压': selectedVoltage
+          'part_number': product.part_number,
+          'model': product.model,
+          'voltage': product.voltage,
+          'spec': product.spec,
+          'spec_imperial': product.spec_imperial,
+          'selected_voltage': selectedVoltage
         };
         itemSpecs = {
-          '料号': product.part_number,
-          '型号': product.model,
-          '电压': product.voltage,
-          '规格': product.spec,
-          '规格(英制)': product.spec_imperial,
-          '净重(kg)': product.net_weight_kg,
+          'part_number': product.part_number,
+          'model': product.model,
+          'voltage': product.voltage,
+          'spec': product.spec,
+          'spec_imperial': product.spec_imperial,
+          'net_weight_kg': product.net_weight_kg,
         };
       } else {
-        const partSpecs = product.parts?.[0]?.specs;
+        const accessory = product as MachineAccessory;
+        const partSpecs = accessory.parts?.[0]?.specs;
         if (partSpecs) {
           properties = { ...partSpecs };
           itemSpecs = partSpecs;
         }
       }
 
-      const cartResponse = await machinesService.addToCart({
-        product_id: product.id.toString(),
+      const cartResponse = await cartService.addToCart({
+        product_id: typeof product.id === 'number' ? product.id : parseInt(product.id, 10),
         product_type: productType,
         quantity: quantity,
-        voltage: productType === 'machine' ? selectedVoltage : undefined,
         properties: properties
       });
 
@@ -357,7 +417,8 @@ const MachinesPage: React.FC = () => {
           priceTiers = [];
         }
       } else {
-        const accessoryPrices = product.parts?.[0]?.prices;
+        const accessory = product as MachineAccessory;
+        const accessoryPrices = accessory.parts?.[0]?.prices;
         if (accessoryPrices) {
           price = accessoryPrices.base || 0;
           priceTiers = [
@@ -715,7 +776,7 @@ const MachinesPage: React.FC = () => {
     try {
       setLoadingState(true);
       // Use the found parentPartNumber for the API call
-      const accessoriesData = await machinesService.getAccessories({
+      const accessoriesData = await accessoryService.getAccessories({
         parent_id: parentPartNumber, // Pass the correct part_number
         machine_id: selectedMachine,
         level: level + 1
@@ -730,10 +791,38 @@ const MachinesPage: React.FC = () => {
       else if (level === 4) { setNextLevelAccessories = setLevel5Accessories; nextLevelDivId = 'accessory-level-5'; }
 
       if (setNextLevelAccessories && nextLevelDivId) {
-        setNextLevelAccessories(accessoriesData.items);
+        // 转换Accessory[]为MachineAccessory[]格式
+        const convertedAccessories: MachineAccessory[] = accessoriesData.items.map(accessory => ({
+          id: accessory.id.toString(),
+          model: accessory.model || '',
+          title: accessory.name_zh || accessory.name_en || accessory.part_number,
+          level: level + 1,
+          image_url: accessory.image_url || '',
+          parts: [{
+            id: accessory.id.toString(),
+            part_number: accessory.part_number,
+            title: accessory.name_zh || accessory.name_en || '',
+            specs: {
+              spec: accessory.spec || '',
+              voltage: accessory.voltage || '',
+              frequency: accessory.frequency || ''
+            },
+            spec: accessory.spec || '',
+            spec_imperial: '',
+            prices: {
+              base: 0,
+              tier1: 0,
+              tier2: 0,
+              vip: 0
+            },
+            inventory: []
+          }]
+        }));
+        
+        setNextLevelAccessories(convertedAccessories);
         const nextDiv = document.getElementById(nextLevelDivId);
         if (nextDiv) {
-          if (accessoriesData.items.length > 0) {
+          if (convertedAccessories.length > 0) {
             nextDiv.style.display = 'block';
           } else {
             nextDiv.style.display = 'none'; // Hide if no items

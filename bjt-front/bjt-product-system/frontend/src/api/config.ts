@@ -2,7 +2,15 @@
 const isDevelopment = import.meta.env.DEV;
 
 // 基础URL
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string || '/wp-json/bjt/v1';
+// Ensure VITE_API_BASE_URL is set to the full base path in your .env files or docker-compose environment, 
+// e.g., http://localhost:8080/wp-json/bjt/v1/
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost';
+
+// 确保 API 基础 URL 不以斜杠结尾
+export const getBaseUrl = () => {
+  const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+  return baseUrl;
+};
 
 // 调试模式
 export const DEBUG = (import.meta.env.VITE_DEBUG === 'true') || false;

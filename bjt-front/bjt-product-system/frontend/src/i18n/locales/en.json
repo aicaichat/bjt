@@ -144,7 +144,11 @@
     "loading": "Loading...",
     "error": "Error",
     "success": "Success",
-    "processing": "Processing..."
+    "processing": "Processing...",
+    "login": "Login",
+    "cancel": "Cancel",
+    "loginRequired": "Login Required",
+    "loginPrompt": "You need to log in to access this content. Would you like to go to the login page?"
   },
   "order": {
     "title": "Confirm Order",

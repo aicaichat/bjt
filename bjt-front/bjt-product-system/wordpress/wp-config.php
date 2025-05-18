@@ -123,6 +123,11 @@ if ($configExtra = getenv_docker('WORDPRESS_CONFIG_EXTRA', '')) {
 }
 
 define( 'WP_DEBUG_DISPLAY', 'true' );
+
+// 设置 WordPress 站点 URL
+define('WP_HOME', 'http://localhost');
+define('WP_SITEURL', 'http://localhost');
+
 /* That's all, stop editing! Happy publishing. */
 
 /** Absolute path to the WordPress directory. */

@@ -6,7 +6,7 @@
  */
 
 class BJT_Auth_Controller extends BJT_API_Controller {
-    protected $resource_name = 'auth';
+    public $resource_name = 'auth';
     
     /**
      * 注册路由
@@ -66,15 +66,18 @@ class BJT_Auth_Controller extends BJT_API_Controller {
         $password = $request['password'];
         
         // 验证凭据
-        $auth = new BJT_Auth();
-        $user = $auth->validate_user($username, $password);
+        $user = wp_authenticate($username, $password);
         
         if (is_wp_error($user)) {
-            return $this->error_response($user->get_error_message(), 1001, 401);
+            return $this->error_response('用户名或密码不正确', 'rest_forbidden', 401);
         }
         
         // 生成令牌
-        $token_data = $this->generate_token_for_user($user);
+        $jwt_handler = new BJT_JWT_Handler();
+        $token = $jwt_handler->generate_token($user->ID);
+        
+        // 令牌过期时间，默认24小时
+        $expires_in = DAY_IN_SECONDS;
         
         // 准备用户数据
         $user_data = [
@@ -88,12 +91,17 @@ class BJT_Auth_Controller extends BJT_API_Controller {
             'type' => get_user_meta($user->ID, 'bjt_user_type', true) ?: 'regular',
         ];
         
+        // 设置当前用户
+        wp_set_current_user($user->ID);
+        
         // 返回令牌和用户信息
-        return rest_ensure_response($this->response([
-            'token' => $token_data['token'],
-            'expires_in' => $token_data['expires_in'],
+        $response_data = [
+            'token' => $token,
+            'expires_in' => $expires_in,
             'user' => $user_data,
-        ]));
+        ];
+        
+        return $this->format_response($response_data);
     }
     
     /**
@@ -103,39 +111,50 @@ class BJT_Auth_Controller extends BJT_API_Controller {
      * @return WP_REST_Response|WP_Error 响应对象
      */
     public function refresh_token($request) {
-        $token = bjt_get_current_token();
-        
-        if (!$token) {
-            return $this->error_response('未提供令牌', 1002, 401);
+        // 从请求头获取Bearer Token
+        $authorization_header = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : '';
+        if (empty($authorization_header) || !preg_match('/Bearer\s+(.*)$/i', $authorization_header, $matches)) {
+            return $this->error_response('未提供授权令牌', 'rest_not_logged_in', 401);
         }
         
-        $auth = new BJT_Auth();
-        $payload = $auth->validate_token($token);
+        $token = $matches[1];
         
-        if (is_wp_error($payload)) {
-            return $this->error_response($payload->get_error_message(), 1003, 401);
+        // 尝试使用JWT Handler验证令牌
+        $jwt_handler = new BJT_JWT_Handler();
+        $payload = $jwt_handler->validate_token($token);
+        
+        if (!$payload) {
+            return $this->error_response('无效的令牌', 'rest_forbidden', 401);
         }
         
-        // 检查是否有用户信息
-        if (!isset($payload['user']) || !isset($payload['user']['id'])) {
-            return $this->error_response('令牌不包含有效的用户信息', 1004, 401);
+        // 获取用户ID
+        $user_id = null;
+        
+        // 尝试从不同的payload格式中获取用户ID
+        if (isset($payload->data->user_id)) {
+            $user_id = $payload->data->user_id;
+        } else if (isset($payload->user) && isset($payload->user->id)) {
+            $user_id = $payload->user->id;
+        } else {
+            return $this->error_response('令牌不包含有效的用户信息', 'rest_forbidden', 401);
         }
         
         // 获取用户
-        $user = get_user_by('id', $payload['user']['id']);
+        $user = get_user_by('id', $user_id);
         
         if (!$user) {
-            return $this->error_response('用户不存在', 1005, 401);
+            return $this->error_response('用户不存在', 'rest_forbidden', 401);
         }
         
         // 生成新令牌
-        $token_data = $this->generate_token_for_user($user);
+        $token = $jwt_handler->generate_token($user->ID);
+        $expires_in = DAY_IN_SECONDS;
         
         // 返回新令牌
-        return rest_ensure_response($this->response([
-            'token' => $token_data['token'],
-            'expires_in' => $token_data['expires_in'],
-        ]));
+        return $this->format_response([
+            'token' => $token,
+            'expires_in' => $expires_in,
+        ]);
     }
     
     /**
@@ -148,7 +167,7 @@ class BJT_Auth_Controller extends BJT_API_Controller {
         // 目前没有实际的退出操作，因为JWT是无状态的
         // 通常由客户端删除存储的令牌
         
-        return rest_ensure_response($this->response(null, '退出登录成功'));
+        return $this->format_response(null, '退出登录成功');
     }
     
     /**
@@ -161,7 +180,7 @@ class BJT_Auth_Controller extends BJT_API_Controller {
         $user = wp_get_current_user();
         
         if (!$user || $user->ID === 0) {
-            return $this->error_response('未授权访问', 1002, 401);
+            return $this->error_response('未授权访问', 'rest_forbidden', 401);
         }
         
         // 获取用户权限
@@ -180,17 +199,70 @@ class BJT_Auth_Controller extends BJT_API_Controller {
             'permissions' => $permissions,
         ];
         
-        return rest_ensure_response($this->response($user_data));
+        return $this->format_response($user_data);
     }
     
     /**
      * 检查是否已认证
      *
-     * @return bool 是否已认证
+     * @param WP_REST_Request $request 请求对象
+     * @return bool|WP_Error 是否已认证
      */
-    public function check_auth() {
-        $user = wp_get_current_user();
-        return $user !== null && $user->ID !== 0;
+    public function check_auth($request = null) {
+        // 从请求头获取Bearer Token
+        $authorization_header = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : '';
+        if (empty($authorization_header) || !preg_match('/Bearer\s+(.*)$/i', $authorization_header, $matches)) {
+            return $this->error_response('未提供授权令牌', 'rest_not_logged_in', 401);
+        }
+        
+        $token = $matches[1];
+        
+        // 尝试使用两种方式验证令牌
+        try {
+            // 首先尝试使用JWT Handler
+            $jwt_handler = new BJT_JWT_Handler();
+            $payload = $jwt_handler->validate_token($token);
+            
+            if ($payload && isset($payload->data->user_id)) {
+                $user_id = $payload->data->user_id;
+                $user = get_user_by('id', $user_id);
+                
+                if (!$user) {
+                    return $this->error_response('用户不存在', 'rest_forbidden', 401);
+                }
+                
+                // 设置当前用户
+                wp_set_current_user($user_id);
+                return true;
+            } 
+            // 如果JWT Handler没有成功，尝试使用BJT Auth
+            else if (class_exists('BJT_Auth')) {
+                $auth = new BJT_Auth();
+                $auth_payload = $auth->validate_token($token);
+                
+                if (is_wp_error($auth_payload)) {
+                    return $this->error_response($auth_payload->get_error_message(), 'rest_forbidden', 401);
+                }
+                
+                // 提取用户信息并设置当前用户
+                if (isset($auth_payload['user']) && isset($auth_payload['user']['id'])) {
+                    $user_id = $auth_payload['user']['id'];
+                    $user = get_user_by('id', $user_id);
+                    
+                    if (!$user) {
+                        return $this->error_response('用户不存在', 'rest_forbidden', 401);
+                    }
+                    
+                    // 设置当前用户
+                    wp_set_current_user($user_id);
+                    return true;
+                }
+            }
+            
+            return $this->error_response('令牌不包含有效的用户信息', 'rest_forbidden', 401);
+        } catch (Exception $e) {
+            return $this->error_response('令牌验证失败: ' . $e->getMessage(), 'rest_forbidden', 401);
+        }
     }
     
     /**
@@ -291,5 +363,52 @@ class BJT_Auth_Controller extends BJT_API_Controller {
         }
         
         return array_unique($permissions);
+    }
+    
+    /**
+     * 格式化响应
+     *
+     * @param mixed $data 响应数据
+     * @param string $message 消息
+     * @param bool $success 是否成功
+     * @param int $code HTTP状态码
+     * @return WP_REST_Response 格式化的响应
+     */
+    protected function format_response($data = null, $message = '', $success = true, $code = 200) {
+        $response = [
+            'success' => $success,
+        ];
+        
+        if ($data !== null) {
+            $response['data'] = $data;
+        }
+        
+        if (!empty($message)) {
+            $response['message'] = $message;
+        }
+        
+        return new WP_REST_Response($response, $code);
+    }
+    
+    /**
+     * 错误响应
+     *
+     * @param string $message 错误消息
+     * @param int|string $code 错误代码
+     * @param int $status 状态码
+     * @return WP_REST_Response 错误响应
+     */
+    protected function error_response($message, $code = 'bjt_api_error', $status = 400, $data = null) {
+        $response = [
+            'success' => false,
+            'message' => $message,
+            'code' => $code
+        ];
+        
+        if ($data !== null) {
+            $response['data'] = $data;
+        }
+        
+        return new WP_REST_Response($response, $status);
     }
 } 

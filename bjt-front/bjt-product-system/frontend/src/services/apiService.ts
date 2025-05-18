@@ -110,6 +110,7 @@ export const createApiError = (error: any): ApiError => {
 class ApiService {
   private axios: AxiosInstance;
   private defaultConfig: AxiosRequestConfig;
+  private authErrorHandled: boolean = false;
 
   constructor() {
     // Destructure for clarity and to avoid property access issues
@@ -153,15 +154,28 @@ class ApiService {
         const apiError = createApiError(error);
         
         // 处理特定错误类型
-        if (apiError.type === ApiErrorType.AUTHENTICATION) {
+        if (apiError.type === ApiErrorType.AUTHENTICATION && !this.authErrorHandled) {
+          this.authErrorHandled = true;
+          
+          // 显示通知
+          notificationService.error('Session expired', 'Please login again to continue');
+          
           // 清除本地存储并重定向到登录页面
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           
           // 如果不是登录页面，则跳转到登录页面
           if (window.location.pathname !== '/login') {
-            window.location.href = '/login';
+            // 添加延迟以确保通知显示
+            setTimeout(() => {
+              window.location.href = '/login';
+            }, 2000);
           }
+          
+          // 重置标志（延迟）
+          setTimeout(() => {
+            this.authErrorHandled = false;
+          }, 5000);
         }
         
         return Promise.reject(apiError);
@@ -179,6 +193,24 @@ class ApiService {
       // 检查是否已经符合标准格式
       if (response.data.data !== undefined && response.data.meta !== undefined) {
         return response.data as ApiResponse;
+      }
+      
+      // 检查WordPress REST API格式
+      if (response.data.code && response.data.message) {
+        // 处理WordPress错误响应
+        if (response.data.code === 'rest_forbidden') {
+          throw new Error('Authentication required');
+        }
+        
+        return {
+          data: response.data,
+          meta: {
+            status: 'error',
+            message: response.data.message,
+            code: response.data.code,
+            timestamp: new Date().toISOString(),
+          }
+        };
       }
       
       // 转换为标准格式
@@ -291,57 +323,74 @@ class ApiService {
    * @param error API错误
    */
   private handleError(error: ApiError): void {
-    // 确定错误消息
-    let title = 'Error';
-    let description = error.message;
-    
+    // 根据错误类型显示不同的通知
     switch (error.type) {
-      case ApiErrorType.AUTHENTICATION:
-        title = '认证错误';
-        description = '您的会话已过期，请重新登录';
-        break;
-      case ApiErrorType.AUTHORIZATION:
-        title = '授权错误';
-        description = '您没有权限执行此操作';
-        break;
       case ApiErrorType.NETWORK:
-        title = '网络错误';
-        description = '无法连接到服务器，请检查您的网络连接';
+        notificationService.error('网络错误', '无法连接到服务器，请检查您的网络连接');
         break;
       case ApiErrorType.SERVER:
-        title = '服务器错误';
-        description = '服务器发生错误，请稍后再试';
+        notificationService.error('服务器错误', '服务器出现问题，请稍后再试');
         break;
       case ApiErrorType.TIMEOUT:
-        title = '请求超时';
-        description = '请求超时，请稍后再试';
+        notificationService.error('请求超时', '服务器响应时间过长，请稍后再试');
         break;
       case ApiErrorType.VALIDATION:
-        title = '验证错误';
-        // 如果有详细错误，则格式化错误信息
-        if (error.errors) {
-          const errorMessages = Object.entries(error.errors)
-            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
-            .join('; ');
-          description = errorMessages || '提交的数据无效';
-        } else {
-          description = '提交的数据无效';
-        }
+        notificationService.warning('验证错误', error.message || '请检查您提交的数据');
         break;
       case ApiErrorType.NOT_FOUND:
-        title = '资源不存在';
-        description = '请求的资源不存在';
+        notificationService.warning('资源不存在', '您请求的资源不存在');
         break;
-      default:
-        // 使用默认错误消息
-        break;
+      // 认证和授权错误在拦截器中处理
     }
+  }
+
+  /**
+   * 检查用户是否已登录
+   */
+  isAuthenticated(): boolean {
+    return !!localStorage.getItem('token');
+  }
+
+  /**
+   * 获取当前用户信息
+   */
+  getCurrentUser(): any {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return null;
     
-    // 使用通知服务显示错误
-    notificationService.error(title, description);
-    
-    // 记录到控制台
-    console.error(`[API Error] ${title}: ${description}`, error);
+    try {
+      return JSON.parse(userStr);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /**
+   * 登录并保存令牌
+   */
+  async login(username: string, password: string): Promise<any> {
+    try {
+      const response = await this.post('/auth/login', { username, password });
+      
+      if (response.data && response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        return response.data;
+      }
+      
+      throw new Error('Invalid response format');
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * 注销
+   */
+  logout(): void {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
   }
 }
 

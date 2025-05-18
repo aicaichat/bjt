@@ -5,5 +5,25 @@
     "spareParts": "查看备件"
   },
   "introduction": "欢迎使用BJT产品管理系统",
-  "browseProducts": "浏览产品"
+  "browseProducts": "浏览产品",
+  "welcome": "欢迎使用BJT产品管理系统",
+  "slogan": "高效管理产品线、设备、配件、备件和耗材的一体化解决方案",
+  "enterDashboard": "进入仪表盘",
+  "systemGuide": "系统指南",
+  "productLines": "产品线",
+  "viewProducts": "查看产品",
+  "noProductLines": "暂无可用产品线",
+  "features": "系统功能",
+  "productManagement": "产品管理",
+  "productManagementDesc": "集中管理产品线、设备、配件、备件和耗材",
+  "productSearch": "产品查询",
+  "productSearchDesc": "按类别、型号、规格等多维度查询产品",
+  "orderManagement": "订单管理",
+  "orderManagementDesc": "一站式完成订单创建、跟踪和管理",
+  "apiIntegration": "API集成",
+  "apiIntegrationDesc": "灵活的API接口支持与其他系统无缝集成",
+  "aboutSystem": "关于BJT产品管理系统",
+  "aboutSystemDesc": "BJT产品管理系统是一个专为工业设备供应商打造的现代化产品管理平台。系统支持全面的产品线管理、设备配置、订单处理和库存跟踪，旨在简化产品管理流程、提高运营效率。",
+  "documentDownload": "文档下载",
+  "afterSalesService": "售后服务"
 } 

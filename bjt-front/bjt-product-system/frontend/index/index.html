@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT 产品管理系统 - 开发环境</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        header {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        .card {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        .warning {
+            background-color: #feefb3;
+            color: #9f6000;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .success {
+            background-color: #dff2bf;
+            color: #4f8a10;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>BJT 产品管理系统</h1>
+        <p>开发环境测试页面</p>
+    </header>
+
+    <div class="success">
+        <strong>成功!</strong> 前端服务运行正常。
+    </div>
+
+    <div class="card">
+        <h2>服务访问</h2>
+        <ul>
+            <li><strong>前端服务</strong>: <a href="http://localhost:5173" target="_blank">http://localhost:5173</a></li>
+            <li><strong>WordPress 后台</strong>: <a href="http://localhost:8080/wp-admin/" target="_blank">http://localhost:8080/wp-admin/</a></li>
+            <li><strong>WordPress API</strong>: <a href="http://localhost:8080/wp-json/" target="_blank">http://localhost:8080/wp-json/</a></li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>系统状态</h2>
+        <div id="status">加载中...</div>
+    </div>
+
+    <script>
+        // 简单的状态检查
+        document.addEventListener('DOMContentLoaded', function() {
+            const statusDiv = document.getElementById('status');
+            
+            const services = [
+                { name: 'frontend', url: 'http://localhost:5173' },
+                { name: 'wordpress', url: 'http://localhost:8080/wp-json/' },
+                { name: 'nginx', url: 'http://localhost' }
+            ];
+            
+            statusDiv.innerHTML = '<ul></ul>';
+            const statusList = statusDiv.querySelector('ul');
+            
+            services.forEach(service => {
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `<strong>${service.name}</strong>: <span class="checking">检查中...</span>`;
+                statusList.appendChild(listItem);
+                
+                fetch(service.url, { mode: 'no-cors' })
+                    .then(() => {
+                        listItem.querySelector('span').className = 'success';
+                        listItem.querySelector('span').textContent = '正常';
+                    })
+                    .catch(error => {
+                        listItem.querySelector('span').className = 'warning';
+                        listItem.querySelector('span').textContent = '异常';
+                    });
+            });
+        });
+    </script>
+</body>
+</html> 

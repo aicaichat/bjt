@@ -7,7 +7,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class BJT_Consumables_Controller extends BJT_API_Controller {
+class BJT_Product_Consumables_Controller extends BJT_Product_API_Controller {
     public function __construct() {
         parent::__construct();
         $this->rest_base = 'consumables';

@@ -128,7 +128,13 @@ class BJT_Product_Lines_Controller extends BJT_API_Controller {
         // 根据语言处理数据
         $items = $this->prepare_product_lines_for_response($items, $lang);
         
-        return $this->get_paginated_response($items, $total, $request);
+        return $this->format_response([
+            'items' => $items,
+            'total' => $total,
+            'page' => (int)$page,
+            'per_page' => (int)$per_page,
+            'total_pages' => ceil($total / $per_page)
+        ]);
     }
     
     /**
@@ -566,5 +572,42 @@ class BJT_Product_Lines_Controller extends BJT_API_Controller {
         }
         
         return $items;
+    }
+    
+    /**
+     * Format a successful response
+     *
+     * @param mixed $data The response data
+     * @param string $message Optional message
+     * @param boolean $success Whether the request was successful
+     * @param int $code HTTP status code
+     * @return WP_REST_Response
+     */
+    protected function format_response($data = null, $message = '', $success = true, $code = 200) {
+        $response = [
+            'success' => $success
+        ];
+        
+        if ($data !== null) {
+            $response['data'] = $data;
+        }
+        
+        if (!empty($message)) {
+            $response['message'] = $message;
+        }
+        
+        return new WP_REST_Response($response, $code);
+    }
+    
+    /**
+     * Format an error response
+     *
+     * @param string $message Error message
+     * @param string $code Error code
+     * @param int $status HTTP status code
+     * @return WP_Error
+     */
+    protected function error_response($message, $code = 'bjt_api_error', $status = 400) {
+        return new WP_Error($code, $message, ['status' => $status]);
     }
 } 

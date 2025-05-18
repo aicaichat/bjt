@@ -1,15 +1,90 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <base href="/" />
-    <link rel="icon" type="image/svg+xml" href="./vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>BJT products</title>
-    <script type="module" crossorigin src="./assets/index-wIMMk555.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-gu9ZGh6O.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT 产品管理系统</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        header {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        .card {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        .warning {
+            background-color: #feefb3;
+            color: #9f6000;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>BJT 产品管理系统</h1>
+        <p>欢迎使用产品管理系统生产环境</p>
+    </header>
+
+    <div class="card">
+        <h2>WordPress 管理后台</h2>
+        <p>本系统使用 WordPress 作为后端管理系统，您可以通过以下方式访问管理界面：</p>
+        <p><a href="/debug/login.php" class="btn">登录 WordPress</a></p>
+        <div class="warning">
+            <strong>注意：</strong> 如果您遇到登录问题，可以使用我们的便捷登录页面，无需输入用户名和密码。
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>系统状态</h2>
+        <p>您可以查看系统状态和 WordPress 信息：</p>
+        <p><a href="/debug/status.php?token=bjt-status-2025" class="btn">查看系统状态</a></p>
+    </div>
+
+    <div class="card">
+        <h2>常见问题</h2>
+        <ul>
+            <li><strong>登录后台异常：</strong> 如果登录后台异常，请使用 <a href="/debug/login.php">便捷登录页面</a> 直接登录。</li>
+            <li><strong>查看 API 文档：</strong> WordPress REST API 文档可以在 <a href="/wp-json">/wp-json</a> 路径下查看。</li>
+            <li><strong>系统故障：</strong> 如果系统出现故障，请联系系统管理员。</li>
+        </ul>
+    </div>
+
+    <footer style="text-align: center; margin-top: 30px; color: #7f8c8d;">
+        <p>&copy; 2025 BJT Corporation. All rights reserved.</p>
+    </footer>
+</body>
 </html>

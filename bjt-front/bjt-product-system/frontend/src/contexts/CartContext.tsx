@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { CartItem as ApiCartItem, CartItemSpecs } from '../services/api';
+import { cartService, CartItem as ServiceCartItem } from '../api/services';
+import { useMockData } from '../config/env';
 
 // 定义价格层级接口
 export interface PriceTier {
@@ -23,6 +25,29 @@ export interface CartItem extends ApiCartItem {
   selected: boolean;
   originalPrice?: number;
 }
+
+// 将服务返回的CartItem转为UI使用的CartItem
+const mapServiceCartItemToUICartItem = (item: ServiceCartItem): CartItem => {
+  return {
+    id: item.item_id.toString(),
+    name: item.name,
+    price: item.unit_price,
+    quantity: item.quantity,
+    code: item.part_number,
+    partNumber: item.part_number,
+    image: item.image_url || '',
+    category: item.product_type,
+    productId: item.product_id,
+    priceTiers: [], // 默认为空数组
+    selected: false,
+    type: item.product_type === 'machine' ? 'machine' : 'accessory',
+    properties: item.properties || {},
+    specs: {
+      partNumber: item.part_number,
+      productName: item.name
+    }
+  };
+};
 
 // 定义购物车上下文接口
 export interface CartContextType {
@@ -66,9 +91,6 @@ interface CartProviderProps {
   children: ReactNode;
 }
 
-// 本地存储键
-const CART_STORAGE_KEY = 'bjt-cart';
-
 // 上下文提供者组件
 export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([]);
@@ -76,79 +98,110 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [syncError, setSyncError] = useState<string | null>(null);
   
-  // Load cart from localStorage on initial render
-  useEffect(() => {
-    const savedCart = localStorage.getItem(CART_STORAGE_KEY);
-    if (savedCart) {
-      try {
-        const parsedCart = JSON.parse(savedCart);
-        setItems(parsedCart);
-      } catch (error) {
-        console.error('Failed to parse cart from localStorage:', error);
-      }
-    }
-    // 设置一个短暂的延迟，模拟加载过程
-    const timer = setTimeout(() => {
+  // 从API加载购物车数据
+  const fetchCart = async () => {
+    try {
+      setLoading(true);
+      const response = await cartService.getCart();
+      const cartItems = response.items.map(mapServiceCartItemToUICartItem);
+      setItems(cartItems);
+      setSyncError(null);
+    } catch (error) {
+      console.error('Failed to fetch cart:', error);
+      setSyncError('Failed to load cart data');
+    } finally {
       setLoading(false);
-    }, 300);
-    
-    return () => clearTimeout(timer);
+    }
+  };
+
+  // 初始加载购物车
+  useEffect(() => {
+    fetchCart();
   }, []);
   
-  // Save cart to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
-  }, [items]);
-  
-  const addItem = (newItem: CartItem) => {
-    setItems(currentItems => {
-      // Check if item already exists in cart
-      const existingItemIndex = currentItems.findIndex(item => 
-        item.id === newItem.id && 
-        JSON.stringify(item.specs) === JSON.stringify(newItem.specs));
+  // 添加商品到购物车
+  const addItem = async (newItem: CartItem) => {
+    try {
+      setLoading(true);
       
-      if (existingItemIndex >= 0) {
-        // Update quantity if item exists
-        const updatedItems = [...currentItems];
-        updatedItems[existingItemIndex] = {
-          ...updatedItems[existingItemIndex],
-          quantity: updatedItems[existingItemIndex].quantity + newItem.quantity
-        };
-        return updatedItems;
-      } else {
-        // Add new item if it doesn't exist
-        return [...currentItems, newItem];
-      }
-    });
+      // 准备添加购物车请求数据
+      await cartService.addToCart({
+        product_type: newItem.type === 'machine' ? 'machine' : 'accessory',
+        product_id: newItem.productId,
+        quantity: newItem.quantity,
+        properties: newItem.properties
+      });
+      
+      // 重新获取购物车数据
+      await fetchCart();
+    } catch (error) {
+      console.error('Failed to add item to cart:', error);
+      setSyncError('Failed to add item to cart');
+      setLoading(false);
+    }
   };
   
-  const removeItem = (id: string) => {
-    setItems(currentItems => currentItems.filter(item => item.id !== id));
-    setSelectedItemIds(current => {
-      const updated = new Set(current);
-      updated.delete(id);
-      return updated;
-    });
+  // 从购物车移除商品
+  const removeItem = async (id: string) => {
+    try {
+      setLoading(true);
+      await cartService.removeCartItem(Number(id));
+      
+      // 移除选中状态
+      setSelectedItemIds(current => {
+        const updated = new Set(current);
+        updated.delete(id);
+        return updated;
+      });
+      
+      // 重新获取购物车数据
+      await fetchCart();
+    } catch (error) {
+      console.error('Failed to remove item from cart:', error);
+      setSyncError('Failed to remove item from cart');
+      setLoading(false);
+    }
   };
   
-  const updateQuantity = (id: string, quantity: number) => {
+  // 更新购物车商品数量
+  const updateQuantity = async (id: string, quantity: number) => {
     if (quantity <= 0) {
-      removeItem(id);
+      await removeItem(id);
       return;
     }
     
-    setItems(currentItems => 
-      currentItems.map(item => 
-        item.id === id ? { ...item, quantity } : item
-      )
-    );
+    try {
+      setLoading(true);
+      await cartService.updateCartItem(Number(id), { quantity });
+      
+      // 重新获取购物车数据
+      await fetchCart();
+    } catch (error) {
+      console.error('Failed to update cart item quantity:', error);
+      setSyncError('Failed to update cart item quantity');
+      setLoading(false);
+    }
   };
   
-  const clearCart = () => {
-    setItems([]);
-    setSelectedItemIds(new Set());
+  // 清空购物车
+  const clearCart = async () => {
+    try {
+      setLoading(true);
+      await cartService.clearCart();
+      
+      // 清空选中状态
+      setSelectedItemIds(new Set());
+      
+      // 重新获取购物车数据
+      await fetchCart();
+    } catch (error) {
+      console.error('Failed to clear cart:', error);
+      setSyncError('Failed to clear cart');
+      setLoading(false);
+    }
   };
   
+  // 切换商品选中状态
   const toggleItemSelection = (id: string, selected: boolean) => {
     setSelectedItemIds(current => {
       const updated = new Set(current);
@@ -161,6 +214,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     });
   };
   
+  // 全选/取消全选
   const selectAll = (selected: boolean) => {
     if (selected) {
       const allIds = new Set(items.map(item => item.id.toString()));
@@ -170,9 +224,10 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     }
   };
   
+  // 判断商品是否被选中
   const isItemSelected = (id: string) => selectedItemIds.has(id);
   
-  // Calculate derived values
+  // 计算派生值
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
   const totalPrice = items.reduce((total, item) => total + (item.price * item.quantity), 0);
   
@@ -205,7 +260,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   );
 };
 
-// Custom hook to use the cart context
+// 使用购物车上下文的自定义钩子
 export const useCart = () => {
   const context = useContext(CartContext);
   if (!context) {

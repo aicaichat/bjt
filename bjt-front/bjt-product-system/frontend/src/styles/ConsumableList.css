@@ -1,0 +1,190 @@
+/* 耗材列表样式 */
+.consumable-list {
+  padding: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.consumable-list h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+/* 耗材网格布局 */
+.consumable-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* 耗材卡片样式 */
+.consumable-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.consumable-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* 耗材图片样式 */
+.consumable-image {
+  height: 180px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f9f9f9;
+}
+
+.consumable-image img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* 耗材信息样式 */
+.consumable-info {
+  padding: 1rem;
+}
+
+.consumable-info h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.consumable-model {
+  font-weight: bold;
+  color: #555;
+  margin-bottom: 0.25rem;
+}
+
+.consumable-part-number {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.consumable-spec {
+  font-size: 0.9rem;
+  color: #777;
+  margin: 0.5rem 0;
+  line-height: 1.4;
+}
+
+.consumable-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #eee;
+}
+
+.consumable-price {
+  font-weight: bold;
+  color: #e74c3c;
+  font-size: 1rem;
+}
+
+.consumable-stock {
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  color: #777;
+}
+
+/* 库存指示器 */
+.stock-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.stock-indicator.in-stock {
+  background-color: #2ecc71;
+}
+
+.stock-indicator.low-stock {
+  background-color: #f39c12;
+}
+
+/* 分页样式 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 2rem;
+}
+
+.pagination button {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  padding: 0.5rem 1rem;
+  margin: 0 0.25rem;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.pagination button:hover {
+  background-color: #f5f5f5;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination .page-numbers {
+  display: flex;
+  margin: 0 0.5rem;
+}
+
+.pagination .page-number {
+  min-width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  margin: 0 0.25rem;
+}
+
+.pagination .page-number.active {
+  background-color: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+/* 加载和错误状态 */
+.loading, .error, .empty {
+  padding: 2rem;
+  text-align: center;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.loading {
+  color: #888;
+}
+
+.error {
+  color: #e74c3c;
+}
+
+.empty {
+  color: #7f8c8d;
+} 

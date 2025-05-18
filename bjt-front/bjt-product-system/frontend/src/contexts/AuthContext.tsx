@@ -1,16 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authApi } from '../services/api';
-import { mockAuthApi } from '../services/mockApi';
-import { LoginApiResponse } from '../services/auth';
-import { mockLogin } from '../services/auth';
-
-// 使用环境变量或配置决定是否使用模拟API
-const USE_MOCK_API = true; // 设置为true强制使用模拟API进行开发
-
-// 根据配置选择使用真实API还是模拟API
-const apiService = {
-  auth: USE_MOCK_API ? mockAuthApi : authApi
-};
+import { authService, User as ServiceUser } from '../api/services';
+import { useMockData } from '../config/env';
 
 // 用户角色定义
 export enum UserRole {
@@ -38,12 +28,29 @@ export interface UserInfo {
 
 // 将后端角色映射到前端UserRole枚举
 const mapRoleToFrontend = (backendRole: string): UserRole => {
-  const role = backendRole.toLowerCase();
-  if (role === 'administrator') return UserRole.ADMIN;
-  if (role === 'editor') return UserRole.SALES;
-  if (role === 'author') return UserRole.PARTNER;
-  if (role === 'contributor' || role === 'subscriber') return UserRole.CUSTOMER;
+  const role = backendRole?.toLowerCase() || '';
+  if (role === 'administrator' || role === 'admin') return UserRole.ADMIN;
+  if (role === 'editor' || role === 'sales') return UserRole.SALES;
+  if (role === 'author' || role === 'partner') return UserRole.PARTNER;
+  if (role === 'contributor' || role === 'subscriber' || role === 'customer') return UserRole.CUSTOMER;
   return UserRole.UNKNOWN;
+};
+
+// 将服务用户对象转换为前端使用的用户信息对象
+const mapServiceUserToUserInfo = (user: ServiceUser, token?: string): UserInfo => {
+  return {
+    id: user.id ? user.id.toString() : '0',
+    name: user.username || user.first_name || (user.email ? user.email.split('@')[0] : 'user'),
+    displayName: user.full_name || user.first_name || user.username,
+    email: user.email || '',
+    username: user.username,
+    role: mapRoleToFrontend(user.role || ''),
+    avatar: user.avatar,
+    vipLevel: (user as any).vipLevel || 0,
+    type: (user as any).type || 'regular',
+    region: (user as any).region || 'CN',
+    token: token
+  };
 };
 
 // 中英文用户名映射
@@ -87,17 +94,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const checkAuth = async () => {
       console.log('[AuthContext] useEffect checkAuth starting...');
       try {
-        // 从本地存储获取用户信息
-        const storedUser = localStorage.getItem('authUser');
-        if (storedUser) {
-          console.log('[AuthContext] Found user in localStorage');
-          const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
+        // 检查本地存储的令牌
+        const token = localStorage.getItem('token');
+        
+        if (token) {
+          console.log('[AuthContext] Found token in localStorage, attempting to get user info');
+          // 尝试使用令牌获取当前用户信息
+          const currentUser = await authService.getCurrentUser();
+          const userInfo = mapServiceUserToUserInfo(currentUser, token);
+          setUser(userInfo);
         } else {
-          console.log('[AuthContext] No user in localStorage');
+          console.log('[AuthContext] No token in localStorage');
         }
       } catch (err) {
         console.error('[AuthContext] Auto login failed:', err);
+        // 清除可能无效的令牌
+        localStorage.removeItem('token');
       } finally {
         console.log('[AuthContext] useEffect checkAuth finished, setting loading to false.');
         setLoading(false);
@@ -112,37 +124,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setLoading(true);
     setError(null);
     try {
-      // 直接硬编码一个模拟响应，完全跳过API调用
-      const response = {
-        success: true,
-        data: {
-          token: 'mock-jwt-token-' + Math.random().toString(36).substring(2, 9),
-          expires_in: 3600,
-          user: {
-            id: 1,
-            name: username,
-            email: username + '@example.com',
-            roles: ['administrator']
-          }
-        }
-      };
+      const response = await authService.login({
+        username,
+        password,
+        remember_me: true
+      });
       
-      console.log('模拟登录数据:', response);
+      const { access_token, user: serviceUser } = response;
       
-      const userInfo: UserInfo = {
-        id: response.data.user.id.toString(),
-        name: response.data.user.name,
-        displayName: response.data.user.name,
-        email: response.data.user.email,
-        username: response.data.user.name,
-        role: UserRole.ADMIN, // 直接硬编码为管理员角色
-        token: response.data.token,
-        vipLevel: 0,
-        type: 'regular',
-        region: 'CN'
-      };
+      // 保存令牌到本地存储
+      localStorage.setItem('token', access_token);
       
-      localStorage.setItem('user', JSON.stringify(userInfo));
+      // 转换用户数据
+      const userInfo = mapServiceUserToUserInfo(serviceUser, access_token);
+      
       setUser(userInfo);
       return userInfo;
     } catch (error) {
@@ -160,16 +155,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     console.log('[AuthContext] logout called');
     setLoading(true);
     try {
-      // 模拟 API 调用
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await authService.logout();
       
       console.log('[AuthContext] logout success, setting user to null');
       // 清除本地存储
-      localStorage.removeItem('user');
+      localStorage.removeItem('token');
       setUser(null);
     } catch (err: any) {
       console.log('[AuthContext] logout error:', err);
       setError(err.message || 'Logout failed. Please try again.');
+      
+      // 即使API调用失败，也清除本地会话
+      localStorage.removeItem('token');
+      setUser(null);
+      
       throw err;
     } finally {
       console.log('[AuthContext] logout finished, setting loading to false.');
@@ -182,22 +181,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setLoading(true);
     setError(null);
     try {
-      // 模拟 API 调用
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // 模拟用户数据
-      const mockUser: UserInfo = {
-        id: Date.now().toString(),
-        name,
+      const response = await authService.register({
+        username: email.split('@')[0], // 从邮箱生成用户名
         email,
-        username: email, // 设置username保持兼容性
-        role: UserRole.CUSTOMER,
-      };
+        password,
+        password_confirmation: password,
+        first_name: name,
+        last_name: ''
+      });
       
-      // 自动登录新注册的用户
-      localStorage.setItem('authUser', JSON.stringify(mockUser));
-      setUser(mockUser);
-      return mockUser;
+      const { access_token, user: serviceUser } = response;
+      
+      // 保存令牌到本地存储
+      localStorage.setItem('token', access_token);
+      
+      // 转换用户数据
+      const userInfo = mapServiceUserToUserInfo(serviceUser, access_token);
+      
+      setUser(userInfo);
+      return userInfo;
     } catch (err: any) {
       setError(err.message || 'Registration failed. Please try again.');
       throw err;
@@ -211,9 +213,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setLoading(true);
     setError(null);
     try {
-      // 模拟 API 调用
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      // 通常这里会发送重置密码邮件
+      await authService.forgotPassword(email);
     } catch (err: any) {
       setError(err.message || 'Password reset request failed. Please try again.');
       throw err;
@@ -227,9 +227,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setLoading(true);
     setError(null);
     try {
-      // 模拟 API 调用
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      // 通常这里会验证令牌并重置密码
+      await authService.changePassword({
+        current_password: '', // 此处应根据实际API需求调整
+        new_password: newPassword,
+        new_password_confirmation: newPassword
+      });
     } catch (err: any) {
       setError(err.message || 'Password reset failed. Please try again.');
       throw err;
@@ -243,13 +245,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setLoading(true);
     setError(null);
     try {
-      // 模拟 API 调用
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // 转换为服务API需要的格式
+      const profileData = {
+        email: data.email,
+        first_name: data.name,
+        department: data.type
+      };
+      
+      const updatedUser = await authService.updateProfile(profileData);
       
       if (user) {
-        const updatedUser = { ...user, ...data };
-        localStorage.setItem('authUser', JSON.stringify(updatedUser));
-        setUser(updatedUser);
+        // 更新用户信息，保留原有令牌
+        const updatedUserInfo = mapServiceUserToUserInfo(updatedUser, user.token);
+        setUser(updatedUserInfo);
       }
     } catch (err: any) {
       setError(err.message || 'Profile update failed. Please try again.');
@@ -270,7 +278,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     forgotPassword,
     resetPassword,
     updateProfile,
-    getTranslatedUserName,
+    getTranslatedUserName
   };
 
   return (
@@ -280,11 +288,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   );
 };
 
-// 自定义钩子，便于在组件中使用认证上下文
+// 使用认证上下文的自定义钩子
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  // console.log('[useAuth] Hook called, context value:', context); // Log context value if needed
-  if (context === undefined) {
+  if (!context) {
     console.error('[AuthContext] useAuth called outside of AuthProvider. Context is undefined.'); // Add error log
     throw new Error('useAuth must be used within an AuthProvider');
   }

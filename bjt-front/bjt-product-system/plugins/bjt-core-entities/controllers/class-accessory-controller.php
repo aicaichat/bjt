@@ -9,7 +9,7 @@ if (!defined('ABSPATH')) {
 
 class BJT_Accessory_Controller extends BJT_API_Controller {
     
-    protected $resource_name = 'accessories';
+    public $resource_name = 'accessories';
 
     public function __construct() {
         parent::__construct();
@@ -1180,7 +1180,7 @@ class BJT_Accessory_Controller extends BJT_API_Controller {
         ];
     }
     
-    protected function get_context_param( $args = array() ) {
+    public function get_context_param( $args = array() ) {
 		$param_args = array(
 			'description'       => 'Scope under which the request is made; determines fields present in response.',
 			'type'              => 'string',

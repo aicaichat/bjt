@@ -9,7 +9,7 @@ class BJT_Product_Controller extends BJT_API_Controller {
      *
      * @var string
      */
-    protected $resource_name = 'product-lines';
+    public $resource_name = 'product-lines';
     
     protected $table_name;
 
@@ -149,10 +149,20 @@ class BJT_Product_Controller extends BJT_API_Controller {
 
         $formatted_items = array_map(array($this, 'format_item_for_response'), $items_db);
         
-        $response = new WP_REST_Response($formatted_items, 200);
+        $total_pages = ceil($total_items / $per_page);
+        
+        $response_data = [
+            'success' => true,
+            'data' => $formatted_items,
+            'total' => (int)$total_items,
+            'page' => (int)$page,
+            'per_page' => (int)$per_page,
+            'total_pages' => (int)$total_pages
+        ];
+        
+        $response = new WP_REST_Response($response_data, 200);
 
         $response->header('X-WP-Total', $total_items);
-        $total_pages = ceil($total_items / $per_page);
         $response->header('X-WP-TotalPages', $total_pages);
 
         // Add Link headers for pagination

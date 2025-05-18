@@ -30,9 +30,7 @@ services:
 
   # WordPress开发服务器
   wordpress:
-    build:
-      context: ./wordpress
-      dockerfile: Dockerfile
+    image: wordpress:latest
     ports:
       - "8080:80"
     environment:
@@ -42,8 +40,8 @@ services:
       WORDPRESS_DB_NAME: bjt_product
       WORDPRESS_DEBUG: 1
     volumes:
-      - ../../wordpress:/var/www/html
-      - ../../plugins:/var/www/html/wp-content/plugins
+      - ../../backend:/var/www/html
+      - ../../backend/plugins:/var/www/html/wp-content/plugins
     env_file:
       - ../../.env.development
     depends_on:
@@ -74,7 +72,6 @@ services:
       MYSQL_PASSWORD: wordpress
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
     env_file:
       - ../../.env.development
     healthcheck:

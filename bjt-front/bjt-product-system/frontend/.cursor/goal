@@ -1,39 +1,863 @@
-"Refactor Frontend Mock Data Handling to Use JSON Files
-Goal: Improve maintainability and clarity of frontend mock data by separating raw data from processing logic.
-Current Structure: Mock data (arrays/objects) is currently hardcoded within TypeScript files located in frontend/src/services/mocks/ (e.g., consumables.mocks.ts, machines.mocks.ts, prices.mocks.ts, inventory.mocks.ts, consumableFilterOptions.mocks.ts).
-Required Changes:
-Create Data Directory: Create a new directory: frontend/src/services/mocks/data/.
-Extract Data to JSON:
-Identify all hardcoded mock data arrays and objects within the existing .mocks.ts files (including data for consumables, machine parts, accessories, relations, prices, inventory, filter options, etc.).
-Move this raw data into separate, appropriately named .json files within the new frontend/src/services/mocks/data/ directory (e.g., consumables.data.json, prices.data.json, parts.data.json, relations.data.json, filterOptions.data.json).
-Ensure all created files are valid JSON.
-Modify .mocks.ts Files:
-Update each relevant .mocks.ts file (e.g., consumables.mocks.ts, machines.mocks.ts, etc.).
-Remove the original hardcoded data declarations.
-Import the raw data from their corresponding new .json files using standard ES module imports (e.g., import rawConsumablesData from './data/consumables.data.json';).
-Keep all existing logic within these .mocks.ts files: data processing, transformation functions (like combining consumables with prices/inventory), filtering, pagination, and any helper functions. These functions should now operate on the data imported from the JSON files.
-Ensure the functions exported by these .mocks.ts files (e.g., getMockConsumables, getMockMachineAccessories) retain their original signatures and continue to provide the correctly processed and structured mock data as before.
-No Changes to Service Files: The service files (frontend/src/services/consumablesService.ts, frontend/src/services/machinesService.ts, etc.) should not be modified. They must continue to import and use the functions exported by the .mocks.ts files.
-TypeScript Configuration: Verify that the tsconfig.app.json file under compilerOptions includes "resolveJsonModule": true and "esModuleInterop": true.
-Outcome: The application's mock data functionality should remain unchanged, but the underlying data source will be JSON files, and the .mocks.ts files will focus solely on processing logic and simulating API behavior."
+# BJT产品管理系统后台管理界面 - 实现任务说明
+
+## 1. 项目概述
+
+本项目需要在现有BJT产品系统的前端代码库中实现管理员后台界面，按照mockup设计文件严格1:1复现各功能页面，对接`/wp-json/bjt/v1/`路径下的RESTful API接口。管理后台将负责维护前端用户选购的产品、类别、价格等数据。
+
+## 2. 实现方案
+
+### 2.1 架构选择：独立模块集成方式（方案A）
+
+在现有前端项目中创建独立的`admin`模块，实现目录结构如下：
+
+```
+frontend/
+├── src/
+│   ├── admin/                                 # 管理后台模块根目录
+│   │   ├── api/                               # 管理后台API层
+│   │   │   ├── httpAdminService.ts            # 管理员HTTP服务
+│   │   │   ├── adminConfig.ts                 # 管理员配置
+│   │   │   └── index.ts                       # API导出
+│   │   ├── components/                        # 管理后台组件
+│   │   │   ├── common/                        # 通用组件
+│   │   │   │   ├── AdminTable.tsx             # 管理表格
+│   │   │   │   ├── AdminPageHeader.tsx        # 页面标题
+│   │   │   │   ├── MultilingualInput.tsx      # 多语言输入
+│   │   │   │   ├── FileUploader.tsx           # 文件上传
+│   │   │   │   └── ImportExportButtons.tsx    # 导入导出
+│   │   │   ├── forms/                         # 表单组件
+│   │   │   │   ├── ProductLineForm.tsx        # 产品线表单
+│   │   │   │   ├── MachineModelForm.tsx       # 主机型号表单
+│   │   │   │   ├── PartNumberForm.tsx         # 料号表单
+│   │   │   │   ├── AccessoryForm.tsx          # 配件表单
+│   │   │   │   ├── ConsumableForm.tsx         # 耗材表单
+│   │   │   │   ├── SparePartForm.tsx          # 备件表单
+│   │   │   │   ├── UserForm.tsx               # 用户表单
+│   │   │   │   └── SettingsForm.tsx           # 设置表单
+│   │   │   └── layout/                        # 布局组件
+│   │   │       ├── AdminLayout.tsx            # 管理布局
+│   │   │       ├── AdminSidebar.tsx           # 侧边栏
+│   │   │       └── AdminHeader.tsx            # 顶部导航
+│   │   ├── contexts/                          # 上下文
+│   │   │   └── AdminAuthContext.tsx           # 管理员认证
+│   │   ├── hooks/                             # 自定义钩子
+│   │   │   ├── useAdminApi.ts                 # API调用钩子
+│   │   │   ├── useAdminTable.ts               # 表格钩子
+│   │   │   └── useAdminForm.ts                # 表单钩子
+│   │   ├── pages/                             # 页面组件
+│   │   │   ├── login/                         # 登录
+│   │   │   │   └── AdminLoginPage.tsx         # 登录页面
+│   │   │   ├── dashboard/                     # 仪表盘
+│   │   │   │   └── AdminDashboardPage.tsx     # 仪表盘页面
+│   │   │   ├── product-lines/                 # 产品线管理
+│   │   │   │   ├── ProductLinesPage.tsx       # 产品线列表
+│   │   │   │   └── ProductLineEditPage.tsx    # 产品线编辑
+│   │   │   ├── machines/                      # 主机管理
+│   │   │   │   ├── MachinesPage.tsx           # 主机列表
+│   │   │   │   └── MachineEditPage.tsx        # 主机编辑
+│   │   │   ├── parts/                         # 料号管理
+│   │   │   │   ├── PartsPage.tsx              # 料号列表
+│   │   │   │   └── PartEditPage.tsx           # 料号编辑
+│   │   │   ├── relations/                     # 关联关系
+│   │   │   │   ├── RelationsPage.tsx          # 关联关系首页
+│   │   │   │   └── RelationEditPage.tsx       # 关联关系编辑
+│   │   │   ├── accessories/                   # 配件管理
+│   │   │   │   ├── AccessoriesPage.tsx        # 配件列表
+│   │   │   │   └── AccessoryEditPage.tsx      # 配件编辑
+│   │   │   ├── consumables/                   # 耗材管理
+│   │   │   │   ├── ConsumablesPage.tsx        # 耗材列表
+│   │   │   │   ├── ConsumableEditPage.tsx     # 耗材编辑
+│   │   │   │   ├── ShapesPage.tsx             # 形状管理
+│   │   │   │   └── MaterialsPage.tsx          # 材料管理
+│   │   │   ├── spare-parts/                   # 备件管理
+│   │   │   │   ├── SparePartsPage.tsx         # 备件列表
+│   │   │   │   └── SparePartEditPage.tsx      # 备件编辑
+│   │   │   ├── users/                         # 用户管理
+│   │   │   │   ├── UsersPage.tsx              # 用户列表
+│   │   │   │   └── UserEditPage.tsx           # 用户编辑
+│   │   │   └── settings/                      # 系统设置
+│   │   │       └── SettingsPage.tsx           # 设置页面
+│   │   ├── services/                          # 业务逻辑
+│   │   │   ├── base-admin.service.ts          # 基础服务
+│   │   │   ├── admin-product-line.service.ts  # 产品线服务
+│   │   │   ├── admin-machine.service.ts       # 主机服务
+│   │   │   ├── admin-part.service.ts          # 料号服务
+│   │   │   ├── admin-relation.service.ts      # 关联关系服务
+│   │   │   ├── admin-accessory.service.ts     # 配件服务
+│   │   │   ├── admin-consumable.service.ts    # 耗材服务
+│   │   │   ├── admin-spare-part.service.ts    # 备件服务
+│   │   │   ├── admin-user.service.ts          # 用户服务
+│   │   │   └── admin-settings.service.ts      # 设置服务
+│   │   ├── types/                             # 类型定义
+│   │   │   ├── admin-api.types.ts             # API类型
+│   │   │   ├── admin-models.types.ts          # 数据模型
+│   │   │   └── admin-common.types.ts          # 通用类型
+│   │   ├── utils/                             # 工具函数
+│   │   │   ├── adminFormatters.ts             # 数据格式化
+│   │   │   └── adminValidators.ts             # 数据验证
+│   │   ├── constants/                         # 常量
+│   │   │   ├── adminRoutes.ts                 # 路由常量
+│   │   │   └── adminConfig.ts                 # 配置常量
+│   │   ├── routes.tsx                         # 路由定义
+│   │   ├── index.tsx                          # 模块入口
+│   │   └── AdminApp.tsx                       # 管理应用组件
+```
+
+管理后台将共享前端的核心设施，包括：
+- API客户端基础设施
+- 公共工具函数
+- 国际化框架
+- 构建配置
+
+### 2.2 技术要求
+
+- **前端技术栈**：与前端一致（React 18、TypeScript、Ant Design、Tailwind CSS）
+- **响应式设计**：所有页面必须在桌面和移动设备上正常工作
+- **API集成**：使用`/wp-json/bjt/v1/`路径下的RESTful API
+- **多语言支持**：所有页面需支持中文/英文切换
+
+## 3. 页面实现要求
+
+严格按照mockup设计文件1:1复现每个页面的布局、交互和功能，不得自行添加或修改功能。
+
+### 3.1 产品线编辑页面（对应mockup: 1.html）
+
+**功能要求**：
+- 顶部导航栏展示：公司logo、产品分类下拉菜单、文档下载入口、售后服务入口和语言切换器
+- 产品线编辑表单，包含以下字段：
+  - 标题（中英文）
+  - 说明内容（中英文）
+  - 子项1:耗材（中英文）
+  - 子项2:备件（中英文）
+  - 产品线图片上传功能
+- 实现双语切换选项卡，使管理员能无缝切换中英文内容编辑
+
+**API接口**：`/wp-json/bjt/v1/product-lines`
+
+### 3.2 主机管理页面（对应mockup: 2.html）
+
+**功能要求**：
+- 双表格结构设计：
+  1. 上方表格：主机型号管理
+     - 表头：编号、型号、操作（编辑、删除、上架）
+     - 支持导入/导出功能
+     - "新增型号"按钮，链接到编辑页
+  2. 下方表格：料号管理
+     - 表头：编号、型号、料号、操作（编辑、关联、删除）
+     - 型号和料号筛选功能
+     - 导入/导出按钮
+     - "新增料号"按钮
+- 表格间联动：当选择主机型号时，料号表自动筛选相关数据
+
+**API接口**：`/wp-json/bjt/v1/host-models`和`/wp-json/bjt/v1/parts`
+
+### 3.3 主机新增/编辑页面（对应mockup: 3.html）
+
+**功能要求**：
+- 基本信息区域：
+  - 型号输入（必填）
+  - 描述字段（中英文双语编辑）
+  - 产品线归属选择
+- 媒体上传区：
+  - 主图上传
+  - 爆炸图PDF上传功能
+- 开发适用于新增和编辑场景的复用组件，编辑模式下预填现有数据
+
+**API接口**：`/wp-json/bjt/v1/host-models`
+
+### 3.4 料号新增/编辑页面（对应mockup: 4.html）
+
+**功能要求**：
+- 必须实现完整的配件料号表单：
+  - 料号信息（PN）输入，支持从CRM系统获取数据
+  - 型号（Model）自动关联或手动选择
+  - 电压（Voltage）规格选择
+  - 名称、规格参数（中英文）
+  - 物流参数（包装尺寸、净重、毛重等）
+  - 图片上传功能
+- CRM数据集成功能，实现输入PN后自动填充相关字段
+
+**API接口**：`/wp-json/bjt/v1/parts`，CRM数据：`/wp-json/bjt/v1/crm/part-data`
+
+### 3.5 关联关系管理页面（对应mockup: 5.html和6.html）
+
+**功能要求**：
+- 当前机型和料号显示区，带重置功能
+- 一级配件表格，包含：
+  - 单选按钮
+  - 编号、型号、料号列
+  - 删除操作
+  - "显示下一级配件"功能
+- 实现最多5级配件递进式显示，每级显示归属关系
+- 创建新增配件关联页面，支持筛选和选择要关联的配件
+
+**API接口**：`/wp-json/bjt/v1/relations`和`/wp-json/bjt/v1/relations/hierarchy`
+
+### 3.6 配件管理页面（对应mockup: 7.html）
+
+**功能要求**：
+- 双表格布局：
+  1. 上方表格：配件型号
+     - 表头：编号、型号名称、产品线、状态、操作
+     - 导入/导出功能
+     - 新增型号按钮
+  2. 下方表格：料号列表
+     - 表头：编号、型号、料号、产品线、操作
+     - 型号和料号筛选
+     - 导入/导出功能
+
+**API接口**：`/wp-json/bjt/v1/accessory-models`和`/wp-json/bjt/v1/accessories`
+
+### 3.7 耗材管理页面（对应mockup: 10.html和11.html）
+
+**功能要求**：
+- 四表格结构：
+  1. 料号表筛选区：通过规格和料号字段筛选
+  2. 主表：料号表（编号、型号、料号、操作）
+  3. 辅助表：
+     - 形状表：编号、缩写、名称、图片、操作
+     - 材料表：编号、缩写、名称、基材、操作
+     - 规格尺寸表：分厚度、克重、宽度、长度四部分
+- 新增耗材页面：包括型号、形状、材质、类型、公英制度量单位输入和适用主机多选功能
+
+**API接口**：`/wp-json/bjt/v1/consumables`、`/wp-json/bjt/v1/shapes`、`/wp-json/bjt/v1/materials`等
+
+### 3.8 备件管理页面（对应mockup: 12.html和13.html）
+
+**功能要求**：
+- 备件列表表格：编号、型号、料号、操作按钮
+- 筛选区：型号和料号筛选
+- 新增备件页面，包含完整的备件料号表字段：
+  - 料号（API从CRM获取）
+  - 是否常用选项
+  - 适用主机多选功能
+  - 适用序列号输入
+  - 图片上传
+
+**API接口**：`/wp-json/bjt/v1/spare-parts`
+
+### 3.9 用户管理页面
+
+**功能要求**：
+- 筛选区域：账户类型、国家/地区筛选
+- 用户表格：用户ID、用户名、邮箱、账户类型、国家/地区、公英制偏好等字段
+- 批量操作：编辑、禁用/启用功能
+- 分页和排序功能
+
+**API接口**：`/wp-json/bjt/v1/users`
+
+### 3.10 系统设置页面
+
+**功能要求**：
+- 四个主要设置区：
+  1. 基础信息：公司名称、联系方式、Logo上传
+  2. 系统设置：默认语言、主题等选项
+  3. 邮件设置：SMTP配置
+  4. API设置：支付接口、物流API接口，价格库存接口等
+
+**API接口**：`/wp-json/bjt/v1/settings`
+
+## 4. 通用组件要求
+
+### 4.1 表格组件
+
+- 支持排序、分页、搜索、批量操作
+- 支持导入/导出功能
+- 响应式适配不同屏幕尺寸
+
+### 4.2 表单组件
+
+- 支持验证、错误显示、多语言输入
+- 双语输入字段使用选项卡切换
+- CRM数据集成与自动填充
+
+### 4.3 文件上传组件
+
+- 支持图片预览
+- 上传进度显示
+- 文件类型限制
+
+## 5. 实现标准
+
+1. **代码组织**：
+   - 遵循React组件最佳实践
+   - 分离组件、逻辑和样式
+   - 使用TypeScript类型定义
+
+2. **响应式设计**：
+   - 桌面优先设计
+   - 断点：768px、992px、1200px
+   - 移动设备上保持关键功能可用
+
+3. **性能优化**：
+   - 延迟加载非关键资源
+   - 使用分页避免加载过多数据
+   - 实现合理的缓存策略
+
+4. **多语言支持**：
+   - 使用i18next翻译函数
+   - 支持内容和UI元素的中英文切换
+
+## 6. 实现计划与优先级
+
+按以下优先级顺序实现各页面：
+
+1. 主机管理页面（最高优先级）- 对应mockup 2.html和3.html
+2. 产品线编辑页面 - 对应mockup 1.html
+3. 料号新增/编辑页面 - 对应mockup 4.html
+4. 关联关系管理页面 - 对应mockup 5.html和6.html
+5. 配件管理页面 - 对应mockup 7.html
+6. 耗材管理页面 - 对应mockup 10.html和11.html
+7. 备件管理页面 - 对应mockup 12.html和13.html
+8. 用户管理和系统设置页面
+
+## 7. 开发阶段划分
+
+### 阶段一：基础架构（3天）
+
+1. **创建管理后台模块基础结构**
+   - 实现admin路由集成
+   - 创建管理员认证上下文
+   - 设置API集成层
+
+2. **公共组件开发**
+   - 创建表格组件
+   - 开发多语言表单组件
+   - 实现文件上传组件
+
+3. **主布局模板**
+   - 实现管理后台布局
+   - 创建侧边栏导航
+   - 设置多语言切换框架
+
+### 阶段二：核心页面实现（7天）
+
+1. **主机管理页面**（2天）
+   - 实现型号管理表格
+   - 开发料号管理表格
+   - 完成型号编辑表单
+
+2. **产品线管理页面**（1.5天）
+   - 实现产品线列表
+   - 开发产品线编辑表单
+   - 完成图片上传功能
+
+3. **料号管理页面**（1.5天）
+   - 实现料号编辑表单
+   - 集成CRM数据获取
+   - 完成字段自动填充
+
+4. **关联关系管理页面**（2天）
+   - 实现递进式层级显示
+   - 开发配件关联流程
+   - 完成关系编辑功能
+
+### 阶段三：扩展功能页面（5天）
+
+1. **配件管理页面**（1天）
+   - 实现双表格布局
+   - 开发筛选和导入/导出功能
+
+2. **耗材管理页面**（1.5天）
+   - 实现四表格结构
+   - 开发形状和材料管理
+   - 完成规格尺寸表
+
+3. **备件管理页面**（1天）
+   - 实现备件列表和筛选
+   - 开发备件编辑表单
+
+4. **用户与系统管理页面**（1.5天）
+   - 实现用户列表和筛选
+   - 开发用户编辑功能
+   - 完成系统设置表单
+
+### 阶段四：测试与优化（3天）
+
+1. **功能测试**
+   - 验证所有页面功能
+   - 测试API交互
+   - 确认表单验证
+
+2. **UI/UX测试**
+   - 检查与mockup的一致性
+   - 验证响应式布局
+   - 测试多语言切换
+
+3. **性能优化**
+   - 改进加载速度
+   - 优化资源使用
+   - 实现缓存策略
+
+## 8. 验收标准
+
+1. 所有页面必须与mockup设计在视觉和交互上保持1:1一致
+2. 所有API集成必须正确实现，使用指定的`/wp-json/bjt/v1/`路径
+3. 多语言支持必须完整实现，包括界面和内容
+4. 响应式设计必须在各种屏幕尺寸上正常工作
+5. 所有表单必须包含指定的全部字段，特别是料号编辑表单
+
+## 注意事项
+
+1. 严格遵循mockup设计，不得擅自修改布局、交互或功能
+2. 确保所有API请求使用正确的端点和参数
+3. 所有数据编辑必须经过适当验证
+4. 保持与现有前端代码的风格一致性
+5. 代码需具备可维护性和可扩展性
 
 
-"重构前端 Mock 数据处理以使用 JSON 文件
-目标: 通过将原始数据与处理逻辑分离，提高前端 Mock 数据的可维护性和清晰度。
-当前结构: Mock 数据（数组/对象）目前硬编码在位于 frontend/src/services/mocks/ 目录下的 TypeScript 文件中（例如 consumables.mocks.ts, machines.mocks.ts, prices.mocks.ts, inventory.mocks.ts, consumableFilterOptions.mocks.ts）。
-要求变更:
-创建数据目录: 创建一个新目录：frontend/src/services/mocks/data/。
-提取数据到 JSON:
-识别现有 .mocks.ts 文件中所有硬编码的 Mock 数据数组和对象（包括耗材、机器部件、配件、关联关系、价格、库存、筛选选项等数据）。
-将这些原始数据移动到 frontend/src/services/mocks/data/ 目录下的、命名恰当的独立 .json 文件中（例如 consumables.data.json, prices.data.json, parts.data.json, relations.data.json, filterOptions.data.json）。
-确保所有创建的文件都是有效的 JSON 格式。
-修改 .mocks.ts 文件:
-更新每个相关的 .mocks.ts 文件（例如 consumables.mocks.ts, machines.mocks.ts 等）。
-移除原始的硬编码数据声明。
-使用标准的 ES 模块导入语句从对应的新的 .json 文件导入原始数据（例如 import rawConsumablesData from './data/consumables.data.json';）。
-保留这些 .mocks.ts 文件中所有现有的逻辑：数据处理、转换函数（如合并耗材与价格/库存）、筛选、分页以及任何辅助函数。这些函数现在应该操作从 JSON 文件导入的数据。
-确保这些 .mocks.ts 文件导出的函数（例如 getMockConsumables, getMockMachineAccessories）保持其原始签名，并继续按预期提供经过正确处理和结构化的 Mock 数据。
-服务文件不变: 服务文件（frontend/src/services/consumablesService.ts, frontend/src/services/machinesService.ts 等）不应被修改。它们必须继续导入并使用由 .mocks.ts 文件导出的函数。
-TypeScript 配置: 验证 tsconfig.app.json 文件在 compilerOptions 下包含 "resolveJsonModule": true 和 "esModuleInterop": true。
-结果: 应用的 Mock 数据功能应保持不变，但底层数据源将变为 JSON 文件，并且 .mocks.ts 文件将仅专注于处理逻辑和模拟 API 行为。"
 
+To understand what API client infrastructure can be reused, I need to examine the existing implementation in the frontend project.
+
+Ran tool
+Now let's check the structure of these API files to understand what can be reused:
+
+Read file: frontend/src/api/httpService.ts
+
+Read file: frontend/src/api/config.ts
+Let's check the API services structure to understand how individual API endpoints are organized:
+
+Ran tool
+Let's look at the base service and a typical service implementation:
+
+Read file: frontend/src/api/services/base.service.ts
+
+Read file: frontend/src/api/services/product-line.service.ts
+Let's also check the API adapters:
+
+Ran tool
+
+Read file: frontend/src/api/adapters/api-adapter.ts
+Let's also look at the ApiService that seems to be imported from /services:
+
+Ran tool
+
+Read file: frontend/src/services/apiService.ts
+Based on my analysis of your frontend codebase, here's what you can reuse for your admin dashboard API client infrastructure:
+
+# API Client Infrastructure Reusable Components
+
+The frontend project has a well-structured API client architecture that can be largely reused for the admin dashboard. Here's how you can reuse these components:
+
+## 1. Core API Client Infrastructure
+
+### A. HTTP Service Layer
+You can reuse `httpService.ts` with minor modifications for admin-specific authentication:
+
+```typescript
+// src/admin/api/httpAdminService.ts
+import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import { 
+  API_BASE_URL, 
+  getAdminAuthHeaders, // New function for admin auth
+  REQUEST_TIMEOUT, 
+  getErrorMessage 
+} from '../../api/config';
+
+// Create Axios instance (reuse core configuration)
+const axiosAdminInstance = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: REQUEST_TIMEOUT,
+  headers: getAdminAuthHeaders() // Use admin-specific headers
+});
+
+// Interceptors with admin-specific authentication
+axiosAdminInstance.interceptors.request.use(
+  (config) => {
+    const authHeaders = getAdminAuthHeaders();
+    for (const key in authHeaders) {
+      if (authHeaders.hasOwnProperty(key)) {
+        config.headers[key] = authHeaders[key as keyof typeof authHeaders];
+      }
+    }
+    if (!config.headers['Content-Type']) {
+        config.headers['Content-Type'] = 'application/json';
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor (similar to original with admin-specific handling)
+axiosAdminInstance.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error: AxiosError) => {
+    // Admin-specific error handling
+    if (error.response?.status === 401) {
+      localStorage.removeItem('admin_token');
+      // Redirect to admin login
+      window.location.href = '/admin/login';
+    }
+    
+    return Promise.reject({
+      message: getErrorMessage(error.response?.status || 0),
+      status: error.response?.status || 0,
+      data: error.response?.data
+    });
+  }
+);
+
+// HTTP service class (reuse the same methods pattern)
+class HttpAdminService {
+  // GET request
+  static async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    try {
+      const response: AxiosResponse<T> = await axiosAdminInstance.get(url, config);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // POST request
+  static async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    try {
+      const response: AxiosResponse<T> = await axiosAdminInstance.post(url, data, config);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // PUT request
+  static async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    try {
+      const response: AxiosResponse<T> = await axiosAdminInstance.put(url, data, config);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // DELETE request
+  static async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    try {
+      const response: AxiosResponse<T> = await axiosAdminInstance.delete(url, config);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // PATCH request
+  static async patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    try {
+      const response: AxiosResponse<T> = await axiosAdminInstance.patch(url, data, config);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+}
+
+export default HttpAdminService;
+```
+
+### B. Config Layer
+You can reuse the `config.ts` with admin-specific extensions:
+
+```typescript
+// src/admin/api/adminConfig.ts
+import { 
+  API_BASE_URL, 
+  getDefaultHeaders, 
+  REQUEST_TIMEOUT, 
+  ERROR_MESSAGES,
+  getErrorMessage,
+  DEBUG,
+  logDebug
+} from '../../api/config';
+
+// Admin-specific auth headers
+export const getAdminAuthHeaders = () => {
+  const adminToken = localStorage.getItem('admin_token');
+  
+  if (adminToken) {
+    return {
+      ...getDefaultHeaders(),
+      'Authorization': `Bearer ${adminToken}`
+    };
+  }
+  
+  return getDefaultHeaders();
+};
+
+// Admin-specific API URLs
+export const ADMIN_API_ENDPOINTS = {
+  PRODUCT_LINES: '/wp-json/bjt/v1/product-lines',
+  HOST_MODELS: '/wp-json/bjt/v1/host-models',
+  PARTS: '/wp-json/bjt/v1/parts',
+  RELATIONS: '/wp-json/bjt/v1/relations',
+  ACCESSORY_MODELS: '/wp-json/bjt/v1/accessory-models',
+  ACCESSORIES: '/wp-json/bjt/v1/accessories',
+  CONSUMABLES: '/wp-json/bjt/v1/consumables',
+  SHAPES: '/wp-json/bjt/v1/shapes',
+  MATERIALS: '/wp-json/bjt/v1/materials',
+  SPARE_PARTS: '/wp-json/bjt/v1/spare-parts',
+  USERS: '/wp-json/bjt/v1/users',
+  SETTINGS: '/wp-json/bjt/v1/settings',
+  AUTH: '/wp-json/bjt/v1/auth/admin'
+};
+
+export default {
+  API_BASE_URL,
+  getDefaultHeaders,
+  getAdminAuthHeaders,
+  REQUEST_TIMEOUT,
+  ERROR_MESSAGES,
+  getErrorMessage,
+  DEBUG,
+  logDebug,
+  ADMIN_API_ENDPOINTS
+};
+```
+
+## 2. Service Layer Pattern
+
+### A. Base Service 
+You can reuse the `BaseService` pattern with admin-specific modifications:
+
+```typescript
+// src/admin/services/base-admin.service.ts
+import HttpAdminService from '../api/httpAdminService';
+import { PaginatedResponseAdapter } from '../../api/adapters/api-adapter';
+
+/**
+ * Admin base service
+ */
+export abstract class BaseAdminService<T, R = any> {
+  protected readonly baseUrl: string;
+  protected readonly adapter: PaginatedResponseAdapter<T>;
+
+  constructor(baseUrl: string) {
+    this.baseUrl = baseUrl;
+    this.adapter = new PaginatedResponseAdapter<T>();
+  }
+
+  /**
+   * Get paginated data
+   */
+  protected async getPaginatedData(
+    path: string = '', 
+    params: Record<string, any> = {}
+  ): Promise<{
+    items: T[];
+    total: number;
+    page: number;
+    page_size: number;
+    total_pages: number;
+  }> {
+    const response = await HttpAdminService.get(`${this.baseUrl}${path}`, { params });
+    return this.adapter.fromApiResponse(response);
+  }
+
+  /**
+   * Get single item
+   */
+  protected async getSingleItem(id: number): Promise<T> {
+    const response = await HttpAdminService.get(`${this.baseUrl}/${id}`);
+    return response.data;
+  }
+
+  /**
+   * Create item
+   */
+  protected async createItem(data: Partial<T>): Promise<T> {
+    const response = await HttpAdminService.post(this.baseUrl, data);
+    return response.data;
+  }
+
+  /**
+   * Update item
+   */
+  protected async updateItem(id: number, data: Partial<T>): Promise<T> {
+    const response = await HttpAdminService.put(`${this.baseUrl}/${id}`, data);
+    return response.data;
+  }
+
+  /**
+   * Delete item
+   */
+  protected async deleteItem(id: number): Promise<void> {
+    await HttpAdminService.delete(`${this.baseUrl}/${id}`);
+  }
+}
+```
+
+### B. Specific Service Implementation
+Pattern reuse for implementing specific admin services:
+
+```typescript
+// src/admin/services/admin-product-line.service.ts
+import { BaseAdminService } from './base-admin.service';
+import { ADMIN_API_ENDPOINTS } from '../api/adminConfig';
+
+// Types (reuse/extend from frontend)
+export interface ProductLine {
+  id: number;
+  title: {
+    zh: string;
+    en: string;
+  };
+  description: {
+    zh: string;
+    en: string;
+  };
+  consumables: {
+    zh: string;
+    en: string;
+  };
+  spareParts: {
+    zh: string;
+    en: string;
+  };
+  image_url: string;
+  status: 'publish' | 'draft' | 'trash';
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Admin product line service
+ */
+export class AdminProductLineService extends BaseAdminService<ProductLine> {
+  constructor() {
+    super(ADMIN_API_ENDPOINTS.PRODUCT_LINES);
+  }
+
+  /**
+   * Get all product lines
+   */
+  async getProductLines(params: {
+    page?: number;
+    page_size?: number;
+    search?: string;
+    status?: string;
+  } = {}): Promise<{
+    items: ProductLine[];
+    total: number;
+    page: number;
+    page_size: number;
+    total_pages: number;
+  }> {
+    return this.getPaginatedData('', params);
+  }
+
+  /**
+   * Get product line by ID
+   */
+  async getProductLine(id: number): Promise<ProductLine> {
+    return this.getSingleItem(id);
+  }
+
+  /**
+   * Create product line
+   */
+  async createProductLine(data: Partial<ProductLine>): Promise<ProductLine> {
+    return this.createItem(data);
+  }
+
+  /**
+   * Update product line
+   */
+  async updateProductLine(id: number, data: Partial<ProductLine>): Promise<ProductLine> {
+    return this.updateItem(id, data);
+  }
+
+  /**
+   * Delete product line
+   */
+  async deleteProductLine(id: number): Promise<void> {
+    return this.deleteItem(id);
+  }
+}
+
+// Export singleton instance
+export default new AdminProductLineService();
+```
+
+## 3. Adapters
+
+You can reuse the API adapters directly:
+
+```typescript
+// src/admin/api/index.ts
+export { PaginatedResponseAdapter } from '../../api/adapters/api-adapter';
+export { BaseAdminService } from '../services/base-admin.service';
+```
+
+## 4. Integration with React Components
+
+Reuse the pattern for integrating API calls with React components:
+
+```typescript
+// src/admin/hooks/useAdminApi.ts
+import { useState, useEffect, useCallback } from 'react';
+
+export function useAdminApi<T, P extends object = {}>(
+  apiCall: (params: P) => Promise<T>,
+  initialParams: P,
+  deps: any[] = []
+) {
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [params, setParams] = useState<P>(initialParams);
+
+  const fetchData = useCallback(async (currentParams: P) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const result = await apiCall(currentParams);
+      setData(result);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Unknown error'));
+    } finally {
+      setLoading(false);
+    }
+  }, [apiCall]);
+
+  // Fetch data when dependencies change
+  useEffect(() => {
+    fetchData(params);
+  }, [fetchData, params, ...deps]);
+
+  // Update params and refetch
+  const updateParams = useCallback((newParams: Partial<P>) => {
+    setParams(prev => ({ ...prev, ...newParams }));
+  }, []);
+
+  // Refetch with current params
+  const refetch = useCallback(() => {
+    fetchData(params);
+  }, [fetchData, params]);
+
+  return { data, loading, error, updateParams, refetch, params };
+}
+```
+
+## 5. Summary of Reusable Components
+
+You can reuse the following infrastructure components:
+
+1. **HTTP Service**: Core axios configuration with interceptors
+2. **Configuration**: API endpoints, auth headers, error handling
+3. **Service Pattern**: BaseService and specific service implementations
+4. **API Adapters**: For transforming data between frontend and API
+5. **Hooks**: For integrating API calls with React components
+
+## Implementation Approach
+
+For the admin module, you should:
+
+1. Create an admin-specific extension of the HTTP service with admin authentication
+2. Reuse the service pattern but implement admin-specific services
+3. Directly reuse the adapters
+4. Create admin-specific hooks that follow the same patterns
+
+This approach allows you to maintain consistency with the existing codebase while adding admin-specific functionality and authentication.

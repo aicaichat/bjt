@@ -161,39 +161,20 @@
   --neutral-900: #0f172a;
 
   /* 应用映射 - 确保在亮色和暗色主题中都能正确显示 */
-  .light-theme {
-    --background-card: var(--neutral-50);
-    --background-primary: #ffffff;
-    --background-secondary: var(--neutral-100);
-    --text-primary: var(--neutral-900);
-    --text-secondary: var(--neutral-600);
-    --text-tertiary: var(--neutral-500);
-    --text-onPrimary: #ffffff;
-    --border-light: var(--neutral-200);
-    --border-medium: var(--neutral-300);
-    
-    /* 添加品牌色彩映射 */
-    --color-primary: var(--brand-primary);
-    --color-primary-light: var(--brand-secondary);
-    --color-primary-bg: var(--brand-light);
-  }
+  --background-card: var(--neutral-50);
+  --background-primary: #ffffff;
+  --background-secondary: var(--neutral-100);
+  --text-primary: var(--neutral-900);
+  --text-secondary: var(--neutral-600);
+  --text-tertiary: var(--neutral-500);
+  --text-onPrimary: #ffffff;
+  --border-light: var(--neutral-200);
+  --border-medium: var(--neutral-300);
   
-  .dark-theme {
-    --background-card: var(--neutral-800);
-    --background-primary: var(--neutral-900);
-    --background-secondary: var(--neutral-800);
-    --text-primary: var(--neutral-100);
-    --text-secondary: var(--neutral-300);
-    --text-tertiary: var(--neutral-400);
-    --text-onPrimary: #ffffff;
-    --border-light: var(--neutral-700);
-    --border-medium: var(--neutral-600);
-    
-    /* 添加品牌色彩在暗色主题下的映射 */
-    --color-primary: #4986d9;
-    --color-primary-light: #1a57a5;
-    --color-primary-bg: rgba(26, 87, 165, 0.15);
-  }
+  /* 添加品牌色彩映射 */
+  --color-primary: var(--brand-primary);
+  --color-primary-light: var(--brand-secondary);
+  --color-primary-bg: var(--brand-light);
 
   /* 消耗品页面专用样式变量 */
   --filter-bg: var(--background-card);
@@ -909,4 +890,21 @@ body.theme-dark {
   
   --border-color: #333333;
   --border-light: #404040;
+}
+
+.dark-theme { /* This class would be applied to body or html tag */
+  --background-card: var(--neutral-800);
+  --background-primary: var(--neutral-900);
+  --background-secondary: var(--neutral-800);
+  --text-primary: var(--neutral-100);
+  --text-secondary: var(--neutral-300);
+  --text-tertiary: var(--neutral-400);
+  --text-onPrimary: #ffffff;
+  --border-light: var(--neutral-700);
+  --border-medium: var(--neutral-600);
+  
+  /* 添加品牌色彩在暗色主题下的映射 */
+  --color-primary: #4986d9;
+  --color-primary-light: #1a57a5;
+  --color-primary-bg: rgba(26, 87, 165, 0.15);
 } 

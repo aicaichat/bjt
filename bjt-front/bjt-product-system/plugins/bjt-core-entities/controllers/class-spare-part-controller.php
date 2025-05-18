@@ -5,7 +5,7 @@
 class BJT_Spare_Part_Controller extends BJT_API_Controller {
     
     protected $table_name;
-    protected $resource_name = 'spare-parts';
+    public $resource_name = 'spare-parts';
 
     // Fields from wp_bjt_spare_parts table
     protected $fillable_fields = [
@@ -293,6 +293,47 @@ class BJT_Spare_Part_Controller extends BJT_API_Controller {
         return $formatted;
     }
 
+    /**
+     * 格式化API响应
+     *
+     * @param mixed $data 响应数据
+     * @param string $message 消息
+     * @param bool $success 是否成功
+     * @param int $code HTTP状态码
+     * @return WP_REST_Response 格式化的响应
+     */
+    protected function format_response($data = null, $message = '', $success = true, $code = 200) {
+        $response = [
+            'success' => $success
+        ];
+
+        if ($data !== null) {
+            $response['data'] = $data;
+        }
+
+        if (!empty($message)) {
+            $response['message'] = $message;
+        }
+
+        return new WP_REST_Response($response, $code);
+    }
+
+    /**
+     * 格式化错误响应
+     * 
+     * @param string $message 错误消息
+     * @param string $code 错误代码
+     * @param int $status HTTP状态码
+     * @return WP_REST_Response
+     */
+    protected function error_response($message, $error_code = 'error', $status = 400) {
+        return new WP_Error(
+            $error_code,
+            $message,
+            ['status' => $status]
+        );
+    }
+
     // Basic CRUD Methods (adapted from BJT_Consumable_Controller)
 
     public function create_item($request) {
@@ -347,7 +388,7 @@ class BJT_Spare_Part_Controller extends BJT_API_Controller {
         }
         
         $formatted_item = $this->format_item_for_response($created_item_db);
-        return new WP_REST_Response(['success' => true, 'message' => 'Spare part created successfully.', 'data' => $formatted_item], 201);
+        return $this->format_response($formatted_item, 'Spare part created successfully.', true, 201);
     }
 
     public function get_item($request) {
@@ -361,7 +402,7 @@ class BJT_Spare_Part_Controller extends BJT_API_Controller {
         }
         
         $formatted_item = $this->format_item_for_response($item_db_object);
-        return new WP_REST_Response(['success' => true, 'data' => $formatted_item], 200);
+        return $this->format_response($formatted_item);
     }
 
     public function update_item($request) {
@@ -406,7 +447,7 @@ class BJT_Spare_Part_Controller extends BJT_API_Controller {
         $updated_item_db = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->table_name} WHERE id = %d", $id));
         $formatted_item = $this->format_item_for_response($updated_item_db);
         
-        return new WP_REST_Response(['success' => true, 'message' => 'Spare part updated successfully.', 'data' => $formatted_item], 200);
+        return $this->format_response($formatted_item, 'Spare part updated successfully.');
     }
 
     public function delete_item($request) {
@@ -432,7 +473,7 @@ class BJT_Spare_Part_Controller extends BJT_API_Controller {
             return $this->error_response('Spare part could not be deleted or was already deleted.', 'delete_failed', 500);
         }
 
-        return new WP_REST_Response(['success' => true, 'message' => 'Spare part deleted successfully.'], 200);
+        return $this->format_response(null, 'Spare part deleted successfully.');
     }
     
     public function get_items($request) {
@@ -479,19 +520,16 @@ class BJT_Spare_Part_Controller extends BJT_API_Controller {
         }
         
         $response_data = [
-            'success' => true,
-            'data' => [
-                'items' => $formatted_items,
-                'total' => $total_items,
-                'page' => $pagination_params['page'],
-                'per_page' => $per_page,
-                'total_pages' => $total_pages,
-            ],
+            'items' => $formatted_items,
+            'total' => $total_items,
+            'page' => $pagination_params['page'],
+            'per_page' => $per_page,
+            'total_pages' => $total_pages,
         ];
         
-        $response = new WP_REST_Response($response_data, 200);
+        $response = $this->format_response($response_data);
         // Add Link headers for pagination (from BJT_API_Controller or implement here if needed)
-        $this->add_pagination_headers($response, $request, $total_items, $total_pages);
+        $this->add_pagination_headers($response, $request, $total_items, $per_page);
 
         return $response;
     }
@@ -578,7 +616,7 @@ class BJT_Spare_Part_Controller extends BJT_API_Controller {
             'serial_number_info' => $serial_number_info
         ];
         
-        return new WP_REST_Response($response_data, 200);
+        return $this->format_response($response_data);
     }
 
     /**
@@ -637,5 +675,54 @@ class BJT_Spare_Part_Controller extends BJT_API_Controller {
         }
         
         return $formatted;
+    }
+    
+    /**
+     * Extracts and processes pagination parameters from an incoming WP_REST_Request object.
+     *
+     * @param WP_REST_Request $request Request object.
+     * @return array Associative array containing 'page', 'per_page', and 'offset'.
+     */
+    protected function extract_pagination_params_from_request($request) {
+        $page = isset($request['page']) ? (int) $request['page'] : 1;
+        $per_page = isset($request['per_page']) ? (int) $request['per_page'] : 10;
+        
+        $page = max(1, $page);
+        $per_page = max(1, min($per_page, 100)); // Cap per_page
+        
+        return [
+            'page' => $page,
+            'per_page' => $per_page,
+            'offset' => ($page - 1) * $per_page,
+        ];
+    }
+
+    /**
+     * Adds pagination headers to a REST response.
+     *
+     * @param WP_REST_Response $response Response object.
+     * @param WP_REST_Request $request Request object.
+     * @param int $total_items Total number of items.
+     * @param int $per_page Number of items per page.
+     * @return WP_REST_Response Modified response object.
+     */
+    protected function add_pagination_headers($response, $request, $total_items, $per_page) {
+        $page = isset($request['page']) ? (int) $request['page'] : 1;
+        
+        $max_pages = ceil($total_items / $per_page);
+        
+        if ($page > 1) {
+            $prev_page = $page - 1;
+            $prev_link = add_query_arg('page', $prev_page, rest_url(sprintf('%s/%s', $this->namespace, $this->resource_name)));
+            $response->link_header('prev', $prev_link);
+        }
+        
+        if ($max_pages > $page) {
+            $next_page = $page + 1;
+            $next_link = add_query_arg('page', $next_page, rest_url(sprintf('%s/%s', $this->namespace, $this->resource_name)));
+            $response->link_header('next', $next_link);
+        }
+        
+        return $response;
     }
 } 

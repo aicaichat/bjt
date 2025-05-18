@@ -8,7 +8,7 @@ class BJT_Relation_Controller extends BJT_API_Controller {
      *
      * @var string
      */
-    protected $resource_name = 'relations';
+    public $resource_name = 'relations';
     protected $table_name;
 
     protected $fillable_fields = [

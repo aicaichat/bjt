@@ -5,7 +5,7 @@
 class BJT_Consumable_Controller extends BJT_API_Controller {
     
     protected $table_name;
-    protected $resource_name = 'consumables'; // The slug for the CPT / API endpoint
+    public $resource_name = 'consumables'; // The slug for the CPT / API endpoint
 
     // Aligned with init.sql and frontend expectations (first pass)
     protected $fillable_fields = [
@@ -106,8 +106,8 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
                 'callback' => [$this, 'batch_get_prices'],
                 'permission_callback' => [$this, 'check_read_permission'],
                 'args' => [
-                    'ids' => [
-                        'required' => true,
+                    'items' => [
+                        'required' => false,
                         'type' => 'array',
                         'description' => '要查询价格的耗材ID数组'
                     ],
@@ -135,8 +135,8 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
                 'callback' => [$this, 'batch_get_inventory'],
                 'permission_callback' => [$this, 'check_read_permission'],
                 'args' => [
-                    'ids' => [
-                        'required' => true,
+                    'items' => [
+                        'required' => false,
                         'type' => 'array',
                         'description' => '要查询库存的耗材ID数组'
                     ],
@@ -150,6 +150,27 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
                         'required' => false,
                         'type' => 'string',
                         'description' => '仓库代码，如不提供则返回指定区域的所有仓库'
+                    ]
+                ]
+            ]
+        ]);
+        
+        // 检查耗材兼容性
+        register_rest_route($this->namespace, '/' . $this->resource_name . '/(?P<id>[\d]+)/compatibility-check', [
+            [
+                'methods' => WP_REST_Server::READABLE,
+                'callback' => [$this, 'check_compatibility'],
+                'permission_callback' => [$this, 'check_read_permission'],
+                'args' => [
+                    'id' => [
+                        'required' => true,
+                        'validate_callback' => function($value) { return is_numeric($value) && (int)$value > 0; },
+                        'sanitize_callback' => 'absint'
+                    ],
+                    'model' => [
+                        'required' => true,
+                        'type' => 'string',
+                        'description' => '要检查兼容性的机器型号'
                     ]
                 ]
             ]
@@ -718,6 +739,39 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
     }
 
     /**
+     * Format a successful response with the standard structure
+     */
+    protected function format_response($data = null, $message = '', $success = true, $code = 200) {
+        $response = [
+            'success' => $success
+        ];
+        
+        if (!empty($data)) {
+            $response['data'] = $data;
+        }
+        
+        if (!empty($message)) {
+            $response['message'] = $message;
+        }
+        
+        return new WP_REST_Response($response, $code);
+    }
+    
+    /**
+     * Format an error response
+     */
+    protected function error_response($message, $code = 'bjt_api_error', $status = 400, $data = null) {
+        return new WP_Error(
+            $code,
+            $message,
+            [
+                'status' => $status,
+                'data' => $data
+            ]
+        );
+    }
+
+    /**
      * 批量获取耗材价格
      *
      * @param WP_REST_Request $request 请求对象，包含耗材IDs、区域和数量
@@ -729,9 +783,28 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
         $consumables_table = $this->table_name;
         
         // 获取请求参数
-        $ids = $request->get_param('ids');
-        $region = $request->get_param('region') ?: 'CN';
-        $quantity = (int)($request->get_param('quantity') ?: 1);
+        $params = $request->get_json_params();
+        if (null === $params) {
+            $params = $request->get_body_params();
+        }
+        
+        // Support both formats: items array (new format) or ids array (old format)
+        $ids = [];
+        $region = $params['region'] ?? $request->get_param('region') ?? 'CN';
+        $quantity = (int)($params['quantity'] ?? $request->get_param('quantity') ?? 1);
+        
+        // Check for items array (new format)
+        if (isset($params['items']) && is_array($params['items'])) {
+            foreach ($params['items'] as $item) {
+                if (isset($item['item_id'])) {
+                    $ids[] = intval($item['item_id']);
+                }
+            }
+        } 
+        // Fallback to ids array (old format)
+        else {
+            $ids = $request->get_param('ids');
+        }
         
         // 验证IDs参数
         if (empty($ids) || !is_array($ids)) {
@@ -807,11 +880,11 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
             $response_data[] = $price_info;
         }
         
-        return new WP_REST_Response([
+        return $this->format_response([
             'region' => $region,
             'quantity' => $quantity,
             'items' => $response_data
-        ], 200);
+        ]);
     }
 
     /**
@@ -826,9 +899,28 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
         $consumables_table = $this->table_name;
         
         // 获取请求参数
-        $ids = $request->get_param('ids');
-        $region = $request->get_param('region'); // 可选
-        $warehouse = $request->get_param('warehouse'); // 可选
+        $params = $request->get_json_params();
+        if (null === $params) {
+            $params = $request->get_body_params();
+        }
+        
+        // Support both formats: items array (new format) or ids array (old format)
+        $ids = [];
+        $region = $params['region'] ?? $request->get_param('region');
+        $warehouse = $params['warehouse'] ?? $request->get_param('warehouse');
+        
+        // Check for items array (new format)
+        if (isset($params['items']) && is_array($params['items'])) {
+            foreach ($params['items'] as $item) {
+                if (isset($item['item_id'])) {
+                    $ids[] = intval($item['item_id']);
+                }
+            }
+        } 
+        // Fallback to ids array (old format)
+        else {
+            $ids = $request->get_param('ids');
+        }
         
         // 验证IDs参数
         if (empty($ids) || !is_array($ids)) {
@@ -915,8 +1007,54 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
             ];
         }
         
-        return new WP_REST_Response([
+        return $this->format_response([
             'items' => $response_data
-        ], 200);
+        ]);
+    }
+
+    /**
+     * 检查耗材与机器的兼容性
+     *
+     * @param WP_REST_Request $request 请求对象，包含耗材ID和机器型号
+     * @return WP_REST_Response|WP_Error 兼容性检查结果
+     */
+    public function check_compatibility($request) {
+        global $wpdb;
+        
+        $consumable_id = (int)$request->get_param('id');
+        $machine_model = sanitize_text_field($request->get_param('model'));
+        
+        if (empty($machine_model)) {
+            return $this->error_response('必须提供要检查兼容性的机器型号', 'missing_model', 400);
+        }
+        
+        // 检查耗材是否存在
+        $consumable = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$this->table_name} WHERE id = %d AND status = 'publish'",
+            $consumable_id
+        ));
+        
+        if (!$consumable) {
+            return $this->error_response('未找到指定的耗材', 'consumable_not_found', 404);
+        }
+        
+        // 检查兼容性（直接从app_model字段获取）
+        $is_compatible = false;
+        
+        if (!empty($consumable->app_model)) {
+            // 兼容性字段可能是逗号分隔的型号列表
+            $compatible_models = explode(',', $consumable->app_model);
+            $compatible_models = array_map('trim', $compatible_models);
+            
+            $is_compatible = in_array($machine_model, $compatible_models);
+        }
+        
+        // 返回兼容性结果
+        return $this->format_response([
+            'consumable_id' => $consumable_id,
+            'machine_model' => $machine_model,
+            'compatible' => $is_compatible,
+            'message' => $is_compatible ? '完全兼容' : '不兼容或未知兼容性'
+        ]);
     }
 } 
