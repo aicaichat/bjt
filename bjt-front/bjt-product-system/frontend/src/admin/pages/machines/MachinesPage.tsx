@@ -1,255 +1,339 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
-  Table,
   Button,
-  Space,
-  Typography,
-  Modal,
   Form,
   Input,
+  Modal,
   Select,
+  Space,
+  Table,
+  Typography,
+  message,
+  Dropdown,
   Card,
   Row,
   Col,
-  Dropdown,
-  Menu,
-  message,
-  Tooltip,
   Tag,
+  Divider,
 } from 'antd';
 import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
-  EyeOutlined,
+  MoreOutlined,
+  CheckCircleOutlined,
+  StopOutlined,
+  UploadOutlined,
   CloudUploadOutlined,
   CloudDownloadOutlined,
-  FilterOutlined,
-  UndoOutlined,
-  ApiOutlined, // For Link action
-  CheckCircleOutlined, // For Active status
-  StopOutlined, // For Inactive status
+  SearchOutlined,
+  LinkOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import AdminService from '../../api/adminService';
-import type {
-  AdminHostModel,
-  AdminPart,
-  AdminModelStatus,
-  ApiResponse,
-  PaginatedResponse,
-} from '../../../admin/types';
+import { AdminHostModel, AdminPart } from '../../types/admin-models.types';
+import adminHostModelService from '../../services/admin-host-model.service';
+import AdminPartService from '../../services/admin-part.service';
+import adminProductLineService from '../../services/admin-product-line.service';
+import { PaginatedResponse } from '../../../admin/types';
+import { useNavigate } from 'react-router-dom';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
 const MachinesPage: React.FC = () => {
-  const [models, setModels] = useState<AdminHostModel[]>([]);
-  const [parts, setParts] = useState<AdminPart[]>([]);
-
+  const navigate = useNavigate();
+  
+  // Models state
   const [modelsLoading, setModelsLoading] = useState(false);
-  const [partsLoading, setPartsLoading] = useState(false);
-
-  const [modelsPagination, setModelsPagination] = useState({ current: 1, pageSize: 5, total: 0 });
-  const [partsPagination, setPartsPagination] = useState({ current: 1, pageSize: 5, total: 0 });
-
-  const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
-  const [partFilters, setPartFilters] = useState({ modelId: '', partNumber: '' });
-
-  // Modal states
-  const [isModelModalVisible, setIsModelModalVisible] = useState(false);
-  const [isPartModalVisible, setIsPartModalVisible] = useState(false);
+  const [modelsList, setModelsList] = useState<AdminHostModel[]>([]);
+  const [modelsPagination, setModelsPagination] = useState({
+    current: 1,
+    page_size: 10,
+    total: 0,
+  });
   const [editingModel, setEditingModel] = useState<AdminHostModel | null>(null);
+  const [isModelModalVisible, setIsModelModalVisible] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [recordToDelete, setRecordToDelete] = useState<AdminHostModel | null>(null);
+  const [modelFilters, setModelFilters] = useState({
+    product_line_id: undefined as number | undefined,
+    status: undefined as string | undefined,
+    search: '',
+  });
+  
+  // Parts state
+  const [partsLoading, setPartsLoading] = useState(false);
+  const [partsList, setPartsList] = useState<AdminPart[]>([]);
+  const [partsPagination, setPartsPagination] = useState({
+    current: 1,
+    page_size: 10,
+    total: 0,
+  });
+  const [selectedPartModelId, setSelectedPartModelId] = useState<string | undefined>(undefined);
+  const [partFilters, setPartFilters] = useState({
+    hostModelId: undefined as string | undefined,
+    status: undefined as string | undefined,
+    search: '',
+  });
+  const [isPartModalVisible, setIsPartModalVisible] = useState(false);
   const [editingPart, setEditingPart] = useState<AdminPart | null>(null);
-  const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
-  const [confirmLoading, setConfirmLoading] = useState(false);
-  const [confirmMessage, setConfirmMessage] = useState('');
+  const [selectedModelForParts, setSelectedModelForParts] = useState<AdminHostModel | null>(null);
 
+  // Common state
+  const [productLines, setProductLines] = useState<any[]>([]);
   const [modelForm] = Form.useForm<AdminHostModel>();
   const [partForm] = Form.useForm<AdminPart>();
 
-  const fetchModels = useCallback(async (page = modelsPagination.current, pageSize = modelsPagination.pageSize) => {
+  // Data fetching
+  const fetchModels = useCallback(async (page = modelsPagination.current, page_size = modelsPagination.page_size) => {
     setModelsLoading(true);
     try {
-      const response = await AdminService.getHostModels({ page, pageSize });
-      setModels(response.items || []);
-      setModelsPagination({ current: response.page, pageSize: response.pageSize, total: response.total });
+      const params = {
+        page,
+        page_size,
+        ...modelFilters,
+      };
+
+      const response = await adminHostModelService.getHostModels(params);
+      setModelsList(response.items);
+      setModelsPagination({
+        ...modelsPagination,
+        current: response.page,
+        total: response.total,
+      });
     } catch (error) {
-      message.error('获取型号列表失败');
-      console.error('Failed to fetch models:', error);
+      console.error('Error fetching host models:', error);
+      message.error('Failed to fetch host models');
     } finally {
       setModelsLoading(false);
     }
-  }, [modelsPagination.current, modelsPagination.pageSize]);
+  }, [modelsPagination.current, modelsPagination.page_size, modelFilters]);
 
-  const fetchParts = useCallback(async (
-    page = partsPagination.current, 
-    pageSize = partsPagination.pageSize,
-    filters = partFilters
-  ) => {
+  const fetchParts = useCallback(async (page = partsPagination.current, page_size = partsPagination.page_size) => {
     setPartsLoading(true);
-    const queryParams: any = { page, pageSize };
-    if (filters.modelId) queryParams.hostModelId = filters.modelId;
-    if (filters.partNumber) queryParams.partNumber_like = filters.partNumber; // Assuming API supports _like for partial match
-    
     try {
-      const response = await AdminService.getParts(queryParams);
-      setParts(response.items || []);
-      setPartsPagination({ current: response.page, pageSize: response.pageSize, total: response.total });
+      const params = {
+        page,
+        page_size,
+        ...partFilters,
+      };
+
+      const response = await AdminPartService.getParts(params);
+      setPartsList(response.items);
+      setPartsPagination({
+        ...partsPagination,
+        current: response.page,
+        total: response.total,
+      });
     } catch (error) {
-      message.error('获取料号列表失败');
-      console.error('Failed to fetch parts:', error);
+      console.error('Error fetching parts:', error);
+      message.error('Failed to fetch parts');
     } finally {
       setPartsLoading(false);
     }
-  }, [partsPagination.current, partsPagination.pageSize, partFilters]);
+  }, [partsPagination.current, partsPagination.page_size, partFilters]);
+
+  const fetchProductLines = async () => {
+    try {
+      const response = await adminProductLineService.getProductLines();
+      if (response && Array.isArray(response.items)) {
+        setProductLines(response.items);
+      }
+    } catch (error) {
+      console.error('Error fetching product lines:', error);
+    }
+  };
 
   useEffect(() => {
     fetchModels();
+    fetchProductLines();
   }, [fetchModels]);
 
   useEffect(() => {
-    // Fetch parts when selectedModelId changes or filters change
-    fetchParts(1, partsPagination.pageSize, { ...partFilters, modelId: selectedModelId || '' });
-  }, [fetchParts, selectedModelId, partFilters, partsPagination.pageSize]);
+    fetchParts();
+  }, [fetchParts]);
 
-  // Model Actions
-  const handleAddModel = () => {
-    setEditingModel(null);
-    modelForm.resetFields();
-    modelForm.setFieldsValue({ status: 'active' }); 
+  // When a model is selected, update the parts filter
+  const handleModelRowClick = (record: AdminHostModel) => {
+    setSelectedModelForParts(record);
+    setPartFilters((prev) => ({
+      ...prev,
+      hostModelId: record.id,
+    }));
+  };
+
+  // CRUD operations for models
+  const showModelModal = (record?: AdminHostModel) => {
+    setEditingModel(record || null);
+    
+    if (record) {
+      modelForm.setFieldsValue({
+        product_line_id: record.product_line_id,
+        model: record.model,
+        title_zh: record.title_zh,
+        title_en: record.title_en,
+        status: record.status,
+        sort_order: record.sort_order,
+      });
+    } else {
+      modelForm.resetFields();
+    }
+    
     setIsModelModalVisible(true);
   };
 
-  const handleEditModel = (model: AdminHostModel) => {
-    setEditingModel(model);
-    modelForm.setFieldsValue(model);
-    setIsModelModalVisible(true);
-  };
-
-  const handleDeleteModel = (model: AdminHostModel) => {
-    setConfirmMessage(`确定要删除型号 "${model.name}" 吗？此操作无法撤销。`);
-    setConfirmAction(() => async () => {
-        await AdminService.deleteHostModel(model.id);
-        message.success('型号删除成功');
-        fetchModels(); // Refresh list
-    });
-    setIsConfirmModalVisible(true);
-  };
-  
-  const handleToggleModelStatus = (model: AdminHostModel) => {
-    const newStatus: AdminModelStatus = model.status === 'active' ? 'inactive' : 'active';
-    const actionText = newStatus === 'active' ? '上架' : '下架';
-    setConfirmMessage(`确定要${actionText}型号 "${model.name}" 吗？`);
-    setConfirmAction(() => async () => {
-        await AdminService.updateHostModel(model.id, { ...model, status: newStatus });
-        message.success(`型号已${actionText}`);
-        fetchModels();
-    });
-    setIsConfirmModalVisible(true);
-  };
-
-  const handleModelFormFinish = async (values: AdminHostModel) => {
-    setModelsLoading(true);
+  const handleModelSubmit = async () => {
     try {
+      const values = await modelForm.validateFields();
+      
+      setModelsLoading(true);
+      
       if (editingModel) {
-        await AdminService.updateHostModel(editingModel.id, { ...editingModel, ...values });
-        message.success('型号更新成功');
+        await adminHostModelService.updateHostModel(editingModel.id, values);
+        message.success('主机型号更新成功');
       } else {
-        await AdminService.createHostModel(values);
-        message.success('型号创建成功');
+        await adminHostModelService.createHostModel(values);
+        message.success('主机型号创建成功');
       }
+      
       setIsModelModalVisible(false);
       fetchModels();
     } catch (error) {
-      message.error('保存型号失败');
+      console.error('Submit error:', error);
+      message.error('操作失败');
     } finally {
       setModelsLoading(false);
     }
   };
 
-  // Part Actions (Similar structure to Model Actions)
-  const handleAddPart = () => {
-    setEditingPart(null);
-    partForm.resetFields();
-    partForm.setFieldsValue({ status: 'active', hostModelId: selectedModelId || undefined });
-    setIsPartModalVisible(true);
+  const handleModelDelete = (record: AdminHostModel) => {
+    setRecordToDelete(record);
+    setShowDeleteConfirm(true);
   };
 
-  const handleEditPart = (part: AdminPart) => {
-    setEditingPart(part);
-    partForm.setFieldsValue(part);
-    setIsPartModalVisible(true);
-  };
-
-  const handleDeletePart = (part: AdminPart) => {
-    setConfirmMessage(`确定要删除料号 "${part.partNumber}" 吗？`);
-    setConfirmAction(() => async () => {
-        await AdminService.deletePart(part.id);
-        message.success('料号删除成功');
-        fetchParts();
-    });
-    setIsConfirmModalVisible(true);
-  };
-
-  const handleTogglePartStatus = (part: AdminPart) => {
-    const newStatus: AdminModelStatus = part.status === 'active' ? 'inactive' : 'active';
-    const actionText = newStatus === 'active' ? '上架' : '下架';
-    setConfirmMessage(`确定要${actionText}料号 "${part.partNumber}" 吗？`);
-    setConfirmAction(() => async () => {
-        await AdminService.updatePart(part.id, { ...part, status: newStatus });
-        message.success(`料号已${actionText}`);
-        fetchParts();
-    });
-    setIsConfirmModalVisible(true);
-  };
-  
-  const handlePartFormFinish = async (values: AdminPart) => {
-    setPartsLoading(true);
+  const confirmModelDelete = async () => {
+    if (!recordToDelete) return;
+    
+    setModelsLoading(true);
     try {
-      const payload = { ...values, hostModelId: values.hostModelId || selectedModelId || undefined };
+      await adminHostModelService.deleteHostModel(recordToDelete.id);
+      message.success('主机型号删除成功');
+      fetchModels();
+      
+      // If the deleted model was selected for parts, clear the selection
+      if (selectedModelForParts?.id === recordToDelete.id) {
+        setSelectedModelForParts(null);
+        setPartFilters((prev) => ({
+          ...prev,
+          hostModelId: undefined,
+        }));
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+      message.error('删除失败');
+    } finally {
+      setModelsLoading(false);
+      setShowDeleteConfirm(false);
+      setRecordToDelete(null);
+    }
+  };
+
+  // CRUD operations for parts
+  const showPartModal = (record?: AdminPart) => {
+    setEditingPart(record || null);
+    
+    if (record) {
+      partForm.setFieldsValue({
+        hostModelId: record.hostModelId,
+        partNumber: record.partNumber,
+        status: record.status,
+      });
+    } else {
+      partForm.resetFields();
+      if (selectedModelForParts) {
+        partForm.setFieldsValue({
+          hostModelId: selectedModelForParts.id,
+        });
+      }
+    }
+    
+    setIsPartModalVisible(true);
+  };
+
+  const handlePartSubmit = async () => {
+    try {
+      const values = await partForm.validateFields();
+      
+      setPartsLoading(true);
+      
       if (editingPart) {
-        await AdminService.updatePart(editingPart.id, { ...editingPart, ...payload });
+        await AdminPartService.updatePart(editingPart.id, values, values.hostModelId);
         message.success('料号更新成功');
       } else {
-        await AdminService.createPart(payload);
+        await AdminPartService.createPart(values, values.hostModelId);
         message.success('料号创建成功');
       }
+      
       setIsPartModalVisible(false);
       fetchParts();
     } catch (error) {
-      message.error('保存料号失败');
+      console.error('Submit error:', error);
+      message.error('操作失败');
     } finally {
       setPartsLoading(false);
     }
   };
 
-  const handleConfirmOk = async () => {
-    if (confirmAction) {
-      setConfirmLoading(true);
-      try {
-        await confirmAction();
-      } catch (error) {
-        message.error('操作失败');
-        console.error('Confirm action failed:', error);
-      } finally {
-        setConfirmLoading(false);
-        setIsConfirmModalVisible(false);
-        setConfirmAction(null);
-      }
+  const handlePartDelete = async (id: string, hostModelId: string) => {
+    try {
+      setPartsLoading(true);
+      await AdminPartService.deletePart(id, hostModelId);
+      message.success('料号删除成功');
+      fetchParts();
+    } catch (error) {
+      console.error('Delete error:', error);
+      message.error('删除失败');
+    } finally {
+      setPartsLoading(false);
     }
   };
 
+  // Navigate to the part edit page
+  const handleEditPart = (record: AdminPart) => {
+    navigate(`/admin/parts/${record.id}/edit`);
+  };
+
+  // Navigate to the relation page
+  const handlePartRelation = (record: AdminPart) => {
+    navigate(`/admin/relations?part_id=${record.id}`);
+  };
+
+  // Table columns definitions
   const modelColumns: ColumnsType<AdminHostModel> = [
-    { title: 'No', dataIndex: 'id', key: 'id', render: (text, record, index) => (modelsPagination.current - 1) * modelsPagination.pageSize + index + 1 },
-    { title: '型号名称', dataIndex: 'name', key: 'name' },
+    {
+      title: '编号',
+      dataIndex: 'id',
+      key: 'id',
+      width: 80,
+    },
+    {
+      title: '型号',
+      dataIndex: 'model',
+      key: 'model',
+      width: 150,
+    },
+    {
+      title: '中文名称',
+      dataIndex: 'title_zh',
+      key: 'title_zh',
+    },
     {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
-      render: (status: AdminModelStatus) => (
-        <Tag icon={status === 'active' ? <CheckCircleOutlined /> : <StopOutlined />} color={status === 'active' ? 'success' : 'error'}>
+      width: 120,
+      render: (status) => (
+        <Tag color={status === 'active' ? 'success' : 'error'}>
           {status === 'active' ? '已上架' : '已下架'}
         </Tag>
       ),
@@ -257,242 +341,421 @@ const MachinesPage: React.FC = () => {
     {
       title: '操作',
       key: 'action',
+      width: 150,
       render: (_, record) => (
-        <Space size="small">
-          <Tooltip title="编辑">
-            <Button icon={<EditOutlined />} onClick={() => handleEditModel(record)} size="small" />
-          </Tooltip>
-          <Tooltip title={record.status === 'active' ? '下架' : '上架'}>
-            <Button 
-                icon={record.status === 'active' ? <StopOutlined /> : <CheckCircleOutlined />}
-                onClick={() => handleToggleModelStatus(record)} 
-                size="small"
-                type={record.status === 'active' ? 'default' : 'primary'}
-                danger={record.status === 'active'}
-            />
-          </Tooltip>
-          <Tooltip title="删除">
-            <Button icon={<DeleteOutlined />} onClick={() => handleDeleteModel(record)} size="small" danger />
-          </Tooltip>
+        <Space size="middle">
+          <Button 
+            type="text" 
+            icon={<EditOutlined />} 
+            onClick={(e) => {
+              e.stopPropagation();
+              showModelModal(record);
+            }}
+          />
+          <Button 
+            type="text" 
+            danger 
+            icon={<DeleteOutlined />} 
+            onClick={(e) => {
+              e.stopPropagation();
+              handleModelDelete(record);
+            }}
+          />
         </Space>
       ),
     },
   ];
-
+  
   const partColumns: ColumnsType<AdminPart> = [
-    { title: 'No', dataIndex: 'id', key: 'id', render: (text, record, index) => (partsPagination.current - 1) * partsPagination.pageSize + index + 1 },
-    { title: '型号', dataIndex: 'hostModelName', key: 'hostModelName', render: (text, record) => record.hostModelName || 'N/A' }, // Assuming API populates this or we map it
-    { title: '料号', dataIndex: 'partNumber', key: 'partNumber' },
+    {
+      title: '编号',
+      dataIndex: 'id',
+      key: 'id',
+      width: 80,
+    },
+    {
+      title: '型号',
+      dataIndex: 'hostModelName',
+      key: 'hostModelName',
+      width: 150,
+    },
+    {
+      title: '料号',
+      dataIndex: 'partNumber',
+      key: 'partNumber',
+    },
     {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
-      render: (status: AdminModelStatus) => (
-        <Tag icon={status === 'active' ? <CheckCircleOutlined /> : <StopOutlined />} color={status === 'active' ? 'success' : 'error'}>
-          {status === 'active' ? '已上架' : '已下架'}
+      width: 120,
+      render: (status) => (
+        <Tag color={status === 'active' ? 'success' : 'error'}>
+          {status === 'active' ? '正常' : '停用'}
         </Tag>
       ),
     },
     {
       title: '操作',
       key: 'action',
+      width: 200,
       render: (_, record) => (
-        <Space size="small">
-          <Tooltip title="编辑">
-            <Button icon={<EditOutlined />} onClick={() => handleEditPart(record)} size="small" />
-          </Tooltip>
-          <Tooltip title={record.status === 'active' ? '下架' : '上架'}>
-             <Button 
-                icon={record.status === 'active' ? <StopOutlined /> : <CheckCircleOutlined />}
-                onClick={() => handleTogglePartStatus(record)} 
-                size="small"
-                type={record.status === 'active' ? 'default' : 'primary'}
-                danger={record.status === 'active'}
-            />
-          </Tooltip>
-          <Tooltip title="关联">
-            <Button icon={<ApiOutlined />} onClick={() => message.info('关联功能待实现')} size="small" />
-          </Tooltip>
-          <Tooltip title="删除">
-            <Button icon={<DeleteOutlined />} onClick={() => handleDeletePart(record)} size="small" danger />
-          </Tooltip>
+        <Space size="middle">
+          <Button 
+            type="text" 
+            icon={<EditOutlined />} 
+            onClick={() => handleEditPart(record)}
+          />
+          <Button 
+            type="text" 
+            icon={<LinkOutlined />} 
+            onClick={() => handlePartRelation(record)}
+          />
+          <Button 
+            type="text" 
+            danger 
+            icon={<DeleteOutlined />} 
+            onClick={() => handlePartDelete(record.id, record.hostModelId || '')}
+          />
         </Space>
       ),
     },
   ];
 
+  // Table event handlers
   const handleModelTableChange = (pagination: any) => {
     fetchModels(pagination.current, pagination.pageSize);
   };
 
   const handlePartTableChange = (pagination: any) => {
-    fetchParts(pagination.current, pagination.pageSize, partFilters);
-  };
-  
-  const handlePartFilterChange = (changedValues: any, allValues: any) => {
-    setPartFilters({modelId: allValues.modelIdFilter || '', partNumber: allValues.partNumberFilter || ''});
+    fetchParts(pagination.current, pagination.pageSize);
   };
 
-  const resetPartFilters = () => {
-    setPartFilters({ modelId: '', partNumber: '' });
-    // TODO: Also reset filter form fields if using a Form instance for filters
+  const handleClearPartFilter = () => {
+    setSelectedModelForParts(null);
+    setPartFilters((prev) => ({
+      ...prev,
+      hostModelId: undefined,
+    }));
   };
-
-  // Mockup shows export/import but functionality needs specific API endpoints
-  const exportMenu = (
-    <Menu onClick={({ key }) => message.info(`导出 ${key} 格式...`)}>
-      <Menu.Item key="excel">Excel</Menu.Item>
-      <Menu.Item key="csv">CSV</Menu.Item>
-      <Menu.Item key="json">JSON</Menu.Item>
-    </Menu>
-  );
 
   return (
-    <Space direction="vertical" size="large" style={{ width: '100%' }}>
-      <Title level={2}>主机管理</Title>
-
-      <Card title="型号表">
-        <Space style={{ marginBottom: 16 }}>
-          <Dropdown overlay={exportMenu}>
-            <Button icon={<CloudDownloadOutlined />}>导出</Button>
-          </Dropdown>
-          <Button icon={<CloudUploadOutlined />} onClick={() => message.info('导入功能待实现')}>导入</Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleAddModel}>
-            新增型号
-          </Button>
-        </Space>
-        <Table
+    <div className="machines-page">
+      {/* 主机型号管理卡片 */}
+      <Card 
+        title={<Title level={4}>主机型号管理</Title>}
+        className="mb-4"
+      >
+        {/* 工具栏 */}
+        <div className="mb-4 flex justify-between">
+          <div>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => showModelModal()}>
+              新增型号
+            </Button>
+            <Button className="ml-2" icon={<CloudUploadOutlined />}>导入</Button>
+            <Button className="ml-2" icon={<CloudDownloadOutlined />}>导出</Button>
+          </div>
+          <div>
+            <Space>
+              <Select 
+                placeholder="产品线" 
+                style={{ width: 200 }}
+                allowClear
+                onChange={(value) => setModelFilters(prev => ({ ...prev, product_line_id: value }))}
+              >
+                {productLines.map(line => (
+                  <Option key={line.id} value={line.id}>
+                    {line.title_zh || line.title_en}
+                  </Option>
+                ))}
+              </Select>
+              <Select 
+                placeholder="状态" 
+                style={{ width: 100 }}
+                allowClear
+                onChange={(value) => setModelFilters(prev => ({ ...prev, status: value }))}
+              >
+                <Option value="active">已上架</Option>
+                <Option value="inactive">已下架</Option>
+              </Select>
+              <Input.Search 
+                placeholder="搜索型号" 
+                allowClear 
+                style={{ width: 200 }}
+                onSearch={(value) => setModelFilters(prev => ({ ...prev, search: value }))}
+              />
+            </Space>
+          </div>
+        </div>
+        
+        {/* 主机型号表格 */}
+        <Table 
           columns={modelColumns}
-          dataSource={models}
-          loading={modelsLoading}
-          pagination={modelsPagination}
+          dataSource={modelsList}
           rowKey="id"
+          loading={modelsLoading}
+          pagination={{
+            current: modelsPagination.current,
+            pageSize: modelsPagination.page_size,
+            total: modelsPagination.total,
+            showSizeChanger: true,
+            showTotal: (total) => `共 ${total} 项`,
+            pageSizeOptions: ['5', '10', '20', '50'],
+          }}
           onChange={handleModelTableChange}
           onRow={(record) => ({
-            onClick: () => {
-              setSelectedModelId(record.id);
-              // Also update the filter dropdown for parts table if it's separate
-              // and reset part number filter text
-              setPartFilters(prev => ({...prev, modelId: record.id, partNumber: ''})); 
-            },
+            onClick: () => handleModelRowClick(record),
+            className: selectedModelForParts?.id === record.id ? 'ant-table-row-selected' : '',
           })}
-          rowClassName={(record) => (record.id === selectedModelId ? 'ant-table-row-selected' : '')}
+          size="middle"
         />
       </Card>
 
-      <Card title="料号表">
-        <Form layout="inline" onValuesChange={handlePartFilterChange} initialValues={{modelIdFilter: selectedModelId || undefined}} style={{ marginBottom: 16 }}>
-            <Form.Item name="modelIdFilter" label="型号">
-                <Select placeholder="全部型号" style={{ width: 200 }} allowClear defaultValue={selectedModelId || undefined}>
-                    {models.map(model => (
-                        <Option key={model.id} value={model.id}>{model.name}</Option>
-                    ))}
-                </Select>
-            </Form.Item>
-            <Form.Item name="partNumberFilter" label="料号">
-                <Input placeholder="请输入料号" style={{ width: 200 }} />
-            </Form.Item>
-            <Form.Item>
-                <Button icon={<FilterOutlined />} onClick={() => fetchParts(1, partsPagination.pageSize, partFilters)}>筛选</Button>
-            </Form.Item>
-            <Form.Item>
-                <Button icon={<UndoOutlined />} onClick={resetPartFilters}>重置</Button>
-            </Form.Item>
-        </Form>
-        <Space style={{ marginBottom: 16 }}>
-          <Dropdown overlay={exportMenu}>
-            <Button icon={<CloudDownloadOutlined />}>导出</Button>
-          </Dropdown>
-          <Button icon={<CloudUploadOutlined />} onClick={() => message.info('导入功能待实现')}>导入</Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleAddPart}>
-            新增料号
-          </Button>
-        </Space>
-        <Table
-          columns={partColumns}
-          dataSource={parts}
-          loading={partsLoading}
-          pagination={partsPagination}
-          rowKey="id"
-          onChange={handlePartTableChange}
-        />
-      </Card>
-
-      {/* Model Add/Edit Modal */}
-      <Modal
-        title={editingModel ? "编辑型号" : "新增型号"}
-        visible={isModelModalVisible}
-        onCancel={() => setIsModelModalVisible(false)}
-        footer={null} // Using Form's submit button
-        destroyOnClose
+      {/* 料号管理卡片 */}
+      <Card 
+        title={
+          <div className="flex justify-between">
+            <Title level={4}>料号管理</Title>
+            {selectedModelForParts && (
+              <div>
+                <Text>当前型号: {selectedModelForParts.model}</Text>
+                <Button type="link" onClick={handleClearPartFilter}>清除筛选</Button>
+              </div>
+            )}
+          </div>
+        }
       >
-        <Form form={modelForm} layout="vertical" onFinish={handleModelFormFinish} initialValues={{ status: 'active'}}>
-          <Form.Item name="name" label="型号名称" rules={[{ required: true, message: '请输入型号名称' }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item name="status" label="状态" rules={[{ required: true, message: '请选择状态' }]}>
-            <Select>
-              <Option value="active">已上架</Option>
-              <Option value="inactive">已下架</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item style={{ textAlign: 'right' }}>
+        {/* 工具栏 */}
+        <div className="mb-4 flex justify-between">
+          <div>
+            <Button 
+              type="primary" 
+              icon={<PlusOutlined />} 
+              onClick={() => showPartModal()}
+              disabled={!selectedModelForParts}
+            >
+              新增料号
+            </Button>
+            <Button className="ml-2" icon={<CloudUploadOutlined />}>导入</Button>
+            <Button className="ml-2" icon={<CloudDownloadOutlined />}>导出</Button>
+          </div>
+          <div>
             <Space>
-              <Button onClick={() => setIsModelModalVisible(false)}>取消</Button>
-              <Button type="primary" htmlType="submit" loading={modelsLoading}>保存</Button>
+              <Select 
+                placeholder="型号" 
+                style={{ width: 200 }}
+                allowClear
+                value={partFilters.hostModelId}
+                onChange={(value) => {
+                  setPartFilters(prev => ({ ...prev, hostModelId: value }));
+                  if (value) {
+                    const model = modelsList.find(m => m.id === value);
+                    setSelectedModelForParts(model || null);
+                  } else {
+                    setSelectedModelForParts(null);
+                  }
+                }}
+              >
+                {modelsList.map(model => (
+                  <Option key={model.id} value={model.id}>
+                    {model.model}
+                  </Option>
+                ))}
+              </Select>
+              <Select 
+                placeholder="状态" 
+                style={{ width: 100 }}
+                allowClear
+                onChange={(value) => setPartFilters(prev => ({ ...prev, status: value }))}
+              >
+                <Option value="active">正常</Option>
+                <Option value="inactive">停用</Option>
+              </Select>
+              <Input.Search 
+                placeholder="搜索料号" 
+                allowClear 
+                style={{ width: 200 }}
+                onSearch={(value) => setPartFilters(prev => ({ ...prev, search: value }))}
+              />
             </Space>
-          </Form.Item>
+          </div>
+        </div>
+        
+        {/* 料号表格 */}
+        <Table 
+          columns={partColumns}
+          dataSource={partsList}
+          rowKey="id"
+          loading={partsLoading}
+          pagination={{
+            current: partsPagination.current,
+            pageSize: partsPagination.page_size,
+            total: partsPagination.total,
+            showSizeChanger: true,
+            showTotal: (total) => `共 ${total} 项`,
+            pageSizeOptions: ['5', '10', '20', '50'],
+          }}
+          onChange={handlePartTableChange}
+          size="middle"
+        />
+      </Card>
+
+      {/* 主机型号模态框 */}
+      <Modal
+        title={editingModel ? '编辑主机型号' : '新增主机型号'}
+        open={isModelModalVisible}
+        onCancel={() => setIsModelModalVisible(false)}
+        onOk={handleModelSubmit}
+        confirmLoading={modelsLoading}
+        width={700}
+      >
+        <Form
+          form={modelForm}
+          layout="vertical"
+        >
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="product_line_id"
+                label="产品线"
+                rules={[{ required: true, message: '请选择产品线' }]}
+              >
+                <Select placeholder="请选择产品线">
+                  {productLines.map(line => (
+                    <Option key={line.id} value={line.id}>
+                      {line.title_zh || line.title_en}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="model"
+                label="型号编码"
+                rules={[{ required: true, message: '请输入型号编码' }]}
+              >
+                <Input placeholder="请输入型号编码" />
+              </Form.Item>
+            </Col>
+          </Row>
+          
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="title_zh"
+                label="中文名称"
+                rules={[{ required: true, message: '请输入中文名称' }]}
+              >
+                <Input placeholder="请输入中文名称" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="title_en"
+                label="英文名称"
+                rules={[{ required: true, message: '请输入英文名称' }]}
+              >
+                <Input placeholder="请输入英文名称" />
+              </Form.Item>
+            </Col>
+          </Row>
+          
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="status"
+                label="状态"
+                initialValue="active"
+              >
+                <Select>
+                  <Option value="active">上架</Option>
+                  <Option value="inactive">下架</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="sort_order"
+                label="排序"
+                initialValue={0}
+              >
+                <Input type="number" placeholder="请输入排序值" />
+              </Form.Item>
+            </Col>
+          </Row>
         </Form>
       </Modal>
 
-      {/* Part Add/Edit Modal */}
+      {/* 料号模态框 */}
       <Modal
-        title={editingPart ? "编辑料号" : "新增料号"}
-        visible={isPartModalVisible}
+        title={editingPart ? '编辑料号' : '新增料号'}
+        open={isPartModalVisible}
         onCancel={() => setIsPartModalVisible(false)}
-        footer={null}
-        destroyOnClose
+        onOk={handlePartSubmit}
+        confirmLoading={partsLoading}
+        width={700}
       >
-        <Form form={partForm} layout="vertical" onFinish={handlePartFormFinish} initialValues={{ status: 'active'}}>
-          <Form.Item name="hostModelId" label="归属型号" rules={[{ required: true, message: '请选择归属型号' }]}>
-            <Select placeholder="选择主机型号" defaultValue={selectedModelId || undefined}>
-              {models.map(model => (
-                <Option key={model.id} value={model.id}>{model.name}</Option>
+        <Form
+          form={partForm}
+          layout="vertical"
+        >
+          <Form.Item
+            name="hostModelId"
+            label="型号"
+            rules={[{ required: true, message: '请选择型号' }]}
+          >
+            <Select placeholder="请选择型号" disabled={!!selectedModelForParts}>
+              {modelsList.map(model => (
+                <Option key={model.id} value={model.id}>
+                  {model.model}
+                </Option>
               ))}
             </Select>
           </Form.Item>
-          <Form.Item name="partNumber" label="料号" rules={[{ required: true, message: '请输入料号' }]}>
-            <Input />
+          
+          <Form.Item
+            name="partNumber"
+            label="料号"
+            rules={[{ required: true, message: '请输入料号' }]}
+          >
+            <Input placeholder="请输入料号" />
           </Form.Item>
-          <Form.Item name="status" label="状态" rules={[{ required: true, message: '请选择状态' }]}>
+          
+          <Form.Item
+            name="status"
+            label="状态"
+            initialValue="active"
+          >
             <Select>
-              <Option value="active">已上架</Option>
-              <Option value="inactive">已下架</Option>
+              <Option value="active">正常</Option>
+              <Option value="inactive">停用</Option>
             </Select>
-          </Form.Item>
-          <Form.Item style={{ textAlign: 'right' }}>
-            <Space>
-              <Button onClick={() => setIsPartModalVisible(false)}>取消</Button>
-              <Button type="primary" htmlType="submit" loading={partsLoading}>保存</Button>
-            </Space>
           </Form.Item>
         </Form>
       </Modal>
-      
-      {/* Confirmation Modal */}
+
+      {/* 删除确认对话框 */}
       <Modal
-        title="确认操作"
-        visible={isConfirmModalVisible}
-        onOk={handleConfirmOk}
-        onCancel={() => setIsConfirmModalVisible(false)}
-        confirmLoading={confirmLoading}
+        title="确认删除"
+        open={showDeleteConfirm}
+        onOk={confirmModelDelete}
+        onCancel={() => {
+          setShowDeleteConfirm(false);
+          setRecordToDelete(null);
+        }}
         okText="确认"
         cancelText="取消"
       >
-        <p>{confirmMessage}</p>
+        <p>确定要删除此主机型号吗？此操作无法撤销。</p>
+        {recordToDelete && (
+          <p>
+            型号：{recordToDelete.model}<br />
+            名称：{recordToDelete.title_zh}
+          </p>
+        )}
       </Modal>
-
-    </Space>
+    </div>
   );
 };
 

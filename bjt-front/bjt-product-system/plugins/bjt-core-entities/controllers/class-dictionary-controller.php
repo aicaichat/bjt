@@ -58,6 +58,10 @@ class BJT_Dictionary_Controller extends BJT_API_Controller {
             'currencies' => __('Currencies'),
             'order_statuses' => __('Order Statuses'),
             'payment_methods' => __('Payment Methods'),
+            'shapes' => __('Shapes'),
+            'materials' => __('Materials'),
+            'specifications' => __('Specifications'),
+            'host_models' => __('Host Models'),
         ];
         
         return $this->format_response([
@@ -69,6 +73,7 @@ class BJT_Dictionary_Controller extends BJT_API_Controller {
      * 获取特定类型的数据字典项
      */
     public function get_dictionary_items($request) {
+        global $wpdb;
         $type = $request['type'];
         $lang = $request->get_param('lang') ?: 'zh';
         
@@ -81,6 +86,30 @@ class BJT_Dictionary_Controller extends BJT_API_Controller {
                     ['code' => 'medium', 'name_zh' => '中型', 'name_en' => 'Medium'],
                     ['code' => 'large', 'name_zh' => '大型', 'name_en' => 'Large'],
                 ];
+                break;
+                
+            case 'product_lines':
+                $table_name = $wpdb->prefix . 'bjt_product_lines';
+                $query = $wpdb->prepare("
+                    SELECT id, code, title_zh, title_en, status, sort_order 
+                    FROM {$table_name} 
+                    WHERE status = %s
+                    ORDER BY sort_order ASC, id ASC
+                ", 'publish');
+                
+                $results = $wpdb->get_results($query);
+                
+                if ($results) {
+                    foreach ($results as $row) {
+                        $items[] = [
+                            'id' => (int) $row->id,
+                            'code' => trim($row->code, '"\''),
+                            'name_zh' => trim($row->title_zh, '"\''),
+                            'name_en' => trim($row->title_en, '"\''),
+                            'sort_order' => (int) $row->sort_order
+                        ];
+                    }
+                }
                 break;
                 
             case 'regions':
@@ -119,6 +148,148 @@ class BJT_Dictionary_Controller extends BJT_API_Controller {
                     ['code' => 'transfer', 'name_zh' => '银行转账', 'name_en' => 'Bank Transfer'],
                     ['code' => 'cod', 'name_zh' => '货到付款', 'name_en' => 'Cash on Delivery'],
                 ];
+                break;
+                
+            case 'shapes':
+                $table_name = $wpdb->prefix . 'bjt_shapes';
+                $query = $wpdb->prepare("
+                    SELECT id, product_line_id, code, name_zh, name_en, image_url, image_url2, status, sort_order 
+                    FROM {$table_name} 
+                    WHERE status = %s
+                    ORDER BY sort_order ASC, id ASC
+                ", 'publish');
+                
+                $results = $wpdb->get_results($query);
+                
+                if ($results) {
+                    foreach ($results as $row) {
+                        $items[] = [
+                            'id' => (int) $row->id,
+                            'product_line_id' => (int) $row->product_line_id,
+                            'code' => trim($row->code, '"\''),
+                            'name_zh' => trim($row->name_zh, '"\''),
+                            'name_en' => trim($row->name_en, '"\''),
+                            'image_url' => trim($row->image_url, '"\''),
+                            'image_url2' => trim($row->image_url2, '"\''),
+                            'sort_order' => (int) $row->sort_order
+                        ];
+                    }
+                }
+                break;
+                
+            case 'materials':
+                $table_name = $wpdb->prefix . 'bjt_materials';
+                $query = $wpdb->prepare("
+                    SELECT id, product_line_id, code, name_zh, name_en, status, sort_order 
+                    FROM {$table_name} 
+                    WHERE status = %s
+                    ORDER BY sort_order ASC, id ASC
+                ", 'publish');
+                
+                $results = $wpdb->get_results($query);
+                
+                if ($results) {
+                    foreach ($results as $row) {
+                        $items[] = [
+                            'id' => (int) $row->id,
+                            'product_line_id' => (int) $row->product_line_id,
+                            'code' => trim($row->code, '"\''),
+                            'name_zh' => trim($row->name_zh, '"\''),
+                            'name_en' => trim($row->name_en, '"\''),
+                            'sort_order' => (int) $row->sort_order
+                        ];
+                    }
+                }
+                break;
+                
+            case 'specifications':
+                $table_name = $wpdb->prefix . 'bjt_specifications';
+                $query = $wpdb->prepare("
+                    SELECT id, product_line_id, spec_type, metric_value, metric_unit, 
+                    imperial_value, imperial_unit, status, sort_order 
+                    FROM {$table_name} 
+                    WHERE status = %s
+                    ORDER BY sort_order ASC, id ASC
+                ", 'publish');
+                
+                $results = $wpdb->get_results($query);
+                
+                if ($results) {
+                    foreach ($results as $row) {
+                        // 根据spec_type生成中英文名称
+                        $name_zh = '';
+                        $name_en = '';
+                        
+                        // 清理spec_type可能含有的引号
+                        $spec_type = trim($row->spec_type, '"\'');
+                        
+                        switch ($spec_type) {
+                            case 'thickness':
+                                $name_zh = '厚度';
+                                $name_en = 'Thickness';
+                                break;
+                            case 'weight':
+                                $name_zh = '重量';
+                                $name_en = 'Weight';
+                                break;
+                            case 'width':
+                                $name_zh = '宽度';
+                                $name_en = 'Width';
+                                break;
+                            case 'length':
+                                $name_zh = '长度';
+                                $name_en = 'Length';
+                                break;
+                            default:
+                                $name_zh = $spec_type;
+                                $name_en = $spec_type;
+                        }
+                        
+                        $items[] = [
+                            'id' => (int) $row->id,
+                            'product_line_id' => (int) $row->product_line_id,
+                            'code' => $spec_type,
+                            'name_zh' => $name_zh,
+                            'name_en' => $name_en,
+                            'metric_value' => (float) $row->metric_value,
+                            'metric_unit' => trim($row->metric_unit, '"\''),
+                            'imperial_value' => (float) $row->imperial_value,
+                            'imperial_unit' => trim($row->imperial_unit, '"\''),
+                            'sort_order' => (int) $row->sort_order
+                        ];
+                    }
+                }
+                break;
+                
+            case 'host_models':
+                $table_name = $wpdb->prefix . 'bjt_host_models';
+                $query = $wpdb->prepare("
+                    SELECT id, product_line_id, model, title_zh, title_en, type, status, sort_order 
+                    FROM {$table_name} 
+                    WHERE status = %s
+                    ORDER BY sort_order ASC, id ASC
+                ", 'publish');
+                
+                $results = $wpdb->get_results($query);
+                
+                if ($results) {
+                    foreach ($results as $row) {
+                        // 处理引号和其他特殊字符
+                        $model = trim($row->model, '"\'');
+                        $title_zh = trim($row->title_zh, '"\'');
+                        $title_en = trim($row->title_en, '"\'');
+                        
+                        $items[] = [
+                            'id' => (int) $row->id,
+                            'product_line_id' => (int) $row->product_line_id,
+                            'code' => $model,
+                            'name_zh' => $title_zh,
+                            'name_en' => $title_en,
+                            'type' => $row->type,
+                            'sort_order' => (int) $row->sort_order
+                        ];
+                    }
+                }
                 break;
                 
             default:
@@ -170,21 +341,11 @@ class BJT_Dictionary_Controller extends BJT_API_Controller {
      * @param mixed $data 响应数据
      * @param string $message 消息
      * @param bool $success 是否成功
-     * @return array 格式化的响应
+     * @param int $status_code HTTP状态码
+     * @return WP_REST_Response 格式化的响应
      */
-    protected function format_response($data = null, $message = '', $success = true) {
-        $response = [
-            'success' => $success,
-        ];
-        
-        if ($data !== null) {
-            $response['data'] = $data;
-        }
-        
-        if (!empty($message)) {
-            $response['message'] = $message;
-        }
-        
-        return $response;
+    protected function format_response($data = null, $message = '', $success = true, $status_code = 200) {
+        // 调用父类的format_response方法
+        return parent::format_response($data, $message, $success, $status_code);
     }
 } 

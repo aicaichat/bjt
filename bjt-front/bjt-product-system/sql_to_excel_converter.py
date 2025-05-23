@@ -8,6 +8,23 @@ from openpyxl.utils import get_column_letter
 import sys
 import json
 
+# 字段默认值映射
+FIELD_DEFAULTS = {
+    'created_at': 'NOW()',
+    'updated_at': 'NOW()',
+    'status': "'publish'",
+    'sort_order': 0,
+    'image_url': "''",
+    'description_zh': "''",
+    'description_en': "''",
+    'type': "''",
+    'code': "''",
+    'brand': "''",
+    'spec': "''",
+    'spec_imperial': "''",
+    'unit': "'pcs'",
+    # 可根据实际表结构继续补充
+}
 
 class SQLExcelConverter:
     def __init__(self, sql_dir=None, output_dir=None):
@@ -15,20 +32,95 @@ class SQLExcelConverter:
         self.output_dir = output_dir or os.getcwd()
         self.tables = {}
         self.warnings = []
+        self.table_schemas = {}  # 存储表结构定义
         
+    def parse_table_schemas(self):
+        """从init.sql解析表结构定义"""
+        init_sql_path = os.path.join(self.sql_dir, 'init.sql')
+        if not os.path.exists(init_sql_path):
+            print(f"Warning: init.sql not found at {init_sql_path}. Will use INSERT statements for table structure.")
+            return
+            
+        try:
+            with open(init_sql_path, 'r', encoding='utf-8') as f:
+                sql_content = f.read()
+                
+            # 解析CREATE TABLE语句
+            create_pattern = r'CREATE\s+TABLE\s+IF\s+NOT\s+EXISTS\s+`(\w+)`\s*\(([\s\S]*?)\)\s*ENGINE'
+            table_matches = re.finditer(create_pattern, sql_content, re.IGNORECASE)
+            
+            for match in table_matches:
+                table_name = match.group(1)
+                columns_def = match.group(2)
+                
+                # 从列定义中提取字段名
+                column_pattern = r'`(\w+)`\s+\w+'
+                columns = re.findall(column_pattern, columns_def)
+                
+                self.table_schemas[table_name] = columns
+                print(f"Parsed schema for table {table_name}: {len(columns)} columns")
+                
+        except Exception as e:
+            print(f"Error parsing init.sql: {str(e)}")
+            
     def parse_sql_files(self, file_paths=None):
         """Parse SQL files and extract table structures and data"""
+        # 先解析表结构定义
+        self.parse_table_schemas()
+        
         if file_paths is None:
             # Use all SQL files in the directory
             file_paths = [os.path.join(self.sql_dir, f) for f in os.listdir(self.sql_dir) 
-                         if f.endswith('.sql')]
+                         if f.endswith('.sql') and f != 'init.sql']
         
         for file_path in file_paths:
             self._parse_sql_file(file_path)
             
+        # 确保所有表都有完整的字段列表
+        self._ensure_complete_columns()
+            
         print(f"Successfully parsed {len(self.tables)} tables from SQL files.")
         return self.tables
     
+    def _ensure_complete_columns(self):
+        """确保所有料号表都有完整的字段列表"""
+        critical_tables = ['wp_bjt_parts', 'wp_bjt_accessories', 'wp_bjt_consumables', 'wp_bjt_spare_parts']
+        
+        for table_name in critical_tables:
+            if table_name in self.tables and table_name in self.table_schemas:
+                # 获取完整字段列表
+                complete_columns = self.table_schemas[table_name]
+                # 获取当前字段列表
+                current_columns = self.tables[table_name]['columns']
+                
+                # 检查是否缺少字段
+                missing_columns = [col for col in complete_columns if col not in current_columns]
+                
+                if missing_columns:
+                    print(f"Adding {len(missing_columns)} missing columns to {table_name}")
+                    
+                    # 更新字段列表
+                    self.tables[table_name]['columns'] = complete_columns
+                    
+                    # 更新数据行，为缺失字段补NULL
+                    for i, row in enumerate(self.tables[table_name]['rows']):
+                        # 构建完整行数据
+                        complete_row = []
+                        for col in complete_columns:
+                            if col in current_columns:
+                                # 保留原有字段的值
+                                idx = current_columns.index(col)
+                                if idx < len(row):
+                                    complete_row.append(row[idx])
+                                else:
+                                    complete_row.append(None)
+                            else:
+                                # 补充缺失字段
+                                complete_row.append(None)
+                        
+                        # 更新行数据
+                        self.tables[table_name]['rows'][i] = complete_row
+                        
     def _parse_sql_file(self, file_path):
         """Parse a single SQL file"""
         try:
@@ -59,7 +151,6 @@ class SQLExcelConverter:
                     current_value = ""
                     in_quote = False
                     quote_char = None
-                    
                     for char in val_str + ',':  # Add comma to process the last value
                         if char in ["'", '"'] and (not in_quote or char == quote_char):
                             in_quote = not in_quote
@@ -73,7 +164,6 @@ class SQLExcelConverter:
                             current_value = ""
                         else:
                             current_value += char
-                    
                     # Clean up values
                     cleaned_values = []
                     for val in values:
@@ -86,14 +176,15 @@ class SQLExcelConverter:
                             cleaned_values.append(val[1:-1])
                         else:
                             cleaned_values.append(val)
-                    
-                    if len(cleaned_values) != len(columns):
-                        self.warnings.append(f"Warning: Column count mismatch in table {table_name}. Expected {len(columns)}, got {len(cleaned_values)}.")
-                        # Skip this row if column count doesn't match
-                        continue
-                        
+                    # 修复字段数量不匹配：补齐或截断
+                    if len(cleaned_values) < len(columns):
+                        # 补齐缺失字段
+                        cleaned_values += [None] * (len(columns) - len(cleaned_values))
+                    elif len(cleaned_values) > len(columns):
+                        # 截断多余字段
+                        cleaned_values = cleaned_values[:len(columns)]
+                    # 现在字段数量严格等于表结构
                     rows.append(cleaned_values)
-                
                 # Add or update table data
                 if table_name not in self.tables:
                     self.tables[table_name] = {
@@ -102,7 +193,6 @@ class SQLExcelConverter:
                     }
                 else:
                     self.tables[table_name]['rows'].extend(rows)
-                    
         except Exception as e:
             print(f"Error parsing SQL file {file_path}: {str(e)}")
             raise
@@ -150,7 +240,7 @@ class SQLExcelConverter:
             "",
             "1. 本Excel文件包含多个工作表，每个工作表对应一个数据库表。",
             "2. 每个工作表的第一行是列名，对应数据库表的字段名。",
-            "3. 第2-6行是留给用户填写数据的空行。",
+            "3. 第2-6行是留给用户填写数据的空行。可自行扩展到多行",
             "4. 第8行开始是示例数据，仅供参考，不会被导入。",
             "5. 填写数据时，请遵循以下规则：",
             "   - 数字类型直接填写数字，不需要引号",
@@ -162,7 +252,18 @@ class SQLExcelConverter:
             "",
             "6. 填写完毕后，使用导入脚本将数据导入数据库。",
             "",
-            "注意：请不要修改表格的结构，包括列名和格式。"
+            "注意：请不要修改表格的结构，包括列名和格式。",
+            "",
+            "导出 SQL 前请删除或清空所有样例数据行（通常为第8行及以后），否则这些数据也会被转为 SQL 语句！",
+            "",
+            "图片字段填写要求：",
+            "- 图片字段请填写图片的URL路径，如 /images/shop/LA-E4S.jpg，不要直接粘贴图片。",
+            "- 推荐图片尺寸：宽度800像素，高度800像素，比例要求1:1（正方形）。",
+            "- 单张图片大小建议不超过500KB，最佳为100~300KB，以保证前端页面加载速度。",
+            "- 推荐图片格式：JPG、PNG（如需透明背景请用PNG）。",
+            "- 图片文件名建议使用英文、数字、下划线，避免中文和特殊字符。",
+            "- 图片应居中、主体清晰，背景简洁，避免过多留白或裁切不当。",
+            "- 如有多张图片字段（如image1_url, image2_url），请分别填写对应图片的URL。",
         ]
         
         for i, text in enumerate(instructions):
@@ -235,7 +336,10 @@ class SQLExcelConverter:
         )
         
         for row_idx, row_data in enumerate(rows[:5], start=8):
-            for col_idx, value in enumerate(row_data, start=1):
+            for col_idx, (col, value) in enumerate(zip(columns, row_data), start=1):
+                # 自动填充默认值
+                if value is None or value == '':
+                    value = FIELD_DEFAULTS.get(col, value)
                 cell = ws.cell(row=row_idx, column=col_idx, value=value)
                 cell.fill = example_fill
                 cell.border = example_border
@@ -364,8 +468,20 @@ if __name__ == "__main__":
     def excel_to_sql(self, excel_path, output_path=None, dialect='mysql', insert_format='multi-row', batch_size=1000, on_duplicate=False):
         """Convert Excel file to SQL INSERT statements"""
         if output_path is None:
-            output_path = os.path.join(self.output_dir, 'generated_inserts.sql')
-        
+            # Generate a default output path based on the Excel filename
+            excel_filename = os.path.basename(excel_path)
+            # Sanitize filename: remove "database_import_templatebak", "（", "）", ".xlsx" and replace with underscores
+            sanitized_name = excel_filename.replace('database_import_templatebak', '')
+            sanitized_name = sanitized_name.replace('（', '_').replace('）', '').replace(' ', '_')
+            sanitized_name = os.path.splitext(sanitized_name)[0] # remove .xlsx
+            if not sanitized_name or sanitized_name == '_': # Handle cases where the name becomes empty or just an underscore
+                 sanitized_name = "excel_import" # Default if sanitization results in empty string
+            
+            # Ensure the output directory exists
+            generated_sql_dir = os.path.join(self.output_dir or os.getcwd(), 'generated_sql_imports')
+            os.makedirs(generated_sql_dir, exist_ok=True)
+            output_path = os.path.join(generated_sql_dir, f'{sanitized_name}.sql')
+
         # Read Excel file
         xl = pd.ExcelFile(excel_path)
         
@@ -387,14 +503,41 @@ if __name__ == "__main__":
             tables.append(sheet_name)
             
             # Read sheet data
-            df = pd.read_excel(excel_path, sheet_name=sheet_name)
+            # Explicitly use the first row as header
+            df = pd.read_excel(excel_path, sheet_name=sheet_name, header=0)
             
-            # Get only the first 5 rows (user data)
-            df = df.iloc[:5]
+            # Drop rows that are entirely empty (often happens at the end of user input or before separator)
+            df.dropna(how='all', inplace=True)
+
+            # Find the separator for example data by checking all cells in a row
+            separator_text = "=== 示例数据 ==="
+            separator_row_index = -1
+            for index, row in df.iterrows():
+                if separator_text in row.astype(str).values:
+                    separator_row_index = index
+                    break
             
-            # Remove empty rows
-            df = df.dropna(how='all')
+            if separator_row_index != -1:
+                # If separator is found, take data only from rows before the separator's row
+                df = df.loc[df.index < separator_row_index]
+            # If no separator, assume all rows (after header) are data meant for import.
+            # This case should be rare if templates are consistently used.
+
+            # Drop rows that are entirely empty again, in case they existed before the separator or were the only content
+            df.dropna(how='all', inplace=True)
+
+            # More robust check to remove any row that is an exact match of the column headers
+            if not df.empty:
+                column_header_list_str = [str(col_name).strip() for col_name in df.columns.tolist()]
+                rows_to_drop = []
+                for index, row_series in df.iterrows():
+                    row_values_list_str = [str(item).strip() for item in row_series.tolist()]
+                    if row_values_list_str == column_header_list_str:
+                        rows_to_drop.append(index)
+                if rows_to_drop:
+                    df.drop(rows_to_drop, inplace=True)
             
+            # Final check for empty DataFrame after all filtering
             if df.empty:
                 continue
             
@@ -406,20 +549,21 @@ if __name__ == "__main__":
                 # Generate single-row INSERT statements
                 for _, row in df.iterrows():
                     values = []
-                    for val in row:
-                        if pd.isna(val):
-                            values.append("NULL")
-                        elif isinstance(val, str) and val.upper() == "NULL":
-                            values.append("NULL")
+                    for col, val in zip(df.columns, row):
+                        # Special handling for product_line_id to ensure it's an integer
+                        if col == 'product_line_id' and isinstance(val, (int, float)) and not pd.isna(val):
+                            val = int(val)
+                        
+                        if pd.isna(val) or (isinstance(val, str) and val.strip().upper() == 'NULL') or val == '':
+                            default = FIELD_DEFAULTS.get(col, "NULL")
+                            values.append(str(default))
                         elif isinstance(val, str) and (val.upper() == "NOW()" or val.upper() == "CURRENT_TIMESTAMP"):
                             values.append(val.upper())
                         elif isinstance(val, (int, float)):
                             values.append(str(val))
                         else:
-                            # Escape single quotes
                             escaped_val = str(val).replace("'", "''")
                             values.append(f"'{escaped_val}'")
-                    
                     value_list = ", ".join(values)
                     sql_statements.append(f"INSERT INTO `{sheet_name}` ({column_list}) VALUES ({value_list});")
             else:
@@ -427,20 +571,21 @@ if __name__ == "__main__":
                 rows = []
                 for _, row in df.iterrows():
                     values = []
-                    for val in row:
-                        if pd.isna(val):
-                            values.append("NULL")
-                        elif isinstance(val, str) and val.upper() == "NULL":
-                            values.append("NULL")
+                    for col, val in zip(df.columns, row):
+                        # Special handling for product_line_id to ensure it's an integer
+                        if col == 'product_line_id' and isinstance(val, (int, float)) and not pd.isna(val):
+                            val = int(val)
+                        
+                        if pd.isna(val) or (isinstance(val, str) and val.strip().upper() == 'NULL') or val == '':
+                            default = FIELD_DEFAULTS.get(col, "NULL")
+                            values.append(str(default))
                         elif isinstance(val, str) and (val.upper() == "NOW()" or val.upper() == "CURRENT_TIMESTAMP"):
                             values.append(val.upper())
                         elif isinstance(val, (int, float)):
                             values.append(str(val))
                         else:
-                            # Escape single quotes
                             escaped_val = str(val).replace("'", "''")
                             values.append(f"'{escaped_val}'")
-                    
                     rows.append(f"  ({', '.join(values)})")
                 
                 # Split into batches

@@ -311,9 +311,9 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
         $raw_prices = $wpdb->get_results($wpdb->prepare(
             "SELECT region, currency, base_price, min_quantity, max_quantity 
              FROM {$pricing_table} 
-             WHERE target_type = 'consumable' AND target_id = %d AND product_line_id = %d AND status = 'active' 
+             WHERE target_type = 'consumable' AND part_number = %s AND product_line_id = %d AND status = 'active' 
              ORDER BY min_quantity ASC, region ASC",
-            $consumable_id,
+            $item_db_object->part_number,
             $product_line_id_for_join
         ));
 
@@ -380,9 +380,9 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
         $raw_inventory = $wpdb->get_results($wpdb->prepare(
             "SELECT region, SUM(quantity) as total_quantity
              FROM {$inventory_table} 
-             WHERE target_type = 'consumable' AND target_id = %d AND product_line_id = %d AND status = 'active' 
+             WHERE target_type = 'consumable' AND part_number = %s AND product_line_id = %d AND status = 'active' 
              GROUP BY region", // Restored GROUP BY and SUM, status back to 'active'
-            $consumable_id,
+            $item_db_object->part_number,
             $product_line_id_for_join
         ));
         

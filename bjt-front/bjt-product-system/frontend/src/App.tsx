@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import './styles/global.css';
 import './styles/theme.css';
@@ -20,6 +20,7 @@ import PO from './pages/PO';
 import OrderList from './pages/OrderList';
 import Profile from './pages/Profile';
 import DashboardPage from './pages/DashboardPage';
+import SqlExcelConverterPage from './pages/SqlExcelConverter';
 // 导入示例组件
 import OrderListExample from './examples/OrderListExample';
 // 其他页面组件（占位符）
@@ -86,6 +87,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   console.log('[ProtectedRoute] No user, redirecting to login from:', location.pathname);
   return <Navigate to="/login" state={{ from: location.pathname }} replace />;
 };
+
+// Near the beginning of the file, before the App component, add this lazy-loaded component
+const UnicodeTest = React.lazy(() => import('./pages/DevTests/UnicodeTest'));
 
 const App: React.FC = () => {
   // 购物车侧边栏状态
@@ -199,6 +203,18 @@ const App: React.FC = () => {
                           </ProtectedRoute>
                         }
                       />
+
+                      {/* SQL-Excel转换器页面 */}
+                      <Route
+                        path="/sql-excel-converter"
+                        element={
+                          <ProtectedRoute>
+                            <MainLayout>
+                              <SqlExcelConverterPage />
+                            </MainLayout>
+                          </ProtectedRoute>
+                        }
+                      />
                       
                       {/* 购物车页面 */}
                       <Route
@@ -283,6 +299,20 @@ const App: React.FC = () => {
                           </MainLayout>
                         }
                       />
+                      
+                      {/* Unicode测试页面 - 仅在开发环境下可用 */}
+                      {process.env.NODE_ENV === 'development' && (
+                        <Route
+                          path="/dev/unicode-test"
+                          element={
+                            <MainLayout>
+                              <Suspense fallback={<div>Loading...</div>}>
+                                <UnicodeTest />
+                              </Suspense>
+                            </MainLayout>
+                          }
+                        />
+                      )}
                       
                       {/* 订单列表示例 */}
                       <Route

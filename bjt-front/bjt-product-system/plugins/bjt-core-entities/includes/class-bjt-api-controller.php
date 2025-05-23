@@ -15,6 +15,34 @@ class BJT_API_Controller {
         $this->db = $wpdb;
         // parent::__construct(); // Removed call to WP_REST_Controller constructor
 
+        // Ensure the database connection is using utf8mb4
+        if ($this->db->dbh) { // Check if dbh is available (connection established)
+            $this->db->set_charset($this->db->dbh, 'utf8mb4');
+            if ($this->db->last_error) {
+                error_log('[BJT API Controller] Failed to set DB charset to utf8mb4: ' . $this->db->last_error);
+            } else {
+                // error_log('[BJT API Controller] DB charset explicitly set to utf8mb4 by plugin.');
+                // Query and log MySQL connection character set variables
+                $charset_vars = [
+                    'character_set_client',
+                    'character_set_connection',
+                    'character_set_results',
+                    'character_set_database',
+                    'character_set_server'
+                ];
+                $log_output = "[BJT API Controller] MySQL Charset Vars Post set_charset: \n";
+                foreach ($charset_vars as $var_name) {
+                    $result = $this->db->get_row( $this->db->prepare( "SHOW VARIABLES LIKE %s", $var_name ) );
+                    if ($result) {
+                        $log_output .= $result->Variable_name . ": " . $result->Value . "\n";
+                    }
+                }
+                error_log($log_output);
+            }
+        } else {
+            error_log('[BJT API Controller] DBH not available, cannot set charset.');
+        }
+
         // Ensure rest_base is set if resource_name is available from child
         if (empty($this->rest_base) && !empty($this->resource_name)) {
             $this->rest_base = $this->resource_name;
@@ -40,6 +68,25 @@ class BJT_API_Controller {
      */
     protected function error_response($message, $error_code, $status_code) {
         return new WP_Error($error_code, $message, array('status' => $status_code));
+    }
+
+    /**
+     * 格式化响应数据为标准格式
+     * 
+     * @param mixed $data 需要返回的数据
+     * @param string $message 操作成功的消息
+     * @param bool $success 是否成功
+     * @param int $status_code HTTP状态码
+     * @return WP_REST_Response 格式化的响应
+     */
+    protected function format_response($data, $message = '', $success = true, $status_code = 200) {
+        $response = [
+            'success' => $success,
+            'message' => $message, // 总是包含message字段，即使是空字符串
+            'data' => $data
+        ];
+
+        return new WP_REST_Response($response, $status_code);
     }
 
     /**
@@ -76,6 +123,27 @@ class BJT_API_Controller {
                  'sanitize_callback' => 'sanitize_text_field',
             ]
         ];
+    }
+
+    /**
+     * 格式化响应数据，确保UTF-8编码正确
+     * 
+     * @param mixed $data 需要格式化的数据
+     * @return mixed 格式化后的数据
+     */
+    protected function format_response_data($data) {
+        if (is_array($data)) {
+            foreach ($data as $key => $value) {
+                $data[$key] = $this->format_response_data($value);
+            }
+        } 
+        elseif (is_object($data)) {
+            foreach (get_object_vars($data) as $key => $value) {
+                $data->$key = $this->format_response_data($value);
+            }
+        }
+        // 不做任何字符串编码转换，直接返回
+        return $data;
     }
 
     /**
@@ -145,51 +213,48 @@ class BJT_API_Controller {
      * @return array Collection parameters.
      */
     public function get_collection_params() {
-        return array(
-            'context' => array(
-                'description' => __('Scope under which the request is made; determines fields present in response.'),
-                'type' => 'string',
-                'default' => 'view',
-                'enum' => array('view', 'embed', 'edit'),
-                'sanitize_callback' => 'sanitize_key',
-                'validate_callback' => 'rest_validate_request_arg',
-            ),
-            'page' => array(
-                'description' => __('Current page of the collection.'),
-                'type' => 'integer',
-                'default' => 1,
-                'minimum' => 1,
-                'sanitize_callback' => 'absint',
-                'validate_callback' => 'rest_validate_request_arg',
-            ),
-            'per_page' => array(
-                'description' => __('Maximum number of items to be returned in result set.'),
-                'type' => 'integer',
-                'default' => 10,
-                'minimum' => 1,
-                'maximum' => 100,
-                'sanitize_callback' => 'absint',
-                'validate_callback' => 'rest_validate_request_arg',
-            ),
-            'search' => array(
-                'description' => __('Limit results to those matching a string.'),
-                'type' => 'string',
-                'sanitize_callback' => 'sanitize_text_field',
-                'validate_callback' => 'rest_validate_request_arg',
-            ),
-            'orderby' => array(
-                'description' => __('Sort collection by parameter.'),
-                'type' => 'string',
-                'default' => 'id',
-                'enum' => array('id', 'created_at', 'updated_at'),
-            ),
-            'order' => array(
-                'description' => __('Order sort attribute ascending or descending.'),
-                'type' => 'string',
-                'default' => 'desc',
-                'enum' => array('asc', 'desc'),
-            ),
-        );
+        return [
+            'context'  => $this->get_context_param(['default' => 'view']),
+            'page'     => [
+                'description'        => '结果集的页码',
+                'type'               => 'integer',
+                'default'            => 1,
+                'minimum'            => 1,
+                'sanitize_callback'  => 'absint',
+                'validate_callback'  => 'rest_validate_request_arg',
+            ],
+            'per_page' => [
+                'description'        => '每页返回的结果数',
+                'type'               => 'integer',
+                'default'            => 10,
+                'minimum'            => 1,
+                'maximum'            => 100,
+                'sanitize_callback'  => 'absint',
+                'validate_callback'  => 'rest_validate_request_arg',
+            ],
+            'search'   => [
+                'description'        => '搜索关键词',
+                'type'               => 'string',
+                'sanitize_callback'  => 'sanitize_text_field',
+                'validate_callback'  => 'rest_validate_request_arg',
+            ],
+            'orderby'  => [
+                'description'        => '排序字段',
+                'type'               => 'string',
+                'default'            => 'id',
+                'enum'               => ['id', 'name', 'date', 'modified', 'title'],
+                'sanitize_callback'  => 'sanitize_key',
+                'validate_callback'  => 'rest_validate_request_arg',
+            ],
+            'order'    => [
+                'description'        => '排序方向',
+                'type'               => 'string',
+                'default'            => 'desc',
+                'enum'               => ['asc', 'desc'],
+                'sanitize_callback'  => 'sanitize_key',
+                'validate_callback'  => 'rest_validate_request_arg',
+            ],
+        ];
     }
     
     // Child classes will implement map_request_to_db, format_item_for_response

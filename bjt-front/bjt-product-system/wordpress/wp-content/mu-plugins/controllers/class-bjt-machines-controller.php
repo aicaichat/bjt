@@ -96,11 +96,6 @@ class BJT_Machines_Controller extends BJT_API_Controller {
                         'type' => 'string',
                         'description' => '设备ID',
                     ),
-                    'level' => array(
-                        'default' => 1,
-                        'type' => 'integer',
-                        'minimum' => 1,
-                    ),
                     'region' => array(
                         'default' => 'CN',
                         'type' => 'string',
@@ -172,27 +167,140 @@ class BJT_Machines_Controller extends BJT_API_Controller {
      * 获取设备配件
      */
     public function get_accessories($request) {
-        $id = $request->get_param('id');
-        $level = $request->get_param('level');
+        global $wpdb;
+        $host_part_number = $request->get_param('id'); // This is now the host part_number
+        // $level_filter = $request->get_param('level'); // Level filter might apply to how deep we go in relations, but API doc example implies direct (level 1)
         $region = $request->get_param('region');
         $lang = $request->get_param('lang');
         
-        // 获取设备
-        $machine = $this->get_machine($id);
+        // Optional: Validate if the host_part_number actually exists in wp_bjt_parts
+        $parts_table = $wpdb->prefix . 'bjt_parts';
+        $host_part_exists = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$parts_table} WHERE part_number = %s", $host_part_number));
+        if (!$host_part_exists) {
+            return $this->error_response('指定的设备料号不存在 (Host part number not found)', 'host_part_not_found', 404);
+        }
+
+        $relations_table = $wpdb->prefix . 'bjt_relations';
+        $accessories_table = $wpdb->prefix . 'bjt_accessories';
+        $accessory_models_table = $wpdb->prefix . 'bjt_accessory_models';
+        $prices_table = $wpdb->prefix . 'bjt_prices';
+        $inventory_table = $wpdb->prefix . 'bjt_inventory';
+
+        // Query to find direct accessory part numbers linked to the host_part_number
+        // Based on user definition: wp_bjt_relations.part_number is the parent (host_part_number here)
+        // and wp_bjt_relations.child_part_number is the accessory part number.
+        $query = $wpdb->prepare(
+            "SELECT DISTINCT r.child_part_number 
+             FROM {$relations_table} r
+             WHERE r.part_number = %s AND r.child_type = 'accessory' AND r.status = 'publish'",
+            $host_part_number
+        );
         
-        if (!$machine) {
-            return $this->error_response('找不到指定的设备', 'machine_not_found', 404);
+        $accessory_pns_results = $wpdb->get_col($query);
+
+        if (empty($accessory_pns_results)) {
+            return $this->success_response(array('items' => array(), 'total' => 0));
         }
         
-        // 获取设备配件
-        $accessories = $this->get_machine_accessories($id, $level);
+        $grouped_accessories = array();
+
+        foreach ($accessory_pns_results as $acc_pn) {
+            // Fetch accessory details from wp_bjt_accessories
+            $accessory_detail = $wpdb->get_row(
+                $wpdb->prepare("SELECT * FROM {$accessories_table} WHERE part_number = %s AND status = 'publish'", $acc_pn),
+                ARRAY_A
+            );
+
+            if ($accessory_detail) {
+                $accessory_db_id = $accessory_detail['id']; // Database ID for price/inventory lookups
+                $accessory_model_code = $accessory_detail['model'];
+
+                // Fetch accessory model details from wp_bjt_accessory_models
+                $accessory_model_detail = $wpdb->get_row(
+                    $wpdb->prepare("SELECT * FROM {$accessory_models_table} WHERE model = %s AND status = 'publish'", $accessory_model_code),
+                    ARRAY_A
+                );
+
+                if (!$accessory_model_detail) {
+                    // If accessory model not found or not published, skip this accessory.
+                    continue;
+                }
+
+                if (!isset($grouped_accessories[$accessory_model_code])) {
+                    $grouped_accessories[$accessory_model_code] = array(
+                        'id' => $accessory_model_code,
+                        'model' => $lang === 'en' ? ($accessory_model_detail['title_en'] ?: $accessory_model_detail['title_zh']) : ($accessory_model_detail['title_zh'] ?: $accessory_model_detail['title_en']),
+                        'title' => $lang === 'en' ? ($accessory_model_detail['title_en'] ?: $accessory_model_detail['title_zh']) : ($accessory_model_detail['title_zh'] ?: $accessory_model_detail['title_en']),
+                        'level' => 1, // Per API documentation structure for direct accessories
+                        'image_url' => $accessory_model_detail['image1_url'] ?: ($accessory_model_detail['image2_url'] ?: ''),
+                        'parts' => array()
+                    );
+                }
+                
+                // Fetch pricing information
+                $price_data_raw = $wpdb->get_row(
+                    $wpdb->prepare(
+                        "SELECT base_price, currency, discount_rate FROM {$prices_table} 
+                         WHERE target_type = 'accessory' AND target_id = %d AND region = %s AND status = 'active' 
+                         ORDER BY min_quantity ASC LIMIT 1",
+                        $accessory_db_id,
+                        $region
+                    ),
+                    ARRAY_A
+                );
+                $price_data = $price_data_raw ?: new stdClass(); // Use empty object if no price
+
+                // Fetch inventory information
+                $inventory_data_raw = $wpdb->get_results(
+                    $wpdb->prepare(
+                        "SELECT warehouse, quantity, reserved, status FROM {$inventory_table} 
+                         WHERE target_type = 'accessory' AND target_id = %d AND region = %s AND status = 'active'",
+                        $accessory_db_id,
+                        $region
+                    ),
+                    ARRAY_A
+                );
+                $inventory_data_array = array();
+                if (!empty($inventory_data_raw)) {
+                    foreach($inventory_data_raw as $inv_item) {
+                         $inventory_data_array[] = array(
+                            'region' => $region, // Already filtered by region
+                            'warehouse' => $inv_item['warehouse'],
+                            'quantity' => (int) $inv_item['quantity'],
+                            'reserved' => (int) $inv_item['reserved'],
+                            'status' => $inv_item['status'] // 'active', 'inactive' etc. from DB
+                        );
+                    }
+                }
+
+
+                // Prepare the 'part' item for the response, mirroring API doc structure
+                $part_item = array(
+                    'id' => $accessory_detail['part_number'], 
+                    'part_number' => $accessory_detail['part_number'],
+                    'title' => $lang === 'en' ? ($accessory_detail['name_en'] ?: $accessory_detail['name_zh']) : ($accessory_detail['name_zh'] ?: $accessory_detail['name_en']),
+                    // The 'specs' object in API doc is complex and its keys are localized.
+                    // This example provides a simplified structure. Full mapping from db columns to localized spec keys would be needed.
+                    'specs' => array( // Simplified - needs proper mapping
+                        ($lang === 'en' ? 'Voltage' : '电压') => $accessory_detail['voltage'] ?: 'N/A',
+                        ($lang === 'en' ? 'Frequency' : '频率') => $accessory_detail['frequency'] ?: 'N/A',
+                        // Add other relevant specs here, mapping DB columns to localized keys
+                    ),
+                    'spec' => $lang === 'en' ? ($accessory_detail['spec_imperial'] ?: $accessory_detail['spec']) : $accessory_detail['spec'],
+                    'spec_imperial' => $accessory_detail['spec_imperial'],
+                    'prices' => $price_data, 
+                    'inventory' => $inventory_data_array 
+                );
+                
+                $grouped_accessories[$accessory_model_code]['parts'][] = $part_item;
+            }
+        }
         
-        // 根据语言和区域处理数据
-        $items = $this->prepare_accessories_for_response($accessories, $region, $lang);
+        $final_items = array_values($grouped_accessories);
         
         return $this->success_response(array(
-            'items' => $items,
-            'total' => count($items),
+            'items' => $final_items,
+            'total' => count($final_items),
         ));
     }
     
@@ -347,139 +455,6 @@ class BJT_Machines_Controller extends BJT_API_Controller {
     }
     
     /**
-     * 获取设备配件
-     */
-    private function get_machine_accessories($machine_id, $level) {
-        // 模拟数据，实际应从数据库获取
-        $accessories = array(
-            'MEY-001' => array(
-                array(
-                    'id' => 'FS-001',
-                    'model' => 'Floor Stand',
-                    'title_cn' => '地面支架组件',
-                    'title_en' => 'Floor Stand Assembly',
-                    'level' => 1,
-                    'image_url' => '/images/shop/FS-001.jpg',
-                    'parts' => array(
-                        array(
-                            'id' => 'BJT-FS-V2-2024',
-                            'part_number' => 'BJT-FS-V2-2024',
-                            'title_cn' => '标准地面支架',
-                            'title_en' => 'Standard Floor Stand',
-                            'specs' => array(
-                                '电压' => 'N/A',
-                                '频率' => 'N/A',
-                                '托盘尺寸' => '90×70×120cm',
-                                '一托数量' => '16件',
-                            ),
-                            'spec_cn' => '90×70×120cm, 7.8kg',
-                            'spec_en' => '90×70×120cm, 7.8kg',
-                            'spec_imperial' => '35.4×27.6×47.2inch, 17.2lbs',
-                            'prices' => array(
-                                'base' => 85,
-                                'tier1' => 75,
-                                'tier2' => 65,
-                                'vip' => 55,
-                            ),
-                            'inventory' => array(
-                                'CN' => 156,
-                                'EU' => 16,
-                                'NA' => 24,
-                                'AU' => 12,
-                            ),
-                        ),
-                    ),
-                ),
-                array(
-                    'id' => 'PH-001',
-                    'model' => 'Print Head',
-                    'title_cn' => '打印头组件',
-                    'title_en' => 'Print Head Assembly',
-                    'level' => 2,
-                    'image_url' => '/images/shop/PH-001.jpg',
-                    'parts' => array(
-                        array(
-                            'id' => 'BJT-PH-V1-2024',
-                            'part_number' => 'BJT-PH-V1-2024',
-                            'title_cn' => '热敏打印头',
-                            'title_en' => 'Thermal Print Head',
-                            'specs' => array(
-                                '电压' => '24V',
-                                '频率' => 'N/A',
-                                '托盘尺寸' => '50×40×20cm',
-                                '一托数量' => '100件',
-                            ),
-                            'spec_cn' => '55×45×10mm, 0.6kg',
-                            'spec_en' => '55×45×10mm, 0.6kg',
-                            'spec_imperial' => '2.2×1.8×0.4inch, 1.3lbs',
-                            'prices' => array(
-                                'base' => 2200,
-                                'tier1' => 2000,
-                                'tier2' => 1800,
-                                'vip' => 1700,
-                            ),
-                            'inventory' => array(
-                                'CN' => 220,
-                                'EU' => 30,
-                                'NA' => 45,
-                                'AU' => 25,
-                            ),
-                        ),
-                    ),
-                ),
-            ),
-            'PB1-001' => array(
-                array(
-                    'id' => 'FS-002',
-                    'model' => 'Paper Stand',
-                    'title_cn' => '纸张支架',
-                    'title_en' => 'Paper Stand',
-                    'level' => 1,
-                    'image_url' => '/images/shop/FS-002.jpg',
-                    'parts' => array(
-                        array(
-                            'id' => 'BJT-PS-V1-2024',
-                            'part_number' => 'BJT-PS-V1-2024',
-                            'title_cn' => '纸张支架',
-                            'title_en' => 'Paper Stand',
-                            'specs' => array(
-                                '电压' => 'N/A',
-                                '频率' => 'N/A',
-                                '托盘尺寸' => '80×60×100cm',
-                                '一托数量' => '10件',
-                            ),
-                            'spec_cn' => '80×60×100cm, 6.5kg',
-                            'spec_en' => '80×60×100cm, 6.5kg',
-                            'spec_imperial' => '31.5×23.6×39.4inch, 14.3lbs',
-                            'prices' => array(
-                                'base' => 75,
-                                'tier1' => 70,
-                                'tier2' => 65,
-                                'vip' => 60,
-                            ),
-                            'inventory' => array(
-                                'CN' => 120,
-                                'EU' => 12,
-                                'NA' => 18,
-                                'AU' => 8,
-                            ),
-                        ),
-                    ),
-                ),
-            ),
-        );
-        
-        // 根据级别筛选
-        if (isset($accessories[$machine_id])) {
-            return array_filter($accessories[$machine_id], function($accessory) use ($level) {
-                return $accessory['level'] === $level;
-            });
-        }
-        
-        return array();
-    }
-    
-    /**
      * 处理设备列表数据
      */
     private function prepare_machines_for_response($machines, $region, $lang) {
@@ -555,56 +530,5 @@ class BJT_Machines_Controller extends BJT_API_Controller {
         }
         
         return $item;
-    }
-    
-    /**
-     * 处理配件列表数据
-     */
-    private function prepare_accessories_for_response($accessories, $region, $lang) {
-        $items = array();
-        
-        foreach ($accessories as $accessory) {
-            $title_field = 'title_' . $lang;
-            
-            $parts = array();
-            foreach ($accessory['parts'] as $part) {
-                $part_title_field = 'title_' . $lang;
-                $part_spec_field = 'spec_' . $lang;
-                
-                $part_item = array(
-                    'id' => $part['id'],
-                    'part_number' => $part['part_number'],
-                    'title' => $part[$part_title_field],
-                    'specs' => $part['specs'],
-                    'spec' => $part[$part_spec_field],
-                    'spec_imperial' => $part['spec_imperial'],
-                    'prices' => $part['prices'],
-                );
-                
-                // 添加当前区域的库存
-                $part_item['inventory'] = array();
-                if (isset($part['inventory'][$region])) {
-                    $part_item['inventory'][] = array('region' => $region, 'amount' => $part['inventory'][$region]);
-                } else {
-                    // 如果没有当前区域的库存，提供所有区域的库存
-                    foreach ($part['inventory'] as $reg => $amount) {
-                        $part_item['inventory'][] = array('region' => $reg, 'amount' => $amount);
-                    }
-                }
-                
-                $parts[] = $part_item;
-            }
-            
-            $items[] = array(
-                'id' => $accessory['id'],
-                'model' => $accessory['model'],
-                'title' => $accessory[$title_field],
-                'level' => $accessory['level'],
-                'image_url' => $accessory['image_url'],
-                'parts' => $parts,
-            );
-        }
-        
-        return $items;
     }
 } 

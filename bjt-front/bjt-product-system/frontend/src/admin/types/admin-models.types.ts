@@ -1,28 +1,40 @@
-export interface AdminMultilingualText {
-  zh: string;
-  en: string;
-}
+// 移除嵌套的多语言文本接口，不再需要
+// export interface AdminMultilingualText {
+//   zh: string;
+//   en: string;
+// }
 
+// 修改为直接使用数据库字段名称的接口
 export interface AdminSubItem {
-  id?: string; // Optional if new
-  key?: string; // For React list rendering, might not be part of the backend model
-  title: AdminMultilingualText;
-  description: AdminMultilingualText;
-  // Add any other fields a subitem might have, e.g., image_url
+  id?: string; // 可选，当创建新项时
+  key?: string; // React列表渲染用，不是后端模型的一部分
+  title_zh: string;
+  title_en: string;
+  description_zh: string;
+  description_en: string;
 }
 
 export interface AdminProductLine {
-  id?: string; // Optional if creating a new product line
-  title: AdminMultilingualText;
-  description: AdminMultilingualText;
-  subItems: AdminSubItem[];
-  imageUrl?: string; // URL of the main product line image
-  // Add other fields like status, code, etc., if managed by admin
-  // For example, from your frontend/src/types/index.ts:
-  // code?: string;
-  // status?: 'active' | 'inactive';
-  // createdAt?: string;
-  // updatedAt?: string;
+  id?: string; // 可选，当创建新产品线时
+  title_zh: string;
+  title_en: string;
+  description_zh: string;
+  description_en: string;
+  // 子项改为直接嵌套在产品线中的结构
+  subitem1_zh?: string;
+  subitem1_en?: string;
+  subitem2_zh?: string;
+  subitem2_en?: string;
+  subitem3_zh?: string;
+  subitem3_en?: string;
+  image_url?: string; // 产品线主图URL
+  code?: string;
+  status?: 'publish' | 'draft' | 'trash';
+  created_at?: string;
+  updated_at?: string;
+  sort_order?: number;
+  // 为兼容现有UI，保留subItems字段，但标记为只读，不会发送到API
+  readonly subItems?: AdminSubItem[];
 }
 
 // Add other admin-specific models here as needed, e.g.:
@@ -34,13 +46,20 @@ export type AdminModelStatus = 'active' | 'inactive'; // Or specific strings lik
 
 export interface AdminHostModel {
   id: string;
-  name: string; // 型号名称 e.g., LA-E4S
-  status: AdminModelStatus;
-  // Potentially other fields from mockup/3.html (edit page)
-  // description?: AdminMultilingualText;
-  // productLineId?: string;
-  // mainImageUrl?: string;
-  // explodedViewPdfUrl?: string;
+  product_line_id: string;
+  model: string; // 主机型号编码
+  title_zh: string; // 中文名称
+  title_en: string; // 英文名称
+  description_zh?: string; // 中文描述
+  description_en?: string; // 英文描述
+  type?: string; // 主机类型
+  image1_url?: string; // 主图URL
+  image2_url?: string; // 副图URL
+  explosion_diagram_pdf?: string; // 爆炸图PDF文件URL
+  status: string; // 'publish' | 'draft' | 'trash'
+  sort_order?: number; // 排序值
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface AdminPart {

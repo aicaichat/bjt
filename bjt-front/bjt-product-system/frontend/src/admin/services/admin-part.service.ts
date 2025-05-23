@@ -1,99 +1,137 @@
 import { BaseAdminService } from './base-admin.service';
 import { ADMIN_API_ENDPOINTS } from '../api/adminConfig';
+import { AdminPart } from '../types/admin-models.types';
 import HttpAdminService from '../api/httpAdminService';
+import { PaginatedResponse } from '../types';
 
-export interface Part {
-  id: number;
-  pn: string;
-  model_id: number;
-  model_name: string;
-  voltage?: string;
-  name: {
-    zh: string;
-    en: string;
-  };
-  specs: {
-    zh: string;
-    en: string;
-  };
-  dimensions?: {
-    length: number;
-    width: number;
-    height: number;
-  };
-  weight?: {
-    net: number;
-    gross: number;
-  };
-  image_url?: string;
-  status: 'publish' | 'draft' | 'trash';
-  created_at: string;
-  updated_at: string;
+export interface PartParams {
+  page?: number;
+  page_size?: number;
+  search?: string;
+  host_model_id?: string;
+  status?: string;
 }
 
-export interface PartFormData {
-  pn: string;
-  model_id: number;
-  voltage?: string;
-  name: {
-    zh: string;
-    en: string;
-  };
-  specs: {
-    zh: string;
-    en: string;
-  };
-  dimensions?: {
-    length: number;
-    width: number;
-    height: number;
-  };
-  weight?: {
-    net: number;
-    gross: number;
-  };
-  image_url?: string;
-  status?: 'publish' | 'draft' | 'trash';
-}
+class AdminPartService extends BaseAdminService<AdminPart> {
+  private httpService = HttpAdminService;
 
-export class AdminPartService extends BaseAdminService<Part> {
   constructor() {
     super(ADMIN_API_ENDPOINTS.PARTS);
   }
 
-  async getParts(params: {
-    page?: number;
-    page_size?: number;
-    search?: string;
-    model_id?: number;
-    status?: string;
-  } = {}) {
-    return this.getPaginatedData('', params);
+  async getParts(params: PartParams = {}): Promise<PaginatedResponse<AdminPart>> {
+    // Extract host_model_id first
+    const { host_model_id, ...restParams } = params;
+    
+    // Filter out undefined and null values from remaining params
+    const filteredParams = Object.fromEntries(
+      Object.entries(restParams).filter(([_, value]) => value !== undefined && value !== null)
+    );
+    
+    // Set default values
+    const queryParams = {
+      page: 1,
+      page_size: 10,
+      ...filteredParams
+    };
+    
+    // Determine which URL to use based on host_model_id
+    let url;
+    
+    if (host_model_id) {
+      // If we're fetching parts for a specific host model
+      url = ADMIN_API_ENDPOINTS.HOST_MODEL_PARTS.replace(':id', host_model_id);
+    } else {
+      // Otherwise get all parts
+      url = ADMIN_API_ENDPOINTS.PARTS;
+    }
+    
+    const queryString = Object.entries(queryParams)
+      .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+      .join('&');
+    
+    const response = await this.httpService.get<any>(`${url}${queryString ? `?${queryString}` : ''}`);
+    
+    const paginatedResponse: PaginatedResponse<AdminPart> = {
+      items: [],
+      total: 0,
+      page: 1,
+      page_size: 10,
+      total_pages: 1
+    };
+    
+    if (response.success && response.data) {
+      // Process the API response
+      if (Array.isArray(response.data)) {
+        paginatedResponse.items = response.data;
+        paginatedResponse.total = response.data.length;
+      } else if (response.data.items) {
+        paginatedResponse.items = response.data.items;
+        paginatedResponse.total = response.data.total || response.data.items.length;
+        paginatedResponse.page = response.data.page || 1;
+        paginatedResponse.page_size = response.data.page_size || 10;
+        paginatedResponse.total_pages = response.data.total_pages || 1;
+      } else {
+        const items = response.data.data || response.data;
+        paginatedResponse.items = Array.isArray(items) ? items : [];
+        paginatedResponse.total = paginatedResponse.items.length;
+      }
+    }
+    
+    return paginatedResponse;
   }
 
-  async getPart(id: number) {
-    return this.getSingleItem(id);
+  async getPart(id: string, hostModelId?: string): Promise<AdminPart> {
+    let url;
+    if (hostModelId) {
+      url = ADMIN_API_ENDPOINTS.PART
+        .replace(':modelId', hostModelId)
+        .replace(':id', id);
+    } else {
+      url = `${ADMIN_API_ENDPOINTS.PARTS}/${id}`;
+    }
+    
+    const response = await this.httpService.get<any>(url);
+    return response.data;
   }
 
-  async getPartByPN(pn: string) {
-    return this.getPaginatedData('', { pn });
+  async createPart(data: Partial<AdminPart>, hostModelId?: string): Promise<AdminPart> {
+    let url;
+    if (hostModelId) {
+      url = ADMIN_API_ENDPOINTS.HOST_MODEL_PARTS.replace(':id', hostModelId);
+    } else {
+      url = ADMIN_API_ENDPOINTS.PARTS;
+    }
+    
+    const response = await this.httpService.post<any>(url, data);
+    return response.data;
   }
 
-  async fetchCRMPartData(pn: string) {
-    const response = await HttpAdminService.get(`/crm/part-data?pn=${pn}`);
-    return response;
+  async updatePart(id: string, data: Partial<AdminPart>, hostModelId?: string): Promise<AdminPart> {
+    let url;
+    if (hostModelId) {
+      url = ADMIN_API_ENDPOINTS.PART
+        .replace(':modelId', hostModelId)
+        .replace(':id', id);
+    } else {
+      url = `${ADMIN_API_ENDPOINTS.PARTS}/${id}`;
+    }
+    
+    const response = await this.httpService.put<any>(url, data);
+    return response.data;
   }
 
-  async createPart(data: PartFormData) {
-    return this.createItem(data);
-  }
-
-  async updatePart(id: number, data: PartFormData) {
-    return this.updateItem(id, data);
-  }
-
-  async deletePart(id: number) {
-    return this.deleteItem(id);
+  async deletePart(id: string, hostModelId?: string): Promise<void> {
+    let url;
+    if (hostModelId) {
+      url = ADMIN_API_ENDPOINTS.PART
+        .replace(':modelId', hostModelId)
+        .replace(':id', id);
+    } else {
+      url = `${ADMIN_API_ENDPOINTS.PARTS}/${id}`;
+    }
+    
+    await this.httpService.delete<any>(url);
   }
 }
 

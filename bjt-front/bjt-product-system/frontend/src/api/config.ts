@@ -4,7 +4,7 @@ const isDevelopment = import.meta.env.DEV;
 // 基础URL
 // Ensure VITE_API_BASE_URL is set to the full base path in your .env files or docker-compose environment, 
 // e.g., http://localhost:8080/wp-json/bjt/v1/
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 // 确保 API 基础 URL 不以斜杠结尾
 export const getBaseUrl = () => {

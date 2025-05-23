@@ -232,27 +232,28 @@
 				return ! isIdentical;
 			case 'emoji':
 				/*
-				 * Why can't we be friends? Everyone can now shake hands in emoji, regardless of skin tone!
+				 * Rise Like a Phoenix.
 				 *
-				 * To test for Emoji 14.0 support, try to render a new emoji: Handshake: Light Skin Tone, Dark Skin Tone.
+				 * To test for Emoji 15.1 support, try to render a new emoji: Phoenix.
 				 *
-				 * The Handshake: Light Skin Tone, Dark Skin Tone emoji is a ZWJ sequence combining 🫱 Rightwards Hand,
-				 * 🏻 Light Skin Tone, a Zero Width Joiner, 🫲 Leftwards Hand, and 🏿 Dark Skin Tone.
+				 * A phoenix, a mythical immortal bird with flame-like feathers found in the folklore of many global
+				 * cultures. Often used to symbolize renewal or rebirth.
 				 *
-				 * 0x1FAF1 == Rightwards Hand
-				 * 0x1F3FB == Light Skin Tone
-				 * 0x200D == Zero-Width Joiner (ZWJ) that links the code points for the new emoji or
-				 * 0x200B == Zero-Width Space (ZWS) that is rendered for clients not supporting the new emoji.
-				 * 0x1FAF2 == Leftwards Hand
-				 * 0x1F3FF == Dark Skin Tone.
+				 * The Phoenix emoji is a ZWJ sequence combining 🐦 Bird, Zero Width Joiner and 🔥 Fire.
+				 * These display as a single emoji on supported platforms.
+				 *
+				 * 0xD83D 0xDC26 (\uD83D\uDC26) == 🐦 Bird
+				 * 0x200D                       == Zero-Width Joiner (ZWJ) that links the code points for the new emoji or
+				 * 0x200B                       == Zero-Width Space (ZWS) that is rendered for clients not supporting the new emoji.
+				 * 0xD83D 0xDD25 (\uD83D\uDD25) == 🔥 Fire
 				 *
 				 * When updating this test for future Emoji releases, ensure that individual emoji that make up the
 				 * sequence come from older emoji standards.
 				 */
 				isIdentical = emojiSetsRenderIdentically(
 					context,
-					'\uD83E\uDEF1\uD83C\uDFFB\u200D\uD83E\uDEF2\uD83C\uDFFF', // as the zero-width joiner sequence
-					'\uD83E\uDEF1\uD83C\uDFFB\u200B\uD83E\uDEF2\uD83C\uDFFF' // separated by a zero-width space
+					'\uD83D\uDC26\u200D\uD83D\uDD25', // as the zero-width joiner sequence
+					'\uD83D\uDC26\u200B\uD83D\uDD25' // separated by a zero-width space
 				);
 
 				return ! isIdentical;

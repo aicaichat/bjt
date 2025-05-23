@@ -95,7 +95,7 @@ export class CartService extends BaseService<CartResponse> {
       return this.getMockData(params);
     }
     
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('auth_token');
     if (!token) {
       console.warn('No authentication token found, using mock data instead');
       return this.getMockData(params);
@@ -139,7 +139,7 @@ export class CartService extends BaseService<CartResponse> {
       return mockItem;
     }
     
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('auth_token');
     if (!token) {
       console.warn('No authentication token found, using mock data for addToCart');
       return this.addToCartMock(data);
@@ -206,7 +206,7 @@ export class CartService extends BaseService<CartResponse> {
       return updatedItem;
     }
     
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('auth_token');
     if (!token) {
       console.warn('No authentication token found, using mock data for updateCartItem');
       return this.updateCartItemMock(itemId, data);
@@ -264,7 +264,7 @@ export class CartService extends BaseService<CartResponse> {
       };
     }
     
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('auth_token');
     if (!token) {
       console.warn('No authentication token found, using mock data for removeCartItem');
       return this.removeCartItemMock(itemId);
@@ -312,7 +312,7 @@ export class CartService extends BaseService<CartResponse> {
       };
     }
     
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('auth_token');
     if (!token) {
       console.warn('No authentication token found, using mock data for clearCart');
       return this.clearCartMock();
@@ -362,7 +362,7 @@ export class CartService extends BaseService<CartResponse> {
       };
     }
     
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('auth_token');
     if (!token) {
       console.warn('No authentication token found, using mock data for getCartSummary');
       return this.getCartSummaryMock();

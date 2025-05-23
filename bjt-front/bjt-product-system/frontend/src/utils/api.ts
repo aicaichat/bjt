@@ -15,10 +15,16 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('auth_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      // 添加调试日志
+      console.log('Setting Authorization header:', `Bearer ${token.substring(0, 15)}...`);
+    } else {
+      console.warn('No auth_token found in localStorage for API request');
     }
+    console.log('API Request:', config.method?.toUpperCase(), 
+      (config.baseURL || '') + (config.url || ''));
     return config;
   },
   (error) => {

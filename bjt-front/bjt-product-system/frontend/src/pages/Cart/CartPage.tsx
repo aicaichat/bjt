@@ -3,7 +3,7 @@ import { Button, Card, Col, Divider, Empty, Row, Space, Spin, Typography } from 
 import { DeleteOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import CartService, { CartItem, CartResponse } from '../../api/services/cart.service';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency } from '../../utils/priceUtils';
 import CartItemCard from '../../components/cart/CartItemCard';
 import './CartPage.scss';
 

@@ -27,6 +27,7 @@ if ( ! defined( 'BJT_CORE_ENTITIES_PLUGIN_DIR' ) ) {
  * Adds CORS headers to allow cross-origin requests from the frontend.
  */
 function bjt_add_cors_headers() {
+    error_log('[BJT DEBUG] bjt_add_cors_headers CALLED'); // Test error logging
     // Allow requests from your frontend development server
     header("Access-Control-Allow-Origin: *");
     // Allow common methods
@@ -35,6 +36,8 @@ function bjt_add_cors_headers() {
     header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
     // Allow credentials (cookies, authorization headers)
     header("Access-Control-Allow-Credentials: true");
+    // Set UTF-8 encoding for all API responses to fix Chinese character issues - 修正连字符
+    header("Content-Type: application/json; charset=utf-8");
 
     // For OPTIONS pre-flight requests, send a 200 OK and exit early.
     if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
@@ -42,8 +45,28 @@ function bjt_add_cors_headers() {
         exit();
     }
 }
-// Hook into 'rest_api_init' with a high priority (e.g., 1) to ensure CORS headers are set early.
-add_action('rest_api_init', 'bjt_add_cors_headers', 1);
+// 确保优先级更高
+add_action('rest_api_init', 'bjt_add_cors_headers', 0);
+
+/**
+ * 设置数据库连接的字符集为 utf8mb4，确保正确处理中文字符
+ */
+function bjt_set_db_charset() {
+    global $wpdb;
+    if ($wpdb->dbh) {
+        $wpdb->query("SET NAMES utf8mb4");
+        $wpdb->query("SET CHARACTER SET utf8mb4");
+        $wpdb->query("SET collation_connection = utf8mb4_unicode_ci");
+        // Add these to ensure connections in PHP 7+ with mysqli maintain proper encoding
+        if (method_exists($wpdb->dbh, 'set_charset')) {
+            $wpdb->dbh->set_charset('utf8mb4');
+        }
+        error_log("BJT API: 已设置数据库连接字符集为 utf8mb4");
+    }
+}
+// 确保在所有API请求之前设置数据库字符集，移到更早的钩子
+add_action('plugins_loaded', 'bjt_set_db_charset', 1);
+add_action('rest_api_init', 'bjt_set_db_charset', 1); // 保留原有钩子作为双重保障
 
 // Include necessary files
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'includes/class-database.php';
@@ -56,13 +79,17 @@ require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-auth-controller.p
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-product-controller.php';
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-machine-controller.php';
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-accessory-controller.php';
+require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-accessory-model-controller.php';
+require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-spare-part-model-controller.php';
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-consumable-controller.php';
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-spare-part-controller.php';
+require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-part-controller.php';
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-cart-controller.php';
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-order-controller.php';
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-price-controller.php';
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-inventory-controller.php';
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-dictionary-controller.php';
+require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-machine-part-controller.php';
 
 // Helper function to get current token from request
 if (!function_exists('bjt_get_current_token')) {
@@ -96,49 +123,50 @@ register_activation_hook(__FILE__, 'bjt_api_activate');
  * Registers all REST API routes for BJT entities.
  */
 function bjt_api_register_routes() {
-    // Auth Controller
-    $auth_controller = new BJT_Auth_Controller();
-    $auth_controller->register_routes();
+    $controllers = array(
+        'BJT_Auth_Controller',
+        'BJT_Product_Controller',
+        'BJT_Machine_Controller',
+        'BJT_Accessory_Controller',
+        'BJT_Accessory_Model_Controller',
+        'BJT_Spare_Part_Model_Controller',
+        'BJT_Consumable_Controller',
+        'BJT_Spare_Part_Controller',
+        'BJT_Part_Controller',
+        'BJT_Cart_Controller',
+        'BJT_Order_Controller',
+        'BJT_Price_Controller',
+        'BJT_Inventory_Controller',
+        'BJT_Dictionary_Controller',
+        'BJT_Machine_Part_Controller'
+    );
 
-    // Product Lines Controller
-    $product_controller = new BJT_Product_Controller();
-    $product_controller->register_routes();
+    foreach ($controllers as $controller_name) {
+        $controller = new $controller_name();
+        $controller->register_routes();
+    }
 
-    // Machines Controller
-    $machine_controller = new BJT_Machine_Controller();
-    $machine_controller->register_routes();
+    // TEST CHARSET ROUTE
+    register_rest_route('bjt/v1', '/test-charset', [
+        'methods' => WP_REST_Server::READABLE, // Or 'GET'
+        'callback' => function() {
+            global $wpdb;
+            // IMPORTANT: Replace with an actual ID from your wp_bjt_host_models table
+            $test_machine_id = 1; 
+            $test_data = $wpdb->get_var( $wpdb->prepare("SELECT title_zh FROM {$wpdb->prefix}bjt_host_models WHERE id = %d LIMIT 1", $test_machine_id) );
 
-    // Accessory Models Controller
-    $accessory_model_controller = new BJT_Accessory_Controller();
-    $accessory_model_controller->register_routes();
-    
-    // Consumables Controller
-    $consumable_controller = new BJT_Consumable_Controller();
-    $consumable_controller->register_routes();
+            if ($test_data === null) {
+                return new WP_REST_Response(['success' => false, 'message' => 'Test data not found. Make sure a host model with ID ' . $test_machine_id . ' exists and has a title_zh.'], 404);
+            }
 
-    // Spare Parts Controller
-    $spare_part_controller = new BJT_Spare_Part_Controller();
-    $spare_part_controller->register_routes();
-    
-    // Cart Controller
-    $cart_controller = new BJT_Cart_Controller();
-    $cart_controller->register_routes();
-    
-    // Order Controller
-    $order_controller = new BJT_Order_Controller();
-    $order_controller->register_routes();
-    
-    // Price Controller
-    $price_controller = new BJT_Price_Controller();
-    $price_controller->register_routes();
-    
-    // Inventory Controller
-    $inventory_controller = new BJT_Inventory_Controller();
-    $inventory_controller->register_routes();
-    
-    // Dictionary Controller
-    $dictionary_controller = new BJT_Dictionary_Controller();
-    $dictionary_controller->register_routes();
+            error_log("Raw test data from DB for /test-charset: " . $test_data);
+
+            $response_data = ['success' => true, 'test_string' => $test_data];
+            
+            return new WP_REST_Response($response_data, 200);
+        },
+        'permission_callback' => '__return_true',
+    ]);
 }
 add_action('rest_api_init', 'bjt_api_register_routes');
 
@@ -186,26 +214,49 @@ function bjt_prepare_success_response($response, $handler, $request) {
         return $response;
     }
     
-    // Get the response data
-    $data = $response->get_data();
+    // The controllers now consistently add 'success' => true.
+    // This filter's primary role for adding 'success' is now redundant.
+    // We will rely on bjt_rest_api_headers for Content-Type.
     
-    // If data is an array and doesn't already have a success field, add it
-    if (is_array($data) && !isset($data['success'])) {
-        // If response already has a proper structured format, just add success field
-        $data['success'] = true;
-        $response->set_data($data);
-    }
-    // Otherwise, if data isn't an array or has another structure, wrap it
-    else if (!isset($data['success'])) {
-        $response->set_data([
-            'success' => true,
-            'data' => $data
-        ]);
+    // $data = $response->get_data(); // No longer needed here for modification
+    
+    // Set the Content-Type header to ensure proper charset
+    // This is also handled by bjt_rest_api_headers, but leaving it here won't hurt as a fallback.
+    if (!headers_sent()) {
+        header('Content-Type: application/json; charset=utf-8');
     }
     
     return $response;
 }
 add_filter('rest_request_after_callbacks', 'bjt_prepare_success_response', 10, 3);
+
+/**
+ * Debug function to log encoding information about Chinese strings
+ * Only logs when WP_DEBUG is true
+ */
+function bjt_debug_encoding($string, $label = '') {
+    if (!defined('WP_DEBUG') || !WP_DEBUG) {
+        return;
+    }
+    
+    // Skip non-string values
+    if (!is_string($string)) {
+        return;
+    }
+    
+    $info = array(
+        'length' => strlen($string),
+        'mb_length' => function_exists('mb_strlen') ? mb_strlen($string, 'UTF-8') : 'n/a',
+        'detected_encoding' => function_exists('mb_detect_encoding') ? mb_detect_encoding($string, 'UTF-8,ISO-8859-1,GBK,GB2312,BIG5', true) : 'n/a',
+        'is_utf8' => function_exists('mb_check_encoding') ? mb_check_encoding($string, 'UTF-8') : 'n/a',
+        'has_chinese' => preg_match('/[\x{4e00}-\x{9fa5}]/u', $string) ? 'yes' : 'no',
+        'first_bytes' => bin2hex(substr($string, 0, 10)) . (strlen($string) > 10 ? '...' : ''),
+        'string_snippet' => substr($string, 0, 30) . (strlen($string) > 30 ? '...' : '')
+    );
+    
+    $label = empty($label) ? 'String encoding debug' : $label;
+    error_log("[$label] " . json_encode($info, JSON_UNESCAPED_UNICODE));
+}
 
 /**
  * Deactivation hook: Clean up if necessary.
@@ -219,6 +270,20 @@ register_deactivation_hook(__FILE__, 'bjt_api_deactivate');
  * Register a debug endpoint to help diagnose API routing issues
  */
 function bjt_register_debug_endpoint() {
+    // Simple health check endpoint 
+    register_rest_route('bjt/v1', '/healthcheck', array(
+        'methods' => 'GET',
+        'callback' => function() {
+            return new WP_REST_Response(array(
+                'success' => true,
+                'status' => 'ok',
+                'message' => 'API is functioning correctly',
+                'timestamp' => current_time('mysql')
+            ), 200);
+        },
+        'permission_callback' => '__return_true'
+    ));
+
     register_rest_route('bjt/v1', '/__debug_test_endpoint__', array(
         'methods' => 'GET',
         'callback' => function() {
@@ -292,8 +357,8 @@ function bjt_register_debug_endpoint() {
 function bjt_register_api_error_handler() {
     // Only register on REST API requests
     if (defined('REST_REQUEST') && REST_REQUEST) {
-        set_error_handler('bjt_rest_error_handler');
-        register_shutdown_function('bjt_rest_shutdown_handler');
+        // set_error_handler('bjt_rest_error_handler');
+        // register_shutdown_function('bjt_rest_shutdown_handler');
     }
 }
 add_action('rest_api_init', 'bjt_register_api_error_handler', 1);
@@ -313,8 +378,15 @@ function bjt_rest_error_handler($errno, $errstr, $errfile, $errline) {
     }
     
     // Set appropriate headers
-    header('Content-Type: application/json');
-    status_header(500);
+    if (!headers_sent()) {
+        header('Content-Type: application/json');
+        status_header(500);
+    } else {
+        // If headers already sent, we can't reliably send a JSON error.
+        // Log it and let the existing output (likely a WP error page) continue.
+        error_log("[BJT REST Error Handler] Headers already sent. Original error: $errstr in $errfile:$errline");
+        return false; // Allow default PHP error handling to continue if it can.
+    }
     
     $error_response = [
         'success' => false,
@@ -326,7 +398,7 @@ function bjt_rest_error_handler($errno, $errstr, $errfile, $errline) {
         ]
     ];
     
-    echo json_encode($error_response);
+    echo json_encode($error_response, JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -342,14 +414,17 @@ function bjt_rest_shutdown_handler() {
         isset($_SERVER['REQUEST_URI']) && 
         strpos($_SERVER['REQUEST_URI'], '/bjt/v1/') !== false) {
         
-        // Clear any existing output buffers
-        while (ob_get_level()) {
-            ob_end_clean();
+        if (!headers_sent()) {
+            while (ob_get_level()) {
+                ob_end_clean();
+            }
+            
+            header('Content-Type: application/json');
+            status_header(500);
+        } else {
+            error_log('[BJT DEBUG Shutdown] Headers already sent. Original fatal error: ' . $error['message'] . ' in ' . $error['file'] . ' on line ' . $error['line']);
+            return; 
         }
-        
-        // Set appropriate headers
-        header('Content-Type: application/json');
-        status_header(500);
         
         $error_response = [
             'success' => false,
@@ -361,9 +436,28 @@ function bjt_rest_shutdown_handler() {
             ]
         ];
         
-        echo json_encode($error_response);
+        echo json_encode($error_response, JSON_UNESCAPED_UNICODE);
     }
 }
 // Register the debug endpoint with a lower priority than the main routes
 // to ensure it can see all registered routes
 add_action('rest_api_init', 'bjt_register_debug_endpoint', 20);
+
+/**
+ * Ensure REST API responses use UTF-8 encoding
+ */
+function bjt_rest_api_headers() {
+    if (!headers_sent()) {
+        header('Content-Type: application/json; charset=utf-8');
+    }
+}
+add_action('rest_pre_serve_request', 'bjt_rest_api_headers', 0); // 提高优先级
+
+/**
+ * Modify WordPress's JSON_ENCODE to force unescaped Unicode characters
+ */
+add_filter('wp_json_encode', function($result, $data, $options) {
+    // Always include JSON_UNESCAPED_UNICODE in options
+    $options = $options | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
+    return json_encode($data, $options);
+}, 999, 3);

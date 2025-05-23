@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { CartItem as ApiCartItem, CartItemSpecs } from '../services/api';
-import { cartService, CartItem as ServiceCartItem } from '../api/services';
+import { CartItem as OriginalCartItem } from '../api/services/cart.service';
+import cartService from '../api/services/cart.service'; // 导入默认导出的cartService实例
 import { useMockData } from '../config/env';
 
 // 定义价格层级接口
@@ -11,28 +11,33 @@ export interface PriceTier {
   originalPrice?: number;
 }
 
-// 扩展CartItem接口，添加额外的属性
-export interface CartItem extends ApiCartItem {
-  code: string;
-  partNumber: string;
-  image: string;
-  category: string;
-  productId: number;
+// 扩展CartItem接口，添加额外的UI需要的属性
+export interface ExtendedCartItem extends OriginalCartItem {
+  id: string;           // item_id的字符串版本
+  code: string;         // 等同于part_number
+  partNumber: string;   // 等同于part_number
+  image: string;        // 等同于image_url，但保证不为undefined
+  category: string;     // 等同于product_type
+  productId: number;    // 等同于product_id
   priceTiers: PriceTier[];
-  properties?: {
-    [key: string]: string;
-  };
   selected: boolean;
   originalPrice?: number;
+  type: 'machine' | 'accessory';  // 简化的product_type
+  specs?: {
+    partNumber: string;
+    productName: string;
+  };
+  price: number;        // 对应于unit_price
 }
 
-// 将服务返回的CartItem转为UI使用的CartItem
-const mapServiceCartItemToUICartItem = (item: ServiceCartItem): CartItem => {
+// For backward compatibility, export ExtendedCartItem as CartItem for external use
+export type CartItem = ExtendedCartItem;
+
+// 将服务返回的CartItem转为UI使用的ExtendedCartItem
+const mapServiceCartItemToUICartItem = (item: OriginalCartItem): ExtendedCartItem => {
   return {
+    ...item, // 保留原始CartItem的所有属性
     id: item.item_id.toString(),
-    name: item.name,
-    price: item.unit_price,
-    quantity: item.quantity,
     code: item.part_number,
     partNumber: item.part_number,
     image: item.image_url || '',
@@ -41,24 +46,24 @@ const mapServiceCartItemToUICartItem = (item: ServiceCartItem): CartItem => {
     priceTiers: [], // 默认为空数组
     selected: false,
     type: item.product_type === 'machine' ? 'machine' : 'accessory',
-    properties: item.properties || {},
     specs: {
       partNumber: item.part_number,
       productName: item.name
-    }
+    },
+    price: item.unit_price // 将unit_price映射为price
   };
 };
 
 // 定义购物车上下文接口
 export interface CartContextType {
-  items: CartItem[];
-  addItem: (item: CartItem) => void;
+  items: ExtendedCartItem[];
+  addItem: (item: ExtendedCartItem) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
   totalPrice: number;
   itemCount: number;
-  selectedItems: CartItem[];
+  selectedItems: ExtendedCartItem[];
   selectedCount: number;
   selectedTotal: number;
   toggleItemSelection: (id: string, selected: boolean) => void;
@@ -93,7 +98,7 @@ interface CartProviderProps {
 
 // 上下文提供者组件
 export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [items, setItems] = useState<ExtendedCartItem[]>([]);
   const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState<boolean>(true);
   const [syncError, setSyncError] = useState<string | null>(null);
@@ -120,7 +125,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   }, []);
   
   // 添加商品到购物车
-  const addItem = async (newItem: CartItem) => {
+  const addItem = async (newItem: ExtendedCartItem) => {
     try {
       setLoading(true);
       

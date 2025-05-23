@@ -141,7 +141,7 @@ CREATE TABLE IF NOT EXISTS `wp_bjt_parts` (
 CREATE TABLE IF NOT EXISTS `wp_bjt_accessories` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `product_line_id` bigint(20) NOT NULL COMMENT '产品线ID',
-  `model` varchar(100) NOT NULL COMMENT '型号',
+  `model` varchar(100) DEFAULT NULL COMMENT '型号',
   `brand` varchar(100) COMMENT '品牌',
   `part_number` varchar(100) NOT NULL COMMENT '料号',
   `name_zh` varchar(255) NOT NULL COMMENT '中文名称',
@@ -242,7 +242,7 @@ CREATE TABLE IF NOT EXISTS `wp_bjt_spare_parts` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `product_line_id` bigint(20) NOT NULL COMMENT '产品线ID',
   `app_model` varchar(255) COMMENT '适配机型',
-  `model` varchar(100) NOT NULL COMMENT '配件型号',
+  `model` varchar(100) default NULL COMMENT '配件型号',
   `is_consumable` tinyint(1) DEFAULT 0 COMMENT '是否易损',
   `image_url` varchar(255) COMMENT '产品图片',
   `part_number` varchar(100) NOT NULL COMMENT '料号',
@@ -250,7 +250,7 @@ CREATE TABLE IF NOT EXISTS `wp_bjt_spare_parts` (
   `name_en` varchar(255) NOT NULL COMMENT '英文名称',
   `spec` varchar(255) COMMENT '规格参数(公制)',
   `spec_imperial` varchar(255) COMMENT '规格参数(英制)',
-  `app_sn` varchar(255) COMMENT '适配序列号',
+  `app_sn` varchar(1000) COMMENT '适配序列号',
   `package_size_cm` varchar(100) COMMENT '包装尺寸(cm)',
   `package_size_inch` varchar(100) COMMENT '包装尺寸(inch)',
   `net_weight_kg` decimal(10,2) COMMENT '单件净重(kg)',
@@ -273,20 +273,21 @@ CREATE TABLE IF NOT EXISTS `wp_bjt_spare_parts` (
 CREATE TABLE IF NOT EXISTS `wp_bjt_relations` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `product_line_id` bigint(20) NOT NULL COMMENT '产品线ID',
-  `parent_part_number` varchar(100) NOT NULL COMMENT '父项料号',
-  `child_part_number` varchar(100) NOT NULL COMMENT '子项料号',
-  `child_type` ENUM('accessory', 'spare_part') NOT NULL COMMENT '子项类型：配件/备件',
+  `part_number` varchar(100) NOT NULL COMMENT '自身料号',
+  `parent_part_number` varchar(100) DEFAULT NULL COMMENT '父项料号',
+  `child_part_number` varchar(100) DEFAULT NULL COMMENT '子项料号',
+  `child_type` ENUM('accessory', 'spare_part') DEFAULT 'accessory' COMMENT '子项类型：配件/备件',
   `level` int(11) NOT NULL DEFAULT 1 COMMENT '层级(1-5)，备件固定为1',
-  `quantity` int(11) DEFAULT 1 COMMENT '数量',
-  `required_parts` varchar(100) DEFAULT NULL COMMENT '必选备件料号，多个用逗号分隔',
-  `required_quantity` int(11) DEFAULT 1 COMMENT '必选备件数量',
+  `quantity` int(11) NOT NULL DEFAULT 1 COMMENT '子项在父项中的数量',
+  `required_parts` varchar(255) COMMENT '依赖关联料号 (多个用逗号分隔, 例如螺丝依赖螺母和垫片)',
+  `required_quantity` varchar(100) DEFAULT NULL COMMENT '依赖关联料号对应的数量 (多个用逗号分隔, 与required_parts一一对应)',
   `sort_order` int(11) DEFAULT 0 COMMENT '同级排序',
   `status` varchar(20) NOT NULL DEFAULT 'publish',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_relation` (`product_line_id`, `parent_part_number`, `child_part_number`),
   KEY `idx_product_line_id` (`product_line_id`),
+  KEY `idx_part_number` (`part_number`),
   KEY `idx_parent_part_number` (`parent_part_number`),
   KEY `idx_child_part_number` (`child_part_number`),
   KEY `idx_required_parts` (`required_parts`),
@@ -340,6 +341,7 @@ CREATE TABLE IF NOT EXISTS `wp_bjt_shapes` (
   `name_zh` varchar(100) NOT NULL COMMENT '中文名称',
   `name_en` varchar(100) NOT NULL COMMENT '英文名称',
   `image_url` varchar(255) COMMENT '形状图片URL',
+  `image_url2` varchar(255) COMMENT '形状图片示意url',
   `status` varchar(20) NOT NULL DEFAULT 'publish',
   `sort_order` int(11) DEFAULT 0,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -455,7 +457,7 @@ CREATE TABLE IF NOT EXISTS `wp_bjt_order_items` (
   KEY `order_id` (`order_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE `wp_bjt_cart_items` (
+CREATE TABLE IF NOT EXISTS `wp_bjt_cart_items` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `user_id` bigint unsigned NOT NULL COMMENT 'WordPress User ID',
   `product_type` varchar(50) NOT NULL COMMENT 'Type: host, accessory, consumable, spare_part',
@@ -468,3 +470,4 @@ CREATE TABLE `wp_bjt_cart_items` (
   KEY `idx_user_id` (`user_id`),
   UNIQUE KEY `uk_user_product` (`user_id`, `part_number`) -- Ensure unique part number per user cart
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='BJT User Cart Items';
+

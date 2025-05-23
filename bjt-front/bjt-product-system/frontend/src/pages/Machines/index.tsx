@@ -14,6 +14,7 @@ import { useMockData, DEFAULT_REGION } from '../../config/env';
 import { REGIONS, getDefaultVoltageByRegion, getStockStatus, getCurrencySymbol } from '../../config/constants';
 import { safeToLocaleString } from '../../utils/priceUtils';
 import { delay } from '../../utils/delay';
+import { safeTextContent } from '../../utils/string';
 
 import './Machines.css';
 import './accessibility.css';
@@ -73,13 +74,31 @@ const MachinesPage: React.FC = () => {
   const currentLanguage = i18n.language.startsWith('zh') ? 'zh' : 'en';
 
   const getMachineName = (machine: MachinePart): string => {
+    // First get the appropriate field based on current language
     const name = currentLanguage === 'zh' ? machine.name_zh : machine.name_en;
-    return name || machine.model || 'N/A';
+    
+    // If the selected language field is empty, fall back to the other language
+    if (!name) {
+      const fallbackName = currentLanguage === 'zh' ? machine.name_en : machine.name_zh;
+      return safeTextContent(fallbackName || machine.model || 'N/A');
+    }
+    
+    // Use safeTextContent to handle any encoding issues
+    return safeTextContent(name);
   };
 
   const getMachineDescription = (machine: MachinePart): string => {
+    // First get the appropriate field based on current language
     const desc = currentLanguage === 'zh' ? machine.model_description_zh : machine.model_description_en;
-    return desc || '';
+    
+    // If the selected language field is empty, fall back to the other language
+    if (!desc) {
+      const fallbackDesc = currentLanguage === 'zh' ? machine.model_description_en : machine.model_description_zh;
+      return safeTextContent(fallbackDesc || '');
+    }
+    
+    // Use safeTextContent to handle any encoding issues
+    return safeTextContent(desc);
   };
 
   // 从API获取设备列表
@@ -199,6 +218,13 @@ const MachinesPage: React.FC = () => {
           try {
             // 使用找到的parentPartNumber获取配件
             const accessoriesData = await accessoryService.getMachineAccessories(parentPartNumber, { level: 1 });
+            
+            // 检查返回的数据格式
+            if (!accessoriesData || !accessoriesData.items) {
+              console.warn('No accessories data returned from API');
+              setAccessories([]);
+              return;
+            }
             
             // 转换Accessory[]为MachineAccessory[]格式
             const convertedAccessories: MachineAccessory[] = accessoriesData.items.map(accessory => ({

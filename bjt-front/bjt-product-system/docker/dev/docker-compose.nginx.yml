@@ -13,7 +13,7 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
-      - VITE_API_URL=http://localhost:8080
+      - VITE_API_URL=http://localhost:8080/wp-json/bjt/v1
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:5173 || exit 1"]
       interval: 30s
@@ -28,7 +28,9 @@ services:
 
   # WordPress开发服务器（使用官方 WordPress 镜像）
   wordpress:
-    image: wordpress:latest
+    build:
+      context: .
+      dockerfile: ./wordpress/Dockerfile
     ports:
       - "8080:80"
     environment:
@@ -36,6 +38,8 @@ services:
       WORDPRESS_DB_USER: wordpress
       WORDPRESS_DB_PASSWORD: wordpress
       WORDPRESS_DB_NAME: bjt_product
+      WORDPRESS_DB_CHARSET: utf8mb4
+      WORDPRESS_DB_COLLATE: ''
       WORDPRESS_CONFIG_EXTRA:
           define('WP_HOME', 'http://localhost');
           define('WP_SITEURL', 'http://localhost');
@@ -49,6 +53,10 @@ services:
       - ../../.env.development
     depends_on:
       - mysql
+    command: >
+      sh -c "sed -i \"s/define( 'DB_CHARSET', getenv_docker('WORDPRESS_DB_CHARSET', 'utf8') );/define( 'DB_CHARSET', 'utf8mb4' );/g\" /var/www/html/wp-config.php && \
+             sed -i \"s/define( 'DB_COLLATE', getenv_docker('WORDPRESS_DB_COLLATE', '') );/define( 'DB_COLLATE', '' );/g\" /var/www/html/wp-config.php && \
+             apache2-foreground"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/wp-admin/"]
       interval: 30s

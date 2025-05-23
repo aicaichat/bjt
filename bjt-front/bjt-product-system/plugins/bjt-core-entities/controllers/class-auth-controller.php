@@ -62,19 +62,26 @@ class BJT_Auth_Controller extends BJT_API_Controller {
      * @return WP_REST_Response|WP_Error 响应对象
      */
     public function login($request) {
+        error_log('[BJT_Auth_Controller] Entered login method.');
         $username = $request['username'];
         $password = $request['password'];
         
+        error_log('[BJT_Auth_Controller] Attempting wp_authenticate with username: ' . $username);
         // 验证凭据
         $user = wp_authenticate($username, $password);
         
         if (is_wp_error($user)) {
+            error_log('[BJT_Auth_Controller] wp_authenticate failed: ' . $user->get_error_message());
             return $this->error_response('用户名或密码不正确', 'rest_forbidden', 401);
         }
         
+        error_log('[BJT_Auth_Controller] wp_authenticate successful for user ID: ' . $user->ID);
+        
         // 生成令牌
         $jwt_handler = new BJT_JWT_Handler();
+        error_log('[BJT_Auth_Controller] About to generate token for user ID: ' . $user->ID);
         $token = $jwt_handler->generate_token($user->ID);
+        error_log('[BJT_Auth_Controller] Token generated: ' . $token);
         
         // 令牌过期时间，默认24小时
         $expires_in = DAY_IN_SECONDS;
@@ -101,6 +108,7 @@ class BJT_Auth_Controller extends BJT_API_Controller {
             'user' => $user_data,
         ];
         
+        error_log('[BJT_Auth_Controller] Preparing successful login response: ' . print_r($response_data, true));
         return $this->format_response($response_data);
     }
     

@@ -16,53 +16,30 @@ export const getAdminAuthHeaders = () => {
 
 // Admin-specific API URLs
 export const ADMIN_API_ENDPOINTS = {
-  // 认证相关
-  LOGIN: '/admin/auth/login',
-  LOGOUT: '/admin/auth/logout',
-  CURRENT_ADMIN: '/admin/auth/me',
+  // Authentication routes
+  LOGIN: '/wp-json/bjt/v1/auth/login',
+  LOGOUT: '/wp-json/bjt/v1/auth/logout',
+  CURRENT_ADMIN: '/wp-json/bjt/v1/user/me',
   
-  // 产品线管理
-  PRODUCT_LINES: '/product-lines',
+  // Product management
+  PRODUCT_LINES: '/wp-json/bjt/v1/product-lines',
+  HOST_MODELS: '/wp-json/bjt/v1/machines',
   
-  // 主机型号管理
-  HOST_MODELS: '/host-models',
+  // Parts management
+  PARTS: '/wp-json/bjt/v1/spare-parts',
+  HOST_MODEL_PARTS: '/wp-json/bjt/v1/machines/:id/spare-parts',
+  PART: '/wp-json/bjt/v1/machines/:modelId/spare-parts/:id',
   
-  // 零件管理
-  PARTS: '/parts',
-  
-  // 关系管理
-  RELATIONS: '/relations',
-  
-  // 配件型号管理
-  ACCESSORY_MODELS: '/accessory-models',
-  
-  // 配件管理
-  ACCESSORIES: '/accessories',
-  
-  // 耗材管理
-  CONSUMABLES: '/consumables',
-  
-  // 形状管理
-  SHAPES: '/shapes',
-  
-  // 材料管理
-  MATERIALS: '/materials',
-  
-  // 规格管理
-  SPECIFICATIONS: '/specifications',
-  
-  // 用户管理
-  USERS: '/users',
-  
-  // 角色管理
-  ROLES: '/roles',
-  
-  // 权限管理
-  PERMISSIONS: '/permissions',
-  
-  // 媒体管理
-  MEDIA: '/media',
-} as const;
+  // Other resources
+  RELATIONS: '/wp-json/bjt/v1/relations',
+  ACCESSORY_MODELS: '/wp-json/bjt/v1/accessory-models',
+  ACCESSORIES: '/wp-json/bjt/v1/accessories',
+  CONSUMABLES: '/wp-json/bjt/v1/consumables',
+  SHAPES: '/wp-json/bjt/v1/shapes',
+  MATERIALS: '/wp-json/bjt/v1/materials',
+  USERS: '/wp-json/bjt/v1/users',
+  SETTINGS: '/wp-json/bjt/v1/settings'
+};
 
 export default {
   API_BASE_URL,

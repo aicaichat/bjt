@@ -150,4 +150,18 @@ function bjt_api_log($message, $data = []) {
         
         file_put_contents($log_file, $log_entry . PHP_EOL, FILE_APPEND);
     }
-} 
+}
+
+/**
+ * Sets UTF-8 charset header for REST API responses
+ * This fixes Chinese character encoding issues in API responses
+ */
+function bjt_set_utf8_charset_header() {
+    // Only apply to REST API requests
+    if (defined('REST_REQUEST') && REST_REQUEST) {
+        header('Content-Type: application/json; charset=utf-8');
+    }
+}
+
+// Add this hook with a high priority to ensure it runs before any output
+add_action('send_headers', 'bjt_set_utf8_charset_header', 1); 

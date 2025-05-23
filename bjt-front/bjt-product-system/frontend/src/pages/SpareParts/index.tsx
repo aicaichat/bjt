@@ -1,9 +1,9 @@
-import React, { useState, useEffect, ChangeEvent, createRef, useRef, useContext } from 'react';
+import React, { useState, useEffect, ChangeEvent, createRef, useRef, useContext, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import sparePartsApi, { SparePart, FilterOptions } from '../../api/sparePartsApi';
 import AuthContext from '../../contexts/AuthContext';
-import { CartContext, CartItem } from '../../contexts/CartContext';
+import { CartContext, ExtendedCartItem } from '../../contexts/CartContext';
 import { getUserRegionFromEmail, isVipUser, getCurrencySymbol, PRICING } from '../../config/appConfig';
 import './SpareParts.css';
 
@@ -154,8 +154,22 @@ const SparePartsPage = () => {
     return roles[role] || roles['guest'];
   };
   
+  // 创建一个包装函数用于按钮点击事件
+  const handleReloadData = useCallback(() => {
+    loadSparePartsData(0, 2);
+  }, []);
+  
+  // 创建一个包装函数用于筛选选项重新加载
+  const handleReloadFilterOptions = useCallback(() => {
+    loadFilterOptions(0, 2);
+  }, []);
+  
   // 在组件首次渲染时从localStorage加载购物车数据并获取备件数据
   useEffect(() => {
+    // 设置默认的型号数据
+    setHostModels(['LA-E4S', 'LA-E5P', 'TM-200', 'TM-300', 'PM-100', 'PM-200', 'ACB-100', 'ACB-200']);
+    setAccessoryModels(['FS-001', 'FS-002', 'FB-100', 'FB-200']);
+    
     loadSparePartsData();
     loadFilterOptions();
     fetchModels(currentProductType); // 初始化时加载当前产品类型的型号
@@ -167,17 +181,18 @@ const SparePartsPage = () => {
   }, [selectedIsConsumable, currentProductType, selectedModel]);
   
   // 加载备件数据
-  const loadSparePartsData = async () => {
-    console.log("Starting loadSparePartsData with filters:", { selectedIsConsumable, currentProductType, selectedModel });
+  const loadSparePartsData = async (retryCount = 0, maxRetries = 2) => {
+    console.log(`Starting loadSparePartsData (attempt ${retryCount + 1}/${maxRetries + 1}) with filters:`, { selectedIsConsumable, currentProductType, selectedModel });
     setLoading(true);
     setError(null);
     
     try {
       // 使用新的API接口获取数据
+      console.log("Calling sparePartsApi.getAllSpareParts()");
       const response = await sparePartsApi.getAllSpareParts();
       
       // 添加调试日志
-      console.log('API response received');
+      console.log('API response received:', response);
       
       // 增强的响应验证
       if (!response) {
@@ -190,11 +205,7 @@ const SparePartsPage = () => {
         throw new Error('Invalid API response format: missing data property');
       }
       
-      if (!Array.isArray(response.data)) {
-        console.error('API response data is not an array:', response.data);
-        throw new Error('Invalid API response format: data is not an array');
-      }
-      
+      // 验证数据是数组
       const data: SparePart[] = response.data;
       console.log(`Received ${data.length} spare parts items`);
       
@@ -207,36 +218,60 @@ const SparePartsPage = () => {
         console.log(`Filtered by is_consumable=${selectedIsConsumable}: ${filteredData.length} items remaining`);
       }
       
-      // 根据产品类型筛选
+      // 根据产品类型筛选（机器/配件）
       if (currentProductType && currentProductType !== 'all') {
-        filteredData = filteredData.filter(part => part.product_type === currentProductType);
-        console.log(`Filtered by product type '${currentProductType}': ${filteredData.length} items remaining`);
+        filteredData = filteredData.filter(part => {
+          // 1. 如果部件有明确的product_type属性，直接使用
+          if (part.product_type) {
+            return part.product_type === currentProductType;
+          }
+          
+          // 2. 如果没有product_type但有product_line_id，则根据product_line_id判断
+          // 产品线ID 1-4对应机器设备，5-8对应配件
+          if (part.product_line_id) {
+            if (currentProductType === 'machine' && part.product_line_id <= 4) {
+              return true;
+            }
+            if (currentProductType === 'accessory' && part.product_line_id > 4) {
+              return true;
+            }
+            return false;
+          }
+          
+          // 3. 如果都没有，根据part_number的前两位字符判断
+          // 假设1开头的是机器，2开头的是配件（根据实际情况调整）
+          if (part.part_number) {
+            const prefix = part.part_number.substring(0, 2);
+            if (currentProductType === 'machine' && prefix.startsWith('1')) {
+              return true;
+            }
+            if (currentProductType === 'accessory' && prefix.startsWith('2')) {
+              return true;
+            }
+          }
+          
+          // 4. 如果无法确定，则默认显示（可以根据实际需求调整）
+          return false;
+        });
+        console.log(`Filtered by product_type '${currentProductType}': ${filteredData.length} items remaining`);
       }
       
-      // 增强型号筛选 - 更健壮的类型检查
-      if (selectedModel && selectedModel !== 'all' && selectedModel !== '') {
+      // 根据型号筛选
+      if (selectedModel) {
         filteredData = filteredData.filter(part => {
-          // 首先检查属性是否存在
-          if (!part.app_model) return false;
-          
-          // 如果是数组，直接检查包含关系
-          if (Array.isArray(part.app_model)) {
-            return part.app_model.includes(selectedModel);
-          }
-          
-          // 如果是字符串，拆分为数组后检查
-          if (typeof part.app_model === 'string') {
-            return part.app_model.split(',')
-              .map(m => m.trim())
-              .includes(selectedModel);
-          }
-          
-          // 其他类型，尝试转换为字符串后检查
           try {
-            const modelString = String(part.app_model);
-            return modelString.split(',')
-              .map(m => m.trim())
-              .includes(selectedModel);
+            if (!part.app_model) return false;
+            
+            // 处理不同类型的app_model
+            let models: string[] = [];
+            
+            if (Array.isArray(part.app_model)) {
+              models = part.app_model;
+            } else if (typeof part.app_model === 'string') {
+              models = part.app_model.split(',').map(m => m.trim());
+            }
+            
+            return models.includes(selectedModel);
           } catch (e) {
             console.warn(`Could not process app_model for part ${part.id || 'unknown'}:`, e);
             return false;
@@ -247,7 +282,16 @@ const SparePartsPage = () => {
       
       setSpareParts(filteredData);
     } catch (err) {
-      console.error('Error loading spare parts data:', err);
+      console.error(`Error loading spare parts data (attempt ${retryCount + 1}/${maxRetries + 1}):`, err);
+      
+      // 如果还有重试次数，则进行重试
+      if (retryCount < maxRetries) {
+        console.log(`Retrying in 1 second (attempt ${retryCount + 2}/${maxRetries + 1})...`);
+        setTimeout(() => {
+          loadSparePartsData(retryCount + 1, maxRetries);
+        }, 1000);
+        return;
+      }
       
       // 增强错误处理 - 检查授权错误
       if (err instanceof Error) {
@@ -257,8 +301,10 @@ const SparePartsPage = () => {
         if (errorMessage.includes('unauthorized') || errorMessage.includes('authentication') || errorMessage.includes('token')) {
           setError('Authentication error. Please log in again.');
           
-          // 可选：重定向到登录页
-          // setTimeout(() => navigate('/login'), 2000);
+          // 在开发环境添加额外的错误信息
+          if (process.env.NODE_ENV === 'development') {
+            console.error('Authentication error details:', err);
+          }
         } else {
           setError(errorMessage);
         }
@@ -270,32 +316,56 @@ const SparePartsPage = () => {
       setSpareParts([]);
     } finally {
       setLoading(false);
-      console.log("Finished loadSparePartsData, loading state set to false");
+      console.log(`Finished loadSparePartsData (attempt ${retryCount + 1}/${maxRetries + 1}), loading state set to false`);
     }
   };
   
   // 加载筛选选项
-  const loadFilterOptions = async () => {
+  const loadFilterOptions = async (retryCount = 0, maxRetries = 2) => {
     try {
       // 不传参数，获取所有筛选选项
+      console.log(`Calling sparePartsApi.getSparePartsFilterOptions() (attempt ${retryCount + 1}/${maxRetries + 1})`);
       const options = await sparePartsApi.getSparePartsFilterOptions();
       
       // 添加响应验证
       if (!options) {
         console.error('Filter options response is null or undefined');
+        throw new Error('No filter options received from API');
+      }
+      
+      // 存储来自API的型号列表，但首先确保它们不是空的
+      const updatedHostModels = options.hostModels && options.hostModels.length > 0 
+        ? options.hostModels 
+        : hostModels; // 保留现有主机型号
+        
+      const updatedAccessoryModels = options.accessoryModels && options.accessoryModels.length > 0
+        ? options.accessoryModels
+        : accessoryModels; // 保留现有配件型号
+      
+      setHostModels(updatedHostModels);
+      setAccessoryModels(updatedAccessoryModels);
+      setFilterOptions(options);
+      
+      // 记录日志
+      console.log('Filter options loaded:', {
+        hostModels: updatedHostModels.length,
+        accessoryModels: updatedAccessoryModels.length,
+        partTypes: options.partTypes?.length || 0
+      });
+    } catch (err) {
+      console.error(`Error loading filter options (attempt ${retryCount + 1}/${maxRetries + 1}):`, err);
+      
+      // 如果还有重试次数，则进行重试
+      if (retryCount < maxRetries) {
+        console.log(`Retrying in 1 second (attempt ${retryCount + 2}/${maxRetries + 1})...`);
+        setTimeout(() => {
+          loadFilterOptions(retryCount + 1, maxRetries);
+        }, 1000);
         return;
       }
       
-      setFilterOptions(options);
-      console.log('Filter options loaded successfully:', options);
-    } catch (err) {
-      console.error('Error loading filter options:', err);
-      
-      // 记录错误但不阻止页面渲染
-      // 可以选择显示用户提示，但不中断主要功能
-      if (err instanceof Error) {
-        console.warn(`Filter options error: ${err.message}`);
-      }
+      // 使用默认值
+      console.warn('Using default filter options values');
     }
   };
   
@@ -451,7 +521,7 @@ const SparePartsPage = () => {
     };
 
     // Add to cart context
-    addItem(cartItem as unknown as CartItem); // Use type assertion carefully
+    addItem(cartItem as unknown as ExtendedCartItem); // Use type assertion carefully
     
     // Show notification
     showCartNotification(t('cart.cartCleared', {ns: 'spareParts'}));
@@ -758,12 +828,30 @@ const SparePartsPage = () => {
             </svg>
           </div>
           <p className="text-content-light mb-4">{error}</p>
-          <button onClick={loadSparePartsData} className="flex items-center px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-            </svg>
-            {t('error.retry', {ns: 'spareParts'})}
-          </button>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button 
+              onClick={handleReloadData} 
+              className="flex items-center px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+              </svg>
+              {t('error.retry', {ns: 'spareParts'})}
+            </button>
+            
+            <button 
+              onClick={() => {
+                localStorage.removeItem('auth_token');
+                navigate('/login');
+              }} 
+              className="flex items-center px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
+              </svg>
+              重新登录
+            </button>
+          </div>
         </div>
       );
     }
@@ -776,16 +864,29 @@ const SparePartsPage = () => {
           </svg>
           <h3 className="mt-4 text-lg font-medium text-title">{t('error.noResults', {ns: 'spareParts'})}</h3>
           <p className="mt-2 text-content-light">{t('error.tryAgain', {ns: 'spareParts'})}</p>
-          <button 
-            onClick={() => {
-              setSelectedModel('');
-              setSelectedIsConsumable(null);
-              // Reset other filters if any
-            }}
-            className="mt-4 px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors"
-          >
-            {t('filters.reset', {ns: 'spareParts'})}
-          </button>
+          <div className="flex flex-col sm:flex-row gap-4 mt-4">
+            <button 
+              onClick={() => {
+                setSelectedModel('');
+                setSelectedIsConsumable(null);
+                // 重新加载数据
+                setTimeout(() => handleReloadData(), 100);
+              }}
+              className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors"
+            >
+              {t('filters.reset', {ns: 'spareParts'})}
+            </button>
+            
+            <button 
+              onClick={handleReloadData}
+              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors flex items-center justify-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+              </svg>
+              仅重试
+            </button>
+          </div>
         </div>
       );
     }
@@ -1111,38 +1212,45 @@ const SparePartsPage = () => {
     console.log(`Fetching models for product type: ${productType}`);
     try {
       setLoading(true);
-      // 根据产品类型获取不同的型号列表
+      
+      // 获取筛选选项
+      console.log(`Getting filter options for ${productType}`);
       const options = await sparePartsApi.getSparePartsFilterOptions();
       console.log(`Received filter options for ${productType}:`, options);
       
       if (options) {
+        // 设置型号数据
         if (productType === 'machine') {
-          setHostModels(options.hostModels || []);
-          console.log(`Set host models:`, options.hostModels);
+          // 有选项数据时才更新，防止清空已有数据
+          if (Array.isArray(options.hostModels)) {
+            setHostModels(options.hostModels);
+            console.log(`Set ${options.hostModels.length} host models:`, options.hostModels);
+          } else {
+            console.warn('Host models is not an array:', options.hostModels);
+          }
         } else if (productType === 'accessory') {
-          setAccessoryModels(options.accessoryModels || []);
-          console.log(`Set accessory models:`, options.accessoryModels);
+          // 有选项数据时才更新，防止清空已有数据
+          if (Array.isArray(options.accessoryModels)) {
+            setAccessoryModels(options.accessoryModels);
+            console.log(`Set ${options.accessoryModels.length} accessory models:`, options.accessoryModels);
+          } else {
+            console.warn('Accessory models is not an array:', options.accessoryModels);
+          }
         }
       } else {
         console.error('No options returned from API');
-        if (productType === 'machine') {
-          setHostModels([]);
-        } else if (productType === 'accessory') {
-          setAccessoryModels([]);
-        }
+        // 保留当前值而不是清空
       }
       
-      // 重置已选型号为空字符串
+      // 重置已选型号
       setSelectedModel('');
       
       // 当切换产品类型时，重新加载数据
       loadSparePartsData();
-      
-      setLoading(false);
     } catch (err) {
       console.error(`Error fetching models for ${productType}:`, err);
       
-      // 更详细的错误处理
+      // 更详细的错误处理，但保持当前值
       if (err instanceof Error) {
         const errorMessage = err.message || `Failed to fetch models for ${productType}`;
         console.warn(errorMessage);
@@ -1150,13 +1258,7 @@ const SparePartsPage = () => {
         // 可以选择显示轻量级的错误提示
         // showCartNotification(`Error: ${errorMessage}`, 3000);
       }
-      
-      // When there's an error loading models, keep the page usable with empty model list
-      if (productType === 'machine') {
-        setHostModels([]);
-      } else if (productType === 'accessory') {
-        setAccessoryModels([]);
-      }
+    } finally {
       setLoading(false);
     }
   };
@@ -1216,6 +1318,67 @@ const SparePartsPage = () => {
             </button>
           </div>
         </div>
+
+        {/* 开发调试面板 - 仅在开发环境显示 */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="bg-gray-100 p-3 rounded-md mb-4 text-xs font-mono overflow-x-auto">
+            <details>
+              <summary className="font-semibold cursor-pointer">调试信息</summary>
+              <div className="mt-2 grid grid-cols-1 gap-2">
+                <div className="text-gray-700">
+                  <strong>加载状态:</strong> {loading ? '加载中...' : '空闲'}
+                </div>
+                <div className="text-gray-700">
+                  <strong>错误状态:</strong> {error || '无错误'}
+                </div>
+                <div className="text-gray-700">
+                  <strong>数据项数:</strong> {Array.isArray(spareParts) ? spareParts.length : 0}
+                </div>
+                <div className="text-gray-700">
+                  <strong>已选型号:</strong> {selectedModel || '无'}
+                </div>
+                <div className="text-gray-700">
+                  <strong>当前产品类型:</strong> {currentProductType || '无'}
+                </div>
+                <div className="text-gray-700">
+                  <strong>耗材类型筛选:</strong> {selectedIsConsumable === null ? '全部' : selectedIsConsumable ? '耗材' : '非耗材'}
+                </div>
+                <div className="text-gray-700">
+                  <strong>可用筛选配置:</strong> {filterOptions ? '已加载' : '未加载'}
+                </div>
+                <div className="text-gray-700">
+                  <strong>机器型号:</strong> {hostModels?.length || 0} 项
+                </div>
+                <div className="text-gray-700">
+                  <strong>配件型号:</strong> {accessoryModels?.length || 0} 项
+                </div>
+                <div className="text-gray-700">
+                  <strong>用户信息:</strong> {userRole}, 区域: {userRegion}
+                </div>
+                <div className="mt-2">
+                  <button 
+                    onClick={handleReloadData} 
+                    className="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
+                  >
+                    重新加载数据
+                  </button>
+                  <button 
+                    onClick={handleReloadFilterOptions} 
+                    className="ml-2 px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
+                  >
+                    重新加载筛选项
+                  </button>
+                  <button 
+                    onClick={() => console.log('筛选选项:', filterOptions, '备件数据:', spareParts)} 
+                    className="ml-2 px-2 py-1 bg-purple-500 text-white text-xs rounded hover:bg-purple-600"
+                  >
+                    控制台输出数据
+                  </button>
+                </div>
+              </div>
+            </details>
+          </div>
+        )}
 
         {/* Filter Container */}
         <div className="bg-card p-6 rounded-lg shadow-md mb-6">

@@ -95,21 +95,57 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.log('[AuthContext] useEffect checkAuth starting...');
       try {
         // 检查本地存储的令牌
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('auth_token');
+        const userJson = localStorage.getItem('user');
         
         if (token) {
-          console.log('[AuthContext] Found token in localStorage, attempting to get user info');
-          // 尝试使用令牌获取当前用户信息
-          const currentUser = await authService.getCurrentUser();
-          const userInfo = mapServiceUserToUserInfo(currentUser, token);
-          setUser(userInfo);
+          console.log('[AuthContext] Found auth_token in localStorage, attempting to get user info');
+          try {
+            // 尝试使用令牌获取当前用户信息
+            const currentUser = await authService.getCurrentUser();
+            console.log('[AuthContext] Successfully retrieved current user:', currentUser);
+            
+            const userInfo = mapServiceUserToUserInfo(currentUser, token);
+            console.log('[AuthContext] Mapped user info:', userInfo);
+            
+            setUser(userInfo);
+            
+            // 更新localStorage中的用户信息
+            localStorage.setItem('user', JSON.stringify(userInfo));
+            console.log('[AuthContext] Updated user info in localStorage');
+          } catch (error) {
+            console.error('[AuthContext] Error getting current user:', error);
+            // 尝试使用localStorage中的用户信息作为备份
+            if (userJson) {
+              try {
+                const cachedUser = JSON.parse(userJson);
+                console.log('[AuthContext] Using cached user info:', cachedUser);
+                setUser(cachedUser);
+              } catch (parseError) {
+                console.error('[AuthContext] Failed to parse cached user info:', parseError);
+                // 清除无效的用户数据
+                localStorage.removeItem('user');
+              }
+            } else {
+              console.log('[AuthContext] No cached user info found');
+              // 清除可能无效的令牌
+              localStorage.removeItem('auth_token');
+            }
+          }
         } else {
-          console.log('[AuthContext] No token in localStorage');
+          console.log('[AuthContext] No auth_token in localStorage');
+          
+          // 如果没有令牌但有用户数据，也清除用户数据以保持一致性
+          if (userJson) {
+            console.log('[AuthContext] Removing inconsistent user data without token');
+            localStorage.removeItem('user');
+          }
         }
       } catch (err) {
         console.error('[AuthContext] Auto login failed:', err);
-        // 清除可能无效的令牌
-        localStorage.removeItem('token');
+        // 清除可能无效的令牌和用户数据
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user');
       } finally {
         console.log('[AuthContext] useEffect checkAuth finished, setting loading to false.');
         setLoading(false);
@@ -124,6 +160,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setLoading(true);
     setError(null);
     try {
+      console.log('[AuthContext] login attempt for user:', username);
       const response = await authService.login({
         username,
         password,
@@ -131,12 +168,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
       
       const { access_token, user: serviceUser } = response;
+      console.log('[AuthContext] login successful, received token and user data');
       
       // 保存令牌到本地存储
-      localStorage.setItem('token', access_token);
+      localStorage.setItem('auth_token', access_token);
+      console.log('[AuthContext] saved auth_token to localStorage');
       
       // 转换用户数据
       const userInfo = mapServiceUserToUserInfo(serviceUser, access_token);
+      console.log('[AuthContext] mapped user info:', userInfo);
+      
+      // 保存用户信息到本地存储
+      localStorage.setItem('user', JSON.stringify(userInfo));
+      console.log('[AuthContext] saved user info to localStorage');
       
       setUser(userInfo);
       return userInfo;
@@ -157,16 +201,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       await authService.logout();
       
-      console.log('[AuthContext] logout success, setting user to null');
+      console.log('[AuthContext] logout success, clearing localStorage and setting user to null');
       // 清除本地存储
-      localStorage.removeItem('token');
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user');
       setUser(null);
     } catch (err: any) {
       console.log('[AuthContext] logout error:', err);
       setError(err.message || 'Logout failed. Please try again.');
       
       // 即使API调用失败，也清除本地会话
-      localStorage.removeItem('token');
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user');
       setUser(null);
       
       throw err;
@@ -193,7 +239,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const { access_token, user: serviceUser } = response;
       
       // 保存令牌到本地存储
-      localStorage.setItem('token', access_token);
+      localStorage.setItem('auth_token', access_token);
       
       // 转换用户数据
       const userInfo = mapServiceUserToUserInfo(serviceUser, access_token);

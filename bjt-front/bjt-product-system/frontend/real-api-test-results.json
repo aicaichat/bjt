@@ -1,0 +1,74 @@
+{
+  "summary": {
+    "total": 4,
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "duration": 777,
+    "timestamp": "2025-05-23T07:28:54.535Z"
+  },
+  "environment": [
+    {
+      "name": "API配置检查",
+      "status": "pass",
+      "message": "API配置正常",
+      "details": {
+        "baseUrl": "http://127.0.0.1:80/wp-json",
+        "timeout": 10000,
+        "authRequired": false
+      }
+    }
+  ],
+  "results": [
+    {
+      "page": "HomePage",
+      "total": 4,
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0,
+      "details": [
+        {
+          "test": "产品线API调用和数据验证",
+          "status": "pass",
+          "apiCall": "/bjt/v1/product-lines",
+          "responseTime": 198,
+          "statusCode": 200
+        },
+        {
+          "test": "设备列表API调用",
+          "status": "pass",
+          "apiCall": "/bjt/v1/machines",
+          "responseTime": 121,
+          "statusCode": 200
+        },
+        {
+          "test": "购物车API集成",
+          "status": "pass",
+          "apiCall": "/bjt/v1/cart",
+          "responseTime": 191,
+          "statusCode": 200
+        },
+        {
+          "test": "错误处理机制验证",
+          "status": "pass",
+          "apiCall": "/bjt/v1/non-existent-endpoint",
+          "responseTime": 267,
+          "statusCode": 404
+        }
+      ],
+      "apiMetrics": {
+        "totalCalls": 4,
+        "averageResponseTime": 194.25,
+        "slowestCall": {
+          "endpoint": "/bjt/v1/non-existent-endpoint",
+          "time": 267
+        },
+        "fastestCall": {
+          "endpoint": "/bjt/v1/machines",
+          "time": 121
+        },
+        "errorRate": 0.25
+      }
+    }
+  ]
+}

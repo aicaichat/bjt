@@ -63,7 +63,20 @@ export class ProductLineService extends BaseService<ProductLineListResponse> {
     search?: string;
     status?: string;
   } = {}): Promise<ProductLineListResponse> {
-    return this.getData('', params);
+    const response = await this.getData('', params);
+    
+    // 如果响应是数组，转换为正确的格式
+    if (Array.isArray(response)) {
+      return {
+        items: response,
+        total: response.length,
+        page: params.page || 1,
+        page_size: params.per_page || response.length,
+        total_pages: 1
+      };
+    }
+    
+    return response;
   }
 
   /**

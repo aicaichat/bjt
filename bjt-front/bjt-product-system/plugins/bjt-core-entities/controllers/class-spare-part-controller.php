@@ -62,36 +62,36 @@ class BJT_Spare_Part_Controller extends BJT_API_Controller {
             ],
         ]);
         
+        // 修正后的路由注册格式
+        $id_arg = [
+            'id' => [
+                'required' => true,
+                'validate_callback' => function($value) { return is_numeric($value) && (int)$value > 0; },
+                'sanitize_callback' => 'absint'
+            ]
+        ];
+        $editable_args = array_merge(
+            $id_arg,
+            $this->get_endpoint_args_for_item_schema(WP_REST_Server::EDITABLE)
+        );
         register_rest_route($this->namespace, '/' . $this->resource_name . '/(?P<id>[\d]+)', [
             [
                 'methods' => WP_REST_Server::READABLE,
                 'callback' => [$this, 'get_item'],
                 'permission_callback' => [$this, 'check_read_permission'],
-                'args' => [
-                    'id' => [
-                        'required' => true,
-                        'validate_callback' => function($value) { return is_numeric($value) && (int)$value > 0; },
-                        'sanitize_callback' => 'absint'
-                    ]
-                ]
+                'args' => $id_arg
             ],
             [
-                'methods' => WP_REST_Server::EDITABLE, // Covers PUT and PATCH
+                'methods' => WP_REST_Server::EDITABLE, // PUT/PATCH
                 'callback' => [$this, 'update_item'],
                 'permission_callback' => [$this, 'check_write_permission'],
-                'args' => $this->get_item_schema() 
+                'args' => $editable_args
             ],
             [
                 'methods' => WP_REST_Server::DELETABLE,
                 'callback' => [$this, 'delete_item'],
                 'permission_callback' => [$this, 'check_write_permission'],
-                'args' => [
-                    'id' => [
-                        'required' => true,
-                        'validate_callback' => function($value) { return is_numeric($value) && (int)$value > 0; },
-                        'sanitize_callback' => 'absint'
-                    ]
-                ]
+                'args' => $id_arg
             ]
         ]);
         

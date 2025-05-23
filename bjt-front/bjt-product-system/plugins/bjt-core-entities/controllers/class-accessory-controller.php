@@ -124,15 +124,15 @@ class BJT_Accessory_Controller extends BJT_API_Controller {
         ]);
 
         // GET /accessories/{id}/children - Get child accessories
-        register_rest_route($this->namespace, '/' . $this->resource_name . '/(?P<id>\\d+)/children', [
+        register_rest_route($this->namespace, '/' . $this->resource_name . '/(?P<id>[\w-]+)/children', [
             [
                 'methods'             => WP_REST_Server::READABLE,
                 'callback'            => [$this, 'get_children'],
                 'permission_callback' => [$this, 'check_read_permission'],
                 'args'                => [
                      'id' => [
-                        'description' => 'Unique identifier for the parent accessory.',
-                        'type'        => 'integer',
+                        'description' => 'Part number of the parent accessory.',
+                        'type'        => 'string',
                         'required'    => true,
                     ],
                     'lang' => [
@@ -142,13 +142,15 @@ class BJT_Accessory_Controller extends BJT_API_Controller {
                         'default'     => 'zh'
                     ],
                     'region' => [
-                        'description' => 'Region code (CN/EU/NA/AU).',
+                        'description' => 'Region code (CN/EU/NA/AU) for pricing and inventory.',
                         'type'        => 'string',
                         'enum'        => ['CN', 'EU', 'NA', 'AU'],
                     ],
+                    'page' => $this->get_pagination_arg_definitions()['page'],
+                    'per_page' => $this->get_pagination_arg_definitions()['per_page'],
                 ],
             ],
-            'schema' => [$this, 'get_public_item_schema'], // Schema might need adjustment for list of children
+            'schema' => [$this, 'get_public_item_schema'], // Consider a specific schema for children response
         ]);
 
         // GET /accessories/{id}/required - Get required spare parts for an accessory
@@ -172,6 +174,42 @@ class BJT_Accessory_Controller extends BJT_API_Controller {
                 ],
             ],
              'schema' => [$this, 'get_public_item_schema'], // Schema likely needs to be for spare parts
+        ]);
+
+        // GET /accessories/machine/{model}/accessories - Get accessories for a specific machine model
+        register_rest_route($this->namespace, '/' . $this->resource_name . '/machine/(?P<model>[a-zA-Z0-9-]+)/accessories', [
+            [
+                'methods'             => WP_REST_Server::READABLE,
+                'callback'            => [$this, 'get_machine_accessories'],
+                'permission_callback' => [$this, 'check_read_permission'],
+                'args'                => [
+                    'model' => [
+                        'description' => 'Machine model code.',
+                        'type'        => 'string',
+                        'required'    => true,
+                    ],
+                    'level' => [
+                        'description' => 'Accessory level (1-5).',
+                        'type'        => 'integer',
+                        'default'     => 1,
+                        'validate_callback' => function($param) {
+                            return is_numeric($param) && $param >= 1 && $param <= 5;
+                        }
+                    ],
+                    'lang' => [
+                        'description' => 'Language code (zh/en).',
+                        'type'        => 'string',
+                        'enum'        => ['zh', 'en'],
+                        'default'     => 'zh'
+                    ],
+                    'region' => [
+                        'description' => 'Region code (CN/EU/NA/AU).',
+                        'type'        => 'string',
+                        'enum'        => ['CN', 'EU', 'NA', 'AU'],
+                    ],
+                ],
+            ],
+            'schema' => [$this, 'get_public_item_schema'],
         ]);
 
     }
@@ -250,12 +288,14 @@ class BJT_Accessory_Controller extends BJT_API_Controller {
             return $this->error_response('Database error retrieving accessories: ' . $wpdb->last_error, 'db_error', 500);
         }
         
+        $formatted_items = array_map([$this, 'format_item_for_response'], $items);
+        
         // Prepare response data structure
         $data = [
-            'items' => $items ?: [], // Ensure items is always an array
+            'items' => $formatted_items,
             'total' => (int) $total_items,
             'page' => $pagination_params['page'],
-            'page_size' => $pagination_params['per_page'],
+            'per_page' => $pagination_params['per_page'],
             'total_pages' => ($total_items > 0) ? ceil($total_items / $pagination_params['per_page']) : 0,
         ];
 
@@ -781,205 +821,167 @@ class BJT_Accessory_Controller extends BJT_API_Controller {
         }
     }
 
+    /**
+     * Get child accessories for a given parent accessory part number.
+     * Children are grouped by their model.
+     * Includes pricing and inventory if region is provided.
+     *
+     * @param WP_REST_Request $request
+     * @return WP_REST_Response|WP_Error
+     */
     public function get_children($request) {
-        $id = (int) $request['id'];
-        // Placeholder: Implement logic to fetch child accessories
-        // Query wp_bjt_relations table where parent_part_number corresponds to accessory ID's part_number and child_type is 'accessory'
-        // Join with wp_bjt_accessories for details
-        // Consider lang and region params
-        // return new WP_REST_Response($this->response([], "Get children for accessory $id endpoint not yet implemented.", false), 404);
-
         global $wpdb;
+        $parent_accessory_part_number = $request->get_param('id');
+        $lang = $request->get_param('lang') ?: 'zh';
+        $region = $request->get_param('region');
+        $page = absint($request->get_param('page') ?: 1);
+        $per_page = absint($request->get_param('per_page') ?: 10);
+
         $accessories_table = $wpdb->prefix . 'bjt_accessories';
         $relations_table = $wpdb->prefix . 'bjt_relations';
         $accessory_models_table = $wpdb->prefix . 'bjt_accessory_models';
-        
-        // Get language parameter
-        $lang = $request->get_param('lang') ?: 'zh';
-        $region = $request->get_param('region'); // Region might be used for price/inventory later
-        
-        // Determine name column based on language
-        $name_column = ($lang === 'en') ? 'name_en' : 'name_zh';
-        $model_title_column = ($lang === 'en') ? 'am.title_en' : 'am.title_zh';
-        
-        // First, get the parent accessory to find its part_number
-        $parent = $wpdb->get_row(
-            $wpdb->prepare(
-                "SELECT id, product_line_id, part_number FROM {$accessories_table} WHERE id = %d",
-                $id
-            )
+        $prices_table = $wpdb->prefix . 'bjt_prices';
+        $inventory_table = $wpdb->prefix . 'bjt_inventory';
+
+        // Validate if the parent accessory part_number actually exists
+        $parent_accessory_exists = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$accessories_table} WHERE part_number = %s AND status = 'publish'",
+            $parent_accessory_part_number
+        ));
+        if (!$parent_accessory_exists) {
+            return $this->error_response('指定的父配件料号不存在 (Parent accessory part number not found)', 'parent_accessory_not_found', 404);
+        }
+
+        // Query to find direct child accessory part numbers linked to the parent_accessory_part_number
+        // In wp_bjt_relations, 'part_number' is the parent for this query, 
+        // and 'child_part_number' is the child. This was corrected based on user feedback.
+        $child_accessory_pns_query = $wpdb->prepare(
+            "SELECT DISTINCT r.child_part_number 
+             FROM {$relations_table} r
+             WHERE r.part_number = %s AND r.child_type = 'accessory' AND r.status = 'publish'",
+            $parent_accessory_part_number
         );
         
-        if (!$parent) {
-            return $this->error_response(
-                "Accessory with ID {$id} not found.",
-                'accessory_not_found',
-                404
+        $child_accessory_pns_results = $wpdb->get_col($child_accessory_pns_query);
+
+        if (empty($child_accessory_pns_results)) {
+            return $this->success_response(['items' => [], 'total' => 0, 'page' => $page, 'per_page' => $per_page, 'total_pages' => 0, 'parent_part_number' => $parent_accessory_part_number]);
+        }
+
+        $grouped_child_accessories = [];
+
+        foreach ($child_accessory_pns_results as $child_acc_pn) {
+            $child_accessory_detail = $wpdb->get_row(
+                $wpdb->prepare("SELECT * FROM {$accessories_table} WHERE part_number = %s AND status = 'publish'", $child_acc_pn),
+                ARRAY_A
             );
-        }
-        
-        // Extract pagination params
-        $pagination_params = $this->extract_pagination_params_from_request($request);
-        
-        // Get child accessories by joining relations table
-        $count_sql = $wpdb->prepare(
-            "SELECT COUNT(a.id)
-            FROM {$relations_table} r
-            JOIN {$accessories_table} a ON r.child_part_number = a.part_number
-            JOIN {$accessory_models_table} am ON a.model = am.model AND a.product_line_id = am.product_line_id
-            WHERE r.parent_part_number = %s
-            AND r.child_type = 'accessory'",
-            $parent->part_number
-        );
-        
-        $total_items = $wpdb->get_var($count_sql);
-        
-        if ($total_items === null) {
-            return $this->error_response(
-                'Database error when counting child accessories.',
-                'db_error',
-                500
-            );
-        }
-        
-        // Fetch children with pagination
-        $children_sql = $wpdb->prepare(
-            "SELECT 
-                a.id, 
-                a.product_line_id,
-                a.model,
-                a.brand,
-                a.part_number,
-                a.{$name_column} AS name,
-                a.spec,
-                a.spec_imperial,
-                a.voltage,
-                a.frequency,
-                a.image_url,
-                a.status,
-                a.unit,
-                a.created_at,
-                a.updated_at,
-                r.level,
-                r.quantity,
-                {$model_title_column} AS model_title
-            FROM {$relations_table} r
-            JOIN {$accessories_table} a ON r.child_part_number = a.part_number
-            JOIN {$accessory_models_table} am ON a.model = am.model AND a.product_line_id = am.product_line_id
-            WHERE r.parent_part_number = %s
-            AND r.child_type = 'accessory'
-            ORDER BY r.level ASC, r.sort_order ASC, a.id ASC
-            LIMIT %d OFFSET %d",
-            $parent->part_number,
-            $pagination_params['per_page'],
-            $pagination_params['offset']
-        );
-        
-        $children = $wpdb->get_results($children_sql);
-        
-        if ($wpdb->last_error) {
-            return $this->error_response(
-                'Database error retrieving child accessories: ' . $wpdb->last_error,
-                'db_error',
-                500
-            );
-        }
-        
-        // Organize children by level if desired
-        $organized_children = [];
-        foreach ($children as $child) {
-            $level = $child->level;
-            if (!isset($organized_children[$level])) {
-                $organized_children[$level] = [];
-            }
-            $organized_children[$level][] = $child;
-        }
-        
-        // Add inventory and pricing if region is specified
-        if ($region && !empty($children)) {
-            // Get IDs of all children
-            $child_ids = array_map(function($child) {
-                return $child->id;
-            }, $children);
-            
-            $child_ids_str = implode(',', $child_ids);
-            
-            // Fetch inventory data
-            $inventory_table = $wpdb->prefix . 'bjt_inventory';
-            $inventory_data = $wpdb->get_results(
+
+            if ($child_accessory_detail) {
+                $child_accessory_db_id = $child_accessory_detail['id'];
+                $child_accessory_model_code = $child_accessory_detail['model'];
+
+                $child_accessory_model_detail = $wpdb->get_row(
+                    $wpdb->prepare("SELECT * FROM {$accessory_models_table} WHERE model = %s AND status = 'publish'", $child_accessory_model_code),
+                    ARRAY_A
+                );
+
+                if (!$child_accessory_model_detail) {
+                    continue; // Skip if model not found or not published
+                }
+
+                // Initialize model group if not exists
+                if (!isset($grouped_child_accessories[$child_accessory_model_code])) {
+                    $model_title_key = $lang === 'en' ? 'title_en' : 'title_zh';
+                    $model_fallback_title_key = $lang === 'en' ? 'title_zh' : 'title_en';
+                    
+                    $model_title = ''; 
+                    if (isset($child_accessory_model_detail[$model_title_key]) && !empty($child_accessory_model_detail[$model_title_key])) {
+                        $model_title = $child_accessory_model_detail[$model_title_key];
+                    } elseif (isset($child_accessory_model_detail[$model_fallback_title_key]) && !empty($child_accessory_model_detail[$model_fallback_title_key])) {
+                        $model_title = $child_accessory_model_detail[$model_fallback_title_key];
+                    }
+
+                    $grouped_child_accessories[$child_accessory_model_code] = [
+                        'id' => $child_accessory_model_code, 
+                        'model' => $model_title, 
+                        'title' => $model_title, 
+                        'image_url' => isset($child_accessory_model_detail['image1_url']) ? ($child_accessory_model_detail['image1_url'] ?: (isset($child_accessory_model_detail['image2_url']) ? $child_accessory_model_detail['image2_url'] : '')) : '',
+                        'parts' => [],
+                    ];
+                }
+                
+                $part_name_key = ($lang === 'en' && isset($child_accessory_detail['name_en']) && !empty($child_accessory_detail['name_en'])) ? 'name_en' : 'name_zh';
+                
+                $part_data = [
+                    'id' => $child_accessory_db_id, 
+                    'part_number' => $child_acc_pn,
+                    'name' => isset($child_accessory_detail[$part_name_key]) ? $child_accessory_detail[$part_name_key] : '',
+                    'spec' => isset($child_accessory_detail['spec']) ? $child_accessory_detail['spec'] : '',
+                    'spec_imperial' => isset($child_accessory_detail['spec_imperial']) ? $child_accessory_detail['spec_imperial'] : '',
+                    'voltage' => isset($child_accessory_detail['voltage']) ? $child_accessory_detail['voltage'] : '',
+                    'frequency' => isset($child_accessory_detail['frequency']) ? $child_accessory_detail['frequency'] : '',
+                    'unit' => isset($child_accessory_detail['unit']) ? $child_accessory_detail['unit'] : '',
+                ];
+
+                if ($region) {
+                    $price_data_raw = $wpdb->get_row(
                 $wpdb->prepare(
-                    "SELECT 
-                        target_id,
-                        region,
-                        quantity,
-                        reserved,
-                        status
-                     FROM {$inventory_table}
-                     WHERE target_type = 'accessory'
-                     AND region = %s
-                     AND target_id IN ($child_ids_str)",
-                    $region
+                            "SELECT base_price, currency, discount_rate FROM {$prices_table} 
+                             WHERE target_type = 'accessory' AND target_id = %d AND region = %s AND status = 'active' 
+                             ORDER BY min_quantity ASC LIMIT 1",
+                            $child_accessory_db_id, $region
                 ),
                 ARRAY_A
             );
-            
-            $inventory_by_id = [];
-            foreach ($inventory_data as $inventory) {
-                $inventory_by_id[$inventory['target_id']] = $inventory;
-            }
-            
-            // Fetch pricing data
-            $prices_table = $wpdb->prefix . 'bjt_prices';
-            $price_data = $wpdb->get_results(
+                    if ($price_data_raw) {
+                        $part_data['pricing'] = [
+                            'base_price' => isset($price_data_raw['base_price']) ? (float)$price_data_raw['base_price'] : 0.0,
+                            'currency' => isset($price_data_raw['currency']) ? $price_data_raw['currency'] : '',
+                            'discount_rate' => isset($price_data_raw['discount_rate']) ? (float)$price_data_raw['discount_rate'] : null,
+                        ];
+                    } else {
+                         $part_data['pricing'] = null; 
+                    }
+                }
+
+                if ($region) {
+                    $inventory_results = $wpdb->get_results(
                 $wpdb->prepare(
-                    "SELECT 
-                        target_id,
-                        base_price,
-                        discount_rate,
-                        currency
-                     FROM {$prices_table}
-                     WHERE target_type = 'accessory'
-                     AND region = %s
-                     AND target_id IN ($child_ids_str)
-                     AND min_quantity <= 1
-                     ORDER BY min_quantity DESC",
-                    $region
+                            "SELECT warehouse, quantity, reserved FROM {$inventory_table} 
+                             WHERE target_type = 'accessory' AND target_id = %d AND region = %s AND status = 'active'",
+                            $child_accessory_db_id, $region
                 ),
                 ARRAY_A
             );
-            
-            $prices_by_id = [];
-            foreach ($price_data as $price) {
-                if (!isset($prices_by_id[$price['target_id']])) {
-                    $prices_by_id[$price['target_id']] = $price;
+                    $part_data['inventory'] = array_map(function($inv_item) {
+                        return [
+                            'warehouse' => isset($inv_item['warehouse']) ? $inv_item['warehouse'] : '',
+                            'quantity' => isset($inv_item['quantity']) ? (int)$inv_item['quantity'] : 0,
+                            'reserved' => isset($inv_item['reserved']) ? (int)$inv_item['reserved'] : 0,
+                            'available' => (isset($inv_item['quantity']) ? (int)$inv_item['quantity'] : 0) - (isset($inv_item['reserved']) ? (int)$inv_item['reserved'] : 0),
+                        ];
+                    }, $inventory_results ?: []);
                 }
-            }
-            
-            // Add inventory and pricing to children
-            foreach ($organized_children as $level => $level_children) {
-                foreach ($level_children as $index => $child) {
-                    if (isset($inventory_by_id[$child->id])) {
-                        $child->inventory = $inventory_by_id[$child->id];
-                    }
-                    if (isset($prices_by_id[$child->id])) {
-                        $child->pricing = $prices_by_id[$child->id];
-                    }
-                }
+                
+                $grouped_child_accessories[$child_accessory_model_code]['parts'][] = $part_data;
             }
         }
+
+        $response_items = array_values($grouped_child_accessories);
+        $total_items = count($response_items); 
         
-        // Prepare response data
-        $data = [
-            'items' => $organized_children,
-            'total' => (int) $total_items,
-            'page' => $pagination_params['page'],
-            'page_size' => $pagination_params['per_page'],
-            'total_pages' => ceil($total_items / $pagination_params['per_page']),
-            'parent_id' => $id,
-            'parent_part_number' => $parent->part_number
-        ];
-        
-        return new WP_REST_Response($data, 200);
+        $paginated_model_groups = array_slice($response_items, ($page - 1) * $per_page, $per_page);
+        $total_pages = ($per_page > 0) ? ceil($total_items / $per_page) : 0;
+
+
+        return $this->success_response([
+            'items' => $paginated_model_groups,
+            'total' => $total_items,
+            'page' => $page,
+            'per_page' => $per_page,
+            'total_pages' => $total_pages,
+            'parent_part_number' => $parent_accessory_part_number,
+        ]);
     }
 
     public function get_required_spare_parts($request) {
@@ -1115,6 +1117,51 @@ class BJT_Accessory_Controller extends BJT_API_Controller {
         );
     }
 
+    /**
+     * Get accessories for a specific machine model
+     * 
+     * @param WP_REST_Request $request
+     * @return WP_REST_Response
+     */
+    public function get_machine_accessories($request) {
+        global $wpdb;
+        
+        $model = $request->get_param('model');
+        $level = $request->get_param('level') ?: 1;
+        $lang = $request->get_param('lang') ?: 'zh';
+        
+        // Determine name column based on language
+        $name_column = ($lang === 'en') ? 'name_en' : 'name_zh';
+        
+        // Query to get accessories for the machine model
+        $query = $wpdb->prepare(
+            "SELECT a.*, am.{$name_column} as name
+            FROM {$wpdb->prefix}bjt_accessories a
+            JOIN {$wpdb->prefix}bjt_accessory_models am ON a.id = am.accessory_id
+            WHERE am.model_code = %s
+            AND a.level = %d
+            AND a.status = 'publish'
+            ORDER BY a.sort_order ASC",
+            $model,
+            $level
+        );
+        
+        $accessories = $wpdb->get_results($query);
+        
+        if ($accessories === null) {
+            return new WP_REST_Response([
+                'success' => false,
+                'message' => 'Failed to fetch accessories',
+                'data' => []
+            ], 500);
+        }
+        
+        return new WP_REST_Response([
+            'success' => true,
+            'data' => $accessories
+        ]);
+    }
+
     // --- Schema --- (Implement later)
     public function get_public_item_schema() {
         // Placeholder: Define the schema for an accessory item
@@ -1190,5 +1237,15 @@ class BJT_Accessory_Controller extends BJT_API_Controller {
 		$param_args = wp_parse_args( $args, $param_args );
 		$param_args['enum'] = array( 'view', 'embed', 'edit' );
 		return $param_args;
+	}
+
+    /**
+     * Helper to return a success WP_REST_Response for API responses.
+     */
+    protected function success_response(array $data, $status_code = 200) {
+        return new WP_REST_Response([
+            'success' => true,
+            'data'    => $data,
+        ], $status_code);
 	}
 } 

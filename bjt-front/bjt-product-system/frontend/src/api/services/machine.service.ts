@@ -1,6 +1,7 @@
 import { BaseService } from './base.service';
 import ApiService from '../../services/apiService';
 import { delay } from '../../utils/delay';
+import { decodeUtf8Unicode } from '../../utils/string';
 
 // 模拟设备数据
 const mockMachines = [
@@ -171,6 +172,16 @@ export class MachineService extends BaseService<MachineListResponse> {
   }
 
   /**
+   * 处理响应数据，修复中文Unicode编码问题
+   * @param data 原始响应数据
+   * @returns 处理后的数据
+   */
+  private processResponse<T>(data: T): T {
+    // 使用decodeUtf8Unicode函数递归处理所有字符串字段中的Unicode编码问题
+    return decodeUtf8Unicode(data);
+  }
+
+  /**
    * 获取设备列表
    * @param params 查询参数
    */
@@ -182,7 +193,9 @@ export class MachineService extends BaseService<MachineListResponse> {
     product_line_id?: number;
     type?: string;
   } = {}): Promise<MachineListResponse> {
-    return this.getData('', params);
+    const response = await this.getData('', params);
+    // 处理中文编码问题
+    return this.processResponse(response);
   }
 
   /**
@@ -207,7 +220,8 @@ export class MachineService extends BaseService<MachineListResponse> {
       }
 
       const response = await ApiService.get(this.getApiPath(`/${id}`), params);
-      return response.data;
+      // 处理中文编码问题
+      return this.processResponse(response.data);
     } catch (error) {
       console.error(`Error getting machine with ID ${id}:`, error);
       throw error;
@@ -242,7 +256,8 @@ export class MachineService extends BaseService<MachineListResponse> {
       }
 
       const response = await ApiService.get(this.getApiPath(`/${machineId}/accessories`), params);
-      return response.data;
+      // 处理中文编码问题
+      return this.processResponse(response.data);
     } catch (error) {
       console.error(`Error getting accessories for machine ${machineId}:`, error);
       throw error;

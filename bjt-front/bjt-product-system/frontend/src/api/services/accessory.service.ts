@@ -150,7 +150,7 @@ export class AccessoryService extends BaseService<AccessoryListResponse> {
   }
 
   // 获取设备配件（兼容旧的machinesService）
-  async getMachineAccessories(machineId: string, params: {
+  async getMachineAccessories(machinePartNumber: string, params: {
     level?: number;
     lang?: string;
     region?: string;
@@ -165,8 +165,38 @@ export class AccessoryService extends BaseService<AccessoryListResponse> {
       };
     }
     
-    const response = await ApiService.get(this.getApiPath(`/machine/${machineId}/accessories`), params);
-    return response.data;
+    try {
+      const response = await ApiService.get(`/machines/${machinePartNumber}/accessories`, params);
+      
+      // 确保返回正确的数据格式
+      if (!response || !response.data) {
+        console.warn('Invalid response format from API');
+        return {
+          items: [],
+          total: 0
+        };
+      }
+      
+      // 如果返回的是数组，转换为正确的格式
+      if (Array.isArray(response.data)) {
+        return {
+          items: response.data,
+          total: response.data.length
+        };
+      }
+      
+      // 如果返回的是对象，确保它有正确的格式
+      return {
+        items: response.data.items || [],
+        total: response.data.total || 0
+      };
+    } catch (error) {
+      console.error('Error fetching machine accessories:', error);
+      return {
+        items: [],
+        total: 0
+      };
+    }
   }
 
   // 获取配件详情
@@ -187,19 +217,33 @@ export class AccessoryService extends BaseService<AccessoryListResponse> {
   }
 
   // 获取配件子配件
-  async getAccessoryChildren(id: number): Promise<AccessoryChildrenResponse> {
+  async getAccessoryChildren(parentPartNumber: string, params: any = {}): Promise<AccessoryChildrenResponse> {
     if (this.useMockData) {
       await delay(300);
       
-      const children = mockAccessoryChildren[id as keyof typeof mockAccessoryChildren] || [];
-      
+      let resolvedChildren: AccessoryChild[] = [];
+      const numericKey = parseInt(parentPartNumber, 10);
+
+      if (!isNaN(numericKey)) {
+        if (numericKey === 1 && mockAccessoryChildren[1]) {
+          resolvedChildren = mockAccessoryChildren[1];
+        } else if (numericKey === 2 && mockAccessoryChildren[2]) {
+          resolvedChildren = mockAccessoryChildren[2];
+        }
+      }
+
       return {
-        items: { [id]: children }
-      };
+        items: resolvedChildren, 
+        total: resolvedChildren.length,
+      } as any; // Cast as any for now due to potential mock/real mismatch
     }
     
-    const response = await ApiService.get(this.getApiPath(`/${id}/children`));
-    return response.data;
+    const response = await ApiService.get(this.getApiPath(`/${parentPartNumber}/children`), params);
+    
+    if (response && response.data) {
+      return response.data;
+    }
+    return { items: [], total: 0 } as any;
   }
 
   // 创建配件

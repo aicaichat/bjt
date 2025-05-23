@@ -4,7 +4,7 @@ import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '', // 使用相对路径
+  base: '/', // 使用根路径
   plugins: [react()],
   css: { // Explicitly set postcss config
     postcss: './postcss.config.js'
@@ -35,6 +35,14 @@ export default defineConfig({
     hmr: {
       port: 5173,
       host: 'localhost'
+    },
+    proxy: {
+      '/wp-json/bjt/v1': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/wp-json\/bjt\/v1/, '/wp-json/bjt/v1')
+      }
     }
   },
   build: {

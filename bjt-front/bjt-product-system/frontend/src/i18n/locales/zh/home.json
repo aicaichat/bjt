@@ -13,6 +13,7 @@
   "productLines": "产品线",
   "viewProducts": "查看产品",
   "noProductLines": "暂无可用产品线",
+  "noProductsDescription": "请稍后再试或联系我们的支持团队获取帮助。",
   "features": "系统功能",
   "productManagement": "产品管理",
   "productManagementDesc": "集中管理产品线、设备、配件、备件和耗材",
@@ -25,5 +26,9 @@
   "aboutSystem": "关于BJT产品管理系统",
   "aboutSystemDesc": "BJT产品管理系统是一个专为工业设备供应商打造的现代化产品管理平台。系统支持全面的产品线管理、设备配置、订单处理和库存跟踪，旨在简化产品管理流程、提高运营效率。",
   "documentDownload": "文档下载",
-  "afterSalesService": "售后服务"
+  "afterSalesService": "售后服务",
+  "errors": {
+    "failedToLoadProducts": "加载产品失败，请稍后重试。",
+    "noProductLines": "暂无可用产品线。"
+  }
 } 

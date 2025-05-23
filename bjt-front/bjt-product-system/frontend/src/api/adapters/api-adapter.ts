@@ -21,6 +21,17 @@ export interface ApiAdapter<T, R> {
 }
 
 /**
+ * BJT API响应接口
+ * 匹配BJT API的标准响应格式
+ */
+export interface BJTApiResponse<T = any> {
+  success: boolean;
+  data: T;
+  message?: string;
+  code?: string;
+}
+
+/**
  * 基础API适配器
  * 提供默认实现，可以被特定实体的适配器继承
  */
@@ -30,9 +41,22 @@ export abstract class BaseApiAdapter<T, R = any> implements ApiAdapter<T, R> {
    * @param response API响应
    * @returns 转换后的数据
    */
-  fromApiResponse(response: ApiResponse<any>): T {
-    // 默认实现，直接返回data部分
-    return response.data as unknown as T;
+  fromApiResponse(response: BJTApiResponse<any> | ApiResponse<any>): T {
+    // 处理BJT API标准响应格式
+    if ('success' in response) {
+      if (!response.success) {
+        throw new Error(response.message || '操作失败');
+      }
+      return response.data as unknown as T;
+    }
+    
+    // 处理通用ApiResponse格式
+    if ('data' in response) {
+      return response.data as unknown as T;
+    }
+    
+    // 其他情况，直接返回
+    return response as unknown as T;
   }
   
   /**
@@ -64,15 +88,29 @@ export class PaginatedResponseAdapter<T> extends BaseApiAdapter<{
     this.itemAdapter = itemAdapter;
   }
   
-  fromApiResponse(response: ApiResponse<any>): {
+  fromApiResponse(response: BJTApiResponse<any> | ApiResponse<any>): {
     items: T[];
     total: number;
     page: number;
     page_size: number;
     total_pages: number;
   } {
-    // 处理BJT API的分页响应格式
-    const data = response.data;
+    // 从标准响应中提取数据
+    let data: any;
+    
+    // 处理BJT API标准响应格式
+    if ('success' in response) {
+      if (!response.success) {
+        throw new Error(response.message || '获取数据失败');
+      }
+      data = response.data;
+    } else if ('data' in response) {
+      // 处理通用ApiResponse格式
+      data = response.data;
+    } else {
+      // 直接使用响应
+      data = response;
+    }
     
     // 如果响应已经是标准格式
     if (data.items && typeof data.total === 'number') {

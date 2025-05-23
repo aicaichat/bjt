@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { API_CONFIG } from '../config/appConfig';
+import { getAuthHeaders, API_BASE_URL, REQUEST_TIMEOUT, getErrorMessage, logDebug } from '../api/config';
 import notificationService from './notificationService';
+import { decodeUtf8Unicode } from '../utils/string';
 
 // API响应标准格式
 export interface ApiResponse<T = any> {
@@ -105,40 +106,102 @@ export const createApiError = (error: any): ApiError => {
 };
 
 /**
+ * 递归解码API返回的中文Unicode转义序列
+ * @param data 需要解码的数据
+ * @returns 解码后的数据
+ */
+export function decodeChineseFromApi(data: any): any {
+  if (data === null || data === undefined) {
+    return data;
+  }
+
+  // 处理字符串
+  if (typeof data === 'string') {
+    // 1. 处理\uXXXX格式的Unicode转义序列
+    if (data.includes('\\u')) {
+      try {
+        // 使用JSON.parse解码Unicode转义序列
+        return JSON.parse(`"${data.replace(/"/g, '\\"')}"`);
+      } catch {
+        // 如果解析失败，尝试正则替换
+        return data.replace(/\\u([0-9a-fA-F]{4})/g, (_, codePoint) => 
+          String.fromCodePoint(parseInt(codePoint, 16))
+        );
+      }
+    }
+    // 2. 对于已经被部分解码但显示为乱码的情况，可能无法完全修复
+    return data;
+  }
+
+  // 处理数组
+  if (Array.isArray(data)) {
+    return data.map(item => decodeChineseFromApi(item));
+  }
+
+  // 处理对象
+  if (typeof data === 'object') {
+    const result: any = {};
+    for (const key in data) {
+      if (Object.prototype.hasOwnProperty.call(data, key)) {
+        result[key] = decodeChineseFromApi(data[key]);
+      }
+    }
+    return result;
+  }
+
+  return data;
+}
+
+/**
  * API服务
  */
 class ApiService {
   private axios: AxiosInstance;
-  private defaultConfig: AxiosRequestConfig;
   private authErrorHandled: boolean = false;
 
   constructor() {
-    // Destructure for clarity and to avoid property access issues
-    const { BASE_URL, TIMEOUT } = API_CONFIG;
-    
-    this.defaultConfig = {
-      baseURL: BASE_URL,
-      timeout: TIMEOUT,
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-    };
-
-    this.axios = axios.create(this.defaultConfig);
+    // 创建axios实例，设置基础配置
+    this.axios = axios.create({
+      baseURL: API_BASE_URL,
+      timeout: REQUEST_TIMEOUT,
+      headers: getAuthHeaders()
+    });
 
     // 请求拦截器
     this.axios.interceptors.request.use(
       (config) => {
         // 从localStorage获取token并添加到请求头
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('auth_token');
         if (token) {
           config.headers = config.headers || {};
           config.headers.Authorization = `Bearer ${token}`;
+          console.log(`[ApiService] Adding auth header for ${config.method?.toUpperCase()} ${config.url}`);
+          console.log(`[ApiService] Token (first 15 chars): ${token.substring(0, 15)}...`);
+        } else {
+          console.warn(`[ApiService] No auth_token found for ${config.method?.toUpperCase()} ${config.url}`);
         }
+        
+        // 为spare-parts API添加更详细的日志
+        if (config.url?.includes('spare-parts')) {
+          console.log(`[ApiService] Making spare parts request: ${config.method?.toUpperCase()} ${config.baseURL || ''}${config.url || ''}`, 
+            config.params ? `params: ${JSON.stringify(config.params)}` : '');
+          
+          // 额外检查Authorization头
+          if (config.headers?.Authorization) {
+            const authHeader = String(config.headers.Authorization);
+            console.log(`[ApiService] Spare parts request using Authorization: ${authHeader.substring(0, 15)}...`);
+          } else {
+            console.warn(`[ApiService] Spare parts request missing Authorization header!`);
+          }
+        } else {
+          console.log(`[ApiService] Making request: ${config.method?.toUpperCase()} ${config.baseURL || ''}${config.url || ''}`, 
+            config.params ? `params: ${JSON.stringify(config.params)}` : '');
+        }
+        
         return config;
       },
       (error) => {
+        console.error(`[ApiService] Request interceptor error:`, error);
         return Promise.reject(error);
       }
     );
@@ -146,27 +209,61 @@ class ApiService {
     // 响应拦截器
     this.axios.interceptors.response.use(
       (response: AxiosResponse) => {
+        console.log(`[ApiService] Response received for ${response.config.method?.toUpperCase()} ${response.config.url}:`, 
+          response.status, response.statusText);
+        
+        // 为spare-parts API添加更详细的日志
+        if (response.config.url?.includes('spare-parts')) {
+          console.log(`[ApiService] Spare parts response success:`, response.status);
+          console.log(`[ApiService] Spare parts response data structure:`, 
+            Object.keys(response.data).length ? Object.keys(response.data) : 'Empty response');
+        }
+        
+        // 处理中文编码问题
+        if (response.data) {
+          response.data = decodeChineseFromApi(response.data);
+        }
+        
         // 标准化响应格式
         const formattedResponse = this.formatResponse(response);
         return formattedResponse as any;
       },
       (error: AxiosError) => {
+        console.error(`[ApiService] Response error:`, error.message);
+        console.error(`[ApiService] Response status:`, error.response?.status, error.response?.statusText);
+        
+        // 为spare-parts API错误添加更详细的日志
+        if (error.config?.url?.includes('spare-parts')) {
+          console.error(`[ApiService] Spare parts API error:`, error.message);
+          console.error(`[ApiService] Spare parts error response:`, error.response?.data);
+          console.error(`[ApiService] Request details:`, {
+            url: error.config.url,
+            method: error.config.method,
+            headers: error.config.headers,
+            params: error.config.params,
+            data: error.config.data
+          });
+        }
+        
         const apiError = createApiError(error);
         
         // 处理特定错误类型
         if (apiError.type === ApiErrorType.AUTHENTICATION && !this.authErrorHandled) {
+          console.warn(`[ApiService] Authentication error detected, handling session expiration...`);
           this.authErrorHandled = true;
           
           // 显示通知
           notificationService.error('Session expired', 'Please login again to continue');
           
           // 清除本地存储并重定向到登录页面
-          localStorage.removeItem('token');
+          localStorage.removeItem('auth_token');
           localStorage.removeItem('user');
+          console.log(`[ApiService] Cleared auth_token and user from localStorage`);
           
           // 如果不是登录页面，则跳转到登录页面
           if (window.location.pathname !== '/login') {
             // 添加延迟以确保通知显示
+            console.log(`[ApiService] Redirecting to login page in 2 seconds...`);
             setTimeout(() => {
               window.location.href = '/login';
             }, 2000);
@@ -189,25 +286,34 @@ class ApiService {
    * @returns 标准化的API响应
    */
   private formatResponse(response: AxiosResponse): ApiResponse {
-    if (response.data && typeof response.data === 'object') {
+    // First check if the response content type indicates JSON with UTF-8 encoding
+    const contentType = response.headers?.['content-type'] || '';
+    const isUtf8Json = contentType.includes('application/json') && contentType.includes('charset=utf-8');
+    
+    console.log(`[ApiService] Response content type: ${contentType}, isUtf8Json: ${isUtf8Json}`);
+    
+    // Process the entire response data to fix encoding issues
+    const processedData = decodeChineseFromApi(response.data);
+    
+    if (processedData && typeof processedData === 'object') {
       // 检查是否已经符合标准格式
-      if (response.data.data !== undefined && response.data.meta !== undefined) {
-        return response.data as ApiResponse;
+      if (processedData.data !== undefined && processedData.meta !== undefined) {
+        return processedData as ApiResponse;
       }
       
       // 检查WordPress REST API格式
-      if (response.data.code && response.data.message) {
+      if (processedData.code && processedData.message) {
         // 处理WordPress错误响应
-        if (response.data.code === 'rest_forbidden') {
+        if (processedData.code === 'rest_forbidden') {
           throw new Error('Authentication required');
         }
         
         return {
-          data: response.data,
+          data: processedData,
           meta: {
             status: 'error',
-            message: response.data.message,
-            code: response.data.code,
+            message: processedData.message,
+            code: processedData.code,
             timestamp: new Date().toISOString(),
           }
         };
@@ -215,18 +321,18 @@ class ApiService {
       
       // 转换为标准格式
       return {
-        data: response.data.data || response.data,
+        data: processedData.data || processedData,
         meta: {
           status: 'success',
           timestamp: new Date().toISOString(),
-          ...(response.data.meta || {}),
+          ...(processedData.meta || {}),
         },
       };
     }
     
     // 非对象响应直接封装
     return {
-      data: response.data,
+      data: processedData,
       meta: {
         status: 'success',
         timestamp: new Date().toISOString(),
@@ -348,7 +454,7 @@ class ApiService {
    * 检查用户是否已登录
    */
   isAuthenticated(): boolean {
-    return !!localStorage.getItem('token');
+    return !!localStorage.getItem('auth_token');
   }
 
   /**
@@ -373,7 +479,7 @@ class ApiService {
       const response = await this.post('/auth/login', { username, password });
       
       if (response.data && response.data.token) {
-        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('auth_token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
         return response.data;
       }
@@ -388,7 +494,7 @@ class ApiService {
    * 注销
    */
   logout(): void {
-    localStorage.removeItem('token');
+    localStorage.removeItem('auth_token');
     localStorage.removeItem('user');
     window.location.href = '/login';
   }

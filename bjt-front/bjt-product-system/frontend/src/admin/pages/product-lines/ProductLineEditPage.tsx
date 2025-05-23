@@ -13,7 +13,7 @@ import {
 } from 'antd';
 import { UploadOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import AdminService from '../../api/adminService'; // Import AdminService
-import type { AdminProductLine, AdminSubItem, AdminMultilingualText } from '../../../admin/types'; // Import admin types
+import type { AdminProductLine, AdminSubItem } from '../../../admin/types'; // Import admin types
 
 const { Title } = Typography;
 const { TabPane } = Tabs;
@@ -40,15 +40,23 @@ const ProductLineEditPage: React.FC = () => {
           const productLine = response.data; // Assuming APIResponse<AdminProductLine>
           // Transform AdminProductLine to form values
           form.setFieldsValue({
-            title: productLine.title, // Should be AdminMultilingualText
-            description: productLine.description, // Should be AdminMultilingualText
+            title_zh: productLine.title_zh,
+            title_en: productLine.title_en,
+            description_zh: productLine.description_zh,
+            description_en: productLine.description_en,
+            subitem1_zh: productLine.subitem1_zh,
+            subitem1_en: productLine.subitem1_en,
+            subitem2_zh: productLine.subitem2_zh,
+            subitem2_en: productLine.subitem2_en,
+            subitem3_zh: productLine.subitem3_zh,
+            subitem3_en: productLine.subitem3_en,
+            image_url: productLine.image_url,
             subItems: (productLine.subItems || []).map((item, index) => ({
               ...item, // Spread existing subitem properties (like id)
               key: item.id || String(index), // Use subitem id for key if available
             })),
-            imageUrl: productLine.imageUrl,
           });
-          if (productLine.imageUrl) setImageUrl(productLine.imageUrl);
+          if (productLine.image_url) setImageUrl(productLine.image_url);
           setLoading(false);
         })
         .catch(error => {
@@ -59,10 +67,18 @@ const ProductLineEditPage: React.FC = () => {
     } else {
       // Default values for new product line form
       form.setFieldsValue({
-        title: { zh: '', en: '' },
-        description: { zh: '', en: '' },
-        subItems: [{ key: '0', title: { zh: '', en: '' }, description: { zh: '', en: '' } }],
-        imageUrl: undefined,
+        title_zh: '',
+        title_en: '',
+        description_zh: '',
+        description_en: '',
+        subitem1_zh: '',
+        subitem1_en: '',
+        subitem2_zh: '',
+        subitem2_en: '',
+        subitem3_zh: '',
+        subitem3_en: '',
+        image_url: undefined,
+        subItems: [{ key: '0', title_zh: '', title_en: '', description_zh: '', description_en: '' }],
       });
     }
   }, [id, form, isEditMode]);
@@ -74,7 +90,7 @@ const ProductLineEditPage: React.FC = () => {
     // However, subItems from Form.List might need their `key` property removed if it's not part of the backend model.
     const payload: Partial<AdminProductLine> = {
         ...values,
-        subItems: values.subItems.map(si => {
+        subItems: values.subItems?.map(si => {
             const { key, ...restOfSubItem } = si; // Remove React key if not needed by backend
             return restOfSubItem as AdminSubItem; // Ensure it's AdminSubItem type
         }),
@@ -101,7 +117,7 @@ const ProductLineEditPage: React.FC = () => {
     if (info.file.status === 'done') {
       message.success(`${info.file.name} 文件上传成功`);
       setImageUrl(info.file.response?.url || URL.createObjectURL(info.file.originFileObj)); 
-      form.setFieldsValue({ imageUrl: info.file.response?.url || URL.createObjectURL(info.file.originFileObj) });
+      form.setFieldsValue({ image_url: info.file.response?.url || URL.createObjectURL(info.file.originFileObj) });
     } else if (info.file.status === 'error') {
       message.error(`${info.file.name} 文件上传失败。`);
     }
@@ -109,8 +125,10 @@ const ProductLineEditPage: React.FC = () => {
 
   // Initial form values for Form.List, ensuring multilingual structure
   const initialSubItem: AdminSubItem = {
-    title: { zh: '', en: '' },
-    description: { zh: '', en: '' },
+    title_zh: '',
+    title_en: '',
+    description_zh: '',
+    description_en: '',
     key: String(Date.now()), // React key
   };
 
@@ -123,10 +141,18 @@ const ProductLineEditPage: React.FC = () => {
         onFinish={onFinish}
         // Set initial values for the whole form, especially for new entries
         initialValues={{
-          title: { zh: '', en: '' },
-          description: { zh: '', en: '' },
+          title_zh: '',
+          title_en: '',
+          description_zh: '',
+          description_en: '',
+          subitem1_zh: '',
+          subitem1_en: '',
+          subitem2_zh: '',
+          subitem2_en: '',
+          subitem3_zh: '',
+          subitem3_en: '',
+          image_url: undefined,
           subItems: [initialSubItem],
-          imageUrl: undefined,
         }}
         disabled={loading}
       >
@@ -134,14 +160,14 @@ const ProductLineEditPage: React.FC = () => {
           <TabPane tab="中文" key="zh">
             <Form.Item
               label="标题 (中文)"
-              name={['title', 'zh']}
+              name={['title_zh']}
               rules={[{ required: true, message: '请输入中文标题!' }]}
             >
               <Input />
             </Form.Item>
             <Form.Item
               label="描述 (中文)"
-              name={['description', 'zh']}
+              name={['description_zh']}
               rules={[{ required: true, message: '请输入中文描述!' }]}
             >
               <TextArea rows={4} />
@@ -150,14 +176,14 @@ const ProductLineEditPage: React.FC = () => {
           <TabPane tab="English" key="en">
             <Form.Item
               label="Title (English)"
-              name={['title', 'en']}
+              name={['title_en']}
               rules={[{ required: true, message: 'Please enter English title!' }]}
             >
               <Input />
             </Form.Item>
             <Form.Item
               label="Description (English)"
-              name={['description', 'en']}
+              name={['description_en']}
               rules={[{ required: true, message: 'Please enter English description!' }]}
             >
               <TextArea rows={4} />
@@ -175,7 +201,7 @@ const ProductLineEditPage: React.FC = () => {
                     <TabPane tab="中文" key="zh">
                        <Form.Item
                         {...restField}
-                        name={[name, 'title', 'zh']}
+                        name={[name, 'title_zh']}
                         label="子项目标题 (中文)"
                         rules={[{ required: true, message: '请输入子项目中文标题' }]}
                       >
@@ -183,7 +209,7 @@ const ProductLineEditPage: React.FC = () => {
                       </Form.Item>
                       <Form.Item
                         {...restField}
-                        name={[name, 'description', 'zh']}
+                        name={[name, 'description_zh']}
                         label="子项目描述 (中文)"
                         rules={[{ required: true, message: '请输入子项目中文描述' }]}
                       >
@@ -193,7 +219,7 @@ const ProductLineEditPage: React.FC = () => {
                     <TabPane tab="English" key="en">
                        <Form.Item
                         {...restField}
-                        name={[name, 'title', 'en']}
+                        name={[name, 'title_en']}
                         label="Subitem Title (English)"
                         rules={[{ required: true, message: 'Please enter subitem English title' }]}
                       >
@@ -201,7 +227,7 @@ const ProductLineEditPage: React.FC = () => {
                       </Form.Item>
                       <Form.Item
                         {...restField}
-                        name={[name, 'description', 'en']}
+                        name={[name, 'description_en']}
                         label="Subitem Description (English)"
                         rules={[{ required: true, message: 'Please enter subitem English description' }]}
                       >
@@ -226,7 +252,7 @@ const ProductLineEditPage: React.FC = () => {
         </Form.List>
         
         <Title level={4} style={{ marginTop: 20 }}>产品图片</Title>
-        <Form.Item name="imageUrl">
+        <Form.Item name="image_url">
           <Upload
             name="productImage"
             listType="picture-card"

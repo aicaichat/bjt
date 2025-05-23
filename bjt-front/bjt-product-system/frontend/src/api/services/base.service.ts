@@ -39,6 +39,11 @@ export abstract class BaseService<T, R = any> {
    * @returns 处理后的数据
    */
   protected handleResponse(response: ApiResponse<any>): T {
+    // 如果响应包含data字段，使用data字段
+    if (response.data && response.data.data) {
+      return this.adapter.fromApiResponse({ data: response.data.data });
+    }
+    // 如果响应直接是数据，直接使用
     return this.adapter.fromApiResponse(response);
   }
 
@@ -229,11 +234,103 @@ export abstract class BaseService<T, R = any> {
  */
 class DefaultAdapter<T, R = any> extends BaseApiAdapter<T, R> {
   fromApiResponse(response: ApiResponse<any>): T {
+    // 递归处理可能存在的编码问题
+    const processEncodingIssues = (data: any): any => {
+      if (data === null || data === undefined) {
+        return data;
+      }
+
+      if (Array.isArray(data)) {
+        return data.map(item => processEncodingIssues(item));
+      }
+
+      if (typeof data === 'object') {
+        const result: Record<string, any> = {};
+        for (const key in data) {
+          if (Object.prototype.hasOwnProperty.call(data, key)) {
+            result[key] = processEncodingIssues(data[key]);
+          }
+        }
+        return result;
+      }
+
+      // 修复字符串中的中文编码问题
+      if (typeof data === 'string') {
+        // 针对API返回的特殊编码格式处理
+        try {
+          // 检测API返回的Unicode转义序列格式 (\u00e6\u00b0 开头)
+          if (/\\u00[a-f0-9]{2}/.test(data) || data.includes('\\u') || /[\u00e0-\u00ff]{2,}/.test(data)) {
+            try {
+              // 尝试解码此类特殊格式
+              const decodedText = decodeURIComponent(escape(data));
+              if (decodedText !== data) {
+                console.log(`成功解码: "${data}" => "${decodedText}"`);
+                return decodedText;
+              }
+            } catch (e) {
+              console.warn('Failed to decode using escape/decodeURIComponent:', data);
+            }
+          }
+
+          // 方法2: 常见中文字符替换表（针对特定模式的硬编码修复）
+          const replacements: Record<string, string> = {
+            'æ°"': '气',
+            'åž«': '垫',
+            'æœº': '机',
+            'çº¸': '纸',
+            'èƒ¶': '胶',
+            'å¸¦': '带',
+            'æŸ±': '柱',
+            'è¢‹': '袋',
+            'é«˜': '高',
+            'è´¨': '质',
+            'è®¾': '设',
+            'å¤‡': '备',
+            'å°': '封',
+            'å¯': '可',
+            'äº': '产',
+            'å"': '品'
+          };
+          
+          let result = data;
+          for (const [pattern, replacement] of Object.entries(replacements)) {
+            result = result.replace(new RegExp(pattern, 'g'), replacement);
+          }
+          
+          // 如果替换发生了变化，返回结果
+          if (result !== data) {
+            console.log(`使用替换表解码: "${data}" => "${result}"`);
+            return result;
+          }
+
+          // 方法3: 检查API返回的Unicode序列 (\u00e6)，尝试另一种方式解码
+          if (data.includes('\\u')) {
+            try {
+              // 使用JSON.parse解析Unicode转义
+              return JSON.parse(`"${data}"`);
+            } catch (error) {
+              console.warn('Failed to parse Unicode using JSON.parse:', data);
+            }
+          }
+        } catch (e) {
+          console.warn('编码转换失败:', e);
+        }
+      }
+
+      return data;
+    };
+
+    // 处理响应数据
+    let result: any;
+    
     // 如果响应有data字段，则返回data
     if (response && response.data !== undefined) {
-      return response.data as unknown as T;
+      result = processEncodingIssues(response.data);
+    } else {
+      // 否则返回整个响应
+      result = processEncodingIssues(response);
     }
-    // 否则返回整个响应
-    return response as unknown as T;
+    
+    return result as unknown as T;
   }
 } 
