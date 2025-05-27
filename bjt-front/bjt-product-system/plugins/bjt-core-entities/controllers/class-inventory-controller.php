@@ -3,7 +3,7 @@
  * 库存控制器
  */
 class BJT_Inventory_Controller extends BJT_API_Controller {
-    protected $resource_name = 'inventory';
+    public $resource_name = 'inventory';
     protected $table_name;
 
     // Database fields
@@ -87,6 +87,43 @@ class BJT_Inventory_Controller extends BJT_API_Controller {
                 ],
             ],
             'schema' => [$this, 'get_public_item_schema'],
+        ]);
+        
+        // Batch inventory endpoint for multiple items
+        register_rest_route($this->namespace, '/' . $this->resource_name . '/batch', [
+            [
+                'methods' => WP_REST_Server::CREATABLE,
+                'callback' => [$this, 'get_batch_inventory'],
+                'permission_callback' => [$this, 'check_read_permission'],
+                'args' => [
+                    'items' => [
+                        'description' => __('List of items to get inventory for.'),
+                        'type' => 'array',
+                        'required' => true,
+                        'items' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'item_type' => [
+                                    'description' => __('Type of item (machine, consumable, spare_part, accessory).'),
+                                    'type' => 'string',
+                                    'required' => true,
+                                    'enum' => ['machine', 'consumable', 'spare_part', 'accessory'],
+                                ],
+                                'item_id' => [
+                                    'description' => __('ID or part number of the item.'),
+                                    'type' => ['string', 'integer'],
+                                    'required' => true,
+                                ],
+                            ],
+                        ],
+                    ],
+                    'region' => [
+                        'description' => __('Region code for inventory lookup.'),
+                        'type' => 'string',
+                        'default' => 'CN',
+                    ],
+                ],
+            ],
         ]);
     }
 
@@ -451,5 +488,171 @@ class BJT_Inventory_Controller extends BJT_API_Controller {
           if (isset($item_array['quantity'])) $response_data['quantity'] = (int) $item_array['quantity'];
 
          return $response_data;
+    }
+
+    /**
+     * Get batch inventory for multiple items
+     */
+    public function get_batch_inventory($request) {
+        $params = $request->get_json_params();
+        if (null === $params) {
+            $params = $request->get_body_params();
+        }
+        
+        $items = isset($params['items']) ? $params['items'] : [];
+        $region = isset($params['region']) ? $params['region'] : 'CN';
+        
+        if (empty($items)) {
+            return $this->format_error('No items provided', 400);
+        }
+        
+        $results = [];
+        
+        foreach ($items as $item) {
+            if (!isset($item['item_type']) || !isset($item['item_id'])) {
+                continue;
+            }
+            
+            $item_type = $item['item_type'];
+            $item_id = $item['item_id'];
+            
+            // Get inventory from the appropriate table based on item type
+            $inventory_data = $this->get_inventory_by_type_and_id($item_type, $item_id, $region);
+            
+            $results[] = [
+                'item_type' => $item_type,
+                'item_id' => $item_id,
+                'quantity' => $inventory_data['quantity'],
+                'status' => $inventory_data['status'],
+                'estimated_restock_date' => $inventory_data['estimated_restock_date'],
+            ];
+        }
+        
+        return $this->format_response([
+            'items' => $results,
+            'region' => $region
+        ]);
+    }
+    
+    /**
+     * Get inventory by item type and ID
+     */
+    protected function get_inventory_by_type_and_id($item_type, $item_id, $region) {
+        global $wpdb;
+        
+        // Default response
+        $result = [
+            'quantity' => 0,
+            'status' => 'out_of_stock',
+            'estimated_restock_date' => null,
+        ];
+        
+        // Simple implementation - in real scenario would query database
+        switch ($item_type) {
+            case 'machine':
+                // Sample inventory for machines
+                $inventory = [
+                    'MEY-001' => ['quantity' => 10, 'status' => 'in_stock'],
+                    'LA-E4S' => ['quantity' => 5, 'status' => 'in_stock'],
+                    'LA-E5P' => ['quantity' => 2, 'status' => 'low_stock'],
+                    'LA-E6L' => ['quantity' => 0, 'status' => 'out_of_stock', 'estimated_restock_date' => '2023-12-15'],
+                ];
+                
+                if (is_numeric($item_id)) {
+                    // ID-based lookup (fallback)
+                    $result['quantity'] = $item_id % 3 == 0 ? 0 : 5;
+                    $result['status'] = $result['quantity'] > 0 ? 'in_stock' : 'out_of_stock';
+                } else if (isset($inventory[$item_id])) {
+                    // Part number lookup
+                    $result = array_merge($result, $inventory[$item_id]);
+                }
+                break;
+                
+            case 'consumable':
+                // For consumables, generally have more stock
+                if (is_numeric($item_id)) {
+                    $result['quantity'] = ($item_id * 10) % 100 + 50;
+                } else {
+                    // Sample consumables
+                    $result['quantity'] = strpos($item_id, 'CONS') !== false ? 100 : 50;
+                }
+                $result['status'] = $result['quantity'] > 10 ? 'in_stock' : ($result['quantity'] > 0 ? 'low_stock' : 'out_of_stock');
+                break;
+                
+            case 'spare_part':
+                // For spare parts, usually have fewer in stock
+                if (is_numeric($item_id)) {
+                    $result['quantity'] = ($item_id * 5) % 20;
+                } else {
+                    // Sample spare parts
+                    $result['quantity'] = strpos($item_id, 'SP') !== false ? 15 : 8;
+                }
+                $result['status'] = $result['quantity'] > 5 ? 'in_stock' : ($result['quantity'] > 0 ? 'low_stock' : 'out_of_stock');
+                if ($result['quantity'] == 0) {
+                    $result['estimated_restock_date'] = date('Y-m-d', strtotime('+2 weeks'));
+                }
+                break;
+                
+            case 'accessory':
+                // For accessories, usually have moderate stock
+                if (is_numeric($item_id)) {
+                    $result['quantity'] = ($item_id * 3) % 30 + 10;
+                } else {
+                    // Sample accessories
+                    $result['quantity'] = strpos($item_id, 'ACC') !== false ? 25 : 15;
+                }
+                $result['status'] = $result['quantity'] > 7 ? 'in_stock' : ($result['quantity'] > 0 ? 'low_stock' : 'out_of_stock');
+                break;
+        }
+        
+        // Regional variations (simplified)
+        if ($region !== 'CN') {
+            if ($region === 'US') {
+                $result['quantity'] = max(0, floor($result['quantity'] * 0.7)); // Less inventory in US
+            } else if ($region === 'EU') {
+                $result['quantity'] = max(0, floor($result['quantity'] * 0.5)); // Even less in EU
+            }
+            
+            // Update status based on adjusted quantity
+            $result['status'] = $result['quantity'] > 5 ? 'in_stock' : ($result['quantity'] > 0 ? 'low_stock' : 'out_of_stock');
+            if ($result['quantity'] == 0 && empty($result['estimated_restock_date'])) {
+                $result['estimated_restock_date'] = date('Y-m-d', strtotime('+3 weeks'));
+            }
+        }
+        
+        return $result;
+    }
+
+    /**
+     * Format a successful response
+     */
+    protected function format_response($data = null, $message = '', $success = true, $code = 200) {
+        $response = [
+            'success' => $success,
+        ];
+        
+        if ($data !== null) {
+            $response['data'] = $data;
+        }
+        
+        if (!empty($message)) {
+            $response['message'] = $message;
+        }
+        
+        return $response;
+    }
+    
+    /**
+     * Format an error response
+     */
+    protected function format_error($message, $code = 400, $data = null) {
+        return new WP_Error(
+            'bjt_api_error',
+            $message,
+            [
+                'status' => $code,
+                'data' => $data
+            ]
+        );
     }
 } 

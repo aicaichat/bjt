@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
+import { useAuth } from '../../contexts/AuthContext';
 import './CartSidebar.css';
 
 interface CartSidebarProps {
@@ -19,9 +20,13 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
     isItemSelected,
     clearCart
   } = useCart();
+  const { user } = useAuth();
+  const preferredUnit = user?.preferred_unit || 'metric';
 
   const hasItems = items.length > 0;
   const allSelected = hasItems && items.every(item => isItemSelected(item.id));
+
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   // 处理全选
   const handleSelectAll = () => {
@@ -47,9 +52,202 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
 
   // 处理清空购物车
   const handleClearCart = () => {
-    if (window.confirm('确定要清空购物车吗？')) {
-      clearCart();
-    }
+    setShowClearConfirm(true);
+  };
+  const handleConfirmClear = () => {
+    clearCart();
+    setShowClearConfirm(false);
+  };
+  const handleCancelClear = () => {
+    setShowClearConfirm(false);
+  };
+
+  // 阶梯价计算函数
+  const getTieredPrice = (item: any) => {
+    if (!item.priceTiers || item.priceTiers.length === 0) return item.price || 0;
+    const qty = item.quantity || 1;
+    const tier = item.priceTiers.find((t: { min: number; max: number | null; price: number }) => {
+      if (t.max === null) return qty >= t.min;
+      return qty >= t.min && qty <= t.max;
+    });
+    return tier ? tier.price : item.price || 0;
+  };
+
+  // 渲染耗材详细信息
+  const renderConsumableDetails = (item: any) => {
+    const props = item.properties || {};
+    
+    return (
+      <div className="consumable-details">
+        <div className="detail-row">
+          <span className="label">料号:</span>
+          <span className="value">{props.part_number || item.part_number}</span>
+        </div>
+        <div className="detail-row">
+          <span className="label">品牌:</span>
+          <span className="value">{props.brand || 'N/A'}</span>
+        </div>
+        <div className="detail-row">
+          <span className="label">型号:</span>
+          <span className="value">
+            {preferredUnit === 'metric' ? props.model : (props.model_imperial || props.model)}
+          </span>
+        </div>
+        <div className="detail-row">
+          <span className="label">规格:</span>
+          <span className="value">
+            {preferredUnit === 'metric' ? props.spec : (props.spec_imperial || props.spec)}
+          </span>
+        </div>
+        {(props.bubble_diameter_met || props.bubble_diameter_imp) && (
+          <div className="detail-row">
+            <span className="label">泡径:</span>
+            <span className="value">
+              {preferredUnit === 'metric' 
+                ? `${props.bubble_diameter_met} cm` 
+                : `${props.bubble_diameter_imp} inch`}
+            </span>
+          </div>
+        )}
+        {props.pcs_per_box && (
+          <div className="detail-row">
+            <span className="label">单箱数量:</span>
+            <span className="value">{props.pcs_per_box}</span>
+          </div>
+        )}
+        <div className="detail-row">
+          <span className="label">产品ID:</span>
+          <span className="value">{props.id || item.product_id}</span>
+        </div>
+      </div>
+    );
+  };
+
+  // 渲染备件详细信息
+  const renderSparePartDetails = (item: any) => {
+    const props = item.properties || {};
+    const specs = item.specs || {};
+    
+    // 解析必选备件信息
+    const parseRequiredParts = (
+      requiredParts: string | null | undefined,
+      requiredQuantity: string | null | undefined
+    ): { part_number: string; quantity: number }[] => {
+      if (!requiredParts || !requiredQuantity) {
+        return [];
+      }
+
+      const partNumbers = requiredParts.split(',').map(p => p.trim()).filter(p => p);
+      const quantities = requiredQuantity.split(',').map(q => parseInt(q.trim(), 10)).filter(q => !isNaN(q));
+
+      if (partNumbers.length !== quantities.length) {
+        console.warn('必选备件料号和数量不匹配:', { requiredParts, requiredQuantity });
+        return [];
+      }
+
+      return partNumbers.map((part_number, index) => ({
+        part_number,
+        quantity: quantities[index]
+      }));
+    };
+
+    const requiredParts = parseRequiredParts(props.required_parts, props.required_quantity);
+    
+    return (
+      <div className="spare-part-details">
+        {/* 基本信息 */}
+        <div className="detail-section">
+          <div className="detail-row">
+            <span className="label">料号:</span>
+            <span className="value">{props.part_number || item.part_number}</span>
+          </div>
+          <div className="detail-row">
+            <span className="label">型号:</span>
+            <span className="value">{props.model || specs.model}</span>
+          </div>
+          <div className="detail-row">
+            <span className="label">产品ID:</span>
+            <span className="value">{props.product_id || item.product_id}</span>
+          </div>
+        </div>
+
+        {/* 适配信息 */}
+        {(props.app_model || specs.app_model) && (
+          <div className="detail-section">
+            <div className="detail-row">
+              <span className="label">适配机型:</span>
+              <span className="value app-model">{props.app_model || specs.app_model}</span>
+            </div>
+          </div>
+        )}
+
+        {(props.app_sn || specs.app_sn) && (
+          <div className="detail-row">
+            <span className="label">适配序列号:</span>
+            <span className="value app-sn">{props.app_sn || specs.app_sn}</span>
+          </div>
+        )}
+
+        {/* 规格信息 */}
+        <div className="detail-section">
+          <div className="detail-row">
+            <span className="label">规格:</span>
+            <span className="value">
+              {preferredUnit === 'metric' 
+                ? (props.spec || specs.spec)
+                : (props.spec_imperial || specs.spec_imperial || props.spec || specs.spec)
+              }
+            </span>
+          </div>
+        </div>
+
+        {/* 包装信息 */}
+        {(props.pcs_per_box || specs.pcs_per_box) && (
+          <div className="detail-row">
+            <span className="label">单箱数量:</span>
+            <span className="value">{props.pcs_per_box || specs.pcs_per_box}</span>
+          </div>
+        )}
+
+        {(props.unit || specs.unit) && (
+          <div className="detail-row">
+            <span className="label">单位:</span>
+            <span className="value">{props.unit || specs.unit}</span>
+          </div>
+        )}
+
+        {/* 易损件标识 */}
+        {(props.is_consumable !== undefined || specs.is_consumable !== undefined) && (
+          <div className="detail-row">
+            <span className="label">类型:</span>
+            <span className="value">
+              <span className="consumable-badge">
+                {(props.is_consumable || specs.is_consumable) ? '易损件' : '标准备件'}
+              </span>
+            </span>
+          </div>
+        )}
+
+        {/* 必选备件信息 */}
+        {requiredParts.length > 0 && (
+          <div className="detail-section">
+            <div className="detail-row">
+              <span className="label">必选备件:</span>
+              <span className="value">
+                <div className="required-parts-list">
+                  {requiredParts.map((reqPart, index) => (
+                    <div key={index} className="required-part-item">
+                      <span className="required-part-number">{reqPart.part_number}</span>
+                      <span className="required-part-quantity">×{reqPart.quantity}</span>
+                    </div>
+                  ))}
+                </div>
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -85,20 +283,16 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
                   </div>
                   
                   <div className="cart-item-image">
-                    <img src={item.image} alt={item.name} />
+                    <img src={item.properties?.image_url || item.image} alt={item.name} />
                   </div>
                   
                   <div className="cart-item-details">
                     <div className="cart-item-title">{item.name}</div>
-                    <div className="cart-item-sku">SKU: {item.code}</div>
-                    <div className="cart-item-price">¥{(item.price || 0).toFixed(2)}</div>
-                    
-                    <div className="cart-item-properties">
-                      {item.properties && Object.entries(item.properties).map(([key, value]) => (
-                        <div key={key} className="cart-item-property">
-                          {key}: {value}
-                        </div>
-                      ))}
+                    {item.product_type === 'consumable' && renderConsumableDetails(item)}
+                    {item.product_type === 'spare_part' && renderSparePartDetails(item)}
+                    <div className="cart-item-price">
+                      <div className="unit-price">单价: ¥{getTieredPrice(item).toFixed(2)}</div>
+                      <div className="subtotal">小计: ¥{(getTieredPrice(item) * item.quantity).toFixed(2)}</div>
                     </div>
                     
                     <div className="cart-item-actions">
@@ -118,11 +312,13 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
                         </button>
                       </div>
                       
-                      <button 
+                      <button
                         className="cart-item-remove"
+                        style={{ color: '#ff4d4f', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}
                         onClick={() => removeItem(item.id)}
+                        title="删除"
                       >
-                        删除
+                        <span role="img" aria-label="delete">🗑️</span> 删除
                       </button>
                     </div>
                   </div>
@@ -144,10 +340,19 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
         </div>
         
         <div className="cart-sidebar-actions">
-          <button 
-            className="cart-sidebar-clear"
+          <button
+            className={`cart-sidebar-clear-btn${!hasItems ? ' disabled' : ''}`}
             onClick={handleClearCart}
             disabled={!hasItems}
+            style={{
+              border: '1px solid #ff4d4f',
+              color: !hasItems ? '#ccc' : '#ff4d4f',
+              background: 'transparent',
+              cursor: !hasItems ? 'not-allowed' : 'pointer',
+              borderRadius: 4,
+              padding: '6px 16px',
+              marginRight: 8
+            }}
           >
             清空购物车
           </button>
@@ -160,6 +365,18 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
             去结算
           </Link>
         </div>
+        {/* 清空购物车确认弹窗 */}
+        {showClearConfirm && (
+          <div className="cart-clear-confirm-modal">
+            <div className="cart-clear-confirm-content">
+              <div className="cart-clear-confirm-title">确定要清空购物车吗？</div>
+              <div className="cart-clear-confirm-actions">
+                <button className="cart-clear-cancel-btn" onClick={handleCancelClear}>取消</button>
+                <button className="cart-clear-confirm-btn" onClick={handleConfirmClear}>确定</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

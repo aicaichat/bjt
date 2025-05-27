@@ -5,7 +5,7 @@
 class BJT_Consumable_Controller extends BJT_API_Controller {
     
     protected $table_name;
-    protected $resource_name = 'consumables'; // The slug for the CPT / API endpoint
+    public $resource_name = 'consumables'; // The slug for the CPT / API endpoint
 
     // Aligned with init.sql and frontend expectations (first pass)
     protected $fillable_fields = [
@@ -106,8 +106,8 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
                 'callback' => [$this, 'batch_get_prices'],
                 'permission_callback' => [$this, 'check_read_permission'],
                 'args' => [
-                    'ids' => [
-                        'required' => true,
+                    'items' => [
+                        'required' => false,
                         'type' => 'array',
                         'description' => '要查询价格的耗材ID数组'
                     ],
@@ -135,8 +135,8 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
                 'callback' => [$this, 'batch_get_inventory'],
                 'permission_callback' => [$this, 'check_read_permission'],
                 'args' => [
-                    'ids' => [
-                        'required' => true,
+                    'items' => [
+                        'required' => false,
                         'type' => 'array',
                         'description' => '要查询库存的耗材ID数组'
                     ],
@@ -150,6 +150,27 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
                         'required' => false,
                         'type' => 'string',
                         'description' => '仓库代码，如不提供则返回指定区域的所有仓库'
+                    ]
+                ]
+            ]
+        ]);
+        
+        // 检查耗材兼容性
+        register_rest_route($this->namespace, '/' . $this->resource_name . '/(?P<id>[\d]+)/compatibility-check', [
+            [
+                'methods' => WP_REST_Server::READABLE,
+                'callback' => [$this, 'check_compatibility'],
+                'permission_callback' => [$this, 'check_read_permission'],
+                'args' => [
+                    'id' => [
+                        'required' => true,
+                        'validate_callback' => function($value) { return is_numeric($value) && (int)$value > 0; },
+                        'sanitize_callback' => 'absint'
+                    ],
+                    'model' => [
+                        'required' => true,
+                        'type' => 'string',
+                        'description' => '要检查兼容性的机器型号'
                     ]
                 ]
             ]
@@ -290,9 +311,9 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
         $raw_prices = $wpdb->get_results($wpdb->prepare(
             "SELECT region, currency, base_price, min_quantity, max_quantity 
              FROM {$pricing_table} 
-             WHERE target_type = 'consumable' AND target_id = %d AND product_line_id = %d AND status = 'active' 
+             WHERE target_type = 'consumable' AND part_number = %s AND product_line_id = %d AND status = 'active' 
              ORDER BY min_quantity ASC, region ASC",
-            $consumable_id,
+            $item_db_object->part_number,
             $product_line_id_for_join
         ));
 
@@ -359,9 +380,9 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
         $raw_inventory = $wpdb->get_results($wpdb->prepare(
             "SELECT region, SUM(quantity) as total_quantity
              FROM {$inventory_table} 
-             WHERE target_type = 'consumable' AND target_id = %d AND product_line_id = %d AND status = 'active' 
+             WHERE target_type = 'consumable' AND part_number = %s AND product_line_id = %d AND status = 'active' 
              GROUP BY region", // Restored GROUP BY and SUM, status back to 'active'
-            $consumable_id,
+            $item_db_object->part_number,
             $product_line_id_for_join
         ));
         
@@ -394,6 +415,7 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
                 'length' => isset($item_db_object->length_met) ? $item_db_object->length_met . ' m' : null, 
                 'rollLength' => isset($item_db_object->total_length_met) ? $item_db_object->total_length_met . ' m' : null,
                 'compatibility' => $item_db_object->app_model ?? null, 
+                'package_image_url' => $item_db_object->package_image_url ?? null,
             ],
             'pricing' => $pricing_tiers,
             'inventory' => $inventory_map, // Restored
@@ -616,10 +638,17 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
     public function get_items($request) {
         global $wpdb;
 
-        // Note: This method will become more complex if we fetch all pricing/inventory 
-        // for all items in the list in an optimized way (e.g. one query for all prices).
-        // For now, format_item_for_response will do N+1 queries for price/inventory per item.
-        // This is acceptable for moderate list sizes but can be optimized later.
+        // Ensure BJT_Dictionary_Controller is available
+        if (!class_exists('BJT_Dictionary_Controller')) {
+            // Attempt to include it - path might need adjustment based on actual file structure
+            $dictionary_controller_path = dirname(__FILE__) . '/class-dictionary-controller.php';
+            if (file_exists($dictionary_controller_path)) {
+                require_once $dictionary_controller_path;
+            } else {
+                // Log error or handle missing controller
+                error_log('BJT_Dictionary_Controller class not found and could not be included.');
+            }
+        }
 
         $page = $request->get_param('page') ? absint($request->get_param('page')) : 1;
         $per_page = $request->get_param('per_page') ? absint($request->get_param('per_page')) : 10; // Default to 10 as per frontend
@@ -698,12 +727,127 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
 
         $formatted_items = array_map(array($this, 'format_item_for_response'), $items_db);
         
+        // --- Fetch Filter Options from Dictionary ---
+        $filter_options = [];
+        if (class_exists('BJT_Dictionary_Controller')) {
+            $dictionary_controller = new BJT_Dictionary_Controller();
+            $lang = $request->get_param('lang') ?: 'zh';
+
+            // Mock a WP_REST_Request for the dictionary controller
+            $dictionary_request = new WP_REST_Request('GET');
+            $dictionary_request->set_param('lang', $lang);
+
+            // Helper function to fetch and format dictionary items
+            $fetch_formatted_dictionary_items = function($type) use ($dictionary_controller, $dictionary_request) {
+                $dictionary_request->set_param('type', $type);
+                $response = $dictionary_controller->get_dictionary_items($dictionary_request);
+                if ($response instanceof WP_REST_Response && $response->get_status() === 200) {
+                    $data = $response->get_data();
+                    if (isset($data['data']['items']) && is_array($data['data']['items'])) {
+                        return array_map(function($item) {
+                            // 保留所有字段，特别是id和image_url
+                            $formatted_item = [
+                                'id' => $item['code'] ?? null, // 使用code作为id
+                                'code' => $item['code'] ?? null, 
+                                'name' => $item['name'] ?? null
+                            ];
+                            
+                            // 添加额外字段（如image_url等）
+                            if (isset($item['image_url'])) {
+                                $formatted_item['image_url'] = $item['image_url'];
+                            }
+                            if (isset($item['image_url2'])) {
+                                $formatted_item['image_url2'] = $item['image_url2'];
+                            }
+                            if (isset($item['name_en'])) {
+                                $formatted_item['name_en'] = $item['name_en'];
+                            }
+                            if (isset($item['sort_order'])) {
+                                $formatted_item['sort_order'] = $item['sort_order'];
+                            }
+                            
+                            return $formatted_item;
+                        }, $data['data']['items']);
+                    }
+                }
+                return [];
+            };
+            
+            // Fetch Shapes
+            $filter_options['shapes'] = $fetch_formatted_dictionary_items('shapes');
+
+            // Fetch Materials
+            $filter_options['materials'] = $fetch_formatted_dictionary_items('materials');
+            
+            // Fetch Host Models (for machine model filter)
+            $filter_options['models'] = $fetch_formatted_dictionary_items('host_models');
+
+            // Fetch and process Specifications
+            $dictionary_request->set_param('type', 'specifications');
+            $spec_response = $dictionary_controller->get_dictionary_items($dictionary_request);
+            $processed_specs = [
+                'thicknesses' => [],
+                'widths' => [],
+                'lengths' => [],
+                'weights' => [],
+            ];
+
+            if ($spec_response instanceof WP_REST_Response && $spec_response->get_status() === 200) {
+                $spec_data = $spec_response->get_data();
+                if (isset($spec_data['data']['items']) && is_array($spec_data['data']['items'])) {
+                    $temp_unique_specs = [
+                        'thicknesses' => [],
+                        'widths' => [],
+                        'lengths' => [],
+                        'weights' => [],
+                    ];
+                    foreach ($spec_data['data']['items'] as $spec_item) {
+                        $spec_type_key = null;
+                        $value_key = 'metric_value'; // Assuming we use metric for filter codes/names
+                        $unit_key = 'metric_unit';
+                        $display_name = $spec_item['name'] ?? ''; // Name from dictionary (e.g., "厚度")
+                        $spec_code_value = $spec_item[$value_key] ?? null;
+                        $spec_unit_value = $spec_item[$unit_key] ?? '';
+                        
+                        // Use the 'code' from dictionary item which is spec_type (thickness, width etc)
+                        $dict_spec_type = $spec_item['code'] ?? '';
+
+                        if ($spec_code_value !== null) {
+                            $item_code_str = strval($spec_code_value) . strtolower(trim($spec_unit_value));
+                            $item_name_str = strval($spec_code_value) . ' ' . trim($spec_unit_value);
+
+                            switch ($dict_spec_type) {
+                                case 'thickness': $spec_type_key = 'thicknesses'; break;
+                                case 'width':     $spec_type_key = 'widths';      break;
+                                case 'length':    $spec_type_key = 'lengths';     break;
+                                case 'weight':    $spec_type_key = 'weights';     break;
+                            }
+
+                            if ($spec_type_key && !isset($temp_unique_specs[$spec_type_key][$item_code_str])) {
+                                $temp_unique_specs[$spec_type_key][$item_code_str] = ['code' => $item_code_str, 'name' => $item_name_str];
+                            }
+                        }
+                    }
+                    foreach($temp_unique_specs as $key => $unique_values_map) {
+                        $processed_specs[$key] = array_values($unique_values_map);
+                         // Sort them naturally if possible (e.g., 10mm, 2mm, 100mm -> 2mm, 10mm, 100mm)
+                        usort($processed_specs[$key], function($a, $b) {
+                            return strnatcmp($a['name'], $b['name']);
+                        });
+                    }
+                }
+            }
+            $filter_options = array_merge($filter_options, $processed_specs);
+        }
+        // --- End Fetch Filter Options ---
+        
         // The frontend expects a specific structure for the list response
         $list_response_data = [
             'items' => $formatted_items,
             'total' => (int) $total_items,
             'total_pages' => ceil($total_items / $per_page),
             'current_page' => (int) $page,
+            'filterOptions' => $filter_options, // Added filter options
         ];
         
         $response = new WP_REST_Response(['success' => true, 'data' => $list_response_data], 200);
@@ -718,6 +862,39 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
     }
 
     /**
+     * Format a successful response with the standard structure
+     */
+    protected function format_response($data = null, $message = '', $success = true, $code = 200) {
+        $response = [
+            'success' => $success
+        ];
+        
+        if (!empty($data)) {
+            $response['data'] = $data;
+        }
+        
+        if (!empty($message)) {
+            $response['message'] = $message;
+        }
+        
+        return new WP_REST_Response($response, $code);
+    }
+    
+    /**
+     * Format an error response
+     */
+    protected function error_response($message, $code = 'bjt_api_error', $status = 400, $data = null) {
+        return new WP_Error(
+            $code,
+            $message,
+            [
+                'status' => $status,
+                'data' => $data
+            ]
+        );
+    }
+
+    /**
      * 批量获取耗材价格
      *
      * @param WP_REST_Request $request 请求对象，包含耗材IDs、区域和数量
@@ -729,9 +906,28 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
         $consumables_table = $this->table_name;
         
         // 获取请求参数
-        $ids = $request->get_param('ids');
-        $region = $request->get_param('region') ?: 'CN';
-        $quantity = (int)($request->get_param('quantity') ?: 1);
+        $params = $request->get_json_params();
+        if (null === $params) {
+            $params = $request->get_body_params();
+        }
+        
+        // Support both formats: items array (new format) or ids array (old format)
+        $ids = [];
+        $region = $params['region'] ?? $request->get_param('region') ?? 'CN';
+        $quantity = (int)($params['quantity'] ?? $request->get_param('quantity') ?? 1);
+        
+        // Check for items array (new format)
+        if (isset($params['items']) && is_array($params['items'])) {
+            foreach ($params['items'] as $item) {
+                if (isset($item['item_id'])) {
+                    $ids[] = intval($item['item_id']);
+                }
+            }
+        } 
+        // Fallback to ids array (old format)
+        else {
+            $ids = $request->get_param('ids');
+        }
         
         // 验证IDs参数
         if (empty($ids) || !is_array($ids)) {
@@ -807,11 +1003,11 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
             $response_data[] = $price_info;
         }
         
-        return new WP_REST_Response([
+        return $this->format_response([
             'region' => $region,
             'quantity' => $quantity,
             'items' => $response_data
-        ], 200);
+        ]);
     }
 
     /**
@@ -826,9 +1022,28 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
         $consumables_table = $this->table_name;
         
         // 获取请求参数
-        $ids = $request->get_param('ids');
-        $region = $request->get_param('region'); // 可选
-        $warehouse = $request->get_param('warehouse'); // 可选
+        $params = $request->get_json_params();
+        if (null === $params) {
+            $params = $request->get_body_params();
+        }
+        
+        // Support both formats: items array (new format) or ids array (old format)
+        $ids = [];
+        $region = $params['region'] ?? $request->get_param('region');
+        $warehouse = $params['warehouse'] ?? $request->get_param('warehouse');
+        
+        // Check for items array (new format)
+        if (isset($params['items']) && is_array($params['items'])) {
+            foreach ($params['items'] as $item) {
+                if (isset($item['item_id'])) {
+                    $ids[] = intval($item['item_id']);
+                }
+            }
+        } 
+        // Fallback to ids array (old format)
+        else {
+            $ids = $request->get_param('ids');
+        }
         
         // 验证IDs参数
         if (empty($ids) || !is_array($ids)) {
@@ -915,8 +1130,54 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
             ];
         }
         
-        return new WP_REST_Response([
+        return $this->format_response([
             'items' => $response_data
-        ], 200);
+        ]);
+    }
+
+    /**
+     * 检查耗材与机器的兼容性
+     *
+     * @param WP_REST_Request $request 请求对象，包含耗材ID和机器型号
+     * @return WP_REST_Response|WP_Error 兼容性检查结果
+     */
+    public function check_compatibility($request) {
+        global $wpdb;
+        
+        $consumable_id = (int)$request->get_param('id');
+        $machine_model = sanitize_text_field($request->get_param('model'));
+        
+        if (empty($machine_model)) {
+            return $this->error_response('必须提供要检查兼容性的机器型号', 'missing_model', 400);
+        }
+        
+        // 检查耗材是否存在
+        $consumable = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$this->table_name} WHERE id = %d AND status = 'publish'",
+            $consumable_id
+        ));
+        
+        if (!$consumable) {
+            return $this->error_response('未找到指定的耗材', 'consumable_not_found', 404);
+        }
+        
+        // 检查兼容性（直接从app_model字段获取）
+        $is_compatible = false;
+        
+        if (!empty($consumable->app_model)) {
+            // 兼容性字段可能是逗号分隔的型号列表
+            $compatible_models = explode(',', $consumable->app_model);
+            $compatible_models = array_map('trim', $compatible_models);
+            
+            $is_compatible = in_array($machine_model, $compatible_models);
+        }
+        
+        // 返回兼容性结果
+        return $this->format_response([
+            'consumable_id' => $consumable_id,
+            'machine_model' => $machine_model,
+            'compatible' => $is_compatible,
+            'message' => $is_compatible ? '完全兼容' : '不兼容或未知兼容性'
+        ]);
     }
 } 

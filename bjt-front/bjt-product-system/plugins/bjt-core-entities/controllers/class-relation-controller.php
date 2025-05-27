@@ -1,31 +1,44 @@
 <?php
 /**
- * 关系控制器
+ * REST controller for Relations management.
+ * 
+ * Handles CRUD operations for relations and provides tree hierarchy support.
+ * Implements proper request parameter handling and pagination.
  */
+
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly.
+}
+
+require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'includes/class-bjt-api-controller.php';
+
 class BJT_Relation_Controller extends BJT_API_Controller {
     /**
      * 资源名称
      *
      * @var string
      */
-    protected $resource_name = 'relations';
+    public $resource_name = 'relations';
     protected $table_name;
 
     protected $fillable_fields = [
+        'product_line_id',
+        'part_number',
         'parent_part_number',
         'child_part_number',
+        'child_type',
         'level',
         'quantity',
-        'description',
+        'required_parts',
+        'required_quantity',
         'sort_order',
-        'is_required',
-        'entity_type' // e.g., 'accessory', 'spare_part' to distinguish child type if needed
+        'status'
     ];
 
     // API fields needed for creation
     protected $required_api_fields_for_create = [
-        'parent_part_number',
-        'child_part_number',
+        'product_line_id',
+        'part_number',
         'level',
         'quantity'
     ];
@@ -51,7 +64,7 @@ class BJT_Relation_Controller extends BJT_API_Controller {
                 'methods' => WP_REST_Server::READABLE,
                 'callback' => [$this, 'get_items'],
                 'permission_callback' => [$this, 'check_read_permission'],
-                'args' => $this->get_collection_params(), // Use WP standard
+                'args' => $this->get_collection_params(),
             ],
             [
                 'methods' => WP_REST_Server::CREATABLE,
@@ -100,20 +113,126 @@ class BJT_Relation_Controller extends BJT_API_Controller {
                     ],
                 ],
             ],
-            'schema' => [$this, 'get_public_item_schema'], // Define schema for single item endpoint
+            'schema' => [$this, 'get_public_item_schema'],
+        ]);
+
+        // GET /relations/{part_number}/accessories - Get multi-level accessories for a part
+        register_rest_route($this->namespace, '/' . $this->rest_base . '/(?P<part_number>[a-zA-Z0-9-]+)/accessories', [
+            [
+                'methods'             => WP_REST_Server::READABLE,
+                'callback'            => [$this, 'get_multi_level_accessories'],
+                'permission_callback' => [$this, 'check_read_permission'],
+                'args'                => [
+                    'part_number' => [
+                        'description' => 'Part number to get accessories for.',
+                        'type'        => 'string',
+                        'required'    => true,
+                    ],
+                    'max_levels' => [
+                        'description' => 'Maximum number of levels to retrieve (1-5).',
+                        'type'        => 'integer',
+                        'default'     => 5,
+                        'minimum'     => 1,
+                        'maximum'     => 5,
+                    ],
+                    'lang' => [
+                        'description' => 'Language code (zh/en).',
+                        'type'        => 'string',
+                        'enum'        => ['zh', 'en'],
+                        'default'     => 'zh'
+                    ],
+                    'region' => [
+                        'description' => 'Region code for pricing and inventory.',
+                        'type'        => 'string',
+                        'enum'        => ['CN', 'EU', 'NA', 'AU'],
+                    ],
+                ],
+            ],
+            'schema' => [$this, 'get_item_schema'],
         ]);
     }
 
     /**
+     * 准备查询参数
+     */
+    protected function prepare_items_query($request) {
+        $prepared_args = [];
+
+        // 分页参数
+        $per_page = isset($request['per_page']) ? (int) $request['per_page'] : 10;
+        $page = isset($request['page']) ? (int) $request['page'] : 1;
+        
+        $prepared_args['posts_per_page'] = $per_page;
+        $prepared_args['offset'] = ($page - 1) * $per_page;
+
+        // 排序参数
+        $prepared_args['orderby'] = isset($request['orderby']) ? sanitize_key($request['orderby']) : 'id';
+        $prepared_args['order'] = isset($request['order']) ? strtoupper(sanitize_key($request['order'])) : 'DESC';
+        
+        // 验证排序字段
+        $allowed_orderby = ['id', 'parent_part_number', 'child_part_number', 'level', 'sort_order'];
+        if (!in_array($prepared_args['orderby'], $allowed_orderby)) {
+            $prepared_args['orderby'] = 'id';
+        }
+        
+        // 验证排序方向
+        if (!in_array($prepared_args['order'], ['ASC', 'DESC'])) {
+            $prepared_args['order'] = 'DESC';
+        }
+
+        // 搜索参数
+        if (isset($request['search'])) {
+            $prepared_args['search'] = sanitize_text_field($request['search']);
+        }
+
+        // 自定义筛选参数
+        if (isset($request['parent_part_number'])) {
+            $prepared_args['parent_part_number'] = sanitize_text_field($request['parent_part_number']);
+        }
+        if (isset($request['child_part_number'])) {
+            $prepared_args['child_part_number'] = sanitize_text_field($request['child_part_number']);
+        }
+        if (isset($request['level'])) {
+            $prepared_args['level'] = absint($request['level']);
+        }
+        if (isset($request['child_type'])) {
+            $prepared_args['child_type'] = sanitize_text_field($request['child_type']);
+        }
+        if (isset($request['product_line_id'])) {
+            $prepared_args['product_line_id'] = absint($request['product_line_id']);
+        }
+        if (isset($request['parent_is_null'])) {
+            $prepared_args['parent_is_null'] = (bool) $request['parent_is_null'];
+        }
+
+        return $prepared_args;
+    }
+
+    /**
+     * 获取响应字段
+     */
+    protected function get_fields_for_response($request) {
+        // 简化实现，返回所有字段
+        return [];
+    }
+
+    /**
+     * 添加分页头信息
+     */
+    protected function add_pagination_headers($response, $request, $total_items, $per_page) {
+        $max_pages = ceil($total_items / $per_page);
+        
+        $response->header('X-WP-Total', (int) $total_items);
+        $response->header('X-WP-TotalPages', (int) $max_pages);
+        
+        return $response;
+    }
+
+    /**
      * Retrieves the query params for collections.
-     * Extends standard WP collection params.
-     *
-     * @since 4.7.0
-     *
-     * @return array Collection parameters.
      */
     public function get_collection_params() {
-        $params = parent::get_collection_params(); // Includes context, page, per_page, search, order, orderby
+        $params = parent::get_collection_params();
 
         $params['parent_part_number'] = [
             'description'       => __('Filter relations by parent part number.'),
@@ -127,31 +246,41 @@ class BJT_Relation_Controller extends BJT_API_Controller {
             'sanitize_callback' => 'sanitize_text_field',
             'validate_callback' => 'rest_validate_request_arg',
         ];
-         $params['level'] = [
+        $params['level'] = [
             'description'       => __('Filter relations by hierarchy level.'),
             'type'              => 'integer',
             'sanitize_callback' => 'absint',
             'validate_callback' => 'rest_validate_request_arg',
         ];
-         $params['is_required'] = [
-            'description'       => __('Filter relations by whether the child is required.'),
+        $params['child_type'] = [
+            'description'       => __('Filter relations by child type (accessory/spare_part).'),
+            'type'              => 'string',
+            'sanitize_callback' => 'sanitize_text_field',
+            'validate_callback' => 'rest_validate_request_arg',
+        ];
+        $params['product_line_id'] = [
+            'description'       => __('Filter relations by product line ID.'),
+            'type'              => 'integer',
+            'sanitize_callback' => 'absint',
+            'validate_callback' => 'rest_validate_request_arg',
+        ];
+        $params['parent_is_null'] = [
+            'description'       => __('Filter relations where parent_part_number is NULL.'),
             'type'              => 'boolean',
             'sanitize_callback' => 'rest_sanitize_boolean',
             'validate_callback' => 'rest_validate_request_arg',
         ];
-         $params['entity_type'] = [
-            'description'       => __('Filter relations by the type of the child entity (e.g., accessory, spare_part).'),
-            'type'              => 'string',
-            'sanitize_callback' => 'sanitize_key', // Use sanitize_key for simple type strings
-            'validate_callback' => 'rest_validate_request_arg',
-        ];
-        $params['orderby']['enum'] = array_merge($params['orderby']['enum'], ['parent_part_number', 'child_part_number', 'level', 'sort_order']); // Add specific orderby fields
+
+        // 更新排序字段选项
+        if (isset($params['orderby']['enum'])) {
+            $params['orderby']['enum'] = array_merge($params['orderby']['enum'], ['parent_part_number', 'child_part_number', 'level', 'sort_order']);
+        }
 
         return $params;
     }
 
     /**
-     * 获取关系列表 (To be implemented)
+     * 获取关系列表
      *
      * @param WP_REST_Request $request
      * @return WP_REST_Response|WP_Error
@@ -159,67 +288,112 @@ class BJT_Relation_Controller extends BJT_API_Controller {
     public function get_items($request) {
         global $wpdb;
 
-        // 1. Prepare Query Args (using WP standard method)
-        $prepared_args = $this->prepare_items_query($request);
-        
-        // 2. Build WHERE Clauses
-        $where_clauses = ["1=1"]; // Start with a tautology
-
-        // Custom Filters
-        if (!empty($prepared_args['parent_part_number'])) {
-            $where_clauses[] = $wpdb->prepare("parent_part_number = %s", $prepared_args['parent_part_number']);
-        }
-        if (!empty($prepared_args['child_part_number'])) {
-            $where_clauses[] = $wpdb->prepare("child_part_number = %s", $prepared_args['child_part_number']);
-        }
-        if (isset($prepared_args['level']) && is_numeric($prepared_args['level'])) {
-            $where_clauses[] = $wpdb->prepare("level = %d", $prepared_args['level']);
-        }
-        if (isset($prepared_args['is_required'])) { // Check boolean explicitly
-            $where_clauses[] = $wpdb->prepare("is_required = %d", $prepared_args['is_required'] ? 1 : 0);
-        }
-         if (!empty($prepared_args['entity_type'])) {
-            $where_clauses[] = $wpdb->prepare("entity_type = %s", $prepared_args['entity_type']);
-        }
-
-        // Search filter (if applicable - searches description perhaps?)
-        if (!empty($prepared_args['search'])) {
-            $search_term = '%' . $wpdb->esc_like($prepared_args['search']) . '%';
-            // Adjust which fields to search
-            $where_clauses[] = $wpdb->prepare("(description LIKE %s OR parent_part_number LIKE %s OR child_part_number LIKE %s)", $search_term, $search_term, $search_term);
-        }
-
-        $where_sql = implode(" AND ", $where_clauses);
-        $base_query = "FROM {$this->table_name}";
-
-        // 3. Get Total Count
-        $total_items_query = "SELECT COUNT(id) {$base_query} WHERE {$where_sql}";
-        $total_items = (int) $wpdb->get_var($total_items_query);
-
-        // 4. Get Paginated Items
-        $fields = $this->get_fields_for_response($request); // Get fields based on context
-        $select_fields = empty($fields) ? '*' : implode(', ', $fields);
-        
-        $items_query = $wpdb->prepare(
-            "SELECT {$select_fields} {$base_query} WHERE {$where_sql} ORDER BY {$prepared_args['orderby']} {$prepared_args['order']} LIMIT %d OFFSET %d",
-            $prepared_args['posts_per_page'],
-            $prepared_args['offset']
-        );
-        $items_db = $wpdb->get_results($items_query);
-
-        // 5. Format Items
-        $formatted_items = [];
-        if ($items_db) {
-            foreach ($items_db as $item_db) {
-                $formatted_items[] = $this->format_item_for_response($item_db);
+        try {
+            // 1. Prepare Query Args (包含分页参数)
+            $prepared_args = $this->prepare_items_query($request);
+            
+            // 2. 从prepared_args中获取分页参数
+            $page = isset($request['page']) ? (int) $request['page'] : 1;
+            $per_page = isset($request['per_page']) ? (int) $request['per_page'] : 10;
+            
+            // 确保per_page有合理的限制
+            if ($per_page > 1000) {
+                $per_page = 1000; // 设置最大限制
             }
-        }
+            
+            // 3. Build WHERE Clauses
+            $where_clauses = ["1=1"];
+            $where_values = [];
 
-        // 6. Prepare Response with Pagination Headers
-        $response = new WP_REST_Response($formatted_items, 200);
-        $response = $this->add_pagination_headers($response, $request, $total_items, $prepared_args['posts_per_page']);
-        
-        return $response;
+            // 产品线ID筛选
+            if (!empty($prepared_args['product_line_id'])) {
+                $where_clauses[] = "product_line_id = %d";
+                $where_values[] = $prepared_args['product_line_id'];
+            }
+
+            // 父料号筛选
+            if (!empty($prepared_args['parent_part_number'])) {
+                $where_clauses[] = "parent_part_number = %s";
+                $where_values[] = $prepared_args['parent_part_number'];
+            }
+            
+            // 父料号为空筛选
+            if (isset($prepared_args['parent_is_null']) && $prepared_args['parent_is_null']) {
+                $where_clauses[] = "parent_part_number IS NULL";
+            }
+            
+            // 子料号筛选
+            if (!empty($prepared_args['child_part_number'])) {
+                $where_clauses[] = "child_part_number = %s";
+                $where_values[] = $prepared_args['child_part_number'];
+            }
+            
+            // 层级筛选
+            if (isset($prepared_args['level']) && is_numeric($prepared_args['level'])) {
+                $where_clauses[] = "level = %d";
+                $where_values[] = $prepared_args['level'];
+            }
+            
+            // 子项类型筛选
+            if (!empty($prepared_args['child_type'])) {
+                $where_clauses[] = "child_type = %s";
+                $where_values[] = $prepared_args['child_type'];
+            }
+
+            // 搜索筛选
+            if (!empty($prepared_args['search'])) {
+                $search_term = '%' . $wpdb->esc_like($prepared_args['search']) . '%';
+                $where_clauses[] = "(part_number LIKE %s OR parent_part_number LIKE %s OR child_part_number LIKE %s)";
+                $where_values[] = $search_term;
+                $where_values[] = $search_term;
+                $where_values[] = $search_term;
+            }
+
+            $where_sql = implode(" AND ", $where_clauses);
+            
+            // 4. Get Total Count
+            $count_query = "SELECT COUNT(id) FROM {$this->table_name} WHERE {$where_sql}";
+            if (!empty($where_values)) {
+                $count_query = $wpdb->prepare($count_query, $where_values);
+            }
+            $total_items = (int) $wpdb->get_var($count_query);
+
+            // 5. Get Paginated Items
+            $offset = ($page - 1) * $per_page;
+            $items_query = "SELECT * FROM {$this->table_name} WHERE {$where_sql} ORDER BY {$prepared_args['orderby']} {$prepared_args['order']} LIMIT %d OFFSET %d";
+            $query_values = array_merge($where_values, [$per_page, $offset]);
+            $items_query = $wpdb->prepare($items_query, $query_values);
+            
+            $items_db = $wpdb->get_results($items_query);
+
+            // 6. Format Items
+            $formatted_items = [];
+            if ($items_db) {
+                foreach ($items_db as $item_db) {
+                    $formatted_items[] = $this->format_item_for_response($item_db);
+                }
+            }
+
+            // 7. Prepare Response
+            $response_data = [
+                'items' => $formatted_items,
+                'page' => $page,
+                'page_size' => $per_page,
+                'total' => (int) $total_items,
+                'total_pages' => ceil($total_items / $per_page)
+            ];
+            
+            $response = new WP_REST_Response($response_data, 200);
+            
+            // 8. Add Pagination Headers
+            $this->add_pagination_headers($response, $request, $total_items, $per_page);
+            
+            return $response;
+            
+        } catch (Exception $e) {
+            error_log('BJT Relations get_items error: ' . $e->getMessage());
+            return $this->error_response('Internal server error', 'server_error', 500);
+        }
     }
 
     /**
@@ -439,7 +613,7 @@ class BJT_Relation_Controller extends BJT_API_Controller {
 
         $schema = [
             '$schema'    => 'http://json-schema.org/draft-04/schema#',
-            'title'      => $this->resource_name, // Use resource name for title
+            'title'      => $this->resource_name,
             'type'       => 'object',
             'properties' => [
                 'id' => [
@@ -448,79 +622,103 @@ class BJT_Relation_Controller extends BJT_API_Controller {
                     'context'     => ['view', 'edit', 'embed'],
                     'readonly'    => true,
                 ],
-                 'parent_part_number' => [
-                    'description' => __('Part number of the parent item.'),
-                    'type'        => 'string',
-                    'context'     => ['view', 'edit', 'embed'],
-                    'required'    => true, // Required for creation
-                ],
-                'child_part_number' => [
-                    'description' => __('Part number of the child item.'),
-                    'type'        => 'string',
-                    'context'     => ['view', 'edit', 'embed'],
-                    'required'    => true, // Required for creation
-                ],
-                'level' => [
-                    'description' => __('Hierarchy level of the child relative to the ultimate parent (e.g., host model).'),
+                'product_line_id' => [
+                    'description' => __('Product line ID.'),
                     'type'        => 'integer',
                     'context'     => ['view', 'edit', 'embed'],
-                    'required'    => true, // Required for creation
+                    'required'    => true,
                 ],
-                'quantity' => [
-                    'description' => __('Quantity of the child item required by the parent.'),
+                'host_part_number' => [
+                    'description' => __('Host machine part number (level 0).'),
+                    'type'        => 'string',
+                    'context'     => ['view', 'edit', 'embed'],
+                    'readonly'    => true,
+                ],
+                'part_number' => [
+                    'description' => __('Current item part number.'),
+                    'type'        => 'string',
+                    'context'     => ['view', 'edit', 'embed'],
+                    'required'    => true,
+                ],
+                'parent_part_number' => [
+                    'description' => __('Parent item part number.'),
+                    'type'        => 'string',
+                    'context'     => ['view', 'edit', 'embed'],
+                ],
+                'child_part_number' => [
+                    'description' => __('Child item part number.'),
+                    'type'        => 'string',
+                    'context'     => ['view', 'edit', 'embed'],
+                ],
+                'child_type' => [
+                    'description' => __('Child item type (accessory/spare_part).'),
+                    'type'        => 'string',
+                    'enum'        => ['accessory', 'spare_part'],
+                    'default'     => 'accessory',
+                    'context'     => ['view', 'edit', 'embed'],
+                ],
+                'level' => [
+                    'description' => __('Hierarchy level (1-5), spare parts fixed at 1.'),
                     'type'        => 'integer',
                     'default'     => 1,
                     'context'     => ['view', 'edit', 'embed'],
-                    'required'    => true, // Required for creation
+                    'required'    => true,
                 ],
-                 'description' => [
-                    'description' => __('Optional description for this relation.'),
+                'quantity' => [
+                    'description' => __('Quantity of child item in parent.'),
+                    'type'        => 'integer',
+                    'default'     => 1,
+                    'context'     => ['view', 'edit', 'embed'],
+                    'required'    => true,
+                ],
+                'required_parts' => [
+                    'description' => __('Required dependency part numbers (comma separated).'),
                     'type'        => 'string',
                     'context'     => ['view', 'edit', 'embed'],
-                 ],
-                 'sort_order' => [
-                    'description' => __('Order in which child items should be displayed.'),
+                ],
+                'required_quantity' => [
+                    'description' => __('Required dependency quantities (comma separated, corresponds to required_parts).'),
+                    'type'        => 'string',
+                    'context'     => ['view', 'edit', 'embed'],
+                ],
+                'sort_order' => [
+                    'description' => __('Sort order within same level.'),
                     'type'        => 'integer',
                     'default'     => 0,
                     'context'     => ['view', 'edit', 'embed'],
-                 ],
-                 'is_required' => [
-                    'description' => __('Indicates if the child part is mandatory for the parent.'),
-                    'type'        => 'boolean',
-                    'default'     => false,
-                    'context'     => ['view', 'edit', 'embed'],
-                 ],
-                'entity_type' => [
-                    'description' => __('Type of the child entity (e.g., accessory, spare_part). Helps interpret the child_part_number.'),
-                    'type'        => 'string',
-                    'context'     => ['view', 'edit', 'embed'],
-                    // 'enum'     => ['accessory', 'spare_part', 'consumable'], // Define possible types if known
                 ],
-                 // Timestamps (read-only)
-                 'created_at' => [
-                     'description' => __( 'The date the relation was created, in the site\'s timezone.' ),
-                     'type'        => 'string',
-                     'format'      => 'date-time',
-                     'context'     => ['view', 'edit', 'embed'],
-                     'readonly'    => true,
-                 ],
-                 'updated_at' => [
-                     'description' => __( 'The date the relation was last updated, in the site\'s timezone.' ),
-                     'type'        => 'string',
-                     'format'      => 'date-time',
-                     'context'     => ['view', 'edit', 'embed'],
-                     'readonly'    => true,
-                 ],
+                'status' => [
+                    'description' => __('Relation status.'),
+                    'type'        => 'string',
+                    'default'     => 'publish',
+                    'enum'        => ['publish', 'draft', 'trash'],
+                    'context'     => ['view', 'edit', 'embed'],
+                ],
+                'created_at' => [
+                    'description' => __('The date the relation was created, in the site\'s timezone.'),
+                    'type'        => 'string',
+                    'format'      => 'date-time',
+                    'context'     => ['view', 'edit', 'embed'],
+                    'readonly'    => true,
+                ],
+                'updated_at' => [
+                    'description' => __('The date the relation was last updated, in the site\'s timezone.'),
+                    'type'        => 'string',
+                    'format'      => 'date-time',
+                    'context'     => ['view', 'edit', 'embed'],
+                    'readonly'    => true,
+                ],
             ],
         ];
         
-        $this->schema = $schema; // Cache the schema
+        $this->schema = $schema;
 
         return $this->add_additional_fields_schema($this->schema);
     }
 
     // Placeholder for mapping/formatting functions if needed
     protected function map_request_to_db(WP_REST_Request $request, $is_update = false) {
+        global $wpdb;
         $params = $request->get_params();
         $data = [];
 
@@ -528,26 +726,57 @@ class BJT_Relation_Controller extends BJT_API_Controller {
             if (isset($params[$db_column])) {
                 $value = $params[$db_column];
                 switch ($db_column) {
+                    case 'product_line_id':
                     case 'level':
                     case 'quantity':
                     case 'sort_order':
                         $data[$db_column] = absint($value);
                         break;
-                    case 'is_required':
-                        $data[$db_column] = rest_sanitize_boolean($value);
-                        break;
+                    case 'part_number':
                     case 'parent_part_number':
                     case 'child_part_number':
-                        // Assuming part numbers are critical and should be handled carefully
-                        // Basic sanitization for now, might need more complex validation
-                        // (e.g., check if part number exists in respective entity tables)
-                        $data[$db_column] = sanitize_text_field(strtoupper(trim($value)));
+                        // 料号字段处理，转换为大写并去除空格
+                        $data[$db_column] = !empty($value) ? sanitize_text_field(strtoupper(trim($value))) : null;
                         break;
-                    case 'entity_type':
-                        $data[$db_column] = sanitize_key($value);
+                    case 'child_type':
+                        // 验证子项类型枚举值
+                        $allowed_types = ['accessory', 'spare_part'];
+                        $cleaned_value = sanitize_text_field($value);
+                        $data[$db_column] = in_array($cleaned_value, $allowed_types) ? $cleaned_value : 'accessory';
                         break;
-                    case 'description':
-                        $data[$db_column] = sanitize_textarea_field($value);
+                    case 'required_parts':
+                        // 处理必选备件料号，支持多个（逗号分隔）
+                        if (is_array($value)) {
+                            // 如果传入的是数组，转换为逗号分隔的字符串
+                            $cleaned_parts = array_map(function($part) {
+                                return sanitize_text_field(strtoupper(trim($part)));
+                            }, $value);
+                            $data[$db_column] = implode(',', array_filter($cleaned_parts));
+                        } else {
+                            // 如果传入的是字符串，直接清理
+                            $data[$db_column] = !empty($value) ? sanitize_text_field($value) : null;
+                        }
+                        break;
+                    case 'required_quantity':
+                        // 处理必选备件数量，支持多个（逗号分隔）
+                        if (is_array($value)) {
+                            // 如果传入的是数组，转换为逗号分隔的字符串
+                            $cleaned_quantities = array_map(function($qty) {
+                                return absint($qty);
+                            }, $value);
+                            $data[$db_column] = implode(',', array_filter($cleaned_quantities, function($qty) {
+                                return $qty > 0;
+                            }));
+                        } else {
+                            // 如果传入的是字符串，直接清理
+                            $data[$db_column] = !empty($value) ? sanitize_text_field($value) : null;
+                        }
+                        break;
+                    case 'status':
+                        // 验证状态枚举值
+                        $allowed_statuses = ['publish', 'draft', 'trash'];
+                        $cleaned_value = sanitize_text_field($value);
+                        $data[$db_column] = in_array($cleaned_value, $allowed_statuses) ? $cleaned_value : 'publish';
                         break;
                     default:
                         $data[$db_column] = sanitize_text_field($value);
@@ -555,6 +784,29 @@ class BJT_Relation_Controller extends BJT_API_Controller {
                 }
             }
         }
+
+        // 自动计算 host_part_number
+        if (isset($data['part_number'])) {
+            if (empty($data['parent_part_number'])) {
+                // 如果没有父料号，这是主机，host_part_number = part_number
+                $data['host_part_number'] = $data['part_number'];
+            } else {
+                // 如果有父料号，查询父记录的 host_part_number
+                $parent_host_part_number = $wpdb->get_var($wpdb->prepare(
+                    "SELECT host_part_number FROM {$this->table_name} WHERE part_number = %s AND product_line_id = %d LIMIT 1",
+                    $data['parent_part_number'],
+                    $data['product_line_id']
+                ));
+                
+                if ($parent_host_part_number) {
+                    $data['host_part_number'] = $parent_host_part_number;
+                } else {
+                    // 如果找不到父记录，默认使用 part_number
+                    $data['host_part_number'] = $data['part_number'];
+                }
+            }
+        }
+
         return $data;
     }
 
@@ -563,40 +815,219 @@ class BJT_Relation_Controller extends BJT_API_Controller {
             return null;
         }
 
-        $response_data = [];
-        // Convert stdClass object to array to easily iterate
-        $item_array = (array) $item_db_object;
+        // 直接基于数据库表结构构建响应
+        $response_data = [
+            'id' => (int) $item_db_object->id,
+            'product_line_id' => (int) $item_db_object->product_line_id,
+            'host_part_number' => $item_db_object->host_part_number,
+            'part_number' => $item_db_object->part_number,
+            'parent_part_number' => $item_db_object->parent_part_number,
+            'child_part_number' => $item_db_object->child_part_number,
+            'child_type' => $item_db_object->child_type,
+            'level' => (int) $item_db_object->level,
+            'quantity' => (int) $item_db_object->quantity,
+            'required_parts' => $item_db_object->required_parts,
+            'required_quantity' => $item_db_object->required_quantity,
+            'sort_order' => (int) $item_db_object->sort_order,
+            'status' => $item_db_object->status,
+            'created_at' => $item_db_object->created_at,
+            'updated_at' => $item_db_object->updated_at,
+        ];
 
-        // Populate response based on schema properties for consistency
-        $schema = $this->get_item_schema();
-        foreach ($schema['properties'] as $field_name => $field_props) {
-            if (isset($item_array[$field_name])) {
-                // Cast to correct type based on schema if necessary (WPDB returns strings mostly)
-                switch ($field_props['type']) {
-                    case 'integer':
-                        $response_data[$field_name] = (int) $item_array[$field_name];
-                        break;
-                    case 'boolean':
-                        $response_data[$field_name] = (bool) $item_array[$field_name];
-                        break;
-                    default:
-                        $response_data[$field_name] = $item_array[$field_name];
-                        break;
+        return $response_data;
+    }
+
+    /**
+     * 获取多级配件关系
+     * 
+     * @param WP_REST_Request $request
+     * @return WP_REST_Response|WP_Error
+     */
+    public function get_multi_level_accessories($request) {
+        global $wpdb;
+        
+        $part_number = $request->get_param('part_number');
+        $max_levels = $request->get_param('max_levels') ?: 5;
+        $lang = $request->get_param('lang') ?: 'zh';
+        $region = $request->get_param('region');
+        
+        try {
+            $accessories_table = $wpdb->prefix . 'bjt_accessories';
+            $name_column = ($lang === 'en') ? 'name_en' : 'name_zh';
+            
+            // 递归获取多级配件
+            $result = $this->get_accessories_recursive($part_number, 1, $max_levels, $lang, $region);
+            
+            return new WP_REST_Response([
+                'success' => true,
+                'data' => [
+                    'part_number' => $part_number,
+                    'max_levels' => $max_levels,
+                    'accessories' => $result
+                ]
+            ], 200);
+            
+        } catch (Exception $e) {
+            error_log('BJT Relations get_multi_level_accessories error: ' . $e->getMessage());
+            return $this->error_response('Failed to retrieve multi-level accessories', 'server_error', 500);
+        }
+    }
+    
+    /**
+     * 递归获取配件关系
+     * 
+     * @param string $part_number
+     * @param int $current_level
+     * @param int $max_levels
+     * @param string $lang
+     * @param string $region
+     * @return array
+     */
+    private function get_accessories_recursive($part_number, $current_level, $max_levels, $lang, $region) {
+        global $wpdb;
+        
+        if ($current_level > $max_levels) {
+            return [];
+        }
+        
+        // 获取当前料号的直接子配件
+        $relations = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT child_part_number FROM {$this->table_name} 
+                 WHERE part_number = %s AND status = 'publish'
+                 ORDER BY sort_order ASC",
+                $part_number
+            )
+        );
+        
+        if (empty($relations)) {
+            return [];
+        }
+        
+        $accessories = [];
+        $accessories_table = $wpdb->prefix . 'bjt_accessories';
+        $name_column = ($lang === 'en') ? 'name_en' : 'name_zh';
+        $processed_parts = []; // 用于去重
+        
+        foreach ($relations as $relation) {
+            $child_part_number = $relation->child_part_number;
+            
+            // 跳过已处理的料号
+            if (in_array($child_part_number, $processed_parts)) {
+                continue;
+            }
+            $processed_parts[] = $child_part_number;
+            
+            // 获取配件详细信息 - 包含所有包装和托盘相关字段
+            $accessory = $wpdb->get_row(
+                $wpdb->prepare(
+                    "SELECT id, model, part_number, {$name_column} as name, spec, spec_imperial, 
+                            voltage, frequency, image_url, status, unit,
+                            package_size_cm, package_size_inch, net_weight_kg, net_weight_lbs,
+                            gross_weight_kg, gross_weight_lbs, pcs_per_box,
+                            pallet_size_cm, pallet_size_inch, pcs_per_pallet,
+                            pallet_height_cm, pallet_height_inch, pallet_gross_weight_kg, pallet_gross_weight_lbs
+                     FROM {$accessories_table} 
+                     WHERE part_number = %s AND status = 'publish'",
+                    $child_part_number
+                )
+            );
+            
+            if ($accessory) {
+                $accessory_data = [
+                    'id' => $accessory->id,
+                    'part_number' => $accessory->part_number,
+                    'model' => $accessory->model,
+                    'name' => $accessory->name,
+                    'spec' => $accessory->spec,
+                    'spec_imperial' => $accessory->spec_imperial,
+                    'voltage' => $accessory->voltage,
+                    'frequency' => $accessory->frequency,
+                    'image_url' => $accessory->image_url,
+                    'unit' => $accessory->unit,
+                    'level' => $current_level,
+                    // 添加包装相关字段
+                    'package_size_cm' => $accessory->package_size_cm,
+                    'package_size_inch' => $accessory->package_size_inch,
+                    'net_weight_kg' => $accessory->net_weight_kg,
+                    'net_weight_lbs' => $accessory->net_weight_lbs,
+                    'gross_weight_kg' => $accessory->gross_weight_kg,
+                    'gross_weight_lbs' => $accessory->gross_weight_lbs,
+                    'pcs_per_box' => $accessory->pcs_per_box,
+                    // 添加托盘相关字段
+                    'pallet_size_cm' => $accessory->pallet_size_cm,
+                    'pallet_size_inch' => $accessory->pallet_size_inch,
+                    'pcs_per_pallet' => $accessory->pcs_per_pallet,
+                    'pallet_height_cm' => $accessory->pallet_height_cm,
+                    'pallet_height_inch' => $accessory->pallet_height_inch,
+                    'pallet_gross_weight_kg' => $accessory->pallet_gross_weight_kg,
+                    'pallet_gross_weight_lbs' => $accessory->pallet_gross_weight_lbs,
+                    'children' => []
+                ];
+                
+                // 添加价格信息（如果提供了region）
+                if ($region) {
+                    $prices_table = $wpdb->prefix . 'bjt_prices';
+                    $price_data = $wpdb->get_row(
+                        $wpdb->prepare(
+                            "SELECT base_price, currency, discount_rate 
+                             FROM {$prices_table} 
+                             WHERE target_type = 'accessory' AND target_id = %d AND region = %s 
+                             AND status = 'active' ORDER BY min_quantity ASC LIMIT 1",
+                            $accessory->id,
+                            $region
+                        )
+                    );
+                    
+                    if ($price_data) {
+                        $accessory_data['pricing'] = [
+                            'base_price' => (float) $price_data->base_price,
+                            'currency' => $price_data->currency,
+                            'discount_rate' => (float) $price_data->discount_rate
+                        ];
+                    }
+                    
+                    // 添加库存信息
+                    $inventory_table = $wpdb->prefix . 'bjt_inventory';
+                    $inventory_data = $wpdb->get_results(
+                        $wpdb->prepare(
+                            "SELECT warehouse, quantity, reserved 
+                             FROM {$inventory_table} 
+                             WHERE target_type = 'accessory' AND target_id = %d AND region = %s 
+                             AND status = 'active'",
+                            $accessory->id,
+                            $region
+                        )
+                    );
+                    
+                    if ($inventory_data) {
+                        $accessory_data['inventory'] = array_map(function($inv) {
+                            return [
+                                'warehouse' => $inv->warehouse,
+                                'quantity' => (int) $inv->quantity,
+                                'reserved' => (int) $inv->reserved,
+                                'available' => (int) $inv->quantity - (int) $inv->reserved
+                            ];
+                        }, $inventory_data);
+                    }
                 }
-            } elseif ($field_name === 'id' && isset($item_array['id'])) {
-                 $response_data[$field_name] = (int) $item_array['id']; // Ensure ID is always present and int
+                
+                // 递归获取子配件
+                if ($current_level < $max_levels) {
+                    $accessory_data['children'] = $this->get_accessories_recursive(
+                        $child_part_number, 
+                        $current_level + 1, 
+                        $max_levels, 
+                        $lang, 
+                        $region
+                    );
+                }
+                
+                $accessories[] = $accessory_data;
             }
         }
         
-        // Ensure all schema fields are present in the response, even if null
-        // (unless explicitly excluded by context, which we are not handling deeply here)
-        foreach (array_keys($schema['properties']) as $field_name) {
-            if (!array_key_exists($field_name, $response_data)) {
-                $response_data[$field_name] = null;
-            }
-        }
-
-        return $response_data;
+        return $accessories;
     }
 
 } 

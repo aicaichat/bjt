@@ -4,7 +4,11 @@ import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: '/', // 使用根路径
   plugins: [react()],
+  css: { // Explicitly set postcss config
+    postcss: './postcss.config.js'
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -27,11 +31,16 @@ export default defineConfig({
     port: 5173,
     host: '0.0.0.0',
     cors: true,
-    strictPort: true,
+    strictPort: true, // 确保使用指定端口
+    hmr: {
+      port: 5173,
+      host: 'localhost'
+    },
     proxy: {
       '/wp-json': {
         target: 'http://localhost:8080',
-        changeOrigin: true
+        changeOrigin: true,
+        secure: false
       }
     }
   },

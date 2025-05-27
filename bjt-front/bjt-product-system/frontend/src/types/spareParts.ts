@@ -118,6 +118,8 @@ export interface SparePart {
   type?: string;
   description?: string;
   category?: string;
+  required_parts?: string | null;
+  required_quantity?: string | null;
 }
 
 /**

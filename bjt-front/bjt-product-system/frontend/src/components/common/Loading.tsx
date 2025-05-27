@@ -14,6 +14,49 @@ interface LoadingProps {
   nested?: boolean; // 是否嵌套在其他组件中
 }
 
+// 安全渲染函数，确保值被转换为字符串
+const safeRender = (value: any): string => {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return value.toString();
+  if (typeof value === 'boolean') return value.toString();
+  if (typeof value === 'object') {
+    // 检查是否是React元素
+    if (value.$$typeof) {
+      return '[React Element]';
+    }
+    // 检查是否是包含特定键的对象（可能导致错误的对象）
+    if (value.products || value.productDetails || value.cart || value.order || value.machines || value.accessories) {
+      console.warn('Loading component detected problematic object with keys:', Object.keys(value));
+      return 'Loading...';
+    }
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return '[Object]';
+    }
+  }
+  return String(value);
+};
+
+// 安全的翻译函数
+const safeTranslate = (t: any, key: string, fallback: string = key): string => {
+  try {
+    const result = t(key);
+    if (typeof result === 'string') {
+      return result;
+    }
+    if (typeof result === 'object') {
+      console.warn(`Loading component: Translation for '${key}' returned an object:`, result);
+      return fallback;
+    }
+    return String(result) || fallback;
+  } catch (error) {
+    console.warn(`Loading component: Translation error for key '${key}':`, error);
+    return fallback;
+  }
+};
+
 /**
  * 通用加载组件
  * @param tip 提示文本，默认使用i18n中的"loading"
@@ -36,7 +79,11 @@ const Loading: React.FC<LoadingProps> = ({
   nested = false
 }) => {
   const { t } = useTranslation();
-  const loadingTip = tip || t('loading', 'Loading...');
+  
+  // 安全处理tip和翻译
+  const safeTip = tip ? safeRender(tip) : safeTranslate(t, 'loading', 'Loading...');
+  const loadingTip = safeTip || 'Loading...';
+  
   const [showSpin, setShowSpin] = React.useState(spinDelay === 0);
   
   // 如果设置了延迟，则在延迟后显示加载组件

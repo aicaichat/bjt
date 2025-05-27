@@ -1,0 +1,76 @@
+.cart-page {
+  padding: 24px;
+  
+  .page-header {
+    margin-bottom: 24px;
+    
+    .ant-typography {
+      margin-bottom: 0;
+    }
+  }
+  
+  .loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+  }
+  
+  .error-message {
+    margin-bottom: 16px;
+    padding: 12px;
+    background-color: #fff1f0;
+    border-radius: 4px;
+    border: 1px solid #ffccc7;
+  }
+  
+  .cart-items-container {
+    margin-bottom: 24px;
+  }
+  
+  .cart-summary {
+    position: sticky;
+    top: 24px;
+    
+    .ant-card-body {
+      padding: 24px;
+    }
+    
+    h4 {
+      margin-bottom: 16px;
+    }
+    
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      
+      &.total {
+        margin-top: 8px;
+        font-size: 18px;
+      }
+    }
+    
+    .ant-divider {
+      margin: 16px 0;
+    }
+    
+    .summary-actions {
+      margin-top: 24px;
+      
+      .ant-btn {
+        margin-top: 12px;
+      }
+    }
+  }
+  
+  // 响应式布局
+  @media (max-width: 768px) {
+    padding: 16px;
+    
+    .cart-summary {
+      position: static;
+      margin-top: 24px;
+    }
+  }
+} 

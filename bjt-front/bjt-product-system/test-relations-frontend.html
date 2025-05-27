@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Relations API</title>
+</head>
+<body>
+    <h1>Relations API Test</h1>
+    <button onclick="testAPI()">Test API Call</button>
+    <div id="results"></div>
+
+    <script>
+        async function testAPI() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = 'Loading...';
+            
+            try {
+                console.log('Making API call...');
+                const response = await fetch('http://localhost:8080/wp-json/bjt/v1/relations?page=1&per_page=100');
+                const data = await response.json();
+                
+                console.log('Raw API response:', data);
+                
+                if (data && data.items && Array.isArray(data.items)) {
+                    console.log('Total relations:', data.items.length);
+                    
+                    // Extract unique host part numbers
+                    const hostPartNumbers = new Set();
+                    const hostOptions = new Map();
+                    
+                    data.items.forEach((relation, index) => {
+                        if (index < 5) {
+                            console.log(`Relation ${index}:`, relation);
+                        }
+                        
+                        if (relation.product_line_id === 1 && relation.host_part_number) {
+                            const hostPartNumber = relation.host_part_number.toString();
+                            if (!hostPartNumbers.has(hostPartNumber)) {
+                                hostPartNumbers.add(hostPartNumber);
+                                hostOptions.set(hostPartNumber, {
+                                    value: hostPartNumber,
+                                    label: `主机料号: ${hostPartNumber}`,
+                                    host_part_number: hostPartNumber
+                                });
+                                console.log('Added host option:', hostPartNumber);
+                            }
+                        }
+                    });
+                    
+                    const hostOptionsArray = Array.from(hostOptions.values());
+                    console.log('Final host options:', hostOptionsArray);
+                    
+                    resultsDiv.innerHTML = `
+                        <h2>Results:</h2>
+                        <p>Total relations: ${data.items.length}</p>
+                        <p>Host options found: ${hostOptionsArray.length}</p>
+                        <h3>Host Options:</h3>
+                        <ul>
+                            ${hostOptionsArray.map(option => `<li>${option.label}</li>`).join('')}
+                        </ul>
+                        <h3>Sample Relations:</h3>
+                        <pre>${JSON.stringify(data.items.slice(0, 3), null, 2)}</pre>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = '<p>Invalid response format</p>';
+                    console.error('Invalid response format:', data);
+                }
+            } catch (error) {
+                console.error('API call failed:', error);
+                resultsDiv.innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html> 

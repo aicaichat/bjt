@@ -1,0 +1,1 @@
+<?php require("../wp-load.php"); echo "<h1>Admin URL</h1>"; echo admin_url(); echo "<h1>Login URL</h1>"; echo wp_login_url(); echo "<h1>Is user logged in?</h1>"; echo is_user_logged_in() ? "Yes" : "No"; ?>

@@ -11,7 +11,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # API Base URL
-API_BASE="http://localhost:8080/wp-json/bjt/v1"
+API_BASE="http://localhost/wp-json/bjt/v1"
 
 # Preset JWT Token for User ID 1 (Admin)
 # Replace with a dynamically obtained token in a real scenario
@@ -166,18 +166,19 @@ echo -e "${RED}DEBUG: Call to do_request for Product Lines List completed${NC}" 
 
 # 1.2 Test Create Product Line (POST /product-lines)
 echo -e "${BLUE}1.2 测试创建产品线 (POST /product-lines)${NC}" >&2
-product_line_data_create='{
-    "code": "testpl001",
+# Generate a unique code using timestamp
+UNIQUE_CODE="testpl_$(date +%s)"
+product_line_data='{
+    "code": "'$UNIQUE_CODE'",
     "name_cn": "测试产品线001",
     "name_en": "Test Product Line 001",
-    "description_cn": "这是一个测试产品线的描述。",
-    "description_en": "This is a test product line description.",
-    "image_url": "http://example.com/testpl001.jpg",
-    "status": "publish",
-    "meta": { "key1": "value1" }
+    "description_cn": "这是一个测试产品线",
+    "description_en": "This is a test product line",
+    "image_url": "https://example.com/image.jpg",
+    "status": "publish"
 }'
-# Revert to using do_request for the create call
-do_request "POST" "/product-lines" "$AUTH_HEADER" "$product_line_data_create" "^2" "true"
+# Expect '.success == true' for a successful creation
+do_request "POST" "/product-lines" "$AUTH_HEADER" "$product_line_data" "^2" "true"
 create_response=$DO_REQUEST_RESPONSE # Get response
 
 # Attempt to extract the ID (assuming response is like {"success":true, "data":{"id":123,...}})
@@ -204,7 +205,7 @@ fi
 if [ -n "$PRODUCT_LINE_ID" ]; then
     echo -e "${BLUE}1.4 测试更新产品线 (PUT /product-lines/$PRODUCT_LINE_ID)${NC}" >&2
     product_line_data_update='{
-        "code": "testpl001",
+        "code": "'$UNIQUE_CODE'",
         "name_cn": "测试产品线001 (已更新)",
         "name_en": "Test Product Line 001 (Updated)",
         "description_cn": "这是更新后的描述。",
@@ -316,9 +317,85 @@ else
     echo -e "${YELLOW}跳过删除主机型号测试，因为创建失败或ID未获取.${NC}" >&2
 fi
 
+echo "================================================================================"
+echo "== 3. Cart API 测试"
+echo "================================================================================"
+
+# 3.1 Test Get Cart Contents (GET /cart)
+echo -e "${BLUE}3.1 测试获取购物车内容 (GET /cart)${NC}" >&2
+do_request "GET" "/cart?lang=zh" "$AUTH_HEADER_NO_CONTENT" "" "^2" "true"
+cart_contents_response=$DO_REQUEST_RESPONSE
+
+# 3.2 Test Add Item to Cart (POST /cart/items)
+echo -e "${BLUE}3.2 测试添加商品到购物车 (POST /cart/items)${NC}" >&2
+# Use a test part number that should exist in your database
+cart_item_data='{
+    "product_type": "host",
+    "part_number": "LA-E4S",
+    "quantity": 2
+}'
+do_request "POST" "/cart/items" "$AUTH_HEADER" "$cart_item_data" "^2" "true"
+add_to_cart_response=$DO_REQUEST_RESPONSE
+
+# Extract the cart item ID for subsequent tests
+CART_ITEM_ID=""
+if echo "$add_to_cart_response" | jq -e '.success == true and (.data.item_id != null)' > /dev/null; then
+    CART_ITEM_ID=$(echo "$add_to_cart_response" | jq -r '.data.item_id')
+    echo -e "${GREEN}信息: 添加到购物车的商品ID: $CART_ITEM_ID${NC}" >&2
+else
+    echo -e "${RED}错误: 未能从添加到购物车响应中获取商品ID.${NC}" >&2
+    # Try to extract from cart contents as fallback
+    do_request "GET" "/cart?lang=zh" "$AUTH_HEADER_NO_CONTENT" "" "^2" "true"
+    if echo "$DO_REQUEST_RESPONSE" | jq -e '.success == true and (.data.items != null) and (.data.items | length > 0)' > /dev/null; then
+        CART_ITEM_ID=$(echo "$DO_REQUEST_RESPONSE" | jq -r '.data.items[0].item_id')
+        echo -e "${YELLOW}信息: 从购物车内容中获取到商品ID: $CART_ITEM_ID${NC}" >&2
+    fi
+fi
+
+# 3.3 Test Update Cart Item Quantity (PUT /cart/items/{id})
+if [ -n "$CART_ITEM_ID" ]; then
+    echo -e "${BLUE}3.3 测试更新购物车商品数量 (PUT /cart/items/$CART_ITEM_ID)${NC}" >&2
+    update_cart_item_data='{
+        "quantity": 3
+    }'
+    do_request "PUT" "/cart/items/$CART_ITEM_ID" "$AUTH_HEADER" "$update_cart_item_data" "^2" "true"
+    update_cart_item_response=$DO_REQUEST_RESPONSE
+else
+    echo -e "${YELLOW}跳过更新购物车商品数量测试，因为未获取到商品ID.${NC}" >&2
+fi
+
+# 3.4 Test Delete Cart Item (DELETE /cart/items/{id})
+if [ -n "$CART_ITEM_ID" ]; then
+    echo -e "${BLUE}3.4 测试删除购物车商品 (DELETE /cart/items/$CART_ITEM_ID)${NC}" >&2
+    do_request "DELETE" "/cart/items/$CART_ITEM_ID" "$AUTH_HEADER_NO_CONTENT" "" "^2" "true"
+    delete_cart_item_response=$DO_REQUEST_RESPONSE
+    
+    # Verify deletion by trying to get the cart and check if the item is gone
+    echo -e "${BLUE}验证删除: 检查购物车中是否还有该商品${NC}" >&2
+    do_request "GET" "/cart?lang=zh" "$AUTH_HEADER_NO_CONTENT" "" "^2" "true"
+    verify_delete_response=$DO_REQUEST_RESPONSE
+else
+    echo -e "${YELLOW}跳过删除购物车商品测试，因为未获取到商品ID.${NC}" >&2
+fi
+
+# 3.5 Test Clear Cart (POST /cart/clear)
+echo -e "${BLUE}3.5 测试清空购物车 (POST /cart/clear)${NC}" >&2
+do_request "POST" "/cart/clear" "$AUTH_HEADER" "" "^2" "true"
+clear_cart_response=$DO_REQUEST_RESPONSE
+
+# Verify cart is empty
+echo -e "${BLUE}验证清空: 检查购物车是否为空${NC}" >&2
+do_request "GET" "/cart?lang=zh" "$AUTH_HEADER_NO_CONTENT" "" "^2" "true"
+verify_clear_response=$DO_REQUEST_RESPONSE
+if echo "$verify_clear_response" | jq -e '.items | length == 0' > /dev/null; then
+    echo -e "${GREEN}✓ 购物车已成功清空${NC}" >&2
+else
+    echo -e "${RED}✗ 购物车未成功清空${NC}" >&2
+fi
+
 # Add more tests for other entities (Accessories, etc.) here...
 # echo "================================================================================"
-# echo "== 3. Accessory Models API 测试 (占位)"
+# echo "== 4. Accessory Models API 测试 (占位)"
 # ... existing code ...
 
 # Print summary BEFORE exiting

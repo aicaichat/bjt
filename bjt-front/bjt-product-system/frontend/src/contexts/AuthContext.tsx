@@ -1,276 +1,215 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authApi } from '../services/api';
-import { mockAuthApi } from '../services/mockApi';
-import { LoginApiResponse } from '../services/auth';
-import { mockLogin } from '../services/auth';
-
-// 使用环境变量或配置决定是否使用模拟API
-const USE_MOCK_API = true; // 设置为true强制使用模拟API进行开发
-
-// 根据配置选择使用真实API还是模拟API
-const apiService = {
-  auth: USE_MOCK_API ? mockAuthApi : authApi
-};
+import { authService, User, UserRole, UnitSystem, UserPermissions } from '../api/services/auth.service';
+import { useMockData } from '../config/env';
 
 // 用户角色定义
-export enum UserRole {
-  CUSTOMER = 'customer',
-  PARTNER = 'partner',
-  SALES = 'sales',
-  ADMIN = 'admin',
-  UNKNOWN = 'unknown' // Added for safety
-}
+export { UserRole } from '../api/services/auth.service';
+
+// 单位制类型定义
+export type { UnitSystem } from '../api/services/auth.service';
+
+// 用户权限定义
+export type { UserPermissions } from '../api/services/auth.service';
 
 // 用户信息接口
-export interface UserInfo {
-  id: string;
-  name: string;
-  displayName?: string; // 显示名称（可用于国际化）
-  email: string;
-  username?: string; // 保持向后兼容
-  role: UserRole;
-  avatar?: string;
-  vipLevel?: number; // VIP级别
-  type?: string; // 用户类型，如'vip', 'regular'等
-  region?: string; // 区域
-  token?: string;
-}
+export type { User } from '../api/services/auth.service';
 
-// 将后端角色映射到前端UserRole枚举
-const mapRoleToFrontend = (backendRole: string): UserRole => {
-  const role = backendRole.toLowerCase();
-  if (role === 'administrator') return UserRole.ADMIN;
-  if (role === 'editor') return UserRole.SALES;
-  if (role === 'author') return UserRole.PARTNER;
-  if (role === 'contributor' || role === 'subscriber') return UserRole.CUSTOMER;
-  return UserRole.UNKNOWN;
-};
-
-// 中英文用户名映射
-const userNameMap: Record<string, string> = {
-  '管理员': 'Admin',
-  '用户': 'User',
-  '合作伙伴': 'Partner',
-};
-
+// 认证上下文接口
 interface AuthContextType {
-  user: UserInfo | null;
+  user: User | null;
   loading: boolean;
-  error: string | null;
-  login: (username: string, password: string) => Promise<UserInfo>;
+  login: (username: string, password: string, rememberMe?: boolean) => Promise<void>;
   logout: () => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<UserInfo>;
-  forgotPassword: (email: string) => Promise<void>;
-  resetPassword: (token: string, newPassword: string) => Promise<void>;
-  updateProfile: (data: Partial<UserInfo>) => Promise<void>;
-  getTranslatedUserName: (name: string) => string;
+  updateProfile: (profileData: any) => Promise<void>;
+  refreshToken: () => Promise<void>;
+  isAuthenticated: boolean;
+  hasPermission: (permission: string) => boolean;
+  getUserRole: () => UserRole | null;
+  getPreferredUnit: () => UnitSystem;
+  setPreferredUnit: (unit: UnitSystem) => Promise<void>;
 }
 
 // 创建认证上下文
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// 提供认证上下文的 Provider 组件
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<UserInfo | null>(null);
+// 认证提供者组件属性
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+// 认证提供者组件
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  console.log('[AuthContext] Rendering Provider - Loading:', loading, 'User:', !!user);
+  // 检查用户是否已认证
+  const isAuthenticated = authService.isAuthenticated();
 
-  // 获取翻译后的用户名
-  const getTranslatedUserName = (name: string): string => {
-    return userNameMap[name] || name;
-  };
-
-  // 在组件挂载时尝试自动登录
+  // 初始化认证状态
   useEffect(() => {
-    const checkAuth = async () => {
-      console.log('[AuthContext] useEffect checkAuth starting...');
+    const initializeAuth = async () => {
       try {
-        // 从本地存储获取用户信息
-        const storedUser = localStorage.getItem('authUser');
-        if (storedUser) {
-          console.log('[AuthContext] Found user in localStorage');
-          const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
+        setLoading(true);
+        
+        // 检查本地存储的用户信息
+        const storedUser = authService.getUser();
+        const token = authService.getToken();
+        
+        if (storedUser && token) {
+          console.log('🔍 [AuthProvider] Found stored user and token, attempting to get current user');
+          
+          try {
+            // 尝试获取最新的用户信息
+            const currentUser = await authService.getCurrentUser();
+            setUser(currentUser);
+            console.log('✅ [AuthProvider] Successfully loaded current user:', currentUser.username);
+          } catch (error) {
+            console.warn('⚠️ [AuthProvider] Failed to get current user, using stored user:', error);
+            // 如果获取当前用户失败，使用存储的用户信息
+            setUser(storedUser);
+          }
         } else {
-          console.log('[AuthContext] No user in localStorage');
+          console.log('🔍 [AuthProvider] No stored user or token found');
+          setUser(null);
         }
-      } catch (err) {
-        console.error('[AuthContext] Auto login failed:', err);
+      } catch (error) {
+        console.error('❌ [AuthProvider] Failed to initialize auth:', error);
+        setUser(null);
       } finally {
-        console.log('[AuthContext] useEffect checkAuth finished, setting loading to false.');
         setLoading(false);
       }
     };
 
-    checkAuth();
+    initializeAuth();
   }, []);
 
   // 登录函数
-  const login = async (username: string, password: string): Promise<UserInfo> => {
-    setLoading(true);
-    setError(null);
+  const login = async (username: string, password: string, rememberMe: boolean = false) => {
     try {
-      // 直接硬编码一个模拟响应，完全跳过API调用
-      const response = {
-        success: true,
-        data: {
-          token: 'mock-jwt-token-' + Math.random().toString(36).substring(2, 9),
-          expires_in: 3600,
-          user: {
-            id: 1,
-            name: username,
-            email: username + '@example.com',
-            roles: ['administrator']
-          }
-        }
-      };
+      setLoading(true);
+      console.log('🔐 [AuthProvider] Attempting login for user:', username);
       
-      console.log('模拟登录数据:', response);
+      const response = await authService.login({
+        username,
+        password,
+        remember_me: rememberMe,
+      });
       
-      const userInfo: UserInfo = {
-        id: response.data.user.id.toString(),
-        name: response.data.user.name,
-        displayName: response.data.user.name,
-        email: response.data.user.email,
-        username: response.data.user.name,
-        role: UserRole.ADMIN, // 直接硬编码为管理员角色
-        token: response.data.token,
-        vipLevel: 0,
-        type: 'regular',
-        region: 'CN'
-      };
-      
-      localStorage.setItem('user', JSON.stringify(userInfo));
-      setUser(userInfo);
-      return userInfo;
+      if (response.success && response.data.user) {
+        setUser(response.data.user);
+        console.log('✅ [AuthProvider] Login successful for user:', response.data.user.username);
+      } else {
+        throw new Error('登录响应格式错误');
+      }
     } catch (error) {
-      console.error('Login error:', error);
-      const errorMsg = error instanceof Error ? error.message : 'Login failed. Please try again.';
-      setError(errorMsg);
+      console.error('❌ [AuthProvider] Login failed:', error);
       throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  // 登出函数
+  // 退出登录函数
   const logout = async () => {
-    console.log('[AuthContext] logout called');
-    setLoading(true);
     try {
-      // 模拟 API 调用
-      await new Promise(resolve => setTimeout(resolve, 500));
+      setLoading(true);
+      console.log('🚪 [AuthProvider] Logging out user');
       
-      console.log('[AuthContext] logout success, setting user to null');
-      // 清除本地存储
-      localStorage.removeItem('user');
+      await authService.logout();
       setUser(null);
-    } catch (err: any) {
-      console.log('[AuthContext] logout error:', err);
-      setError(err.message || 'Logout failed. Please try again.');
-      throw err;
-    } finally {
-      console.log('[AuthContext] logout finished, setting loading to false.');
-      setLoading(false);
-    }
-  };
-
-  // 注册函数
-  const register = async (name: string, email: string, password: string): Promise<UserInfo> => {
-    setLoading(true);
-    setError(null);
-    try {
-      // 模拟 API 调用
-      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // 模拟用户数据
-      const mockUser: UserInfo = {
-        id: Date.now().toString(),
-        name,
-        email,
-        username: email, // 设置username保持兼容性
-        role: UserRole.CUSTOMER,
-      };
+      console.log('✅ [AuthProvider] Logout successful');
+    } catch (error) {
+      console.error('❌ [AuthProvider] Logout failed:', error);
+      // 即使退出登录API失败，也要清除本地状态
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 更新用户资料函数
+  const updateProfile = async (profileData: any) => {
+    try {
+      setLoading(true);
+      console.log('📝 [AuthProvider] Updating user profile');
       
-      // 自动登录新注册的用户
-      localStorage.setItem('authUser', JSON.stringify(mockUser));
-      setUser(mockUser);
-      return mockUser;
-    } catch (err: any) {
-      setError(err.message || 'Registration failed. Please try again.');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 忘记密码函数
-  const forgotPassword = async (email: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      // 模拟 API 调用
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      // 通常这里会发送重置密码邮件
-    } catch (err: any) {
-      setError(err.message || 'Password reset request failed. Please try again.');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 重置密码函数
-  const resetPassword = async (token: string, newPassword: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      // 模拟 API 调用
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      // 通常这里会验证令牌并重置密码
-    } catch (err: any) {
-      setError(err.message || 'Password reset failed. Please try again.');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 更新用户资料
-  const updateProfile = async (data: Partial<UserInfo>) => {
-    setLoading(true);
-    setError(null);
-    try {
-      // 模拟 API 调用
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await authService.updateProfile(profileData);
       
-      if (user) {
-        const updatedUser = { ...user, ...data };
-        localStorage.setItem('authUser', JSON.stringify(updatedUser));
-        setUser(updatedUser);
+      if (response.success && response.data) {
+        setUser(response.data);
+        console.log('✅ [AuthProvider] Profile updated successfully');
+      } else {
+        throw new Error('更新用户资料响应格式错误');
       }
-    } catch (err: any) {
-      setError(err.message || 'Profile update failed. Please try again.');
-      throw err;
+    } catch (error) {
+      console.error('❌ [AuthProvider] Update profile failed:', error);
+      throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  // 提供上下文值
+  // 刷新令牌函数
+  const refreshToken = async () => {
+    try {
+      console.log('🔄 [AuthProvider] Refreshing token');
+      
+      await authService.refreshToken();
+      
+      // 刷新令牌后，重新获取用户信息
+      const currentUser = await authService.getCurrentUser();
+      setUser(currentUser);
+      
+      console.log('✅ [AuthProvider] Token refreshed successfully');
+    } catch (error) {
+      console.error('❌ [AuthProvider] Token refresh failed:', error);
+      // 如果刷新失败，清除用户状态
+      setUser(null);
+      throw error;
+    }
+  };
+
+  // 检查用户权限
+  const hasPermission = (permission: string): boolean => {
+    if (!user) return false;
+    return authService.hasPermission(permission);
+  };
+
+  // 获取用户角色
+  const getUserRole = (): UserRole | null => {
+    return user?.role || null;
+  };
+
+  // 获取用户偏好单位制
+  const getPreferredUnit = (): UnitSystem => {
+    return user?.preferred_unit || 'metric';
+  };
+
+  // 设置用户偏好单位制
+  const setPreferredUnit = async (unit: UnitSystem) => {
+    try {
+      await updateProfile({ preferred_unit: unit });
+      console.log('✅ [AuthProvider] Preferred unit updated to:', unit);
+    } catch (error) {
+      console.error('❌ [AuthProvider] Failed to update preferred unit:', error);
+      throw error;
+    }
+  };
+
+  // 上下文值
   const contextValue: AuthContextType = {
     user,
     loading,
-    error,
     login,
     logout,
-    register,
-    forgotPassword,
-    resetPassword,
     updateProfile,
-    getTranslatedUserName,
+    refreshToken,
+    isAuthenticated,
+    hasPermission,
+    getUserRole,
+    getPreferredUnit,
+    setPreferredUnit,
   };
 
   return (
@@ -280,15 +219,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   );
 };
 
-// 自定义钩子，便于在组件中使用认证上下文
-export const useAuth = () => {
+// 使用认证上下文的Hook
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  // console.log('[useAuth] Hook called, context value:', context); // Log context value if needed
   if (context === undefined) {
-    console.error('[AuthContext] useAuth called outside of AuthProvider. Context is undefined.'); // Add error log
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
 
+// 默认导出
 export default AuthContext; 

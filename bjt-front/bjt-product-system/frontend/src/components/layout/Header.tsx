@@ -6,11 +6,10 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage, getI18nLanguage } from '../../contexts/LanguageContext';
 import { useTranslation } from 'react-i18next';
 import { Menu, Dropdown, Button, Space, Divider, Badge } from 'antd';
-import type { MenuProps } from 'antd';
-import { DownOutlined, CaretDownFilled, MenuOutlined, UserOutlined, ShoppingCartOutlined, GlobalOutlined } from '@ant-design/icons';
+import { DownOutlined, MenuOutlined, UserOutlined, ShoppingCartOutlined, GlobalOutlined } from '@ant-design/icons';
 // 导入环境变量
 import { IMAGE_BASE_URL } from '../../config/env';
-import { IMAGES } from '@/config/constants';
+import { IMAGES } from '../../config/constants';
 // 导入安全渲染工具
 import { safeRender, safeRenderProduct } from '../../utils/renderUtils';
 import classNames from 'classnames';
@@ -148,7 +147,7 @@ const Header = ({
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout, getTranslatedUserName } = useAuth();
+  const { user, logout } = useAuth();
   const { language, setLanguage, getI18nLanguage } = useLanguage();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -156,7 +155,7 @@ const Header = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
   // 获取购物车数据
-  const { items: cartItems = [] } = useCart();
+  const { items: cartItems = [], itemCount } = useCart();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -237,7 +236,7 @@ const Header = ({
                   })),
                 })),
               }}
-              onOpenChange={(open) => toggleDropdown(navLabel)}
+              onOpenChange={(open: boolean) => toggleDropdown(navLabel)}
               open={openDropdown === navLabel}
             >
               <a
@@ -251,7 +250,7 @@ const Header = ({
               >
                 <SafeContent>
                   {safeRender(t(navLabel))}
-                  <CaretDownFilled
+                  <DownOutlined
                     className={classNames('dropdown-icon', {
                       open: openDropdown === navLabel,
                     })}
@@ -276,7 +275,7 @@ const Header = ({
                   ),
                 })),
               }}
-              onOpenChange={(open) => toggleDropdown(navLabel)}
+              onOpenChange={(open: boolean) => toggleDropdown(navLabel)}
               open={openDropdown === navLabel}
             >
               <a
@@ -290,7 +289,7 @@ const Header = ({
               >
                 <SafeContent>
                   {safeRender(t(navLabel))}
-                  <CaretDownFilled
+                  <DownOutlined
                     className={classNames('dropdown-icon', {
                       open: openDropdown === navLabel,
                     })}
@@ -321,7 +320,7 @@ const Header = ({
   };
 
   // 用户菜单
-  const userMenuItems: MenuProps['items'] = [
+  const userMenuItems = [
     {
       key: 'profile',
       label: <Link to="/profile">{t('header.profile')}</Link>
@@ -341,7 +340,7 @@ const Header = ({
   ];
 
   // 语言菜单
-  const languageMenuItems: MenuProps['items'] = [
+  const languageMenuItems = [
     {
       key: 'zh',
       label: '中文',
@@ -394,7 +393,7 @@ const Header = ({
           </Dropdown>
 
           <Link to="/cart" className="cart-link">
-            <Badge count={cartItems.length} size="small">
+            <Badge count={itemCount} size="small">
               <Button type="text" icon={<ShoppingCartOutlined />} className="action-button">
                 {safeRender(t('header.cart'))}
               </Button>
@@ -409,7 +408,7 @@ const Header = ({
             >
               <Button type="text" className="user-info">
                 <div className="user-avatar">
-                  {safeRender(getTranslatedUserName(user.name)).charAt(0).toUpperCase()}
+                  {safeRender(user.name).charAt(0).toUpperCase()}
                 </div>
               </Button>
             </Dropdown>

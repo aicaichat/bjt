@@ -577,10 +577,6 @@ class BJT_Admin_Pages {
                     'product_line3' => array(
                         'title' => '产品线3',
                         'page' => $this->menu_slug . '-product-line3'
-                    ),
-                    'product_line4' => array(
-                        'title' => '产品线4',
-                        'page' => $this->menu_slug . '-product-line4'
                     )
                 )
             ),

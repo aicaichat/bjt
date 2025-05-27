@@ -3,10 +3,10 @@ version: '3.8'
 services:
   # Nginx负载均衡
   nginx:
-    image: nginx:1.20
+    image: nginx:alpine
     ports:
-      - "80:80"
-      - "443:443"
+      - "9080:80"
+      - "9443:443"
     volumes:
       - ../../nginx/conf.d:/etc/nginx/conf.d
       - ../../nginx/ssl:/etc/nginx/ssl
@@ -28,7 +28,7 @@ services:
 
   # WordPress应用服务器
   wordpress:
-    image: wordpress:php8.0
+    image: arm64v8/wordpress:latest
     environment:
       WORDPRESS_DB_HOST: mysql
       WORDPRESS_DB_NAME: bjt_product

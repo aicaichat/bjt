@@ -7,10 +7,14 @@ class BJT_Machine_Controller extends BJT_API_Controller {
      * 构造函数
      */
     public function __construct() {
-        parent::__construct(); // Restored
-        error_log("BJT_API_MACHINE: Constructor for BJT_Machine_Controller CALLED. Namespace: " . $this->namespace . ", Resource: " . $this->resource_name); // Restored
+        // Define controller-specific properties first
         global $wpdb;
         $this->table_name = $wpdb->prefix . 'bjt_host_models'; // Changed from bjt_machines
+        $this->resource_name = 'machines'; // Explicitly set resource_name
+        
+        // Call the parent constructor
+        parent::__construct();
+        error_log("BJT_API_MACHINE: Constructor for BJT_Machine_Controller CALLED. Namespace: " . $this->namespace . ", Resource: " . $this->resource_name);
     }
 
     /**
@@ -18,7 +22,7 @@ class BJT_Machine_Controller extends BJT_API_Controller {
      *
      * @var string
      */
-    protected $resource_name = 'machines';
+    public $resource_name = 'machines';
     
     protected $fillable_fields = [
         'product_line_id', 
@@ -42,6 +46,8 @@ class BJT_Machine_Controller extends BJT_API_Controller {
      */
     public function register_routes() {
         error_log("BJT_API_MACHINE: BJT_Machine_Controller::register_routes() CALLED. Namespace: " . $this->namespace . ", Resource: " . $this->resource_name);
+        
+        // Register original 'machines' routes
         register_rest_route($this->namespace, '/' . $this->resource_name, [
             [
                 'methods' => WP_REST_Server::READABLE,
@@ -94,10 +100,57 @@ class BJT_Machine_Controller extends BJT_API_Controller {
             ]
         ]);
         
-        register_rest_route($this->namespace, '/' . $this->resource_name . '/(?P<id>[\d]+)/accessories', [
+        register_rest_route($this->namespace, '/' . $this->resource_name . '/(?P<id>[\\w-]+)/accessories', [
             [
                 'methods' => WP_REST_Server::READABLE,
                 'callback' => [$this, 'get_accessories'],
+                'permission_callback' => [$this, 'check_read_permission'],
+                'args' => [
+                    'id' => [
+                        'description' => 'Host Part Number.',
+                        'required' => true,
+                        'type' => 'string',
+                        'validate_callback' => function($value, $request, $param) {
+                            return is_string($value) && !empty($value);
+                        },
+                        'sanitize_callback' => 'sanitize_text_field'
+                    ],
+                    'lang' => [
+                        'description' => 'Language code for localized data (e.g., zh, en).',
+                        'type' => 'string',
+                        'enum' => ['zh', 'en', 'system'], // 'system' could mean follow WordPress locale
+                        'default' => 'system' 
+                    ],
+                    'region' => [
+                        'description' => 'Region code for pricing/inventory (e.g., CN, US).',
+                        'type' => 'string',
+                        // Add enum if you have a fixed list of regions
+                        'default' => 'CN' 
+                    ]
+                ]
+            ]
+        ]);
+        
+        // Add host-models routes that map to the same controller methods
+        register_rest_route($this->namespace, '/host-models', [
+            [
+                'methods' => WP_REST_Server::READABLE,
+                'callback' => [$this, 'get_items'],
+                'permission_callback' => [$this, 'check_read_permission'],
+                'args' => $this->get_pagination_arg_definitions(),
+            ],
+            [
+                'methods' => WP_REST_Server::CREATABLE,
+                'callback' => [$this, 'create_item'],
+                'permission_callback' => [$this, 'check_write_permission'],
+                'args' => $this->get_item_schema(),
+            ]
+        ]);
+        
+        register_rest_route($this->namespace, '/host-models/(?P<id>[\d]+)', [
+            [
+                'methods' => WP_REST_Server::READABLE,
+                'callback' => [$this, 'get_item'],
                 'permission_callback' => [$this, 'check_read_permission'],
                 'args' => [
                     'id' => [
@@ -106,12 +159,26 @@ class BJT_Machine_Controller extends BJT_API_Controller {
                             return is_numeric($value) && (int)$value > 0;
                         },
                         'sanitize_callback' => 'absint'
-                    ],
-                    'level' => [
-                        'default' => 1,
-                        'validate_callback' => function($value) {
-                            return is_numeric($value) && $value >= 1 && $value <= 5;
-                        }
+                    ]
+                ]
+            ],
+            [
+                'methods' => WP_REST_Server::EDITABLE,
+                'callback' => [$this, 'update_item'],
+                'permission_callback' => [$this, 'check_write_permission'],
+                'args' => $this->get_item_schema()
+            ],
+            [
+                'methods' => WP_REST_Server::DELETABLE,
+                'callback' => [$this, 'delete_item'],
+                'permission_callback' => [$this, 'check_write_permission'],
+                'args' => [
+                    'id' => [
+                        'required' => true,
+                        'validate_callback' => function($value, $request, $param) {
+                            return is_numeric($value) && (int)$value > 0;
+                        },
+                        'sanitize_callback' => 'absint'
                     ]
                 ]
             ]
@@ -268,7 +335,7 @@ class BJT_Machine_Controller extends BJT_API_Controller {
 
         // Format for response (similar to get_item)
         $formatted_item = $this->format_item_for_response($created_item_db);
-
+        
         $response_data = [
             'success' => true,
             'message' => 'Machine created successfully.',
@@ -398,49 +465,205 @@ class BJT_Machine_Controller extends BJT_API_Controller {
     /**
      * 获取机器配件
      */
-    public function get_accessories($request) {
-        $response = new WP_REST_Response();
-        // $machine_id = $request['id'];
-        // $level = isset($request['level']) ? (int) $request['level'] : 1;
+    public function get_accessories(WP_REST_Request $request) {
+        global $wpdb;
+        $host_part_number = $request->get_param('id');
+        $lang = $request->get_param('lang');
+        $region = $request->get_param('region');
         
-        // // 示例数据
-        // $response_data = [
-        //     'success' => true,
-        //     'data' => [
-        //         'items' => [
-        //             [
-        //                 'id' => 'FS-001',
-        //                 'model' => 'Floor Stand',
-        //                 'title' => '地面支架组件',
-        //                 'level' => $level,
-        //                 'image_url' => '/images/shop/FS-001.jpg',
-        //                 'parts' => [
-        //                     [
-        //                         'id' => 'BJT-FS-V2-2024',
-        //                         'part_number' => 'BJT-FS-V2-2024',
-        //                         'title' => '标准地面支架',
-        //                         'specs' => [
-        //                             '电压' => 'N/A',
-        //                             '频率' => 'N/A',
-        //                             '托盘尺寸' => '90×70×120cm',
-        //                             '一托数量' => '16件'
-        //                         ],
-        //                         'spec' => '90×70×120cm, 7.8kg',
-        //                         'spec_imperial' => '35.4×27.6×47.2inch, 17.2lbs'
-        //                     ]
-        //                 ]
-        //             ]
-        //         ],
-        //         'total' => 1
-        //     ]
-        // ];
+        if (empty($host_part_number)) {
+            return $this->error_response('Host part number is required.', 'missing_host_part_number', 400);
+        }
+
+        // Determine effective language
+        if ($lang === 'system') {
+            $current_locale = get_locale(); // e.g., zh_CN, en_US
+            if (strpos($current_locale, 'zh') === 0) {
+                $effective_lang = 'zh';
+            } else {
+                $effective_lang = 'en'; // Default to English if not Chinese
+            }
+        } else {
+            $effective_lang = $lang;
+        }
+
+        $relations_table = $wpdb->prefix . 'bjt_relations';
+        $accessories_table = $wpdb->prefix . 'bjt_accessories';
+        $accessory_models_table = $wpdb->prefix . 'bjt_accessory_models';
+        $prices_table = $wpdb->prefix . 'bjt_prices';
+        $inventory_table = $wpdb->prefix . 'bjt_inventory';
+
+        // Step 1: Find child part numbers (accessories) related to the host_part_number
+        $child_part_numbers_query = $wpdb->prepare(
+            "SELECT DISTINCT child_part_number FROM {$relations_table} WHERE part_number = %s",
+            $host_part_number
+        );
+        $child_part_numbers_results = $wpdb->get_col($child_part_numbers_query);
+
+        error_log("BJT_API_DEBUG: Found child part numbers: " . print_r($child_part_numbers_results, true));
+
+        if (empty($child_part_numbers_results)) {
+            return new WP_REST_Response([
+                'success' => true,
+                'data' => [
+                    'items' => [],
+                    'total' => 0,
+                    'parent_part_number' => $host_part_number
+                ]
+            ], 200);
+        }
+
+        $placeholders = implode(',', array_fill(0, count($child_part_numbers_results), '%s'));
+
+        // Step 2: Fetch accessory details for these part numbers, joining with accessory_models
+        $accessories_query_args = $child_part_numbers_results; // Arguments for prepare
+        $accessories_query = $wpdb->prepare(
+            "SELECT 
+                a.id AS accessory_id, a.part_number, a.model AS accessory_model_code, 
+                a.name_zh AS accessory_name_zh, a.name_en AS accessory_name_en, 
+                a.spec AS accessory_spec, a.spec_imperial AS accessory_spec_imperial,
+                a.image_url AS accessory_image_url, a.status AS accessory_status, a.unit AS accessory_unit,
+                am.id AS model_id, am.title_zh AS model_title_zh, am.title_en AS model_title_en,
+                am.description_zh AS model_description_zh, am.description_en AS model_description_en,
+                am.type AS model_type, am.image1_url AS model_image1_url, am.image2_url AS model_image2_url,
+                am.diagram_pdf AS model_diagram_pdf, am.status AS model_status
+            FROM {$accessories_table} a
+            LEFT JOIN {$accessory_models_table} am ON a.model = am.model
+            WHERE a.part_number IN ($placeholders) AND a.status = 'publish'",
+            $accessories_query_args
+        );
+        $accessories_results = $wpdb->get_results($accessories_query, ARRAY_A);
         
-        $response_data = ['success' => true, 'message' => 'Accessories temporarily unavailable.'];
+        error_log("BJT_API_DEBUG: Found accessories: " . print_r($accessories_results, true));
         
-        $response->set_data($response_data);
-        return $response;
+        if (empty($accessories_results)) {
+             return new WP_REST_Response([
+                'success' => true,
+                'data' => [
+                    'items' => [],
+                    'total' => 0,
+                    'message' => 'No published accessory details found for related part numbers.',
+                    'parent_part_number' => $host_part_number
+                ]
+            ], 200);
+        }
+
+        // Step 3: Fetch prices and inventory for the found accessory part numbers
+        $part_numbers_for_pi = array_column($accessories_results, 'part_number');
+        $prices_data = $this->fetch_batch_data($prices_table, $part_numbers_for_pi, $region, 'part_number', ['price', 'currency', 'unit_price', 'is_discount', 'original_price', 'discount_rate', 'valid_from', 'valid_to']);
+        $inventory_data = $this->fetch_batch_data($inventory_table, $part_numbers_for_pi, $region, 'part_number', ['warehouse_code', 'quantity', 'available_quantity', 'location', 'last_checked_at']);
+
+        // Group accessories by model and format the output
+        $grouped_accessories = [];
+        foreach ($accessories_results as $acc) {
+            $model_code = $acc['accessory_model_code'];
+            if (!isset($grouped_accessories[$model_code])) {
+                $model_title_key = 'model_title_' . $effective_lang;
+                $model_description_key = 'model_description_' . $effective_lang;
+
+                $grouped_accessories[$model_code] = [
+                    'id' => $acc['model_id'] ? (int)$acc['model_id'] : null,
+                    'model_code' => $model_code,
+                    'title' => isset($acc[$model_title_key]) ? $acc[$model_title_key] : ($acc['model_title_zh'] ?: $acc['model_title_en']),
+                    'description' => isset($acc[$model_description_key]) ? $acc[$model_description_key] : ($acc['model_description_zh'] ?: $acc['model_description_en']),
+                    'type' => $acc['model_type'],
+                    'image_url' => $this->get_full_url($acc['model_image1_url']),
+                    'image2_url' => $this->get_full_url($acc['model_image2_url']),
+                    'diagram_pdf' => $this->get_full_url($acc['model_diagram_pdf']),
+                    'status' => $acc['model_status'],
+                    'parts' => []
+                ];
+            }
+
+            $part_number = $acc['part_number'];
+            $accessory_name_key = 'accessory_name_' . $effective_lang;
+            $accessory_spec_key = ($effective_lang === 'en' && !empty($acc['accessory_spec_imperial'])) ? 'accessory_spec_imperial' : 'accessory_spec';
+
+
+            $part_data = [
+                'id' => (int)$acc['accessory_id'],
+                'part_number' => $part_number,
+                'name' => isset($acc[$accessory_name_key]) ? $acc[$accessory_name_key] : ($acc['accessory_name_zh'] ?: $acc['accessory_name_en']),
+                'spec' => $acc[$accessory_spec_key],
+                'spec_imperial' => $acc['accessory_spec_imperial'], // Always include if available
+                'image_url' => $this->get_full_url($acc['accessory_image_url']),
+                'status' => $acc['accessory_status'],
+                'unit' => $acc['accessory_unit'],
+                'pricing' => isset($prices_data[$part_number]) ? $prices_data[$part_number] : [],
+                'inventory' => isset($inventory_data[$part_number]) ? $inventory_data[$part_number] : []
+            ];
+            $grouped_accessories[$model_code]['parts'][] = $part_data;
+        }
+        
+        $final_items = array_values($grouped_accessories); // Convert map to list
+
+        return new WP_REST_Response([
+            'success' => true,
+            'data' => [
+                'items' => $final_items,
+                'total' => count($final_items),
+                'parent_part_number' => $host_part_number
+            ]
+        ], 200);
     }
     
+    /**
+     * Helper function to fetch batch data (prices or inventory)
+     */
+    private function fetch_batch_data($table_name, $part_numbers, $region, $part_number_column = 'part_number', $select_columns = ['*']) {
+        global $wpdb;
+        if (empty($part_numbers)) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($part_numbers), '%s'));
+        $columns_to_select = implode(', ', $select_columns);
+
+        $query_args = $part_numbers;
+        $sql = "SELECT {$part_number_column}, {$columns_to_select} FROM {$table_name} WHERE {$part_number_column} IN ({$placeholders})";
+        
+        if ($region) {
+            $sql .= " AND region = %s";
+            $query_args[] = $region;
+        }
+        
+        $results = $wpdb->get_results($wpdb->prepare($sql, $query_args), ARRAY_A);
+        
+        $data_map = [];
+        foreach ($results as $row) {
+            $pn = $row[$part_number_column];
+            unset($row[$part_number_column]); // Don't repeat part_number inside the data array for it
+            if (!isset($data_map[$pn])) {
+                $data_map[$pn] = [];
+            }
+            // If there can be multiple entries per part_number (e.g. multiple warehouses for inventory)
+            // this will collect them into an array. Otherwise, it will be an array with one item.
+            $data_map[$pn][] = $row;
+        }
+        // If only one entry is expected per part_number (e.g., for prices), simplify the structure.
+        if ($table_name === $wpdb->prefix . 'bjt_prices') { // Assuming prices are unique per part_number+region
+            foreach($data_map as $pn => $entries) {
+                if (count($entries) === 1) {
+                    $data_map[$pn] = $entries[0];
+                } else if (empty($entries)) {
+                     $data_map[$pn] = null; // or some default like [] or null
+                }
+                 // if multiple price entries for same part_number/region, it remains an array
+            }
+        }
+        return $data_map;
+    }
+    
+    /**
+     * Helper function to convert relative URL to full URL if not already full.
+     */
+    protected function get_full_url($url) {
+        if (empty($url) || filter_var($url, FILTER_VALIDATE_URL)) {
+            return $url;
+        }
+        // Assuming $url is a path like /uploads/something.jpg
+        return get_site_url() . $url;
+    }
+
     /**
      * 定义 REST API 端点参数 (Schema)
      */
@@ -453,11 +676,11 @@ class BJT_Machine_Controller extends BJT_API_Controller {
                 'code' => ['type' => 'string', 'required' => true, 'description' => 'Unique model code for the host. Maps to \'model\' in DB.'], 
                 'name_cn' => ['type' => 'string', 'required' => true, 'description' => 'Chinese name/title. Maps to \'title_zh\' in DB.'],
                 'name_en' => ['type' => 'string', 'required' => true, 'description' => 'English name/title. Maps to \'title_en\' in DB.'],
-                'description_zh' => ['type' => 'string', 'description' => 'Optional. Chinese description.'],
-                'description_en' => ['type' => 'string', 'description' => 'Optional. English description.'],
+            'description_zh' => ['type' => 'string', 'description' => 'Optional. Chinese description.'],
+            'description_en' => ['type' => 'string', 'description' => 'Optional. English description.'],
                 'type' => ['type' => 'string', 'description' => 'Optional. Type of the host machine.'],
                 'image1_url' => ['type' => 'string', 'format' => 'uri', 'description' => 'Optional. Primary image URL.'],
-                'image2_url' => ['type' => 'string', 'format' => 'uri', 'description' => 'Optional. Secondary image URL.'],
+            'image2_url' => ['type' => 'string', 'format' => 'uri', 'description' => 'Optional. Secondary image URL.'],
                 'explosion_diagram_pdf' => ['type' => 'string', 'format' => 'uri', 'description' => 'Optional. Explosion diagram PDF URL.'],
                 'status' => ['type' => 'string', 'default' => 'publish', 'enum' => ['publish', 'draft', 'trash']],
                 'sort_order' => ['type' => 'integer', 'default' => 0, 'description' => 'Optional. Sort order.'],
@@ -475,17 +698,17 @@ class BJT_Machine_Controller extends BJT_API_Controller {
         }
         return [
             'id' => (int) $item_db_object->id,
-            'code' => $item_db_object->model,
-            'title_zh' => $item_db_object->title_zh,
-            'title_en' => $item_db_object->title_en,
-            'description_zh' => $item_db_object->description_zh,
-            'description_en' => $item_db_object->description_en,
+            'code' => trim($item_db_object->model, '"\''),
+            'title_zh' => trim($item_db_object->title_zh, '"\''),
+            'title_en' => trim($item_db_object->title_en, '"\''),
+            'description_zh' => trim($item_db_object->description_zh, '"\''),
+            'description_en' => trim($item_db_object->description_en, '"\''),
             'product_line_id' => (int) $item_db_object->product_line_id,
-            'type' => $item_db_object->type,
-            'image_url' => $item_db_object->image1_url, // Corresponds to image1_url in DB
-            'image2_url' => $item_db_object->image2_url,
-            'explosion_diagram_pdf' => $item_db_object->explosion_diagram_pdf,
-            'status' => $item_db_object->status,
+            'type' => trim($item_db_object->type, '"\''),
+            'image_url' => trim($item_db_object->image1_url, '"\''), // Corresponds to image1_url in DB
+            'image2_url' => $item_db_object->image2_url ? trim($item_db_object->image2_url, '"\'') : null,
+            'explosion_diagram_pdf' => $item_db_object->explosion_diagram_pdf ? trim($item_db_object->explosion_diagram_pdf, '"\'') : null,
+            'status' => trim($item_db_object->status, '"\''),
             'sort_order' => isset($item_db_object->sort_order) ? (int) $item_db_object->sort_order : 0,
             'created_at' => $item_db_object->created_at,
             'updated_at' => $item_db_object->updated_at,
@@ -495,7 +718,7 @@ class BJT_Machine_Controller extends BJT_API_Controller {
     protected function map_request_to_db(WP_REST_Request $request) {
         $params = $request->get_params();
         $data = [];
-
+        
         // Map API 'code' to DB 'model'
         if (isset($params['code'])) {
             $data['model'] = sanitize_text_field($params['code']);
@@ -540,7 +763,7 @@ class BJT_Machine_Controller extends BJT_API_Controller {
             }
             // We might want to allow explicit null setting on update later
         }
-        
+
         return $data;
     }
 } 

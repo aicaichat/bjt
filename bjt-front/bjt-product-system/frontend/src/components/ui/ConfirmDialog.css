@@ -1,0 +1,328 @@
+/* 对话框背景遮罩 */
+.dialog-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: dialog-backdrop-enter 0.2s ease-out forwards;
+}
+
+.dialog-backdrop-leaving {
+  animation: dialog-backdrop-exit 0.2s ease-out forwards;
+}
+
+/* 对话框容器 */
+.dialog-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  max-width: 400px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: dialog-enter 0.2s ease-out forwards;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dialog-leaving {
+  animation: dialog-exit 0.2s ease-out forwards;
+}
+
+/* 对话框内容 */
+.dialog-content {
+  padding: 24px;
+}
+
+/* 对话框头部 */
+.dialog-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+/* 图标容器 */
+.dialog-icon-wrapper {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.dialog-icon {
+  width: 24px;
+  height: 24px;
+}
+
+/* 文本内容 */
+.dialog-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.dialog-title {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0 0 8px 0;
+  color: #1f2937;
+}
+
+.dialog-message {
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0;
+  color: #6b7280;
+}
+
+/* 操作按钮区域 */
+.dialog-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+/* 按钮样式 */
+.dialog-button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 80px;
+  justify-content: center;
+}
+
+.dialog-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 取消按钮 */
+.dialog-button-cancel {
+  background: #f9fafb;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.dialog-button-cancel:hover:not(:disabled) {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+/* 确认按钮 - 默认 */
+.dialog-button-confirm {
+  background: #3b82f6;
+  color: white;
+}
+
+.dialog-button-confirm:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+/* 确认按钮 - 危险操作 */
+.dialog-button-danger {
+  background: #ef4444;
+  color: white;
+}
+
+.dialog-button-danger:hover:not(:disabled) {
+  background: #dc2626;
+}
+
+/* 确认按钮 - 警告 */
+.dialog-button-warning {
+  background: #f59e0b;
+  color: white;
+}
+
+.dialog-button-warning:hover:not(:disabled) {
+  background: #d97706;
+}
+
+/* 确认按钮 - 信息 */
+.dialog-button-info {
+  background: #3b82f6;
+  color: white;
+}
+
+.dialog-button-info:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+/* 加载动画 */
+.dialog-loading {
+  width: 16px;
+  height: 16px;
+  animation: dialog-spin 1s linear infinite;
+}
+
+@keyframes dialog-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 不同类型的图标容器样式 */
+.dialog-default .dialog-icon-wrapper {
+  background: #dbeafe;
+  color: #3b82f6;
+}
+
+.dialog-danger .dialog-icon-wrapper {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+.dialog-warning .dialog-icon-wrapper {
+  background: #fef3c7;
+  color: #f59e0b;
+}
+
+.dialog-info .dialog-icon-wrapper {
+  background: #dbeafe;
+  color: #3b82f6;
+}
+
+/* 动画效果 */
+@keyframes dialog-backdrop-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dialog-backdrop-exit {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes dialog-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes dialog-exit {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 640px) {
+  .dialog-backdrop {
+    padding: 16px;
+  }
+  
+  .dialog-container {
+    max-width: none;
+    width: 100%;
+    border-radius: 12px;
+  }
+  
+  .dialog-content {
+    padding: 20px;
+  }
+  
+  .dialog-header {
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  
+  .dialog-icon-wrapper {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .dialog-icon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .dialog-title {
+    font-size: 16px;
+  }
+  
+  .dialog-message {
+    font-size: 13px;
+  }
+  
+  .dialog-actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+  
+  .dialog-button {
+    width: 100%;
+    padding: 12px 20px;
+  }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .dialog-container {
+    background: #1f2937;
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 
+      0 20px 25px -5px rgba(0, 0, 0, 0.3),
+      0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  }
+  
+  .dialog-title {
+    color: #f9fafb;
+  }
+  
+  .dialog-message {
+    color: #d1d5db;
+  }
+  
+  .dialog-button-cancel {
+    background: #374151;
+    color: #d1d5db;
+    border-color: #4b5563;
+  }
+  
+  .dialog-button-cancel:hover:not(:disabled) {
+    background: #4b5563;
+    border-color: #6b7280;
+  }
+} 

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Image Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .image-test {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .image-item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .image-item img {
+            max-width: 100%;
+            height: 150px;
+            object-fit: contain;
+            border: 1px solid #eee;
+            margin-bottom: 10px;
+        }
+        .error {
+            color: red;
+            font-size: 12px;
+        }
+        .success {
+            color: green;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>API Image URL Test</h1>
+        <p>Testing image URLs from the mock API data:</p>
+        
+        <div class="image-test">
+            <div class="image-item">
+                <h3>Pillow Shape</h3>
+                <img id="pillow-img" src="/images/shop/MFB25.jpg" alt="Pillow Shape">
+                <div id="pillow-status"></div>
+                <p>URL: /images/shop/MFB25.jpg</p>
+            </div>
+            
+            <div class="image-item">
+                <h3>Bubble Shape</h3>
+                <img id="bubble-img" src="/images/shop/MEX.JPG" alt="Bubble Shape">
+                <div id="bubble-status"></div>
+                <p>URL: /images/shop/MEX.JPG</p>
+            </div>
+            
+            <div class="image-item">
+                <h3>Tube Shape</h3>
+                <img id="tube-img" src="/images/shop/MFC.jpg" alt="Tube Shape">
+                <div id="tube-status"></div>
+                <p>URL: /images/shop/MFC.jpg</p>
+            </div>
+            
+            <div class="image-item">
+                <h3>Pillow Dimensions</h3>
+                <img id="pillow-dim-img" src="/images/dimensions/pillow-dimensions.jpg" alt="Pillow Dimensions">
+                <div id="pillow-dim-status"></div>
+                <p>URL: /images/dimensions/pillow-dimensions.jpg</p>
+            </div>
+            
+            <div class="image-item">
+                <h3>Bubble Dimensions</h3>
+                <img id="bubble-dim-img" src="/images/dimensions/bubble-dimensions.jpg" alt="Bubble Dimensions">
+                <div id="bubble-dim-status"></div>
+                <p>URL: /images/dimensions/bubble-dimensions.jpg</p>
+            </div>
+            
+            <div class="image-item">
+                <h3>Tube Dimensions</h3>
+                <img id="tube-dim-img" src="/images/dimensions/tube-dimensions.jpg" alt="Tube Dimensions">
+                <div id="tube-dim-status"></div>
+                <p>URL: /images/dimensions/tube-dimensions.jpg</p>
+            </div>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <h2>Console Output</h2>
+            <div id="console-output" style="background: #f0f0f0; padding: 10px; border-radius: 4px; font-family: monospace; white-space: pre-wrap;"></div>
+        </div>
+    </div>
+
+    <script>
+        const consoleOutput = document.getElementById('console-output');
+        
+        function log(message) {
+            consoleOutput.textContent += new Date().toLocaleTimeString() + ': ' + message + '\n';
+            console.log(message);
+        }
+        
+        // Test each image
+        const images = [
+            { id: 'pillow-img', statusId: 'pillow-status', name: 'Pillow Shape' },
+            { id: 'bubble-img', statusId: 'bubble-status', name: 'Bubble Shape' },
+            { id: 'tube-img', statusId: 'tube-status', name: 'Tube Shape' },
+            { id: 'pillow-dim-img', statusId: 'pillow-dim-status', name: 'Pillow Dimensions' },
+            { id: 'bubble-dim-img', statusId: 'bubble-dim-status', name: 'Bubble Dimensions' },
+            { id: 'tube-dim-img', statusId: 'tube-dim-status', name: 'Tube Dimensions' }
+        ];
+        
+        images.forEach(({ id, statusId, name }) => {
+            const img = document.getElementById(id);
+            const status = document.getElementById(statusId);
+            
+            img.onload = function() {
+                status.innerHTML = '<span class="success">✓ Loaded successfully</span>';
+                log(`${name}: Image loaded successfully`);
+            };
+            
+            img.onerror = function() {
+                status.innerHTML = '<span class="error">✗ Failed to load</span>';
+                log(`${name}: Failed to load image from ${img.src}`);
+            };
+        });
+        
+        log('Starting image load test...');
+    </script>
+</body>
+</html> 

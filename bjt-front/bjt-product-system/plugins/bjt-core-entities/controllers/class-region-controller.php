@@ -3,7 +3,7 @@
  * 区域控制器
  */
 class BJT_Region_Controller extends BJT_API_Controller {
-    protected $resource_name = 'regions';
+    public $resource_name = 'regions';
     protected $table_name;
 
     // Database fields

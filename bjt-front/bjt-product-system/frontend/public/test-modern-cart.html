@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>现代化购物车交互测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1a57a5 0%, #2563eb 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        
+        .header p {
+            margin: 0;
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .feature-section {
+            margin: 30px 0;
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 4px solid #10b981;
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+        }
+        
+        .feature-title {
+            font-weight: 600;
+            color: #065f46;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .feature-title::before {
+            content: "✨";
+            margin-right: 10px;
+            font-size: 1.5rem;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin: 12px 0;
+            color: #047857;
+            font-size: 1.1rem;
+        }
+        
+        .feature-item::before {
+            content: "🚀";
+            margin-right: 12px;
+            font-size: 1.2rem;
+        }
+        
+        .demo-section {
+            margin: 40px 0;
+            padding: 30px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 2px solid #e2e8f0;
+        }
+        
+        .demo-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .demo-title::before {
+            content: "🎮";
+            margin-right: 10px;
+            font-size: 1.5rem;
+        }
+        
+        .demo-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        
+        .demo-button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .demo-button.success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .demo-button.success:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+        
+        .demo-button.error {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .demo-button.error:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+        
+        .demo-button.warning {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .demo-button.warning:hover {
+            background: #d97706;
+            transform: translateY(-2px);
+        }
+        
+        .demo-button.info {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .demo-button.info:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+        
+        .test-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+        
+        .test-link:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .comparison-section {
+            margin: 40px 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .comparison-card {
+            padding: 25px;
+            border-radius: 12px;
+            border: 2px solid;
+        }
+        
+        .comparison-card.old {
+            border-color: #ef4444;
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        }
+        
+        .comparison-card.new {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        }
+        
+        .comparison-title {
+            font-weight: 600;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .comparison-card.old .comparison-title {
+            color: #dc2626;
+        }
+        
+        .comparison-card.new .comparison-title {
+            color: #059669;
+        }
+        
+        .code-block {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+        
+        .highlight {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #f59e0b;
+            margin: 30px 0;
+        }
+        
+        .highlight-title {
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .comparison-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .demo-buttons {
+                flex-direction: column;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+        
+        /* Toast 通知样式预览 */
+        .toast-preview {
+            position: relative;
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-left: 4px solid;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .toast-preview.success {
+            border-left-color: #10b981;
+        }
+        
+        .toast-preview.error {
+            border-left-color: #ef4444;
+        }
+        
+        .toast-preview.warning {
+            border-left-color: #f59e0b;
+        }
+        
+        .toast-preview.info {
+            border-left-color: #3b82f6;
+        }
+        
+        .toast-icon {
+            font-size: 1.2rem;
+        }
+        
+        .toast-content {
+            flex: 1;
+        }
+        
+        .toast-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .toast-message {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛒 现代化购物车交互</h1>
+            <p>耗材页面交互体验升级完成</p>
+        </div>
+        
+        <div class="content">
+            <div class="feature-section">
+                <div class="feature-title">新增现代化功能</div>
+                <ul class="feature-list">
+                    <li class="feature-item">Toast 通知系统替代传统 alert 弹窗</li>
+                    <li class="feature-item">购物车动画效果增强用户体验</li>
+                    <li class="feature-item">智能错误处理和用户友好提示</li>
+                    <li class="feature-item">视觉反馈和交互动画</li>
+                    <li class="feature-item">响应式设计和无障碍支持</li>
+                </ul>
+            </div>
+            
+            <div class="demo-section">
+                <div class="demo-title">Toast 通知效果预览</div>
+                
+                <div class="toast-preview success">
+                    <div class="toast-icon">✅</div>
+                    <div class="toast-content">
+                        <div class="toast-title">添加成功</div>
+                        <div class="toast-message">商品已成功添加到购物车</div>
+                    </div>
+                </div>
+                
+                <div class="toast-preview error">
+                    <div class="toast-icon">❌</div>
+                    <div class="toast-content">
+                        <div class="toast-title">添加失败</div>
+                        <div class="toast-message">产品料号信息缺失，请刷新页面重试</div>
+                    </div>
+                </div>
+                
+                <div class="toast-preview warning">
+                    <div class="toast-icon">⚠️</div>
+                    <div class="toast-content">
+                        <div class="toast-title">请选择数量</div>
+                        <div class="toast-message">请先选择商品数量再添加到购物车</div>
+                    </div>
+                </div>
+                
+                <div class="toast-preview info">
+                    <div class="toast-icon">ℹ️</div>
+                    <div class="toast-content">
+                        <div class="toast-title">提示信息</div>
+                        <div class="toast-message">这是一条信息提示</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="comparison-section">
+                <div class="comparison-card old">
+                    <div class="comparison-title">❌ 旧版交互方式</div>
+                    <div class="code-block">
+// 使用传统 alert 弹窗
+message.warning('请选择数量');
+message.error('添加失败');
+message.success('添加成功');
+
+// 问题：
+// - 阻塞用户操作
+// - 样式不统一
+// - 用户体验差
+// - 无法自定义
+                    </div>
+                </div>
+                
+                <div class="comparison-card new">
+                    <div class="comparison-title">✅ 新版现代化交互</div>
+                    <div class="code-block">
+// 使用现代化 Toast 通知
+warning('请选择数量');
+showErrorToast('添加失败', '详细错误信息');
+success('商品已成功添加到购物车');
+
+// 优势：
+// - 非阻塞式通知
+// - 统一设计风格
+// - 更好的用户体验
+// - 支持动画效果
+                    </div>
+                </div>
+            </div>
+            
+            <div class="highlight">
+                <div class="highlight-title">🎯 核心改进点</div>
+                <p><strong>1. 用户体验提升：</strong>从阻塞式弹窗改为非阻塞式Toast通知</p>
+                <p><strong>2. 视觉一致性：</strong>与整个应用的设计语言保持一致</p>
+                <p><strong>3. 交互反馈：</strong>添加购物车动画，提供即时视觉反馈</p>
+                <p><strong>4. 错误处理：</strong>智能错误分类和用户友好的错误提示</p>
+                <p><strong>5. 性能优化：</strong>减少DOM阻塞，提高页面响应速度</p>
+            </div>
+            
+            <div class="demo-section">
+                <div class="demo-title">立即体验</div>
+                <p>点击下面的链接测试新的购物车交互功能：</p>
+                <a href="/bjt/consumables" class="test-link">
+                    🛒 打开耗材页面体验
+                </a>
+            </div>
+            
+            <div class="feature-section">
+                <div class="feature-title">技术实现细节</div>
+                <ul class="feature-list">
+                    <li class="feature-item">集成 useToastNotifications Hook</li>
+                    <li class="feature-item">购物车动画使用 CartAnimation 组件</li>
+                    <li class="feature-item">智能错误分类和处理</li>
+                    <li class="feature-item">按钮元素引用传递支持动画</li>
+                    <li class="feature-item">移除传统 message API 依赖</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎉 现代化购物车交互测试页面加载完成');
+            console.log('🚀 主要改进：');
+            console.log('   ✅ Toast 通知替代 alert 弹窗');
+            console.log('   ✅ 购物车动画效果');
+            console.log('   ✅ 智能错误处理');
+            console.log('   ✅ 现代化用户体验');
+        });
+    </script>
+</body>
+</html> 

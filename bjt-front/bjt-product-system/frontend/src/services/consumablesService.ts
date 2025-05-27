@@ -1,7 +1,7 @@
 import HttpServiceInstance, { ApiResponse } from './apiService';
 import { ASSETS } from '../config/appConfig';
 import { getMockConsumables as getBaseMockConsumables, getMockConsumableById as getBaseMockConsumableById } from './mocks/consumables.mocks';
-import { Consumable as CentralConsumable, ConsumablePriceTier as CentralConsumablePriceTier, ConsumableInventory as CentralConsumableInventory, ConsumableFilterOptions as CentralConsumableFilterOptions } from '../types/consumables';
+import { Consumable as CentralConsumable, ConsumablePriceTier as CentralConsumablePriceTier, ConsumableInventoryDetail as CentralConsumableInventory, ConsumableFilterOptions as CentralConsumableFilterOptions } from '../types/consumables';
 import { delay } from '../utils/delay';
 
 // 耗材接口定义 (LOCAL TO THIS SERVICE)
@@ -10,6 +10,14 @@ export interface ConsumableProduct {
   name: string;
   code: string;
   model: string;
+  model_imperial?: string | null;
+  spec?: string | null;
+  spec_imperial?: string | null;
+  bubble_diameter_met?: number | null;
+  bubble_diameter_imp?: number | null;
+  pcs_per_box?: number | null;
+  brand?: string | null;
+  part_number?: string | null;
   image_url: string;
   specs: {
     material: string;
@@ -66,7 +74,9 @@ export interface ConsumableListData {
 export interface FilterOptionItem {
   id: string;
   name: string;
+  name_en?: string;
   image_url?: string;
+  image_url2?: string;
 }
 
 export interface FilterOptionsType {
@@ -155,17 +165,17 @@ const mockGetConsumables_local = async (filters: ConsumableFilters): Promise<Con
   // This local filtering can be reduced if getBaseMockConsumables handles more filters
   if (filters.material && filters.material !== 'all') {
     sourceConsumables = sourceConsumables.filter(product => 
-      product.material?.trim().toLowerCase() === filters.material!.trim().toLowerCase()
+      (product.specs?.material || '').trim().toLowerCase() === filters.material!.trim().toLowerCase()
     );
   }
   if (filters.shape && filters.shape !== 'all') {
     sourceConsumables = sourceConsumables.filter(product => 
-      product.bag_type?.trim().toLowerCase() === filters.shape!.trim().toLowerCase() 
+      (product.specs?.shape || '').trim().toLowerCase() === filters.shape!.trim().toLowerCase() 
     );
   }
   if (filters.model && filters.model !== 'all') {
     sourceConsumables = sourceConsumables.filter(product =>
-      product.app_model?.toLowerCase().split(',').map((m: string) => m.trim()).includes(filters.model!.toLowerCase())
+      (product.specs?.compatibility || '').toLowerCase().split(',').map((m: string) => m.trim()).includes(filters.model!.toLowerCase())
     );
   }
   // Add other local filters (thickness, weight, width, length) if not handled by base mock
@@ -180,27 +190,26 @@ const mockGetConsumables_local = async (filters: ConsumableFilters): Promise<Con
       name: name,
       code: product.part_number,
       model: productModelString,
+      model_imperial: product.model_imperial || '',
+      spec: product.spec || '',
+      spec_imperial: product.spec_imperial || '',
+      bubble_diameter_met: (product as any).bubble_diameter_met || null,
+      bubble_diameter_imp: (product as any).bubble_diameter_imp || null,
+      pcs_per_box: product.pcs_per_box || null,
+      brand: product.brand || '',
+      part_number: product.part_number || '',
       image_url: ASSETS.getUrl(product.image_url || '/images/placeholder.jpg'), 
       specs: {
-        material: product.material || '',
-        shape: product.bag_type || '',
-        thickness: product.thickness_met ? `${product.thickness_met}um` : (product.thickness_imp ? `${product.thickness_imp}mil` : undefined),
+        material: product.specs?.material || '',
+        shape: product.specs?.shape || '',
+        thickness: product.specs?.thickness || '',
         weight: undefined, // Placeholder, CentralConsumable doesn't have direct weight field for specs
-        width: product.width_met ? `${product.width_met}cm` : (product.width_imp ? `${product.width_imp}inch` : ''),
-        length: product.length_met ? `${product.length_met}cm` : (product.length_imp ? `${product.length_imp}inch` : ''),
-        rollLength: product.total_length_met ? `${product.total_length_met}m` : (product.total_length_imp ? `${product.total_length_imp}ft` : undefined),
-        compatibility: product.app_model || '',
+        width: product.specs?.width || '',
+        length: product.specs?.length || '',
+        rollLength: product.specs?.rollLength || '',
+        compatibility: product.specs?.compatibility || '',
       },
-      pricing: product.prices.map((p: CentralConsumablePriceTier) => ({
-        range: `${p.tiers[0].min_quantity}${p.tiers[0].max_quantity ? '-'+p.tiers[0].max_quantity : '+'}`,
-        price: p.tiers[0].price,
-        regionalPrices: { // This mapping is very specific, adjust if CentralConsumablePriceTier changes
-          eu: p.region === 'EU' ? p.tiers[0].price : 0,
-          na: p.region === 'US' ? p.tiers[0].price : 0,
-          au: p.region === 'AU' ? p.tiers[0].price : 0,
-          cn: p.region === 'CN' ? p.tiers[0].price : 0,
-        }
-      })),
+      pricing: product.pricing || [],
       inventory: product.inventory.reduce((acc: Record<string, number>, inv: CentralConsumableInventory) => {
         acc[inv.region] = inv.quantity;
         return acc;
@@ -265,27 +274,26 @@ const transformCentralConsumableToLocal = (product?: CentralConsumable): Consuma
       name: name,
       code: product.part_number,
       model: productModelString,
+      model_imperial: product.model_imperial || '',
+      spec: product.spec || '',
+      spec_imperial: product.spec_imperial || '',
+      bubble_diameter_met: (product as any).bubble_diameter_met || null,
+      bubble_diameter_imp: (product as any).bubble_diameter_imp || null,
+      pcs_per_box: product.pcs_per_box || null,
+      brand: product.brand || '',
+      part_number: product.part_number || '',
       image_url: ASSETS.getUrl(product.image_url || '/images/placeholder.jpg'),
       specs: {
-        material: product.material || '',
-        shape: product.bag_type || '',
-        thickness: product.thickness_met ? `${product.thickness_met}um` : (product.thickness_imp ? `${product.thickness_imp}mil` : undefined),
+        material: product.specs?.material || '',
+        shape: product.specs?.shape || '',
+        thickness: product.specs?.thickness || '',
         weight: undefined,
-        width: product.width_met ? `${product.width_met}cm` : (product.width_imp ? `${product.width_imp}inch` : ''),
-        length: product.length_met ? `${product.length_met}cm` : (product.length_imp ? `${product.length_imp}inch` : ''),
-        rollLength: product.total_length_met ? `${product.total_length_met}m` : (product.total_length_imp ? `${product.total_length_imp}ft` : undefined),
-        compatibility: product.app_model || '',
+        width: product.specs?.width || '',
+        length: product.specs?.length || '',
+        rollLength: product.specs?.rollLength || '',
+        compatibility: product.specs?.compatibility || '',
       },
-      pricing: product.prices.map((p: CentralConsumablePriceTier) => ({
-        range: `${p.tiers[0].min_quantity}${p.tiers[0].max_quantity ? '-'+p.tiers[0].max_quantity : '+'}`,
-        price: p.tiers[0].price,
-        regionalPrices: {
-          eu: p.region === 'EU' ? p.tiers[0].price : 0,
-          na: p.region === 'US' ? p.tiers[0].price : 0,
-          au: p.region === 'AU' ? p.tiers[0].price : 0,
-          cn: p.region === 'CN' ? p.tiers[0].price : 0,
-        }
-      })),
+      pricing: product.pricing || [],
       inventory: product.inventory.reduce((acc: Record<string, number>, inv: CentralConsumableInventory) => {
         acc[inv.region] = inv.quantity;
         return acc;

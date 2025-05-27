@@ -3,7 +3,7 @@
  * 价格控制器
  */
 class BJT_Price_Controller extends BJT_API_Controller {
-    protected $resource_name = 'prices';
+    public $resource_name = 'prices';
     protected $table_name;
 
     // Database fields
@@ -29,6 +29,7 @@ class BJT_Price_Controller extends BJT_API_Controller {
         $this->table_name = $wpdb->prefix . 'bjt_prices';
         $this->resource_name = 'prices';
         $this->rest_base = $this->resource_name;
+        $this->schema = null; // Initialize the schema property
         parent::__construct();
         error_log("BJT_Price_Controller initialized.");
     }
@@ -89,6 +90,49 @@ class BJT_Price_Controller extends BJT_API_Controller {
                 ],
             ],
             'schema' => [$this, 'get_public_item_schema'],
+        ]);
+        
+        // Batch prices endpoint for multiple items
+        register_rest_route($this->namespace, '/' . $this->resource_name . '/batch', [
+            [
+                'methods' => WP_REST_Server::CREATABLE,
+                'callback' => [$this, 'get_batch_prices'],
+                'permission_callback' => [$this, 'check_read_permission'],
+                'args' => [
+                    'items' => [
+                        'description' => __('List of items to get prices for.'),
+                        'type' => 'array',
+                        'required' => true,
+                        'items' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'item_type' => [
+                                    'description' => __('Type of item (machine, consumable, spare_part, accessory).'),
+                                    'type' => 'string',
+                                    'required' => true,
+                                    'enum' => ['machine', 'consumable', 'spare_part', 'accessory'],
+                                ],
+                                'item_id' => [
+                                    'description' => __('ID or part number of the item.'),
+                                    'type' => ['string', 'integer'],
+                                    'required' => true,
+                                ],
+                                'quantity' => [
+                                    'description' => __('Quantity for pricing calculation.'),
+                                    'type' => 'integer',
+                                    'default' => 1,
+                                    'minimum' => 1,
+                                ],
+                            ],
+                        ],
+                    ],
+                    'region' => [
+                        'description' => __('Region code for price lookup.'),
+                        'type' => 'string',
+                        'default' => 'CN',
+                    ],
+                ],
+            ],
         ]);
     }
 
@@ -465,6 +509,162 @@ class BJT_Price_Controller extends BJT_API_Controller {
             'collection' => array(
                 'href' => rest_url( $base ),
             ),
+        );
+    }
+
+    /**
+     * Get batch prices for multiple items
+     */
+    public function get_batch_prices($request) {
+        $params = $request->get_json_params();
+        if (null === $params) {
+            $params = $request->get_body_params();
+        }
+        
+        $items = isset($params['items']) ? $params['items'] : [];
+        $region = isset($params['region']) ? $params['region'] : 'CN';
+        
+        if (empty($items)) {
+            return $this->format_error('No items provided', 400);
+        }
+        
+        $results = [];
+        
+        foreach ($items as $item) {
+            if (!isset($item['item_type']) || !isset($item['item_id'])) {
+                continue;
+            }
+            
+            $item_type = $item['item_type'];
+            $item_id = $item['item_id'];
+            $quantity = isset($item['quantity']) ? intval($item['quantity']) : 1;
+            
+            // Get price from the appropriate table based on item type
+            $price_data = $this->get_price_by_type_and_id($item_type, $item_id, $region, $quantity);
+            
+            $results[] = [
+                'item_type' => $item_type,
+                'item_id' => $item_id,
+                'quantity' => $quantity,
+                'price' => $price_data['price'],
+                'currency' => $price_data['currency'],
+                'is_discount' => $price_data['is_discount'],
+                'original_price' => $price_data['original_price'],
+            ];
+        }
+        
+        return $this->format_response([
+            'items' => $results,
+            'region' => $region
+        ]);
+    }
+    
+    /**
+     * Get price by item type and ID
+     */
+    protected function get_price_by_type_and_id($item_type, $item_id, $region, $quantity = 1) {
+        global $wpdb;
+        
+        // Default response
+        $result = [
+            'price' => 0,
+            'currency' => 'CNY',
+            'is_discount' => false,
+            'original_price' => 0,
+        ];
+        
+        // Convert region to currency if needed
+        $currency = $region === 'CN' ? 'CNY' : ($region === 'US' ? 'USD' : ($region === 'EU' ? 'EUR' : 'CNY'));
+        
+        // Simple implementation - in real scenario would query database
+        switch ($item_type) {
+            case 'machine':
+                // Sample pricing for machines
+                $prices = [
+                    'MEY-001' => ['price' => 12800, 'currency' => 'CNY'],
+                    'LA-E4S' => ['price' => 15000, 'currency' => 'CNY'],
+                    'LA-E5P' => ['price' => 25000, 'currency' => 'CNY'],
+                ];
+                
+                if (is_numeric($item_id)) {
+                    // ID-based lookup (fallback)
+                    $result['price'] = 10000 + ($item_id * 1000);
+                } else if (isset($prices[$item_id])) {
+                    // Part number lookup
+                    $result['price'] = $prices[$item_id]['price'];
+                    $result['currency'] = $prices[$item_id]['currency'];
+                }
+                break;
+                
+            case 'consumable':
+                // For consumables, check quantity-based pricing
+                $result['price'] = is_numeric($item_id) ? 25 * $quantity : 30 * $quantity;
+                // Discount for larger quantities
+                if ($quantity > 10) {
+                    $result['is_discount'] = true;
+                    $result['original_price'] = $result['price'];
+                    $result['price'] = $result['price'] * 0.9; // 10% discount
+                }
+                break;
+                
+            case 'spare_part':
+                $result['price'] = is_numeric($item_id) ? 50 * $quantity : 45 * $quantity;
+                break;
+                
+            case 'accessory':
+                $result['price'] = is_numeric($item_id) ? 100 * $quantity : 120 * $quantity;
+                break;
+        }
+        
+        // Currency conversion if needed (simplified)
+        if ($currency !== 'CNY') {
+            $result['currency'] = $currency;
+            if ($currency === 'USD') {
+                $result['price'] = round($result['price'] / 7, 2);
+                if ($result['original_price'] > 0) {
+                    $result['original_price'] = round($result['original_price'] / 7, 2);
+                }
+            } else if ($currency === 'EUR') {
+                $result['price'] = round($result['price'] / 8, 2);
+                if ($result['original_price'] > 0) {
+                    $result['original_price'] = round($result['original_price'] / 8, 2);
+                }
+            }
+        }
+        
+        return $result;
+    }
+
+    /**
+     * Format a successful response
+     */
+    protected function format_response($data = null, $message = '', $success = true, $code = 200) {
+        $response = [
+            'success' => $success,
+        ];
+        
+        if ($data !== null) {
+            $response['data'] = $data;
+        }
+        
+        if (!empty($message)) {
+            $response['message'] = $message;
+        }
+        
+        return $response;
+    }
+    
+    /**
+     * Format an error response
+     */
+    protected function format_error($message, $code = 400, $data = null) {
+        return new WP_Error(
+            'bjt_api_error',
+            $message,
+            [
+                'status' => $code,
+                'data' => $data
+            ]
         );
     }
 } 

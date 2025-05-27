@@ -74,7 +74,7 @@ export const getMockConsumables = (options: {
   if (filters.app_model && String(filters.app_model).toLowerCase() !== 'all') {
     const selectedModel = String(filters.app_model).trim().toLowerCase();
     filteredConsumables = filteredConsumables.filter(c => 
-      c.app_model?.toLowerCase().split(',').map(am => am.trim()).includes(selectedModel)
+      c.app_model?.toLowerCase().replace(/"/g, '').split(',').map(am => am.trim()).includes(selectedModel)
     );
   }
   if (filters.bag_type && String(filters.bag_type).toLowerCase() !== 'all') {

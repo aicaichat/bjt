@@ -48,4 +48,6 @@ export interface AccessoryProduct {
   pallet_gross_weight_imperial: number;
   prices: Prices;
   inventory: Inventory;
+  required_parts?: string | null;
+  required_quantity?: string | null;
 } 

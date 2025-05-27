@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './Products.css';
 import { productApi, cartApi, Product, CartItem } from '../../services/api';
 import { mockProductApi, mockCartApi } from '../../services/mockApi';
 import { safeToLocaleString } from '../../utils/priceUtils';
+import { useAuth } from '../../contexts/AuthContext';
+import productLineService, { ProductLine } from '../../api/services/product-line.service';
+import { Loading, Error } from '../../components/common';
+import { useTranslation } from 'react-i18next';
+import { ROUTES } from '../../config/routes';
 
 // 临时占位图片路径
 const placeholderImage = 'https://via.placeholder.com/100x100?text=Product';
@@ -123,7 +128,10 @@ const filterOptions = {
 };
 
 const Products: React.FC = () => {
-  // 状态定义
+  const { t, i18n } = useTranslation('products');
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [products, setProducts] = useState<typeof mockProducts>([]);
   const [selectedType, setSelectedType] = useState<string>('全部类型');
   const [selectedCapacity, setSelectedCapacity] = useState<string>('全部产能');
@@ -133,17 +141,53 @@ const Products: React.FC = () => {
   const [userRole, setUserRole] = useState<string>('customer');
   const [activeTab, setActiveTab] = useState<string>('all');
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<string>('');
   const [selectedVoltage, setSelectedVoltage] = useState<string>('220');
   const [cartItems, setCartItems] = useState<EnhancedCartItem[]>([]);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [showCartModal, setShowCartModal] = useState<boolean>(false);
   const [showClearConfirm, setShowClearConfirm] = useState<boolean>(false);
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [itemsPerPage, setItemsPerPage] = useState<number>(5);
-  const [totalPages, setTotalPages] = useState<number>(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [productLines, setProductLines] = useState<ProductLine[]>([]);
+
+  // 当前语言
+  const currentLanguage = i18n.language.startsWith('zh') ? 'zh' : 'en';
+  
+  // 检查用户是否已登录
+  useEffect(() => {
+    const isPublicPage = true; // Products页面是公开页面
+    if (!user && !isPublicPage) {
+      navigate('/login', { state: { from: location } });
+    }
+  }, [user, navigate, location]);
+
+  // 获取产品线数据
+  useEffect(() => {
+    const fetchProductLines = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const response = await productLineService.getProductLines({
+          status: 'publish',
+          per_page: 100,
+          page: currentPage
+        });
+        
+        setProductLines(response.items);
+        setTotalPages(response.total_pages);
+      } catch (error: any) {
+        console.error('Failed to fetch product lines:', error);
+        setError(t('errors.failedToLoadProducts'));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProductLines();
+  }, [i18n.language, currentPage, t]);
 
   // 加载产品数据
   useEffect(() => {
@@ -364,13 +408,8 @@ const Products: React.FC = () => {
   };
 
   // Handle page change
-  const handlePageChange = (pageNumber: number) => {
-    setCurrentPage(pageNumber);
-    // Scroll to top of product list
-    const productList = document.querySelector('.product-list');
-    if (productList) {
-      productList.scrollIntoView({ behavior: 'smooth' });
-    }
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   // Get current products for displayed page
@@ -380,25 +419,26 @@ const Products: React.FC = () => {
     return products.slice(indexOfFirstItem, indexOfLastItem);
   };
 
-  // 加载中状态显示
+  // 处理产品链接点击事件
+  const handleProductLinkClick = (e: React.MouseEvent, path: string) => {
+    if (!user) {
+      e.preventDefault();
+      navigate('/login', { state: { from: path } });
+    }
+  };
+
+  // 根据当前语言获取标题
+  const getTitle = (line: ProductLine) => currentLanguage === 'en' ? line.title_en : line.title_zh;
+  
+  // 根据当前语言获取描述
+  const getDescription = (line: ProductLine) => currentLanguage === 'en' ? line.description_en : line.description_zh;
+
   if (loading) {
-    return (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
-        <p>正在加载产品数据...</p>
-      </div>
-    );
+    return <Loading fullPage={true} />;
   }
 
-  // 错误状态显示
   if (error) {
-    return (
-      <div className="error-container">
-        <h2>出错了</h2>
-        <p>{error}</p>
-        <button onClick={() => window.location.reload()}>重试</button>
-      </div>
-    );
+    return <Error message={error} />;
   }
 
   return (
@@ -595,19 +635,6 @@ const Products: React.FC = () => {
               >
                 下一页
               </button>
-              
-              <div className="items-per-page">
-                <span>每页显示:</span>
-                <select
-                  value={itemsPerPage}
-                  onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                  className="items-per-page-select"
-                >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                </select>
-              </div>
             </div>
           )}
         </div>

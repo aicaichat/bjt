@@ -1,0 +1,300 @@
+/* 加载状态容器 */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.loading-state-small {
+  gap: 8px;
+}
+
+.loading-state-large {
+  gap: 16px;
+}
+
+/* 加载文本 */
+.loading-text {
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.loading-state-small .loading-text {
+  font-size: 12px;
+}
+
+.loading-state-large .loading-text {
+  font-size: 16px;
+}
+
+/* 覆盖层 */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  border-radius: inherit;
+}
+
+/* 旋转加载器 */
+.loading-spinner {
+  position: relative;
+}
+
+.loading-spinner-circle {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e5e7eb;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  animation: loading-spin 1s linear infinite;
+}
+
+.loading-spinner-small .loading-spinner-circle {
+  width: 20px;
+  height: 20px;
+  border-width: 2px;
+}
+
+.loading-spinner-large .loading-spinner-circle {
+  width: 48px;
+  height: 48px;
+  border-width: 4px;
+}
+
+@keyframes loading-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 点状加载器 */
+.loading-dots {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.loading-dot {
+  width: 8px;
+  height: 8px;
+  background: #3b82f6;
+  border-radius: 50%;
+  animation: loading-bounce 1.4s ease-in-out infinite both;
+}
+
+.loading-dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.loading-dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+.loading-dots-small .loading-dot {
+  width: 6px;
+  height: 6px;
+}
+
+.loading-dots-large .loading-dot {
+  width: 12px;
+  height: 12px;
+}
+
+@keyframes loading-bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* 脉冲加载器 */
+.loading-pulse {
+  position: relative;
+}
+
+.loading-pulse-circle {
+  width: 32px;
+  height: 32px;
+  background: #3b82f6;
+  border-radius: 50%;
+  animation: loading-pulse-animation 1.5s ease-in-out infinite;
+}
+
+.loading-pulse-small .loading-pulse-circle {
+  width: 20px;
+  height: 20px;
+}
+
+.loading-pulse-large .loading-pulse-circle {
+  width: 48px;
+  height: 48px;
+}
+
+@keyframes loading-pulse-animation {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+/* 骨架屏加载器 */
+.loading-skeleton {
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.loading-skeleton-small {
+  width: 150px;
+  gap: 6px;
+}
+
+.loading-skeleton-large {
+  width: 300px;
+  gap: 12px;
+}
+
+.loading-skeleton-line {
+  height: 12px;
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 25%,
+    #e0e0e0 50%,
+    #f0f0f0 75%
+  );
+  background-size: 200% 100%;
+  border-radius: 6px;
+  animation: loading-skeleton-shimmer 1.5s infinite;
+}
+
+.loading-skeleton-line-1 {
+  width: 100%;
+}
+
+.loading-skeleton-line-2 {
+  width: 80%;
+}
+
+.loading-skeleton-line-3 {
+  width: 60%;
+}
+
+.loading-skeleton-small .loading-skeleton-line {
+  height: 10px;
+}
+
+.loading-skeleton-large .loading-skeleton-line {
+  height: 16px;
+}
+
+@keyframes loading-skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .loading-text {
+    color: #d1d5db;
+  }
+  
+  .loading-overlay {
+    background: rgba(31, 41, 55, 0.8);
+  }
+  
+  .loading-spinner-circle {
+    border-color: #4b5563;
+    border-top-color: #60a5fa;
+  }
+  
+  .loading-dot {
+    background: #60a5fa;
+  }
+  
+  .loading-pulse-circle {
+    background: #60a5fa;
+  }
+  
+  .loading-skeleton-line {
+    background: linear-gradient(
+      90deg,
+      #374151 25%,
+      #4b5563 50%,
+      #374151 75%
+    );
+    background-size: 200% 100%;
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 640px) {
+  .loading-skeleton {
+    width: 100%;
+    max-width: 250px;
+  }
+  
+  .loading-skeleton-small {
+    max-width: 180px;
+  }
+  
+  .loading-skeleton-large {
+    max-width: 280px;
+  }
+}
+
+/* 特殊效果 - 彩虹加载器 */
+.loading-spinner.loading-rainbow .loading-spinner-circle {
+  border-top-color: #ef4444;
+  animation: loading-spin 1s linear infinite, loading-rainbow 3s linear infinite;
+}
+
+@keyframes loading-rainbow {
+  0% { border-top-color: #ef4444; }
+  16.66% { border-top-color: #f97316; }
+  33.33% { border-top-color: #eab308; }
+  50% { border-top-color: #22c55e; }
+  66.66% { border-top-color: #3b82f6; }
+  83.33% { border-top-color: #8b5cf6; }
+  100% { border-top-color: #ef4444; }
+}
+
+/* 特殊效果 - 渐变点 */
+.loading-dots.loading-gradient .loading-dot:nth-child(1) {
+  background: linear-gradient(45deg, #3b82f6, #8b5cf6);
+}
+
+.loading-dots.loading-gradient .loading-dot:nth-child(2) {
+  background: linear-gradient(45deg, #8b5cf6, #ec4899);
+}
+
+.loading-dots.loading-gradient .loading-dot:nth-child(3) {
+  background: linear-gradient(45deg, #ec4899, #ef4444);
+} 

@@ -1,19 +1,34 @@
 {
   "shapes": [
     {
-      "id": "pillow",
-      "name": "pillow",
-      "image_url": "/images/shop/MFB25.jpg"
+      "id": "MEX",
+      "name": "气泡枕",
+      "name_en": "Pillow",
+      "image_url": "/images/MEX/values/MEX.png"
     },
     {
-      "id": "bubble",
-      "name": "bubble",
-      "image_url": "/images/shop/MEX.JPG"
+      "id": "MEY",
+      "name": "开口气泡枕",
+      "name_en": "Precut Air Pillow",
+      "image_url": "/images/MEX/values/MEX.png"
     },
     {
-      "id": "tube",
-      "name": "tube",
-      "image_url": "/images/shop/MFC.jpg"
+      "id": "MFB",
+      "name": "葫芦膜",
+      "name_en": "Bubble",
+      "image_url": "/images/MFB/values/MFB.png"
+    },
+    {
+      "id": "MFC",
+      "name": "气枕膜",
+      "name_en": "Tube",
+      "image_url": "/images/MFC/values/MFC.png"
+    },
+    {
+      "id": "MFF",
+      "name": "葫芦膜",
+      "name_en": "Bubble",
+      "image_url": "/images/MFF/values/MFF.png"
     }
   ],
   "materials": [
@@ -32,6 +47,10 @@
     {
       "id": "PAPER+PE",
       "name": "Paper+Polyethylene"
+    },
+    {
+      "id": "PAPER",
+      "name": "Paper"
     }
   ],
   "models": [
@@ -95,6 +114,18 @@
     {
       "id": "all",
       "name": "ALL"
+    },
+    {
+      "id": "50gsm",
+      "name": "50 gsm"
+    },
+    {
+      "id": "75gsm",
+      "name": "75 gsm"
+    },
+    {
+      "id": "100gsm",
+      "name": "100 gsm"
     }
   ],
   "widths": [

@@ -5,5 +5,30 @@
     "spareParts": "View Spare Parts"
   },
   "introduction": "Welcome to BJT Product Management System",
-  "browseProducts": "Browse Products"
+  "browseProducts": "Browse Products",
+  "welcome": "Welcome to BJT Product Management System",
+  "slogan": "Integrated solution for efficient management of product lines, machines, accessories, spare parts and consumables",
+  "enterDashboard": "Enter Dashboard",
+  "systemGuide": "System Guide",
+  "productLines": "Product Lines",
+  "viewProducts": "View Products",
+  "noProductLines": "No product lines available at the moment",
+  "noProductsDescription": "Please check back later or contact our support team for assistance.",
+  "features": "System Features",
+  "productManagement": "Product Management",
+  "productManagementDesc": "Centralized management of product lines, equipment, accessories, spare parts and consumables",
+  "productSearch": "Product Search",
+  "productSearchDesc": "Multi-dimensional search for products by category, model, specifications and more",
+  "orderManagement": "Order Management",
+  "orderManagementDesc": "One-stop solution for order creation, tracking and management",
+  "apiIntegration": "API Integration",
+  "apiIntegrationDesc": "Flexible API interfaces for seamless integration with other systems",
+  "aboutSystem": "About BJT Product Management System",
+  "aboutSystemDesc": "BJT Product Management System is a modern product management platform designed for industrial equipment suppliers. The system supports comprehensive product line management, equipment configuration, order processing and inventory tracking, aiming to simplify product management processes and improve operational efficiency.",
+  "documentDownload": "Document Download",
+  "afterSalesService": "After-Sales Service",
+  "errors": {
+    "failedToLoadProducts": "Failed to load products. Please try again later.",
+    "noProductLines": "No product lines available at the moment."
+  }
 } 

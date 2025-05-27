@@ -2,9 +2,8 @@ import React, { useState, useEffect, Fragment, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage, Language } from '../../contexts/LanguageContext';
 import './PO.css';
-import { ASSETS, API_CONFIG } from '../../config/appConfig';
+import { ASSETS } from '../../config/appConfig';
 import { shouldUseMockData } from '../../services/mockService';
-import { orderApi } from '../../services/api';
 import { useNotification } from '../../contexts/NotificationContext';
 import { ROUTES } from '../../config/routes';
 import { format, addDays } from 'date-fns';
@@ -13,6 +12,8 @@ import { Form, Input, Button, Spin, Space, Drawer, Table, message } from 'antd';
 import { useAuth } from '../../contexts/AuthContext';
 import { safeToLocaleString } from '../../utils/priceUtils';
 import logo from '../../assets/logo.svg';
+import orderService, { Order, OrderStatus, CreateOrderRequest } from '../../api/services/order.service';
+import { Loading, Error } from '../../components/common';
 
 // 定义类型
 export interface POProduct {
@@ -67,10 +68,11 @@ interface POLocationState {
 }
 
 const POPage: React.FC = () => {
+  const { t, i18n } = useTranslation('po');
+  const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { language, setLanguage } = useLanguage();
-  const { t } = useTranslation('po');
   const notification = useNotification();
   
   const [isDirectAccess, setIsDirectAccess] = useState(true);
@@ -124,8 +126,48 @@ const POPage: React.FC = () => {
   const [expectedDeliveryDate, setExpectedDeliveryDate] = useState<string>(
     format(addDays(new Date(), 15), 'yyyy-MM-dd')
   );
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const poRef = useRef<HTMLDivElement>(null);
+
+  // 当前语言
+  const currentLanguage = i18n.language.startsWith('zh') ? 'zh' : 'en';
+  
+  // 检查用户是否已登录
+  useEffect(() => {
+    const isPublicPage = false; // PO页面需要登录
+    if (!user && !isPublicPage) {
+      navigate('/login', { state: { from: location } });
+    }
+  }, [user, navigate, location]);
+
+  // 获取订单数据
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const response = await orderService.getOrders({
+          page: currentPage,
+          perPage: 100
+        });
+        
+        setOrders(response.items);
+        setTotalPages(response.total_pages);
+      } catch (error: any) {
+        console.error('Failed to fetch orders:', error);
+        setError(t('errors.failedToLoadOrders'));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchOrders();
+    }
+  }, [i18n.language, currentPage, t, user]);
 
   useEffect(() => {
     // 检查是否有从Order页面传递的数据
@@ -200,12 +242,12 @@ const POPage: React.FC = () => {
       } else {
         // 实际API调用
         try {
-          // 使用orderApi的exportPO方法
-          const response = await orderApi.exportPO(poNumber, 'excel');
+          // 使用orderService的exportPO方法
+          const response = await orderService.exportPO(Number(poNumber), 'excel');
           
-          if (response && response.data) {
+          if (response) {
             // 创建Blob对象并下载
-            const blob = new Blob([response.data], { 
+            const blob = new Blob([response], { 
               type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
             });
             const url = window.URL.createObjectURL(blob);
@@ -219,11 +261,11 @@ const POPage: React.FC = () => {
             
             notification.success(t('exportSuccess'));
           } else {
-            throw new Error('导出失败：未获取到有效响应');
+            notification.error(t('exportError'));
           }
         } catch (apiError) {
           console.error('API调用失败:', apiError);
-          throw new Error('导出失败：API调用错误');
+          notification.error(t('exportError'));
         }
       }
     } catch (error) {
@@ -249,30 +291,32 @@ const POPage: React.FC = () => {
     try {
       // 创建订单对象
       const orderItems = products.map(product => ({
-        id: product.id,
-        image: product.image || `${ASSETS.BASE_URL}/images/placeholder-product.png`,
+        order_item_id: Date.now() + Math.floor(Math.random() * 1000),
+        product_type: 'machine' as const,
+        product_id: parseInt(product.id),
+        part_number: product.code || product.sku || '',
         name: typeof product.name === 'object' ? 
               product.name[language === 'cn' ? 'zh-CN' : 'en-US'] : 
               product.name,
-        specs: product.specs || 
-               (product.properties ? 
-                Object.entries(product.properties).map(([key, value]) => `${key}: ${value}`).join(', ') : 
-                ''),
-        price: product.price,
         quantity: product.quantity,
-        type: product.type || 'product'
+        unit_price: product.price,
+        line_total: product.price * product.quantity,
+        properties: product.properties || {}
       }));
 
-      const newOrder = {
-        id: `BJT${new Date().toISOString().replace(/[-:T.]/g, '').substring(0, 14)}`,
-        poNumber: poNumber,
-        date: new Date().toISOString().replace('T', ' ').substring(0, 19),
-        status: 'pending',
-        total: summary.total,
-        paymentMethod: paymentMethod,
-        customerInfo: customerInfo,
-        shippingInfo: shippingInfo,
-        items: orderItems
+      const newOrder: CreateOrderRequest = {
+        shipping_address: {
+          name: shippingInfo.contactName,
+          phone: shippingInfo.phone,
+          address: shippingInfo.address
+        },
+        billing_address: {
+          name: customerInfo.contactName,
+          phone: customerInfo.phone,
+          address: customerInfo.address
+        },
+        payment_method: paymentMethod,
+        notes: shippingInfo.notes
       };
 
       setIsLoading(true);
@@ -295,13 +339,12 @@ const POPage: React.FC = () => {
         notification.success(t('orderCompleted'));
       } else {
         // 实际API调用
-        const response = await orderApi.createOrder(newOrder);
+        const response = await orderService.createOrder(newOrder);
         
-        // 检查响应对象，Axios通常返回data属性
-        if (response && response.data) {
+        if (response) {
           notification.success(t('orderCompleted'));
         } else {
-          throw new Error('提交订单失败');
+          notification.error(t('processingError'));
         }
       }
       
@@ -373,14 +416,12 @@ const POPage: React.FC = () => {
     }).format(amount);
   };
 
-  // 加载状态
-  if (isLoading || !dataReady) {
-    return (
-      <div className="po-loading-container">
-        <div className="po-spinner"></div>
-        <p>{t('loading')}</p>
-      </div>
-    );
+  if (isLoading) {
+    return <Loading fullPage={true} />;
+  }
+
+  if (error) {
+    return <Error message={error} />;
   }
 
   // 修改PO单表格部分，完全按照图片精确实现

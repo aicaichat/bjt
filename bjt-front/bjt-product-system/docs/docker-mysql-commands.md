@@ -142,3 +142,9 @@ docker-compose -f docker/dev/docker-compose.dev.yml exec wordpress cat /var/www/
 
 
 docker-compose -f docker/dev/docker-compose.nginx.yml exec wordpress wp option update bjt_jwt_secret "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwODAiLCJpYXQiOjE2ODMwMDAwMDAsImV4cCI6MTk5OTk5OTk5OSwidXNlciI6eyJpZCI6MX19.gHpqpeoq_NBRF2-v1UG9XNWG2X2Sj9pB5stCN4Y5IxA"  --allow-root
+
+
+lsof -ti:5173,5174,5175,5176,5177,5178 | xargs kill -9
+
+
+venvzuodao@zuodaolizhiguodeMacBook-Air bjt-product-system % pkill -f vite && sleep 3 && npm run de

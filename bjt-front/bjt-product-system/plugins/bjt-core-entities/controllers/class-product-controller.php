@@ -9,7 +9,7 @@ class BJT_Product_Controller extends BJT_API_Controller {
      *
      * @var string
      */
-    protected $resource_name = 'product-lines';
+    public $resource_name = 'product-lines';
     
     protected $table_name;
 
@@ -19,6 +19,12 @@ class BJT_Product_Controller extends BJT_API_Controller {
         'title_en',
         'description_zh', 
         'description_en',
+        'subitem1_zh',
+        'subitem1_en',
+        'subitem2_zh',
+        'subitem2_en',
+        'subitem3_zh',
+        'subitem3_en',
         'image_url',
         'status', 
         'sort_order'
@@ -38,7 +44,7 @@ class BJT_Product_Controller extends BJT_API_Controller {
         $this->rest_base = $this->resource_name; // Explicitly set rest_base
         
         // Call the parent constructor (BJT_API_Controller)
-        parent::__construct(); // Restored
+        parent::__construct(); 
     }
     
     /**
@@ -106,7 +112,7 @@ class BJT_Product_Controller extends BJT_API_Controller {
      */
     public function get_items($request) {
         global $wpdb;
-
+        
         // Pagination parameters
         $page = $request->get_param('page') ? absint($request->get_param('page')) : 1;
         $per_page = $request->get_param('per_page') ? absint($request->get_param('per_page')) : 10;
@@ -149,10 +155,20 @@ class BJT_Product_Controller extends BJT_API_Controller {
 
         $formatted_items = array_map(array($this, 'format_item_for_response'), $items_db);
         
-        $response = new WP_REST_Response($formatted_items, 200);
+        $total_pages = ceil($total_items / $per_page);
+        
+        $response_data = [
+            'success' => true,
+            'data' => $formatted_items,
+            'total' => (int)$total_items,
+            'page' => (int)$page,
+            'per_page' => (int)$per_page,
+            'total_pages' => (int)$total_pages
+        ];
+        
+        $response = new WP_REST_Response($response_data, 200);
 
         $response->header('X-WP-Total', $total_items);
-        $total_pages = ceil($total_items / $per_page);
         $response->header('X-WP-TotalPages', $total_pages);
 
         // Add Link headers for pagination
@@ -233,19 +249,14 @@ class BJT_Product_Controller extends BJT_API_Controller {
         $result = $wpdb->insert($this->table_name, $data_to_insert);
 
         if ($result === false) {
-            error_log($this->resource_name . ' DB Insert Error: ' . $wpdb->last_error);
-            return $this->error_response('Failed to create product line. DB Error: ' . $wpdb->last_error, 'db_error', 500);
+            return $this->error_response('Failed to create product line. Database error.', 'db_error_create', 500);
         }
 
-        $new_item_id = $wpdb->insert_id;
-        $created_item_db = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->table_name} WHERE id = %d", $new_item_id));
-        
-        if (!$created_item_db) {
-            return $this->error_response('Failed to retrieve created product line.', 'retrieve_error', 500);
-        }
-        
-        $formatted_item = $this->format_item_for_response($created_item_db);
-        return new WP_REST_Response(['success' => true, 'message' => 'Product line created successfully.', 'data' => $formatted_item], 201);
+        $new_id = $wpdb->insert_id;
+        $created_item = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->table_name} WHERE id = %d", $new_id));
+        $formatted_item = $this->format_item_for_response($created_item);
+
+        return new WP_REST_Response(['success' => true, 'data' => $formatted_item], 201);
     }
     
     public function update_item($request) {
@@ -256,50 +267,43 @@ class BJT_Product_Controller extends BJT_API_Controller {
             return $this->error_response('Invalid product line ID.', 'invalid_id', 400);
         }
 
-        $existing_item_db = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->table_name} WHERE id = %d", $id));
-        if (!$existing_item_db) {
-            return $this->error_response("Product line with ID {$id} not found to update.", 'not_found', 404);
+        $item_exists = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$this->table_name} WHERE id = %d", $id));
+        if (!$item_exists) {
+            return $this->error_response("Product line with ID {$id} not found for update.", 'not_found_update', 404);
         }
 
-        $data_to_update = $this->map_request_to_db($request, true /* is_update */);
+        $data_to_update = $this->map_request_to_db($request, true); // is_update = true
 
         if (empty($data_to_update)) {
-            return $this->error_response('No valid fields provided for update.', 'no_fields_to_update', 400);
+            return $this->error_response('No valid fields provided for update.', 'no_fields_update', 400);
         }
 
-        // Check for duplicate code if code is being changed
-        if (isset($data_to_update['code']) && $data_to_update['code'] !== $existing_item_db->code) {
-            $item_with_new_code = $wpdb->get_var($wpdb->prepare(
+        // If code is being updated, check for duplicates excluding the current item
+        if (isset($data_to_update['code'])) {
+            $existing_item_with_code = $wpdb->get_var($wpdb->prepare(
                 "SELECT id FROM {$this->table_name} WHERE code = %s AND id != %d",
                 $data_to_update['code'],
                 $id
             ));
-            if ($item_with_new_code) {
-                return $this->error_response('Another product line with this code already exists.', 'duplicate_code_on_update', 409);
+            if ($existing_item_with_code) {
+                return $this->error_response('Another product line with this code already exists.', 'duplicate_code_update', 409);
             }
         }
         
-        // Add current timestamp for updated_at
-        $data_to_update['updated_at'] = current_time('mysql', 1); // GMT
+        $result = $wpdb->update($this->table_name, $data_to_update, ['id' => $id]);
 
-        $result = $wpdb->update($this->table_name, $data_to_update, array('id' => $id));
-
-        if ($result === false) {
-            error_log($this->resource_name . ' DB Update Error: ' . $wpdb->last_error);
-            return $this->error_response('Failed to update product line. DB Error: ' . $wpdb->last_error, 'db_error', 500);
+        if ($result === false) { // Could be an error or 0 rows affected if data is the same
+            // Check if it was a real error or just no change
+            if ($wpdb->last_error) {
+                 return $this->error_response('Failed to update product line. Database error: ' . $wpdb->last_error, 'db_error_update', 500);
+            }
+            // If no error but 0 rows affected, it means data was the same. Treat as success.
         }
         
-        // $wpdb->update returns the number of rows affected. 
-        // If 0 rows were affected, it could mean the data was the same or the item wasn't found (though we check above).
-        // We'll fetch the item again to return the current state regardless.
-        $updated_item_db = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->table_name} WHERE id = %d", $id));
-        if (!$updated_item_db) {
-            // This should ideally not happen if the initial check passed and update didn't error out
-            return $this->error_response('Failed to retrieve product line after update.', 'retrieve_after_update_error', 500);
-        }
+        $updated_item = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->table_name} WHERE id = %d", $id));
+        $formatted_item = $this->format_item_for_response($updated_item);
 
-        $formatted_item = $this->format_item_for_response($updated_item_db);
-        return new WP_REST_Response(['success' => true, 'message' => 'Product line updated successfully.', 'data' => $formatted_item], 200);
+        return new WP_REST_Response(['success' => true, 'data' => $formatted_item], 200);
     }
     
     public function delete_item($request) {
@@ -310,88 +314,210 @@ class BJT_Product_Controller extends BJT_API_Controller {
             return $this->error_response('Invalid product line ID.', 'invalid_id', 400);
         }
 
-        // Check if the item exists before trying to delete
-        $item_exists = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->table_name} WHERE id = %d", $id));
+        $item_exists = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$this->table_name} WHERE id = %d", $id));
         if (!$item_exists) {
-            return $this->error_response("Product line with ID {$id} not found to delete.", 'not_found', 404);
+            return $this->error_response("Product line with ID {$id} not found for deletion.", 'not_found_delete', 404);
         }
 
-        $result = $wpdb->delete($this->table_name, array('id' => $id), array('%d'));
+        // Optionally, implement soft delete by changing status to 'trash' instead of deleting
+        // For now, we will hard delete
+        $result = $wpdb->delete($this->table_name, ['id' => $id]);
 
         if ($result === false) {
-            error_log($this->resource_name . ' DB Delete Error: ' . $wpdb->last_error);
-            return $this->error_response('Failed to delete product line. DB Error: ' . $wpdb->last_error, 'db_error', 500);
+            return $this->error_response('Failed to delete product line. Database error.', 'db_error_delete', 500);
         }
         
-        // $wpdb->delete returns the number of rows affected.
-        if ($result === 0) {
-            // This case should be rare given the existence check above, but good to handle.
-            return $this->error_response("Product line with ID {$id} could not be deleted (it may have been deleted by another process).", 'delete_failed_not_found', 404);
+        if ($result === 0) { // Should not happen if item_exists check passed, but as a safeguard
+            return $this->error_response("Product line with ID {$id} could not be deleted (already deleted or other issue).", 'delete_failed_no_rows', 404);
         }
 
         return new WP_REST_Response(['success' => true, 'message' => "Product line with ID {$id} deleted successfully."], 200);
     }
 
+    /**
+     * Defines the schema for a product line item.
+     * Used for validating create/update requests and for documentation.
+     *
+     * @return array
+     */
     public function get_item_schema() { // Ensure this is public
-        return [
-            'type' => 'object',
+        $schema = [
+            '$schema'    => 'http://json-schema.org/draft-04/schema#',
+            'title'      => $this->resource_name,
+            'type'       => 'object',
             'properties' => [
-                'id' => ['type' => 'integer', 'readonly' => true, 'context' => ['view', 'edit', 'embed']],
-                'code' => ['type' => 'string', 'required' => true, 'description' => 'Unique code for the product line.'],
-                'name_cn' => ['type' => 'string', 'required' => true, 'description' => 'Chinese name of the product line. Maps to title_zh.'],
-                'name_en' => ['type' => 'string', 'required' => true, 'description' => 'English name of the product line. Maps to title_en.'],
-                'description_zh' => ['type' => 'string', 'description' => 'Chinese description.'],
-                'description_en' => ['type' => 'string', 'description' => 'English description.'],
-                'image_url' => ['type' => 'string', 'format' => 'uri', 'description' => 'Image URL.'],
-                'status' => ['type' => 'string', 'default' => 'publish', 'enum' => ['publish', 'draft', 'trash']],
-                'sort_order' => ['type' => 'integer', 'default' => 0, 'description' => 'Sort order.'],
-                // Add other fields from $fillable_fields as needed
+                'id' => [
+                    'description' => __('Unique identifier for the product line.', 'bjt'),
+                    'type'        => 'integer',
+                    'context'     => ['view', 'edit', 'embed'],
+                    'readonly'    => true,
+                ],
+                'code' => [
+                    'description' => __('Unique code for the product line.', 'bjt'),
+                    'type'        => 'string',
+                    'context'     => ['view', 'edit', 'embed'],
+                    'required'    => true, 
+                ],
+                'title_zh' => [
+                    'description' => __('Chinese title for the product line.', 'bjt'),
+                    'type'        => 'string',
+                    'context'     => ['view', 'edit', 'embed'],
+                    'required'    => true,
+                ],
+                'title_en' => [
+                    'description' => __('English title for the product line.', 'bjt'),
+                    'type'        => 'string',
+                    'context'     => ['view', 'edit', 'embed'],
+                    'required'    => true,
+                ],
+                'description_zh' => [
+                    'description' => __('Chinese description for the product line.', 'bjt'),
+                    'type'        => 'string',
+                    'context'     => ['view', 'edit', 'embed'],
+                ],
+                'description_en' => [
+                    'description' => __('English description for the product line.', 'bjt'),
+                    'type'        => 'string',
+                    'context'     => ['view', 'edit', 'embed'],
+                ],
+                'subitem1_zh' => [
+                    'description' => __('Subitem 1 Chinese name.', 'bjt'),
+                    'type' => 'string',
+                    'context' => ['view', 'edit', 'embed'],
+                ],
+                'subitem1_en' => [
+                    'description' => __('Subitem 1 English name.', 'bjt'),
+                    'type' => 'string',
+                    'context' => ['view', 'edit', 'embed'],
+                ],
+                'subitem2_zh' => [
+                    'description' => __('Subitem 2 Chinese name.', 'bjt'),
+                    'type' => 'string',
+                    'context' => ['view', 'edit', 'embed'],
+                ],
+                'subitem2_en' => [
+                    'description' => __('Subitem 2 English name.', 'bjt'),
+                    'type' => 'string',
+                    'context' => ['view', 'edit', 'embed'],
+                ],
+                'subitem3_zh' => [
+                    'description' => __('Subitem 3 Chinese name.', 'bjt'),
+                    'type' => 'string',
+                    'context' => ['view', 'edit', 'embed'],
+                ],
+                'subitem3_en' => [
+                    'description' => __('Subitem 3 English name.', 'bjt'),
+                    'type' => 'string',
+                    'context' => ['view', 'edit', 'embed'],
+                ],
+                'image_url' => [
+                    'description' => __('URL of the product line image.', 'bjt'),
+                    'type'        => 'string',
+                    'format'      => 'uri',
+                    'context'     => ['view', 'edit', 'embed'],
+                ],
+                'status' => [
+                    'description' => __('Status of the product line.', 'bjt'),
+                    'type'        => 'string',
+                    'enum'        => ['publish', 'draft', 'trash'],
+                    'context'     => ['view', 'edit', 'embed'],
+                ],
+                'sort_order' => [
+                    'description' => __('Sort order for the product line.', 'bjt'),
+                    'type'        => 'integer',
+                    'context'     => ['view', 'edit', 'embed'],
+                ],
+                'created_at' => [
+                    'description' => __('The date the product line was created, in the site\'s timezone.', 'bjt'),
+                    'type'        => 'string',
+                    'format'      => 'date-time',
+                    'context'     => ['view', 'edit', 'embed'],
+                    'readonly'    => true,
+                ],
+                'updated_at' => [
+                    'description' => __('The date the product line was last updated, in the site\'s timezone.', 'bjt'),
+                    'type'        => 'string',
+                    'format'      => 'date-time',
+                    'context'     => ['view', 'edit', 'embed'],
+                    'readonly'    => true,
+                ],
             ],
         ];
+        return $schema;
     }
 
+    /**
+     * Maps incoming API request fields to database column names.
+     * This also handles renaming fields if API names differ from DB names.
+     *
+     * @param WP_REST_Request $request
+     * @param boolean $is_update True if this is for an update operation (to skip some fields)
+     * @return array
+     */
     protected function map_request_to_db(WP_REST_Request $request, $is_update = false) {
-        $params = $request->get_params();
-        $data = [];
-
-        // Map name_cn to title_zh and name_en to title_en
-        if (isset($params['name_cn'])) {
-            $data['title_zh'] = sanitize_text_field($params['name_cn']);
+        $params = $request->get_json_params();
+        if (null === $params) {
+             $params = $request->get_body_params();
         }
-        if (isset($params['name_en'])) {
-            $data['title_en'] = sanitize_text_field($params['name_en']);
-        }
+        
+        $mapped_data = [];
 
-        // Process other fillable fields
-        $direct_map_fields = ['code', 'description_zh', 'description_en', 'image_url', 'status', 'sort_order'];
-        foreach ($direct_map_fields as $field) {
-            if (isset($params[$field])) {
-                if ($field === 'sort_order') {
-                    $data[$field] = absint($params[$field]);
-                } elseif ($field === 'image_url') {
-                    $data[$field] = esc_url_raw($params[$field]);
+        $field_map = [
+            'name_cn' => 'title_zh',
+            'name_en' => 'title_en',
+            'description_cn' => 'description_zh',
+            'description_en' => 'description_en',
+            'subitem1_zh' => 'subitem1_zh',
+            'subitem1_en' => 'subitem1_en',
+            'subitem2_zh' => 'subitem2_zh',
+            'subitem2_en' => 'subitem2_en',
+            'subitem3_zh' => 'subitem3_zh',
+            'subitem3_en' => 'subitem3_en',
+            'code' => 'code',
+            'image_url' => 'image_url',
+            'status' => 'status',
+            'sort_order' => 'sort_order'
+        ];
+
+        foreach ($field_map as $api_field => $db_field) {
+            if (isset($params[$api_field]) && in_array($db_field, $this->fillable_fields)) {
+                $value = $params[$api_field];
+                if (in_array($db_field, ['title_zh', 'title_en', 'description_zh', 'description_en', 'subitem1_zh', 'subitem1_en', 'subitem2_zh', 'subitem2_en', 'subitem3_zh', 'subitem3_en', 'image_url', 'status', 'code'])) {
+                    $mapped_data[$db_field] = sanitize_text_field($value);
+                } elseif ($db_field === 'sort_order') {
+                    $mapped_data[$db_field] = absint($value);
                 } else {
-                    $data[$field] = sanitize_text_field($params[$field]);
+                    $mapped_data[$db_field] = sanitize_text_field($value);
                 }
-            } elseif ($is_update && array_key_exists($field, $params) && $params[$field] === null) {
-                $data[$field] = null;
             }
         }
-        return $data;
+        return $mapped_data;
     }
-
+    
+    /**
+     * Formats a database object for the API response.
+     *
+     * @param object $item_db_object The database object for a product line.
+     * @return array The formatted product line data.
+     */
     protected function format_item_for_response($item_db_object) {
         if (!$item_db_object) {
             return null;
         }
+
         $response_data = [];
-        // Use a clean list of fields actually in the DB for product lines
         $product_line_actual_fields = [
             'code',
             'title_zh',
             'title_en',
             'description_zh',
             'description_en',
+            'subitem1_zh',
+            'subitem1_en',
+            'subitem2_zh',
+            'subitem2_en',
+            'subitem3_zh',
+            'subitem3_en',
             'image_url',
             'status',
             'sort_order'
@@ -405,7 +531,6 @@ class BJT_Product_Controller extends BJT_API_Controller {
                     $response_data[$field] = $item_db_object->$field;
                  }
             } else {
-                // Ensure all defined fields are present in the response, even if null
                 $response_data[$field] = null;
             }
         }
@@ -415,4 +540,59 @@ class BJT_Product_Controller extends BJT_API_Controller {
         
         return $response_data;
     }
-}
+
+     /**
+     * Checks if the current user has permission to read product lines.
+     * Publicly accessible for now.
+     *
+     * @param WP_REST_Request $request Full data about the request.
+     * @return true|WP_Error True if the request has read access, WP_Error object otherwise.
+     */
+    public function check_read_permission($request) {
+        // For now, allow public read access. Implement specific checks if needed.
+        // Example: return current_user_can('read_product_lines');
+        return true; 
+    }
+
+    /**
+     * Checks if the current user has permission to write (create/update/delete) product lines.
+     * Requires authentication.
+     *
+     * @param WP_REST_Request $request Full data about the request.
+     * @return true|WP_Error True if the request has write access, WP_Error object otherwise.
+     */
+    public function check_write_permission($request) {
+        // This is a placeholder. Actual permission check should be more robust.
+        // It should verify JWT token and user capabilities.
+        // if (BJT_Auth::is_user_authenticated_and_authorized($request, 'administrator')) { // Or a more specific capability
+        //     return true;
+        // }
+        // return new WP_Error('rest_forbidden', __('You do not have permission to perform this action.'), ['status' => 403]);
+
+        // Attempt to use BJT_Auth_Controller for authentication
+        if (!class_exists('BJT_Auth_Controller')) {
+            // Try to include it if it's not found. This path is a guess based on prior search.
+            $auth_controller_path = WP_PLUGIN_DIR . '/bjt-product-admin/includes/api/class-bjt-auth-controller.php';
+            if (file_exists($auth_controller_path)) {
+                require_once $auth_controller_path;
+            } else {
+                error_log('[BJT DEBUG ProductCtrl] BJT_Auth_Controller class file not found at: ' . $auth_controller_path);
+                return new WP_Error('rest_forbidden', __('Authentication controller not found.'), ['status' => 500]);
+            }
+        }
+
+        if (!class_exists('BJT_Auth_Controller')) {
+             error_log('[BJT DEBUG ProductCtrl] BJT_Auth_Controller class still not found after include attempt.');
+             return new WP_Error('rest_forbidden', __('Authentication controller class not loadable.'), ['status' => 500]);
+        }
+
+        $auth_controller = new BJT_Auth_Controller();
+        $is_authenticated = $auth_controller->check_auth($request);
+
+        if ($is_authenticated && current_user_can('administrator')) {
+            return true;
+        }
+
+        return new WP_Error('rest_forbidden', __('You do not have permission to perform this action.'), ['status' => 403]);
+    }
+} 

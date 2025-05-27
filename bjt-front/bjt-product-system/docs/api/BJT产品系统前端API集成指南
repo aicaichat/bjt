@@ -1,0 +1,1328 @@
+import React, { useState, useEffect } from 'react';
+import { getProductLines } from '../api/products';
+import { ErrorMessage } from '../components/ErrorMessage';
+
+const ProductList: React.FC = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    async function loadProducts() {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await getProductLines();
+        setProducts(response.data);
+      } catch (err) {
+        setError(err as Error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    loadProducts();
+  }, []);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <ErrorMessage error={error} />;
+
+  return (
+    <div>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>名称</th>
+            <th>代码</th>
+            <th>状态</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {products.map(product => (
+            <tr key={product.id}>
+              <td>{product.id}</td>
+              <td>{product.title_zh}</td>
+              <td>{product.code}</td>
+              <td>{product.status}</td>
+              <td>
+                <button className="mr-2 text-blue-500">编辑</button>
+                <button className="text-red-500">删除</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+export default ProductList;
+```
+
+## 实用组件
+
+### 分页组件
+
+```tsx
+// components/Pagination.tsx
+import React from 'react';
+
+interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  className?: string;
+}
+
+const Pagination: React.FC<PaginationProps> = ({
+  currentPage,
+  totalPages,
+  onPageChange,
+  className = ''
+}) => {
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxPagesToShow = 5;
+    
+    if (totalPages <= maxPagesToShow) {
+      // 如果总页数小于要显示的页数，显示所有页
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // 否则显示部分页码
+      const leftBound = Math.max(1, currentPage - 2);
+      const rightBound = Math.min(totalPages, currentPage + 2);
+      
+      if (leftBound > 1) {
+        pages.push(1);
+        if (leftBound > 2) pages.push('...');
+      }
+      
+      for (let i = leftBound; i <= rightBound; i++) {
+        pages.push(i);
+      }
+      
+      if (rightBound < totalPages) {
+        if (rightBound < totalPages - 1) pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
+  };
+  
+  if (totalPages <= 1) return null;
+  
+  return (
+    <div className={`flex items-center justify-center ${className}`}>
+      <button
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+        className={`px-3 py-1 mx-1 border rounded ${
+          currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'
+        }`}
+      >
+        上一页
+      </button>
+      
+      {getPageNumbers().map((page, index) => (
+        <button
+          key={index}
+          onClick={() => typeof page === 'number' && onPageChange(page)}
+          disabled={page === '...'}
+          className={`px-3 py-1 mx-1 border rounded ${
+            page === currentPage
+              ? 'bg-blue-500 text-white'
+              : page === '...'
+              ? 'opacity-50 cursor-not-allowed'
+              : 'hover:bg-gray-100'
+          }`}
+        >
+          {page}
+        </button>
+      ))}
+      
+      <button
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        className={`px-3 py-1 mx-1 border rounded ${
+          currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'
+        }`}
+      >
+        下一页
+      </button>
+    </div>
+  );
+};
+
+export default Pagination;
+```
+
+### 通用错误提示组件
+
+```tsx
+// components/ErrorMessage.tsx
+import React from 'react';
+import { getErrorMessage } from '../utils/errorMessages';
+
+interface ErrorMessageProps {
+  error: Error | { code?: string; message: string };
+  className?: string;
+}
+
+const ErrorMessage: React.FC<ErrorMessageProps> = ({ error, className = '' }) => {
+  let message = '';
+  
+  if ('code' in error && error.code) {
+    message = getErrorMessage(error.code);
+  } else {
+    message = error.message || '发生未知错误';
+  }
+  
+  return (
+    <div className={`bg-red-50 text-red-700 p-4 rounded-md ${className}`}>
+      <p className="font-medium">错误</p>
+      <p>{message}</p>
+    </div>
+  );
+};
+
+export default ErrorMessage;
+```
+
+### 实现安全的API实体类型系统
+
+```typescript
+// api/types/index.ts
+
+// 通用类型
+export type ApiStatus = 'pending' | 'loading' | 'success' | 'error';
+
+// 实体基础接口
+export interface EntityBase {
+  id: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// 导出各个模型类型
+export * from './models/product';
+export * from './models/machine';
+export * from './models/accessory';
+export * from './models/consumable';
+export * from './models/sparePart';
+export * from './models/cart';
+export * from './models/order';
+export * from './models/user';
+
+// 导出请求类型
+export * from './requests';
+
+// 导出响应类型
+export * from './responses';
+```
+
+## 状态管理集成指南
+
+### API数据与前端状态管理整合
+
+使用React Context API结合自定义hooks来管理不同资源的状态：
+
+```typescript
+// contexts/ProductContext.tsx
+import React, { createContext, useState, useContext, useCallback } from 'react';
+import { getProductLines } from '../api/products';
+import { ProductLineModel } from '../api/types';
+
+interface ProductContextType {
+  productLines: ProductLineModel[];
+  loading: boolean;
+  error: Error | null;
+  fetchProductLines: () => Promise<void>;
+}
+
+const ProductContext = createContext<ProductContextType | undefined>(undefined);
+
+export const ProductProvider: React.FC = ({ children }) => {
+  const [productLines, setProductLines] = useState<ProductLineModel[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchProductLines = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await getProductLines();
+      setProductLines(response.data);
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return (
+    <ProductContext.Provider value={{ productLines, loading, error, fetchProductLines }}>
+      {children}
+    </ProductContext.Provider>
+  );
+};
+
+export const useProducts = () => {
+  const context = useContext(ProductContext);
+  if (context === undefined) {
+    throw new Error('useProducts must be used within a ProductProvider');
+  }
+  return context;
+};
+```
+
+### 异步请求状态处理方法
+
+创建通用的异步状态hook：
+
+```typescript
+// hooks/useAsync.ts
+import { useState, useCallback } from 'react';
+
+export function useAsync<T, E = Error>() {
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<E | null>(null);
+
+  const execute = useCallback(async (asyncFunction: () => Promise<T>) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await asyncFunction();
+      setData(result);
+      return result;
+    } catch (err) {
+      setError(err as E);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { data, loading, error, execute };
+}
+```
+
+### 缓存策略说明
+
+使用React Query实现缓存：
+
+```typescript
+// api/reactQuery.ts
+import { QueryClient } from 'react-query';
+
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5分钟
+      cacheTime: 10 * 60 * 1000, // 10分钟
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+// 使用示例
+import { useQuery } from 'react-query';
+import { getProductLines } from '../api/products';
+
+export function useProductLines() {
+  return useQuery('productLines', async () => {
+    const response = await getProductLines();
+    return response.data;
+  });
+}
+```
+
+## 环境变量配置
+
+### .env文件中的API相关变量
+
+创建以下环境变量：
+
+```
+# .env.development
+REACT_APP_API_BASE_URL=/wp-json/bjt/v1
+REACT_APP_AUTH_TOKEN_KEY=bjt_auth_token
+REACT_APP_AUTH_REFRESH_TOKEN_KEY=bjt_refresh_token
+REACT_APP_TOKEN_EXPIRE_TIME=86400
+
+# .env.production
+REACT_APP_API_BASE_URL=https://api.example.com/wp-json/bjt/v1
+REACT_APP_AUTH_TOKEN_KEY=bjt_auth_token
+REACT_APP_AUTH_REFRESH_TOKEN_KEY=bjt_refresh_token
+REACT_APP_TOKEN_EXPIRE_TIME=86400
+```
+
+### 环境切换配置
+
+创建环境配置文件：
+
+```typescript
+// config/api.ts
+const API_CONFIG = {
+  baseUrl: process.env.REACT_APP_API_BASE_URL || '/wp-json/bjt/v1',
+  tokenKey: process.env.REACT_APP_AUTH_TOKEN_KEY || 'bjt_auth_token',
+  refreshTokenKey: process.env.REACT_APP_AUTH_REFRESH_TOKEN_KEY || 'bjt_refresh_token',
+  tokenExpireTime: Number(process.env.REACT_APP_TOKEN_EXPIRE_TIME || 86400),
+};
+
+export default API_CONFIG;
+```
+
+## 错误处理规范
+
+### 组件中API错误处理
+
+使用try/catch捕获API错误：
+
+```tsx
+import React, { useState, useEffect } from 'react';
+import { getProductLines } from '../api/products';
+import { ErrorMessage } from '../components/ErrorMessage';
+
+const ProductListPage: React.FC = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    async function loadProducts() {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await getProductLines();
+        setProducts(response.data);
+      } catch (err) {
+        setError(err as Error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    loadProducts();
+  }, []);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <ErrorMessage error={error} />;
+
+  return (
+    <div>
+      {products.map(product => (
+        <div key={product.id}>{product.title_zh}</div>
+      ))}
+    </div>
+  );
+};
+```
+
+### 全局错误处理机制
+
+创建全局错误处理上下文：
+
+```tsx
+// contexts/ErrorContext.tsx
+import React, { createContext, useContext, useState } from 'react';
+import ErrorModal from '../components/ErrorModal';
+
+interface ErrorContextType {
+  setError: (error: Error) => void;
+  clearError: () => void;
+}
+
+const ErrorContext = createContext<ErrorContextType | undefined>(undefined);
+
+export const ErrorProvider: React.FC = ({ children }) => {
+  const [error, setErrorState] = useState<Error | null>(null);
+
+  const setError = (error: Error) => {
+    setErrorState(error);
+  };
+
+  const clearError = () => {
+    setErrorState(null);
+  };
+
+  return (
+    <ErrorContext.Provider value={{ setError, clearError }}>
+      {children}
+      {error && <ErrorModal error={error} onClose={clearError} />}
+    </ErrorContext.Provider>
+  );
+};
+
+export const useError = () => {
+  const context = useContext(ErrorContext);
+  if (context === undefined) {
+    throw new Error('useError must be used within an ErrorProvider');
+  }
+  return context;
+};
+```
+
+### 用户友好的错误信息
+
+创建错误映射表，将API错误码转换为用户友好的消息：
+
+```typescript
+// utils/errorMessages.ts
+export const ERROR_MESSAGES: Record<string, string> = {
+  // 认证错误
+  'invalid_credentials': '用户名或密码错误，请重试',
+  'invalid_token': '会话已失效，请重新登录',
+  'expired_token': '会话已过期，请重新登录',
+  
+  // 通用错误
+  'rest_not_logged_in': '请先登录后再进行操作',
+  'rest_forbidden': '您没有权限执行此操作',
+  'rest_not_found': '请求的资源不存在',
+  
+  // 购物车错误
+  'cart_empty': '购物车为空，无法创建订单',
+  'invalid_quantity': '商品数量无效',
+  'cart_item_not_found': '找不到购物车中的商品',
+  
+  // 默认错误
+  'default': '操作失败，请稍后重试'
+};
+
+export function getErrorMessage(code: string): string {
+  return ERROR_MESSAGES[code] || ERROR_MESSAGES.default;
+}
+```
+
+## 认证流程说明
+
+### 组件中认证状态处理
+
+创建认证上下文和hooks：
+
+```tsx
+// contexts/AuthContext.tsx
+import React, { createContext, useState, useEffect, useContext } from 'react';
+import { login, getCurrentUser, refreshTokenApi } from '../api/auth';
+import { UserModel } from '../api/types';
+import API_CONFIG from '../config/api';
+
+interface AuthContextType {
+  user: UserModel | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  login: (username: string, password: string) => Promise<void>;
+  logout: () => void;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider: React.FC = ({ children }) => {
+  const [user, setUser] = useState<UserModel | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const initAuth = async () => {
+      const token = localStorage.getItem(API_CONFIG.tokenKey);
+      if (token) {
+        try {
+          const response = await getCurrentUser();
+          setUser(response.data);
+        } catch (error) {
+          // 尝试刷新token
+          try {
+            await refreshTokenApi();
+            const userResponse = await getCurrentUser();
+            setUser(userResponse.data);
+          } catch (refreshError) {
+            localStorage.removeItem(API_CONFIG.tokenKey);
+            localStorage.removeItem(API_CONFIG.refreshTokenKey);
+          }
+        }
+      }
+      setIsLoading(false);
+    };
+
+    initAuth();
+  }, []);
+
+  const handleLogin = async (username: string, password: string) => {
+    setIsLoading(true);
+    try {
+      const response = await login(username, password);
+      const { token, user } = response.data;
+      localStorage.setItem(API_CONFIG.tokenKey, token);
+      setUser(user);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem(API_CONFIG.tokenKey);
+    localStorage.removeItem(API_CONFIG.refreshTokenKey);
+    setUser(null);
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoading,
+        isAuthenticated: !!user,
+        login: handleLogin,
+        logout: handleLogout,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+```
+
+### Token存储和更新机制
+
+在`auth.ts`文件中实现令牌管理：
+
+```typescript
+// api/auth.ts
+import http from './httpService';
+import API_CONFIG from '../config/api';
+
+export function getToken(): string | null {
+  return localStorage.getItem(API_CONFIG.tokenKey);
+}
+
+export function getRefreshToken(): string | null {
+  return localStorage.getItem(API_CONFIG.refreshTokenKey);
+}
+
+export function saveToken(token: string): void {
+  localStorage.setItem(API_CONFIG.tokenKey, token);
+}
+
+export function saveRefreshToken(token: string): void {
+  localStorage.setItem(API_CONFIG.refreshTokenKey, token);
+}
+
+export function removeTokens(): void {
+  localStorage.removeItem(API_CONFIG.tokenKey);
+  localStorage.removeItem(API_CONFIG.refreshTokenKey);
+}
+
+export async function refreshToken(): Promise<void> {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) throw new Error('No refresh token found');
+  
+  const response = await http.post('/auth/refresh');
+  const { token } = response.data.data;
+  saveToken(token);
+}
+
+export async function login(username: string, password: string) {
+  return http.post('/auth/login', { username, password });
+}
+
+export async function getCurrentUser() {
+  return http.get('/user/me');
+}
+
+export async function logout() {
+  const response = await http.post('/auth/logout');
+  removeTokens();
+  return response;
+}
+```
+
+### 权限路由配置方法
+
+创建受保护的路由组件：
+
+```tsx
+// components/ProtectedRoute.tsx
+import React from 'react';
+import { Route, Redirect, RouteProps } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+
+interface ProtectedRouteProps extends RouteProps {
+  requiredPermission?: string;
+}
+
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
+  requiredPermission, 
+  ...rest 
+}) => {
+  const { isAuthenticated, user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <Redirect to="/login" />;
+  }
+
+  // 检查权限
+  if (requiredPermission && user?.permissions && 
+      !user.permissions.includes(requiredPermission)) {
+    return <Redirect to="/unauthorized" />;
+  }
+
+  return <Route {...rest} />;
+};
+
+export default ProtectedRoute;
+```
+
+使用示例：
+
+```tsx
+// App.tsx
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+import ProtectedRoute from './components/ProtectedRoute';
+import Dashboard from './pages/Dashboard';
+import Login from './pages/Login';
+import OrderManagement from './pages/OrderManagement';
+
+const App: React.FC = () => {
+  return (
+    <Router>
+      <Switch>
+        <Route path="/login" component={Login} />
+        <ProtectedRoute path="/dashboard" component={Dashboard} />
+        <ProtectedRoute 
+          path="/orders" 
+          component={OrderManagement} 
+          requiredPermission="manage_orders" 
+        />
+      </Switch>
+    </Router>
+  );
+};
+```
+
+## 加载状态和反馈机制
+
+### 请求加载状态实现
+
+创建通用加载组件：
+
+```tsx
+// components/LoadingSpinner.tsx
+import React from 'react';
+
+interface LoadingSpinnerProps {
+  size?: 'small' | 'medium' | 'large';
+  fullPage?: boolean;
+}
+
+const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
+  size = 'medium', 
+  fullPage = false 
+}) => {
+  const getSpinnerClass = () => {
+    switch (size) {
+      case 'small': return 'w-4 h-4';
+      case 'large': return 'w-10 h-10';
+      default: return 'w-6 h-6';
+    }
+  };
+
+  const spinner = (
+    <div className="flex items-center justify-center">
+      <div className={`${getSpinnerClass()} border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin`}></div>
+    </div>
+  );
+
+  if (fullPage) {
+    return (
+      <div className="fixed inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
+        {spinner}
+      </div>
+    );
+  }
+
+  return spinner;
+};
+
+export default LoadingSpinner;
+```
+
+### 长耗时请求处理策略
+
+对于长耗时请求，建议：
+
+1. 使用乐观UI更新
+2. 实现请求取消功能
+3. 显示进度指示器
+
+```tsx
+// hooks/useCancelToken.ts
+import { useRef, useEffect } from 'react';
+import axios, { CancelTokenSource } from 'axios';
+
+export function useCancelToken() {
+  const cancelTokenRef = useRef<CancelTokenSource | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (cancelTokenRef.current) {
+        cancelTokenRef.current.cancel('组件卸载，请求取消');
+      }
+    };
+  }, []);
+
+  const getCancelToken = () => {
+    if (cancelTokenRef.current) {
+      cancelTokenRef.current.cancel('新请求替换旧请求');
+    }
+    cancelTokenRef.current = axios.CancelToken.source();
+    return cancelTokenRef.current.token;
+  };
+
+  return { getCancelToken };
+}
+```
+
+使用示例：
+
+```tsx
+import React, { useState, useCallback } from 'react';
+import { useCancelToken } from '../hooks/useCancelToken';
+import { uploadLargeFile } from '../api/files';
+import ProgressBar from '../components/ProgressBar';
+
+const FileUploadComponent: React.FC = () => {
+  const [progress, setProgress] = useState(0);
+  const [uploading, setUploading] = useState(false);
+  const { getCancelToken } = useCancelToken();
+
+  const handleFileUpload = useCallback(async (file: File) => {
+    setUploading(true);
+    setProgress(0);
+    
+    try {
+      await uploadLargeFile(
+        file, 
+        (progressEvent) => {
+          const percentCompleted = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          setProgress(percentCompleted);
+        },
+        getCancelToken()
+      );
+    } finally {
+      setUploading(false);
+    }
+  }, [getCancelToken]);
+
+  return (
+    <div>
+      {uploading && <ProgressBar progress={progress} />}
+      <input 
+        type="file" 
+        disabled={uploading} 
+        onChange={(e) => {
+          if (e.target.files?.[0]) {
+            handleFileUpload(e.target.files[0]);
+          }
+        }} 
+      />
+    </div>
+  );
+};
+```
+
+## 测试要求
+
+### API调用mock测试方法
+
+使用Jest和MSW(Mock Service Worker)进行API模拟：
+
+```typescript
+// __mocks__/handlers.ts
+import { rest } from 'msw';
+import API_CONFIG from '../config/api';
+
+export const handlers = [
+  // 模拟登录API
+  rest.post(`${API_CONFIG.baseUrl}/auth/login`, (req, res, ctx) => {
+    const { username, password } = req.body as any;
+    
+    if (username === 'test' && password === 'password') {
+      return res(
+        ctx.json({
+          success: true,
+          data: {
+            token: 'fake-jwt-token',
+            user: {
+              id: 1,
+              username: 'test',
+              name: '测试用户',
+              role: 'USER'
+            }
+          }
+        })
+      );
+    }
+    
+    return res(
+      ctx.status(401),
+      ctx.json({
+        success: false,
+        message: '用户名或密码错误',
+        code: 'invalid_credentials'
+      })
+    );
+  }),
+  
+  // 模拟获取产品线列表API
+  rest.get(`${API_CONFIG.baseUrl}/product-lines`, (req, res, ctx) => {
+    return res(
+      ctx.json({
+        success: true,
+        data: [
+          {
+            id: 1,
+            code: 'LP',
+            title_zh: '气垫机产品线',
+            title_en: 'Air Cushion Machine Line',
+            status: 'publish',
+            sort_order: 10,
+            created_at: '2023-01-01 00:00:00',
+            updated_at: '2023-01-01 00:00:00'
+          }
+        ]
+      })
+    );
+  })
+];
+```
+
+设置MSW：
+
+```typescript
+// __mocks__/server.ts
+import { setupServer } from 'msw/node';
+import { handlers } from './handlers';
+
+export const server = setupServer(...handlers);
+```
+
+在测试文件中使用：
+
+```typescript
+// __tests__/products.test.ts
+import { server } from '../__mocks__/server';
+import { getProductLines } from '../api/products';
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+
+describe('Product API', () => {
+  test('getProductLines returns product lines data', async () => {
+    const response = await getProductLines();
+    expect(response.success).toBe(true);
+    expect(response.data).toHaveLength(1);
+    expect(response.data[0].code).toBe('LP');
+  });
+});
+```
+
+### API集成测试编写方法
+
+使用React Testing Library结合MSW：
+
+```tsx
+// __tests__/LoginForm.test.tsx
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { server } from '../__mocks__/server';
+import { rest } from 'msw';
+import { AuthProvider } from '../contexts/AuthContext';
+import LoginForm from '../components/LoginForm';
+import API_CONFIG from '../config/api';
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+
+describe('LoginForm', () => {
+  test('successfully logs in with valid credentials', async () => {
+    render(
+      <AuthProvider>
+        <LoginForm onSuccess={() => {}} />
+      </AuthProvider>
+    );
+
+    fireEvent.change(screen.getByLabelText(/用户名/i), {
+      target: { value: 'test' }
+    });
+    
+    fireEvent.change(screen.getByLabelText(/密码/i), {
+      target: { value: 'password' }
+    });
+    
+    fireEvent.click(screen.getByRole('button', { name: /登录/i }));
+    
+    await waitFor(() => {
+      expect(localStorage.getItem(API_CONFIG.tokenKey)).toBe('fake-jwt-token');
+    });
+  });
+
+  test('shows error message with invalid credentials', async () => {
+    // 覆盖默认处理程序
+    server.use(
+      rest.post(`${API_CONFIG.baseUrl}/auth/login`, (req, res, ctx) => {
+        return res(
+          ctx.status(401),
+          ctx.json({
+            success: false,
+            message: '用户名或密码错误',
+            code: 'invalid_credentials'
+          })
+        );
+      })
+    );
+
+    render(
+      <AuthProvider>
+        <LoginForm onSuccess={() => {}} />
+      </AuthProvider>
+    );
+
+    fireEvent.change(screen.getByLabelText(/用户名/i), {
+      target: { value: 'wrong' }
+    });
+    
+    fireEvent.change(screen.getByLabelText(/密码/i), {
+      target: { value: 'wrong' }
+    });
+    
+    fireEvent.click(screen.getByRole('button', { name: /登录/i }));
+    
+    await waitFor(() => {
+      expect(screen.getByText(/用户名或密码错误/i)).toBeInTheDocument();
+    });
+  });
+});
+```
+
+## 代码示例
+
+### CRUD操作典型实现
+
+产品线CRUD操作实现：
+
+```typescript
+// api/products.ts
+import http from './httpService';
+import { BJTResponse, PaginatedResponse, PaginationParams, SortParams } from './types/responses';
+import { ProductLineModel } from './types/models/product';
+import { CreateProductLineRequest } from './types/requests';
+
+// 获取产品线列表
+export function getProductLines(params?: PaginationParams & SortParams & { search?: string, status?: string }) {
+  return http.request<ProductLineModel[]>({
+    method: 'GET',
+    url: '/product-lines',
+    params
+  });
+}
+
+// 获取单个产品线
+export function getProductLine(id: number) {
+  return http.request<ProductLineModel>({
+    method: 'GET',
+    url: `/product-lines/${id}`
+  });
+}
+
+// 创建产品线
+export function createProductLine(data: CreateProductLineRequest) {
+  return http.request<ProductLineModel>({
+    method: 'POST',
+    url: '/product-lines',
+    data
+  });
+}
+
+// 更新产品线
+export function updateProductLine(id: number, data: Partial<CreateProductLineRequest>) {
+  return http.request<ProductLineModel>({
+    method: 'PUT',
+    url: `/product-lines/${id}`,
+    data
+  });
+}
+
+// 删除产品线
+export function deleteProductLine(id: number) {
+  return http.request<{ id: number }>({
+    method: 'DELETE',
+    url: `/product-lines/${id}`
+  });
+}
+```
+
+### 文件上传API调用示例
+
+```typescript
+// api/uploads.ts
+import http from './httpService';
+import { CancelToken } from 'axios';
+
+export function uploadFile(
+  file: File, 
+  onUploadProgress?: (progressEvent: ProgressEvent) => void,
+  cancelToken?: CancelToken
+) {
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  return http.request({
+    method: 'POST',
+    url: '/uploads',
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    },
+    onUploadProgress,
+    cancelToken
+  });
+}
+
+// 使用示例
+import { useState } from 'react';
+import { uploadFile } from '../api/uploads';
+import { useCancelToken } from '../hooks/useCancelToken';
+
+const FileUploader = () => {
+  const [progress, setProgress] = useState(0);
+  const { getCancelToken } = useCancelToken();
+  
+  const handleUpload = async (file: File) => {
+    try {
+      await uploadFile(
+        file,
+        (progressEvent) => {
+          const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setProgress(percent);
+        },
+        getCancelToken()
+      );
+      alert('上传成功');
+    } catch (error) {
+      if (axios.isCancel(error)) {
+        console.log('上传已取消');
+      } else {
+        alert('上传失败');
+      }
+    }
+  };
+  
+  return (
+    <div>
+      <input type="file" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])} />
+      {progress > 0 && <progress value={progress} max="100" />}
+    </div>
+  );
+};
+```
+
+### 带分页/筛选的列表请求示例
+
+```tsx
+// components/ProductList.tsx
+import React, { useState, useEffect } from 'react';
+import { useQueryParams, StringParam, NumberParam } from 'use-query-params';
+import { getProductLines } from '../api/products';
+import { ProductLineModel } from '../api/types/models/product';
+import Pagination from './Pagination';
+import LoadingSpinner from './LoadingSpinner';
+import { useDebounce } from '../hooks/useDebounce';
+
+const ProductList: React.FC = () => {
+  const [query, setQuery] = useQueryParams({
+    page: NumberParam,
+    per_page: NumberParam,
+    search: StringParam,
+    status: StringParam,
+    order: StringParam,
+    orderby: StringParam
+  });
+  
+  const [products, setProducts] = useState<ProductLineModel[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  
+  const { page = 1, per_page = 10, search = '', status, order = 'desc', orderby = 'id' } = query;
+  const debouncedSearch = useDebounce(search, 500);
+  
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await getProductLines({
+          page,
+          per_page,
+          search: debouncedSearch,
+          status,
+          order,
+          orderby
+        });
+        
+        setProducts(response.data);
+        // 从响应头获取分页信息
+        const totalItems = parseInt(response.headers['x-wp-total'] || '0', 10);
+        const totalPagesFromHeader = parseInt(response.headers['x-wp-totalpages'] || '0', 10);
+        
+        setTotal(totalItems);
+        setTotalPages(totalPagesFromHeader);
+      } catch (err) {
+        setError(err as Error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchProducts();
+  }, [page, per_page, debouncedSearch, status, order, orderby]);
+  
+  const handlePageChange = (newPage: number) => {
+    setQuery({ ...query, page: newPage });
+  };
+  
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuery({ ...query, search: e.target.value, page: 1 });
+  };
+  
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setQuery({ 
+      ...query, 
+      status: e.target.value === 'all' ? undefined : e.target.value, 
+      page: 1 
+    });
+  };
+  
+  const handleSortChange = (field: string) => {
+    const newOrder = orderby === field && order === 'asc' ? 'desc' : 'asc';
+    setQuery({ ...query, orderby: field, order: newOrder });
+  };
+  
+  if (loading && page === 1) return <LoadingSpinner fullPage />;
+  if (error) return <div>Error: {error.message}</div>;
+  
+  return (
+    <div className="container mx-auto py-6">
+      <div className="flex justify-between mb-4">
+        <input
+          type="text"
+          placeholder="搜索产品线..."
+          value={search}
+          onChange={handleSearchChange}
+          className="px-4 py-2 border rounded"
+        />
+        <select
+          value={status || 'all'}
+          onChange={handleStatusChange}
+          className="px-4 py-2 border rounded"
+        >
+          <option value="all">全部状态</option>
+          <option value="publish">已发布</option>
+          <option value="draft">草稿</option>
+          <option value="trash">已删除</option>
+        </select>
+      </div>
+      
+      {loading && page > 1 && <LoadingSpinner />}
+      
+      <table className="min-w-full bg-white">
+        <thead>
+          <tr>
+            <th className="py-2 px-4 border-b" onClick={() => handleSortChange('id')}>
+              ID {orderby === 'id' && (order === 'asc' ? '↑' : '↓')}
+            </th>
+            <th className="py-2 px-4 border-b" onClick={() => handleSortChange('title_zh')}>
+              名称 {orderby === 'title_zh' && (order === 'asc' ? '↑' : '↓')}
+            </th>
+            <th className="py-2 px-4 border-b">代码</th>
+            <th className="py-2 px-4 border-b">状态</th>
+            <th className="py-2 px-4 border-b">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {products.map(product => (
+            <tr key={product.id}>
+              <td className="py-2 px-4 border-b">{product.id}</td>
+              <td className="py-2 px-4 border-b">{product.title_zh}</td>
+              <td className="py-2 px-4 border-b">{product.code}</td>
+              <td className="py-2 px-4 border-b">{product.status}</td>
+              <td className="py-2 px-4 border-b">
+                <button className="mr-2 text-blue-500">编辑</button>
+                <button className="text-red-500">删除</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        className="mt-4"
+      />
+    </div>
+  );
+};
+
+export default ProductList;
+```
+
+## 扩展现有HttpService
+
+```typescript
+// api/httpService.ts
+import axios, { AxiosRequestConfig } from 'axios';
+import { BJTResponse } from './types/responses';
+
+class EnhancedHttpService extends HttpService {
+  async request<T>(config: AxiosRequestConfig): Promise<BJTResponse<T>> {
+    try {
+      const response = await super.request(config);
+      return response.data;
+    } catch (error) {
+      this.handleApiError(error);
+      throw error;
+    }
+  }
+  
+  private handleApiError(error: any) {
+    // 统一错误处理逻辑
+    if (error.response?.data?.code) {
+      // 处理API定义的错误码
+    }
+  }
+}
+```
+

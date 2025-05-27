@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>耗材页面视觉设计预览</title>
+    <style>
+        /* 从Consumables.css复制的核心样式 */
+        :root {
+            /* 品牌色 - 基于BJT蓝色调 */
+            --consumables-brand-primary: #1a57a5;
+            --consumables-brand-secondary: #2563eb;
+            --consumables-brand-accent: #3b82f6;
+            --consumables-brand-light: #dbeafe;
+            --consumables-brand-ultralight: #f0f9ff;
+            
+            /* 背景层级 - 创建清晰的视觉层次 */
+            --consumables-bg-base: #f8fafc;
+            --consumables-bg-card: #ffffff;
+            --consumables-bg-elevated: #ffffff;
+            --consumables-bg-hover: #f1f5f9;
+            --consumables-bg-selected: #e0f2fe;
+            
+            /* 文本色彩 - 确保高对比度 */
+            --consumables-text-primary: #0f172a;
+            --consumables-text-secondary: #475569;
+            --consumables-text-muted: #64748b;
+            --consumables-text-inverse: #ffffff;
+            
+            /* 边框色彩 */
+            --consumables-border-light: #e2e8f0;
+            --consumables-border-default: #cbd5e1;
+            --consumables-border-strong: #94a3b8;
+            --consumables-border-focus: #3b82f6;
+            
+            /* 阴影系统 */
+            --consumables-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --consumables-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -1px rgb(0 0 0 / 0.06);
+            --consumables-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
+            --consumables-shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background-color: var(--consumables-bg-base);
+            color: var(--consumables-text-primary);
+            line-height: 1.6;
+        }
+
+        .consumables-page {
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 24px 20px;
+        }
+
+        /* 标题区域 */
+        .section-title {
+            background: linear-gradient(135deg, var(--consumables-brand-primary) 0%, var(--consumables-brand-accent) 100%);
+            color: var(--consumables-text-inverse);
+            padding: 32px 24px;
+            margin: -24px -20px 32px;
+            box-shadow: var(--consumables-shadow-lg);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .section-title::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 40%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            transform: rotate(45deg);
+        }
+
+        .title-text {
+            position: relative;
+            z-index: 1;
+        }
+
+        .title-text h2 {
+            font-size: 30px;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+            letter-spacing: -0.02em;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .title-text p {
+            font-size: 18px;
+            opacity: 0.95;
+            margin: 0;
+            font-weight: 400;
+        }
+
+        .cart-button {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            color: var(--consumables-text-inverse);
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .cart-button:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        /* 筛选容器 */
+        .filter-container {
+            background-color: var(--consumables-bg-card);
+            border: 1px solid var(--consumables-border-light);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+            box-shadow: var(--consumables-shadow-md);
+        }
+
+        .filter-header {
+            display: flex;
+            align-items: center;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--consumables-border-light);
+            margin-bottom: 20px;
+        }
+
+        .filter-header h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--consumables-text-primary);
+            margin: 0;
+        }
+
+        /* 产品卡片 */
+        .product-card {
+            background-color: var(--consumables-bg-card);
+            border: 1px solid var(--consumables-border-light);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s ease;
+            box-shadow: var(--consumables-shadow-sm);
+            margin-bottom: 20px;
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--consumables-shadow-xl);
+            border-color: var(--consumables-brand-light);
+        }
+
+        .product-header {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .product-image-container {
+            background-color: var(--consumables-bg-base);
+            border-radius: 12px;
+            padding: 16px;
+            width: 140px;
+            height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .product-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .product-info {
+            flex: 1;
+        }
+
+        .product-code {
+            display: inline-block;
+            background-color: var(--consumables-brand-primary);
+            color: var(--consumables-text-inverse);
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .product-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--consumables-text-primary);
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .product-model {
+            font-size: 14px;
+            color: var(--consumables-text-muted);
+            margin-bottom: 12px;
+        }
+
+        /* 价格信息 */
+        .price-info {
+            background-color: var(--consumables-bg-base);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .price-tier {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background-color: var(--consumables-bg-card);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .price-tier:hover {
+            background-color: var(--consumables-brand-ultralight);
+        }
+
+        .price-range {
+            font-size: 14px;
+            color: var(--consumables-text-muted);
+        }
+
+        .price-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--consumables-brand-primary);
+        }
+
+        /* 操作区域 */
+        .actions {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .quantity-input {
+            width: 120px;
+            padding: 8px 12px;
+            border: 1px solid var(--consumables-border-light);
+            border-radius: 8px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .cart-add-button {
+            flex: 1;
+            background-color: var(--consumables-brand-primary);
+            color: var(--consumables-text-inverse);
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .cart-add-button:hover {
+            background-color: var(--consumables-brand-secondary);
+            transform: translateY(-2px);
+            box-shadow: var(--consumables-shadow-md);
+        }
+    </style>
+</head>
+<body>
+    <div class="consumables-page">
+        <div class="container">
+            <!-- 标题区域 -->
+            <div class="section-title">
+                <div class="title-text">
+                    <h2>耗材产品</h2>
+                    <p>BJT 缓冲气垫膜、缓冲气袋及其他产品</p>
+                </div>
+                <button class="cart-button">
+                    🛒 查看购物车
+                </button>
+            </div>
+
+            <!-- 筛选容器 -->
+            <div class="filter-container">
+                <div class="filter-header">
+                    <h3>🔍 筛选条件</h3>
+                </div>
+                <p style="color: var(--consumables-text-secondary); margin-bottom: 20px;">
+                    在这里显示形状选择器、材料选择器、尺寸筛选等组件
+                </p>
+            </div>
+
+            <!-- 产品列表 -->
+            <div class="products-container">
+                <!-- 产品卡片示例 -->
+                <div class="product-card">
+                    <div class="product-header">
+                        <div class="product-image-container">
+                            <img src="/images/MEX/consumables/MEX.png" alt="产品图片" class="product-image">
+                        </div>
+                        <div class="product-info">
+                            <span class="product-code">90R01287</span>
+                            <h3 class="product-name">MEX-RH50-15-20-20-L</h3>
+                            <p class="product-model">15um 50%HDPE Pillow, 20cmx20cm, 800m</p>
+                        </div>
+                    </div>
+
+                    <div class="price-info">
+                        <div class="price-tier">
+                            <span class="price-range">1-99 卷</span>
+                            <span class="price-value">¥100.00</span>
+                        </div>
+                        <div class="price-tier">
+                            <span class="price-range">100-199 卷</span>
+                            <span class="price-value">¥90.00</span>
+                        </div>
+                        <div class="price-tier">
+                            <span class="price-range">200+ 卷</span>
+                            <span class="price-value">¥80.00</span>
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <input type="number" class="quantity-input" placeholder="数量" value="1">
+                        <button class="cart-add-button">
+                            🛒 加入购物车
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 第二个产品卡片示例 -->
+                <div class="product-card">
+                    <div class="product-header">
+                        <div class="product-image-container">
+                            <img src="/images/BUB/consumables/BUB.png" alt="产品图片" class="product-image">
+                        </div>
+                        <div class="product-info">
+                            <span class="product-code">90R01288</span>
+                            <h3 class="product-name">BUB-LD30-10-25-25</h3>
+                            <p class="product-model">10um 30%LDPE Bubble, 25cmx25cm, 600m</p>
+                        </div>
+                    </div>
+
+                    <div class="price-info">
+                        <div class="price-tier">
+                            <span class="price-range">1-99 卷</span>
+                            <span class="price-value">¥120.00</span>
+                        </div>
+                        <div class="price-tier">
+                            <span class="price-range">100-199 卷</span>
+                            <span class="price-value">¥108.00</span>
+                        </div>
+                        <div class="price-tier">
+                            <span class="price-range">200+ 卷</span>
+                            <span class="price-value">¥95.00</span>
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <input type="number" class="quantity-input" placeholder="数量" value="1">
+                        <button class="cart-add-button">
+                            🛒 加入购物车
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 添加简单的交互效果
+        document.querySelectorAll('.cart-add-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const originalText = this.textContent;
+                this.textContent = '✓ 已添加';
+                this.style.backgroundColor = '#059669';
+                
+                setTimeout(() => {
+                    this.textContent = originalText;
+                    this.style.backgroundColor = '';
+                }, 2000);
+            });
+        });
+    </script>
+</body>
+</html> 

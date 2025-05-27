@@ -3,7 +3,7 @@
  * 订单控制器
  */
 class BJT_Order_Controller extends BJT_API_Controller {
-    protected $resource_name = 'orders';
+    public $resource_name = 'orders';
     protected $order_table_name;
     protected $order_item_table_name;
     protected $rest_base = 'orders';
@@ -13,6 +13,7 @@ class BJT_Order_Controller extends BJT_API_Controller {
         $this->order_table_name = $wpdb->prefix . 'bjt_orders';
         $this->order_item_table_name = $wpdb->prefix . 'bjt_order_items';
         $this->namespace = 'bjt/v1';
+        $this->schema = $this->get_item_schema();
         parent::__construct();
         error_log("BJT_Order_Controller initialized.");
     }
@@ -32,11 +33,11 @@ class BJT_Order_Controller extends BJT_API_Controller {
                 'permission_callback' => [$this, 'check_user_logged_in_permission'], // User must be logged in to create order
                 'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::CREATABLE),
             ],
-             'schema' => [$this, 'get_public_item_schema'], // Schema for a single order
+            'schema' => [$this, 'get_public_item_schema'], // Schema for a single order
         ]);
 
-        // Get a specific order
-        register_rest_route($this->namespace, '/' . $this->rest_base . '/(?P<id>[\d]+)', [
+        // Get a specific order - changed pattern to support alphanumeric IDs like ORD-001
+        register_rest_route($this->namespace, '/' . $this->rest_base . '/(?P<id>[\w\-]+)', [
             [
                 'methods' => WP_REST_Server::READABLE,
                 'callback' => [$this, 'get_item'],
@@ -44,57 +45,66 @@ class BJT_Order_Controller extends BJT_API_Controller {
                 'args' => [
                     'id' => [
                         'description' => __('Unique identifier for the order.'),
-                        'type' => 'integer',
+                        'type' => 'string',
                         'required' => true,
                         'validate_callback' => 'rest_validate_request_arg',
                     ],
                     'context' => $this->get_context_param(['default' => 'view']),
-                     'lang' => [
+                    'lang' => [
                         'description'       => __('Language for product names in order items.'),
                         'type'              => 'string',
-                         'default'           => 'zh',
+                        'default'           => 'zh',
                         'sanitize_callback' => 'sanitize_key',
                         'validate_callback' => 'rest_validate_request_arg',
-                         'enum'              => ['zh', 'en'],
+                        'enum'              => ['zh', 'en'],
                     ],
                 ],
             ],
-            // Potentially add UPDATE for admins to change status
-            // [
-            //     'methods' => WP_REST_Server::EDITABLE,
-            //     'callback' => [$this, 'update_item'],
-            //     'permission_callback' => [$this, 'check_admin_permission'], 
-            //     'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::EDITABLE),
-            // ],
+            [
+                'methods' => WP_REST_Server::EDITABLE, // Handles PUT/PATCH
+                'callback' => [$this, 'update_item'],
+                'permission_callback' => [$this, 'check_admin_permission'], 
+                'args' => [
+                    'id' => [
+                        'description' => __('Unique identifier for the order.'),
+                        'type' => 'string',
+                        'required' => true,
+                        'validate_callback' => 'rest_validate_request_arg',
+                    ],
+                    'status' => [
+                        'description' => __('New status for the order.'),
+                        'type'        => 'string',
+                        'required'    => true, // Require status for update
+                        'enum'        => ['pending_payment', 'processing', 'shipped', 'completed', 'cancelled', 'refunded', 'failed'],
+                        'validate_callback' => 'rest_validate_request_arg',
+                        'sanitize_callback' => 'sanitize_key',
+                    ],
+                ],
+            ],
             'schema' => [$this, 'get_public_item_schema'],
         ]);
 
-        // Add UPDATE route for admins to change status etc.
-        [
-            'methods' => WP_REST_Server::EDITABLE, // Handles PUT/PATCH
-            'callback' => [$this, 'update_item'],
-            'permission_callback' => [$this, 'check_admin_permission'], 
-            'args' => [
-                 'id' => [
-                   'description' => __('Unique identifier for the order.'),
-                   'type' => 'integer',
-                   'required' => true,
-                   'validate_callback' => 'rest_validate_request_arg',
+        // Cancel an order - changed pattern to support alphanumeric IDs
+        register_rest_route($this->namespace, '/' . $this->rest_base . '/(?P<id>[\w\-]+)/cancel', [
+            [
+                'methods' => WP_REST_Server::CREATABLE,
+                'callback' => [$this, 'cancel_order'],
+                'permission_callback' => [$this, 'check_read_item_permission'], // User can cancel their own, admin can cancel any
+                'args' => [
+                    'id' => [
+                        'description' => __('Unique identifier for the order.'),
+                        'type' => 'string',
+                        'required' => true,
+                        'validate_callback' => 'rest_validate_request_arg',
+                    ],
+                    'reason' => [
+                        'description' => __('Reason for cancellation.'),
+                        'type' => 'string',
+                        'required' => true,
+                    ],
                 ],
-                'status' => [
-                   'description' => __('New status for the order.'),
-                   'type'        => 'string',
-                   'required'    => true, // Require status for update
-                   'enum'        => ['pending_payment', 'processing', 'shipped', 'completed', 'cancelled', 'refunded', 'failed'],
-                   'validate_callback' => 'rest_validate_request_arg',
-                   'sanitize_callback' => 'sanitize_key',
-                ],
-                // Add other editable fields here later if needed (e.g., tracking_number)
-                // 'tracking_number' => [ ... ],
             ],
-        ],
-        'schema' => [$this, 'get_public_item_schema'],
-    ]);
+        ]);
     }
     
     /**
@@ -304,9 +314,14 @@ class BJT_Order_Controller extends BJT_API_Controller {
     // --- Placeholder CRUD Methods ---
     public function get_items(WP_REST_Request $request) {
         global $wpdb;
+        
+        error_log("BJT_Order_Controller->get_items: Starting method");
+        
         // Permission checks are handled by the 'check_read_permission' callback
         $current_user_id = get_current_user_id();
         $is_admin = current_user_can('manage_options');
+        
+        error_log("BJT_Order_Controller->get_items: current_user_id: $current_user_id, is_admin: " . ($is_admin ? 'true' : 'false'));
 
         // Prepare args for query
         $args = [];
@@ -316,6 +331,8 @@ class BJT_Order_Controller extends BJT_API_Controller {
                 $args[$key] = $request[$key];
             }
         }
+        
+        error_log("BJT_Order_Controller->get_items: args: " . print_r($args, true));
 
         // Force user_id filter for non-admins
         if (!$is_admin) {
@@ -365,24 +382,33 @@ class BJT_Order_Controller extends BJT_API_Controller {
             $order = 'DESC'; // Default to DESC if invalid
         }
         
-        $prepared_where_sql = $wpdb->prepare($where_sql, $sql_params);
-
+        // Fix SQL preparations
         // Get total items count
-        $total_items_sql = "SELECT COUNT(id) FROM {$this->order_table_name} WHERE {$prepared_where_sql}";
+        $total_items_sql = "SELECT COUNT(id) FROM {$this->order_table_name} WHERE {$where_sql}";
+        // Only prepare if we have parameters
+        if (!empty($sql_params)) {
+            $total_items_sql = $wpdb->prepare($total_items_sql, $sql_params);
+        }
         $total_items = (int) $wpdb->get_var($total_items_sql);
 
         // Get order IDs for the current page
-        $orders_sql = "SELECT * FROM {$this->order_table_name} WHERE {$prepared_where_sql} ORDER BY {$orderby} {$order} LIMIT %d OFFSET %d";
-        $orders_db = $wpdb->get_results($wpdb->prepare($orders_sql, $per_page, $offset));
+        $orders_sql = "SELECT * FROM {$this->order_table_name} WHERE {$where_sql} ORDER BY {$orderby} {$order} LIMIT %d OFFSET %d";
+        // Combine all parameters
+        $all_sql_params = array_merge($sql_params, [$per_page, $offset]);
+        $orders_db = $wpdb->get_results($wpdb->prepare($orders_sql, $all_sql_params));
 
         $order_ids = wp_list_pluck($orders_db, 'id');
         $all_order_items = [];
 
         // Fetch all items for the retrieved orders in one go
         if (!empty($order_ids)) {
-            $order_ids_placeholder = implode(',', array_fill(0, count($order_ids), '%d'));
-            $items_sql = "SELECT * FROM {$this->order_item_table_name} WHERE order_id IN ({$order_ids_placeholder})";
-            $all_order_items_db = $wpdb->get_results($wpdb->prepare($items_sql, $order_ids));
+            // Prepare placeholder for order IDs
+            $placeholders = implode(',', array_fill(0, count($order_ids), '%d'));
+            $items_sql = $wpdb->prepare(
+                "SELECT * FROM {$this->order_item_table_name} WHERE order_id IN ($placeholders)",
+                $order_ids
+            );
+            $all_order_items_db = $wpdb->get_results($items_sql);
             
             // Map items to their order ID
             foreach($all_order_items_db as $item) {
@@ -422,25 +448,55 @@ class BJT_Order_Controller extends BJT_API_Controller {
             $response->link_header('next', add_query_arg('page', $next_page, $base));
         }
 
+        // Return with success wrapper
+        $final_response = [
+            'success' => true,
+            'data' => $response->get_data()
+        ];
+        
+        // Add pagination headers to the response
+        $response = rest_ensure_response($final_response);
+        $response->header('X-WP-Total', $total_items);
+        $response->header('X-WP-TotalPages', $max_pages);
+        
         return $response;
     }
 
     public function get_item(WP_REST_Request $request) {
+        global $wpdb;
         // Permission check is handled by 'check_read_item_permission' callback in register_routes
-        $order_id = absint($request['id']);
-        if ($order_id <= 0) {
-            return new WP_Error('rest_invalid_id', __('Invalid order ID.'), ['status' => 400]);
+        $order_id = $request['id'];
+        
+        // Check if this is a numeric ID or an order number
+        if (is_numeric($order_id)) {
+            $order_id = absint($order_id);
+            $order = $this->get_order_object($order_id);
+        } else {
+            // Lookup by order number instead - ensure we handle only the order ID without repeating it
+            $clean_order_id = trim($order_id);
+            $order_row = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM {$this->order_table_name} WHERE order_number = %s",
+                $clean_order_id
+            ));
+            if (!$order_row) {
+                return $this->error_response('Order not found.', 'rest_not_found', 404);
+            }
+            $order_id = $order_row->id;
+            $order = $this->get_order_object($order_id);
         }
 
-        // Use the helper to get the raw order object with items
-        $order = $this->get_order_object($order_id);
-        if (is_wp_error($order)) {
-            // Error occurred (e.g., not found)
+        if ($order instanceof WP_REST_Response) {
+            // If it's an error response, return it
             return $order;
         }
 
-        // Prepare the response using the standard formatter
-        $response = $this->prepare_item_for_response($order, $request);
+        // Prepare the response
+        $prepared_order = $this->prepare_item_for_response($order, $request);
+        $response = [
+            'success' => true,
+            'data' => $prepared_order->get_data()
+        ];
+        
         return rest_ensure_response($response);
     }
 
@@ -565,17 +621,18 @@ class BJT_Order_Controller extends BJT_API_Controller {
                 'created_at' => $current_time,
                 'updated_at' => $current_time,
             ];
-            $order_result = $wpdb->insert($this->order_table_name, $order_data);
-
-            if (!$order_result) {
-                throw new Exception('Failed to insert order header: ' . $wpdb->last_error);
+            $order_formats = $this->get_wpdb_data_formats($order_data);
+            $wpdb->insert($this->order_table_name, $order_data, $order_formats);
+            $new_order_id = $wpdb->insert_id;
+            
+            if (!$new_order_id) {
+                throw new Exception('Failed to create order.');
             }
-            $order_id = $wpdb->insert_id;
-
+            
             // 6. Insert into wp_bjt_order_items
             foreach ($order_items_data as $item_data) {
                 $item_insert_data = [
-                    'order_id' => $order_id,
+                    'order_id' => $new_order_id,
                     'product_line_id' => $item_data['product_line_id'] ?? 0, // Need to get this correctly
                     'product_id' => $item_data['product_id'],
                     'product_type' => $item_data['product_type'],
@@ -587,7 +644,8 @@ class BJT_Order_Controller extends BJT_API_Controller {
                     'created_at' => $current_time, // Use order creation time
                     'updated_at' => $current_time,
                 ];
-                $item_result = $wpdb->insert($this->order_item_table_name, $item_insert_data);
+                $item_formats = $this->get_wpdb_data_formats($item_insert_data);
+                $item_result = $wpdb->insert($this->order_item_table_name, $item_insert_data, $item_formats);
                 if (!$item_result) {
                      throw new Exception('Failed to insert order item (' . $item_data['part_number'] . '): ' . $wpdb->last_error);
                 }
@@ -597,7 +655,7 @@ class BJT_Order_Controller extends BJT_API_Controller {
             $clear_result = $wpdb->delete($cart_table, ['user_id' => $user_id], ['%d']);
             if ($clear_result === false) {
                  // Log warning, but don't fail the order creation
-                 error_log("Warning: Failed to clear cart for user {$user_id} after order {$order_id} creation.");
+                 error_log("Warning: Failed to clear cart for user {$user_id} after order {$new_order_id} creation.");
             }
             
             // 8. Commit Transaction
@@ -612,17 +670,28 @@ class BJT_Order_Controller extends BJT_API_Controller {
 
         // 10. Fetch and return the created order
         $request->set_param('context', 'edit'); // Use edit context to get all fields back
-        $new_order = $this->get_order_object($order_id); // Fetch the complete order object
-        if (is_wp_error($new_order)) {
-            return $this->error_response('Order created, but failed to retrieve details.', 'retrieve_error_after_create', 500);
+        $new_order = $this->get_order_object($new_order_id); // Fetch the complete order object
+        if ($new_order instanceof WP_REST_Response) {
+            // Should not happen if insert was successful
+            return $this->error_response('Order created but could not be retrieved.', 'rest_retrieve_error', 500);
         }
 
         $response = $this->prepare_item_for_response($new_order, $request);
         $response = rest_ensure_response($response);
         $response->set_status(201); // 201 Created
-        $response->header('Location', rest_url(sprintf('%s/%s/%d', $this->namespace, $this->rest_base, $order_id)));
+        $response->header('Location', rest_url(sprintf('%s/%s/%d', $this->namespace, $this->rest_base, $new_order_id)));
         
-        return $response;
+        // Create direct response with success wrapper instead of using format_response
+        $final_response = [
+            'success' => true,
+            'message' => 'Order created successfully.',
+            'data' => $response->get_data()
+        ];
+        
+        $result = new WP_REST_Response($final_response, 201);
+        $result->header('Location', rest_url(sprintf('%s/%s/%d', $this->namespace, $this->rest_base, $new_order_id)));
+        
+        return $result;
     }
 
     // --- Helper methods needed for create_item ---
@@ -753,7 +822,7 @@ class BJT_Order_Controller extends BJT_API_Controller {
             $id
         ));
         if (!$order) {
-            return new WP_Error('rest_not_found', __('Order not found.'), ['status' => 404]);
+            return $this->error_response('Order not found.', 'rest_not_found', 404);
         }
         
         // Fetch associated items
@@ -850,14 +919,26 @@ class BJT_Order_Controller extends BJT_API_Controller {
     public function update_item(WP_REST_Request $request) {
         global $wpdb;
         // Permission is handled by check_admin_permission
-        $order_id = absint($request['id']);
-        if ($order_id <= 0) {
-            return new WP_Error('rest_invalid_id', __('Invalid order ID.'), ['status' => 400]);
+        $order_id = $request['id'];
+        
+        // Check if this is a numeric ID or an order number
+        if (is_numeric($order_id)) {
+            $order_id = absint($order_id);
+        } else {
+            // Lookup by order number instead
+            $order_row = $wpdb->get_row($wpdb->prepare(
+                "SELECT id FROM {$this->order_table_name} WHERE order_number = %s",
+                $order_id
+            ));
+            if (!$order_row) {
+                return $this->error_response('Order not found.', 'rest_not_found', 404);
+            }
+            $order_id = $order_row->id;
         }
         
         // Fetch the existing order to ensure it exists
         $order = $this->get_order_object($order_id);
-        if (is_wp_error($order)) {
+        if ($order instanceof WP_REST_Response) {
             return $order; // Return 404 if not found
         }
 
@@ -871,7 +952,7 @@ class BJT_Order_Controller extends BJT_API_Controller {
         if (isset($params['status'])) {
             $new_status = sanitize_key($params['status']);
             if (!in_array($new_status, $schema['properties']['status']['enum'])) {
-                 return new WP_Error('rest_invalid_param', __('Invalid order status provided.'), ['status' => 400, 'param' => 'status']);
+                return $this->error_response('Invalid order status provided.', 'rest_invalid_param', 400);
             }
             if ($order->status !== $new_status) {
                 $data_to_update['status'] = $new_status;
@@ -886,7 +967,7 @@ class BJT_Order_Controller extends BJT_API_Controller {
         // If no data needs updating, return the current item
         if (empty($data_to_update)) {
             $response = $this->prepare_item_for_response($order, $request);
-            return rest_ensure_response($response);
+            return rest_ensure_response($this->format_response($response->get_data()));
         }
 
         // Add updated_at timestamp
@@ -903,67 +984,113 @@ class BJT_Order_Controller extends BJT_API_Controller {
         
         if (false === $result) {
             error_log('BJT_Order_Controller DB Update Error: ' . $wpdb->last_error);
-            return new WP_Error('rest_db_error', __('Failed to update order.'), ['status' => 500]);
+            return $this->error_response('Failed to update order.', 'rest_db_error', 500);
         }
         
         // Fetch the updated order object
         $updated_order = $this->get_order_object($order_id);
-         if (is_wp_error($updated_order)) {
+        if ($updated_order instanceof WP_REST_Response) {
             // Should not happen if update succeeded, but handle anyway
             return $this->error_response('Order updated, but failed to retrieve details.', 'retrieve_error_after_update', 500);
         }
 
         // Prepare and return response
         $response = $this->prepare_item_for_response($updated_order, $request);
-        return rest_ensure_response($response);
+        return rest_ensure_response($this->format_response($response->get_data()));
     }
 
     // public function delete_item(WP_REST_Request $request) { ... } // Orders usually not deleted, but cancelled/status changed
 
     // --- Permission Checks ---
-    public function check_user_logged_in_permission(WP_REST_Request $request) {
-        if (!is_user_logged_in()) {
-            return new WP_Error('rest_not_logged_in', __('You are not currently logged in.'), ['status' => 401]);
+    public function check_user_logged_in_permission($request) {
+        // First check standard WP login
+        if (is_user_logged_in()) {
+            return true;
         }
-        return true;
+        
+        // Then check for JWT token in Authorization header
+        $headers = $request->get_headers();
+        if (isset($headers['authorization'][0])) {
+            $auth_header = $headers['authorization'][0];
+            
+            if (preg_match('/Bearer\s(\S+)/', $auth_header, $matches)) {
+                $token = $matches[1];
+                
+                try {
+                    // Use the JWT handler to validate the token
+                    $auth = new BJT_Auth();
+                    $auth_payload = $auth->validate_token($token);
+                    
+                    if (!is_wp_error($auth_payload)) {
+                        // Extract user info and set current user
+                        if (isset($auth_payload['user']) && isset($auth_payload['user']['id'])) {
+                            $user_id = $auth_payload['user']['id'];
+                            $user = get_user_by('id', $user_id);
+                            
+                            if ($user) {
+                                // Set current user
+                                wp_set_current_user($user_id);
+                                return true;
+                            }
+                        }
+                    }
+                } catch (Exception $e) {
+                    error_log('JWT token validation error: ' . $e->getMessage());
+                }
+            }
+        }
+        
+        return $this->error_response('You are not currently logged in.', 'rest_not_logged_in', 401);
     }
 
-    public function check_read_permission(WP_REST_Request $request) {
+    public function check_read_permission($request) {
         if (!is_user_logged_in()) {
-            return new WP_Error('rest_not_logged_in', __('You are not currently logged in.'), ['status' => 401]);
+            return $this->error_response('You are not currently logged in.', 'rest_not_logged_in', 401);
         }
         // Allow users to see their own orders. Admins can see all if user_id param is used.
         if (current_user_can('manage_options') || empty($request['user_id']) || get_current_user_id() == $request['user_id']) {
             return true;
         }
-        return new WP_Error('rest_forbidden', __('You cannot view these orders.'), ['status' => 403]);
+        return $this->error_response('You cannot view these orders.', 'rest_forbidden', 403);
     }
 
-    public function check_read_item_permission(WP_REST_Request $request) {
+    public function check_read_item_permission($request) {
         global $wpdb;
         if (!is_user_logged_in()) {
-            return new WP_Error('rest_not_logged_in', __('You are not currently logged in.'), ['status' => 401]);
+            return $this->error_response('You are not currently logged in.', 'rest_not_logged_in', 401);
         }
-        $order_id = absint($request['id']);
-        $order = $wpdb->get_row($wpdb->prepare("SELECT user_id FROM {$this->order_table_name} WHERE id = %d", $order_id));
+        
+        $order_id = $request['id'];
+        
+        // Check if this is a numeric ID or an order number
+        if (is_numeric($order_id)) {
+            $order_id = absint($order_id);
+            $order = $wpdb->get_row($wpdb->prepare("SELECT user_id FROM {$this->order_table_name} WHERE id = %d", $order_id));
+        } else {
+            // Lookup by order number instead
+            $order = $wpdb->get_row($wpdb->prepare("SELECT user_id FROM {$this->order_table_name} WHERE order_number = %s", $order_id));
+        }
+        
         if (!$order) {
-            return new WP_Error('rest_not_found', __('Order not found.'), ['status' => 404]);
+            return $this->error_response('Order not found.', 'rest_not_found', 404);
         }
+        
         if (current_user_can('manage_options') || get_current_user_id() == $order->user_id) {
             return true;
         }
-        return new WP_Error('rest_forbidden', __('You cannot view this order.'), ['status' => 403]);
+        
+        return $this->error_response('You cannot view this order.', 'rest_forbidden', 403);
     }
 
     /**
      * Check if the current user has admin privileges.
      */
-    public function check_admin_permission(WP_REST_Request $request) {
+    public function check_admin_permission($request) {
         if (!is_user_logged_in()) {
-            return new WP_Error('rest_not_logged_in', __('You are not currently logged in.'), ['status' => 401]);
+            return $this->error_response('You are not currently logged in.', 'rest_not_logged_in', 401);
         }
         if (!current_user_can('manage_options')) { // 'manage_options' is a standard capability for admins
-            return new WP_Error('rest_forbidden', __('You do not have permission to modify orders.'), ['status' => 403]);
+            return $this->error_response('You do not have permission to modify orders.', 'rest_forbidden', 403);
         }
         return true;
     }
@@ -997,5 +1124,199 @@ class BJT_Order_Controller extends BJT_API_Controller {
     // protected function map_cart_item_to_order_item($cart_item_data, $order_id, $lang) { ... }
     // protected function prepare_order_for_response($order_db, $order_items_db, $request) { ... }
 
+    protected function error_response($message, $code = 'bjt_api_error', $status = 400, $data = null) {
+        $response = [
+            'success' => false,
+            'message' => $message,
+            'code' => $code
+        ];
+        
+        if ($data !== null) {
+            $response['data'] = $data;
+        }
+        
+        return new WP_REST_Response($response, $status);
+    }
+
+    /**
+     * Format a successful response with consistent structure.
+     *
+     * @param mixed  $data    The response data.
+     * @param string $message Optional message.
+     * @param int    $status  HTTP status code.
+     * @param array  $headers Optional headers.
+     * @return WP_REST_Response
+     */
+    protected function format_response($data, $message = null, $status = 200, $headers = []) {
+        $response_data = [
+            'success' => true,
+        ];
+        
+        // Include message if provided
+        if ($message !== null) {
+            $response_data['message'] = $message;
+        }
+        
+        // Add data (wrapped if necessary)
+        $response_data['data'] = $data;
+        
+        // Create response
+        $response = new WP_REST_Response($response_data, $status);
+        
+        // Add headers if any
+        if (!empty($headers)) {
+            foreach ($headers as $header => $value) {
+                $response->header($header, $value);
+            }
+        }
+        
+        return $response;
+    }
+
+    /**
+     * Filters a response based on the context defined in the schema.
+     *
+     * @param array  $data    Raw API data.
+     * @param array  $schema  Schema properties for the data object.
+     * @param string $context Request context.
+     * @return array Filtered response object.
+     */
+    protected function filter_response_by_context($data, $schema_properties, $context = 'view') {
+        if (empty($schema_properties) || !is_array($schema_properties)) {
+            return $data;
+        }
+
+        $filtered_data = [];
+        foreach ($data as $key => $value) {
+            // Skip if the property isn't defined in the schema
+            if (!isset($schema_properties[$key])) {
+                $filtered_data[$key] = $value;
+                continue;
+            }
+            
+            // Skip if the property shouldn't be included in this context
+            if (isset($schema_properties[$key]['context']) && 
+                is_array($schema_properties[$key]['context']) && 
+                !in_array($context, $schema_properties[$key]['context'])) {
+                continue;
+            }
+            
+            $filtered_data[$key] = $value;
+        }
+        
+        return $filtered_data;
+    }
+
+    /**
+     * Prepare a response for inserting into a collection of responses.
+     *
+     * @param WP_REST_Response $response Response object.
+     * @return array|WP_REST_Response Response data, ready for insertion into a collection.
+     */
+    protected function prepare_response_for_collection($response) {
+        if (!($response instanceof WP_REST_Response)) {
+            return $response;
+        }
+
+        $data = (array) $response->get_data();
+        $server = rest_get_server();
+
+        if (method_exists($server, 'get_compact_response_links')) {
+            $links = call_user_func([$server, 'get_compact_response_links'], $response);
+        } else {
+            $links = array();
+        }
+
+        if (!empty($links)) {
+            $data['_links'] = $links;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Cancels an existing order. Can be used by admin or the owner of the order.
+     *
+     * @param WP_REST_Request $request Full details about the request.
+     * @return WP_REST_Response|WP_Error Response object.
+     */
+    public function cancel_order(WP_REST_Request $request) {
+        global $wpdb;
+        
+        // Get the order ID and convert it to the appropriate type (int or string)
+        $order_id = $request['id'];
+        
+        // Check if this is a numeric ID or an order number
+        if (is_numeric($order_id)) {
+            $order_id = absint($order_id);
+            $order = $this->get_order_object($order_id);
+        } else {
+            // Lookup by order number instead
+            $order_row = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM {$this->order_table_name} WHERE order_number = %s",
+                $order_id
+            ));
+            if (!$order_row) {
+                return $this->error_response('Order not found.', 'rest_not_found', 404);
+            }
+            $order_id = $order_row->id;
+            $order = $this->get_order_object($order_id);
+        }
+        
+        if ($order instanceof WP_REST_Response) {
+            return $order; // Not found error is already formatted
+        }
+        
+        // Check if order status allows cancellation 
+        $allowed_statuses = array('pending_payment', 'processing');
+        if (!in_array($order->status, $allowed_statuses)) {
+            return $this->error_response(
+                sprintf('Cannot cancel order with status "%s". Only orders with status: %s can be cancelled.', 
+                       $order->status, implode(', ', $allowed_statuses)),
+                'rest_invalid_order_status',
+                400
+            );
+        }
+        
+        // Get cancellation reason
+        $reason = $request['reason'];
+        
+        // Update order status to cancelled
+        $update_data = array(
+            'status' => 'cancelled',
+            'updated_at' => current_time('mysql', 1),
+            'notes' => !empty($order->notes) ? 
+                $order->notes . "\n" . sprintf('Cancelled on %s. Reason: %s', current_time('mysql'), $reason) :
+                sprintf('Cancelled on %s. Reason: %s', current_time('mysql'), $reason)
+        );
+        
+        // Perform the update
+        $result = $wpdb->update(
+            $this->order_table_name,
+            $update_data,
+            array('id' => $order_id),
+            array('%s', '%s', '%s'),
+            array('%d')
+        );
+        
+        if (false === $result) {
+            return $this->error_response('Failed to cancel order. Database error.', 'cancel_order_failed', 500);
+        }
+        
+        // Get the updated order
+        $updated_order = $this->get_order_object($order_id);
+        
+        // Prepare and return the response directly
+        $response_data = $this->prepare_item_for_response($updated_order, $request);
+        
+        // Create direct response with success wrapper instead of using format_response
+        $final_response = [
+            'success' => true,
+            'message' => 'Order cancelled successfully.',
+            'data' => $response_data->get_data()
+        ];
+        
+        return rest_ensure_response($final_response);
+    }
 }
-?> 
+ 

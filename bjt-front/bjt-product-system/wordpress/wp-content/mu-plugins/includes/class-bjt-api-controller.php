@@ -26,7 +26,7 @@ abstract class BJT_API_Controller extends WP_REST_Controller {
         // 从请求头获取Bearer Token
         $authorization_header = $request->get_header('authorization');
         if (empty($authorization_header) || !preg_match('/Bearer\s+(.*)$/i', $authorization_header, $matches)) {
-            return $this->error_response('未提供授权令牌', 'token_not_provided', 401, false);
+            return $this->error_response('未提供授权令牌', 'rest_not_logged_in', 401, false);
         }
         
         $token = $matches[1];
@@ -37,15 +37,30 @@ abstract class BJT_API_Controller extends WP_REST_Controller {
             $decoded_token = $jwt_handler->validate_token($token);
             
             if (!$decoded_token) {
-                return $this->error_response('无效的授权令牌', 'invalid_token', 401, false);
+                return $this->error_response('无效的授权令牌', 'rest_forbidden', 401, false);
             }
             
-            // 将用户ID存储在请求对象中，以便在控制器方法中使用
-            $request->set_param('user_id', $decoded_token->data->user_id);
+            // 从令牌中提取用户ID并设置当前用户
+            if (isset($decoded_token->data->user_id)) {
+                $user_id = $decoded_token->data->user_id;
+                $user = get_user_by('id', $user_id);
+                
+                if (!$user) {
+                    return $this->error_response('用户不存在', 'rest_forbidden', 401, false);
+                }
+                
+                // 设置当前用户
+                wp_set_current_user($user_id);
+                
+                // 将用户ID存储在请求对象中，以便在控制器方法中使用
+                $request->set_param('user_id', $user_id);
+                
+                return true;
+            }
             
-            return true;
+            return $this->error_response('令牌不包含有效的用户信息', 'rest_forbidden', 401, false);
         } catch (Exception $e) {
-            return $this->error_response('令牌验证失败: ' . $e->getMessage(), 'token_validation_failed', 401, false);
+            return $this->error_response('令牌验证失败: ' . $e->getMessage(), 'rest_forbidden', 401, false);
         }
     }
     

@@ -7,7 +7,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class BJT_Accessory_Models_Controller extends BJT_API_Controller {
+class BJT_Product_Accessory_Models_Controller extends BJT_Product_API_Controller {
     public function __construct() {
         parent::__construct();
         $this->rest_base = 'accessory-models';

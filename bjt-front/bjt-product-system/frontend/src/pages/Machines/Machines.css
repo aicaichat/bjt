@@ -2482,8 +2482,129 @@ header .container {
   
   /* 可选：高亮特定规格 */
   .spec-highlight {
-    background-color: #f0f7ff;
-    padding: 3px 6px;
+    background-color: var(--primary-bg);
+    color: var(--primary-dark);
+    padding: 2px 4px;
     border-radius: 3px;
-    border-left: 2px solid #1a57a5;
+    font-weight: 600;
   }
+
+/* Custom Tooltip Styles */
+.custom-tooltip .ant-tooltip-inner {
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.custom-tooltip .ant-tooltip-arrow {
+  display: none !important;
+}
+
+.custom-tooltip .ant-tooltip-content {
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+
+/* Enhanced tooltip animations */
+.custom-tooltip {
+  animation: tooltipFadeIn 0.3s ease-out;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Frequency field emphasis styles */
+.frequency-highlight {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+  border-left: 4px solid #f59e0b !important;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2) !important;
+  animation: frequencyPulse 2s ease-in-out infinite;
+}
+
+.frequency-highlight strong {
+  color: #92400e !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(146, 64, 14, 0.1);
+}
+
+.frequency-highlight span {
+  color: #78350f !important;
+  font-weight: 700 !important;
+  font-size: 1.1em !important;
+  text-shadow: 0 1px 2px rgba(120, 53, 15, 0.1);
+}
+
+@keyframes frequencyPulse {
+  0%, 100% {
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+  }
+  50% {
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
+  }
+}
+
+/* Quantity input field styles */
+.quantity-input-field .ant-input-number-input {
+  color: #333333 !important;
+  font-weight: bold !important;
+  text-align: center !important;
+  background-color: #ffffff !important;
+}
+
+.quantity-input-field .ant-input-number-input:focus {
+  color: #333333 !important;
+  font-weight: bold !important;
+}
+
+/* Electrical accessory indicator */
+.electrical-indicator {
+  position: relative;
+}
+
+.electrical-indicator::before {
+  content: "⚡";
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #fbbf24;
+  color: #92400e;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+  .custom-tooltip .ant-tooltip-inner {
+    max-width: 280px !important;
+  }
+  
+  .frequency-highlight {
+    padding: 8px !important;
+    margin: 4px 0 !important;
+  }
+  
+  .frequency-highlight strong {
+    font-size: 0.9em !important;
+  }
+  
+  .frequency-highlight span {
+    font-size: 1em !important;
+  }
+}

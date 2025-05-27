@@ -9,7 +9,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class BJT_API_Controller {
+class BJT_Product_API_Controller {
     protected $wpdb;
     protected $namespace = 'bjt/v1';
     protected $rest_base;
@@ -48,6 +48,25 @@ class BJT_API_Controller {
                         'description' => __('Unique identifier for the object.', 'bjt-product-admin'),
                         'type' => 'integer',
                         'required' => true,
+                        'validate_callback' => function($param, $request, $key) {
+                            return is_numeric($param);
+                        }
+                    ),
+                    'lang' => array(
+                        'description' => __('Language code for the response.', 'bjt-product-admin'),
+                        'type' => 'string',
+                        'enum' => array('zh', 'en'),
+                        'default' => 'zh',
+                    ),
+                    'region' => array(
+                        'description' => __('Region code for prices and inventory.', 'bjt-product-admin'),
+                        'type' => 'string',
+                        'default' => 'CN',
+                    ),
+                    'context' => array(
+                        'description' => __('Scope under which the request is made; determines fields present in response.', 'bjt-product-admin'),
+                        'type' => 'string',
+                        'default' => 'view'
                     ),
                 ),
             ),
@@ -66,6 +85,14 @@ class BJT_API_Controller {
                         'description' => __('Unique identifier for the object.', 'bjt-product-admin'),
                         'type' => 'integer',
                         'required' => true,
+                        'validate_callback' => function($param, $request, $key) {
+                            return is_numeric($param);
+                        }
+                    ),
+                    'force' => array(
+                        'type' => 'boolean',
+                        'default' => false,
+                        'description' => __('Whether to bypass trash and force deletion.', 'bjt-product-admin'),
                     ),
                 ),
             ),

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Shape Dimension Sync</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .shape-selector {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .shape-option {
+            text-align: center;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        .shape-option:hover {
+            border-color: #1890ff;
+            box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
+        }
+        .shape-option.selected {
+            border-color: #1890ff;
+            background-color: #e6f7ff;
+        }
+        .shape-option img {
+            width: 80px;
+            height: 60px;
+            object-fit: contain;
+            border-radius: 4px;
+            background: #f9f9f9;
+        }
+        .shape-option span {
+            display: block;
+            margin-top: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .dimension-display {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .dimension-display img {
+            max-width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: white;
+        }
+        .api-test {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .error {
+            background: #ffe8e8;
+            color: #d00;
+        }
+        .success {
+            background: #e8f5e8;
+            color: #080;
+        }
+        .info {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Shape Dimension Sync Test</h1>
+    
+    <div class="test-section">
+        <h2>📊 API Test Results</h2>
+        <div id="api-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🎨 Shape Selector</h2>
+        <p>点击下面的形状来测试尺寸图片同步功能：</p>
+        <div id="shape-selector" class="shape-selector"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📐 Product Dimensions</h2>
+        <div class="dimension-display">
+            <img id="dimension-image" 
+                 src="/images/placeholders/placeholder-480x220.svg" 
+                 alt="Product Dimensions">
+            <p id="dimension-info">当前显示：默认尺寸图片</p>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔍 Debug Info</h2>
+        <pre id="debug-info"></pre>
+    </div>
+
+    <script>
+        console.log('🚀 Starting shape dimension sync test...');
+        
+        let shapesData = [];
+        let selectedShapeId = 'MEX';
+        
+        // Test API endpoint
+        async function testAPI() {
+            const resultsDiv = document.getElementById('api-results');
+            const debugDiv = document.getElementById('debug-info');
+            
+            try {
+                // Test consumables API to get filter options
+                console.log('📡 Fetching consumables data...');
+                const response = await fetch('/api/consumables?page=1&pageSize=5');
+                const data = await response.json();
+                
+                console.log('✅ API Response received:', data);
+                
+                resultsDiv.innerHTML = `
+                    <div class="api-test success">
+                        ✅ API Response: ${response.status}<br>
+                        📦 Data structure: ${data.success ? 'Success' : 'Failed'}<br>
+                        🔍 Filter options available: ${data.data?.filterOptions ? 'Yes' : 'No'}<br>
+                        🎨 Shapes count: ${data.data?.filterOptions?.shapes?.length || 0}
+                    </div>
+                `;
+                
+                if (data.data?.filterOptions?.shapes) {
+                    shapesData = data.data.filterOptions.shapes;
+                    displayShapes(shapesData);
+                    
+                    // Test each shape for required fields
+                    testShapeFields(shapesData);
+                    
+                    // Initialize with first shape
+                    if (shapesData.length > 0) {
+                        selectShape(shapesData[0].id);
+                    }
+                } else {
+                    resultsDiv.innerHTML += `
+                        <div class="api-test error">
+                            ❌ No shapes data found in filterOptions
+                        </div>
+                    `;
+                }
+                
+                debugDiv.textContent = JSON.stringify(data, null, 2);
+                
+            } catch (error) {
+                console.error('❌ API test failed:', error);
+                resultsDiv.innerHTML = `
+                    <div class="api-test error">
+                        ❌ API Error: ${error.message}<br>
+                        🔧 Check console for details
+                    </div>
+                `;
+                debugDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+        
+        // Test shape fields
+        function testShapeFields(shapes) {
+            const resultsDiv = document.getElementById('api-results');
+            
+            let hasId = 0;
+            let hasImageUrl = 0;
+            let hasImageUrl2 = 0;
+            let hasName = 0;
+            let hasCode = 0;
+            
+            shapes.forEach(shape => {
+                if (shape.id) hasId++;
+                if (shape.image_url) hasImageUrl++;
+                if (shape.image_url2) hasImageUrl2++;
+                if (shape.name) hasName++;
+                if (shape.code) hasCode++;
+            });
+            
+            const total = shapes.length;
+            
+            resultsDiv.innerHTML += `
+                <div class="api-test info">
+                    📊 Field Analysis:<br>
+                    🆔 ID field: ${hasId}/${total} (${hasId === total ? '✅' : '❌'})<br>
+                    🖼️ Image URL: ${hasImageUrl}/${total} (${hasImageUrl === total ? '✅' : '❌'})<br>
+                    🖼️ Image URL2: ${hasImageUrl2}/${total} (${hasImageUrl2 === total ? '✅' : '❌'})<br>
+                    📝 Name field: ${hasName}/${total} (${hasName === total ? '✅' : '❌'})<br>
+                    🔤 Code field: ${hasCode}/${total} (${hasCode === total ? '✅' : '❌'})
+                </div>
+            `;
+        }
+        
+        // Display shapes
+        function displayShapes(shapes) {
+            const container = document.getElementById('shape-selector');
+            
+            if (!shapes || shapes.length === 0) {
+                container.innerHTML = '<p>❌ No shapes data found</p>';
+                return;
+            }
+            
+            const shapesHTML = shapes.map(shape => `
+                <div class="shape-option" data-shape-id="${shape.id}" onclick="selectShape('${shape.id}')">
+                    <img src="${shape.image_url || '/images/placeholders/placeholder-80x60.svg'}" 
+                         alt="${shape.name}" 
+                         onerror="this.style.border='2px solid red';">
+                    <span>${shape.name || 'No Name'}</span>
+                </div>
+            `).join('');
+            
+            container.innerHTML = shapesHTML;
+            
+            console.log('✅ Shapes displayed:', shapes);
+        }
+        
+        // Select shape and update dimension image
+        function selectShape(shapeId) {
+            selectedShapeId = shapeId;
+            
+            // Update visual selection
+            document.querySelectorAll('.shape-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            document.querySelector(`[data-shape-id="${shapeId}"]`)?.classList.add('selected');
+            
+            // Find shape data
+            const shapeData = shapesData.find(shape => shape.id === shapeId);
+            const dimensionImage = document.getElementById('dimension-image');
+            const dimensionInfo = document.getElementById('dimension-info');
+            
+            if (shapeData) {
+                console.log('🔄 Selecting shape:', shapeData);
+                
+                // Update dimension image
+                if (shapeData.image_url2) {
+                    dimensionImage.src = shapeData.image_url2;
+                    dimensionInfo.textContent = `当前显示：${shapeData.name} 的尺寸图片 (image_url2)`;
+                    console.log('✅ Updated dimension image to:', shapeData.image_url2);
+                } else {
+                    dimensionImage.src = '/images/placeholders/placeholder-480x220.svg';
+                    dimensionInfo.textContent = `当前显示：${shapeData.name} - 无尺寸图片，显示默认图片`;
+                    console.log('⚠️ No image_url2 found for shape:', shapeData.name);
+                }
+                
+                // Update debug info
+                const debugDiv = document.getElementById('debug-info');
+                debugDiv.textContent = `Selected Shape Data:\n${JSON.stringify(shapeData, null, 2)}`;
+            } else {
+                console.error('❌ Shape data not found for ID:', shapeId);
+            }
+        }
+        
+        // Make selectShape globally available
+        window.selectShape = selectShape;
+        
+        // Start the test
+        testAPI();
+    </script>
+</body>
+</html> 

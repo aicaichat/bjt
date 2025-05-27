@@ -2,7 +2,7 @@
 export const isDev = import.meta.env.DEV;
 export const useMockData = import.meta.env.VITE_USE_MOCK_DATA === 'true';
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/wp-json/bjt/v1';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/wp-json/bjt/v1';
 export const API_TIMEOUT = 10000;
 export const ENABLE_DEBUG_LOGS = isDev;
 export const DEFAULT_LANGUAGE = 'zh';

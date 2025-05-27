@@ -1,0 +1,123 @@
+/* Admin登录页面样式 */
+
+.login-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f5f7fa;
+}
+
+/* Login Container */
+.login-container {
+  width: 380px;
+  padding: 30px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.logo {
+  width: 100px;
+  margin-bottom: 20px;
+}
+
+.login-title {
+  color: #1a57a5;
+  margin-bottom: 10px !important;
+}
+
+.login-subtitle {
+  color: #666;
+  margin-bottom: 25px !important;
+}
+
+.login-form {
+  text-align: left;
+}
+
+.login-button {
+  height: 42px;
+  margin-top: 10px;
+}
+
+.login-error {
+  background-color: #fff2f0;
+  border: 1px solid #ffccc7;
+  border-radius: 4px;
+  color: #f5222d;
+  padding: 10px;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.test-accounts-section {
+  margin-top: 30px;
+  text-align: left;
+}
+
+.test-accounts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  color: #888;
+  font-size: 14px;
+}
+
+.test-accounts-card {
+  margin-top: 10px;
+}
+
+.test-account {
+  padding: 12px;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.test-account:hover {
+  background-color: #f0f5ff;
+}
+
+.account-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.account-email {
+  font-weight: 500;
+}
+
+.account-description {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.account-password {
+  font-size: 12px;
+  color: #666;
+}
+
+.account-password code {
+  background-color: #f0f0f0;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .login-container {
+    width: 90%;
+    padding: 20px;
+  }
+  
+  .login-button {
+    height: 44px;
+  }
+} 

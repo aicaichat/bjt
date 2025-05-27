@@ -3,7 +3,8 @@
     "introduction": "欢迎使用BJT产品管理系统",
     "browseProducts": "浏览产品"
   },
-  "loading": {
+  "loading": "加载中...",
+  "loadingMessages": {
     "products": "正在加载产品...",
     "productDetails": "正在加载产品详情...",
     "cart": "正在加载购物车...",
@@ -82,7 +83,8 @@
     "filters": {
       "all": "全部",
       "priceRange": "价格范围",
-      "region": "区域"
+      "region": "区域",
+      "voltage": "电压"
     },
     "voltage": "电压"
   },
@@ -144,7 +146,11 @@
     "loading": "加载中...",
     "error": "错误",
     "success": "成功",
-    "processing": "处理中..."
+    "processing": "处理中...",
+    "login": "登录",
+    "cancel": "取消",
+    "loginRequired": "需要登录",
+    "loginPrompt": "您需要登录后才能访问此内容。是否前往登录页面？"
   },
   "order": {
     "title": "确认订单",

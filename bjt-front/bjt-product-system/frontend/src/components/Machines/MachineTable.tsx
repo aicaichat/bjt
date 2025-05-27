@@ -141,7 +141,7 @@ const MachineTable: React.FC<MachineTableProps> = ({
           <div className="quantity-control">
             <Button
               icon={<MinusOutlined />}
-              onClick={(e) => {
+              onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
                 if (!isAtMinimum) {
                   handleQuantityChange(record.id, currentQuantity - 1);
@@ -160,7 +160,7 @@ const MachineTable: React.FC<MachineTableProps> = ({
             />
             <Button
               icon={<PlusOutlined />}
-              onClick={(e) => {
+              onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
                 if (!isAtMaximum) {
                   handleQuantityChange(record.id, currentQuantity + 1);
@@ -220,10 +220,10 @@ const MachineTable: React.FC<MachineTableProps> = ({
           columns={columns}
           rowKey="id"
           pagination={false}
-          rowClassName={(record) => String(selectedMachine) === String(record.id) ? 'selected-row' : ''}
-          onRow={(record) => ({
+          rowClassName={(record: MachineProduct) => String(selectedMachine) === String(record.id) ? 'selected-row' : ''}
+          onRow={(record: MachineProduct) => ({
             onClick: () => handleMachineSelection(record.id),
-            onKeyDown: (e) => {
+            onKeyDown: (e: React.KeyboardEvent) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 handleMachineSelection(record.id);
                 e.preventDefault();

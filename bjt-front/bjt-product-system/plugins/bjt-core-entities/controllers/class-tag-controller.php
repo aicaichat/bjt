@@ -3,7 +3,7 @@
  * 标签控制器
  */
 class BJT_Tag_Controller extends BJT_API_Controller {
-    protected $resource_name = 'tags';
+    public $resource_name = 'tags';
     protected $table_name;
 
     protected $fillable_fields = [
