@@ -154,8 +154,8 @@ check_ssl_certificates() {
 stop_services() {
     print_step "停止现有服务..."
     
-    if docker-compose -f docker/prod/docker-compose.prod.yml ps | grep -q "Up"; then
-        docker-compose -f docker/prod/docker-compose.prod.yml down
+    if docker-compose --env-file .env.production -f docker/prod/docker-compose.prod.yml ps | grep -q "Up"; then
+        docker-compose --env-file .env.production -f docker/prod/docker-compose.prod.yml down
         print_message "现有服务已停止"
     else
         print_message "没有运行中的服务"
@@ -166,14 +166,14 @@ stop_services() {
 backup_database() {
     print_step "检查是否需要备份数据库..."
     
-    if docker-compose -f docker/prod/docker-compose.prod.yml ps mysql 2>/dev/null | grep -q "Up"; then
+    if docker-compose --env-file .env.production -f docker/prod/docker-compose.prod.yml ps mysql 2>/dev/null | grep -q "Up"; then
         print_message "发现运行中的数据库，正在备份..."
         
         # 创建备份目录
         mkdir -p backups
         
         # 执行备份
-        docker-compose -f docker/prod/docker-compose.prod.yml exec -T mysql \
+        docker-compose --env-file .env.production -f docker/prod/docker-compose.prod.yml exec -T mysql \
             mysqldump -u root -p${MYSQL_ROOT_PASSWORD} ${MYSQL_DATABASE} \
             > backups/backup_before_deploy_$(date +%Y%m%d_%H%M%S).sql
         
@@ -189,15 +189,15 @@ start_services() {
     
     # 拉取最新镜像
     print_message "拉取最新镜像..."
-    docker-compose -f docker/prod/docker-compose.prod.yml pull
+    docker-compose --env-file .env.production -f docker/prod/docker-compose.prod.yml pull
     
     # 构建自定义镜像
     print_message "构建自定义镜像..."
-    docker-compose -f docker/prod/docker-compose.prod.yml build --no-cache
+    docker-compose --env-file .env.production -f docker/prod/docker-compose.prod.yml build --no-cache
     
     # 启动服务
     print_message "启动所有服务..."
-    docker-compose -f docker/prod/docker-compose.prod.yml up -d
+    docker-compose --env-file .env.production -f docker/prod/docker-compose.prod.yml up -d
     
     print_message "✅ 服务启动完成"
 }
@@ -210,7 +210,7 @@ wait_for_services() {
     print_message "等待MySQL服务启动..."
     timeout=60
     while [ $timeout -gt 0 ]; do
-        if docker-compose -f docker/prod/docker-compose.prod.yml exec -T mysql \
+        if docker-compose --env-file .env.production -f docker/prod/docker-compose.prod.yml exec -T mysql \
            mysqladmin ping -h localhost -u root -p${MYSQL_ROOT_PASSWORD} &> /dev/null; then
             print_message "✅ MySQL服务已启动"
             break
@@ -229,12 +229,12 @@ wait_for_services() {
     print_message "等待数据库初始化完成..."
     timeout=180  # 增加超时时间到3分钟
     while [ $timeout -gt 0 ]; do
-        if docker-compose -f docker/prod/docker-compose.prod.yml ps db-init | grep -q "Exit 0"; then
+        if docker-compose --env-file .env.production -f docker/prod/docker-compose.prod.yml ps db-init | grep -q "Exit 0"; then
             print_message "✅ 数据库初始化完成"
             break
-        elif docker-compose -f docker/prod/docker-compose.prod.yml ps db-init | grep -q "Exit"; then
+        elif docker-compose --env-file .env.production -f docker/prod/docker-compose.prod.yml ps db-init | grep -q "Exit"; then
             print_warning "数据库初始化可能失败，请检查日志"
-            docker-compose -f docker/prod/docker-compose.prod.yml logs db-init
+            docker-compose --env-file .env.production -f docker/prod/docker-compose.prod.yml logs db-init
             break
         fi
         echo -n "."
@@ -244,7 +244,7 @@ wait_for_services() {
     
     if [ $timeout -le 0 ]; then
         print_warning "数据库初始化超时，请检查日志"
-        docker-compose -f docker/prod/docker-compose.prod.yml logs db-init
+        docker-compose --env-file .env.production -f docker/prod/docker-compose.prod.yml logs db-init
     fi
     
     # 等待WordPress就绪
@@ -273,7 +273,7 @@ verify_database() {
     print_step "验证数据库初始化结果..."
     
     # 检查BJT表是否存在
-    TABLE_COUNT=$(docker-compose -f docker/prod/docker-compose.prod.yml exec -T mysql \
+    TABLE_COUNT=$(docker-compose --env-file .env.production -f docker/prod/docker-compose.prod.yml exec -T mysql \
         mysql -u root -p${MYSQL_ROOT_PASSWORD} -e "
             SELECT COUNT(*) as count 
             FROM information_schema.tables 
@@ -287,7 +287,7 @@ verify_database() {
         
         # 显示关键表的记录数
         print_message "关键表记录数："
-        docker-compose -f docker/prod/docker-compose.prod.yml exec -T mysql \
+        docker-compose --env-file .env.production -f docker/prod/docker-compose.prod.yml exec -T mysql \
             mysql -u root -p${MYSQL_ROOT_PASSWORD} -e "
                 USE ${MYSQL_DATABASE};
                 SELECT 'wp_bjt_product_lines' as table_name, COUNT(*) as count FROM wp_bjt_product_lines
@@ -299,7 +299,7 @@ verify_database() {
                 SELECT 'wp_bjt_spare_parts' as table_name, COUNT(*) as count FROM wp_bjt_spare_parts;" 2>/dev/null || true
     else
         print_warning "⚠️ 数据库初始化可能不完整，请检查日志"
-        docker-compose -f docker/prod/docker-compose.prod.yml logs db-init
+        docker-compose --env-file .env.production -f docker/prod/docker-compose.prod.yml logs db-init
     fi
 }
 
@@ -321,13 +321,13 @@ show_deployment_info() {
     echo "  ✅ 已导入设备和耗材数据（如果文件存在）"
     echo ""
     echo "🔧 服务状态："
-    docker-compose -f docker/prod/docker-compose.prod.yml ps
+    docker-compose --env-file .env.production -f docker/prod/docker-compose.prod.yml ps
     echo ""
     echo "📋 常用命令："
-    echo "  查看日志: docker-compose -f docker/prod/docker-compose.prod.yml logs -f"
-    echo "  停止服务: docker-compose -f docker/prod/docker-compose.prod.yml down"
-    echo "  重启服务: docker-compose -f docker/prod/docker-compose.prod.yml restart"
-    echo "  数据库初始化日志: docker-compose -f docker/prod/docker-compose.prod.yml logs db-init"
+    echo "  查看日志: docker-compose --env-file .env.production -f docker/prod/docker-compose.prod.yml logs -f"
+    echo "  停止服务: docker-compose --env-file .env.production -f docker/prod/docker-compose.prod.yml down"
+    echo "  重启服务: docker-compose --env-file .env.production -f docker/prod/docker-compose.prod.yml restart"
+    echo "  数据库初始化日志: docker-compose --env-file .env.production -f docker/prod/docker-compose.prod.yml logs db-init"
     echo ""
     echo "🔍 故障排除："
     echo "  如果遇到问题，请查看相关日志文件"

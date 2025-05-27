@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Shape Sync Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .shape-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .shape-card {
+            text-align: center;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        .shape-card:hover {
+            border-color: #1890ff;
+            box-shadow: 0 4px 12px rgba(24, 144, 255, 0.2);
+        }
+        .shape-card.selected {
+            border-color: #1890ff;
+            background-color: #e6f7ff;
+        }
+        .shape-card img {
+            width: 80px;
+            height: 60px;
+            object-fit: contain;
+            border-radius: 4px;
+            background: #f9f9f9;
+            margin-bottom: 10px;
+        }
+        .shape-card .name {
+            font-weight: 500;
+            color: #333;
+        }
+        .shape-card .code {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .dimension-viewer {
+            text-align: center;
+            padding: 30px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+            margin: 20px 0;
+        }
+        .dimension-viewer img {
+            max-width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .dimension-info {
+            margin-top: 15px;
+            font-size: 16px;
+            color: #333;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success { background: #e8f5e8; color: #080; }
+        .error { background: #ffe8e8; color: #d00; }
+        .info { background: #e6f7ff; color: #1890ff; }
+        .debug-panel {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎯 Shape Dimension Sync - Final Test</h1>
+        
+        <div class="test-section">
+            <h2>📊 API Status</h2>
+            <div id="api-status"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎨 Shape Selection</h2>
+            <p>点击下面的形状卡片来测试尺寸图片同步功能：</p>
+            <div id="shapes-grid" class="shape-grid"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📐 Product Dimensions</h2>
+            <div class="dimension-viewer">
+                <img id="dimension-image" 
+                     src="/images/placeholders/placeholder-480x220.svg" 
+                     alt="Product Dimensions"
+                     onerror="this.style.border='2px solid red';">
+                <div id="dimension-info" class="dimension-info">
+                    当前显示：默认尺寸图片
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 Debug Information</h2>
+            <div id="debug-panel" class="debug-panel"></div>
+        </div>
+    </div>
+
+    <script>
+        let shapesData = [];
+        let selectedShapeId = null;
+        
+        function log(message, type = 'info') {
+            const debugPanel = document.getElementById('debug-panel');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}\n`;
+            debugPanel.textContent += logEntry;
+            debugPanel.scrollTop = debugPanel.scrollHeight;
+            
+            console.log(`${type.toUpperCase()}: ${message}`);
+        }
+        
+        async function testAPI() {
+            const statusDiv = document.getElementById('api-status');
+            
+            try {
+                log('🚀 Starting API test...');
+                
+                // Test consumables API
+                const response = await fetch('/api/consumables?page=1&page_size=5');
+                const data = await response.json();
+                
+                log(`✅ API Response: ${response.status}`);
+                log(`📦 Success: ${data.success}`);
+                
+                if (data.success && data.data?.filterOptions?.shapes) {
+                    shapesData = data.data.filterOptions.shapes;
+                    log(`🎨 Found ${shapesData.length} shapes`);
+                    
+                    // Test each shape for required fields
+                    let hasImageUrl2Count = 0;
+                    shapesData.forEach((shape, index) => {
+                        log(`Shape ${index}: ${shape.name} (${shape.id})`);
+                        if (shape.image_url2) {
+                            hasImageUrl2Count++;
+                            log(`  ✅ Has image_url2: ${shape.image_url2}`);
+                        } else {
+                            log(`  ❌ Missing image_url2`);
+                        }
+                    });
+                    
+                    statusDiv.innerHTML = `
+                        <div class="status success">
+                            ✅ API连接成功<br>
+                            📊 形状数量: ${shapesData.length}<br>
+                            🖼️ 有尺寸图片的形状: ${hasImageUrl2Count}/${shapesData.length}
+                        </div>
+                    `;
+                    
+                    displayShapes();
+                    
+                    // Auto-select first shape
+                    if (shapesData.length > 0) {
+                        selectShape(shapesData[0].id);
+                    }
+                    
+                } else {
+                    throw new Error('No shapes data found in API response');
+                }
+                
+            } catch (error) {
+                log(`❌ API Error: ${error.message}`, 'error');
+                statusDiv.innerHTML = `
+                    <div class="status error">
+                        ❌ API连接失败: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        function displayShapes() {
+            const container = document.getElementById('shapes-grid');
+            
+            if (!shapesData || shapesData.length === 0) {
+                container.innerHTML = '<p>❌ No shapes data available</p>';
+                return;
+            }
+            
+            const shapesHTML = shapesData.map(shape => `
+                <div class="shape-card" data-shape-id="${shape.id}" onclick="selectShape('${shape.id}')">
+                    <img src="${shape.image_url || '/images/placeholders/placeholder-80x60.svg'}" 
+                         alt="${shape.name}"
+                         onerror="this.style.border='2px solid orange';">
+                    <div class="name">${shape.name}</div>
+                    <div class="code">${shape.id}</div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = shapesHTML;
+            log(`✅ Displayed ${shapesData.length} shape cards`);
+        }
+        
+        function selectShape(shapeId) {
+            selectedShapeId = shapeId;
+            log(`🔄 Selecting shape: ${shapeId}`);
+            
+            // Update visual selection
+            document.querySelectorAll('.shape-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.querySelector(`[data-shape-id="${shapeId}"]`)?.classList.add('selected');
+            
+            // Find shape data
+            const shapeData = shapesData.find(shape => shape.id === shapeId);
+            const dimensionImage = document.getElementById('dimension-image');
+            const dimensionInfo = document.getElementById('dimension-info');
+            
+            if (shapeData) {
+                log(`📋 Shape data found: ${shapeData.name}`);
+                
+                // Update dimension image
+                if (shapeData.image_url2) {
+                    dimensionImage.src = shapeData.image_url2;
+                    dimensionInfo.textContent = `当前显示：${shapeData.name} 的尺寸图片`;
+                    log(`✅ Updated dimension image: ${shapeData.image_url2}`);
+                } else {
+                    dimensionImage.src = '/images/placeholders/placeholder-480x220.svg';
+                    dimensionInfo.textContent = `当前显示：${shapeData.name} - 无尺寸图片，显示默认图片`;
+                    log(`⚠️ No dimension image for ${shapeData.name}, using placeholder`);
+                }
+                
+                // Test image loading
+                const testImg = new Image();
+                testImg.onload = () => log(`✅ Dimension image loaded successfully`);
+                testImg.onerror = () => log(`❌ Failed to load dimension image: ${shapeData.image_url2}`, 'error');
+                testImg.src = shapeData.image_url2 || '/images/placeholders/placeholder-480x220.svg';
+                
+            } else {
+                log(`❌ Shape data not found for ID: ${shapeId}`, 'error');
+            }
+        }
+        
+        // Make selectShape globally available
+        window.selectShape = selectShape;
+        
+        // Initialize
+        log('🎯 Initializing Shape Dimension Sync Test');
+        testAPI();
+    </script>
+</body>
+</html> 
