@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Hooks 修复验证</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .header h1 {
+            color: #1f2937;
+            margin: 0 0 10px 0;
+            font-size: 2rem;
+        }
+        
+        .header p {
+            color: #6b7280;
+            margin: 0;
+            font-size: 1.1rem;
+        }
+        
+        .status-section {
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #10b981;
+            background: #f0fdf4;
+        }
+        
+        .status-title {
+            font-weight: 600;
+            color: #065f46;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .status-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            color: #047857;
+        }
+        
+        .status-item::before {
+            content: "✅";
+            margin-right: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border-radius: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .test-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+        
+        .test-link {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        .test-link:hover {
+            background: #2563eb;
+        }
+        
+        .code-block {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+        
+        .warning {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            color: #92400e;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        
+        .warning-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 React Hooks 修复验证</h1>
+            <p>耗材页面 Hooks 顺序问题修复完成</p>
+        </div>
+        
+        <div class="status-section">
+            <div class="status-title">✅ 修复完成的问题</div>
+            <ul class="status-list">
+                <li class="status-item">移除了条件性的早期返回（early return）</li>
+                <li class="status-item">将所有 useState 调用移到组件顶部</li>
+                <li class="status-item">确保 Hooks 调用顺序在每次渲染中保持一致</li>
+                <li class="status-item">修复了缺少的 widths 变量定义</li>
+                <li class="status-item">保持了所有现代化UI组件的功能</li>
+            </ul>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">🧪 测试耗材页面</div>
+            <p>点击下面的链接测试修复后的耗材页面：</p>
+            <a href="/bjt/consumables" class="test-link">打开耗材页面</a>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">🔍 修复详情</div>
+            <p><strong>问题原因：</strong></p>
+            <div class="code-block">
+// 之前的问题代码（违反 Hooks 规则）
+if (loading) {
+  return &lt;LoadingComponent /&gt;; // 早期返回
+}
+
+// 在条件返回后调用 useState - 违反规则！
+const [someState, setSomeState] = useState(false);
+            </div>
+            
+            <p><strong>修复方案：</strong></p>
+            <div class="code-block">
+// 修复后的代码（符合 Hooks 规则）
+// 1. 所有 Hooks 在组件顶部调用
+const [someState, setSomeState] = useState(false);
+
+// 2. 条件渲染在组件最后
+if (loading) {
+  return &lt;LoadingComponent /&gt;;
+}
+            </div>
+        </div>
+        
+        <div class="warning">
+            <div class="warning-title">⚠️ React Hooks 规则提醒</div>
+            <p>
+                React Hooks 必须在每次渲染中以相同的顺序调用。不能在循环、条件或嵌套函数中调用 Hooks。
+                这确保了 React 能够正确地保持组件状态。
+            </p>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">📊 验证步骤</div>
+            <ol style="margin: 0; padding-left: 20px;">
+                <li>打开浏览器开发者工具</li>
+                <li>访问耗材页面</li>
+                <li>检查控制台是否还有 Hooks 错误</li>
+                <li>测试页面交互功能是否正常</li>
+                <li>验证"更多信息"弹出功能</li>
+            </ol>
+        </div>
+    </div>
+    
+    <script>
+        // 简单的页面加载完成提示
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ React Hooks 修复验证页面加载完成');
+            console.log('🔧 主要修复内容：');
+            console.log('   - 移除条件性早期返回');
+            console.log('   - 统一 Hooks 调用顺序');
+            console.log('   - 修复变量定义问题');
+        });
+    </script>
+</body>
+</html> 

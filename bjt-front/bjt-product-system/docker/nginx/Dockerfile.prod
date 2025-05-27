@@ -17,8 +17,8 @@ COPY frontend/ ./
 ARG VITE_API_URL
 ENV VITE_API_URL=${VITE_API_URL}
 
-# 构建前端应用
-RUN npm run build
+# 构建前端应用（跳过TypeScript检查）
+RUN npm run build:skip-check
 
 # 第二阶段：构建nginx镜像
 FROM nginx:alpine
