@@ -10,6 +10,7 @@ export interface PartParams {
   search?: string;
   host_model_id?: string;
   status?: string;
+  product_line_id?: number;
 }
 
 class AdminPartService extends BaseAdminService<AdminPart> {
@@ -20,37 +21,43 @@ class AdminPartService extends BaseAdminService<AdminPart> {
   }
 
   async getParts(params: PartParams = {}): Promise<PaginatedResponse<AdminPart>> {
-    // Extract host_model_id first
-    const { host_model_id, ...restParams } = params;
-    
-    // Filter out undefined and null values from remaining params
+    // Filter out undefined, null, and empty string values
     const filteredParams = Object.fromEntries(
-      Object.entries(restParams).filter(([_, value]) => value !== undefined && value !== null)
+      Object.entries(params).filter(([_, value]) => value !== undefined && value !== null && value !== '')
     );
     
     // Set default values
-    const queryParams = {
+    const queryParams: any = {
       page: 1,
-      page_size: 10,
+      per_page: 10, // 后端使用 per_page 而不是 page_size
       ...filteredParams
     };
     
-    // Determine which URL to use based on host_model_id
-    let url;
-    
-    if (host_model_id) {
-      // If we're fetching parts for a specific host model
-      url = ADMIN_API_ENDPOINTS.HOST_MODEL_PARTS.replace(':id', host_model_id);
-    } else {
-      // Otherwise get all parts
-      url = ADMIN_API_ENDPOINTS.PARTS;
+    // 如果有 host_model_id，需要根据后端API调整为正确的参数名
+    if (queryParams.host_model_id) {
+      // 根据后端BJT_Machine_Part_Controller，使用model参数代表主机型号代码
+      // 这里需要通过host_model_id查找对应的model代码，暂时保持原样
+      // TODO: 实现ID到model代码的转换
+      queryParams.model = queryParams.host_model_id;
+      delete queryParams.host_model_id;
     }
     
     const queryString = Object.entries(queryParams)
       .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
       .join('&');
     
-    const response = await this.httpService.get<any>(`${url}${queryString ? `?${queryString}` : ''}`);
+    const url = ADMIN_API_ENDPOINTS.PARTS;
+    const fullUrl = `${url}${queryString ? `?${queryString}` : ''}`;
+    
+    // Debug log for search functionality
+    console.log('AdminPartService.getParts:', {
+      originalParams: params,
+      filteredParams,
+      queryParams,
+      fullUrl
+    });
+    
+    const response = await this.httpService.get<any>(fullUrl);
     
     const paginatedResponse: PaginatedResponse<AdminPart> = {
       items: [],
@@ -69,7 +76,7 @@ class AdminPartService extends BaseAdminService<AdminPart> {
         paginatedResponse.items = response.data.items;
         paginatedResponse.total = response.data.total || response.data.items.length;
         paginatedResponse.page = response.data.page || 1;
-        paginatedResponse.page_size = response.data.page_size || 10;
+        paginatedResponse.page_size = response.data.per_page || 10; // 对应后端的 per_page
         paginatedResponse.total_pages = response.data.total_pages || 1;
       } else {
         const items = response.data.data || response.data;
@@ -82,54 +89,28 @@ class AdminPartService extends BaseAdminService<AdminPart> {
   }
 
   async getPart(id: string, hostModelId?: string): Promise<AdminPart> {
-    let url;
-    if (hostModelId) {
-      url = ADMIN_API_ENDPOINTS.PART
-        .replace(':modelId', hostModelId)
-        .replace(':id', id);
-    } else {
-      url = `${ADMIN_API_ENDPOINTS.PARTS}/${id}`;
-    }
+    const url = ADMIN_API_ENDPOINTS.PART.replace(':id', id);
     
-    const response = await this.httpService.get<any>(url);
+    const response = await this.httpService.get<AdminPart>(url);
     return response.data;
   }
 
   async createPart(data: Partial<AdminPart>, hostModelId?: string): Promise<AdminPart> {
-    let url;
-    if (hostModelId) {
-      url = ADMIN_API_ENDPOINTS.HOST_MODEL_PARTS.replace(':id', hostModelId);
-    } else {
-      url = ADMIN_API_ENDPOINTS.PARTS;
-    }
+    const url = ADMIN_API_ENDPOINTS.PARTS;
     
     const response = await this.httpService.post<any>(url, data);
     return response.data;
   }
 
   async updatePart(id: string, data: Partial<AdminPart>, hostModelId?: string): Promise<AdminPart> {
-    let url;
-    if (hostModelId) {
-      url = ADMIN_API_ENDPOINTS.PART
-        .replace(':modelId', hostModelId)
-        .replace(':id', id);
-    } else {
-      url = `${ADMIN_API_ENDPOINTS.PARTS}/${id}`;
-    }
+    const url = ADMIN_API_ENDPOINTS.PART.replace(':id', id);
     
     const response = await this.httpService.put<any>(url, data);
     return response.data;
   }
 
   async deletePart(id: string, hostModelId?: string): Promise<void> {
-    let url;
-    if (hostModelId) {
-      url = ADMIN_API_ENDPOINTS.PART
-        .replace(':modelId', hostModelId)
-        .replace(':id', id);
-    } else {
-      url = `${ADMIN_API_ENDPOINTS.PARTS}/${id}`;
-    }
+    const url = ADMIN_API_ENDPOINTS.PART.replace(':id', id);
     
     await this.httpService.delete<any>(url);
   }

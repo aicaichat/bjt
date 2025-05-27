@@ -10,21 +10,15 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
-  {
-    key: 'dashboard',
-    label: '首页',
-    icon: '🏠',
-    path: '/admin',
-  },
+
   {
     key: 'page-edit',
-    label: '页面编辑',
+    label: '产品线管理',
     icon: '📄',
     children: [
-      { key: 'product-line-1', label: '产品线1', path: '/admin/product-lines/edit/1' }, // Example path
+      { key: 'product-line-1', label: '产品线1', path: '/admin/product-lines/edit/1' },
       { key: 'product-line-2', label: '产品线2', path: '/admin/product-lines/edit/2' },
       { key: 'product-line-3', label: '产品线3', path: '/admin/product-lines/edit/3' },
-      { key: 'product-line-4', label: '产品线4', path: '/admin/product-lines/edit/4' },
     ],
   },
   {
@@ -33,8 +27,10 @@ const menuItems: MenuItem[] = [
     icon: '🛋️',
     children: [
       { key: 'ac-main', label: '主机', path: '/admin/machines?type=air-cushion' },
+      { key: 'ac-relations', label: '关联关系', path: '/admin/relations?type=air-cushion' },
       { key: 'ac-accessories', label: '配件', path: '/admin/accessories?type=air-cushion' },
-      { key: 'ac-consumables', label: '耗材', path: '/admin/consumables?type=air-cushion' },
+      { key: 'ac-consumables', label: '耗材管理', path: '/admin/consumables?type=air-cushion' },
+      { key: 'ac-consumables-dictionary', label: '耗材字典', path: '/admin/consumables/dictionary?type=air-cushion' },
       { key: 'ac-spare-parts', label: '备件', path: '/admin/spare-parts?type=air-cushion' },
     ],
   },
@@ -44,8 +40,10 @@ const menuItems: MenuItem[] = [
     icon: '📃',
     children: [
       { key: 'pm-main', label: '主机', path: '/admin/machines?type=paper' },
+      { key: 'pm-relations', label: '关联关系', path: '/admin/relations?type=paper' },
       { key: 'pm-accessories', label: '配件', path: '/admin/accessories?type=paper' },
-      { key: 'pm-consumables', label: '耗材', path: '/admin/consumables?type=paper' },
+      { key: 'pm-consumables', label: '耗材管理', path: '/admin/consumables?type=paper' },
+      { key: 'pm-consumables-dictionary', label: '耗材字典', path: '/admin/consumables/dictionary?type=paper' },
       { key: 'pm-spare-parts', label: '备件', path: '/admin/spare-parts?type=paper' },
     ],
   },
@@ -55,17 +53,11 @@ const menuItems: MenuItem[] = [
     icon: '🧵',
     children: [
       { key: 'tm-main', label: '主机', path: '/admin/machines?type=tape' },
+      { key: 'tm-relations', label: '关联关系', path: '/admin/relations?type=tape' },
       { key: 'tm-accessories', label: '配件', path: '/admin/accessories?type=tape' },
-      { key: 'tm-consumables', label: '耗材', path: '/admin/consumables?type=tape' },
+      { key: 'tm-consumables', label: '耗材管理', path: '/admin/consumables?type=tape' },
+      { key: 'tm-consumables-dictionary', label: '耗材字典', path: '/admin/consumables/dictionary?type=tape' },
       { key: 'tm-spare-parts', label: '备件', path: '/admin/spare-parts?type=tape' },
-    ],
-  },
-  {
-    key: 'air-column-bag',
-    label: '气柱袋',
-    icon: '💼',
-    children: [
-      { key: 'acb-consumables', label: '耗材', path: '/admin/consumables?type=air-column-bag' },
     ],
   },
   {
@@ -110,7 +102,9 @@ const AdminSidebar: React.FC = () => {
     alignItems: 'center',
     color: 'rgba(255,255,255,0.8)',
     textDecoration: 'none',
-    borderLeft: '3px solid transparent',
+    borderLeftWidth: '3px',
+    borderLeftStyle: 'solid',
+    borderLeftColor: 'transparent',
     fontSize: '14px'
   };
 

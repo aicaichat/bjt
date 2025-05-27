@@ -37,11 +37,10 @@ export default defineConfig({
       host: 'localhost'
     },
     proxy: {
-      '/wp-json/bjt/v1': {
+      '/wp-json': {
         target: 'http://localhost:8080',
         changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace(/^\/wp-json\/bjt\/v1/, '/wp-json/bjt/v1')
+        secure: false
       }
     }
   },

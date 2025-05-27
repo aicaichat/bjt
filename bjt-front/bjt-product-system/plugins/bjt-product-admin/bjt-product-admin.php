@@ -36,13 +36,13 @@ function bjt_product_admin_activate() {
         try {
             $product_line_management->create_tables();
             update_option('bjt_product_admin_db_version', BJT_PRODUCT_ADMIN_VERSION);
-        } catch (Exception $e) {
+    } catch (Exception $e) {
             error_log('BJT Product Admin activation error: ' . $e->getMessage());
         }
     }
     
     // 刷新重写规则
-    flush_rewrite_rules();
+        flush_rewrite_rules();
 }
 register_activation_hook(__FILE__, 'bjt_product_admin_activate');
 
@@ -91,6 +91,44 @@ function bjt_product_admin_register_rest_routes() {
     require_once BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'includes/api/class-bjt-cart-controller.php';
     $cart_controller = new BJT_Cart_Controller();
     $cart_controller->register_routes();
+    
+    // 注册管理后台主机型号控制器
+    if (file_exists(BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'includes/api/class-bjt-host-models-controller.php')) {
+        require_once BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'includes/api/class-bjt-host-models-controller.php';
+        $host_models_controller = new BJT_Product_Host_Models_Controller();
+        $host_models_controller->register_routes();
+    }
+    
+    // 注册管理后台配件型号控制器
+    if (file_exists(BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'includes/api/class-bjt-accessory-models-controller.php')) {
+        require_once BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'includes/api/class-bjt-accessory-models-controller.php';
+        $accessory_models_controller = new BJT_Product_Accessory_Models_Controller();
+        $accessory_models_controller->register_routes();
+    }
+    
+    // 注册管理后台配件料号控制器
+    // 临时禁用：避免与bjt-core-entities插件的/bjt/v1/accessories路由冲突
+    /*
+    if (file_exists(BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'includes/api/class-bjt-accessories-controller.php')) {
+        require_once BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'includes/api/class-bjt-accessories-controller.php';
+        $accessories_controller = new BJT_Product_Accessories_Controller();
+        $accessories_controller->register_routes();
+    }
+    */
+    
+    // 注册管理后台备件控制器
+    if (file_exists(BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'includes/api/class-bjt-spare-parts-controller.php')) {
+        require_once BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'includes/api/class-bjt-spare-parts-controller.php';
+        $spare_parts_controller = new BJT_Product_Spare_Parts_Controller();
+        $spare_parts_controller->register_routes();
+    }
+    
+    // 注册管理后台耗材控制器
+    if (file_exists(BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'includes/api/class-bjt-consumables-controller.php')) {
+        require_once BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'includes/api/class-bjt-consumables-controller.php';
+        $consumables_controller = new BJT_Product_Consumables_Controller();
+        $consumables_controller->register_routes();
+    }
 }
 
 /**

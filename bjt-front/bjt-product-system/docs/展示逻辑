@@ -135,7 +135,7 @@ CREATE TABLE IF NOT EXISTS `wp_bjt_consumables` (
 2.1 筛选项：
 主机或者配件
 适用机型
-是否易损 
+是否易损 1是易损 2是非易损 3是不展示
 
 2.2购物车/列表展示：
 适配机型
@@ -143,11 +143,13 @@ CREATE TABLE IF NOT EXISTS `wp_bjt_consumables` (
 料号	 
 名称	
 Spec.	
-适配序列号	
+Spec.(英制)
+productId	
 单箱数量	
 
 
 2.3tooltip展示：
+适配序列号
 "包装尺寸 cm"	
 "包装尺寸 inch"	
 "单件净重 kg"	
@@ -190,13 +192,25 @@ CREATE TABLE IF NOT EXISTS `wp_bjt_spare_parts` (
 电压
 
 3.2 列表展示项
+主机：
+型号
+电压
+图片
+料号
+名称
+单箱数量
+"托盘尺寸 cm"
+"托盘尺寸 inch"
+一托数量
+
+配件：
 产品图片
 型号
 料号
 产品名称
-PRODUCTID
 "电压 V"
 "频率 Hz"
+"包装尺寸 cm"
 单箱数量
 "托盘尺寸 cm"
 "托盘尺寸 inch"

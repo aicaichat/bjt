@@ -153,6 +153,28 @@ class BJT_Part_Controller extends BJT_API_Controller {
                 ],
             ],
         ]);
+
+        // 🆕 获取主机必选备件详情端点
+        register_rest_route($this->namespace, '/' . $this->resource_name . '/(?P<id>\d+)/required-parts', [
+            'methods' => WP_REST_Server::READABLE,
+            'callback' => [$this, 'get_required_parts'],
+            'permission_callback' => [$this, 'check_read_permission'],
+            'args' => [
+                'id' => [
+                    'description' => 'Unique identifier for the part.',
+                    'type' => 'integer',
+                    'required' => true,
+                    'sanitize_callback' => 'absint',
+                ],
+                'lang' => [
+                    'description' => 'Language for response (zh/en).',
+                    'type' => 'string',
+                    'default' => 'zh',
+                    'enum' => ['zh', 'en'],
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
+            ],
+        ]);
     }
 
     public function get_item_schema() {
@@ -300,22 +322,23 @@ class BJT_Part_Controller extends BJT_API_Controller {
             'spec_imperial' => $item_db_object->spec_imperial,
             'package_size_cm' => $item_db_object->package_size_cm,
             'package_size_inch' => $item_db_object->package_size_inch,
-            'net_weight_kg' => $item_db_object->net_weight_kg !== null ? (float)$item_db_object->net_weight_kg : null,
-            'net_weight_lbs' => $item_db_object->net_weight_lbs !== null ? (float)$item_db_object->net_weight_lbs : null,
-            'gross_weight_kg' => $item_db_object->gross_weight_kg !== null ? (float)$item_db_object->gross_weight_kg : null,
-            'gross_weight_lbs' => $item_db_object->gross_weight_lbs !== null ? (float)$item_db_object->gross_weight_lbs : null,
-            'pcs_per_box' => $item_db_object->pcs_per_box !== null ? (int)$item_db_object->pcs_per_box : null,
+            'net_weight_kg' => $item_db_object->net_weight_kg,
+            'net_weight_lbs' => $item_db_object->net_weight_lbs,
+            'gross_weight_kg' => $item_db_object->gross_weight_kg,
+            'gross_weight_lbs' => $item_db_object->gross_weight_lbs,
+            'pcs_per_box' => $item_db_object->pcs_per_box,
             'pallet_size_cm' => $item_db_object->pallet_size_cm,
             'pallet_size_inch' => $item_db_object->pallet_size_inch,
-            'pcs_per_pallet' => $item_db_object->pcs_per_pallet !== null ? (int)$item_db_object->pcs_per_pallet : null,
-            'pallet_height_cm' => $item_db_object->pallet_height_cm !== null ? (float)$item_db_object->pallet_height_cm : null,
-            'pallet_height_inch' => $item_db_object->pallet_height_inch !== null ? (float)$item_db_object->pallet_height_inch : null,
-            'pallet_gross_weight_kg' => $item_db_object->pallet_gross_weight_kg !== null ? (float)$item_db_object->pallet_gross_weight_kg : null,
-            'pallet_gross_weight_lbs' => $item_db_object->pallet_gross_weight_lbs !== null ? (float)$item_db_object->pallet_gross_weight_lbs : null,
+            'pcs_per_pallet' => $item_db_object->pcs_per_pallet,
+            'pallet_height_cm' => $item_db_object->pallet_height_cm,
+            'pallet_height_inch' => $item_db_object->pallet_height_inch,
+            'pallet_gross_weight_kg' => $item_db_object->pallet_gross_weight_kg,
+            'pallet_gross_weight_lbs' => $item_db_object->pallet_gross_weight_lbs,
             'status' => $item_db_object->status,
             'unit' => $item_db_object->unit,
             'pricing' => $pricing_tiers,
             'inventory' => $inventory_map,
+            'required_parts' => [], // 主机没有必选备件
             'created_at' => $item_db_object->created_at,
             'updated_at' => $item_db_object->updated_at
         ];
@@ -800,5 +823,58 @@ class BJT_Part_Controller extends BJT_API_Controller {
                 'type' => 'string',
             ]
         ];
+    }
+
+    public function get_required_parts($request) {
+        global $wpdb;
+        $id = absint($request['id']);
+        $lang = sanitize_text_field($request['lang'] ?: 'zh');
+
+        if ($id <= 0) {
+            return $this->error_response('Invalid part ID.', 'invalid_id', 400);
+        }
+
+        $item_db = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->table_name} WHERE id = %d", $id));
+
+        if (!$item_db) {
+            return $this->error_response("Part with ID {$id} not found.", 'not_found', 404);
+        }
+
+        $formatted_info = [
+            'required_parts' => [], // 主机没有必选备件
+            'created_at' => $item_db->created_at,
+            'updated_at' => $item_db->updated_at
+        ];
+
+        if ($lang === 'en') {
+            $formatted_info['name_en'] = $item_db->name_en;
+            $formatted_info['name_zh'] = $item_db->name_zh;
+        } else {
+            $formatted_info['name_zh'] = $item_db->name_zh;
+            $formatted_info['name_en'] = $item_db->name_en;
+        }
+
+        return $this->format_response($formatted_info, '获取主机必选备件详情成功');
+    }
+
+    /**
+     * Check read permission
+     */
+    public function check_read_permission($request) {
+        return true; // 允许所有用户读取
+    }
+
+    /**
+     * Check write permission
+     */
+    public function check_write_permission($request) {
+        return current_user_can('manage_options'); // 只有管理员可以写入
+    }
+
+    /**
+     * Check delete permission
+     */
+    public function check_delete_permission($request) {
+        return current_user_can('manage_options'); // 只有管理员可以删除
     }
 } 

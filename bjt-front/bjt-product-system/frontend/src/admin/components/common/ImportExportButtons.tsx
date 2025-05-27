@@ -48,7 +48,7 @@ function ImportExportButtons({
         <Upload
           accept={accept}
           showUploadList={false}
-          beforeUpload={(file) => {
+          beforeUpload={(file: File) => {
             const isLtMaxSize = file.size / 1024 / 1024 < maxSize;
             if (!isLtMaxSize) {
               message.error(`文件大小不能超过 ${maxSize}MB!`);

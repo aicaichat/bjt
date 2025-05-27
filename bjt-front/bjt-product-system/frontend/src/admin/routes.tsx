@@ -17,9 +17,14 @@ import AccessoryModelEditPage from './pages/accessories/AccessoryModelEditPage';
 import ConsumablesPage from './pages/consumables/ConsumablesPage';
 import ConsumableEditPage from './pages/consumables/ConsumableEditPage';
 import ConsumableModelEditPage from './pages/consumables/ConsumableModelEditPage';
+import ConsumablesDictionaryPage from './pages/consumables/ConsumablesDictionaryPage';
+import DictionaryItemEditPage from './pages/consumables/DictionaryItemEditPage';
 import SparePartsPage from './pages/spare-parts/SparePartsPage';
 import SparePartEditPage from './pages/spare-parts/SparePartEditPage';
 import SparePartModelEditPage from './pages/spare-parts/SparePartModelEditPage';
+import UsersPage from './pages/users/UsersPage';
+import UserEditPage from './pages/users/UserEditPage';
+import SettingsPage from './pages/settings/SettingsPage';
 import DebugPage from './pages/DebugPage';
 
 const AdminRoutes: React.FC = () => {
@@ -61,6 +66,15 @@ const AdminRoutes: React.FC = () => {
           <Route path="edit/:id" element={<ConsumableEditPage />} />
           <Route path="models/create" element={<ConsumableModelEditPage />} />
           <Route path="models/edit/:id" element={<ConsumableModelEditPage />} />
+          <Route path="dictionary">
+            <Route index element={<ConsumablesDictionaryPage />} />
+            <Route path="shape/create" element={<DictionaryItemEditPage type="shape" mode="create" />} />
+            <Route path="shape/edit/:id" element={<DictionaryItemEditPage type="shape" mode="edit" />} />
+            <Route path="material/create" element={<DictionaryItemEditPage type="material" mode="create" />} />
+            <Route path="material/edit/:id" element={<DictionaryItemEditPage type="material" mode="edit" />} />
+            <Route path="specification/create" element={<DictionaryItemEditPage type="specification" mode="create" />} />
+            <Route path="specification/edit/:id" element={<DictionaryItemEditPage type="specification" mode="edit" />} />
+          </Route>
         </Route>
         <Route path="spare-parts">
           <Route index element={<SparePartsPage />} />
@@ -69,6 +83,12 @@ const AdminRoutes: React.FC = () => {
           <Route path="models/create" element={<SparePartModelEditPage mode="create" />} />
           <Route path="models/edit/:id" element={<SparePartModelEditPage mode="edit" />} />
         </Route>
+        <Route path="users">
+          <Route index element={<UsersPage />} />
+          <Route path="create" element={<UserEditPage />} />
+          <Route path="edit/:id" element={<UserEditPage />} />
+        </Route>
+        <Route path="settings" element={<SettingsPage />} />
       </Route>
     </Routes>
   );

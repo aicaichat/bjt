@@ -175,7 +175,11 @@ class SQLExcelConverter:
                         elif (val.startswith("'") and val.endswith("'")) or (val.startswith('"') and val.endswith('"')):
                             cleaned_values.append(val[1:-1])
                         else:
-                            cleaned_values.append(val)
+                            escaped_val = str(val).replace("'", "''")
+                            # Fix image paths: replace backslashes with forward slashes
+                            if ('image' in col.lower() or 'url' in col.lower()) and '\\' in escaped_val:
+                                escaped_val = escaped_val.replace('\\', '/')
+                            cleaned_values.append(f"'{escaped_val}'")
                     # 修复字段数量不匹配：补齐或截断
                     if len(cleaned_values) < len(columns):
                         # 补齐缺失字段
@@ -563,6 +567,9 @@ if __name__ == "__main__":
                             values.append(str(val))
                         else:
                             escaped_val = str(val).replace("'", "''")
+                            # Fix image paths: replace backslashes with forward slashes
+                            if ('image' in col.lower() or 'url' in col.lower()) and '\\' in escaped_val:
+                                escaped_val = escaped_val.replace('\\', '/')
                             values.append(f"'{escaped_val}'")
                     value_list = ", ".join(values)
                     sql_statements.append(f"INSERT INTO `{sheet_name}` ({column_list}) VALUES ({value_list});")
@@ -585,6 +592,9 @@ if __name__ == "__main__":
                             values.append(str(val))
                         else:
                             escaped_val = str(val).replace("'", "''")
+                            # Fix image paths: replace backslashes with forward slashes
+                            if ('image' in col.lower() or 'url' in col.lower()) and '\\' in escaped_val:
+                                escaped_val = escaped_val.replace('\\', '/')
                             values.append(f"'{escaped_val}'")
                     rows.append(f"  ({', '.join(values)})")
                 

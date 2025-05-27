@@ -1,63 +1,87 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { Form, Input, Button, Select, Card, Tabs, message, Spin, Avatar } from 'antd';
-import { UserOutlined, LockOutlined, GlobalOutlined, MailOutlined, IdcardOutlined } from '@ant-design/icons';
-import './Profile.css';
+import { 
+  Card, 
+  Form, 
+  Input, 
+  Button, 
+  message, 
+  Tabs, 
+  Select, 
+  Radio, 
+  Upload, 
+  Avatar, 
+  Spin, 
+  Row, 
+  Col, 
+  Divider,
+  Tag,
+  Space,
+  Typography
+} from 'antd';
+import { 
+  UserOutlined, 
+  MailOutlined, 
+  LockOutlined, 
+  IdcardOutlined, 
+  SettingOutlined,
+  CameraOutlined,
+  GlobalOutlined,
+  SecurityScanOutlined,
+  InfoCircleOutlined
+} from '@ant-design/icons';
+import { useAuth, UnitSystem, UserRole } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { REGIONS } from '../../config/constants';
+import './Profile.css';
 
 const { TabPane } = Tabs;
 const { Option } = Select;
+const { Title, Text } = Typography;
 
-// 区域配置
-const REGIONS = {
-  CN: {
-    code: 'CN',
-    nameCn: '中国',
-    nameEn: 'China',
-    currencySymbol: '¥',
-    voltage: '220V',
-  },
-  EU: {
-    code: 'EU',
-    nameCn: '欧洲',
-    nameEn: 'Europe',
-    currencySymbol: '€',
-    voltage: '220V',
-  },
-  NA: {
-    code: 'NA',
-    nameCn: '北美',
-    nameEn: 'North America',
-    currencySymbol: '$',
-    voltage: '110V',
-  },
-  AU: {
-    code: 'AU',
-    nameCn: '澳洲',
-    nameEn: 'Australia',
-    currencySymbol: 'A$',
-    voltage: '220V',
-  }
+// 角色显示映射
+const roleDisplayMap = {
+  [UserRole.ADMIN]: { label: '管理员', color: 'red', icon: '👑' },
+  [UserRole.SALES]: { label: '销售人员', color: 'blue', icon: '💼' },
+  [UserRole.PARTNER]: { label: '合作伙伴', color: 'green', icon: '🤝' },
+  [UserRole.CUSTOMER]: { label: '客户', color: 'orange', icon: '👤' },
+  [UserRole.UNKNOWN]: { label: '未知', color: 'default', icon: '❓' }
 };
 
+// 单位制选项
+const unitSystemOptions = [
+  { value: 'metric', label: '公制 (Metric)', description: '厘米、千克、摄氏度' },
+  { value: 'imperial', label: '英制 (Imperial)', description: '英寸、磅、华氏度' }
+];
+
 const Profile: React.FC = () => {
-  const { user, updateProfile, loading: authLoading } = useAuth();
+  const { user, updateProfile, updatePreferredUnit, hasPermission, loading: authLoading } = useAuth();
   const { t, language } = useLanguage();
   const [form] = Form.useForm();
   const [passwordForm] = Form.useForm();
+  const [unitForm] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
+  const [avatarLoading, setAvatarLoading] = useState(false);
 
   // 初始化表单数据
   useEffect(() => {
     if (user) {
       form.setFieldsValue({
         name: user.name,
+        displayName: user.displayName,
         email: user.email,
+        username: user.username,
         region: user.region || 'CN',
+        country: user.country,
+        customerCode: user.customerCode,
+        companyLogo: user.companyLogo
+      });
+
+      unitForm.setFieldsValue({
+        preferredUnit: user.preferredUnit || 'metric'
       });
     }
-  }, [user, form]);
+  }, [user, form, unitForm]);
 
   // 处理个人资料更新
   const handleProfileUpdate = async (values: any) => {
@@ -65,12 +89,31 @@ const Profile: React.FC = () => {
       setLoading(true);
       await updateProfile({
         name: values.name,
+        displayName: values.displayName,
+        email: values.email,
         region: values.region,
+        country: values.country,
+        customerCode: values.customerCode,
+        companyLogo: values.companyLogo
       });
       message.success(t('profileUpdateSuccess', '个人资料更新成功'));
     } catch (error) {
       message.error(t('profileUpdateFailed', '更新失败，请重试'));
       console.error('Profile update failed:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 处理单位制偏好更新
+  const handleUnitSystemUpdate = async (values: any) => {
+    try {
+      setLoading(true);
+      await updatePreferredUnit(values.preferredUnit);
+      message.success('单位制偏好更新成功');
+    } catch (error) {
+      message.error('单位制偏好更新失败，请重试');
+      console.error('Unit system update failed:', error);
     } finally {
       setLoading(false);
     }
@@ -97,6 +140,22 @@ const Profile: React.FC = () => {
     }
   };
 
+  // 处理头像上传
+  const handleAvatarUpload = async (file: any) => {
+    try {
+      setAvatarLoading(true);
+      // 这里应该上传文件并获取URL，暂时模拟
+      const avatarUrl = URL.createObjectURL(file);
+      await updateProfile({ avatar: avatarUrl });
+      message.success('头像更新成功');
+    } catch (error) {
+      message.error('头像更新失败');
+      console.error('Avatar upload failed:', error);
+    } finally {
+      setAvatarLoading(false);
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="profile-loading">
@@ -108,45 +167,80 @@ const Profile: React.FC = () => {
   if (!user) {
     return (
       <div className="profile-error">
-        <p>{t('notLoggedIn', '您尚未登录，请先登录再访问此页面')}</p>
+        <p>{t('userNotFound', '用户信息未找到')}</p>
       </div>
     );
   }
 
+  const roleInfo = roleDisplayMap[user.role] || roleDisplayMap[UserRole.UNKNOWN];
+
   return (
-    <div className="profile-container">
-      <div className="profile-header">
-        <h1>{t('myProfile', '我的个人资料')}</h1>
-        <p>{t('profileSubtitle', '查看和更新您的个人信息')}</p>
-      </div>
-
-      <div className="profile-content">
-        <div className="profile-summary">
-          <Card className="summary-card">
-            <div className="user-avatar-container">
-              <Avatar 
-                size={80} 
-                icon={<UserOutlined />} 
-                src={user.avatar}
-                className="user-avatar"
-              />
-              <h2>{user.name}</h2>
-              <p className="user-email">{user.email}</p>
-              <p className="user-role">{t(`role_${user.role}`, user.role)}</p>
-              {user.region && (
-                <p className="user-region">
-                  <GlobalOutlined /> {REGIONS[user.region as keyof typeof REGIONS]?.nameEn || user.region}
-                </p>
-              )}
-              {user.vipLevel && user.vipLevel > 0 && (
-                <div className="vip-badge">
-                  VIP {user.vipLevel}
+    <div className="profile-page">
+      <div className="profile-container">
+        {/* 用户信息头部 */}
+        <Card className="profile-header">
+          <Row gutter={24} align="middle">
+            <Col span={4}>
+              <div className="avatar-section">
+                <Avatar 
+                  size={80} 
+                  src={user.avatar} 
+                  icon={<UserOutlined />}
+                  className="user-avatar"
+                />
+                <Upload
+                  showUploadList={false}
+                  beforeUpload={(file: any) => {
+                    handleAvatarUpload(file);
+                    return false;
+                  }}
+                  accept="image/*"
+                >
+                  <Button 
+                    icon={<CameraOutlined />} 
+                    size="small" 
+                    className="avatar-upload-btn"
+                    loading={avatarLoading}
+                  >
+                    更换头像
+                  </Button>
+                </Upload>
+              </div>
+            </Col>
+            <Col span={20}>
+              <div className="user-info">
+                <Title level={3} style={{ margin: 0 }}>
+                  {user.displayName || user.name}
+                  <Tag color={roleInfo.color} style={{ marginLeft: 12 }}>
+                    {roleInfo.icon} {roleInfo.label}
+                  </Tag>
+                </Title>
+                <Text type="secondary" style={{ fontSize: 16 }}>
+                  {user.email}
+                </Text>
+                <div style={{ marginTop: 8 }}>
+                  <Space>
+                    <Tag icon={<GlobalOutlined />}>
+                      {user.region && REGIONS[user.region as keyof typeof REGIONS] 
+                        ? (language === 'cn' 
+                          ? REGIONS[user.region as keyof typeof REGIONS].nameCn 
+                          : REGIONS[user.region as keyof typeof REGIONS].nameEn)
+                        : user.region}
+                    </Tag>
+                    <Tag icon={<SettingOutlined />}>
+                      {user.preferredUnit === 'metric' ? '公制' : '英制'}
+                    </Tag>
+                    {user.customerCode && (
+                      <Tag>客户代码: {user.customerCode}</Tag>
+                    )}
+                  </Space>
                 </div>
-              )}
-            </div>
-          </Card>
-        </div>
+              </div>
+            </Col>
+          </Row>
+        </Card>
 
+        {/* 详细设置 */}
         <div className="profile-editor">
           <Tabs activeKey={activeTab} onChange={setActiveTab}>
             <TabPane 
@@ -160,48 +254,112 @@ const Profile: React.FC = () => {
                   onFinish={handleProfileUpdate}
                   className="profile-form"
                 >
-                  <Form.Item
-                    name="name"
-                    label={t('name', '姓名')}
-                    rules={[{ required: true, message: t('nameRequired', '请输入您的姓名') }]}
-                  >
-                    <Input 
-                      prefix={<UserOutlined />} 
-                      placeholder={t('enterName', '输入姓名')} 
-                    />
-                  </Form.Item>
+                  <Row gutter={24}>
+                    <Col span={12}>
+                      <Form.Item
+                        name="name"
+                        label={t('name', '姓名')}
+                        rules={[{ required: true, message: t('nameRequired', '请输入您的姓名') }]}
+                      >
+                        <Input 
+                          prefix={<UserOutlined />} 
+                          placeholder={t('enterName', '输入姓名')} 
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                      <Form.Item
+                        name="displayName"
+                        label="显示名称"
+                      >
+                        <Input 
+                          prefix={<UserOutlined />} 
+                          placeholder="输入显示名称" 
+                        />
+                      </Form.Item>
+                    </Col>
+                  </Row>
 
-                  <Form.Item
-                    name="email"
-                    label={t('email', '电子邮件')}
-                  >
-                    <Input 
-                      prefix={<MailOutlined />} 
-                      disabled
-                    />
-                  </Form.Item>
+                  <Row gutter={24}>
+                    <Col span={12}>
+                      <Form.Item
+                        name="email"
+                        label={t('email', '电子邮件')}
+                      >
+                        <Input 
+                          prefix={<MailOutlined />} 
+                          disabled
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                      <Form.Item
+                        name="username"
+                        label="用户名"
+                      >
+                        <Input 
+                          prefix={<UserOutlined />} 
+                          disabled
+                        />
+                      </Form.Item>
+                    </Col>
+                  </Row>
 
-                  <Form.Item
-                    name="region"
-                    label={t('region', '区域')}
-                    rules={[{ required: true, message: t('regionRequired', '请选择区域') }]}
-                  >
-                    <Select placeholder={t('selectRegion', '选择区域')}>
-                      <Option value="CN">{language === 'cn' ? REGIONS.CN.nameCn : REGIONS.CN.nameEn}</Option>
-                      <Option value="EU">{language === 'cn' ? REGIONS.EU.nameCn : REGIONS.EU.nameEn}</Option>
-                      <Option value="NA">{language === 'cn' ? REGIONS.NA.nameCn : REGIONS.NA.nameEn}</Option>
-                      <Option value="AU">{language === 'cn' ? REGIONS.AU.nameCn : REGIONS.AU.nameEn}</Option>
-                    </Select>
-                  </Form.Item>
+                  <Row gutter={24}>
+                    <Col span={12}>
+                      <Form.Item
+                        name="region"
+                        label={t('region', '区域')}
+                        rules={[{ required: true, message: t('regionRequired', '请选择区域') }]}
+                      >
+                        <Select placeholder={t('selectRegion', '选择区域')}>
+                          {Object.entries(REGIONS).map(([key, region]) => (
+                            <Option key={key} value={key}>
+                              {language === 'cn' ? region.nameCn : region.nameEn}
+                            </Option>
+                          ))}
+                        </Select>
+                      </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                      <Form.Item
+                        name="country"
+                        label="国家"
+                      >
+                        <Input placeholder="输入国家" />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+
+                  {user.role !== UserRole.CUSTOMER && (
+                    <Row gutter={24}>
+                      <Col span={12}>
+                        <Form.Item
+                          name="customerCode"
+                          label="客户代码"
+                        >
+                          <Input placeholder="输入客户代码" />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item
+                          name="companyLogo"
+                          label="公司Logo URL"
+                        >
+                          <Input placeholder="输入公司Logo URL" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                  )}
 
                   <Form.Item>
                     <Button 
                       type="primary" 
                       htmlType="submit" 
                       loading={loading}
-                      className="update-button"
+                      size="large"
                     >
-                      {t('updateProfile', '更新个人资料')}
+                      {t('updateProfile', '更新资料')}
                     </Button>
                   </Form.Item>
                 </Form>
@@ -209,10 +367,78 @@ const Profile: React.FC = () => {
             </TabPane>
 
             <TabPane 
-              tab={<span><LockOutlined /> {t('password', '密码')}</span>} 
-              key="password"
+              tab={<span><SettingOutlined /> 单位制偏好</span>} 
+              key="units"
             >
               <Card>
+                <div style={{ marginBottom: 24 }}>
+                  <Title level={4}>
+                    <SettingOutlined /> 单位制设置
+                  </Title>
+                  <Text type="secondary">
+                    选择您偏好的单位制，这将影响整个系统中尺寸、重量等数据的显示方式。
+                  </Text>
+                </div>
+
+                <Form
+                  form={unitForm}
+                  layout="vertical"
+                  onFinish={handleUnitSystemUpdate}
+                >
+                  <Form.Item
+                    name="preferredUnit"
+                    label="偏好单位制"
+                    rules={[{ required: true, message: '请选择偏好的单位制' }]}
+                  >
+                    <Radio.Group>
+                      {unitSystemOptions.map(option => (
+                        <div key={option.value} style={{ marginBottom: 12 }}>
+                          <Radio value={option.value}>
+                            <div>
+                              <div style={{ fontWeight: 'bold' }}>{option.label}</div>
+                              <div style={{ fontSize: '12px', color: '#666' }}>
+                                {option.description}
+                              </div>
+                            </div>
+                          </Radio>
+                        </div>
+                      ))}
+                    </Radio.Group>
+                  </Form.Item>
+
+                  <div style={{ background: '#f6f8fa', padding: 16, borderRadius: 6, marginBottom: 24 }}>
+                    <Space>
+                      <InfoCircleOutlined style={{ color: '#1890ff' }} />
+                      <Text>
+                        当前设置: <strong>
+                          {user.preferredUnit === 'metric' ? '公制 (厘米、千克)' : '英制 (英寸、磅)'}
+                        </strong>
+                      </Text>
+                    </Space>
+                  </div>
+
+                  <Form.Item>
+                    <Button 
+                      type="primary" 
+                      htmlType="submit" 
+                      loading={loading}
+                      size="large"
+                    >
+                      保存单位制偏好
+                    </Button>
+                  </Form.Item>
+                </Form>
+              </Card>
+            </TabPane>
+
+            <TabPane 
+              tab={<span><SecurityScanOutlined /> {t('security', '安全设置')}</span>} 
+              key="security"
+            >
+              <Card>
+                <Title level={4}>
+                  <LockOutlined /> {t('changePassword', '修改密码')}
+                </Title>
                 <Form
                   form={passwordForm}
                   layout="vertical"
@@ -235,7 +461,7 @@ const Profile: React.FC = () => {
                     label={t('newPassword', '新密码')}
                     rules={[
                       { required: true, message: t('newPasswordRequired', '请输入新密码') },
-                      { min: 8, message: t('passwordMinLength', '密码长度不得少于8个字符') }
+                      { min: 6, message: t('passwordMinLength', '密码至少6位') }
                     ]}
                   >
                     <Input.Password 
@@ -247,17 +473,7 @@ const Profile: React.FC = () => {
                   <Form.Item
                     name="confirmPassword"
                     label={t('confirmPassword', '确认新密码')}
-                    rules={[
-                      { required: true, message: t('confirmPasswordRequired', '请确认新密码') },
-                      ({ getFieldValue }) => ({
-                        validator(_, value) {
-                          if (!value || getFieldValue('newPassword') === value) {
-                            return Promise.resolve();
-                          }
-                          return Promise.reject(new Error(t('passwordsDoNotMatch', '两次输入的密码不一致')));
-                        },
-                      }),
-                    ]}
+                    rules={[{ required: true, message: t('confirmPasswordRequired', '请确认新密码') }]}
                   >
                     <Input.Password 
                       prefix={<LockOutlined />} 
@@ -270,7 +486,7 @@ const Profile: React.FC = () => {
                       type="primary" 
                       htmlType="submit" 
                       loading={loading}
-                      className="update-button"
+                      size="large"
                     >
                       {t('updatePassword', '更新密码')}
                     </Button>
@@ -278,6 +494,40 @@ const Profile: React.FC = () => {
                 </Form>
               </Card>
             </TabPane>
+
+            {/* 权限信息 - 仅管理员和销售可见 */}
+            {hasPermission('viewAdmin') && (
+              <TabPane 
+                tab={<span><SecurityScanOutlined /> 权限信息</span>} 
+                key="permissions"
+              >
+                <Card>
+                  <Title level={4}>
+                    <SecurityScanOutlined /> 用户权限
+                  </Title>
+                  <div style={{ marginBottom: 16 }}>
+                    <Text type="secondary">
+                      当前角色: <Tag color={roleInfo.color}>{roleInfo.label}</Tag>
+                    </Text>
+                  </div>
+                  
+                  {user.permissions && (
+                    <div>
+                      <Title level={5}>权限列表:</Title>
+                      <Row gutter={[8, 8]}>
+                        {Object.entries(user.permissions).map(([key, value]) => (
+                          <Col key={key}>
+                            <Tag color={value ? 'green' : 'red'}>
+                              {value ? '✓' : '✗'} {key}
+                            </Tag>
+                          </Col>
+                        ))}
+                      </Row>
+                    </div>
+                  )}
+                </Card>
+              </TabPane>
+            )}
           </Tabs>
         </div>
       </div>

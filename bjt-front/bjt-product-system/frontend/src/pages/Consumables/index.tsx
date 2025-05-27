@@ -1,15 +1,29 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Spin, message, Button, Select, InputNumber, Tabs, Tag, Pagination, Tooltip, Popover } from 'antd';
-import { ShoppingCartOutlined, InfoCircleOutlined, FilterOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Spin, Button, Select, InputNumber, Tabs, Tag, Tooltip, Modal } from 'antd';
+import { ShoppingCartOutlined, InfoCircleOutlined, FilterOutlined, ReloadOutlined, EyeOutlined } from '@ant-design/icons';
+
+// 导入现代化UI组件
+import { 
+  LoadingState, 
+  ConfirmDialog, 
+  CartAnimation, 
+  useToastNotifications
+} from '../../components/ui';
+
+// 导入SQL Mock数据服务
+import { useConsumables, useShapes, useMaterials } from '../../hooks/useMockData';
+import MockServiceStatus from '../../components/MockServiceStatus';
+
+// 原有导入 (保留作为备用)
 import { useAuth } from '../../contexts/AuthContext';
-import { useCart, PriceTier } from '../../contexts/CartContext';
+import { useCart, ExtendedCartItem } from '../../contexts/CartContext';
 import Loading from '../../components/common/Loading';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import {
   consumablesService,
-  ConsumableProduct,
+  ConsumableProduct, 
   ConsumableFilters,
   ConsumableListData,
   FilterOptionsType
@@ -48,14 +62,25 @@ const isVipUser = (email: string) => {
   return email.toLowerCase().includes('vip');
 };
 
+// 判断是否为纸质材料
+const isPaperMaterial = (materialId: string): boolean => {
+  return materialId === 'PAPER' || materialId === 'paper_pe' || materialId.toLowerCase().includes('paper');
+};
+
 const ConsumablesPage: React.FC = () => {
-  const { t } = useTranslation('consumables');
+  const { t, i18n } = useTranslation('consumables');
   const navigate = useNavigate();
   const { user } = useAuth();
   const { addItem } = useCart();
   const [searchParams] = useSearchParams();
   
-  // 状态定义
+  // 现代化UI组件hooks
+  const { success, error: showErrorToast, warning, info } = useToastNotifications();
+  
+  // 获取当前语言
+  const currentLanguage = i18n.language || 'zh';
+  
+  // 所有状态定义 - 必须在组件顶部，不能有条件调用
   const [consumables, setConsumables] = useState<ConsumableProduct[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -69,16 +94,95 @@ const ConsumablesPage: React.FC = () => {
   
   // 筛选条件状态
   const [selectedModel, setSelectedModel] = useState<string>('all');
-  const [selectedShape, setSelectedShape] = useState<string>('pillow');
+  const [selectedShape, setSelectedShape] = useState<string>('MEX');
   const [selectedMaterial, setSelectedMaterial] = useState<string>('hdpe');
   const [selectedThickness, setSelectedThickness] = useState<string>('all');
   const [selectedWeight, setSelectedWeight] = useState<string>('all');
   const [selectedWidth, setSelectedWidth] = useState<string>('all');
   const [selectedLength, setSelectedLength] = useState<string>('all');
   const [showModelUsage, setShowModelUsage] = useState<boolean>(false);
+  
+  // 详细信息Modal状态
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<ConsumableProduct | null>(null);
+  
+  // 添加状态来跟踪当前选中形状的尺寸图片
+  const [currentDimensionImage, setCurrentDimensionImage] = useState<string>(dimensionGuidePlaceholder);
+
+  // 现代化UI状态
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'default' | 'danger' | 'warning' | 'info';
+    onConfirm: () => void;
+    loading?: boolean;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'default',
+    onConfirm: () => {},
+    loading: false
+  });
+  
+  const [cartAnimation, setCartAnimation] = useState<{
+    isActive: boolean;
+    startElement: HTMLElement | null;
+    targetElement: HTMLElement | null;
+    productImage?: string;
+    productName?: string;
+  }>({
+    isActive: false,
+    startElement: null,
+    targetElement: null
+  });
 
   // 获取用户区域
   const userRegion = user?.region || DEFAULT_REGION;
+
+  // 在组件开始处添加ref
+  const cartButtonRef = useRef<HTMLElement>(null);
+  
+  // 使用useCallback稳定回调函数引用
+  const handleConsumablesSuccess = useCallback((data: any) => {
+    console.log('✅ 耗材页面数据加载成功:', data);
+  }, []);
+  
+  const handleConsumablesError = useCallback((error: string) => {
+    console.error('❌ 耗材页面数据加载失败:', error);
+  }, []);
+  
+  // SQL Mock数据服务Hook
+  const { 
+    data: mockConsumablesData, 
+    loading: mockLoading, 
+    error: mockError 
+  } = useConsumables({
+    page: 1,
+    pageSize: 20,
+    shape: 'all',
+    material: 'all'
+  }, {
+    onSuccess: handleConsumablesSuccess,
+    onError: handleConsumablesError
+  });
+  
+  // 获取形状和材料数据
+  const { data: shapesData } = useShapes();
+  
+  const { data: materialsData } = useMaterials();
+  
+  // 初始化默认尺寸图片
+  useEffect(() => {
+    if (filterOptions?.shapes && filterOptions.shapes.length > 0) {
+      // 查找默认选中形状(MEX)的image_url2
+      const defaultShape = filterOptions.shapes.find(shape => shape.id === selectedShape);
+      if (defaultShape && defaultShape.image_url2) {
+        setCurrentDimensionImage(defaultShape.image_url2);
+      }
+    }
+  }, [filterOptions?.shapes, selectedShape]);
 
   // 获取耗材数据
   useEffect(() => {
@@ -88,7 +192,7 @@ const ConsumablesPage: React.FC = () => {
         setError(null);
         
         const categoryFilter = searchParams.get('category') ? parseInt(searchParams.get('category')!) : undefined;
-
+        
         // 构建筛选参数
         const filters: ConsumableFilters = {
           model: selectedModel,
@@ -107,19 +211,20 @@ const ConsumablesPage: React.FC = () => {
         
         const consumableData = await consumablesService.getConsumables(filters);
         console.log('ConsumableData received in Page:', JSON.stringify(consumableData, null, 2));
+        console.log('🔍 Debug - FilterOptions shapes:', consumableData.filterOptions?.shapes);
         
         setConsumables(consumableData.items);
-        setTotalItems(consumableData.total);
-        setTotalPages(consumableData.total_pages);
-        setCurrentPage(consumableData.page);
+        setTotalItems(consumableData.total || 0);
+        setTotalPages(Math.max(1, consumableData.total_pages || 1));
+        setCurrentPage(Math.max(1, consumableData.page || 1));
         setFilterOptions(consumableData.filterOptions);
-        
-        // 初始化数量状态
-        const initialQuantities: Record<string, number> = {};
+          
+          // 初始化数量状态
+          const initialQuantities: Record<string, number> = {};
         consumableData.items.forEach(item => {
-          initialQuantities[item.id] = 1;
-        });
-        setQuantities(initialQuantities);
+            initialQuantities[item.id] = 1;
+          });
+          setQuantities(initialQuantities);
 
       } catch (err) {
         const errorMessage = (err instanceof Error) ? err.message : t('error.systemError');
@@ -155,16 +260,27 @@ const ConsumablesPage: React.FC = () => {
   
   // 获取区域价格
   const getRegionalPrice = (product: ConsumableProduct, quantity: number = 1): number => {
+    // 安全检查输入参数
+    if (!product || !product.pricing || !Array.isArray(product.pricing) || isNaN(quantity) || quantity < 1) {
+      return 0;
+    }
+
     // 找到适用的价格区间
     const pricing = product.pricing.find(p => {
+      if (!p || !p.range) return false;
+      
       if (p.range.includes('-')) {
         const [min, max] = p.range.split('-').map(n => parseInt(n));
+        if (isNaN(min) || isNaN(max)) return false;
         return quantity >= min && quantity <= max;
       } else if (p.range.includes('>')) {
         const min = parseInt(p.range.replace('>', '').trim());
+        if (isNaN(min)) return false;
         return quantity > min;
       } else {
-        return parseInt(p.range) === quantity;
+        const rangeValue = parseInt(p.range);
+        if (isNaN(rangeValue)) return false;
+        return rangeValue === quantity;
       }
     });
     
@@ -172,76 +288,139 @@ const ConsumablesPage: React.FC = () => {
     
     // 获取适用区域的价格
     const region = userRegion.toLowerCase();
-    return pricing.regionalPrices[region as keyof typeof pricing.regionalPrices] || pricing.price;
+    const price = pricing.regionalPrices?.[region as keyof typeof pricing.regionalPrices] || pricing.price || 0;
+    
+    // 确保返回有效数字
+    return isNaN(price) ? 0 : Number(price);
   };
   
   // 处理数量变更
   const handleQuantityChange = (itemId: string, value: number) => {
-    if (value < 1) return;
+    // 安全检查：确保value是有效数字且大于等于1
+    const safeValue = isNaN(value) ? 1 : Math.max(1, Math.floor(value));
     setQuantities(prev => ({
       ...prev,
-      [itemId]: value
+      [itemId]: safeValue
     }));
   };
   
-  // 添加到购物车
-  const addToCart = async (itemId: string) => {
+  // 添加到购物车 - 参考备件页面的实现
+  const addToCart = async (itemId: string, buttonElement?: HTMLElement) => {
+    if (!quantities[itemId] || quantities[itemId] < 1) {
+      warning(t('warning.selectQuantity', 'Please select quantity'));
+      return;
+    }
+
+    const product = consumables.find(p => p.id === itemId);
+    if (!product) {
+      showErrorToast(t('error.productNotFound', 'Product not found'));
+      return;
+    }
+
     try {
-      const product = consumables.find(p => p.id === itemId);
-      if (!product) return;
+      const quantity = quantities[itemId];
       
-      const quantity = quantities[itemId] || 1;
-      
-      // 创建价格层级数据
-      const priceTiers: PriceTier[] = product.pricing.map(tier => {
-        // 解析价格范围
-        let min = 1;
-        let max: number | null = null;
+      // 准备购物车项目数据 - 简化版本，只包含必需字段
+      const cartItem: ExtendedCartItem = {
+        // OriginalCartItem 必需字段
+        item_id: parseInt(itemId) || 0,
+        product_type: 'consumable',
+        product_id: parseInt(itemId) || 0,
+        part_number: product.code,
+        quantity: quantity,
+        name: product.name,
+        image_url: product.image_url || '/images/placeholder.png',
+        unit_price: getRegionalPrice(product, quantity),
+        currency: getCurrencySymbolByRegion(),
+        line_total: getRegionalPrice(product, quantity) * quantity,
+        inventory_status: 'in_stock',
+        added_at: new Date().toISOString(),
         
-        if (tier.range.includes('-')) {
-          const parts = tier.range.split('-').map(part => parseInt(part.trim()));
-          min = parts[0];
-          max = parts[1];
-        } else if (tier.range.includes('>')) {
-          min = parseInt(tier.range.replace('>', '').trim());
-          max = null;
-        } else {
-          min = parseInt(tier.range);
-          max = min;
-        }
-        
-        return {
-          min,
-          max,
-          price: tier.regionalPrices[userRegion.toLowerCase() as keyof RegionPrices] || tier.price
-        };
-      });
-      
-      // 添加到购物车上下文
-      if (addItem) {
-        addItem({
-          id: product.id,
-          code: product.code,
-          name: product.name,
-          price: getRegionalPrice(product, quantity),
-          quantity: quantity,
-          specs: {
-            model: product.model,
-            productName: product.name,
-          },
+        // ExtendedCartItem 额外字段
+        id: itemId,
+        code: product.code,
+        partNumber: product.code,
+        image: product.image_url || '/images/placeholder.png',
+        category: 'consumable',
+        productId: parseInt(itemId) || 0,
+        priceTiers: product.pricing?.map(p => {
+          const minQty = parseInt(p.range.split('-')[0] || '1') || 1;
+          const maxQty = p.range.includes('+') ? null : (parseInt(p.range.split('-')[1] || '999999') || 999999);
+          return {
+            min: minQty,
+            max: maxQty,
+            price: p.regionalPrices?.cn || p.price || 0
+          };
+        }) || [],
+        selected: false,
+        type: 'consumable',
+        specs: {
           partNumber: product.code,
-          category: 'consumables',
-          productId: parseInt(product.id),
-          selected: true,
-          image: product.image_url,
-          priceTiers: priceTiers
+          productName: product.name
+        },
+        price: getRegionalPrice(product, quantity),
+        properties: {
+          model: product.model,
+          model_imperial: product.model_imperial || '',
+          spec: product.spec || '',
+          spec_imperial: product.spec_imperial || '',
+          bubble_diameter_met: product.bubble_diameter_met ?? '',
+          bubble_diameter_imp: product.bubble_diameter_imp ?? '',
+          pcs_per_box: product.pcs_per_box ?? '',
+          brand: product.brand || '',
+          part_number: product.code,
+          image_url: product.image_url,
+          id: product.id,
+          width: product.specs?.width || '',
+          length: product.specs?.length || '',
+          thickness: product.specs?.thickness || '',
+          weight: product.specs?.weight || '',
+          rollLength: product.specs?.rollLength || '',
+          compatibility: product.specs?.compatibility || '',
+          material: product.specs?.material || '',
+          shape: product.specs?.shape || '',
+          // 可按需补充其它字段
+        }
+      };
+      
+      await addItem(cartItem);
+      
+      // 触发购物车动画
+      if (buttonElement && cartButtonRef.current) {
+        setCartAnimation({
+          isActive: true,
+          startElement: buttonElement,
+          targetElement: cartButtonRef.current,
+          productImage: product.image_url || '/images/placeholder.png',
+          productName: product.name
         });
       }
       
-      message.success(t('cart.added'));
-    } catch (err) {
-      console.error('Failed to add to cart:', err);
-      message.error(t('error.systemError'));
+      // 显示成功通知 - 使用现代化Toast
+      success(t('cart.added', '商品已成功添加到购物车'));
+      
+      // 重置数量
+      setQuantities(prev => ({
+        ...prev,
+        [itemId]: 0,
+      }));
+      
+    } catch (error) {
+      console.error('Add to cart error:', error);
+      
+      // 使用现代化错误通知
+      let errorMessage = '添加到购物车失败';
+      if (error instanceof Error) {
+        if (error.message?.includes('part_number')) {
+          errorMessage = '产品料号信息缺失，请刷新页面重试';
+        } else if (error.message?.includes('401') || error.message?.includes('unauthorized')) {
+          errorMessage = '认证失效，请刷新页面重新登录';
+        } else if (error.message?.includes('400')) {
+          errorMessage = '请求参数错误，请检查产品信息';
+        }
+      }
+      
+      showErrorToast('添加失败', errorMessage);
     }
   };
   
@@ -258,6 +437,15 @@ const ConsumablesPage: React.FC = () => {
   // 处理形状变更
   const handleShapeChange = (value: string) => {
     setSelectedShape(value);
+    
+    // 查找选中形状的image_url2并更新尺寸图片
+    const selectedShapeData = shapesData?.find(shape => shape.id === value);
+    if (selectedShapeData && selectedShapeData.image_url2) {
+      setCurrentDimensionImage(selectedShapeData.image_url2);
+    } else {
+      // 如果没有image_url2，回退到默认图片
+      setCurrentDimensionImage(dimensionGuidePlaceholder);
+    }
   };
   
   // 处理材质变更
@@ -288,7 +476,7 @@ const ConsumablesPage: React.FC = () => {
   // 重置筛选
   const handleResetFilters = () => {
     setSelectedModel('all');
-    setSelectedShape('pillow');
+    setSelectedShape('MEX');
     setSelectedMaterial('hdpe');
     setSelectedThickness('all');
     setSelectedWeight('all');
@@ -304,198 +492,150 @@ const ConsumablesPage: React.FC = () => {
     // 重置页码并触发数据加载
     setCurrentPage(1);
   };
-  
-  // 渲染产品表格
+
+  // 处理图片错误
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const target = e.target as HTMLImageElement;
+    target.src = placeholderImage;
+  };
+
+  // 显示产品详细信息
+  const showProductDetail = (product: ConsumableProduct) => {
+    setSelectedProduct(product);
+    setDetailModalVisible(true);
+  };
+
+  // 关闭详细信息Modal
+  const closeDetailModal = () => {
+    setDetailModalVisible(false);
+    setSelectedProduct(null);
+  };
+
+  // 渲染产品表格 - 参考备件页面的现代化UI
   const renderConsumablesTable = () => {
+    if (loading) {
+      return (
+        <div className="flex justify-center items-center p-16 bg-card rounded-lg shadow-md border border-border transition-all duration-300">
+          <LoadingState 
+            size="large" 
+            text={t('loading', 'Loading data...')} 
+            type="spinner"
+          />
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="flex flex-col items-center justify-center p-10 bg-card rounded-lg shadow-md border border-error/20">
+          <div className="text-error text-3xl mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <p className="text-content-light mb-4">{error}</p>
+          <Button 
+            type="primary"
+            onClick={() => window.location.reload()} 
+            className="flex items-center"
+          >
+            <ReloadOutlined className="mr-2" />
+            {t('error.retry', '重试')}
+          </Button>
+        </div>
+      );
+    }
+
+    if (consumables.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center py-16 text-center bg-card rounded-lg shadow-md">
+          <svg className="h-16 w-16 text-content-light" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+          <h3 className="mt-4 text-lg font-medium text-title">{t('noProducts.title', '没有找到符合条件的产品')}</h3>
+          <p className="mt-2 text-content-light">{t('noProducts.message', '请尝试调整筛选条件')}</p>
+          <Button type="primary" onClick={handleResetFilters} className="mt-4">
+            {t('button.resetFilters', '重置筛选条件')}
+          </Button>
+        </div>
+      );
+    }
+
     return (
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 gap-6">
         {consumables.map((item) => (
           <div 
             key={item.id} 
-            className="bg-card rounded-lg shadow-md hover:shadow-lg transition-all duration-300 border border-border text-content"
+            className="bg-card rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-border text-content overflow-hidden"
           >
-            <div className="flex flex-col md:flex-row p-4">
+            <div className="flex flex-col md:flex-row p-6">
               {/* 列1: 图片 */}
               <div className="w-full md:w-1/6 flex items-center justify-center md:justify-start mb-4 md:mb-0">
-                <img 
-                  src={item.image_url || placeholderImage} 
-                  alt={item.name} 
-                  className="w-24 h-24 object-contain border border-border rounded bg-card-alt p-1 hover:border-brand-accent transition-colors"
-                />
+                <div className="relative">
+                  <img 
+                    src={item.image_url || placeholderImage} 
+                    alt={item.name} 
+                    className="w-32 h-32 object-contain border-2 border-border rounded-lg bg-card-alt p-2 shadow-sm hover:shadow-md transition-shadow duration-200"
+                    onError={handleImageError}
+                  />
+                </div>
               </div>
 
               {/* 列2: 信息与规格 */}
               <div className="w-full md:w-3/6 md:px-4">
-                <div className="mb-1">
-                  <span className="inline-block bg-brand-primary text-gray-800 px-2 py-1 text-xs font-bold rounded">{item.code}</span>
-                  <h3 className="text-lg font-semibold text-title mt-1">{item.name}</h3>
+                <div className="mb-4">
+                  <span className="inline-block bg-primary text-white px-3 py-1 text-sm font-bold rounded-lg shadow-sm">{item.code}</span>
+                  <h3 className="text-xl font-bold text-title mt-2 leading-tight line-clamp-2">{item.name}</h3>
                   {item.model && (
-                    <div className="text-sm text-content-light">
-                      <span>({item.model})</span>
+                    <div className="text-sm text-content-light mt-1">
+                      <span>型号: {item.model}</span>
                     </div>
                   )}
+                  {/* 可选显示 productId */}
+                  <div className="text-xs text-content-light mt-1 opacity-60">ID: {item.id}</div>
                 </div>
 
-                <div className="flex flex-wrap gap-2 my-2">
-                  <span className="inline-flex items-center px-2 py-1 bg-background rounded text-xs">
-                    <strong className="text-label mr-1">材料:</strong> 
-                    <span className="text-content">{item.specs.material}</span>
-                  </span>
-                  <span className="inline-flex items-center px-2 py-1 bg-background rounded text-xs">
-                    <strong className="text-label mr-1">形状:</strong> 
-                    <span className="text-content">{item.specs.shape}</span>
-                  </span>
-                  {item.specs.thickness && (
-                    <span className="inline-flex items-center px-2 py-1 bg-background rounded text-xs">
-                      <strong className="text-label mr-1">厚度:</strong> 
-                      <span className="text-content">{item.specs.thickness}</span>
-                    </span>
-                  )}
-                </div>
-
-                <div className="bg-card-alt rounded-md p-3 mt-2">
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="flex">
-                      <strong className="w-20 text-label">宽度:</strong>
-                      <span className="text-content">{item.specs.width}</span>
+                {/* 规格信息（公制/英制自动切换） */}
+                <div className="bg-card-alt rounded-lg p-4 shadow-sm">
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="flex items-center">
+                      <strong className="w-16 text-label font-medium">宽度:</strong>
+                      <span className="text-content font-medium ml-2">
+                        {userRegion === 'na' || userRegion === 'au' ? 
+                          (item.specs?.width ? item.specs.width + ' inch' : 'N/A') : 
+                          (item.specs?.width ? item.specs.width : 'N/A')
+                        }
+                      </span>
                     </div>
-                    <div className="flex">
-                      <strong className="w-20 text-label">长度:</strong>
-                      <span className="text-content">{item.specs.length}</span>
+                    <div className="flex items-center">
+                      <strong className="w-16 text-label font-medium">长度:</strong>
+                      <span className="text-content font-medium ml-2">
+                        {userRegion === 'na' || userRegion === 'au' ? 
+                          (item.specs?.length ? item.specs.length + ' inch' : 'N/A') : 
+                          (item.specs?.length ? item.specs.length : 'N/A')
+                        }
+                      </span>
                     </div>
-                    {item.specs.rollLength && (
-                      <div className="flex">
-                        <strong className="w-20 text-label">卷长:</strong>
-                        <span className="text-content">{item.specs.rollLength}</span>
-                      </div>
-                    )}
+                    <div className="flex items-center">
+                      <strong className="w-16 text-label font-medium">卷长:</strong>
+                      <span className="text-content font-medium ml-2">{item.specs?.rollLength || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <strong className="w-16 text-label font-medium">材质:</strong>
+                      <span className="text-content font-medium ml-2">{item.specs?.material || 'N/A'}</span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="mt-3 flex gap-2">
+                <div className="mt-4 flex gap-2">
                   <Button 
                     size="small"
-                    icon={<InfoCircleOutlined />}
-                    className="bg-secondary-light text-secondary hover:bg-secondary"
-                    onClick={() => {
-                      const pdfUrl = (item.specs as any).pdfUrl || '#'; // Add type assertion and placeholder
-                      if (pdfUrl !== '#') {
-                        window.open(pdfUrl, '_blank');
-                      }
-                    }}
-                    disabled={!(item.specs as any).pdfUrl} // Add type assertion
+                    icon={<EyeOutlined />}
+                    onClick={() => showProductDetail(item)}
+                    className="bg-accent-light text-accent hover:bg-accent"
                   >
-                    规格详情 (PDF)
+                    更多信息
                   </Button>
-
-                  <Popover
-                    title={`${item.name} - 更多信息`}
-                    content={
-                      <div className="order-info-popover">
-                        {/* 材质信息 */}
-                        <div className="section">
-                          <h4>材质信息</h4>
-                          <div className="info-grid">
-                            <div>
-                              <strong>厚度/克重:</strong> 
-                              <span>{userRegion === 'na' || userRegion === 'au' ? ((item.specs as any).thicknessMil || 'N/A') : ((item.specs as any).thickness || 'N/A')} ({userRegion === 'na' || userRegion === 'au' ? 'mil/#' : 'um/gsm'})</span>
-                            </div>
-                            <div>
-                              <strong>膜宽:</strong> 
-                              <span>{userRegion === 'na' || userRegion === 'au' ? ((item.specs as any).filmWidthInch || 'N/A') : ((item.specs as any).filmWidthCm || 'N/A')} ({userRegion === 'na' || userRegion === 'au' ? 'inch' : 'cm'})</span>
-                            </div>
-                            <div>
-                              <strong>袋长:</strong> 
-                              <span>{userRegion === 'na' || userRegion === 'au' ? ((item.specs as any).bagLengthInch || 'N/A') : ((item.specs as any).bagLengthCm || 'N/A')} ({userRegion === 'na' || userRegion === 'au' ? 'inch' : 'cm'})</span>
-                            </div>
-                            <div>
-                              <strong>总长:</strong> 
-                              <span>{userRegion === 'na' || userRegion === 'au' ? ((item.specs as any).totalLengthFt || 'N/A') : ((item.specs as any).totalLengthM || 'N/A')} ({userRegion === 'na' || userRegion === 'au' ? 'ft' : 'm'})</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* 包装属性 */}
-                        <div className="section">
-                          <h4>包装属性 (Package Info)</h4>
-                          <div className="info-grid">
-                             <div>
-                              <strong>包装方式:</strong> 
-                              <span>{((item.specs as any).packagingMethod || 'N/A')}</span>
-                            </div>
-                            <div>
-                              <strong>包装尺寸:</strong> 
-                              <span>{userRegion === 'na' || userRegion === 'au' ? ((item.specs as any).packageSizeInch || 'N/A') : ((item.specs as any).packageSizeCm || 'N/A')} ({userRegion === 'na' || userRegion === 'au' ? 'inch' : 'cm'})</span>
-                            </div>
-                            <div>
-                              <strong>单件净重:</strong> 
-                              <span>{userRegion === 'na' || userRegion === 'au' ? ((item.specs as any).netWeightLbs || 'N/A') : ((item.specs as any).netWeightKg || 'N/A')} ({userRegion === 'na' || userRegion === 'au' ? 'lbs' : 'kg'})</span>
-                            </div>
-                            <div>
-                              <strong>托盘尺寸:</strong> 
-                              <span>{userRegion === 'na' || userRegion === 'au' ? 'N/A' : (((item.specs as any).palletSizeCm || 'N/A'))} ({userRegion === 'na' || userRegion === 'au' ? 'inch' : 'cm'})</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* 打托属性 */}
-                        <div className="section">
-                          <h4>打托属性 (Pallet Info)</h4>
-                          <div className="info-grid-pallet">
-                            {/* 一托卷数 A */}
-                            <div><strong>一托卷数A:</strong> <span>{((item.specs as any).rollsPerPalletA || 'N/A')}</span></div>
-                            <div>
-                              <strong>整托毛重A:</strong> 
-                              <span>{userRegion === 'na' || userRegion === 'au' ? (((item.specs as any).palletWeightALbs || 'N/A')) : (((item.specs as any).palletWeightAKg || 'N/A'))} ({userRegion === 'na' || userRegion === 'au' ? 'lbs' : 'kg'})</span>
-                            </div>
-                            <div>
-                              <strong>打托高度A:</strong> 
-                              <span>{userRegion === 'na' || userRegion === 'au' ? (((item.specs as any).palletHeightAInch || 'N/A')) : (((item.specs as any).palletHeightACm || 'N/A'))} ({userRegion === 'na' || userRegion === 'au' ? 'inch' : 'cm'})</span>
-                            </div>
-                            
-                            {/* 一托卷数 B */}
-                            <div><strong>一托卷数B:</strong> <span>{((item.specs as any).rollsPerPalletB || 'N/A')}</span></div>
-                            <div>
-                              <strong>整托毛重B:</strong> 
-                              <span>{userRegion === 'na' || userRegion === 'au' ? (((item.specs as any).palletWeightBLbs || 'N/A')) : (((item.specs as any).palletWeightBKg || 'N/A'))} ({userRegion === 'na' || userRegion === 'au' ? 'lbs' : 'kg'})</span>
-                            </div>
-                            <div>
-                              <strong>打托高度B:</strong> 
-                              <span>{userRegion === 'na' || userRegion === 'au' ? (((item.specs as any).palletHeightBInch || 'N/A')) : (((item.specs as any).palletHeightBCm || 'N/A'))} ({userRegion === 'na' || userRegion === 'au' ? 'inch' : 'cm'})</span>
-                            </div>
-                            
-                            {/* 一托卷数 C */}
-                            <div><strong>一托卷数C:</strong> <span>{((item.specs as any).rollsPerPalletC || 'N/A')}</span></div>
-                            <div>
-                              <strong>整托毛重C:</strong> 
-                              <span>{userRegion === 'na' || userRegion === 'au' ? (((item.specs as any).palletWeightCLbs || 'N/A')) : (((item.specs as any).palletWeightCKg || 'N/A'))} ({userRegion === 'na' || userRegion === 'au' ? 'lbs' : 'kg'})</span>
-                            </div>
-                            <div>
-                              <strong>打托高度C:</strong> 
-                              <span>{userRegion === 'na' || userRegion === 'au' ? (((item.specs as any).palletHeightCInch || 'N/A')) : (((item.specs as any).palletHeightCCm || 'N/A'))} ({userRegion === 'na' || userRegion === 'au' ? 'inch' : 'cm'})</span>
-                            </div>
-
-                            {/* 纸筒内径 */}
-                            <div className="full-width">
-                              <strong>纸筒内径:</strong> 
-                              <span>{userRegion === 'na' || userRegion === 'au' ? ((item.specs as any).tubeDiameterInch || 'N/A') : ((item.specs as any).tubeDiameterCm || 'N/A')} ({userRegion === 'na' || userRegion === 'au' ? 'inch' : 'cm'})</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    }
-                    trigger="hover"
-                    placement="right"
-                    overlayClassName="order-info-popover-container wide-popover"
-                  >
-                    <Button 
-                      size="small"
-                      icon={<InfoCircleOutlined />}
-                      className="bg-accent-light text-accent hover:bg-accent"
-                    >
-                      更多信息
-                    </Button>
-                  </Popover>
                 </div>
               </div>
 
@@ -504,14 +644,20 @@ const ConsumablesPage: React.FC = () => {
                 <div>
                   <h4 className="font-medium text-sm text-label mb-2">价格:</h4>
                   <div className="space-y-1">
-                    {item.pricing.map((price, idx) => (
-                      <div key={idx} className="flex justify-between items-center bg-background rounded px-3 py-1 text-sm hover:bg-brand-light transition-colors">
-                        <span className="text-content-light">{price.range}:</span>
-                        <span className="font-semibold text-brand-primary">
-                          {getCurrencySymbolByRegion()}{getRegionalPrice(item, parseInt(price.range.replace(/[^0-9]/g, '') || '1')).toFixed(2)}
-                        </span>
-                      </div>
-                    ))}
+                    {item.pricing.map((price, idx) => {
+                      const quantity = parseInt(price.range.replace(/[^0-9]/g, '') || '1') || 1;
+                      const priceValue = getRegionalPrice(item, quantity);
+                      const displayPrice = isNaN(priceValue) ? 0 : priceValue;
+                      
+                      return (
+                        <div key={idx} className="flex justify-between items-center bg-background rounded px-3 py-1 text-sm hover:bg-brand-light transition-colors">
+                          <span className="text-content-light">{price.range}:</span>
+                          <span className="font-semibold text-brand-primary">
+                            {getCurrencySymbolByRegion()}{displayPrice.toFixed(2)}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                   
                   {/* 库存信息（仅管理员/销售可见） */}
@@ -522,8 +668,8 @@ const ConsumablesPage: React.FC = () => {
                         {Object.entries(item.inventory).map(([region, count]) => (
                           <div key={region} className="flex justify-between items-center px-2 py-1 rounded border border-border">
                             <span className="font-medium">{region.toUpperCase()}:</span>
-                            <span className={`font-medium ${count > 0 ? 'text-success' : 'text-error'}`}>
-                              {count}
+                            <span className={`font-medium ${(count || 0) > 0 ? 'text-success' : 'text-error'}`}>
+                              {isNaN(count) ? 0 : count}
                             </span>
                           </div>
                         ))}
@@ -533,19 +679,41 @@ const ConsumablesPage: React.FC = () => {
                 </div>
                 
                 <div className="mt-4 flex items-center justify-between">
-                  <div className="w-20">
-                    <InputNumber
-                      min={1}
-                      value={quantities[item.id] || 1}
-                      onChange={(value) => handleQuantityChange(item.id, Number(value || 1))}
-                      className="w-full"
-                    />
+                  {/* 自定义数量选择器 */}
+                  <div className="quantity-selector-container">
+                    <label className="quantity-label">数量:</label>
+                    <div className="quantity-selector">
+                      <button 
+                        className="quantity-btn quantity-decrease"
+                        onClick={() => handleQuantityChange(item.id, (quantities[item.id] || 1) - 1)}
+                        disabled={(quantities[item.id] || 1) <= 1}
+                        type="button"
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        className="quantity-input"
+                        value={quantities[item.id] || 1}
+                        onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 1)}
+                        min="1"
+                        max="9999"
+                      />
+                      <button 
+                        className="quantity-btn quantity-increase"
+                        onClick={() => handleQuantityChange(item.id, (quantities[item.id] || 1) + 1)}
+                        type="button"
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
                   <Button 
                     type="primary"
-                    onClick={() => addToCart(item.id)}
-                    className="flex-grow ml-3 h-10"
+                    onClick={(e: React.MouseEvent<HTMLButtonElement>) => addToCart(item.id, e.currentTarget)}
+                    className="cart-add-button"
                     icon={<ShoppingCartOutlined />}
+                    size="large"
                   >
                     加入购物车
                   </Button>
@@ -558,22 +726,6 @@ const ConsumablesPage: React.FC = () => {
     );
   };
   
-  // 加载中状态显示
-  if (loading) {
-    return <Loading tip={t('loading', 'Loading data...')} fullPage={true} />;
-  }
-  
-  // 错误状态显示
-  if (error) {
-    return (
-      <ErrorMessage
-        message={t('error.title', 'Error')}
-        description={error}
-        onRetry={() => window.location.reload()}
-      />
-    );
-  }
-  
   // 获取筛选选项
   const shapes = filterOptions?.shapes || [];
   const materials = filterOptions?.materials || [];
@@ -584,8 +736,57 @@ const ConsumablesPage: React.FC = () => {
   const lengths = filterOptions?.lengths || [];
   const modelExplodedViews = filterOptions?.modelExplodedViews || {};
   
+  // 调试日志
+  console.log('🔍 Debug - Current shapes data:', shapes);
+  shapes.forEach((shape, index) => {
+    console.log(`🔍 Shape ${index}:`, {
+      id: shape.id,
+      name: shape.name,
+      image_url: shape.image_url,
+      hasImageUrl: !!shape.image_url
+    });
+  });
+  
+  // 条件性渲染 - 加载中状态
+  if (loading) {
+    return (
+      <div className="consumables-page">
+        <div className="container">
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <h3>{t('loading', 'Loading data...')}</h3>
+            <p>{t('loading.description', 'Please wait while we fetch the product information.')}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // 条件性渲染 - 错误状态
+  if (error) {
+    return (
+      <div className="consumables-page">
+        <div className="container">
+          <div className="error-container">
+            <h3>{t('error.title', 'Error')}</h3>
+            <p>{error}</p>
+            <Button 
+              type="primary" 
+              onClick={() => window.location.reload()}
+            >
+              {t('error.retry', 'Retry')}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className="consumables-page">
+      {/* SQL Mock服务状态组件 */}
+      <MockServiceStatus position="top-right" compact={true} hidden={true} />
+      
       <div className="container">
         <div className="section-title">
           <div className="title-text">
@@ -597,7 +798,8 @@ const ConsumablesPage: React.FC = () => {
               type="primary"
               icon={<ShoppingCartOutlined />}
               onClick={toggleCartModal}
-              className="flex items-center"
+              className="flex items-center cart-button"
+              ref={cartButtonRef}
             >
               {t('button.cart', 'View Cart')}
             </Button>
@@ -626,7 +828,7 @@ const ConsumablesPage: React.FC = () => {
               <div className="flex items-center">
                 <Select 
                   value={selectedModel} 
-                  onChange={(value) => setSelectedModel(value)}
+                  onChange={(value: string) => setSelectedModel(value)}
                   style={{ width: '100%', maxWidth: '300px' }}
                   className="mr-2"
                 >
@@ -683,13 +885,13 @@ const ConsumablesPage: React.FC = () => {
             <div className="dimensions-container">
               <div className="dimensions-filters grid grid-cols-1 md:grid-cols-3 gap-4 w-full md:w-7/12">
                 <div className="filter-group vertical">
-                  <label className="block text-sm font-medium mb-2 text-label">{selectedMaterial === 'paper_pe' ? t('filter.weight', 'Weight') : t('filter.thickness', 'Thickness')}:</label>
+                  <label className="block text-sm font-medium mb-2 text-label">{isPaperMaterial(selectedMaterial) ? t('filter.weight', 'Weight') : t('filter.thickness', 'Thickness')}:</label>
                   <Select 
-                    value={selectedMaterial === 'paper_pe' ? selectedWeight : selectedThickness}
-                    onChange={selectedMaterial === 'paper_pe' ? (value) => setSelectedWeight(value) : (value) => setSelectedThickness(value)}
+                    value={isPaperMaterial(selectedMaterial) ? selectedWeight : selectedThickness}
+                    onChange={isPaperMaterial(selectedMaterial) ? (value: string) => setSelectedWeight(value) : (value: string) => setSelectedThickness(value)}
                     style={{ width: '100%' }}
                   >
-                    {(selectedMaterial === 'paper_pe' ? weights : thicknesses).map(item => (
+                    {(isPaperMaterial(selectedMaterial) ? weights : thicknesses).map(item => (
                       <Option key={item.id} value={item.id}>{item.name}</Option>
                     ))}
                   </Select>
@@ -699,7 +901,7 @@ const ConsumablesPage: React.FC = () => {
                   <label className="block text-sm font-medium mb-2 text-label">{t('filter.width', 'Width')}:</label>
                   <Select
                     value={selectedWidth}
-                    onChange={(value) => setSelectedWidth(value)}
+                    onChange={(value: string) => setSelectedWidth(value)}
                     style={{ width: '100%' }}
                   >
                     {widths.map(width => (
@@ -712,7 +914,7 @@ const ConsumablesPage: React.FC = () => {
                   <label className="block text-sm font-medium mb-2 text-label">{t('filter.length', 'Length')}:</label>
                   <Select
                     value={selectedLength}
-                    onChange={(value) => setSelectedLength(value)}
+                    onChange={(value: string) => setSelectedLength(value)}
                     style={{ width: '100%' }}
                   >
                     {lengths.map(length => (
@@ -724,9 +926,7 @@ const ConsumablesPage: React.FC = () => {
               
               <div className="dimension-image w-full md:w-5/12 flex justify-center items-center">
                 <img 
-                  src={selectedModel && modelExplodedViews[selectedModel as keyof typeof modelExplodedViews] 
-                      ? modelExplodedViews[selectedModel as keyof typeof modelExplodedViews] 
-                      : dimensionGuidePlaceholder} 
+                  src={currentDimensionImage} 
                   alt={t('filter.dimensions', 'Product Dimensions')} 
                   className="object-contain max-h-60 border border-border rounded p-2 bg-card"
                 />
@@ -749,32 +949,213 @@ const ConsumablesPage: React.FC = () => {
           {/* 表格式布局 */}
           {renderConsumablesTable()}
           
-          {consumables.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <svg className="h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-              <h3 className="mt-4 text-lg font-medium text-title">{t('noProducts.title', '没有找到符合条件的产品')}</h3>
-              <p className="mt-2 text-content-light">{t('noProducts.message', '请尝试调整筛选条件')}</p>
-              <Button type="primary" onClick={handleResetFilters} className="mt-4">
-                {t('button.resetFilters', '重置筛选条件')}
-                  </Button>
-                </div>
-          )}
-          
-          {totalPages > 1 && (
+          {totalPages > 1 && !isNaN(totalPages) && !isNaN(currentPage) && (
             <div className="flex justify-center mt-6">
-              <Pagination
-                current={currentPage}
-                total={totalItems}
-                pageSize={10}
-                onChange={(page) => setCurrentPage(page)}
-                showSizeChanger={false}
-              />
+              <div className="pagination">
+                <button 
+                  className="pagination-button"
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                >
+                  上一页
+                </button>
+                <div className="pagination-pages">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const page = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                    // 确保page是有效数字且在合理范围内
+                    if (isNaN(page) || page < 1 || page > totalPages) {
+                      return null;
+                    }
+                    return (
+                      <button
+                        key={`page-${page}`}
+                        className={`pagination-page ${currentPage === page ? 'active' : ''}`}
+                        onClick={() => setCurrentPage(page)}
+                      >
+                        {page}
+                      </button>
+                    );
+                  }).filter(Boolean)}
+                </div>
+                <button 
+                  className="pagination-button"
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  下一页
+                </button>
+              </div>
             </div>
           )}
         </div>
       </div>
+      
+      {/* 购物车动画组件 */}
+      <CartAnimation
+        isActive={cartAnimation.isActive}
+        startElement={cartAnimation.startElement}
+        targetElement={cartAnimation.targetElement}
+        productImage={cartAnimation.productImage}
+        productName={cartAnimation.productName}
+        onComplete={() => setCartAnimation({
+          isActive: false,
+          startElement: null,
+          targetElement: null
+        })}
+      />
+      
+      {/* 确认对话框组件 */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        type={confirmDialog.type}
+        loading={confirmDialog.loading}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+      />
+      
+      {/* 产品详细信息Modal */}
+      <Modal
+        title={selectedProduct ? `${selectedProduct.name} - 详细信息` : '产品详细信息'}
+        open={detailModalVisible}
+        onCancel={closeDetailModal}
+        footer={[
+          <Button key="close" onClick={closeDetailModal}>
+            关闭
+          </Button>,
+          selectedProduct && (
+            <Button 
+              key="addToCart" 
+              type="primary" 
+              icon={<ShoppingCartOutlined />}
+              onClick={() => {
+                addToCart(selectedProduct.id);
+                closeDetailModal();
+              }}
+            >
+              加入购物车
+            </Button>
+          )
+        ]}
+        width={800}
+        className="product-detail-modal"
+      >
+        {selectedProduct && (
+          <div className="product-detail-content">
+            {/* 产品基本信息 */}
+            <div className="flex flex-col md:flex-row gap-6 mb-6">
+              <div className="w-full md:w-1/3">
+                <img 
+                  src={selectedProduct.image_url || placeholderImage}
+                  alt={selectedProduct.name}
+                  className="w-full h-64 object-contain border border-border rounded-lg bg-card-alt p-4"
+                  onError={handleImageError}
+                />
+              </div>
+              <div className="w-full md:w-2/3">
+                <div className="mb-4">
+                  <span className="inline-block bg-primary text-white px-3 py-1 text-sm font-bold rounded-lg mb-2">
+                    {selectedProduct.code}
+                  </span>
+                  <h3 className="text-xl font-bold text-title mb-2">{selectedProduct.name}</h3>
+                  {selectedProduct.model && (
+                    <p className="text-content-light mb-2">型号: {selectedProduct.model}</p>
+                  )}
+                  <p className="text-xs text-content-light opacity-60">产品ID: {selectedProduct.id}</p>
+                </div>
+                
+                {/* 价格信息 */}
+                <div className="bg-card-alt rounded-lg p-4 mb-4">
+                  <h4 className="font-medium text-sm text-label mb-2">价格信息:</h4>
+                  <div className="space-y-2">
+                    {selectedProduct.pricing.map((price, idx) => {
+                      const quantity = parseInt(price.range.replace(/[^0-9]/g, '') || '1') || 1;
+                      const priceValue = getRegionalPrice(selectedProduct, quantity);
+                      const displayPrice = isNaN(priceValue) ? 0 : priceValue;
+                      
+                      return (
+                        <div key={idx} className="flex justify-between items-center bg-background rounded px-3 py-2">
+                          <span className="text-content-light">{price.range}:</span>
+                          <span className="font-semibold text-brand-primary text-lg">
+                            {getCurrencySymbolByRegion()}{displayPrice.toFixed(2)}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* 详细规格 */}
+            <div className="bg-card-alt rounded-lg p-4 mb-4">
+              <h4 className="font-medium text-base text-label mb-3">详细规格:</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-label font-medium">宽度:</span>
+                    <span className="text-content">
+                      {userRegion === 'na' || userRegion === 'au' ? 
+                        (selectedProduct.specs?.width ? selectedProduct.specs.width + ' inch' : 'N/A') : 
+                        (selectedProduct.specs?.width ? selectedProduct.specs.width : 'N/A')
+                      }
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-label font-medium">长度:</span>
+                    <span className="text-content">
+                      {userRegion === 'na' || userRegion === 'au' ? 
+                        (selectedProduct.specs?.length ? selectedProduct.specs.length + ' inch' : 'N/A') : 
+                        (selectedProduct.specs?.length ? selectedProduct.specs.length : 'N/A')
+                      }
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-label font-medium">卷长:</span>
+                    <span className="text-content">{selectedProduct.specs?.rollLength || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-label font-medium">材质:</span>
+                    <span className="text-content">{selectedProduct.specs?.material || 'N/A'}</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-label font-medium">厚度:</span>
+                    <span className="text-content">{selectedProduct.specs?.thickness || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-label font-medium">形状:</span>
+                    <span className="text-content">{selectedProduct.specs?.shape || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-label font-medium">兼容性:</span>
+                    <span className="text-content">{selectedProduct.specs?.compatibility || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* 库存信息（仅管理员/销售可见） */}
+            {(user?.role === 'sales' || user?.role === 'admin') && (
+              <div className="bg-card-alt rounded-lg p-4">
+                <h4 className="font-medium text-base text-label mb-3">库存信息:</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {Object.entries(selectedProduct.inventory).map(([region, count]) => (
+                    <div key={region} className="bg-background rounded-lg p-3 text-center">
+                      <div className="text-sm text-label font-medium mb-1">{region.toUpperCase()}</div>
+                      <div className={`text-lg font-bold ${(count || 0) > 0 ? 'text-success' : 'text-error'}`}>
+                        {isNaN(count) ? 0 : count}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

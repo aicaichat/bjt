@@ -26,7 +26,7 @@ export { default as accessoryService } from './accessory.service';
 
 // 耗材服务
 export * from './consumable.service';
-export { default as consumableService } from './consumable.service';
+export { consumableService } from './consumable.service';
 
 // 购物车服务
 export * from './cart.service';

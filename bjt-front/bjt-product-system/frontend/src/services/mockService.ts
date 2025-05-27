@@ -209,7 +209,7 @@ export const SparePartsMockService = {
     // Keep filtering by compatible model (app_model)
     if (params.model) {
       parts = parts.filter(part => 
-        part.app_model?.toLowerCase().split(',').map(m => m.trim()).includes(params.model.toLowerCase())
+        part.app_model?.toLowerCase().replace(/"/g, '').split(',').map(m => m.trim()).includes(params.model.toLowerCase())
       );
     }
     
@@ -276,7 +276,7 @@ export const SparePartsMockService = {
     const accessoryModelsSet = new Set<string>();
 
     allParts.forEach(part => {
-      const models = part.app_model?.split(',').map(m => m.trim()).filter(Boolean) || [];
+      const models = part.app_model?.replace(/"/g, '').split(',').map(m => m.trim()).filter(Boolean) || [];
       if (part.product_type === 'machine') {
         models.forEach(model => hostModelsSet.add(model));
       } else if (part.product_type === 'accessory') {
@@ -419,9 +419,11 @@ const mockConsumables = [
 // 耗材选项数据
 export const consumableOptions = {
   shapes: [
-    { id: 'pillow', name: 'Pillow', image_url: ASSETS.getUrl('/images/icons/shape-pillow.svg') },
-    { id: 'bubble', name: 'Bubble', image_url: ASSETS.getUrl('/images/icons/shape-bubble.svg') },
-    { id: 'tube', name: 'Tube', image_url: ASSETS.getUrl('/images/icons/shape-tube.svg') }
+    { id: 'MEX', name: '气泡枕', name_en: 'Pillow', image_url: '/images/MEX/values/MEX.png' },
+    { id: 'MEY', name: '开口气泡枕', name_en: 'Precut Air Pillow', image_url: '/images/MEX/values/MEX.png' },
+    { id: 'MFB', name: '葫芦膜', name_en: 'Bubble', image_url: '/images/MFB/values/MFB.png' },
+    { id: 'MFC', name: '气枕膜', name_en: 'Tube', image_url: '/images/MFC/values/MFC.png' },
+    { id: 'MFF', name: '葫芦膜', name_en: 'Bubble', image_url: '/images/MFF/values/MFF.png' }
   ],
   materials: [
     { id: 'hdpe', name: 'HDPE' },

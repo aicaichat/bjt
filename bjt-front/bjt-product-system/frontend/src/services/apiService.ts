@@ -2,6 +2,7 @@ import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } f
 import { getAuthHeaders, API_BASE_URL, REQUEST_TIMEOUT, getErrorMessage, logDebug } from '../api/config';
 import notificationService from './notificationService';
 import { decodeUtf8Unicode } from '../utils/string';
+import { authService } from './auth';
 
 // API响应标准格式
 export interface ApiResponse<T = any> {
@@ -228,7 +229,7 @@ class ApiService {
         const formattedResponse = this.formatResponse(response);
         return formattedResponse as any;
       },
-      (error: AxiosError) => {
+      async (error: AxiosError) => {
         console.error(`[ApiService] Response error:`, error.message);
         console.error(`[ApiService] Response status:`, error.response?.status, error.response?.statusText);
         
@@ -247,26 +248,51 @@ class ApiService {
         
         const apiError = createApiError(error);
         
-        // 处理特定错误类型
+        // 处理认证错误
         if (apiError.type === ApiErrorType.AUTHENTICATION && !this.authErrorHandled) {
-          console.warn(`[ApiService] Authentication error detected, handling session expiration...`);
+          console.warn(`[ApiService] Authentication error detected, attempting token refresh...`);
           this.authErrorHandled = true;
           
-          // 显示通知
-          notificationService.error('Session expired', 'Please login again to continue');
-          
-          // 清除本地存储并重定向到登录页面
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('user');
-          console.log(`[ApiService] Cleared auth_token and user from localStorage`);
-          
-          // 如果不是登录页面，则跳转到登录页面
-          if (window.location.pathname !== '/login') {
-            // 添加延迟以确保通知显示
-            console.log(`[ApiService] Redirecting to login page in 2 seconds...`);
-            setTimeout(() => {
+          try {
+            // 尝试刷新token
+            const refreshSuccess = await authService.refreshToken();
+            
+            if (refreshSuccess) {
+              console.log(`[ApiService] Token refreshed successfully, retrying original request...`);
+              // 重试原始请求
+              const originalRequest = error.config;
+              if (originalRequest) {
+                // 更新请求头中的token
+                const authHeader = authService.getAuthHeader();
+                if ('Authorization' in authHeader) {
+                  originalRequest.headers.set('Authorization', authHeader.Authorization as string);
+                }
+                return this.axios(originalRequest);
+              }
+            } else {
+              console.warn(`[ApiService] Token refresh failed, handling session expiration...`);
+              // 显示通知
+              notificationService.error('Session expired', 'Please login again to continue');
+              
+              // 清除本地存储并重定向到登录页面
+              authService.logout();
+              
+              // 如果不是登录页面，则跳转到登录页面
+              if (window.location.pathname !== '/login') {
+                // 添加延迟以确保通知显示
+                console.log(`[ApiService] Redirecting to login page in 2 seconds...`);
+                setTimeout(() => {
+                  window.location.href = '/login';
+                }, 2000);
+              }
+            }
+          } catch (refreshError) {
+            console.error(`[ApiService] Error during token refresh:`, refreshError);
+            // 如果刷新失败，执行登出操作
+            authService.logout();
+            if (window.location.pathname !== '/login') {
               window.location.href = '/login';
-            }, 2000);
+            }
           }
           
           // 重置标志（延迟）

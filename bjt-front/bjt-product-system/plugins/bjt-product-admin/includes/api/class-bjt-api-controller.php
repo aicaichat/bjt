@@ -63,7 +63,11 @@ class BJT_Product_API_Controller {
                         'type' => 'string',
                         'default' => 'CN',
                     ),
-                    'context' => $this->get_context_param(array('default' => 'view')),
+                    'context' => array(
+                        'description' => __('Scope under which the request is made; determines fields present in response.', 'bjt-product-admin'),
+                        'type' => 'string',
+                        'default' => 'view'
+                    ),
                 ),
             ),
             array(

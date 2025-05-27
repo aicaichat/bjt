@@ -43,6 +43,18 @@ class BJT_Accessory_Controller extends BJT_API_Controller {
                         ],
                         // Add filter args based on API doc / DB schema if needed
                         // 'model' => [ ... ],
+                        'part_number' => [
+                            'description' => 'Filter by part number.',
+                            'type'        => 'string',
+                        ],
+                        'model' => [
+                            'description' => 'Filter by model.',
+                            'type'        => 'string',
+                        ],
+                        'product_line_id' => [
+                            'description' => 'Filter by product line ID.',
+                            'type'        => 'integer',
+                        ],
                     ]
                 ),
             ],
@@ -244,6 +256,24 @@ class BJT_Accessory_Controller extends BJT_API_Controller {
         //     $where_clauses[] = "model = %s";
         //     $params[] = $request->get_param('model');
         // }
+
+        // Add part_number filter
+        if ($request->get_param('part_number')) {
+            $where_clauses[] = "part_number = %s";
+            $params[] = $request->get_param('part_number');
+        }
+
+        // Add model filter
+        if ($request->get_param('model')) {
+            $where_clauses[] = "model = %s";
+            $params[] = $request->get_param('model');
+        }
+
+        // Add product_line_id filter
+        if ($request->get_param('product_line_id')) {
+            $where_clauses[] = "product_line_id = %d";
+            $params[] = intval($request->get_param('product_line_id'));
+        }
 
         $where_sql = 'WHERE ' . implode(' AND ', $where_clauses);
 
@@ -1024,10 +1054,8 @@ class BJT_Accessory_Controller extends BJT_API_Controller {
                     required_parts, 
                     required_quantity 
                  FROM {$relations_table} 
-                 WHERE parent_part_number = %s OR child_part_number = %s
-                 AND required_parts IS NOT NULL 
+                 WHERE child_part_number = %s AND required_parts IS NOT NULL 
                  AND required_parts != ''",
-                $accessory->part_number,
                 $accessory->part_number
             )
         );
@@ -1248,4 +1276,85 @@ class BJT_Accessory_Controller extends BJT_API_Controller {
             'data'    => $data,
         ], $status_code);
 	}
+
+    /**
+     * Helper function to format a DB row item for API response.
+     * This centralizes the formatting logic used by get_item, get_items, create_item, update_item.
+     */
+    protected function format_item_for_response($item_db_object) {
+        global $wpdb;
+        if (!$item_db_object) {
+            return null;
+        }
+        
+        // --- 🆕 获取必选备件信息 ---
+        $relations_table = $wpdb->prefix . 'bjt_relations';
+        $required_parts_relations = $wpdb->get_results($wpdb->prepare(
+            "SELECT required_parts, required_quantity 
+             FROM {$relations_table} 
+             WHERE child_part_number = %s AND required_parts IS NOT NULL AND required_parts != '' 
+             AND status = 'publish'",
+            $item_db_object->part_number
+        ));
+        
+        $required_parts_info = [];
+        if (!empty($required_parts_relations)) {
+            foreach ($required_parts_relations as $relation) {
+                $part_numbers = explode(',', $relation->required_parts);
+                $quantities = explode(',', $relation->required_quantity ?: '1');
+                
+                foreach ($part_numbers as $index => $part_number) {
+                    $part_number = trim($part_number);
+                    $quantity = isset($quantities[$index]) ? (int) trim($quantities[$index]) : 1;
+                    
+                    if (!empty($part_number)) {
+                        $required_parts_info[] = [
+                            'part_number' => $part_number,
+                            'quantity' => $quantity
+                        ];
+                    }
+                }
+            }
+        }
+        
+        return [
+            'id' => (int) $item_db_object->id,
+            'product_line_id' => (int) $item_db_object->product_line_id,
+            'model' => $item_db_object->model,
+            'brand' => $item_db_object->brand,
+            'part_number' => $item_db_object->part_number,
+            'name' => $item_db_object->name,
+            'spec' => $item_db_object->spec,
+            'spec_imperial' => $item_db_object->spec_imperial,
+            'voltage' => $item_db_object->voltage,
+            'frequency' => $item_db_object->frequency,
+            'image_url' => $item_db_object->image_url,
+            'status' => $item_db_object->status,
+            'unit' => $item_db_object->unit,
+            'required_parts' => $required_parts_info,
+            'created_at' => $item_db_object->created_at,
+            'updated_at' => $item_db_object->updated_at,
+        ];
+    }
+
+    /**
+     * Check read permission
+     */
+    public function check_read_permission($request) {
+        return true; // 允许所有用户读取
+    }
+
+    /**
+     * Check write permission
+     */
+    public function check_write_permission($request) {
+        return current_user_can('manage_options'); // 只有管理员可以写入
+    }
+
+    /**
+     * Check delete permission
+     */
+    public function check_delete_permission($request) {
+        return current_user_can('manage_options'); // 只有管理员可以删除
+    }
 } 

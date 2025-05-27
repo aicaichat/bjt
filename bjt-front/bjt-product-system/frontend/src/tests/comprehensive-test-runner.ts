@@ -9,6 +9,8 @@ import './test-environment';
 import { runHomePageTests } from './pages/home-page.integration.test';
 import { runMachinesPageTests } from './pages/machines-page.integration.test';
 import { runCartPageTests } from './pages/cart-page.integration.test';
+import { runLoginPageTests } from './pages/login-page.integration.test';
+import { runSparePartsPageTests } from './pages/spare-parts-page.integration.test';
 
 // 测试结果接口
 interface TestResult {
@@ -92,8 +94,10 @@ export class ComprehensiveTestRunner {
     console.log('='.repeat(50));
 
     const testSuites = [
-      { name: 'HomePage', runner: runHomePageTests, priority: 'high' },
       { name: 'MachinesPage', runner: runMachinesPageTests, priority: 'critical' },
+      { name: 'LoginPage', runner: runLoginPageTests, priority: 'critical' },
+      { name: 'SparePartsPage', runner: runSparePartsPageTests, priority: 'critical' },
+      { name: 'HomePage', runner: runHomePageTests, priority: 'high' },
       { name: 'CartPage', runner: runCartPageTests, priority: 'high' },
     ];
 
@@ -682,7 +686,9 @@ export class ComprehensiveTestRunner {
     // 模拟计算测试覆盖率
     const coverageMap: Record<string, number> = {
       'HomePage': 95,
-      'MachinesPage': 85,
+      'MachinesPage': 95,
+      'LoginPage': 100,
+      'SparePartsPage': 100,
       'CartPage': 90
     };
     return coverageMap[pageName] || 80;

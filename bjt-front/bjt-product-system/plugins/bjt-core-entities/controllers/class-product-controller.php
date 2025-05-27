@@ -112,7 +112,7 @@ class BJT_Product_Controller extends BJT_API_Controller {
      */
     public function get_items($request) {
         global $wpdb;
-
+        
         // Pagination parameters
         $page = $request->get_param('page') ? absint($request->get_param('page')) : 1;
         $per_page = $request->get_param('per_page') ? absint($request->get_param('per_page')) : 10;
@@ -258,7 +258,7 @@ class BJT_Product_Controller extends BJT_API_Controller {
 
         return new WP_REST_Response(['success' => true, 'data' => $formatted_item], 201);
     }
-
+    
     public function update_item($request) {
         global $wpdb;
         $id = absint($request['id']);
@@ -305,7 +305,7 @@ class BJT_Product_Controller extends BJT_API_Controller {
 
         return new WP_REST_Response(['success' => true, 'data' => $formatted_item], 200);
     }
-
+    
     public function delete_item($request) {
         global $wpdb;
         $id = absint($request['id']);
@@ -595,4 +595,4 @@ class BJT_Product_Controller extends BJT_API_Controller {
 
         return new WP_Error('rest_forbidden', __('You do not have permission to perform this action.'), ['status' => 403]);
     }
-}
+} 

@@ -111,36 +111,44 @@ class BJT_Auth_Controller extends BJT_API_Controller {
      * 刷新令牌
      */
     public function refresh_token($request) {
-        $auth_header = $request->get_header('Authorization');
-        if (!$auth_header || strpos($auth_header, 'Bearer ') !== 0) {
-            return $this->error_response('未授权访问', 1002, 401);
+        // 从请求头获取Bearer Token
+        $authorization_header = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : '';
+        if (empty($authorization_header) || !preg_match('/Bearer\s+(.*)$/i', $authorization_header, $matches)) {
+            return $this->error_response('未提供授权令牌', 'rest_not_logged_in', 401);
         }
         
-        $token = substr($auth_header, 7);
+        $token = $matches[1];
         
         try {
-            // 解析（但不验证过期时间）JWT令牌
-            $decoded = $this->decode_token_without_expiration($token);
+            // 使用JWT Handler验证令牌，但不检查过期时间
+            $jwt_handler = new BJT_JWT_Handler();
+            $payload = $jwt_handler->validate_token($token, false); // 添加参数以跳过过期检查
             
-            // 获取用户
-            if (!isset($decoded->user) || !isset($decoded->user->id)) {
-                return $this->error_response('无效的刷新令牌', 1003, 401);
+            if (!$payload) {
+                return $this->error_response('无效的令牌', 'invalid_token', 401);
             }
             
-            $user = get_user_by('id', $decoded->user->id);
-            if (!$user) {
-                return $this->error_response('无效的刷新令牌', 1003, 401);
+            // 获取用户ID
+            $user_id = null;
+            if (isset($payload->data->user_id)) {
+                $user_id = $payload->data->user_id;
+            } else if (isset($payload->user) && isset($payload->user->id)) {
+                $user_id = $payload->user->id;
+            } else {
+                return $this->error_response('令牌不包含有效的用户信息', 'invalid_token', 401);
             }
             
             // 生成新令牌
-            $new_token = $this->generate_token($user);
+            $new_token = $jwt_handler->generate_token($user_id);
             
-            return $this->success_response(array(
-                'token' => $new_token,
-                'expires_in' => 86400, // 24小时过期
-            ));
+            // 返回统一格式的响应
+            return $this->format_response([
+                'access_token' => $new_token,
+                'expires_in' => 86400 // 24小时
+            ]);
         } catch (Exception $e) {
-            return $this->error_response('无效的刷新令牌', 1003, 401);
+            error_log('Token refresh failed: ' . $e->getMessage());
+            return $this->error_response('令牌验证失败: ' . $e->getMessage(), 'token_validation_failed', 401);
         }
     }
     
@@ -300,5 +308,70 @@ class BJT_Auth_Controller extends BJT_API_Controller {
         }
         
         return $permissions;
+    }
+
+    public function check_auth($request = null) {
+        // 从请求头获取Bearer Token
+        $authorization_header = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : '';
+        if (empty($authorization_header) || !preg_match('/Bearer\s+(.*)$/i', $authorization_header, $matches)) {
+            error_log('[BJT_Auth_Controller] No valid Authorization header found');
+            return $this->error_response('未提供授权令牌', 'rest_not_logged_in', 401);
+        }
+        
+        $token = $matches[1];
+        error_log('[BJT_Auth_Controller] Validating token: ' . substr($token, 0, 20) . '...');
+        
+        try {
+            // 使用JWT Handler验证令牌
+            $jwt_handler = new BJT_JWT_Handler();
+            $payload = $jwt_handler->validate_token($token);
+            
+            if (!$payload) {
+                error_log('[BJT_Auth_Controller] Token validation failed - no payload returned');
+                return $this->error_response('无效的令牌', 'invalid_token', 401);
+            }
+            
+            error_log('[BJT_Auth_Controller] Token payload: ' . print_r($payload, true));
+            
+            // 尝试从不同的payload格式中获取用户ID
+            $user_id = null;
+            if (isset($payload->data->user_id)) {
+                $user_id = $payload->data->user_id;
+            } else if (isset($payload->user) && isset($payload->user->id)) {
+                $user_id = $payload->user->id;
+            } else if (isset($payload->user_id)) {
+                $user_id = $payload->user_id;
+            }
+            
+            if (!$user_id) {
+                error_log('[BJT_Auth_Controller] No user ID found in token payload');
+                return $this->error_response('令牌不包含有效的用户信息', 'invalid_token', 401);
+            }
+            
+            error_log('[BJT_Auth_Controller] Found user ID in token: ' . $user_id);
+            
+            // 从wp_bjt_users表获取用户
+            global $wpdb;
+            $table_name = $wpdb->prefix . 'bjt_users';
+            $user = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM {$table_name} WHERE id = %d AND status = 'active'",
+                $user_id
+            ));
+            
+            if (!$user) {
+                error_log('[BJT_Auth_Controller] User not found or inactive: ' . $user_id);
+                return $this->error_response('用户不存在或已被禁用', 'user_not_found', 401);
+            }
+            
+            error_log('[BJT_Auth_Controller] User authenticated successfully: ' . $user->username);
+            
+            // 将用户信息存储到全局变量中，供其他方法使用
+            $GLOBALS['bjt_current_user'] = $user;
+            
+            return true;
+        } catch (Exception $e) {
+            error_log('[BJT_Auth_Controller] Token validation exception: ' . $e->getMessage());
+            return $this->error_response('令牌验证失败: ' . $e->getMessage(), 'token_validation_failed', 401);
+        }
     }
 } 

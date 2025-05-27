@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 export function useAdminApi<T, P extends object = {}>(
   apiCall: (params: P) => Promise<T>,
@@ -9,6 +9,9 @@ export function useAdminApi<T, P extends object = {}>(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [params, setParams] = useState<P>(initialParams);
+  
+  // 使用ref来避免params对象引用变化导致的无限循环
+  const prevParamsRef = useRef<string>('');
 
   const fetchData = useCallback(async (currentParams: P) => {
     setLoading(true);
@@ -24,9 +27,15 @@ export function useAdminApi<T, P extends object = {}>(
     }
   }, [apiCall]);
 
-  // Fetch data when dependencies change
+  // Fetch data when dependencies change - 使用params的JSON字符串进行比较
   useEffect(() => {
-    fetchData(params);
+    const paramsString = JSON.stringify(params);
+    
+    // 只有当参数真正改变时才发起请求
+    if (paramsString !== prevParamsRef.current) {
+      prevParamsRef.current = paramsString;
+      fetchData(params);
+    }
   }, [fetchData, params, ...deps]);
 
   // Update params and refetch

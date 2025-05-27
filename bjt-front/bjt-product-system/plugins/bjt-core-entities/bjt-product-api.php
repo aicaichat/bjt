@@ -90,6 +90,8 @@ require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-price-controller.
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-inventory-controller.php';
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-dictionary-controller.php';
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-machine-part-controller.php';
+require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-relation-controller.php';
+require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-user-controller.php';
 
 // Helper function to get current token from request
 if (!function_exists('bjt_get_current_token')) {
@@ -138,7 +140,9 @@ function bjt_api_register_routes() {
         'BJT_Price_Controller',
         'BJT_Inventory_Controller',
         'BJT_Dictionary_Controller',
-        'BJT_Machine_Part_Controller'
+        'BJT_Machine_Part_Controller',
+        'BJT_Relation_Controller',
+        'BJT_User_Controller'
     );
 
     foreach ($controllers as $controller_name) {

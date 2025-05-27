@@ -20,9 +20,9 @@ export class AdminHostModelService extends BaseAdminService<AdminHostModel> {
   }
 
   async getHostModels(params: HostModelParams = {}): Promise<PaginatedResponse<AdminHostModel>> {
-    // Filter out undefined and null values
+    // Filter out undefined, null, and empty string values  
     const filteredParams = Object.fromEntries(
-      Object.entries(params).filter(([_, value]) => value !== undefined && value !== null)
+      Object.entries(params).filter(([_, value]) => value !== undefined && value !== null && value !== '')
     );
     
     // Set default values
@@ -36,7 +36,17 @@ export class AdminHostModelService extends BaseAdminService<AdminHostModel> {
       .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
       .join('&');
     
-    const response = await this.httpService.get<any>(`${ADMIN_API_ENDPOINTS.HOST_MODELS}${queryString ? `?${queryString}` : ''}`);
+    const fullUrl = `${ADMIN_API_ENDPOINTS.HOST_MODELS}${queryString ? `?${queryString}` : ''}`;
+    
+    // Debug log for search functionality
+    console.log('AdminHostModelService.getHostModels:', {
+      originalParams: params,
+      filteredParams,
+      queryParams,
+      fullUrl
+    });
+    
+    const response = await this.httpService.get<any>(fullUrl);
     
     const paginatedResponse: PaginatedResponse<AdminHostModel> = {
       items: [],

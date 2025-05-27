@@ -415,6 +415,7 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
                 'length' => isset($item_db_object->length_met) ? $item_db_object->length_met . ' m' : null, 
                 'rollLength' => isset($item_db_object->total_length_met) ? $item_db_object->total_length_met . ' m' : null,
                 'compatibility' => $item_db_object->app_model ?? null, 
+                'package_image_url' => $item_db_object->package_image_url ?? null,
             ],
             'pricing' => $pricing_tiers,
             'inventory' => $inventory_map, // Restored
@@ -637,10 +638,17 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
     public function get_items($request) {
         global $wpdb;
 
-        // Note: This method will become more complex if we fetch all pricing/inventory 
-        // for all items in the list in an optimized way (e.g. one query for all prices).
-        // For now, format_item_for_response will do N+1 queries for price/inventory per item.
-        // This is acceptable for moderate list sizes but can be optimized later.
+        // Ensure BJT_Dictionary_Controller is available
+        if (!class_exists('BJT_Dictionary_Controller')) {
+            // Attempt to include it - path might need adjustment based on actual file structure
+            $dictionary_controller_path = dirname(__FILE__) . '/class-dictionary-controller.php';
+            if (file_exists($dictionary_controller_path)) {
+                require_once $dictionary_controller_path;
+            } else {
+                // Log error or handle missing controller
+                error_log('BJT_Dictionary_Controller class not found and could not be included.');
+            }
+        }
 
         $page = $request->get_param('page') ? absint($request->get_param('page')) : 1;
         $per_page = $request->get_param('per_page') ? absint($request->get_param('per_page')) : 10; // Default to 10 as per frontend
@@ -719,12 +727,127 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
 
         $formatted_items = array_map(array($this, 'format_item_for_response'), $items_db);
         
+        // --- Fetch Filter Options from Dictionary ---
+        $filter_options = [];
+        if (class_exists('BJT_Dictionary_Controller')) {
+            $dictionary_controller = new BJT_Dictionary_Controller();
+            $lang = $request->get_param('lang') ?: 'zh';
+
+            // Mock a WP_REST_Request for the dictionary controller
+            $dictionary_request = new WP_REST_Request('GET');
+            $dictionary_request->set_param('lang', $lang);
+
+            // Helper function to fetch and format dictionary items
+            $fetch_formatted_dictionary_items = function($type) use ($dictionary_controller, $dictionary_request) {
+                $dictionary_request->set_param('type', $type);
+                $response = $dictionary_controller->get_dictionary_items($dictionary_request);
+                if ($response instanceof WP_REST_Response && $response->get_status() === 200) {
+                    $data = $response->get_data();
+                    if (isset($data['data']['items']) && is_array($data['data']['items'])) {
+                        return array_map(function($item) {
+                            // 保留所有字段，特别是id和image_url
+                            $formatted_item = [
+                                'id' => $item['code'] ?? null, // 使用code作为id
+                                'code' => $item['code'] ?? null, 
+                                'name' => $item['name'] ?? null
+                            ];
+                            
+                            // 添加额外字段（如image_url等）
+                            if (isset($item['image_url'])) {
+                                $formatted_item['image_url'] = $item['image_url'];
+                            }
+                            if (isset($item['image_url2'])) {
+                                $formatted_item['image_url2'] = $item['image_url2'];
+                            }
+                            if (isset($item['name_en'])) {
+                                $formatted_item['name_en'] = $item['name_en'];
+                            }
+                            if (isset($item['sort_order'])) {
+                                $formatted_item['sort_order'] = $item['sort_order'];
+                            }
+                            
+                            return $formatted_item;
+                        }, $data['data']['items']);
+                    }
+                }
+                return [];
+            };
+            
+            // Fetch Shapes
+            $filter_options['shapes'] = $fetch_formatted_dictionary_items('shapes');
+
+            // Fetch Materials
+            $filter_options['materials'] = $fetch_formatted_dictionary_items('materials');
+            
+            // Fetch Host Models (for machine model filter)
+            $filter_options['models'] = $fetch_formatted_dictionary_items('host_models');
+
+            // Fetch and process Specifications
+            $dictionary_request->set_param('type', 'specifications');
+            $spec_response = $dictionary_controller->get_dictionary_items($dictionary_request);
+            $processed_specs = [
+                'thicknesses' => [],
+                'widths' => [],
+                'lengths' => [],
+                'weights' => [],
+            ];
+
+            if ($spec_response instanceof WP_REST_Response && $spec_response->get_status() === 200) {
+                $spec_data = $spec_response->get_data();
+                if (isset($spec_data['data']['items']) && is_array($spec_data['data']['items'])) {
+                    $temp_unique_specs = [
+                        'thicknesses' => [],
+                        'widths' => [],
+                        'lengths' => [],
+                        'weights' => [],
+                    ];
+                    foreach ($spec_data['data']['items'] as $spec_item) {
+                        $spec_type_key = null;
+                        $value_key = 'metric_value'; // Assuming we use metric for filter codes/names
+                        $unit_key = 'metric_unit';
+                        $display_name = $spec_item['name'] ?? ''; // Name from dictionary (e.g., "厚度")
+                        $spec_code_value = $spec_item[$value_key] ?? null;
+                        $spec_unit_value = $spec_item[$unit_key] ?? '';
+                        
+                        // Use the 'code' from dictionary item which is spec_type (thickness, width etc)
+                        $dict_spec_type = $spec_item['code'] ?? '';
+
+                        if ($spec_code_value !== null) {
+                            $item_code_str = strval($spec_code_value) . strtolower(trim($spec_unit_value));
+                            $item_name_str = strval($spec_code_value) . ' ' . trim($spec_unit_value);
+
+                            switch ($dict_spec_type) {
+                                case 'thickness': $spec_type_key = 'thicknesses'; break;
+                                case 'width':     $spec_type_key = 'widths';      break;
+                                case 'length':    $spec_type_key = 'lengths';     break;
+                                case 'weight':    $spec_type_key = 'weights';     break;
+                            }
+
+                            if ($spec_type_key && !isset($temp_unique_specs[$spec_type_key][$item_code_str])) {
+                                $temp_unique_specs[$spec_type_key][$item_code_str] = ['code' => $item_code_str, 'name' => $item_name_str];
+                            }
+                        }
+                    }
+                    foreach($temp_unique_specs as $key => $unique_values_map) {
+                        $processed_specs[$key] = array_values($unique_values_map);
+                         // Sort them naturally if possible (e.g., 10mm, 2mm, 100mm -> 2mm, 10mm, 100mm)
+                        usort($processed_specs[$key], function($a, $b) {
+                            return strnatcmp($a['name'], $b['name']);
+                        });
+                    }
+                }
+            }
+            $filter_options = array_merge($filter_options, $processed_specs);
+        }
+        // --- End Fetch Filter Options ---
+        
         // The frontend expects a specific structure for the list response
         $list_response_data = [
             'items' => $formatted_items,
             'total' => (int) $total_items,
             'total_pages' => ceil($total_items / $per_page),
             'current_page' => (int) $page,
+            'filterOptions' => $filter_options, // Added filter options
         ];
         
         $response = new WP_REST_Response(['success' => true, 'data' => $list_response_data], 200);

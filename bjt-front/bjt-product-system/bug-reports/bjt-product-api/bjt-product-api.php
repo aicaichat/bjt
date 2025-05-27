@@ -442,17 +442,84 @@ class BJT_Product_API {
      * @return WP_REST_Response
      */
     public function handle_refresh_token($request) {
-        // Implement token refresh logic here
-        // This would typically validate the provided refresh token and generate a new access token
+        $auth_header = $request->get_header('Authorization');
+        if (!$auth_header || !preg_match('/Bearer\s+(.*)$/i', $auth_header, $matches)) {
+            return new WP_REST_Response(
+                $this->format_response(null, false, '未提供有效的认证令牌'),
+                401
+            );
+        }
+
+        $token = $matches[1];
         
-        // Mock implementation
-        return new WP_REST_Response(
-            $this->format_response([
-                'token' => 'new_jwt_token_string',
-                'expires_in' => 86400,
-            ]),
-            200
-        );
+        try {
+            // 验证当前token
+            $decoded = JWT::decode($token, $this->get_jwt_secret(), array('HS256'));
+            
+            // 检查token是否即将过期（比如还有不到1小时）
+            $exp = $decoded->exp;
+            $now = time();
+            
+            // 检查token是否已经过期
+            if ($exp < $now) {
+                return new WP_REST_Response(
+                    $this->format_response(null, false, '令牌已过期'),
+                    401
+                );
+            }
+            
+            // 如果token还有超过1小时的有效期，直接返回当前token
+            if ($exp - $now > 3600) {
+                return new WP_REST_Response(
+                    $this->format_response([
+                        'token' => $token,
+                        'expires_in' => $exp - $now
+                    ]),
+                    200
+                );
+            }
+            
+            // 获取用户信息
+            $user_id = $decoded->data->user_id;
+            $user = get_user_by('id', $user_id);
+            
+            if (!$user) {
+                return new WP_REST_Response(
+                    $this->format_response(null, false, '用户不存在'),
+                    401
+                );
+            }
+            
+            // 生成新token
+            $new_token = $this->generate_jwt_token($user);
+            
+            // 验证新token
+            try {
+                $new_decoded = JWT::decode($new_token, $this->get_jwt_secret(), array('HS256'));
+                if (!$new_decoded || !isset($new_decoded->exp) || $new_decoded->exp <= $now) {
+                    throw new Exception('Invalid new token');
+                }
+            } catch (Exception $e) {
+                return new WP_REST_Response(
+                    $this->format_response(null, false, '生成新令牌失败'),
+                    500
+                );
+            }
+            
+            return new WP_REST_Response(
+                $this->format_response([
+                    'token' => $new_token,
+                    'expires_in' => 86400 // 24小时
+                ]),
+                200
+            );
+        } catch (Exception $e) {
+            error_log('Token refresh error: ' . $e->getMessage());
+            return new WP_REST_Response(
+                $this->format_response(null, false, '令牌无效或已过期'),
+                401
+            );
+        }
     }
     
     /**

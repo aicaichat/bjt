@@ -28,7 +28,6 @@ if (!defined('ABSPATH')) {
                         <a href="#" class="bjt-menu-item">产品线1</a>
                         <a href="#" class="bjt-menu-item">产品线2</a>
                         <a href="#" class="bjt-menu-item">产品线3</a>
-                        <a href="#" class="bjt-menu-item">产品线4</a>
                     </div>
                 </div>
                 

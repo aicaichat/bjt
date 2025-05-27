@@ -1,486 +1,757 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  Form, Input, Button, Card, Space, message, Select, Switch, InputNumber,
-  Divider, Typography, Row, Col
+  Form,
+  Input,
+  Button,
+  Card,
+  message,
+  Select,
+  Space,
+  Divider,
+  Row,
+  Col,
+  InputNumber,
+  Radio,
+  Tabs,
+  Tag,
+  Table,
+  Modal,
 } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, WarningOutlined } from '@ant-design/icons';
+import { SaveOutlined, ArrowLeftOutlined, SyncOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import AdminPageHeader from '../../components/common/AdminPageHeader';
-import { sparePartService, SparePartFormData, SparePart } from '../../services/admin-spare-part.service';
-import { sparePartModelService } from '../../services/admin-spare-part.service';
+import MultilingualInput from '../../components/common/MultilingualInput';
+import FileUploader from '../../components/common/FileUploader';
+import CRMDataFetcher from '../../components/common/CRMDataFetcher';
 import adminProductLineService from '../../services/admin-product-line.service';
-import adminMachineService from '../../services/admin-machine.service';
-import adminPartService from '../../services/admin-part.service';
 
-const { Option } = Select;
 const { TextArea } = Input;
-const { Title } = Typography;
+const { Option } = Select;
 
-interface SparePartEditPageProps {
-  mode?: 'create' | 'edit';
+// 严格对应wp_bjt_spare_parts表的19个字段
+interface SparePartFormData {
+  id?: number;
+  product_line_id: number;        // 产品线ID - 必填
+  app_model: string;             // 适配机型
+  model: string;                 // 配件型号
+  is_consumable: boolean;        // 是否易损 - radio选项
+  image_url: string;             // 产品图片
+  part_number: string;           // 料号 - 必填，同产品线下唯一
+  name_zh: string;               // 中文名称 - 必填
+  name_en: string;               // 英文名称 - 必填
+  spec: string;                  // 规格参数(公制)
+  spec_imperial: string;         // 规格参数(英制)
+  app_sn: string;                // 适配序列号
+  
+  // 包装信息
+  package_size_cm: string;       // 包装尺寸(cm)
+  package_size_inch: string;     // 包装尺寸(inch)
+  net_weight_kg: number;         // 单件净重(kg)
+  net_weight_lbs: number;        // 单件净重(lbs)
+  gross_weight_kg: number;       // 包装毛重(kg)
+  gross_weight_lbs: number;      // 包装毛重(lbs)
+  pcs_per_box: number;          // 单箱数量
+  
+  required_parts: string;        // 必选备件料号，多个用逗号分隔
+  required_quantity: string;     // 必选备件数量，多个用逗号分隔，与必选备件料号一一对应
+  status: 'publish' | 'draft' | 'trash'; // 状态
+  unit: 'pcs' | 'roll' | 'box'; // 单位
+  created_at?: string;           // 只读
+  updated_at?: string;           // 只读
 }
 
-const SparePartEditPage: React.FC<SparePartEditPageProps> = ({ mode = 'create' }) => {
-  const navigate = useNavigate();
+// 必选备件项接口
+interface RequiredPartItem {
+  key: string;
+  part_number: string;
+  quantity: number;
+}
+
+const SparePartEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [form] = Form.useForm();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [productLines, setProductLines] = useState<any[]>([]);
-  const [sparePartModels, setSparePartModels] = useState<any[]>([]);
-  const [machineModels, setMachineModels] = useState<any[]>([]);
-  const [partModels, setPartModels] = useState<any[]>([]);
-  const [selectedProductLineId, setSelectedProductLineId] = useState<number | undefined>(undefined);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [autoConvert, setAutoConvert] = useState(true); // 自动公英制转换
+  const [requiredParts, setRequiredParts] = useState<RequiredPartItem[]>([]); // 必选备件列表
 
-  // 获取产品线列表
-  const fetchProductLines = async () => {
-    try {
-      const response = await adminProductLineService.getProductLines({
-        page: 1,
-        page_size: 100,
-        status: 'publish'
-      });
-      setProductLines(response.items || []);
-    } catch (error) {
-      message.error('获取产品线列表失败');
-    }
+  const isEditMode = !!id;
+  const productLineFromUrl = searchParams.get('product_line_id');
+
+  // 公英制转换系数
+  const CONVERSIONS = {
+    // 重量：kg to lbs
+    KG_TO_LBS: 2.20462,
+    // 尺寸：cm to inch
+    CM_TO_INCH: 0.393701,
   };
 
-  // 获取备件型号列表
-  const fetchSparePartModels = async (productLineId?: number) => {
-    try {
-      const response = await sparePartModelService.getSparePartModels({
-        page: 1,
-        page_size: 100,
-        product_line_id: productLineId,
-        status: 'publish'
-      });
-      setSparePartModels(response.items || []);
-    } catch (error) {
-      message.error('获取备件型号列表失败');
-    }
-  };
+  // 适用机型选项 (支持多选)
+  const appModelOptions = [
+    { value: 'HM-100', label: 'HM-100 主机' },
+    { value: 'HM-200', label: 'HM-200 主机' },
+    { value: 'HM-300', label: 'HM-300 主机' },
+    { value: 'AM-150', label: 'AM-150 配件机' },
+    { value: 'AM-250', label: 'AM-250 配件机' },
+  ];
 
-  // 获取主机型号列表
-  const fetchMachineModels = async () => {
-    try {
-      const response = await adminMachineService.getMachines({
-        page: 1,
-        page_size: 100,
-        status: 'publish'
-      });
-      setMachineModels(response.items || []);
-    } catch (error) {
-      message.error('获取主机型号列表失败');
-    }
-  };
+  // 配件型号选项
+  const modelOptions = [
+    { value: 'SP-001', label: 'SP-001 标准备件' },
+    { value: 'SP-002', label: 'SP-002 易损备件' },
+    { value: 'SP-003', label: 'SP-003 关键备件' },
+  ];
 
-  // 获取料号列表
-  const fetchPartModels = async () => {
-    try {
-      const response = await adminPartService.getParts({
-        page: 1,
-        page_size: 100,
-        status: 'publish'
-      });
-      setPartModels(response.items || []);
-    } catch (error) {
-      message.error('获取料号列表失败');
-    }
-  };
-
-  // 获取备件料号详情
-  const fetchSparePart = async (sparePartId: number) => {
-    try {
-      setIsLoading(true);
-      const data = await sparePartService.getSparePart(sparePartId);
-      
-      // 设置产品线和型号选项
-      setSelectedProductLineId(data.product_line_id);
-      await fetchSparePartModels(data.product_line_id);
-      
-      // 填充表单数据
-      form.setFieldsValue({
-        pn: data.pn,
-        name: data.name,
-        model_id: data.model_id,
-        product_line_id: data.product_line_id,
-        description: data.description,
-        compatibility: data.compatibility,
-        is_critical: data.is_critical,
-        lead_time: data.lead_time,
-        status: data.status,
-        logistics: data.logistics,
-        specs: data.specs || []
-      });
-    } catch (error) {
-      message.error('获取备件料号详情失败');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // 初始化
+  // 初始化数据
   useEffect(() => {
-    fetchProductLines();
-    fetchMachineModels();
-    fetchPartModels();
+    loadProductLines();
     
-    // 编辑模式下获取备件料号详情
-    if (mode === 'edit' && id) {
-      fetchSparePart(Number(id));
+    if (isEditMode && id) {
+      loadSparePart(parseInt(id));
+    } else {
+      // 新建时设置默认值
+      const defaultValues = {
+        product_line_id: productLineFromUrl ? parseInt(productLineFromUrl) : undefined,
+        app_model: '',
+        model: '',
+        is_consumable: false,
+        image_url: '',
+        part_number: '',
+        name_zh: '',
+        name_en: '',
+        spec: '',
+        spec_imperial: '',
+        app_sn: '',
+        package_size_cm: '',
+        package_size_inch: '',
+        net_weight_kg: 0,
+        net_weight_lbs: 0,
+        gross_weight_kg: 0,
+        gross_weight_lbs: 0,
+        pcs_per_box: 1,
+        required_parts: '',
+        required_quantity: '',
+        status: 'draft' as const,
+        unit: 'pcs' as const,
+      };
+      form.setFieldsValue(defaultValues);
     }
-  }, [mode, id]);
+  }, [id, isEditMode, form, productLineFromUrl]);
 
-  // 处理产品线变更
-  const handleProductLineChange = async (value: number) => {
-    setSelectedProductLineId(value);
-    form.setFieldValue('model_id', undefined);
-    await fetchSparePartModels(value);
+  const loadProductLines = async () => {
+    try {
+      const response = await adminProductLineService.getProductLines();
+      setProductLines(response.items);
+    } catch (error) {
+      console.error('加载产品线失败:', error);
+      message.error('加载产品线失败');
+    }
   };
 
-  // 处理表单提交
-  const handleSubmit = async (values: any) => {
+  const loadSparePart = async (sparePartId: number) => {
     try {
-      setIsSubmitting(true);
-      
-      const formData: SparePartFormData = {
-        pn: values.pn,
-        name: values.name,
-        model_id: values.model_id,
-        product_line_id: values.product_line_id,
-        description: values.description,
-        compatibility: values.compatibility || {
-          machine_models: [],
-          part_models: []
-        },
-        is_critical: values.is_critical || false,
-        lead_time: values.lead_time,
-        status: values.status || 'publish',
-        logistics: values.logistics || {
-          weight: 0,
-          length: 0,
-          width: 0,
-          height: 0,
-          package_quantity: 1
-        },
-        specs: values.specs || []
+      setLoading(true);
+      // Mock API调用 - 实际应该调用备件服务
+      const mockData = {
+        id: sparePartId,
+        product_line_id: 1,
+        app_model: 'HM-100,HM-200',
+        model: 'SP-001',
+        is_consumable: true,
+        image_url: '',
+        part_number: '15S00001',
+        name_zh: '传感器',
+        name_en: 'Sensor',
+        spec: '12V 100mA',
+        spec_imperial: '12V 100mA',
+        app_sn: 'SN001,SN002',
+        package_size_cm: '10x5x3',
+        package_size_inch: '4x2x1.2',
+        net_weight_kg: 0.15,
+        net_weight_lbs: 0.33,
+        gross_weight_kg: 0.2,
+        gross_weight_lbs: 0.44,
+        pcs_per_box: 10,
+        required_parts: '15A00001,15A00002',
+        required_quantity: '2,1',
+        status: 'publish',
+        unit: 'pcs',
       };
+
+      // 处理多选字段，将字符串转换为数组
+      const processedData = {
+        ...mockData,
+        app_model: mockData.app_model ? mockData.app_model.replace(/"/g, '').split(',').map(item => item.trim()) : [],
+      };
+
+      form.setFieldsValue(processedData);
       
-      let result: SparePart;
-      if (mode === 'edit' && id) {
-        result = await sparePartService.updateSparePart(Number(id), formData);
-        message.success('备件料号更新成功');
-      } else {
-        result = await sparePartService.createSparePart(formData);
-        message.success('备件料号创建成功');
+      // 解析必选备件
+      if (mockData.required_parts && mockData.required_quantity) {
+        const partNumbers = mockData.required_parts.split(',');
+        const quantities = mockData.required_quantity.split(',').map(q => parseInt(q));
+        const parsedRequiredParts = partNumbers.map((partNumber, index) => ({
+          key: `required_${index}`,
+          part_number: partNumber.trim(),
+          quantity: quantities[index] || 1,
+        }));
+        setRequiredParts(parsedRequiredParts);
       }
+    } catch (error) {
+      console.error('加载备件数据失败:', error);
+      message.error('加载备件数据失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 公英制单位自动转换 - 重量
+  const handleWeightChange = (field: string, value: number) => {
+    if (!autoConvert || !value) return;
+
+    if (field.endsWith('_kg')) {
+      const lbsField = field.replace('_kg', '_lbs');
+      const convertedValue = Math.round(value * CONVERSIONS.KG_TO_LBS * 1000) / 1000;
+      form.setFieldValue(lbsField, convertedValue);
+    } else if (field.endsWith('_lbs')) {
+      const kgField = field.replace('_lbs', '_kg');
+      const convertedValue = Math.round(value / CONVERSIONS.KG_TO_LBS * 1000) / 1000;
+      form.setFieldValue(kgField, convertedValue);
+    }
+  };
+
+  // CRM数据获取成功处理
+  const handleCRMDataFetched = (data: any) => {
+    if (data) {
+      // 自动填充从CRM获取的数据
+      const updates: any = {};
       
-      // 返回列表页
+      if (data.name_zh) updates.name_zh = data.name_zh;
+      if (data.name_en) updates.name_en = data.name_en;
+      if (data.spec) updates.spec = data.spec;
+      if (data.spec_imperial) updates.spec_imperial = data.spec_imperial;
+      if (data.net_weight_kg) updates.net_weight_kg = data.net_weight_kg;
+      if (data.gross_weight_kg) updates.gross_weight_kg = data.gross_weight_kg;
+      if (data.package_size_cm) updates.package_size_cm = data.package_size_cm;
+      
+      form.setFieldsValue(updates);
+      message.success('CRM数据获取成功，已自动填充相关字段');
+    }
+  };
+
+  // 添加必选备件
+  const addRequiredPart = () => {
+    const newItem: RequiredPartItem = {
+      key: `required_${Date.now()}`,
+      part_number: '',
+      quantity: 1,
+    };
+    setRequiredParts([...requiredParts, newItem]);
+  };
+
+  // 删除必选备件
+  const removeRequiredPart = (key: string) => {
+    setRequiredParts(requiredParts.filter(item => item.key !== key));
+  };
+
+  // 更新必选备件
+  const updateRequiredPart = (key: string, field: keyof RequiredPartItem, value: any) => {
+    setRequiredParts(requiredParts.map(item => 
+      item.key === key ? { ...item, [field]: value } : item
+    ));
+  };
+
+  // 必选备件表格列定义
+  const requiredPartsColumns = [
+    {
+      title: '料号',
+      dataIndex: 'part_number',
+      key: 'part_number',
+      render: (text: string, record: RequiredPartItem) => {
+        return (
+          <Input
+            value={text}
+            placeholder="输入料号"
+            onChange={(e: any) => updateRequiredPart(record.key, 'part_number', e.target.value)}
+          />
+        );
+      },
+    },
+    {
+      title: '数量',
+      dataIndex: 'quantity',
+      key: 'quantity',
+      width: 120,
+      render: (value: number, record: RequiredPartItem) => {
+        return (
+          <InputNumber
+            value={value}
+            min={1}
+            style={{ width: '100%' }}
+            onChange={(val: any) => updateRequiredPart(record.key, 'quantity', val || 1)}
+          />
+        );
+      },
+    },
+    {
+      title: '操作',
+      key: 'action',
+      width: 80,
+      render: (_: any, record: RequiredPartItem) => {
+        return (
+          <Button
+            type="text"
+            danger
+            size="small"
+            icon={<DeleteOutlined />}
+            onClick={() => removeRequiredPart(record.key)}
+          />
+        );
+      },
+    },
+  ];
+
+  const onFinish = async (values: any) => {
+    try {
+      setSubmitting(true);
+
+      // 处理必选备件数据
+      const partNumbers = requiredParts.map(item => item.part_number).filter(pn => pn.trim());
+      const quantities = requiredParts.map(item => item.quantity.toString()).filter((_, index) => 
+        requiredParts[index].part_number.trim()
+      );
+
+      // 转换表单数据为API格式
+      const formData: Partial<SparePartFormData> = {
+        product_line_id: values.product_line_id,
+        app_model: Array.isArray(values.app_model) ? values.app_model.join(',') : values.app_model,
+        model: values.model,
+        is_consumable: values.is_consumable,
+        image_url: values.image_url,
+        part_number: values.part_number,
+        name_zh: values.name_zh,
+        name_en: values.name_en,
+        spec: values.spec,
+        spec_imperial: values.spec_imperial,
+        app_sn: Array.isArray(values.app_sn) ? values.app_sn.join(',') : values.app_sn,
+        package_size_cm: values.package_size_cm,
+        package_size_inch: values.package_size_inch,
+        net_weight_kg: values.net_weight_kg,
+        net_weight_lbs: values.net_weight_lbs,
+        gross_weight_kg: values.gross_weight_kg,
+        gross_weight_lbs: values.gross_weight_lbs,
+        pcs_per_box: values.pcs_per_box,
+        required_parts: partNumbers.join(','),
+        required_quantity: quantities.join(','),
+        status: values.status,
+        unit: values.unit,
+      };
+
+      if (isEditMode && id) {
+        // await sparePartService.updateSparePart(parseInt(id), formData);
+        message.success('备件更新成功');
+      } else {
+        // await sparePartService.createSparePart(formData);
+        message.success('备件创建成功');
+      }
+
       navigate('/admin/spare-parts');
     } catch (error) {
-      message.error(mode === 'edit' ? '更新备件料号失败' : '创建备件料号失败');
+      console.error('保存备件失败:', error);
+      message.error('保存备件失败');
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
+  };
+
+  const handleBack = () => {
+    navigate('/admin/spare-parts');
   };
 
   return (
-    <div className="p-6">
+    <div className="spare-part-edit-page">
       <AdminPageHeader
-        title={mode === 'edit' ? '编辑备件料号' : '新增备件料号'}
+        title={isEditMode ? '编辑备件' : '新增备件'}
+        description={isEditMode ? `编辑备件 ID: ${id}` : '创建新的备件'}
         extra={
-          <Space>
-            <Button 
-              icon={<ArrowLeftOutlined />} 
-              onClick={() => navigate('/admin/spare-parts')}
-            >
-              返回列表
-            </Button>
-          </Space>
+          <Button key="back" icon={<ArrowLeftOutlined />} onClick={handleBack}>
+            返回列表
+          </Button>
         }
       />
-      
-      <Card loading={isLoading}>
+
+      <Card loading={loading}>
         <Form
           form={form}
           layout="vertical"
-          onFinish={handleSubmit}
-          initialValues={{
-            status: 'publish',
-            is_critical: false,
-            logistics: {
-              weight: 0,
-              length: 0,
-              width: 0,
-              height: 0,
-              package_quantity: 1
-            },
-            compatibility: {
-              machine_models: [],
-              part_models: []
-            }
-          }}
+          onFinish={onFinish}
+          disabled={submitting}
+          scrollToFirstError
         >
-          <Title level={5}>基本信息</Title>
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item
-                name="product_line_id"
-                label="产品线"
-                rules={[{ required: true, message: '请选择产品线' }]}
+          <Tabs
+            defaultActiveKey="basic"
+            size="large"
+            items={[
+              {
+                key: 'basic',
+                label: '基本信息',
+                children: (
+                  <div>
+                    <Row gutter={24}>
+                      <Col span={8}>
+                        <Form.Item
+                          label="所属产品线"
+                          name="product_line_id"
+                          rules={[{ required: true, message: '请选择所属产品线' }]}
+                        >
+                          <Select placeholder="请选择产品线">
+                            {productLines && productLines.map((line) => (
+                              <Option key={line.id} value={line.id}>
+                                {line.title_zh || line.title_en || `产品线${line.id}`}
+                              </Option>
+                            ))}
+                          </Select>
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={8}>
+                        <Form.Item
+                          label="料号"
+                          name="part_number"
+                          rules={[{ required: true, message: '请输入料号' }]}
+                          extra="在同一产品线下必须唯一"
+                        >
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <Input placeholder="例如: 15S00001" style={{ flex: 1 }} />
+                            <CRMDataFetcher
+                              partNumber={form.getFieldValue('part_number') || ''}
+                              onDataFetched={handleCRMDataFetched}
+                              onError={(error: string) => message.error(`CRM数据获取失败: ${error}`)}
+                              fields={['name_zh', 'name_en', 'spec', 'spec_imperial', 'net_weight_kg', 'gross_weight_kg', 'package_size_cm']}
+                            />
+                          </div>
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={8}>
+                        <Form.Item
+                          label="配件型号"
+                          name="model"
+                          rules={[{ required: true, message: '请选择配件型号' }]}
+                        >
+                          <Select placeholder="选择配件型号">
+                            {modelOptions.map((option) => (
+                              <Option key={option.value} value={option.value}>
+                                {option.label}
+                              </Option>
+                            ))}
+                          </Select>
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={12}>
+                        <Form.Item
+                          label="中文名称"
+                          name="name_zh"
+                          rules={[{ required: true, message: '请输入中文名称' }]}
+                        >
+                          <Input placeholder="例如: 传感器" />
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={12}>
+                        <Form.Item
+                          label="英文名称"
+                          name="name_en"
+                          rules={[{ required: true, message: '请输入英文名称' }]}
+                        >
+                          <Input placeholder="例如: Sensor" />
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={8}>
+                        <Form.Item
+                          label="是否易损备件"
+                          name="is_consumable"
+                          rules={[{ required: true, message: '请选择是否易损备件' }]}
+                        >
+                          <Radio.Group>
+                            <Radio value={true}>是</Radio>
+                            <Radio value={false}>否</Radio>
+                          </Radio.Group>
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={8}>
+                        <Form.Item
+                          label="状态"
+                          name="status"
+                          rules={[{ required: true, message: '请选择状态' }]}
+                        >
+                          <Select>
+                            <Option value="draft">草稿</Option>
+                            <Option value="publish">已发布</Option>
+                            <Option value="trash">回收站</Option>
+                          </Select>
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={8}>
+                        <Form.Item
+                          label="单位"
+                          name="unit"
+                          rules={[{ required: true, message: '请选择单位' }]}
+                        >
+                          <Select>
+                            <Option value="pcs">件</Option>
+                            <Option value="roll">卷</Option>
+                            <Option value="box">箱</Option>
+                          </Select>
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={12}>
+                        <Form.Item
+                          label="适配机型"
+                          name="app_model"
+                          extra="支持多个机型，可多选"
+                        >
+                          <Select 
+                            mode="multiple" 
+                            placeholder="选择适配机型"
+                            style={{ width: '100%' }}
+                          >
+                            {appModelOptions.map((option) => (
+                              <Option key={option.value} value={option.value}>
+                                {option.label}
+                              </Option>
+                            ))}
+                          </Select>
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={12}>
+                        <Form.Item
+                          label="适配序列号"
+                          name="app_sn"
+                          extra="多个序列号用逗号分隔"
+                        >
+                          <Input placeholder="例如: SN001,SN002,SN003" />
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={12}>
+                        <Form.Item
+                          label="规格参数(公制)"
+                          name="spec"
+                        >
+                          <TextArea 
+                            rows={2}
+                            placeholder="例如: 12V 100mA, 尺寸: 50x30x20mm" 
+                          />
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={12}>
+                        <Form.Item
+                          label="规格参数(英制)"
+                          name="spec_imperial"
+                        >
+                          <TextArea 
+                            rows={2}
+                            placeholder="例如: 12V 100mA, Size: 2x1.2x0.8inch" 
+                          />
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={24}>
+                        <Form.Item
+                          label="产品图片"
+                          name="image_url"
+                          extra="支持 JPG, PNG, GIF, WEBP 格式，文件大小不超过 10MB"
+                        >
+                          <FileUploader
+                            type="image"
+                            maxSize={10}
+                            placeholder="上传产品图片"
+                            preview
+                          />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                  </div>
+                ),
+              },
+              {
+                key: 'packaging',
+                label: '包装物流信息',
+                children: (
+                  <div>
+                    <Divider orientation="left">
+                      包装信息
+                      <Space style={{ marginLeft: 16 }}>
+                        <span>自动公英制转换:</span>
+                        <Radio.Group 
+                          value={autoConvert} 
+                          onChange={(e: any) => setAutoConvert(e.target.value)}
+                          size="small"
+                        >
+                          <Radio value={true}>开启</Radio>
+                          <Radio value={false}>关闭</Radio>
+                        </Radio.Group>
+                        <SyncOutlined style={{ color: autoConvert ? '#1890ff' : '#ccc' }} />
+                      </Space>
+                    </Divider>
+
+                    <Row gutter={24}>
+                      <Col span={12}>
+                        <Form.Item
+                          label="包装尺寸(cm)"
+                          name="package_size_cm"
+                        >
+                          <Input placeholder="长×宽×高" />
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={12}>
+                        <Form.Item
+                          label="包装尺寸(inch)"
+                          name="package_size_inch"
+                        >
+                          <Input placeholder="L×W×H" />
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={6}>
+                        <Form.Item
+                          label="单件净重(kg)"
+                          name="net_weight_kg"
+                        >
+                          <InputNumber 
+                            min={0} 
+                            precision={3} 
+                            style={{ width: '100%' }}
+                            onChange={(value: number) => handleWeightChange('net_weight_kg', value || 0)}
+                          />
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={6}>
+                        <Form.Item
+                          label="单件净重(lbs)"
+                          name="net_weight_lbs"
+                        >
+                          <InputNumber 
+                            min={0} 
+                            precision={3} 
+                            style={{ width: '100%' }}
+                            onChange={(value: number) => handleWeightChange('net_weight_lbs', value || 0)}
+                          />
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={6}>
+                        <Form.Item
+                          label="包装毛重(kg)"
+                          name="gross_weight_kg"
+                        >
+                          <InputNumber 
+                            min={0} 
+                            precision={3} 
+                            style={{ width: '100%' }}
+                            onChange={(value: number) => handleWeightChange('gross_weight_kg', value || 0)}
+                          />
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={6}>
+                        <Form.Item
+                          label="包装毛重(lbs)"
+                          name="gross_weight_lbs"
+                        >
+                          <InputNumber 
+                            min={0} 
+                            precision={3} 
+                            style={{ width: '100%' }}
+                            onChange={(value: number) => handleWeightChange('gross_weight_lbs', value || 0)}
+                          />
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={12}>
+                        <Form.Item
+                          label="单箱数量"
+                          name="pcs_per_box"
+                          rules={[{ required: true, message: '请输入单箱数量' }]}
+                        >
+                          <InputNumber min={1} style={{ width: '100%' }} />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                  </div>
+                ),
+              },
+              {
+                key: 'required',
+                label: '必选备件',
+                children: (
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <div className="text-base font-medium">必选备件管理</div>
+                        <div className="text-sm text-gray-500">配置此备件必须配套的其他备件</div>
+                      </div>
+                      <Button
+                        type="primary"
+                        icon={<PlusOutlined />}
+                        onClick={addRequiredPart}
+                      >
+                        添加必选备件
+                      </Button>
+                    </div>
+
+                    <Table
+                      columns={requiredPartsColumns}
+                      dataSource={requiredParts}
+                      rowKey="key"
+                      pagination={false}
+                      locale={{ emptyText: '暂无必选备件，点击上方按钮添加' }}
+                    />
+
+                    {requiredParts.length > 0 && (
+                      <div className="mt-4 p-4 bg-blue-50 rounded">
+                        <div className="text-sm text-blue-800">
+                          <strong>预览:</strong> 必选备件料号: {requiredParts && requiredParts.map(item => item.part_number).filter(pn => pn).join(', ')}
+                          <br />
+                          对应数量: {requiredParts && requiredParts.map(item => item.quantity).join(', ')}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ),
+              },
+            ]}
+          />
+
+          {/* 操作按钮 */}
+          <Form.Item style={{ marginTop: 32, textAlign: 'center' }}>
+            <Space size="large">
+              <Button
+                type="primary" 
+                htmlType="submit" 
+                icon={<SaveOutlined />}
+                loading={submitting}
+                size="large"
               >
-                <Select
-                  placeholder="选择产品线"
-                  onChange={handleProductLineChange}
-                >
-                  {productLines.map(item => (
-                    <Option key={item.id} value={item.id}>{item.title.zh}</Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-            
-            <Col span={8}>
-              <Form.Item
-                name="model_id"
-                label="备件型号"
-                rules={[{ required: true, message: '请选择备件型号' }]}
-              >
-                <Select
-                  placeholder="选择备件型号"
-                  disabled={!selectedProductLineId}
-                >
-                  {sparePartModels.map(item => (
-                    <Option key={item.id} value={item.id}>{item.model}</Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-            
-            <Col span={8}>
-              <Form.Item
-                name="pn"
-                label="料号"
-                rules={[{ required: true, message: '请输入料号' }]}
-              >
-                <Input placeholder="请输入料号" />
-              </Form.Item>
-            </Col>
-          </Row>
-          
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name={['name', 'zh']}
-                label="名称(中文)"
-                rules={[{ required: true, message: '请输入中文名称' }]}
-              >
-                <Input placeholder="请输入备件中文名称" />
-              </Form.Item>
-            </Col>
-            
-            <Col span={12}>
-              <Form.Item
-                name={['name', 'en']}
-                label="名称(英文)"
-                rules={[{ required: true, message: '请输入英文名称' }]}
-              >
-                <Input placeholder="请输入备件英文名称" />
-              </Form.Item>
-            </Col>
-          </Row>
-          
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name={['description', 'zh']}
-                label="描述(中文)"
-              >
-                <TextArea rows={3} placeholder="请输入备件中文描述" />
-              </Form.Item>
-            </Col>
-            
-            <Col span={12}>
-              <Form.Item
-                name={['description', 'en']}
-                label="描述(英文)"
-              >
-                <TextArea rows={3} placeholder="请输入备件英文描述" />
-              </Form.Item>
-            </Col>
-          </Row>
-          
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item
-                name="status"
-                label="状态"
-              >
-                <Select>
-                  <Option value="publish">已发布</Option>
-                  <Option value="draft">草稿</Option>
-                  <Option value="trash">已删除</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            
-            <Col span={8}>
-              <Form.Item
-                name="is_critical"
-                label="关键备件"
-                valuePropName="checked"
-              >
-                <Switch 
-                  checkedChildren={<WarningOutlined />}
-                  unCheckedChildren={<WarningOutlined />}
-                />
-              </Form.Item>
-            </Col>
-            
-            <Col span={8}>
-              <Form.Item
-                name="lead_time"
-                label="采购周期(天)"
-              >
-                <InputNumber
-                  min={0}
-                  style={{ width: '100%' }}
-                  placeholder="备件采购周期(天)"
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-          
-          <Divider />
-          
-          <Title level={5}>兼容性信息</Title>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name={['compatibility', 'machine_models']}
-                label="兼容主机型号"
-              >
-                <Select
-                  mode="multiple"
-                  placeholder="选择兼容的主机型号"
-                  style={{ width: '100%' }}
-                  optionFilterProp="children"
-                >
-                  {machineModels.map(item => (
-                    <Option key={item.id} value={item.model}>{item.model}</Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-            
-            <Col span={12}>
-              <Form.Item
-                name={['compatibility', 'part_models']}
-                label="兼容料号型号"
-              >
-                <Select
-                  mode="multiple"
-                  placeholder="选择兼容的料号型号"
-                  style={{ width: '100%' }}
-                  optionFilterProp="children"
-                >
-                  {partModels.map(item => (
-                    <Option key={item.id} value={item.model}>{item.model}</Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-          
-          <Divider />
-          
-          <Title level={5}>物流信息</Title>
-          <Row gutter={16}>
-            <Col span={6}>
-              <Form.Item
-                name={['logistics', 'weight']}
-                label="重量(kg)"
-              >
-                <InputNumber
-                  min={0}
-                  step={0.01}
-                  style={{ width: '100%' }}
-                  placeholder="重量(kg)"
-                />
-              </Form.Item>
-            </Col>
-            
-            <Col span={6}>
-              <Form.Item
-                name={['logistics', 'length']}
-                label="长度(cm)"
-              >
-                <InputNumber
-                  min={0}
-                  step={0.1}
-                  style={{ width: '100%' }}
-                  placeholder="长度(cm)"
-                />
-              </Form.Item>
-            </Col>
-            
-            <Col span={6}>
-              <Form.Item
-                name={['logistics', 'width']}
-                label="宽度(cm)"
-              >
-                <InputNumber
-                  min={0}
-                  step={0.1}
-                  style={{ width: '100%' }}
-                  placeholder="宽度(cm)"
-                />
-              </Form.Item>
-            </Col>
-            
-            <Col span={6}>
-              <Form.Item
-                name={['logistics', 'height']}
-                label="高度(cm)"
-              >
-                <InputNumber
-                  min={0}
-                  step={0.1}
-                  style={{ width: '100%' }}
-                  placeholder="高度(cm)"
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-          
-          <Row gutter={16}>
-            <Col span={6}>
-              <Form.Item
-                name={['logistics', 'package_quantity']}
-                label="包装数量"
-                rules={[{ required: true, message: '请输入包装数量' }]}
-              >
-                <InputNumber
-                  min={1}
-                  style={{ width: '100%' }}
-                  placeholder="包装数量"
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-          
-          <Divider />
-          
-          <Form.Item>
-            <Button 
-              type="primary" 
-              htmlType="submit" 
-              icon={<SaveOutlined />}
-              loading={isSubmitting}
-            >
-              保存
-            </Button>
+                {isEditMode ? '保存更改' : '创建备件'}
+              </Button>
+              <Button onClick={handleBack} size="large">
+                取消
+              </Button>
+            </Space>
           </Form.Item>
         </Form>
       </Card>

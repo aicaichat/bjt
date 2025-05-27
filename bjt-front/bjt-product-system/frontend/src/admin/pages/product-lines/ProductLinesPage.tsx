@@ -21,7 +21,7 @@ const ProductLinesPage: React.FC = () => {
       setLoading(true);
       const response = await adminProductLineService.getProductLines({
         page: pagination.current,
-        page_size: pagination.pageSize,
+        per_page: pagination.pageSize,
       });
       
       setProductLines(response.items);

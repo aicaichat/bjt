@@ -3,7 +3,6 @@ import { Layout, Menu, Dropdown, Space, Avatar } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import {
   UserOutlined,
-  LogoutOutlined,
   GlobalOutlined,
 } from '@ant-design/icons';
 
@@ -17,24 +16,32 @@ const AdminHeader: React.FC = () => {
     navigate('/admin/login');
   };
 
-  const userMenu = (
-    <Menu>
-      <Menu.Item key="profile" icon={<UserOutlined />}>
-        个人信息
-      </Menu.Item>
-      <Menu.Divider />
-      <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={handleLogout}>
-        退出登录
-      </Menu.Item>
-    </Menu>
-  );
+  const userMenuItems = [
+    {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: '个人信息',
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: 'logout',
+      label: '退出登录',
+      onClick: handleLogout,
+    },
+  ];
 
-  const languageMenu = (
-    <Menu>
-      <Menu.Item key="zh">中文</Menu.Item>
-      <Menu.Item key="en">English</Menu.Item>
-    </Menu>
-  );
+  const languageMenuItems = [
+    {
+      key: 'zh',
+      label: '中文',
+    },
+    {
+      key: 'en',
+      label: 'English',
+    },
+  ];
 
   // Basic styling to match mockup
   const headerStyle: React.CSSProperties = {
@@ -80,10 +87,10 @@ const AdminHeader: React.FC = () => {
     <Header className="bg-white px-6 flex justify-between items-center border-b">
       <div className="flex-1" />
       <Space size="large">
-        <Dropdown overlay={languageMenu} placement="bottomRight">
+        <Dropdown menu={{ items: languageMenuItems }} placement="bottomRight">
           <GlobalOutlined className="text-lg cursor-pointer" />
         </Dropdown>
-        <Dropdown overlay={userMenu} placement="bottomRight">
+        <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
           <Space className="cursor-pointer">
             <Avatar icon={<UserOutlined />} />
             <span>管理员</span>

@@ -13,7 +13,7 @@ LANG="zh"    # Forcing LANG to "zh" globally for tests
 FALLBACK_LANG="en"
 
 # 设置API基础URL
-API_BASE="http://localhost/wp-json/bjt/v1"
+API_BASE="http://localhost:8080/wp-json/bjt/v1"
 
 # 测试结果统计
 TESTS_TOTAL=0
@@ -27,7 +27,12 @@ echo -e "${GREEN}JWT密钥设置成功: bjt-secret-key-2023${NC}"
 
 # 预设的JWT令牌 - 使用bjt-secret-key-2023密钥生成，有效期到2053年
 # 此令牌用于测试目的，包含用户ID为1的管理员权限信息
-TOKEN="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwODAiLCJpYXQiOjE2ODMwMDAwMDAsImV4cCI6MTk5OTk5OTk5OSwidXNlciI6eyJpZCI6MX19.gHpqpeoq_NBRF2-v1UG9XNWG2X2Sj9pB5stCN4Y5IxA"
+CURRENT_TIME=$(date +%s)
+EXPIRY_TIME=1999999999  # 2053年
+JWT_HEADER=$(echo -n '{"typ":"JWT","alg":"HS256"}' | base64 | tr -d '=' | tr '/+' '_-')
+JWT_PAYLOAD=$(echo -n "{\"iss\":\"http://localhost:8080\",\"iat\":$CURRENT_TIME,\"exp\":$EXPIRY_TIME,\"user\":{\"id\":1}}" | base64 | tr -d '=' | tr '/+' '_-')
+JWT_SIGNATURE=$(echo -n "$JWT_HEADER.$JWT_PAYLOAD" | openssl dgst -binary -sha256 -hmac "bjt-secret-key-2023" | base64 | tr -d '=' | tr '/+' '_-')
+TOKEN="$JWT_HEADER.$JWT_PAYLOAD.$JWT_SIGNATURE"
 INITIAL_PRESET_TOKEN="$TOKEN" # Save the initially hardcoded token for reference if needed
 
 # 输出令牌信息
@@ -71,7 +76,7 @@ check_response() {
         TESTS_PASSED=$((TESTS_PASSED + 1))
         return 0
     fi
-
+    
     # 尝试解析JSON
     if echo "$clean_response" | jq . >/dev/null 2>&1; then
         # 检查success字段
@@ -112,7 +117,7 @@ check_response() {
 # Function to perform login and store the token
 login_and_get_token() {
     echo -e "${BLUE}执行登录并获取令牌...${NC}" >&2
-    local login_data='{"username":"admin","password":"password"}' # Use appropriate credentials
+    local login_data='{"username":"admin","password":"password123"}' # Use appropriate credentials
     
     TOKEN="" # Clear current token before attempting login
     echo -e "${YELLOW}令牌已清除，尝试登录获取新令牌...${NC}" >&2
@@ -681,7 +686,7 @@ cat > /tmp/consumable_inventory_batch.json << EOF
   "items": [
     {"item_type": "consumable", "item_id": "$consumable_id_for_batch_test"}
   ],
-  "region": "CN"
+    "region": "CN"
 }
 EOF
 consumable_inventory_response=$(curl -s -X POST "$API_BASE/consumables/inventory/batch" \
@@ -900,7 +905,7 @@ separator "11. 实时价格与库存API测试"
 echo -e "${BLUE}11.1 测试获取实时价格 API${NC}"
 cat > /tmp/price_batch.json << 'EOF'
 {
-  "items": [
+    "items": [
     {"item_type": "spare_part", "item_id": "SP1001", "quantity": 1},
     {"item_type": "spare_part", "item_id": "SP1002", "quantity": 2}
   ]
@@ -917,7 +922,7 @@ echo "$price_response"
 echo -e "${BLUE}11.2 测试获取实时库存 API${NC}"
 cat > /tmp/inventory_batch.json << 'EOF'
 {
-  "items": [
+    "items": [
     {"item_type": "spare_part", "item_id": "SP1001"},
     {"item_type": "spare_part", "item_id": "SP1002"}
   ]

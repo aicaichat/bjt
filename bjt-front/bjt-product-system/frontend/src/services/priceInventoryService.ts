@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { API_BASE_URL } from '../api/config';
 import { APIResponse } from '../types/common';
 
 export interface ProductPriceRequest {
@@ -111,7 +112,7 @@ export interface InventoryChangedEvent {
 export type WebSocketEvent = PriceChangedEvent | InventoryChangedEvent;
 
 class PriceInventoryService {
-  private baseUrl = '/wp-json/bjt/v1';
+  private baseUrl = API_BASE_URL;
   private priceSocket: WebSocket | null = null;
   private inventorySocket: WebSocket | null = null;
   private priceListeners: ((event: PriceChangedEvent) => void)[] = [];

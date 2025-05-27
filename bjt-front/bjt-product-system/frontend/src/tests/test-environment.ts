@@ -158,7 +158,19 @@ export class MockConsole {
 export function setupTestEnvironment(): void {
   // Mock localStorage
   if (typeof global !== 'undefined') {
-    (global as any).localStorage = new MockLocalStorage();
+    const mockStorage = new MockLocalStorage();
+    // 添加默认的认证token用于测试
+    mockStorage.setItem('auth_token', 'test-token-123');
+    mockStorage.setItem('user', JSON.stringify({
+      id: 1,
+      name: 'Test User',
+      email: 'test@bjt.com',
+      role: 'CUSTOMER',
+      region: 'CN',
+      permissions: ['view_products', 'view_prices']
+    }));
+    
+    (global as any).localStorage = mockStorage;
     (global as any).sessionStorage = new MockLocalStorage();
   }
   

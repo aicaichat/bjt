@@ -4,14 +4,27 @@ import { Card, Typography, List, Divider } from 'antd';
 
 const { Title, Text, Paragraph } = Typography;
 
+interface RouteItem {
+  path: string;
+  description: string;
+}
+
 const DebugPage: React.FC = () => {
   // 备件管理相关路由
-  const sparePartsRoutes = [
+  const sparePartsRoutes: RouteItem[] = [
     { path: '/admin/spare-parts', description: '备件管理主页' },
     { path: '/admin/spare-parts/create', description: '创建备件料号' },
     { path: '/admin/spare-parts/edit/1', description: '编辑备件料号 (ID=1)' },
     { path: '/admin/spare-parts/models/create', description: '创建备件型号' },
     { path: '/admin/spare-parts/models/edit/1', description: '编辑备件型号 (ID=1)' },
+  ];
+
+  const suggestionItems: string[] = [
+    "路由配置问题：检查 admin/routes.tsx 中的路由配置",
+    "组件导入问题：确保所有组件正确导入和导出",
+    "路由层级问题：可能嵌套路由配置有误",
+    "URL 路径问题：确保基础路径正确",
+    "组件渲染错误：查看控制台错误信息"
   ];
 
   return (
@@ -37,7 +50,7 @@ const DebugPage: React.FC = () => {
         <List
           bordered
           dataSource={sparePartsRoutes}
-          renderItem={item => (
+          renderItem={(item: RouteItem) => (
             <List.Item>
               <Link to={item.path}>{item.path}</Link> - {item.description}
             </List.Item>
@@ -49,14 +62,8 @@ const DebugPage: React.FC = () => {
         <Title level={4}>如果页面无法访问，可能的原因：</Title>
         <List
           bordered
-          dataSource={[
-            "路由配置问题：检查 admin/routes.tsx 中的路由配置",
-            "组件导入问题：确保所有组件正确导入和导出",
-            "路由层级问题：可能嵌套路由配置有误",
-            "URL 路径问题：确保基础路径正确",
-            "组件渲染错误：查看控制台错误信息"
-          ]}
-          renderItem={item => <List.Item>{item}</List.Item>}
+          dataSource={suggestionItems}
+          renderItem={(item: string) => <List.Item>{item}</List.Item>}
         />
       </Card>
       

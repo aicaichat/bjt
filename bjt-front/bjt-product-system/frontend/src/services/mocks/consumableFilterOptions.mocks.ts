@@ -11,6 +11,7 @@ import dynamicConsumableOptionsData from './data/consumableFilterOptions.data.js
 export interface FilterOption {
   id: string;
   name: string;
+  name_en?: string;
   image_url?: string;
 }
 

@@ -2,9 +2,15 @@ import React, { useState } from 'react';
 import { Table, TableProps, Button, Space, Input, Select } from 'antd';
 import { SearchOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import { InputChangeEvent, PaginationShowTotal, TableChangeEvent } from '../../../types/events';
 
-interface AdminTableProps<T> extends Omit<TableProps<T>, 'columns'> {
+interface AdminTableProps<T = any> extends TableProps<T> {
   columns: ColumnsType<T>;
+  dataSource: T[];
+  loading?: boolean;
+  pagination?: any;
+  rowSelection?: any;
+  onChange?: TableChangeEvent;
   tableTitle?: string;
   searchable?: boolean;
   searchPlaceholder?: string;
@@ -14,8 +20,13 @@ interface AdminTableProps<T> extends Omit<TableProps<T>, 'columns'> {
   batchActions?: React.ReactNode;
 }
 
-function AdminTable<T extends object>({
+function AdminTable<T = any>({
   columns,
+  dataSource,
+  loading = false,
+  pagination,
+  rowSelection,
+  onChange,
   tableTitle,
   searchable = true,
   searchPlaceholder = '搜索...',
@@ -23,18 +34,47 @@ function AdminTable<T extends object>({
   onRefresh,
   extra,
   batchActions,
-  ...tableProps
+  ...restProps
 }: AdminTableProps<T>) {
   const [searchText, setSearchText] = useState('');
 
-  const handleSearch = (value: string) => {
-    setSearchText(value);
-    onSearch?.(value);
+  const handleSearch = (e: InputChangeEvent) => {
+    setSearchText(e.target.value);
   };
 
   const handleRefresh = () => {
     setSearchText('');
     onRefresh?.();
+  };
+
+  const handleTableChange = (
+    paginationConfig: any,
+    filters: any,
+    sorter: any
+  ) => {
+    onChange?.(paginationConfig, filters, sorter);
+  };
+
+  const showTotal = (total: number, range?: [number, number]) => 
+    range ? `第 ${range[0]}-${range[1]} 条/共 ${total} 条` : `共 ${total} 条`;
+
+  const defaultPagination = {
+    current: pagination?.current || 1,
+    pageSize: pagination?.pageSize || 10,
+    total: pagination?.total || 0,
+    showSizeChanger: true,
+    showQuickJumper: true,
+    showTotal,
+    ...pagination
+  };
+
+  const handleRowSelectionChange = (
+    selectedRowKeys: React.Key[],
+    selectedRows: T[]
+  ) => {
+    if (rowSelection?.onChange) {
+      rowSelection.onChange(selectedRowKeys, selectedRows);
+    }
   };
 
   return (
@@ -46,7 +86,7 @@ function AdminTable<T extends object>({
             <Input
               placeholder={searchPlaceholder}
               value={searchText}
-              onChange={(e) => handleSearch(e.target.value)}
+              onChange={handleSearch}
               prefix={<SearchOutlined />}
               className="w-64"
             />
@@ -73,7 +113,19 @@ function AdminTable<T extends object>({
 
       <Table
         columns={columns}
-        {...tableProps}
+        dataSource={dataSource}
+        loading={loading}
+        pagination={defaultPagination}
+        rowSelection={
+          rowSelection
+            ? {
+                ...rowSelection,
+                onChange: handleRowSelectionChange
+              }
+            : undefined
+        }
+        onChange={handleTableChange}
+        {...restProps}
         className="admin-table"
       />
     </div>

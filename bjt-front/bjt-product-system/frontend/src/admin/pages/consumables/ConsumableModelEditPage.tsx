@@ -36,7 +36,7 @@ const ConsumableModelEditPage: React.FC = () => {
       try {
         const response = await adminProductLineService.getProductLines({
           page: 1,
-          page_size: 100,
+          per_page: 100,
           status: 'publish'
         });
         setProductLines(response.items || []);

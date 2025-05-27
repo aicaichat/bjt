@@ -31,11 +31,6 @@ $menu_items = array(
                 'page' => 'bjt-product-lines',
                 'params' => array('product_line' => 3)
             ),
-            array(
-                'title' => __('产品线4', 'bjt-product-admin'),
-                'page' => 'bjt-product-lines',
-                'params' => array('product_line' => 4)
-            ),
         )
     ),
     array(

@@ -216,6 +216,38 @@ class BJT_Spare_Part_Controller extends BJT_API_Controller {
             }
         }
         
+        // --- 🆕 获取必选备件数据 ---
+        $relations_table = $wpdb->prefix . 'bjt_relations';
+        $required_parts_data = $wpdb->get_row($wpdb->prepare(
+            "SELECT required_parts, required_quantity 
+             FROM {$relations_table} 
+             WHERE child_part_number = %s AND required_parts IS NOT NULL AND required_parts != '' 
+             ORDER BY id ASC LIMIT 1",
+            $item_db_object->part_number
+        ));
+        
+        $required_parts_info = [];
+        if ($required_parts_data) {
+            $part_numbers = explode(',', $required_parts_data->required_parts);
+            $quantities = explode(',', $required_parts_data->required_quantity ?: '1');
+            
+            foreach ($part_numbers as $index => $part_number) {
+                $part_number = trim($part_number);
+                $quantity = isset($quantities[$index]) ? (int) trim($quantities[$index]) : 1;
+                
+                if (!empty($part_number)) {
+                    $required_parts_info[] = [
+                        'part_number' => $part_number,
+                        'quantity' => $quantity
+                    ];
+                }
+            }
+            
+            // 添加调试日志
+            error_log("🔍 [BJT_Spare_Part_Controller] Found required parts for {$item_db_object->part_number}: " . 
+                     $required_parts_data->required_parts . " (qty: " . $required_parts_data->required_quantity . ")");
+        }
+        
         // --- Fetch Pricing --- 
         $pricing_table = $wpdb->prefix . 'bjt_prices';
         $raw_prices = $wpdb->get_results($wpdb->prepare(
@@ -289,6 +321,9 @@ class BJT_Spare_Part_Controller extends BJT_API_Controller {
             }
         }
         $formatted['inventory'] = $inventory_response;
+        
+        // 添加必选备件信息到响应中
+        $formatted['required_parts'] = $required_parts_info;
 
         return $formatted;
     }
@@ -724,5 +759,26 @@ class BJT_Spare_Part_Controller extends BJT_API_Controller {
         }
         
         return $response;
+    }
+
+    /**
+     * Check read permission
+     */
+    public function check_read_permission($request) {
+        return true; // 允许所有用户读取
+    }
+
+    /**
+     * Check write permission
+     */
+    public function check_write_permission($request) {
+        return current_user_can('manage_options'); // 只有管理员可以写入
+    }
+
+    /**
+     * Check delete permission
+     */
+    public function check_delete_permission($request) {
+        return current_user_can('manage_options'); // 只有管理员可以删除
     }
 } 

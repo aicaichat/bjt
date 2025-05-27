@@ -1,250 +1,376 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Select, Upload, Button, message } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
-import type { UploadFile } from 'antd/es/upload/interface';
-import type { RcFile } from 'antd/es/upload';
-import { useNavigate, useParams } from 'react-router-dom';
-import AdminService from '../../api/adminService';
-import type { HostModel, ProductLine } from '../../../types';
+import { useParams, useNavigate } from 'react-router-dom';
+import {
+  Form,
+  Input,
+  Button,
+  Space,
+  Card,
+  message,
+  Select,
+  InputNumber,
+  Row,
+  Col,
+  Divider,
+} from 'antd';
+import { SaveOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import AdminPageHeader from '../../components/common/AdminPageHeader';
+import adminHostModelService from '../../services/admin-host-model.service';
+import { AdminHostModel } from '../../types/admin-models.types';
+import adminProductLineService from '../../services/admin-product-line.service';
 
-const { TextArea } = Input;
+// 使用AdminHostModel接口
+const { Option } = Select;
 
 interface MachineEditPageProps {
-  mode: 'create' | 'edit';
+  mode?: 'create' | 'edit';
 }
 
 const MachineEditPage: React.FC<MachineEditPageProps> = ({ mode }) => {
-  const [form] = Form.useForm();
-  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [productLines, setProductLines] = useState<ProductLine[]>([]);
-  const [fileList, setFileList] = useState<UploadFile[]>([]);
-  const [explosionFileList, setExplosionFileList] = useState<UploadFile[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [productLines, setProductLines] = useState<any[]>([]);
 
-  // 加载产品线数据
+  const isEditMode = mode === 'edit' || !!id;
+
+  // 初始化数据
+  useEffect(() => {
+    loadProductLines();
+    if (isEditMode && id) {
+      loadHostModel(id);
+    } else {
+      // 新建时设置默认值
+      form.setFieldsValue({
+        product_line_id: undefined,
+        model: '',
+        title_zh: '',
+        title_en: '',
+        description_zh: '',
+        description_en: '',
+        type: '',
+        image1_url: '',
+        image2_url: '',
+        explosion_diagram_pdf: '',
+        status: 'publish',
+        sort_order: 1,
+      });
+    }
+  }, [id, isEditMode, form]);
+
   const loadProductLines = async () => {
     try {
-      const response = await AdminService.getProductLines();
-      setProductLines(response.items);
+      const response = await adminProductLineService.getProductLines();
+      if (response && response.items && Array.isArray(response.items)) {
+        setProductLines(response.items);
+      } else {
+        console.warn('Invalid product lines response:', response);
+        setProductLines([]);
+      }
     } catch (error) {
+      console.error('加载产品线失败:', error);
       message.error('加载产品线失败');
+      setProductLines([]); // 确保设置为空数组而不是 undefined
     }
   };
 
-  // 加载主机型号数据（编辑模式）
-  const loadHostModel = async () => {
-    if (!id) return;
-
+  const loadHostModel = async (hostModelId: string) => {
     try {
       setLoading(true);
-      const response = await AdminService.getHostModel(id);
-      const hostModel = response.data;
-
-      // 设置表单数据
+      const data = await adminHostModelService.getHostModel(hostModelId);
+      
+      // 转换数据格式以适应表单
       form.setFieldsValue({
-        name: hostModel.name,
-        code: hostModel.code,
-        productLineId: hostModel.productLineId,
-        description: hostModel.description,
+        product_line_id: data.product_line_id,
+        model: data.model,
+        title_zh: data.title_zh,
+        title_en: data.title_en,
+        description_zh: data.description_zh,
+        description_en: data.description_en,
+        type: data.type,
+        image1_url: data.image1_url,
+        image2_url: data.image2_url,
+        explosion_diagram_pdf: data.explosion_diagram_pdf,
+        status: data.status,
+        sort_order: data.sort_order,
       });
-
-      // 设置图片
-      if (hostModel.imageUrl) {
-        setFileList([
-          {
-            uid: '-1',
-            name: '主机图片',
-            status: 'done',
-            url: hostModel.imageUrl,
-          },
-        ]);
-      }
-
-      // 设置爆炸图
-      if (hostModel.explosionUrl) {
-        setExplosionFileList([
-          {
-            uid: '-1',
-            name: '爆炸图',
-            status: 'done',
-            url: hostModel.explosionUrl,
-          },
-        ]);
-      }
     } catch (error) {
-      message.error('加载主机型号失败');
+      console.error('加载主机型号数据失败:', error);
+      message.error('加载主机型号数据失败');
     } finally {
       setLoading(false);
     }
   };
 
-  // 初始加载
-  useEffect(() => {
-    loadProductLines();
-    if (mode === 'edit') {
-      loadHostModel();
+  const validateModel = async (rule: any, value: string) => {
+    if (!value) {
+      throw new Error('请输入主机型号编码');
     }
-  }, [mode, id]);
 
-  // 处理表单提交
-  const handleSubmit = async (values: any) => {
+    const productLineId = form.getFieldValue('product_line_id');
+    if (!productLineId) {
+      throw new Error('请先选择产品线');
+    }
+
+    // TODO: 检查型号在同产品线下的唯一性
+    // const isUnique = await checkModelUnique(productLineId, value, id);
+    // if (!isUnique) {
+    //   throw new Error('该型号在当前产品线下已存在');
+    // }
+  };
+
+  const onFinish = async (values: any) => {
     try {
-      setLoading(true);
+      setSubmitting(true);
 
-      const formData = new FormData();
-      formData.append('name', values.name);
-      formData.append('code', values.code);
-      formData.append('productLineId', values.productLineId);
-      if (values.description) {
-        formData.append('description', values.description);
-      }
+      // 转换表单数据为API格式
+      const formData: Partial<AdminHostModel> = {
+        product_line_id: values.product_line_id,
+        model: values.model,
+        title_zh: values.title_zh,
+        title_en: values.title_en,
+        description_zh: values.description_zh,
+        description_en: values.description_en,
+        type: values.type,
+        image1_url: values.image1_url,
+        image2_url: values.image2_url,
+        explosion_diagram_pdf: values.explosion_diagram_pdf,
+        status: values.status,
+        sort_order: values.sort_order,
+      };
 
-      // 添加图片
-      if (fileList.length > 0 && fileList[0].originFileObj) {
-        formData.append('image', fileList[0].originFileObj);
-      }
-
-      // 添加爆炸图
-      if (explosionFileList.length > 0 && explosionFileList[0].originFileObj) {
-        formData.append('explosion', explosionFileList[0].originFileObj);
-      }
-
-      if (mode === 'create') {
-        await AdminService.createHostModel(formData);
-        message.success('创建成功');
+      if (isEditMode && id) {
+        await adminHostModelService.updateHostModel(id, formData);
+        message.success('主机型号更新成功');
       } else {
-        await AdminService.updateHostModel(id!, formData);
-        message.success('更新成功');
+        await adminHostModelService.createHostModel(formData);
+        message.success('主机型号创建成功');
       }
 
       navigate('/admin/machines');
     } catch (error) {
-      message.error(mode === 'create' ? '创建失败' : '更新失败');
+      console.error('保存主机型号失败:', error);
+      message.error('保存主机型号失败');
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
-  // 处理图片上传前的验证
-  const beforeUpload = (file: RcFile) => {
-    const isImage = file.type.startsWith('image/');
-    if (!isImage) {
-      message.error('只能上传图片文件！');
-      return false;
-    }
-    const isLt2M = file.size / 1024 / 1024 < 2;
-    if (!isLt2M) {
-      message.error('图片大小不能超过 2MB！');
-      return false;
-    }
-    return true;
+  const handleBack = () => {
+    navigate('/admin/machines');
   };
 
-  // 处理爆炸图上传前的验证
-  const beforeUploadExplosion = (file: RcFile) => {
-    const isPDF = file.type === 'application/pdf';
-    if (!isPDF) {
-      message.error('只能上传PDF文件！');
-      return false;
-    }
-    const isLt10M = file.size / 1024 / 1024 < 10;
-    if (!isLt10M) {
-      message.error('PDF大小不能超过 10MB！');
-      return false;
-    }
-    return true;
-  };
+  // 使用类型断言解决React组件类型问题
+  const ButtonComponent = Button as any;
+  const CardComponent = Card as any;
+  const FormComponent = Form as any;
+  const FormItemComponent = Form.Item as any;
+  const RowComponent = Row as any;
+  const ColComponent = Col as any;
+  const DividerComponent = Divider as any;
+  const SelectComponent = Select as any;
+  const OptionComponent = Option as any;
+  const InputComponent = Input as any;
+  const InputNumberComponent = InputNumber as any;
+  const SpaceComponent = Space as any;
+  const ArrowLeftIcon = ArrowLeftOutlined as any;
+  const SaveIcon = SaveOutlined as any;
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-6">
-        {mode === 'create' ? '新增主机型号' : '编辑主机型号'}
-      </h1>
+    <div className="machine-edit-page">
+      <AdminPageHeader
+        title={isEditMode ? '编辑主机型号' : '新增主机型号'}
+        description={isEditMode ? `编辑主机型号 ID: ${id}` : '创建新的主机型号'}
+        extra={
+          <ButtonComponent key="back" icon={<ArrowLeftIcon />} onClick={handleBack}>
+            返回列表
+          </ButtonComponent>
+        }
+      />
 
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleSubmit}
-        className="max-w-2xl"
-      >
-        <Form.Item
-          name="name"
-          label="型号名称"
-          rules={[{ required: true, message: '请输入型号名称' }]}
+      <CardComponent loading={loading}>
+        <FormComponent
+          form={form}
+          layout="vertical"
+          onFinish={onFinish}
+          disabled={submitting}
+          scrollToFirstError
         >
-          <Input placeholder="请输入型号名称" />
-        </Form.Item>
+          <RowComponent gutter={24}>
+            {/* 基本信息 */}
+            <ColComponent span={24}>
+              <DividerComponent orientation="left">基本信息</DividerComponent>
+            </ColComponent>
 
-        <Form.Item
-          name="code"
-          label="型号代码"
-          rules={[{ required: true, message: '请输入型号代码' }]}
-        >
-          <Input placeholder="请输入型号代码" />
-        </Form.Item>
+            <ColComponent span={8}>
+              <FormItemComponent
+                label="所属产品线"
+                name="product_line_id"
+                rules={[{ required: true, message: '请选择所属产品线' }]}
+              >
+                <SelectComponent placeholder="请选择产品线">
+                  {(productLines || []).map((line) => (
+                    <OptionComponent key={line.id} value={line.id}>
+                      {line.title_zh || line.title_en || line.name || `产品线${line.id}`}
+                    </OptionComponent>
+                  ))}
+                </SelectComponent>
+              </FormItemComponent>
+            </ColComponent>
 
-        <Form.Item
-          name="productLineId"
-          label="所属产品线"
-          rules={[{ required: true, message: '请选择所属产品线' }]}
-        >
-          <Select placeholder="请选择所属产品线">
-            {productLines.map((line) => (
-              <Select.Option key={line.id} value={line.id}>
-                {line.name}
-              </Select.Option>
-            ))}
-          </Select>
-        </Form.Item>
+            <ColComponent span={8}>
+              <FormItemComponent
+                label="主机型号编码"
+                name="model"
+                rules={[
+                  { required: true, message: '请输入主机型号编码' },
+                  { validator: validateModel },
+                ]}
+                extra="在同一产品线下必须唯一"
+              >
+                <InputComponent placeholder="例如: BJT-A100" />
+              </FormItemComponent>
+            </ColComponent>
 
-        <Form.Item
-          name="description"
-          label="描述"
-        >
-          <TextArea rows={4} placeholder="请输入描述" />
-        </Form.Item>
+            <ColComponent span={8}>
+              <FormItemComponent
+                label="主机类型"
+                name="type"
+                rules={[{ required: true, message: '请输入主机类型' }]}
+              >
+                <InputComponent placeholder="例如: 包装机" />
+              </FormItemComponent>
+            </ColComponent>
 
-        <Form.Item
-          label="主机图片"
-          extra="支持jpg、png格式，大小不超过2MB"
-        >
-          <Upload
-            listType="picture"
-            maxCount={1}
-            fileList={fileList}
-            onChange={({ fileList }) => setFileList(fileList)}
-            beforeUpload={beforeUpload}
-          >
-            <Button icon={<UploadOutlined />}>上传图片</Button>
-          </Upload>
-        </Form.Item>
+            <ColComponent span={6}>
+              <FormItemComponent
+                label="状态"
+                name="status"
+                rules={[{ required: true, message: '请选择状态' }]}
+              >
+                <SelectComponent>
+                  <OptionComponent value="draft">草稿</OptionComponent>
+                  <OptionComponent value="publish">已发布</OptionComponent>
+                  <OptionComponent value="trash">回收站</OptionComponent>
+                </SelectComponent>
+              </FormItemComponent>
+            </ColComponent>
 
-        <Form.Item
-          label="爆炸图"
-          extra="支持PDF格式，大小不超过10MB"
-        >
-          <Upload
-            maxCount={1}
-            fileList={explosionFileList}
-            onChange={({ fileList }) => setExplosionFileList(fileList)}
-            beforeUpload={beforeUploadExplosion}
-          >
-            <Button icon={<UploadOutlined />}>上传爆炸图</Button>
-          </Upload>
-        </Form.Item>
+            <ColComponent span={6}>
+              <FormItemComponent
+                label="排序"
+                name="sort_order"
+                rules={[{ required: true, message: '请输入排序号' }]}
+              >
+                <InputNumberComponent min={1} style={{ width: '100%' }} />
+              </FormItemComponent>
+            </ColComponent>
 
-        <Form.Item>
-          <div className="flex space-x-4">
-            <Button type="primary" htmlType="submit" loading={loading}>
-              {mode === 'create' ? '创建' : '保存'}
-            </Button>
-            <Button onClick={() => navigate('/admin/machines')}>
-              取消
-            </Button>
-          </div>
-        </Form.Item>
-      </Form>
+            {/* 多语言名称 */}
+            <ColComponent span={24}>
+              <DividerComponent orientation="left">主机名称</DividerComponent>
+            </ColComponent>
+
+            <ColComponent span={12}>
+              <FormItemComponent
+                label="中文名称"
+                name="title_zh"
+                rules={[{ required: true, message: '请输入中文名称' }]}
+              >
+                <InputComponent placeholder="请输入中文名称" />
+              </FormItemComponent>
+            </ColComponent>
+
+            <ColComponent span={12}>
+              <FormItemComponent
+                label="英文名称"
+                name="title_en"
+                rules={[{ required: true, message: '请输入英文名称' }]}
+              >
+                <InputComponent placeholder="Please enter English name" />
+              </FormItemComponent>
+            </ColComponent>
+
+            {/* 描述信息 */}
+            <ColComponent span={24}>
+              <DividerComponent orientation="left">主机描述</DividerComponent>
+            </ColComponent>
+
+            <ColComponent span={12}>
+              <FormItemComponent
+                label="中文描述"
+                name="description_zh"
+              >
+                <InputComponent.TextArea rows={4} placeholder="请输入中文描述" />
+              </FormItemComponent>
+            </ColComponent>
+
+            <ColComponent span={12}>
+              <FormItemComponent
+                label="英文描述"
+                name="description_en"
+              >
+                <InputComponent.TextArea rows={4} placeholder="Please enter English description" />
+              </FormItemComponent>
+            </ColComponent>
+
+            {/* 图片和文档 */}
+            <ColComponent span={24}>
+              <DividerComponent orientation="left">图片和文档</DividerComponent>
+            </ColComponent>
+
+            <ColComponent span={12}>
+              <FormItemComponent
+                label="主图URL"
+                name="image1_url"
+                extra="请输入图片URL地址"
+              >
+                <InputComponent placeholder="例如: https://example.com/image1.jpg" />
+              </FormItemComponent>
+            </ColComponent>
+
+            <ColComponent span={12}>
+              <FormItemComponent
+                label="副图URL"
+                name="image2_url"
+                extra="请输入图片URL地址"
+              >
+                <InputComponent placeholder="例如: https://example.com/image2.jpg" />
+              </FormItemComponent>
+            </ColComponent>
+
+            <ColComponent span={24}>
+              <FormItemComponent
+                label="爆炸图PDF URL"
+                name="explosion_diagram_pdf"
+                extra="请输入PDF文件URL地址"
+              >
+                <InputComponent placeholder="例如: https://example.com/diagram.pdf" />
+              </FormItemComponent>
+            </ColComponent>
+          </RowComponent>
+
+          {/* 操作按钮 */}
+          <FormItemComponent style={{ marginTop: 32, textAlign: 'center' }}>
+            <SpaceComponent size="large">
+              <ButtonComponent
+                type="primary"
+                htmlType="submit"
+                icon={<SaveIcon />}
+                loading={submitting}
+                size="large"
+              >
+                {isEditMode ? '保存更改' : '创建主机型号'}
+              </ButtonComponent>
+              <ButtonComponent onClick={handleBack} size="large">
+                取消
+              </ButtonComponent>
+            </SpaceComponent>
+          </FormItemComponent>
+        </FormComponent>
+      </CardComponent>
     </div>
   );
 };

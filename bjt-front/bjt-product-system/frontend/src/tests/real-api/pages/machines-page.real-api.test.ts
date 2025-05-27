@@ -10,7 +10,7 @@ const BASE_URL = process.env.API_BASE || 'http://localhost/wp-json/bjt/v1';
 
 // 获取主机料号表
 async function getHostParts(token?: string) {
-  const res = await fetch(`${BASE_URL}/host-parts?page=1&per_page=10`, {
+  const res = await fetch(`${BASE_URL}/machineparts?page=1&per_page=10`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
   return res.json();
@@ -66,15 +66,15 @@ export async function runRealMachinesPageTests(): Promise<{
     const start = Date.now();
     const data = await getHostParts();
     const end = Date.now();
-    recordApiCall('/host-parts', end - start, data.success);
+    recordApiCall('/machineparts', end - start, data.success);
     if (data && data.success && data.data && data.data.items && data.data.items.length > 0) {
       hostPartNumber = data.data.items[0].part_number;
-      addTestResult('获取主机料号表', 'pass', undefined, '/host-parts', end - start);
+      addTestResult('获取主机料号表', 'pass', undefined, '/machineparts', end - start);
     } else {
-      addTestResult('获取主机料号表', 'fail', '未获取到主机料号', '/host-parts', end - start);
+      addTestResult('获取主机料号表', 'fail', '未获取到主机料号', '/machineparts', end - start);
     }
   } catch (error: unknown) {
-    addTestResult('获取主机料号表', 'fail', `网络错误: ${error instanceof Error ? error.message : String(error)}`, '/host-parts');
+    addTestResult('获取主机料号表', 'fail', `网络错误: ${error instanceof Error ? error.message : String(error)}`, '/machineparts');
   }
 
   // 获取主机下一级配件

@@ -744,21 +744,22 @@ class BJT_Machine_Part_Controller extends BJT_API_Controller {
      * @param WP_REST_Request $request Current request.
      */
     public function check_read_permission($request) {
+        error_log('[BJT_Machine_Part_Controller] Checking read permission');
+        
         // Allow if the user can read posts in general, or adjust to a more specific capability.
         if (!class_exists('BJT_Auth_Controller')) {
             // Attempt to include the BJT_Auth_Controller file if it's not found.
-            // This path is based on common plugin structures, adjust if necessary.
             $auth_controller_path = dirname(__FILE__) . '/class-auth-controller.php';
             if (file_exists($auth_controller_path)) {
                 require_once $auth_controller_path;
             } else {
-                // Log an error or handle the missing file case as appropriate.
-                // error_log('BJT_Auth_Controller class file not found at: ' . $auth_controller_path);
+                error_log('[BJT_Machine_Part_Controller] BJT_Auth_Controller class file not found at: ' . $auth_controller_path);
                 return new WP_Error('rest_controller_not_found', 'Authentication controller not found.', ['status' => 500]);
             }
         }
         
         if (!class_exists('BJT_Auth_Controller')) {
+            error_log('[BJT_Machine_Part_Controller] BJT_Auth_Controller class still not found after include attempt');
             return new WP_Error('rest_controller_not_loadable', 'Authentication controller class not loadable.', ['status' => 500]);
         }
 
@@ -766,22 +767,46 @@ class BJT_Machine_Part_Controller extends BJT_API_Controller {
         $is_authenticated = $auth_controller->check_auth($request);
 
         if (true !== $is_authenticated && is_wp_error($is_authenticated)) {
-            // If check_auth returns a WP_Error, propagate it.
+            error_log('[BJT_Machine_Part_Controller] Authentication failed: ' . $is_authenticated->get_error_message());
             return $is_authenticated;
         }
         
         if (!$is_authenticated) {
-             // Fallback if check_auth returns false but not an error (should ideally not happen with current check_auth logic)
+            error_log('[BJT_Machine_Part_Controller] User not authenticated');
             return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
         }
 
-        if (!current_user_can('read')) {
+        // 检查用户是否有权限查看机器部件
+        // 这里我们使用一个更具体的权限检查，而不是通用的 'read' 权限
+        $user = $GLOBALS['bjt_current_user'];
+        if (!$user) {
+            error_log('[BJT_Machine_Part_Controller] No current user found in globals');
+            return new WP_Error('rest_forbidden', __('User information not available.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户状态
+        if ($user->status !== 'active') {
+            error_log('[BJT_Machine_Part_Controller] User is not active: ' . $user->username);
+            return new WP_Error('rest_forbidden', __('Your account is not active.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户角色
+        $has_permission = false;
+        if (isset($user->role)) {
+            $allowed_roles = [ 'admin','sales', 'partner','customer'];
+            $has_permission = in_array($user->role, $allowed_roles);
+        }
+
+        if (!$has_permission) {
+            error_log('[BJT_Machine_Part_Controller] User does not have required role: ' . $user->username);
             return new WP_Error(
                 'rest_forbidden',
                 __('You do not have permission to view machine parts.', 'bjt'),
-                ['status' => rest_authorization_required_code(), 'success' => false]
+                ['status' => 403, 'success' => false]
             );
         }
+
+        error_log('[BJT_Machine_Part_Controller] Read permission granted for user: ' . $user->username);
         return true;
     }
 

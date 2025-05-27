@@ -32,7 +32,7 @@ class BJT_JWT_Handler {
     /**
      * 生成JWT令牌
      *
-     * @param array $payload 令牌负载
+     * @param int $user_id 用户ID
      * @return string 生成的令牌
      */
     public function generate_token($user_id) {
@@ -52,6 +52,17 @@ class BJT_JWT_Handler {
             )
         );
         
+        // 使用简单实现以避免版本兼容性问题
+        return $this->simple_encode($payload);
+    }
+    
+    /**
+     * 使用自定义payload生成JWT令牌
+     *
+     * @param array $payload 自定义令牌负载
+     * @return string 生成的令牌
+     */
+    public function generate_token_with_payload($payload) {
         // 使用简单实现以避免版本兼容性问题
         return $this->simple_encode($payload);
     }

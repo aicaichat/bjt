@@ -482,13 +482,16 @@ class BJT_Cart_Controller extends BJT_API_Controller {
         $item_schema = $this->get_item_schema();
         $required_fields = [];
         foreach ($item_schema['properties'] as $key => $props) {
-            if (!empty($props['required']) && $key !== 'item_id' && !isset($props['readonly'])) {
+            if (!empty($props['required']) && $key !== 'item_id' && empty($props['readonly'])) {
                 $required_fields[] = $key;
             }
         }
         
+        // Manually define required fields for adding items to cart
+        $required_fields = ['product_type', 'part_number', 'quantity'];
+        
         foreach ($required_fields as $field) {
-            if (!isset($params[$field])) {
+            if (!isset($params[$field]) || empty($params[$field])) {
                 return $this->error_response("Missing required field: {$field}", 'missing_field', 400);
             }
         }

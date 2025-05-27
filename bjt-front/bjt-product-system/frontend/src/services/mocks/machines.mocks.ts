@@ -8,6 +8,8 @@ import mockAccessoryPrices from './data/accessoryPrices.data.json';
 import mockAccessoryInventory from './data/accessoryInventory.data.json';
 import hostModelsData from './data/hostModels.data.json';
 import rawMachinePartsData from './data/machineParts.data.json';
+import pricesData from './data/prices.data.json';
+import inventoryData from './data/inventory.data.json';
 // TODO: Update import paths if PriceTier/InventoryData are elsewhere
 
 // --- Mock Data based on mockup.sql ---
@@ -71,55 +73,74 @@ import rawMachinePartsData from './data/machineParts.data.json';
 
 // Placeholder functions - Updated to match mockup.sql data
 
-const getMachinePartPrices = (partId: number, productLineId: number): PriceTier[] => { 
+const getMachinePartPrices = (partId: number, productLineId: number): PriceTier[] => {
   console.warn(`Called mock getMachinePartPrices for partId: ${partId}, productLineId: ${productLineId}`);
 
-  // Mock data based ONLY on wp_bjt_prices for target_type='host', target_id=1
-  const mockPricesForPart1: PriceTier[] = [
-      { region: 'CN', currency: 'CNY', tiers: [
-          { min_quantity: 1, max_quantity: 5, base_price: 5000.00, discount_rate: 0.05 },
-          { min_quantity: 6, max_quantity: null, base_price: 4800.00, discount_rate: 0.10 }
-      ]},
-      { region: 'US', currency: 'USD', tiers: [
-          { min_quantity: 1, max_quantity: 5, base_price: 800.00, discount_rate: 0.05 },
-          { min_quantity: 6, max_quantity: null, base_price: 760.00, discount_rate: 0.10 }
-      ]},
-      { region: 'EU', currency: 'EUR', tiers: [
-          { min_quantity: 1, max_quantity: 5, base_price: 750.00, discount_rate: 0.05 },
-          { min_quantity: 6, max_quantity: null, base_price: 710.00, discount_rate: 0.10 }
-      ]},
-       { region: 'AU', currency: 'AUD', tiers: [
-          { min_quantity: 1, max_quantity: 5, base_price: 1200.00, discount_rate: 0.05 },
-          { min_quantity: 6, max_quantity: null, base_price: 1100.00, discount_rate: 0.10 }
-      ]},
-  ];
+  // Filter prices for the specific part and product line
+  const partPrices = pricesData.filter(
+    p => p.target_type === 'host' && 
+         p.target_id === partId && 
+         p.product_line_id === productLineId && 
+         p.status === 'active'
+  );
 
-  // Return prices only if partId is 1, otherwise return empty array (as per mockup.sql)
-  if (partId === 1) {
-      return mockPricesForPart1;
-  } else {
-      console.warn(`Mock price data only available for partId 1 (based on mockup.sql). Returning empty array for partId ${partId}.`);
-      return []; // Return empty array for other parts
+  if (partPrices.length === 0) {
+    console.warn(`No mock price data found for partId ${partId}, productLineId ${productLineId}. Returning empty array.`);
+    return [];
   }
+
+  // Group prices by region
+  const regionPrices: Record<string, any> = {};
+  partPrices.forEach(price => {
+    if (!regionPrices[price.region]) {
+      regionPrices[price.region] = {
+        currency: price.currency,
+        tiers: []
+      };
+    }
+    regionPrices[price.region].tiers.push({
+      min_quantity: price.min_quantity,
+      max_quantity: price.max_quantity,
+      base_price: price.base_price,
+      discount_rate: price.discount_rate
+    });
+  });
+
+  // Convert to PriceTier format
+  const priceTiers: PriceTier[] = Object.keys(regionPrices).map(region => ({
+    region: region,
+    currency: regionPrices[region].currency,
+    tiers: regionPrices[region].tiers.sort((a: any, b: any) => a.min_quantity - b.min_quantity)
+  }));
+
+  return priceTiers;
 };
 
 const getMachinePartInventory = (partId: number, productLineId: number): InventoryData[] => { 
   console.warn(`Called mock getMachinePartInventory for partId: ${partId}, productLineId: ${productLineId}`);
 
-  // Mock data based ONLY on wp_bjt_inventory for target_type='host', target_id=1
-  const mockInventoryForPart1: InventoryData[] = [
-       { region: 'CN', warehouse: 'WH-SH-01', quantity: 100, reserved: 10 },
-       { region: 'US', warehouse: 'WH-US-01', quantity: 50, reserved: 5 }
-       // mockup.sql only has CN/US inventory for host part id 1
-  ];
+  // Filter inventory for the specific part and product line
+  const partInventory = inventoryData.filter(
+    inv => inv.target_type === 'host' && 
+           inv.target_id === partId && 
+           inv.product_line_id === productLineId && 
+           inv.status === 'active'
+  );
 
-  // Return inventory only if partId is 1
-  if (partId === 1) {
-      return mockInventoryForPart1;
-  } else {
-      console.warn(`Mock inventory data only available for partId 1 (based on mockup.sql). Returning empty array for partId ${partId}.`);
-      return []; // Return empty array for other parts
+  if (partInventory.length === 0) {
+    console.warn(`No mock inventory data found for partId ${partId}, productLineId ${productLineId}. Returning empty array.`);
+    return [];
   }
+
+  // Convert to InventoryData format
+  const inventoryList: InventoryData[] = partInventory.map(inv => ({
+    region: inv.region,
+    warehouse: inv.warehouse,
+    quantity: inv.quantity,
+    reserved: inv.reserved || 0
+  }));
+
+  return inventoryList;
 };
 
 const getAccessoryHierarchy = (): MachineAccessory[] => { console.warn('getAccessoryHierarchy mock called'); return []; }; // Placeholder

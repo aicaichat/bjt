@@ -335,7 +335,7 @@ class BJT_Machine_Controller extends BJT_API_Controller {
 
         // Format for response (similar to get_item)
         $formatted_item = $this->format_item_for_response($created_item_db);
-
+        
         $response_data = [
             'success' => true,
             'message' => 'Machine created successfully.',
@@ -495,10 +495,12 @@ class BJT_Machine_Controller extends BJT_API_Controller {
 
         // Step 1: Find child part numbers (accessories) related to the host_part_number
         $child_part_numbers_query = $wpdb->prepare(
-            "SELECT DISTINCT child_part_number FROM {$relations_table} WHERE parent_part_number = %s AND child_type = 'accessory'",
+            "SELECT DISTINCT child_part_number FROM {$relations_table} WHERE part_number = %s",
             $host_part_number
         );
         $child_part_numbers_results = $wpdb->get_col($child_part_numbers_query);
+
+        error_log("BJT_API_DEBUG: Found child part numbers: " . print_r($child_part_numbers_results, true));
 
         if (empty($child_part_numbers_results)) {
             return new WP_REST_Response([
@@ -526,11 +528,13 @@ class BJT_Machine_Controller extends BJT_API_Controller {
                 am.type AS model_type, am.image1_url AS model_image1_url, am.image2_url AS model_image2_url,
                 am.diagram_pdf AS model_diagram_pdf, am.status AS model_status
             FROM {$accessories_table} a
-            LEFT JOIN {$accessory_models_table} am ON a.model = am.code
+            LEFT JOIN {$accessory_models_table} am ON a.model = am.model
             WHERE a.part_number IN ($placeholders) AND a.status = 'publish'",
             $accessories_query_args
         );
         $accessories_results = $wpdb->get_results($accessories_query, ARRAY_A);
+        
+        error_log("BJT_API_DEBUG: Found accessories: " . print_r($accessories_results, true));
         
         if (empty($accessories_results)) {
              return new WP_REST_Response([

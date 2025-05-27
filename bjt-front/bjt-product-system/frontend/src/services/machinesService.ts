@@ -11,7 +11,7 @@ import type { MachinePartListData as ExplicitMachinePartListData } from '../type
 
 export const machinesService = {
   /**
-   * 获取设备列表 (Now fetches Machine Parts)
+   * 获取主机料号列表 (Host Parts List)
    */
   getMachines: async (params: {
     region?: string;
@@ -22,7 +22,15 @@ export const machinesService = {
     voltage?: string; // Added voltage filter possibility
     product_line_id?: number | string; // Added product_line_id filter possibility
   } = {}): Promise<MachinePartListData> => { // Updated return type
-    if (import.meta.env.VITE_USE_MOCK_DATA === 'true') { // 使用新的环境变量判断
+    // 添加调试输出
+    console.log('🔍 [machinesService] Environment variables check:', {
+      VITE_USE_MOCK_DATA: import.meta.env.VITE_USE_MOCK_DATA,
+      shouldUseMock: import.meta.env.VITE_USE_MOCK_DATA === 'true',
+      allEnvVars: import.meta.env
+    });
+    
+    if (import.meta.env.VITE_USE_MOCK_DATA === 'true') { // 使用环境变量判断
+      console.log('✅ [machinesService] Using MOCK data mode');
       await delay(300);
       const page = params.page || 1;
       const pageSize = params.page_size || 10;
@@ -35,37 +43,27 @@ export const machinesService = {
         page, 
         pageSize
       );
+      console.log('📦 [machinesService] Mock data returned:', mockData);
       return mockData;
-
-      // Removed old logic:
-      // const start = (page - 1) * pageSize;
-      // const end = start + pageSize;
-      // const items = mockMachines.slice(start, end);
-      // return {
-      //   items,
-      //   total: mockMachines.length,
-      //   page,
-      //   page_size: pageSize,
-      //   total_pages: Math.ceil(mockMachines.length / pageSize)
-      // };
     }
     
-    // Assuming the API endpoint /machines now returns MachinePartListData
-    const responseUntyped = await HttpServiceInstance.get(`/machines`, params);
+    console.log('⚠️ [machinesService] Using REAL API mode');
+    // 修改API调用：使用主机料号接口而不是机器型号接口
+    const responseUntyped = await HttpServiceInstance.get(`/machineparts`, params);
     // Adjust type assertion if necessary based on actual API response structure
     const response = responseUntyped as ApiResponse<MachinePartListData>; 
     return response.data;
   },
 
   /**
-   * 获取设备详情 (Now fetches Machine Part Detail)
+   * 获取主机料号详情 (Host Part Detail)
    * Note: Mock currently fetches all and filters, inefficient.
    */
   getMachine: async (machineId: string, params: {
     region?: string;
     lang?: string;
   } = {}): Promise<MachinePart> => { // Updated return type
-    if (import.meta.env.VITE_USE_MOCK_DATA === 'true') { // 使用新的环境变量判断
+    if (import.meta.env.VITE_USE_MOCK_DATA === 'true') { // 使用环境变量判断
       await delay(300);
       // Fetch all mock parts (inefficient, TODO: add getMockMachinePartById)
       // Explicitly type the result using the aliased import
@@ -77,21 +75,15 @@ export const machinesService = {
       }
       
       return machine;
-      // Removed old logic:
-      // const machine = mockMachines.find(m => m.id.toString() === machineId);
-      // if (!machine) {
-      //   throw new Error('Machine not found in mock data');
-      // }
-      // return machine;
     }
     
-    // Assuming API endpoint /machines/{id} now returns a MachinePart
-    const response: ApiResponse<MachinePart> = await HttpServiceInstance.get<MachinePart>(`/machines/${machineId}`, params);
+    // 修改API调用：使用主机料号详情接口
+    const response: ApiResponse<MachinePart> = await HttpServiceInstance.get<MachinePart>(`/machineparts/${machineId}`, params);
     return response.data;
   },
 
   /**
-   * 获取设备配件
+   * 获取主机配件
    */
   getMachineAccessories: async (machineId: string, params: {
     level?: number;
@@ -100,7 +92,7 @@ export const machinesService = {
     parent_id?: string | number;
     machine_id?: string | number;
   } = {}): Promise<{ items: MachineAccessory[], total: number }> => {
-    if (import.meta.env.VITE_USE_MOCK_DATA === 'true') { // 使用新的环境变量判断
+    if (import.meta.env.VITE_USE_MOCK_DATA === 'true') { // 使用环境变量判断
       await delay(300);
       
       // Fetch accessories based on parent part number (or machine if no parent)
@@ -122,6 +114,7 @@ export const machinesService = {
       };
     }
     
+    // 这里API路径保持不变，因为这个接口是针对主机料号获取配件的
     const response: ApiResponse<{ items: MachineAccessory[], total: number }> = await HttpServiceInstance.get(`/machines/${machineId}/accessories`, params);
     return response.data;
   },
@@ -136,7 +129,7 @@ export const machinesService = {
     region?: string;
     lang?: string;
   } = {}): Promise<{ items: MachineAccessory[], total: number }> => {
-    if (import.meta.env.VITE_USE_MOCK_DATA === 'true') { // 使用新的环境变量判断
+    if (import.meta.env.VITE_USE_MOCK_DATA === 'true') { // 使用环境变量判断
       await delay(300);
       
       // Fetch accessories based on parent_id if provided, otherwise return empty array
@@ -175,7 +168,7 @@ export const machinesService = {
     voltage?: string;
     properties?: Record<string, string>;
   }): Promise<{cart_count: number, item_id: string, summary: any}> => {
-    if (import.meta.env.VITE_USE_MOCK_DATA === 'true') { // 使用新的环境变量判断
+    if (import.meta.env.VITE_USE_MOCK_DATA === 'true') { // 使用环境变量判断
       await delay(300);
       // 模拟添加到购物车的响应
       return {

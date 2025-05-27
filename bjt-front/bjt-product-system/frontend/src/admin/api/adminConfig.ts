@@ -17,28 +17,28 @@ export const getAdminAuthHeaders = () => {
 // Admin-specific API URLs
 export const ADMIN_API_ENDPOINTS = {
   // Authentication routes
-  LOGIN: '/wp-json/bjt/v1/auth/login',
-  LOGOUT: '/wp-json/bjt/v1/auth/logout',
-  CURRENT_ADMIN: '/wp-json/bjt/v1/user/me',
+  LOGIN: '/auth/login',
+  LOGOUT: '/auth/logout',
+  CURRENT_ADMIN: '/user/me',
   
   // Product management
-  PRODUCT_LINES: '/wp-json/bjt/v1/product-lines',
-  HOST_MODELS: '/wp-json/bjt/v1/machines',
+  PRODUCT_LINES: '/product-lines',
+  HOST_MODELS: '/machines',
   
-  // Parts management
-  PARTS: '/wp-json/bjt/v1/spare-parts',
-  HOST_MODEL_PARTS: '/wp-json/bjt/v1/machines/:id/spare-parts',
-  PART: '/wp-json/bjt/v1/machines/:modelId/spare-parts/:id',
+  // Parts management - 根据后端实际端点调整
+  PARTS: '/machineparts',
+  HOST_MODEL_PARTS: '/machineparts',
+  PART: '/machineparts/:id',
   
   // Other resources
-  RELATIONS: '/wp-json/bjt/v1/relations',
-  ACCESSORY_MODELS: '/wp-json/bjt/v1/accessory-models',
-  ACCESSORIES: '/wp-json/bjt/v1/accessories',
-  CONSUMABLES: '/wp-json/bjt/v1/consumables',
-  SHAPES: '/wp-json/bjt/v1/shapes',
-  MATERIALS: '/wp-json/bjt/v1/materials',
-  USERS: '/wp-json/bjt/v1/users',
-  SETTINGS: '/wp-json/bjt/v1/settings'
+  RELATIONS: '/relations',
+  ACCESSORY_MODELS: '/accessory-models',
+  ACCESSORIES: '/accessories',
+  CONSUMABLES: '/consumables',
+  SHAPES: '/shapes',
+  MATERIALS: '/materials',
+  USERS: '/users',
+  SETTINGS: '/settings'
 };
 
 export default {

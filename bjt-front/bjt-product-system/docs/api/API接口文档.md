@@ -1,8 +1,32 @@
 # BJT Core Entities API 接口文档
 
-**版本**: v1.0.0  
-**最后更新**: 2023-MM-DD  
+**版本**: v1.3.0  
+**最后更新**: 2025-05-27  
 **基础URL**: `/wp-json/bjt/v1`
+
+## 更新日志
+
+### v1.3.0 (2025-05-27)
+- 🔧 **重要修正**: 修正必选备件逻辑，明确主机、配件、备件的必选备件关系
+  - **主机（60A01xxx）**: 本身没有必选备件，`required_parts` 始终返回空数组 `[]`
+  - **配件（60Axxxxx）**: 某些配件有必选备件，查询 `wp_bjt_relations` 表的 `child_part_number` 字段
+  - **备件（其他格式）**: 某些备件有必选备件，查询 `wp_bjt_spare_parts` 表的 `required_parts` 字段
+- 📊 基于实际数据库分析，确保API逻辑与业务需求一致
+- 🔄 统一必选备件数据格式为 `[{part_number, quantity}]` 数组格式
+- ✅ 添加完整的测试用例和验证脚本
+
+### v1.2.0 (2025-05-27)
+- ✨ 新增备件必选配件关系支持 (`required_parts`, `required_quantity`)
+- 🚀 备件接口增强：支持定价和库存信息查询
+- 🔧 优化备件数据结构，从关系表动态获取必选配件数据
+- 📝 完善备件接口文档，增加定价层级和库存区域信息
+- 🐛 修复分页参数处理和响应格式统一
+
+### v1.1.0 (2024-01-15)
+- ✨ 新增多级配件关系接口 (`/relations/{part_number}/accessories`)
+- 🚀 支持最多5级配件层级的递归查询
+- 🔧 优化配件关系查询性能，减少API调用次数
+- 📝 完善关系接口文档和错误码
 
 ## 目录
 
@@ -19,7 +43,9 @@
 11. [订单接口](#11-订单接口)
 12. [数据字典接口](#12-数据字典接口)
 13. [主机料号接口](#13-主机料号接口)
-14. [错误码](#14-错误码)
+14. [关系接口](#14-关系接口)
+15. [必选备件逻辑说明](#15-必选备件逻辑说明)
+16. [错误码](#16-错误码)
 
 ---
 
@@ -1303,29 +1329,57 @@ Authorization: Bearer {token}
 **成功响应** (状态码: 200):
 ```json
 {
-  "items": [
-    {
-      "id": 5,
-      "product_line_id": 1,
-      "app_model": "MEY-001",
-      "model": "SP-001",
-      "is_consumable": 0,
-      "image_url": "/images/shop/SP-001.jpg",
-      "part_number": "BJT-SP-001-2024",
-      "name": "连接器",
-      "spec": "10×10×5mm",
-      "spec_imperial": "0.4×0.4×0.2inch",
-      "app_sn": "A123",
-      "status": "publish",
-      "unit": "pcs",
-      "quantity": 2
-    }
-    // ... 更多必选备件
-  ],
-  "accessory_id": 1,
-  "accessory_part_number": "BJT-FS-V2-2024"
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": 37,
+        "product_line_id": 1,
+        "app_model": "FR8002,FR8004,EC2005",
+        "model": null,
+        "is_consumable": false,
+        "image_url": "/uploads/accessory/05A0101289.jpg",
+        "part_number": "05A0101289",
+        "name_zh": "脚垫钣金1",
+        "name_en": "Foot Mat Sheet Metal 1",
+        "spec": "",
+        "spec_imperial": "",
+        "app_sn": null,
+        "status": "publish",
+        "unit": "pcs",
+        "quantity": 2
+      },
+      {
+        "id": 38,
+        "product_line_id": 1,
+        "app_model": "FR8002,FR8004,EC2005",
+        "model": null,
+        "is_consumable": false,
+        "image_url": "/uploads/accessory/05A0101290.jpg",
+        "part_number": "05A0101290",
+        "name_zh": "脚垫钣金2",
+        "name_en": "Foot Mat Sheet Metal 2",
+        "spec": "",
+        "spec_imperial": "",
+        "app_sn": null,
+        "status": "publish",
+        "unit": "pcs",
+        "quantity": 2
+      }
+    ],
+    "accessory_id": 12,
+    "accessory_part_number": "60A11002"
+  }
 }
 ```
+
+**重要说明**:
+- **配件（料号格式：60Axxxxx）的必选备件**从 `wp_bjt_relations` 表查询，使用 `child_part_number` 字段匹配
+- 根据实际数据库分析，有必选备件的配件包括：
+  - `60A11002` (FR8002 收卷车) → 必选备件：`05A0101289,05A0101290` (数量：2,2)
+  - `60A11009` (FR8004 收卷车) → 必选备件：`05A0101289,05A0101290` (数量：2,2)  
+  - `60A04005` (EC2005 工作台) → 必选备件：`05A0101289,05A0101290` (数量：2,2)
+- 如果配件没有必选备件，返回空数组 `[]`
 
 **失败响应**:
 - 状态码 `404`: 配件不存在
@@ -1548,7 +1602,7 @@ Authorization: Bearer {token}
 
 ### 8.1 获取备件列表
 
-获取所有备件的分页列表
+获取所有备件的分页列表，包含定价和库存信息
 
 **请求**:  
 - 方法: `GET`
@@ -1562,6 +1616,8 @@ Authorization: Bearer {token}
 - `status` (字符串, 可选): 状态筛选，可选值: `publish`, `draft`, `trash`
 - `product_line_id` (整数, 可选): 产品线ID筛选
 - `app_model` (字符串, 可选): 适用机型筛选
+- `is_consumable` (布尔, 可选): 是否为耗材筛选
+- `lang` (字符串, 可选): 语言，可选值: `zh`, `en`，默认`zh`
 
 **成功响应** (状态码: 200):
 ```json
@@ -1572,22 +1628,155 @@ Authorization: Bearer {token}
       {
         "id": 1,
         "product_line_id": 1,
-        "part_number": "BJT-SP-001-2024",
-        "name": "连接器",
-        "app_model": "MEY-001,MEY-002",
-        "is_consumable": false,
-        "image_url": "/images/spare-parts/SP-001.jpg",
-        "spec": "10×10×5mm",
-        "spec_imperial": "0.4×0.4×0.2inch",
-        "app_sn": "SN10001-SN20000",
+        "part_number": "08A0105795",
+        "model": null,
+        "name_zh": "8A 保险丝",
+        "name_en": "8A Fuse",
+        "app_model": "\"LA-E4S V2.0\",LA-E4S(paper)",
+        "is_consumable": true,
+        "image_url": "/uploads/spare_parts/08A0105795.jpg",
+        "spec": "8A Fuse For \"LA-E4S V2.0\",LA-E4S(paper) AC100-240V",
+        "spec_imperial": "8A Fuse For \"LA-E4S V2.0\",LA-E4S(paper) AC100-240V",
+        "app_sn": "ALL",
+        "package_size_cm": null,
+        "package_size_inch": null,
+        "net_weight_kg": 0.01,
+        "net_weight_lbs": 0.2,
+        "gross_weight_kg": null,
+        "gross_weight_lbs": null,
+        "pcs_per_box": 1,
+        "required_parts": null,
+        "required_quantity": null,
+        "unit": "pcs",
         "status": "publish",
-        "created_at": "YYYY-MM-DD HH:MM:SS",
-        "updated_at": "YYYY-MM-DD HH:MM:SS"
+        "pricing": [
+          {
+            "range": "1-10",
+            "price": 15.50,
+            "regionalPrices": {
+              "cn": 15.50,
+              "eu": 18.60,
+              "na": 17.25,
+              "au": 19.80
+            }
+          },
+          {
+            "range": ">10",
+            "price": 13.95,
+            "regionalPrices": {
+              "cn": 13.95,
+              "eu": 16.74,
+              "na": 15.53,
+              "au": 17.82
+            }
+          }
+        ],
+        "inventory": {
+          "CN": 150,
+          "EU": 75,
+          "NA": 100,
+          "AU": 50
+        }
+      },
+      {
+        "id": 2,
+        "product_line_id": 1,
+        "part_number": "60A11002",
+        "model": null,
+        "name_zh": "FR8002 收卷车",
+        "name_en": "FR8002 Winder Cart",
+        "app_model": "\"LA-E4S V2.0\",LA-E4S(paper)",
+        "is_consumable": false,
+        "image_url": "/uploads/spare_parts/11A0103002.jpg",
+        "spec": "",
+        "spec_imperial": "",
+        "app_sn": "ALL",
+        "package_size_cm": null,
+        "package_size_inch": null,
+        "net_weight_kg": 0.1,
+        "net_weight_lbs": 0.2,
+        "gross_weight_kg": null,
+        "gross_weight_lbs": null,
+        "pcs_per_box": 1,
+        "required_parts": "05A0101289,05A0101290",
+        "required_quantity": "2,2",
+        "unit": "pcs",
+        "status": "publish",
+        "pricing": [
+          {
+            "range": "base",
+            "price": 1250.00,
+            "regionalPrices": {
+              "cn": 1250.00,
+              "eu": 1500.00,
+              "na": 1375.00,
+              "au": 1625.00
+            }
+          }
+        ],
+        "inventory": {
+          "CN": 25,
+          "EU": 12,
+          "NA": 18,
+          "AU": 8
+        }
+      },
+      {
+        "id": 3,
+        "product_line_id": 1,
+        "part_number": "01A0101038",
+        "model": null,
+        "name_zh": "去皱硅胶",
+        "name_en": "Wrinkle Removal Silicone Gel",
+        "app_model": "\"LA-E4S V2.0\",LA-E4S(paper)",
+        "is_consumable": true,
+        "image_url": "/uploads/spare_parts/01A0101038.jpg",
+        "spec": "Wrinkle Removal Silicone Gel For \"LA-E4S V2.0\",LA-E4S(paper) AC100-240V",
+        "spec_imperial": "Wrinkle Removal Silicone Gel For \"LA-E4S V2.0\",LA-E4S(paper) AC100-240V",
+        "app_sn": "ALL",
+        "package_size_cm": null,
+        "package_size_inch": null,
+        "net_weight_kg": 0.1,
+        "net_weight_lbs": 0.2,
+        "gross_weight_kg": null,
+        "gross_weight_lbs": null,
+        "pcs_per_box": 1,
+        "required_parts": [
+          {
+            "part_number": "11A0103002",
+            "quantity": 2
+          },
+          {
+            "part_number": "11A0101003", 
+            "quantity": 2
+          }
+        ],
+        "unit": "pcs",
+        "status": "publish",
+        "pricing": [
+          {
+            "range": "base",
+            "price": 25.00,
+            "regionalPrices": {
+              "cn": 25.00,
+              "eu": 30.00,
+              "na": 28.00,
+              "au": 32.00
+            }
+          }
+        ],
+        "inventory": {
+          "CN": 150,
+          "EU": 80,
+          "NA": 120,
+          "AU": 60
+        },
+        "created_at": "2025-05-27 10:30:00",
+        "updated_at": "2025-05-27 10:30:00"
       }
-      // ... 更多备件
     ],
-    "total": 15,
-    "total_pages": 2,
+    "total": 45,
+    "total_pages": 5,
     "current_page": 1
   }
 }
@@ -1595,7 +1784,7 @@ Authorization: Bearer {token}
 
 ### 8.2 获取备件详情
 
-获取单个备件的详细信息
+获取单个备件的详细信息，包含完整的定价层级和库存信息
 
 **请求**:  
 - 方法: `GET`
@@ -1605,37 +1794,116 @@ Authorization: Bearer {token}
 **路径参数**:
 - `id` (整数): 备件ID
 
+**查询参数**:
+- `lang` (字符串, 可选): 语言，可选值: `zh`, `en`，默认`zh`
+
 **成功响应** (状态码: 200):
 ```json
 {
   "success": true,
   "data": {
-    "id": 1,
+    "id": 2,
     "product_line_id": 1,
-    "part_number": "BJT-SP-001-2024",
-    "name_zh": "连接器",
-    "name_en": "Connector",
-    "app_model": "MEY-001,MEY-002",
+    "part_number": "60A11002",
+    "model": null,
+    "name_zh": "FR8002 收卷车",
+    "name_en": "FR8002 Winder Cart",
+    "app_model": "\"LA-E4S V2.0\",LA-E4S(paper)",
     "is_consumable": false,
-    "image_url": "/images/spare-parts/SP-001.jpg",
-    "spec": "10×10×5mm",
-    "spec_imperial": "0.4×0.4×0.2inch",
-    "app_sn": "SN10001-SN20000",
-    "package_size_cm": "15×15×10cm",
-    "package_size_inch": "5.9×5.9×3.9inch",
-    "net_weight_kg": 0.05,
-    "net_weight_lbs": 0.11,
-    "gross_weight_kg": 0.07,
-    "gross_weight_lbs": 0.15,
-    "pcs_per_box": 50,
-    "required_parts": "BJT-SP-002-2024",
-    "required_quantity": "2",
+    "image_url": "/uploads/spare_parts/11A0103002.jpg",
+    "spec": "",
+    "spec_imperial": "",
+    "app_sn": "ALL",
+    "package_size_cm": null,
+    "package_size_inch": null,
+    "net_weight_kg": 0.1,
+    "net_weight_lbs": 0.2,
+    "gross_weight_kg": null,
+    "gross_weight_lbs": null,
+    "pcs_per_box": 1,
+    "required_parts": "05A0101289,05A0101290",
+    "required_quantity": "2,2",
+    "unit": "pcs",
     "status": "publish",
-    "created_at": "YYYY-MM-DD HH:MM:SS",
-    "updated_at": "YYYY-MM-DD HH:MM:SS"
+    "pricing": [
+      {
+        "range": "base",
+        "price": 1250.00,
+        "regionalPrices": {
+          "cn": 1250.00,
+          "eu": 1500.00,
+          "na": 1375.00,
+          "au": 1625.00
+        }
+      }
+    ],
+    "inventory": {
+      "CN": 25,
+      "EU": 12,
+      "NA": 18,
+      "AU": 8
+    },
+    "created_at": "2025-05-27 10:30:00",
+    "updated_at": "2025-05-27 10:30:00"
   }
 }
 ```
+
+**字段说明**:
+
+#### 基础信息字段
+- `id`: 备件唯一标识符
+- `product_line_id`: 所属产品线ID
+- `part_number`: 备件料号（唯一）
+- `model`: 备件型号（可选）
+- `name_zh`: 中文名称
+- `name_en`: 英文名称
+- `app_model`: 适用机型，多个用逗号分隔
+- `is_consumable`: 是否为耗材（布尔值）
+- `image_url`: 产品图片URL
+- `spec`: 规格说明（中文/公制）
+- `spec_imperial`: 规格说明（英文/英制）
+- `app_sn`: 适用序列号范围
+- `unit`: 计量单位（如：pcs, set, kg等）
+- `status`: 状态（publish, draft, trash）
+
+#### 包装信息字段
+- `package_size_cm`: 包装尺寸（厘米）
+- `package_size_inch`: 包装尺寸（英寸）
+- `net_weight_kg`: 净重（千克）
+- `net_weight_lbs`: 净重（磅）
+- `gross_weight_kg`: 毛重（千克）
+- `gross_weight_lbs`: 毛重（磅）
+- `pcs_per_box`: 每箱数量
+
+#### 必选配件字段
+- `required_parts`: 必选配件料号，多个用逗号分隔（如："05A0101289,05A0101290"）
+- `required_quantity`: 对应必选配件数量，多个用逗号分隔（如："2,2"）
+
+**重要说明**:
+- **备件（非60A开头料号）的必选备件**从 `wp_bjt_spare_parts` 表的 `required_parts` 字段查询
+- 根据实际数据库分析，有必选备件的备件包括：
+  - `01A0101038` (去皱硅胶) → 必选备件：`11A0103002,11A0101003` (数量：2,2)
+  - `07A0105325` (陶瓷刀片) → 必选备件：`11A0103157,11A0101002` (数量：1,1)
+- 在新版API中，`required_parts` 字段统一返回数组格式：`[{part_number, quantity}]`
+- 如果备件没有必选备件，返回空数组 `[]`
+
+#### 定价信息字段
+- `pricing`: 定价层级数组
+  - `range`: 数量范围（如："1-10", ">10", "base"）
+  - `price`: 默认价格（通常为CN区域价格）
+  - `regionalPrices`: 区域价格对象
+    - `cn`: 中国区域价格
+    - `eu`: 欧洲区域价格
+    - `na`: 北美区域价格
+    - `au`: 澳洲区域价格
+
+#### 库存信息字段
+- `inventory`: 库存信息对象，按区域分组
+  - `CN`: 中国区域库存数量
+  - `EU`: 欧洲区域库存数量
+  - `NA`: 北美区域库存数量
+  - `AU`: 澳洲区域库存数量
 
 ### 8.3 创建备件
 
@@ -1650,15 +1918,19 @@ Authorization: Bearer {token}
 ```json
 {
   "product_line_id": 1,
-  "part_number": "BJT-SP-002-2024",
-  "name_zh": "密封圈",
-  "name_en": "Seal Ring",
-  "app_model": "MEY-001,MEY-003",
+  "part_number": "BJT-SP-003-2024",
+  "name_zh": "新型密封圈",
+  "name_en": "New Seal Ring",
+  "app_model": "\"LA-E4S V2.0\",LA-E4S(paper)",
   "is_consumable": true,
-  "image_url": "/images/spare-parts/SP-002.jpg",
-  "spec": "20×20×2mm",
-  "spec_imperial": "0.8×0.8×0.08inch",
-  "app_sn": "SN20000* (2022及以后)",
+  "image_url": "/uploads/spare_parts/BJT-SP-003.jpg",
+  "spec": "新型密封圈规格说明",
+  "spec_imperial": "New Seal Ring Specification",
+  "app_sn": "ALL",
+  "net_weight_kg": 0.05,
+  "net_weight_lbs": 0.11,
+  "pcs_per_box": 10,
+  "unit": "pcs",
   "status": "publish"
 }
 ```
@@ -1669,8 +1941,10 @@ Authorization: Bearer {token}
   "success": true,
   "message": "Spare part created successfully.",
   "data": {
-    "id": 2,
-    // ... 创建的备件信息
+    "id": 3,
+    "product_line_id": 1,
+    "part_number": "BJT-SP-003-2024",
+    // ... 创建的备件完整信息
   }
 }
 ```
@@ -1690,10 +1964,11 @@ Authorization: Bearer {token}
 **请求体**:
 ```json
 {
-  "name_zh": "改良版密封圈",
-  "name_en": "Improved Seal Ring",
-  "app_model": "MEY-001,MEY-003,MEY-004",
-  "image_url": "/images/spare-parts/SP-002-updated.jpg"
+  "name_zh": "改良版新型密封圈",
+  "name_en": "Improved New Seal Ring",
+  "app_model": "\"LA-E4S V2.0\",LA-E4S(paper),LA-E5P",
+  "spec": "改良版新型密封圈规格说明",
+  "spec_imperial": "Improved New Seal Ring Specification"
 }
 ```
 
@@ -1703,8 +1978,8 @@ Authorization: Bearer {token}
   "success": true,
   "message": "Spare part updated successfully.",
   "data": {
-    "id": 2,
-    // ... 更新后的备件信息
+    "id": 3,
+    // ... 更新后的备件完整信息
   }
 }
 ```
@@ -1747,33 +2022,80 @@ Authorization: Bearer {token}
 **成功响应** (状态码: 200):
 ```json
 {
-  "id": 1,
-  "part_number": "BJT-SP-001-2024",
-  "name": "连接器",
-  "compatible_models": [
-    {
-      "id": 1,
-      "model": "MEY-001",
-      "title": "气垫机 Pro - MEY系列",
-      "type": "气垫机",
-      "image_url": "/images/shop/MEY-001.jpg"
-    },
-    {
-      "id": 2,
-      "model": "MEY-002",
-      "title": "气垫机 Pro - MEY系列 2代",
-      "type": "气垫机",
-      "image_url": "/images/shop/MEY-002.jpg"
-    }
-  ],
-  "serial_number_info": {
-    "raw": "SN10001-SN20000",
-    "formatted": [
+  "success": true,
+  "data": {
+    "id": 1,
+    "part_number": "08A0105795",
+    "name": "8A 保险丝",
+    "compatible_models": [
       {
-        "type": "range",
-        "start": "SN10001",
-        "end": "SN20000",
-        "display": "SN10001-SN20000"
+        "id": 1,
+        "model": "\"LA-E4S V2.0\"",
+        "title": "LA-E4S V2.0 商用型缓冲气垫机",
+        "type": "气垫机",
+        "image_url": "/uploads/host/LA-E4S V2.0.jpg"
+      },
+      {
+        "id": 2,
+        "model": "LA-E4S(paper)",
+        "title": "LA-E4S(paper)商用型缓冲气垫机",
+        "type": "气垫机",
+        "image_url": "/uploads/host/LA-E4S(paper).jpg"
+      }
+    ],
+    "serial_number_info": {
+      "raw": "ALL",
+      "formatted": [
+        {
+          "type": "universal",
+          "display": "适用于所有序列号"
+        }
+      ]
+    },
+    "required_parts_info": {
+      "has_required_parts": false,
+      "required_parts": null,
+      "required_quantity": null,
+      "parsed_requirements": []
+    }
+  }
+}
+```
+
+### 8.7 获取备件筛选选项
+
+获取备件页面的筛选选项数据
+
+**请求**:  
+- 方法: `GET`
+- 路径: `/spare-parts/filter-options`
+- 认证: 需要
+
+**查询参数**:
+- `lang` (字符串, 可选): 语言，可选值: `zh`, `en`，默认`zh`
+
+**成功响应** (状态码: 200):
+```json
+{
+  "success": true,
+  "data": {
+    "hostModels": [
+      "\"LA-E4S V2.0\"",
+      "LA-E4S(paper)"
+    ],
+    "accessoryModels": [
+      "ET400",
+      "ET1003",
+      "FR8002"
+    ],
+    "partTypes": [
+      {
+        "id": "consumable",
+        "name": "耗材"
+      },
+      {
+        "id": "component",
+        "name": "组件"
       }
     ]
   }
@@ -1782,6 +2104,17 @@ Authorization: Bearer {token}
 
 **失败响应**:
 - 状态码 `404`: 备件不存在
+- 状态码 `500`: 服务器内部错误
+
+**注意事项**:
+1. **必选配件关系**: 当备件有`required_parts`时，添加到购物车会自动计算并提示相关的必选配件
+2. **定价层级**: 根据购买数量自动匹配对应的价格层级
+3. **库存检查**: 添加到购物车前会检查对应区域的库存数量
+4. **序列号兼容性**: `app_sn`字段支持多种格式：
+   - `"ALL"`: 适用于所有序列号
+   - `"SN10001-SN20000"`: 序列号范围
+   - `"BJTE4S-21-****"`: 带通配符的序列号模式
+   - `">BJTE4S-3511153"`: 大于某个序列号的所有设备
 
 ## 9. 耗材接口
 
@@ -3104,23 +3437,22 @@ Authorization: Bearer {token}
   "data": {
     "id": 1,
     "product_line_id": 1,
-    "part_number": "BJT-H-001",
-    "name": "气垫机 Pro Max",
-    "app_model": "MEY-001,MEY-002",
+    "part_number": "60A01143",
+    "name": "LA-E4S V2.0主机-标准版",
+    "app_model": "LA-E4S V2.0",
     "is_consumable": false,
-    "image_url": "/images/hosts/H-001.jpg",
-    "spec": "10×10×5mm",
-    "spec_imperial": "0.4×0.4×0.2inch",
-    "app_sn": "SN10001-SN20000",
-    "package_size_cm": "15×15×10cm",
-    "package_size_inch": "5.9×5.9×3.9inch",
-    "net_weight_kg": 0.05,
-    "net_weight_lbs": 0.11,
-    "gross_weight_kg": 0.07,
-    "gross_weight_lbs": 0.15,
-    "pcs_per_box": 50,
-    "required_parts": "BJT-H-002-2024",
-    "required_quantity": "2",
+    "image_url": "/uploads/host/LA-E4S V2.0.jpg",
+    "spec": "Business Class Air Cushion Pillow & Bubble System,AC220V",
+    "spec_imperial": "Business Class Air Cushion Pillow & Bubble System,AC220V",
+    "app_sn": "ALL",
+    "package_size_cm": "40×34.5×39",
+    "package_size_inch": "15.7×13.6×15.4",
+    "net_weight_kg": 8.8,
+    "net_weight_lbs": 19.4,
+    "gross_weight_kg": 10.8,
+    "gross_weight_lbs": 23.8,
+    "pcs_per_box": 1,
+    "required_parts": [],
     "status": "publish",
     "created_at": "YYYY-MM-DD HH:MM:SS",
     "updated_at": "YYYY-MM-DD HH:MM:SS"
@@ -3128,9 +3460,9 @@ Authorization: Bearer {token}
 }
 ```
 
-**失败响应**:
-- 状态码 `400`: ID无效
-- 状态码 `404`: 主机料号不存在
+**重要说明**:
+- **主机（料号格式：60A01xxx）本身没有必选备件**，`required_parts` 字段始终返回空数组 `[]`
+- 主机的配件和备件关系通过关系接口 `/relations/{part_number}` 查询
 
 ### 13.3 创建主机料号
 
@@ -3239,11 +3571,509 @@ Authorization: Bearer {token}
 - 状态码 `400`: 主机料号正在被使用
 - 状态码 `404`: 主机料号不存在
 
-## 14. 错误码
+## 14. 关系接口
+
+关系接口用于管理产品与配件之间的关系。
+
+### 14.1 获取产品与配件关系列表
+
+获取产品与配件关系的分页列表
+
+**请求**:  
+- 方法: `GET`
+- 路径: `/product-accessory-relations`
+- 认证: 需要
+
+**查询参数**:
+- `page` (整数, 可选): 页码，默认1
+- `per_page` (整数, 可选): 每页数量，默认10
+- `search` (字符串, 可选): 搜索词，匹配产品名称、配件名称等字段
+- `status` (字符串, 可选): 状态筛选，可选值: `publish`, `draft`, `trash`
+- `product_line_id` (整数, 可选): 产品线ID筛选
+- `app_model` (字符串, 可选): 适用机型筛选
+
+**成功响应** (状态码: 200):
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": 1,
+        "product_line_id": 1,
+        "product_id": 42,
+        "part_number": "BJT-H-001",
+        "accessory_id": 55,
+        "accessory_part_number": "BJT-A-010",
+        "status": "publish",
+        "created_at": "YYYY-MM-DD HH:MM:SS",
+        "updated_at": "YYYY-MM-DD HH:MM:SS"
+      }
+      // ... 更多产品与配件关系
+    ],
+    "total": 10,
+    "total_pages": 2,
+    "current_page": 1
+  }
+}
+```
+
+### 14.2 获取产品与配件关系详情
+
+获取单个产品与配件关系的详细信息
+
+**请求**:  
+- 方法: `GET`
+- 路径: `/product-accessory-relations/{id}`
+- 认证: 需要
+
+**路径参数**:
+- `id` (整数): 产品与配件关系ID
+
+**查询参数**:
+- `lang` (字符串, 可选): 语言，可选值: `zh`, `en`，默认`zh`
+
+**成功响应** (状态码: 200):
+```json
+{
+  "id": 1,
+  "product_line_id": 1,
+  "product_id": 42,
+  "part_number": "BJT-H-001",
+  "accessory_id": 55,
+  "accessory_part_number": "BJT-A-010",
+  "status": "publish",
+  "created_at": "YYYY-MM-DD HH:MM:SS",
+  "updated_at": "YYYY-MM-DD HH:MM:SS"
+}
+```
+
+### 14.3 创建产品与配件关系
+
+创建新的产品与配件关系
+
+**请求**:  
+- 方法: `POST`
+- 路径: `/product-accessory-relations`
+- 认证: 需要 (写入权限)
+
+**请求体**:
+```json
+{
+  "product_line_id": 1,
+  "product_id": 42,
+  "part_number": "BJT-H-001",
+  "accessory_id": 55,
+  "accessory_part_number": "BJT-A-010",
+  "status": "publish"
+}
+```
+
+**成功响应** (状态码: 201):
+```json
+{
+  "success": true,
+  "message": "Product accessory relation created successfully.",
+  "data": {
+    "id": 2,
+    // ... 创建的产品与配件关系信息
+  }
+}
+```
+
+### 14.4 更新产品与配件关系
+
+更新现有的产品与配件关系信息
+
+**请求**:  
+- 方法: `PUT`
+- 路径: `/product-accessory-relations/{id}`
+- 认证: 需要 (写入权限)
+
+**路径参数**:
+- `id` (整数): 产品与配件关系ID
+
+**请求体**:
+```json
+{
+  "status": "draft"
+}
+```
+
+**成功响应** (状态码: 200):
+```json
+{
+  "success": true,
+  "message": "Product accessory relation updated successfully.",
+  "data": {
+    "id": 1,
+    // ... 更新后的产品与配件关系信息
+  }
+}
+```
+
+### 14.5 删除产品与配件关系
+
+删除指定的产品与配件关系
+
+**请求**:  
+- 方法: `DELETE`
+- 路径: `/product-accessory-relations/{id}`
+- 认证: 需要 (写入权限)
+
+**路径参数**:
+- `id` (整数): 产品与配件关系ID
+
+**成功响应** (状态码: 200):
+```json
+{
+  "success": true,
+  "message": "Product accessory relation deleted successfully."
+}
+```
+
+### 14.6 获取产品与配件关系兼容性信息
+
+获取产品与配件关系的兼容性信息
+
+**请求**:  
+- 方法: `GET`
+- 路径: `/product-accessory-relations/{id}/compatibility`
+- 认证: 需要
+
+**路径参数**:
+- `id` (整数): 产品与配件关系ID
+
+**查询参数**:
+- `lang` (字符串, 可选): 语言，可选值: `zh`, `en`，默认`zh`
+
+**成功响应** (状态码: 200):
+```json
+{
+  "id": 1,
+  "product_line_id": 1,
+  "product_id": 42,
+  "part_number": "BJT-H-001",
+  "accessory_id": 55,
+  "accessory_part_number": "BJT-A-010",
+  "compatible_models": [
+    {
+      "id": 1,
+      "model": "MEY-001",
+      "title": "气垫机 Pro - MEY系列",
+      "type": "气垫机",
+      "image_url": "/images/shop/MEY-001.jpg"
+    },
+    {
+      "id": 2,
+      "model": "MEY-002",
+      "title": "气垫机 Pro - MEY系列 2代",
+      "type": "气垫机",
+      "image_url": "/images/shop/MEY-002.jpg"
+    }
+  ],
+  "serial_number_info": {
+    "raw": "SN10001-SN20000",
+    "formatted": [
+      {
+        "type": "range",
+        "start": "SN10001",
+        "end": "SN20000",
+        "display": "SN10001-SN20000"
+      }
+    ]
+  }
+}
+```
+
+**失败响应**:
+- 状态码 `404`: 产品与配件关系不存在
+
+### 14.7 获取多级配件关系 (新增优化接口)
+
+获取指定产品的多级配件关系树形结构，支持最多5级配件层级
+
+**请求**:  
+- 方法: `GET`
+- 路径: `/relations/{part_number}/accessories`
+- 认证: 需要
+
+**路径参数**:
+- `part_number` (字符串): 主机料号
+
+**查询参数**:
+- `max_levels` (整数, 可选): 最大层级数，范围1-5，默认5
+- `lang` (字符串, 可选): 语言，可选值: `zh`, `en`，默认`zh`
+- `region` (字符串, 可选): 区域代码，可选值: `CN`, `EU`, `NA`, `AU`，用于获取价格和库存信息
+
+**成功响应** (状态码: 200):
+```json
+{
+  "success": true,
+  "data": {
+    "part_number": "60A01149",
+    "max_levels": 5,
+    "accessories": [
+      {
+        "id": "1",
+        "part_number": "60A04038",
+        "model": "ET400",
+        "name": "ET400 自动分离器",
+        "spec": "ET400 Auto Separator,AC110V",
+        "spec_imperial": "ET400 Auto Separator,AC110V",
+        "voltage": "110V",
+        "frequency": null,
+        "image_url": "/uploads/accessory/ET400.jpg",
+        "unit": "pcs",
+        "level": 1,
+        "pricing": {
+          "base_price": 299.99,
+          "currency": "CNY",
+          "discount_rate": 0.1
+        },
+        "inventory": [
+          {
+            "warehouse": "CN-BJ-01",
+            "quantity": 50,
+            "reserved": 5,
+            "available": 45
+          }
+        ],
+        "children": [
+          {
+            "id": "22",
+            "part_number": "60A04039",
+            "model": "EC401",
+            "name": "EC401 小支架",
+            "spec": "EC401 Small bracket",
+            "spec_imperial": "EC401 Small bracket",
+            "voltage": null,
+            "frequency": null,
+            "image_url": "/uploads/accessory/EC401.jpg",
+            "unit": "pcs",
+            "level": 2,
+            "pricing": {
+              "base_price": 29.99,
+              "currency": "CNY",
+              "discount_rate": 0.05
+            },
+            "inventory": [
+              {
+                "warehouse": "CN-BJ-01",
+                "quantity": 100,
+                "reserved": 10,
+                "available": 90
+              }
+            ],
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "19",
+        "part_number": "60A06006",
+        "model": "EC2007",
+        "name": "EC2007 移动网篮",
+        "spec": "EC2007 Movable Basket",
+        "spec_imperial": "EC2007 Movable Basket",
+        "voltage": null,
+        "frequency": null,
+        "image_url": "/uploads/accessory/EC2007.jpg",
+        "unit": "pcs",
+        "level": 1,
+        "children": []
+      }
+    ]
+  }
+}
+```
+
+**特性说明**:
+- **递归层级结构**: 自动获取最多5级的配件关系
+- **去重处理**: 自动去除重复的配件记录
+- **完整信息**: 包含配件的完整信息（规格、价格、库存等）
+- **多语言支持**: 根据lang参数返回对应语言的配件名称
+- **区域化数据**: 根据region参数返回对应区域的价格和库存信息
+- **性能优化**: 一次API调用获取所有层级数据，减少网络请求
+
+**失败响应**:
+- 状态码 `400`: 参数无效（如max_levels超出范围）
+- 状态码 `404`: 指定料号不存在
+- 状态码 `500`: 服务器内部错误
+
+**使用示例**:
+```bash
+# 获取60A01149的所有配件关系（最多5级）
+GET /wp-json/bjt/v1/relations/60A01149/accessories?lang=zh&region=CN&max_levels=5
+
+# 只获取前2级配件关系
+GET /wp-json/bjt/v1/relations/60A01149/accessories?max_levels=2
+
+# 获取英文版本的配件信息
+GET /wp-json/bjt/v1/relations/60A01149/accessories?lang=en&region=EU
+```
+
+**数据结构说明**:
+- `level`: 配件层级，1为一级配件，2为二级配件，以此类推
+- `children`: 子配件数组，包含下一级的配件信息
+- `pricing`: 价格信息（仅在提供region参数时返回）
+- `inventory`: 库存信息（仅在提供region参数时返回）
+
+## 15. 必选备件逻辑说明
+
+### 15.1 业务逻辑概述
+
+在BJT产品系统中，必选备件（Required Parts）是指某些产品在使用时必须配套的其他零部件。根据产品类型的不同，必选备件的查询逻辑也有所区别：
+
+### 15.2 产品类型与必选备件关系
+
+#### 15.2.1 主机（Host Parts）
+- **料号格式**: `60A01xxx`
+- **必选备件**: 主机本身**没有必选备件**
+- **API返回**: `required_parts` 字段始终返回空数组 `[]`
+- **关系查询**: 主机的配件和备件关系通过关系接口 `/relations/{part_number}` 查询
+
+**示例主机料号**:
+- `60A01143` - LA-E4S V2.0主机-标准版
+- `60A01141` - LA-E4S V2.0主机-美标版
+- `60A01148` - LA-E4S(paper)主机-标准版
+- `60A01149` - LA-E4S(paper)主机-美标版
+
+#### 15.2.2 配件（Accessories）
+- **料号格式**: `60Axxxxx`（除主机外的60A开头料号）
+- **必选备件**: 某些配件有必选备件
+- **数据来源**: 查询 `wp_bjt_relations` 表，使用 `child_part_number` 字段匹配
+- **API接口**: `/accessories/{accessoryId}/required`
+
+**有必选备件的配件**:
+- `60A11002` (FR8002 收卷车) → 必选备件：`05A0101289,05A0101290` (数量：2,2)
+- `60A11009` (FR8004 收卷车) → 必选备件：`05A0101289,05A0101290` (数量：2,2)
+- `60A04005` (EC2005 工作台) → 必选备件：`05A0101289,05A0101290` (数量：2,2)
+
+#### 15.2.3 备件（Spare Parts）
+- **料号格式**: 非60A开头的各种格式
+- **必选备件**: 某些备件有必选备件
+- **数据来源**: 查询 `wp_bjt_spare_parts` 表的 `required_parts` 字段
+- **API接口**: 在备件详情接口中直接返回
+
+**有必选备件的备件**:
+- `01A0101038` (去皱硅胶) → 必选备件：`11A0103002,11A0101003` (数量：2,2)
+- `07A0105325` (陶瓷刀片) → 必选备件：`11A0103157,11A0101002` (数量：1,1)
+
+### 15.3 数据格式统一
+
+#### 15.3.1 数据库存储格式
+在数据库中，必选备件信息以逗号分隔的字符串形式存储：
+- `required_parts`: `"05A0101289,05A0101290"`
+- `required_quantity`: `"2,2"`
+
+#### 15.3.2 API返回格式
+在API响应中，必选备件信息统一返回为数组格式：
+```json
+{
+  "required_parts": [
+    {
+      "part_number": "05A0101289",
+      "quantity": 2
+    },
+    {
+      "part_number": "05A0101290", 
+      "quantity": 2
+    }
+  ]
+}
+```
+
+#### 15.3.3 空值处理
+- 如果产品没有必选备件，返回空数组：`"required_parts": []`
+- 不返回 `null` 或 `undefined`
+
+### 15.4 API控制器实现
+
+#### 15.4.1 主机控制器 (class-part-controller.php)
+```php
+// 主机没有必选备件，直接返回空数组
+$formatted_item['required_parts'] = [];
+```
+
+#### 15.4.2 配件控制器 (class-accessory-controller.php)
+```php
+// 从关系表查询必选备件
+$relations = $wpdb->get_results($wpdb->prepare(
+    "SELECT required_parts, required_quantity 
+     FROM {$wpdb->prefix}bjt_relations 
+     WHERE child_part_number = %s 
+     AND required_parts IS NOT NULL 
+     AND required_parts != ''",
+    $part_number
+));
+```
+
+#### 15.4.3 备件控制器 (class-spare-part-controller.php)
+```php
+// 从备件表直接获取必选备件信息
+// required_parts 字段已存在于表中
+$required_parts = $item_db_object->required_parts;
+$required_quantity = $item_db_object->required_quantity;
+```
+
+### 15.5 前端使用指南
+
+#### 15.5.1 判断产品类型
+```javascript
+function determinePartType(partNumber) {
+  if (partNumber.startsWith('60A01')) {
+    return 'host';
+  } else if (partNumber.startsWith('60A')) {
+    return 'accessory';
+  } else {
+    return 'spare_part';
+  }
+}
+```
+
+#### 15.5.2 获取必选备件
+```javascript
+// 主机：直接返回空数组
+if (partType === 'host') {
+  return [];
+}
+
+// 配件：调用专门的必选备件接口
+if (partType === 'accessory') {
+  const response = await fetch(`/wp-json/bjt/v1/accessories/${accessoryId}/required`);
+  return response.data.items;
+}
+
+// 备件：从详情接口获取
+if (partType === 'spare_part') {
+  const response = await fetch(`/wp-json/bjt/v1/spare-parts/${sparePartId}`);
+  return response.data.required_parts;
+}
+```
+
+### 15.6 测试验证
+
+#### 15.6.1 测试用例
+系统提供了完整的测试脚本 `test-required-parts-logic.php` 来验证必选备件逻辑：
+
+```bash
+# 运行测试脚本
+php test-required-parts-logic.php
+```
+
+#### 15.6.2 预期结果
+- 主机接口：`required_parts` 始终为空数组
+- 配件接口：正确返回必选备件信息（如果有）
+- 备件接口：正确返回必选备件信息（如果有）
+
+---
+
+## 16. 错误码
 
 以下是API可能返回的错误码及其含义：
 
-### 14.1 通用错误码
+### 16.1 通用错误码
 
 | 状态码 | 错误码 | 描述 |
 |--------|--------|------|
@@ -3257,7 +4087,7 @@ Authorization: Bearer {token}
 | 500 | db_error | 数据库操作错误 |
 | 500 | server_error | 服务器内部错误 |
 
-### 14.2 认证错误码
+### 16.2 认证错误码
 
 | 状态码 | 错误码 | 描述 |
 |--------|--------|------|
@@ -3265,15 +4095,34 @@ Authorization: Bearer {token}
 | 401 | invalid_token | 无效的令牌 |
 | 401 | expired_token | 令牌已过期 |
 
-### 14.3 产品相关错误码
+### 16.3 产品相关错误码
 
 | 状态码 | 错误码 | 描述 |
 |--------|--------|------|
 | 400 | invalid_product_type | 产品类型无效 |
 | 404 | product_not_found | 产品不存在 |
 | 400 | duplicate_part_number | 料号重复 |
+| 400 | missing_part_number | 缺少料号 |
+| 400 | missing_product_line_id | 缺少产品线ID |
+| 409 | duplicate_spare_part | 该产品线中已存在相同料号的备件 |
+| 400 | invalid_required_parts_format | 必选配件格式无效 |
+| 400 | required_parts_not_found | 必选配件不存在 |
+| 400 | insufficient_inventory | 库存不足 |
+| 400 | invalid_pricing_tier | 定价层级无效 |
 
-### 14.4 购物车错误码
+### 16.4 备件相关错误码
+
+| 状态码 | 错误码 | 描述 |
+|--------|--------|------|
+| 404 | spare_part_not_found | 备件不存在 |
+| 400 | invalid_spare_part_id | 备件ID无效 |
+| 400 | spare_part_required_parts_missing | 必选配件缺失 |
+| 400 | spare_part_compatibility_check_failed | 备件兼容性检查失败 |
+| 400 | invalid_app_model_format | 适用机型格式无效 |
+| 400 | invalid_serial_number_format | 序列号格式无效 |
+| 400 | spare_part_filter_options_unavailable | 备件筛选选项不可用 |
+
+### 16.5 购物车错误码
 
 | 状态码 | 错误码 | 描述 |
 |--------|--------|------|
@@ -3281,7 +4130,7 @@ Authorization: Bearer {token}
 | 400 | invalid_quantity | 数量无效 |
 | 404 | cart_item_not_found | 购物车项目不存在 |
 
-### 14.5 订单错误码
+### 16.6 订单错误码
 
 | 状态码 | 错误码 | 描述 |
 |--------|--------|------|
@@ -3290,7 +4139,16 @@ Authorization: Bearer {token}
 | 400 | invalid_address | 地址信息无效 |
 | 404 | order_not_found | 订单不存在 |
 
-### 14.6 错误响应格式
+### 16.7 关系接口错误码
+
+| 状态码 | 错误码 | 描述 |
+|--------|--------|------|
+| 400 | invalid_max_levels | 最大层级数超出范围(1-5) |
+| 400 | invalid_part_number | 料号格式无效 |
+| 404 | part_not_found | 指定料号不存在 |
+| 404 | no_accessories_found | 未找到相关配件 |
+
+### 16.8 错误响应格式
 
 错误响应的JSON格式如下：
 

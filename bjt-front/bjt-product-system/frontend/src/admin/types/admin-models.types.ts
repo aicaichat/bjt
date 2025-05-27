@@ -48,6 +48,7 @@ export interface AdminHostModel {
   id: string;
   product_line_id: string;
   model: string; // 主机型号编码
+  code: string; // 主机型号编码 (API返回字段)
   title_zh: string; // 中文名称
   title_en: string; // 英文名称
   description_zh?: string; // 中文描述
@@ -64,16 +65,40 @@ export interface AdminHostModel {
 
 export interface AdminPart {
   id: string;
-  hostModelId?: string; // ID of the host model it belongs to
-  hostModelName?: string; // Name of the host model for display (e.g., LA-E4S)
-  partNumber: string; // 料号 e.g., 13A00001
-  status: AdminModelStatus;
-  // Potentially other fields from mockup/4.html (edit page)
-  // voltage?: string;
-  // name_multilingual?: AdminMultilingualText;
-  // spec_params_multilingual?: AdminMultilingualText;
-  // logistics_packaging_size?: string;
-  // logistics_net_weight_kg?: number;
-  // logistics_gross_weight_kg?: number;
-  // imageUrl?: string;
+  product_line_id?: number;
+  host_model_id?: string; // 主机型号ID，API字段名
+  model?: string; // 主机型号，API字段名
+  voltage?: string;
+  image_url?: string;
+  part_number: string; // 料号，API字段名
+  name_zh?: string; // 中文名称
+  name_en?: string; // 英文名称
+  brand?: string;
+  spec?: string; // 规格参数(公制)
+  spec_imperial?: string; // 规格参数(英制)
+  package_size_cm?: string;
+  package_size_inch?: string;
+  net_weight_kg?: number;
+  net_weight_lbs?: number;
+  gross_weight_kg?: number;
+  gross_weight_lbs?: number;
+  pcs_per_box?: number;
+  pallet_size_cm?: string;
+  pallet_size_inch?: string;
+  pcs_per_pallet?: number;
+  pallet_height_cm?: number;
+  pallet_height_inch?: number;
+  pallet_gross_weight_kg?: number;
+  pallet_gross_weight_lbs?: number;
+  status: string; // 'publish' | 'draft' | 'trash'
+  unit?: string; // 'pcs' | 'roll' | 'box'
+  pricing?: any[];
+  inventory?: any;
+  created_at?: string;
+  updated_at?: string;
+  
+  // 向后兼容字段（已弃用，用于向后兼容）
+  hostModelId?: string;
+  hostModelName?: string;
+  partNumber?: string;
 } 

@@ -1,40 +1,7 @@
 #!/bin/bash
-
-# 颜色定义
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-# 设置API基础URL
-API_BASE="http://localhost:8080/wp-json/bjt/v1"
-
-# 打印分隔线
-separator() {
-    echo -e "${BLUE}================================================================================${NC}"
-    echo -e "${BLUE}== $1${NC}"
-    echo -e "${BLUE}================================================================================${NC}"
-}
-
-# 开始测试
-separator "BJT产品管理系统 API 测试"
-
-# 检查WordPress基础API
-separator "0. 检查WordPress基础API"
-echo -e "${YELLOW}尝试访问WordPress REST API（基础）${NC}"
-curl -v "http://localhost:8080/wp-json/"
-
-echo -e "\n${YELLOW}尝试访问WordPress REST API（添加REST_REQUEST=true）${NC}"
-curl -v "http://localhost:8080/wp-json/?REST_REQUEST=true"
-
-echo -e "\n${YELLOW}尝试访问WordPress REST API（添加bjt_is_rest=1）${NC}"
-curl -v "http://localhost:8080/wp-json/?bjt_is_rest=1"
-
-echo -e "\n${YELLOW}尝试访问WordPress REST API（添加两个参数）${NC}"
-curl -v "http://localhost:8080/wp-json/?REST_REQUEST=true&bjt_is_rest=1"
-
-echo -e "\n${YELLOW}尝试访问WordPress REST API（添加Accept头）${NC}"
-curl -v "http://localhost:8080/wp-json/" -H "Accept: application/json"
-
-separator "测试完成" 
+GREEN="[0;32m"; RED="[0;31m"; YELLOW="[1;33m"; NC="[0m"; TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3Q6ODA4MCIsImlhdCI6MTc0ODI2MjUyOSwiZXhwIjoxNzQ4MzQ4OTI5LCJkYXRhIjp7InVzZXJfaWQiOiIxNCIsInVzZXJuYW1lIjoiYWRtaW4iLCJyb2xlIjoiYWRtaW4ifX0.uC57nn5x8z3nk-buHdmk3esJOh364YcDL6gIgY2rXSI"
+test_endpoint() { local endpoint=$1; local method=$2; local data=$3; local description=$4; echo -e "
+${YELLOW}Testing $description...${NC}"; echo "Endpoint: $method $endpoint"; if [ -z "$data" ]; then response=$(curl -s -X $method "http://localhost:8080/wp-json/bjt/v1$endpoint" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -w "
+%{http_code}"); else response=$(curl -s -X $method "http://localhost:8080/wp-json/bjt/v1$endpoint" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d "$data" -w "
+%{http_code}"); fi; body=$(echo "$response" | sed "$d"); status=$(echo "$response" | tail -n1); echo "Status Code: $status"; echo "Response Body: $body"; if [ "$status" = "200" ] || [ "$status" = "201" ]; then echo -e "${GREEN}✓ Success${NC}"; else echo -e "${RED}✗ Failed${NC}"; fi; echo "----------------------------------------"; }
+echo "Starting API tests..."; echo "----------------------------------------"; test_endpoint "/user/me" "GET" "" "Get User Info"; test_endpoint "/machineparts?region=CN&lang=en&page=1&page_size=10" "GET" "" "Get Machine Parts - Basic"; test_endpoint "/machineparts?region=CN&lang=en&page=1&page_size=10&category=1&voltage=220V&product_line_id=1" "GET" "" "Get Machine Parts - With Filters"; test_endpoint "/product-lines?page=1&page_size=10&lang=zh" "GET" "" "Get Product Lines"; test_endpoint "/accessories?page=1&page_size=10&region=CN&lang=zh" "GET" "" "Get Accessories"; test_endpoint "/spare-parts?page=1&page_size=10&region=CN&lang=zh" "GET" "" "Get Spare Parts"; test_endpoint "/consumables?page=1&page_size=10&region=CN&lang=zh" "GET" "" "Get Consumables"; test_endpoint "/cart" "GET" "" "Get Cart"; test_endpoint "/orders?page=1&page_size=10" "GET" "" "Get Orders"; test_endpoint "/dictionaries/types" "GET" "" "Get Dictionary Types"; test_endpoint "/dictionaries/shapes?lang=zh" "GET" "" "Get Shapes Dictionary"; test_endpoint "/healthcheck" "GET" "" "Health Check"; echo "Tests completed"

@@ -62,7 +62,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
         <Search
           placeholder={t('machines.filters.searchPlaceholder')}
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
           allowClear
         />
       </div>
@@ -109,7 +109,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
         </h3>
         <Select
           value={sortOrder}
-          onChange={(value) => setSortOrder(value)}
+          onChange={(value: string) => setSortOrder(value)}
           style={{ width: '100%' }}
         >
           {sortOptions.map((option) => (

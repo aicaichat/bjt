@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { decodeUtf8Unicode, safeTextContent, fixMojibake } from '../utils/string';
 import axios from 'axios';
+import { API_BASE_URL } from '../api/config';
 
 /**
  * ChineseTextDebug component - helps diagnose and fix Chinese character encoding issues
@@ -11,6 +12,16 @@ const ChineseTextDebug: React.FC = () => {
   const [rawResponse, setRawResponse] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  const testAPICall = async () => {
+    try {
+      // 使用完整的API URL
+      const response = await axios.get(`${API_BASE_URL}/product-lines`);
+      setApiData(response.data);
+    } catch (err) {
+      setError(`API错误: ${err}`);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {

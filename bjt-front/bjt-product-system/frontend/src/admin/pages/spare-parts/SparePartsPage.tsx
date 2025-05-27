@@ -208,53 +208,81 @@ const SparePartsPage: React.FC = () => {
       width: 80,
     },
     {
-      title: '型号',
-      dataIndex: 'model_name',
-      key: 'model_name',
+      title: '料号',
+      dataIndex: 'part_number',
+      key: 'part_number',
       width: 120,
+      render: (text: string) => <span className="font-mono">{text}</span>,
     },
     {
-      title: '料号',
-      dataIndex: 'pn',
-      key: 'pn',
+      title: '中文名称',
+      dataIndex: 'name_zh',
+      key: 'name_zh',
       width: 150,
     },
     {
-      title: '名称',
-      key: 'name',
-      render: (_: any, record: SparePart) => (
-        <div>
-          <div>{record.name.zh}</div>
-          <div className="text-gray-500 text-sm">{record.name.en}</div>
-        </div>
+      title: '英文名称',
+      dataIndex: 'name_en',
+      key: 'name_en',
+      width: 150,
+    },
+    {
+      title: '配件型号',
+      dataIndex: 'model',
+      key: 'model',
+      width: 120,
+    },
+    {
+      title: '是否易损',
+      dataIndex: 'is_consumable',
+      key: 'is_consumable',
+      width: 100,
+      render: (isConsumable: boolean) => (
+        <Tag color={isConsumable ? 'orange' : 'blue'}>
+          {isConsumable ? '易损' : '标准'}
+        </Tag>
       ),
     },
     {
-      title: '关键备件',
-      dataIndex: 'is_critical',
-      key: 'is_critical',
-      width: 100,
-      render: (isCritical: boolean) => {
-        return isCritical ? 
-          <Tag icon={<WarningOutlined />} color="red">关键</Tag> : 
-          <Tag color="default">普通</Tag>;
+      title: '适配机型',
+      dataIndex: 'app_model',
+      key: 'app_model',
+      width: 150,
+      render: (text: string) => {
+        if (!text) return '-';
+        const models = text.split(',').slice(0, 2);
+        const hasMore = text.split(',').length > 2;
+        return (
+          <div>
+            {models.map((model, index) => (
+              <Tag key={index} size="small">{model.trim()}</Tag>
+            ))}
+            {hasMore && <Tag size="small">...</Tag>}
+          </div>
+        );
       },
     },
     {
-      title: '采购周期',
-      dataIndex: 'lead_time',
-      key: 'lead_time',
+      title: '净重(kg)',
+      dataIndex: 'net_weight_kg',
+      key: 'net_weight_kg',
       width: 100,
-      render: (leadTime: number | undefined) => {
-        if (!leadTime) return <span>-</span>;
-        return <Tag color="blue">{leadTime}天</Tag>;
-      },
+      render: (weight: number) => weight ? `${weight.toFixed(3)}` : '-',
     },
     {
-      title: '产品线',
-      dataIndex: 'product_line_name',
-      key: 'product_line_name',
-      width: 120,
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+      width: 100,
+      render: (status: string) => {
+        const statusMap: Record<string, { text: string; color: string }> = {
+          publish: { text: '已发布', color: 'green' },
+          draft: { text: '草稿', color: 'orange' },
+          trash: { text: '已删除', color: 'red' },
+        };
+        const { text, color } = statusMap[status] || { text: '未知', color: 'gray' };
+        return <span style={{ color }}>{text}</span>;
+      },
     },
     {
       title: '操作',
@@ -340,7 +368,7 @@ const SparePartsPage: React.FC = () => {
             total: sparePartModelData?.total || 0,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total) => `共 ${total} 条记录`,
+            showTotal: (total: number) => `共 ${total} 条记录`,
           }}
           onChange={handleModelTableChange}
         />
@@ -426,7 +454,7 @@ const SparePartsPage: React.FC = () => {
             total: sparePartData?.total || 0,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total) => `共 ${total} 条记录`,
+            showTotal: (total: number) => `共 ${total} 条记录`,
           }}
           onChange={handleSparePartTableChange}
         />

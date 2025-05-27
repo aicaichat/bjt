@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>备件数据调试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { color: #28a745; background: #d4edda; border-color: #c3e6cb; }
+        .error { color: #dc3545; background: #f8d7da; border-color: #f5c6cb; }
+        .info { color: #17a2b8; background: #d1ecf1; border-color: #bee5eb; }
+        .warning { color: #856404; background: #fff3cd; border-color: #ffeaa7; }
+        .part-item { margin: 10px 0; padding: 10px; border: 1px solid #eee; border-radius: 4px; background: #f9f9f9; }
+        .spec-highlight { font-weight: bold; color: #007bff; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 备件数据调试工具</h1>
+        
+        <div class="test-section info">
+            <h2>📊 环境变量检查</h2>
+            <div id="env-check"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📦 Mock数据测试</h2>
+            <div id="mock-test"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🌐 API服务测试</h2>
+            <div id="api-test"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🔍 详细数据分析</h2>
+            <div id="data-analysis"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        console.log('🚀 Starting spare parts debug...');
+        
+        // 环境变量检查
+        const envCheck = document.getElementById('env-check');
+        const mockDataEnabled = import.meta.env.VITE_USE_MOCK_DATA === 'true';
+        envCheck.innerHTML = `
+            <p><strong>VITE_USE_MOCK_DATA:</strong> ${import.meta.env.VITE_USE_MOCK_DATA}</p>
+            <p><strong>Mock数据状态:</strong> <span class="${mockDataEnabled ? 'spec-highlight' : 'error'}">${mockDataEnabled ? '✅ 启用' : '❌ 禁用'}</span></p>
+            <p><strong>NODE_ENV:</strong> ${import.meta.env.NODE_ENV}</p>
+            <p><strong>MODE:</strong> ${import.meta.env.MODE}</p>
+        `;
+
+        // Mock数据测试
+        const mockTest = document.getElementById('mock-test');
+        try {
+            console.log('🧪 Testing mock data...');
+            
+            // 直接导入Mock数据
+            const { getAllMockSpareParts } = await import('./src/services/mocks/spareParts.mocks.js');
+            const mockParts = getAllMockSpareParts();
+            
+            console.log('✅ Mock data loaded:', mockParts);
+            
+            mockTest.innerHTML = `
+                <div class="success">
+                    <p><strong>✅ Mock数据加载成功</strong></p>
+                    <p><strong>总数量:</strong> ${mockParts.length}</p>
+                    <div style="margin-top: 15px;">
+                        <h4>📋 备件列表:</h4>
+                        ${mockParts.map(part => `
+                            <div class="part-item">
+                                <p><strong>料号:</strong> ${part.part_number}</p>
+                                <p><strong>名称:</strong> ${part.name_zh} / ${part.name_en}</p>
+                                <p><strong>规格:</strong> <span class="spec-highlight">${part.spec || '❌ 无数据'}</span></p>
+                                <p><strong>规格(英制):</strong> <span class="spec-highlight">${part.spec_imperial || '❌ 无数据'}</span></p>
+                                <p><strong>数据类型:</strong> ${typeof part.spec}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        } catch (error) {
+            console.error('❌ Mock data test failed:', error);
+            mockTest.innerHTML = `
+                <div class="error">
+                    <p><strong>❌ Mock数据加载失败</strong></p>
+                    <p><strong>错误:</strong> ${error.message}</p>
+                    <pre>${error.stack}</pre>
+                </div>
+            `;
+        }
+
+        // API服务测试
+        const apiTest = document.getElementById('api-test');
+        try {
+            console.log('🌐 Testing API service...');
+            
+            const { default: sparePartsApi } = await import('./src/api/sparePartsApi.js');
+            const apiResponse = await sparePartsApi.getAllSpareParts();
+            
+            console.log('✅ API response:', apiResponse);
+            
+            if (apiResponse && apiResponse.data) {
+                apiTest.innerHTML = `
+                    <div class="success">
+                        <p><strong>✅ API服务正常</strong></p>
+                        <p><strong>返回数量:</strong> ${apiResponse.data.length}</p>
+                        <div style="margin-top: 15px;">
+                            <h4>📋 API返回的备件列表:</h4>
+                            ${apiResponse.data.map(part => `
+                                <div class="part-item">
+                                    <p><strong>料号:</strong> ${part.part_number}</p>
+                                    <p><strong>名称:</strong> ${part.name_zh} / ${part.name_en}</p>
+                                    <p><strong>规格:</strong> <span class="spec-highlight">${part.spec || '❌ 无数据'}</span></p>
+                                    <p><strong>规格(英制):</strong> <span class="spec-highlight">${part.spec_imperial || '❌ 无数据'}</span></p>
+                                    <p><strong>数据类型:</strong> ${typeof part.spec}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else {
+                apiTest.innerHTML = `
+                    <div class="error">
+                        <p><strong>❌ API返回无数据</strong></p>
+                        <pre>${JSON.stringify(apiResponse, null, 2)}</pre>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('❌ API test failed:', error);
+            apiTest.innerHTML = `
+                <div class="error">
+                    <p><strong>❌ API服务失败</strong></p>
+                    <p><strong>错误:</strong> ${error.message}</p>
+                    <pre>${error.stack}</pre>
+                </div>
+            `;
+        }
+
+        // 详细数据分析
+        const dataAnalysis = document.getElementById('data-analysis');
+        try {
+            // 读取原始JSON数据
+            const response = await fetch('./src/services/mocks/data/spareParts.data.json');
+            const rawData = await response.json();
+            
+            console.log('📊 Raw JSON data:', rawData);
+            
+            dataAnalysis.innerHTML = `
+                <div class="info">
+                    <p><strong>📊 原始JSON数据分析</strong></p>
+                    <p><strong>总数量:</strong> ${rawData.length}</p>
+                    <div style="margin-top: 15px;">
+                        <h4>🔍 原始数据详情:</h4>
+                        <pre>${JSON.stringify(rawData, null, 2)}</pre>
+                    </div>
+                </div>
+            `;
+        } catch (error) {
+            console.error('❌ Data analysis failed:', error);
+            dataAnalysis.innerHTML = `
+                <div class="error">
+                    <p><strong>❌ 数据分析失败</strong></p>
+                    <p><strong>错误:</strong> ${error.message}</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html> 

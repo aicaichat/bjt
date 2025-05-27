@@ -145,3 +145,6 @@ docker-compose -f docker/dev/docker-compose.nginx.yml exec wordpress wp option u
 
 
 lsof -ti:5173,5174,5175,5176,5177,5178 | xargs kill -9
+
+
+venvzuodao@zuodaolizhiguodeMacBook-Air bjt-product-system % pkill -f vite && sleep 3 && npm run de

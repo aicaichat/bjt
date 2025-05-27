@@ -1,116 +1,121 @@
 import { BaseService } from './base.service';
 
-// 配件型号接口定义
+// 配件型号接口定义 - 完全匹配 wp_bjt_accessory_models 表
 export interface AccessoryModel {
   id: number;
-  model: string;
   product_line_id: number;
-  product_line_name?: string;
-  description: {
-    zh: string;
-    en: string;
-  };
+  model: string;
+  title_zh: string;
+  title_en: string;
+  description_zh?: string;
+  description_en?: string;
+  type?: string;
+  image1_url?: string;
+  image2_url?: string;
+  explosion_diagram_pdf?: string;
   status: string;
+  sort_order?: number;
   created_at?: string;
   updated_at?: string;
 }
 
-// 配件型号表单数据接口
-export interface AccessoryModelFormData {
-  model: string;
-  product_line_id: number;
-  description: {
-    zh: string;
-    en: string;
-  };
-  status: string;
-}
-
-// 配件料号接口定义
+// 配件料号接口定义 - 完全匹配 wp_bjt_accessories 表
 export interface Accessory {
   id: number;
-  pn: string;
-  name: {
-    zh: string;
-    en: string;
-  };
-  model_id: number;
-  model_name?: string;
   product_line_id: number;
-  product_line_name?: string;
-  description: {
-    zh: string;
-    en: string;
-  };
+  model?: string;
+  brand?: string;
+  part_number: string;
+  name_zh: string;
+  name_en: string;
+  spec?: string;
+  spec_imperial?: string;
+  voltage?: string;
+  frequency?: string;
+  package_size_cm?: string;
+  package_size_inch?: string;
+  net_weight_kg?: number;
+  net_weight_lbs?: number;
+  gross_weight_kg?: number;
+  gross_weight_lbs?: number;
+  pcs_per_box?: number;
+  pallet_size_cm?: string;
+  pallet_size_inch?: string;
+  pcs_per_pallet?: number;
+  pallet_height_cm?: number;
+  pallet_height_inch?: number;
+  pallet_gross_weight_kg?: number;
+  pallet_gross_weight_lbs?: number;
+  image_url?: string;
   status: string;
-  logistics: {
-    weight: number;
-    length: number;
-    width: number;
-    height: number;
-    package_quantity: number;
-  };
-  specs?: Record<string, any>[];
+  unit: string;
   created_at?: string;
   updated_at?: string;
 }
 
-// 配件料号表单数据接口
-export interface AccessoryFormData {
-  pn: string;
-  name: {
-    zh: string;
-    en: string;
-  };
-  model_id: number;
+// 配件型号表单数据类型
+export interface AccessoryModelFormData {
   product_line_id: number;
-  description: {
-    zh: string;
-    en: string;
-  };
+  model: string;
+  title_zh: string;
+  title_en: string;
+  description_zh?: string;
+  description_en?: string;
+  type?: string;
+  image1_url?: string;
+  image2_url?: string;
+  explosion_diagram_pdf?: string;
   status: string;
-  logistics: {
-    weight: number;
-    length: number;
-    width: number;
-    height: number;
-    package_quantity: number;
-  };
-  specs?: Record<string, any>[];
+  sort_order?: number;
 }
 
-// 配件型号查询参数接口
-interface AccessoryModelQueryParams {
-  page: number;
-  page_size: number;
-  search?: string;
-  product_line_id?: number;
-  status?: string;
+// 配件料号表单数据类型
+export interface AccessoryFormData {
+  product_line_id: number;
+  model?: string;
+  brand?: string;
+  part_number: string;
+  name_zh: string;
+  name_en: string;
+  spec?: string;
+  spec_imperial?: string;
+  voltage?: string;
+  frequency?: string;
+  package_size_cm?: string;
+  package_size_inch?: string;
+  net_weight_kg?: number;
+  net_weight_lbs?: number;
+  gross_weight_kg?: number;
+  gross_weight_lbs?: number;
+  pcs_per_box?: number;
+  pallet_size_cm?: string;
+  pallet_size_inch?: string;
+  pcs_per_pallet?: number;
+  pallet_height_cm?: number;
+  pallet_height_inch?: number;
+  pallet_gross_weight_kg?: number;
+  pallet_gross_weight_lbs?: number;
+  image_url?: string;
+  status: string;
+  unit: string;
 }
 
-// 配件料号查询参数接口
-interface AccessoryQueryParams {
-  page: number;
-  page_size: number;
-  search?: string;
-  model_id?: number;
-  product_line_id?: number;
-  status?: string;
-}
-
-// 配件型号服务类
-class AdminAccessoryModelService extends BaseService {
+// 配件型号服务
+export class AccessoryModelService extends BaseService {
   constructor() {
     super('/accessory-models');
   }
 
-  async getAccessoryModels(params: AccessoryModelQueryParams) {
-    return this.get<{
-      items: AccessoryModel[];
-      total: number;
-      page: number;
-      page_size: number;
-    }>('', params);
+  async getAccessoryModels(params: {
+    page?: number;
+    per_page?: number;
+    lang?: string;
+    region?: string;
+    product_line_id?: number;
+    status?: string;
+    search?: string;
+  } = {}) {
+    return this.get<{ items: AccessoryModel[]; total: number; page: number; page_size: number }>('', params);
   }
 
   async getAccessoryModel(id: number) {
@@ -130,19 +135,23 @@ class AdminAccessoryModelService extends BaseService {
   }
 }
 
-// 配件料号服务类
-class AdminAccessoryService extends BaseService {
+// 配件料号服务
+export class AccessoryService extends BaseService {
   constructor() {
     super('/accessories');
   }
 
-  async getAccessories(params: AccessoryQueryParams) {
-    return this.get<{
-      items: Accessory[];
-      total: number;
-      page: number;
-      page_size: number;
-    }>('', params);
+  async getAccessories(params: {
+    page?: number;
+    per_page?: number;
+    lang?: string;
+    region?: string;
+    product_line_id?: number;
+    model?: string;
+    status?: string;
+    search?: string;
+  } = {}) {
+    return this.get<{ items: Accessory[]; total: number; page: number; page_size: number }>('', params);
   }
 
   async getAccessory(id: number) {
@@ -162,5 +171,6 @@ class AdminAccessoryService extends BaseService {
   }
 }
 
-export const accessoryModelService = new AdminAccessoryModelService();
-export const accessoryService = new AdminAccessoryService(); 
+// 导出服务实例
+export const accessoryModelService = new AccessoryModelService();
+export const accessoryService = new AccessoryService(); 

@@ -1,10 +1,16 @@
 import React from 'react';
-import { Button, Space } from 'antd';
+import { Button, Space, Breadcrumb } from 'antd';
 import { PlusOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+
+export interface BreadcrumbItem {
+  title: string;
+  path?: string;
+}
 
 export interface AdminPageHeaderProps {
   title: string;
   description?: string;
+  breadcrumb?: BreadcrumbItem[];
   actions?: React.ReactNode;
   extra?: React.ReactNode;
   onAdd?: () => void;
@@ -16,6 +22,7 @@ export interface AdminPageHeaderProps {
 function AdminPageHeader({
   title,
   description,
+  breadcrumb,
   actions,
   extra,
   onAdd,
@@ -24,6 +31,20 @@ function AdminPageHeader({
 }: AdminPageHeaderProps) {
   return (
     <div className="mb-6">
+      {breadcrumb && breadcrumb.length > 0 && (
+        <Breadcrumb className="mb-4">
+          {breadcrumb.map((item, index) => (
+            <Breadcrumb.Item key={index}>
+              {item.path ? (
+                <a href={item.path}>{item.title}</a>
+              ) : (
+                item.title
+              )}
+            </Breadcrumb.Item>
+          ))}
+        </Breadcrumb>
+      )}
+      
       <div className="flex justify-between items-start">
         <div>
           {onBack && (

@@ -228,7 +228,7 @@ class BJT_API_Controller {
                 'type'               => 'integer',
                 'default'            => 10,
                 'minimum'            => 1,
-                'maximum'            => 100,
+                'maximum'            => 1000,
                 'sanitize_callback'  => 'absint',
                 'validate_callback'  => 'rest_validate_request_arg',
             ],

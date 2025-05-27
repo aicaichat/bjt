@@ -60,14 +60,9 @@ axiosAdminInstance.interceptors.response.use(
     return response;
   },
   (error: AxiosError) => {
-    if (DEBUG) {
-      logDebug('Admin API Error:', error);
-    }
-
     // Handle authentication errors
     if (error.response?.status === 401) {
-      localStorage.removeItem('admin_token');
-      window.location.href = '/admin/login';
+      // Let components handle authentication errors
     }
     
     const errorResponse = error.response?.data as ApiResponse<any> | undefined;

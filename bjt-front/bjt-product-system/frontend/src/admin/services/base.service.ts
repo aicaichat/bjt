@@ -1,4 +1,4 @@
-import HttpAdminService from '../api/httpAdminService';
+import HttpAdminService, { ApiResponse } from '../api/httpAdminService';
 
 /**
  * HTTP响应接口
@@ -27,7 +27,15 @@ export class BaseService {
    * @returns 请求结果
    */
   async get<T>(path: string = '', params: Record<string, any> = {}): Promise<T> {
-    const response = await HttpAdminService.get<HttpResponse<T>>(`${this.baseUrl}${path}`, { params });
+    // 过滤掉空值参数，防止发送空字符串到API
+    const filteredParams = Object.entries(params).reduce((acc, [key, value]) => {
+      if (value !== null && value !== undefined && value !== '') {
+        acc[key] = value;
+      }
+      return acc;
+    }, {} as Record<string, any>);
+    
+    const response = await HttpAdminService.get<T>(`${this.baseUrl}${path}`, { params: filteredParams });
     return response.data;
   }
 
@@ -38,7 +46,7 @@ export class BaseService {
    * @returns 请求结果
    */
   async post<T>(path: string = '', data: any): Promise<T> {
-    const response = await HttpAdminService.post<HttpResponse<T>>(`${this.baseUrl}${path}`, data);
+    const response = await HttpAdminService.post<T>(`${this.baseUrl}${path}`, data);
     return response.data;
   }
 
@@ -49,7 +57,7 @@ export class BaseService {
    * @returns 请求结果
    */
   async put<T>(path: string = '', data: any): Promise<T> {
-    const response = await HttpAdminService.put<HttpResponse<T>>(`${this.baseUrl}${path}`, data);
+    const response = await HttpAdminService.put<T>(`${this.baseUrl}${path}`, data);
     return response.data;
   }
 
@@ -59,7 +67,7 @@ export class BaseService {
    * @returns 请求结果
    */
   async delete<T = any>(path: string = ''): Promise<T> {
-    const response = await HttpAdminService.delete<HttpResponse<T>>(`${this.baseUrl}${path}`);
+    const response = await HttpAdminService.delete<T>(`${this.baseUrl}${path}`);
     return response.data;
   }
 
@@ -70,7 +78,7 @@ export class BaseService {
    * @returns 请求结果
    */
   async patch<T>(path: string = '', data: any): Promise<T> {
-    const response = await HttpAdminService.patch<HttpResponse<T>>(`${this.baseUrl}${path}`, data);
+    const response = await HttpAdminService.patch<T>(`${this.baseUrl}${path}`, data);
     return response.data;
   }
 } 

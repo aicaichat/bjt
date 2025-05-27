@@ -1,8 +1,10 @@
 import axios from 'axios';
 import { message } from 'antd';
+// 导入统一的API配置
+import { API_BASE_URL } from '../api/config';
 
-// 使用相对路径，确保请求通过Nginx代理
-const baseURL = '/wp-json/bjt/v1';
+// 使用统一的API配置
+const baseURL = API_BASE_URL;
 
 const api = axios.create({
   baseURL,

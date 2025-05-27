@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, message, Typography, Row, Col, Card, Switch, Badge, Tag } from 'antd';
-import { UserOutlined, LockOutlined, BankOutlined, ShopOutlined, UserSwitchOutlined } from '@ant-design/icons';
+import { UserOutlined, LockOutlined, CrownOutlined, ShoppingCartOutlined, TeamOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import './Login.css';
 import logo from '../../assets/logo.svg';
+import { authService } from '../../services/auth';
+import testAuthFlow from '../../utils/authTest';
 
 const { Title, Paragraph } = Typography;
 
@@ -26,7 +28,7 @@ const Login: React.FC = () => {
   const testAccounts: TestAccount[] = [
     {
       username: 'admin',
-      password: 'password',
+      password: 'password123',
       role: 'admin',
       description: '系统管理员 - 拥有所有功能、用户管理和系统设置的完全访问权限'
     },
@@ -56,17 +58,37 @@ const Login: React.FC = () => {
     }
   ];
 
-  const handleSubmit = async (values: { username: string; password: string }) => {
+  const handleSubmit = async (values: { username: string; password: string; remember?: boolean }) => {
+    console.log('🔐 [Login] Attempting login with:', values);
+    console.log('🔐 [Login] Current environment:', {
+      VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
+      VITE_USE_MOCK_DATA: import.meta.env.VITE_USE_MOCK_DATA
+    });
+    
     setLoading(true);
     setErrorMsg('');
-
+    
     try {
-      await login(values.username, values.password);
-      message.success('Login successful!');
-      navigate('/home');
+      console.log('🔐 [Login] Calling auth service login...');
+      const user = await login(values.username, values.password);
+      console.log('✅ [Login] Login successful:', user);
+      
+      // 验证token是否正确保存
+      const savedToken = localStorage.getItem('auth_token');
+      const savedUser = localStorage.getItem('user');
+      console.log('🔐 [Login] Post-login verification:', {
+        hasSavedToken: !!savedToken,
+        tokenLength: savedToken?.length,
+        tokenPreview: savedToken ? savedToken.substring(0, 15) + '...' : 'none',
+        hasSavedUser: !!savedUser,
+        userObject: user
+      });
+      
+      // 导航到机器页面
+      navigate('/machines');
     } catch (error: any) {
-      console.error('Login error:', error);
-      setErrorMsg(error.message || 'An error occurred during login');
+      console.error('❌ [Login] Login failed:', error);
+      setErrorMsg(error.message || '登录失败，请检查用户名和密码');
     } finally {
       setLoading(false);
     }
@@ -82,14 +104,39 @@ const Login: React.FC = () => {
   const getRoleIcon = (role: string) => {
     switch (role) {
       case 'admin':
-        return <BankOutlined />;
+        return <CrownOutlined />;
       case 'sales':
-        return <ShopOutlined />;
+        return <ShoppingCartOutlined />;
       case 'customer':
       case 'partner':
-        return <UserSwitchOutlined />;
+        return <TeamOutlined />;
       default:
         return <UserOutlined />;
+    }
+  };
+
+  const onFinish = async (values: { username: string; password: string }) => {
+    setLoading(true);
+    try {
+      const response = await authService.login(values.username, values.password);
+      if (response.success) {
+        message.success('登录成功');
+        navigate('/');
+      } else {
+        message.error(response.message || '登录失败');
+      }
+    } catch (error: any) {
+      message.error(error.message || '登录失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const runAuthTest = async () => {
+    try {
+      await testAuthFlow();
+    } catch (error) {
+      console.error('测试失败:', error);
     }
   };
 
@@ -154,7 +201,7 @@ const Login: React.FC = () => {
             <span>Test Accounts</span>
             <Switch 
               checked={showTestAccounts}
-              onChange={(checked) => setShowTestAccounts(checked)}
+              onChange={(checked: boolean) => setShowTestAccounts(checked)}
               size="small"
             />
           </div>
@@ -193,6 +240,19 @@ const Login: React.FC = () => {
             </Card>
           )}
         </div>
+
+        <Form
+          name="login"
+          initialValues={{ remember: true }}
+          onFinish={onFinish}
+          size="large"
+        >
+          <Form.Item>
+            <Button type="default" onClick={runAuthTest} block>
+              运行认证测试
+            </Button>
+          </Form.Item>
+        </Form>
       </div>
     </div>
   );

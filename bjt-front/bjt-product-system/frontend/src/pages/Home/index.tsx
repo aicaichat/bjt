@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './Home.css';
 import { useAuth } from '../../contexts/AuthContext';
-import productLineService, { ProductLine } from '../../api/services/product-line.service';
+// 替换原有的API导入为SQL Mock服务
+import { useProductLines } from '../../hooks/useMockData';
+import MockServiceStatus from '../../components/MockServiceStatus';
 import { Loading, Error } from '../../components/common';
 import { useTranslation } from 'react-i18next';
 import { ROUTES } from '../../config/routes';
@@ -15,9 +17,22 @@ const Home: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [productLines, setProductLines] = useState<ProductLine[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  
+  // 使用useCallback稳定回调函数引用
+  const handleSuccess = useCallback((data: any) => {
+    console.log('✅ 首页产品线数据加载成功:', data);
+  }, []);
+  
+  const handleError = useCallback((error: string) => {
+    console.error('❌ 首页产品线数据加载失败:', error);
+  }, []);
+  
+  // 使用SQL Mock数据服务Hook
+  const { data: productLines, loading, error } = useProductLines({
+    onSuccess: handleSuccess,
+    onError: handleError
+  });
+
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   
@@ -32,31 +47,13 @@ const Home: React.FC = () => {
     }
   }, [user, navigate, location]);
 
-  // 获取产品线数据
+  // 计算分页数据
   useEffect(() => {
-    const fetchProductLines = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const response = await productLineService.getProductLines({
-          status: 'publish',
-          per_page: 100,
-          page: currentPage
-        });
-        
-        setProductLines(response.items);
-        setTotalPages(response.total_pages);
-      } catch (error: any) {
-        console.error('Failed to fetch product lines:', error);
-        setError(t('errors.failedToLoadProducts'));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProductLines();
-  }, [i18n.language, currentPage, t]);
+    if (productLines && productLines.length > 0) {
+      const itemsPerPage = 10;
+      setTotalPages(Math.ceil(productLines.length / itemsPerPage));
+    }
+  }, [productLines]);
 
   // 处理产品链接点击事件
   const handleProductLinkClick = (e: React.MouseEvent, path: string) => {
@@ -72,10 +69,10 @@ const Home: React.FC = () => {
   };
 
   // 根据当前语言获取标题
-  const getTitle = (line: ProductLine) => currentLanguage === 'en' ? line.title_en : line.title_zh;
+  const getTitle = (line: any) => currentLanguage === 'en' ? line.title_en : line.title_zh;
   
   // 根据当前语言获取描述
-  const getDescription = (line: ProductLine) => currentLanguage === 'en' ? line.description_en : line.description_zh;
+  const getDescription = (line: any) => currentLanguage === 'en' ? line.description_en : line.description_zh;
   
   // 使用统一的加载组件
   if (loading) {
@@ -89,8 +86,11 @@ const Home: React.FC = () => {
 
   return (
     <div className="home-page">
+      {/* SQL Mock服务状态组件 */}
+      <MockServiceStatus position="top-right" compact={true} hidden={true} />
+      
       <main className="container">
-        {productLines.map((line: ProductLine) => (
+        {productLines && productLines.map((line: any) => (
           <div key={line.id} className="product-section">
             <div className="section-header">
               {getTitle(line)}
