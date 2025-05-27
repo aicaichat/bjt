@@ -1,0 +1,22 @@
+FROM mysql:8.0
+
+# 安装必要的工具
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# 复制初始化脚本
+COPY init-db.sh /usr/local/bin/init-db.sh
+RUN chmod +x /usr/local/bin/init-db.sh
+
+# 复制SQL文件到初始化目录
+COPY ../../docker/dev/mysql/init.sql /docker-entrypoint-initdb.d/
+COPY ../../generated_sql_imports/_设备.sql /docker-entrypoint-initdb.d/
+COPY ../../generated_sql_imports/_耗材.sql /docker-entrypoint-initdb.d/
+
+# 设置工作目录
+WORKDIR /docker-entrypoint-initdb.d
+
+# 默认命令
+CMD ["/usr/local/bin/init-db.sh"] 
