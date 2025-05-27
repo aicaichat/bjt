@@ -1,0 +1,113 @@
+version: '3.8'
+
+services:
+  # Nginx负载均衡和反向代理（本地版本）
+  nginx:
+    build:
+      context: ../../
+      dockerfile: docker/nginx/Dockerfile.ip
+      args:
+        - VITE_API_URL=http://localhost:8080/wp-json/bjt/v1
+    ports:
+      - "8080:80"  # 使用8080端口避免冲突
+    volumes:
+      - ../../nginx/conf.d:/etc/nginx/conf.d
+      - ../../backend:/var/www/html:ro
+      - ../../plugins:/var/www/html/wp-content/plugins:ro
+    depends_on:
+      - wordpress
+    environment:
+      - DOMAIN_NAME=localhost
+      - USE_SSL=false
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - bjt_network
+    restart: unless-stopped
+
+  # WordPress应用服务器
+  wordpress:
+    build:
+      context: ../../docker/wordpress
+      dockerfile: Dockerfile.prod
+    environment:
+      WORDPRESS_DB_HOST: mysql
+      WORDPRESS_DB_NAME: bjt_product
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress123
+      WORDPRESS_DB_CHARSET: utf8mb4
+      WORDPRESS_DB_COLLATE: ""
+      WORDPRESS_AUTH_KEY: "local-auth-key-123"
+      WORDPRESS_SECURE_AUTH_KEY: "local-secure-auth-key-123"
+      WORDPRESS_LOGGED_IN_KEY: "local-logged-in-key-123"
+      WORDPRESS_NONCE_KEY: "local-nonce-key-123"
+      WORDPRESS_AUTH_SALT: "local-auth-salt-123"
+      WORDPRESS_SECURE_AUTH_SALT: "local-secure-auth-salt-123"
+      WORDPRESS_LOGGED_IN_SALT: "local-logged-in-salt-123"
+      WORDPRESS_NONCE_SALT: "local-nonce-salt-123"
+      JWT_AUTH_SECRET_KEY: "local-jwt-secret-key-123"
+      WP_HOME: "http://localhost:8080"
+      WP_SITEURL: "http://localhost:8080"
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_HOME', 'http://localhost:8080');
+        define('WP_SITEURL', 'http://localhost:8080');
+        define('WP_CONTENT_URL', 'http://localhost:8080/wp-content');
+        define('WP_CONTENT_DIR', '/var/www/html/wp-content');
+        define('JWT_AUTH_SECRET_KEY', 'local-jwt-secret-key-123');
+        define('WP_DEBUG', true);
+        define('WP_DEBUG_LOG', true);
+        define('WP_DEBUG_DISPLAY', false);
+        define('FORCE_SSL_ADMIN', false);
+        define('WP_CACHE', false);
+    volumes:
+      - ../../backend:/var/www/html
+      - ../../plugins:/var/www/html/wp-content/plugins
+      - wordpress_uploads:/var/www/html/wp-content/uploads
+    depends_on:
+      - mysql
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/wp-admin/admin-ajax.php"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - bjt_network
+    restart: unless-stopped
+
+  # MySQL数据库
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: bjt_product
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress123
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ../../docker/mysql/conf.d:/etc/mysql/conf.d
+    command: --default-authentication-plugin=mysql_native_password --innodb-buffer-pool-size=128M
+    ports:
+      - "3306:3306"  # 暴露MySQL端口便于调试
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot123"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - bjt_network
+    restart: unless-stopped
+
+networks:
+  bjt_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
+  wordpress_uploads:
+    driver: local 

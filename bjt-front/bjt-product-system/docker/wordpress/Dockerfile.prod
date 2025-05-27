@@ -1,0 +1,44 @@
+# WordPress生产环境
+FROM wordpress:6.4-php8.2-apache
+
+# 安装必要的PHP扩展和工具
+RUN apt-get update && apt-get install -y \
+    curl \
+    zip \
+    unzip \
+    git \
+    && docker-php-ext-install mysqli pdo pdo_mysql \
+    && docker-php-ext-enable mysqli \
+    && rm -rf /var/lib/apt/lists/*
+
+# 安装WP-CLI
+RUN curl -O https://raw.githubusercontent.com/wp-cli/wp-cli/v2.8.1/wp-cli.phar \
+    && chmod +x wp-cli.phar \
+    && mv wp-cli.phar /usr/local/bin/wp
+
+# 复制自定义PHP配置
+COPY php.ini /usr/local/etc/php/conf.d/custom.ini
+
+# 复制Apache配置
+COPY apache.conf /etc/apache2/sites-available/000-default.conf
+
+# 启用Apache模块
+RUN a2enmod rewrite headers ssl
+
+# 设置正确的权限
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html
+
+# 创建必要的目录
+RUN mkdir -p /var/www/html/wp-content/uploads \
+    && mkdir -p /var/www/html/wp-content/cache \
+    && chown -R www-data:www-data /var/www/html/wp-content
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost/wp-admin/admin-ajax.php || exit 1
+
+EXPOSE 80
+
+# 启动Apache
+CMD ["apache2-foreground"] 
