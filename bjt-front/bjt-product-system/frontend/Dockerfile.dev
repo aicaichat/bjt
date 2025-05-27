@@ -2,9 +2,15 @@ FROM node:18-alpine
 
 WORKDIR /app
 
+# 安装必要的构建工具
+RUN apk add --no-cache python3 make g++
+
 COPY package*.json ./
 
-RUN npm install
+# 清理 npm 缓存并重新安装依赖
+RUN npm cache clean --force && \
+    rm -rf node_modules && \
+    npm install
 
 COPY . .
 
@@ -12,4 +18,5 @@ EXPOSE 5173
 
 ENV VITE_HOST=0.0.0.0
 
+# 使用开发模式启动
 CMD ["sh", "-c", "npm run dev -- --host ${VITE_HOST}"] 
