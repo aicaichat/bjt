@@ -76,7 +76,10 @@ services:
     env_file:
       - ../../.env.production.ip
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/wp-admin/admin-ajax.php"]
       interval: 30s
@@ -104,6 +107,10 @@ services:
       - mysql_data:/var/lib/mysql
       - mysql_backup:/backup
       - ../../docker/mysql/conf.d:/etc/mysql/conf.d
+      # 挂载初始化SQL文件
+      - ../../docker/dev/mysql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ../../generated_sql_imports/_设备.sql:/docker-entrypoint-initdb.d/02-devices.sql:ro
+      - ../../generated_sql_imports/_耗材.sql:/docker-entrypoint-initdb.d/03-consumables.sql:ro
     command: --default-authentication-plugin=mysql_native_password --innodb-buffer-pool-size=256M
     env_file:
       - ../../.env.production.ip
@@ -121,6 +128,28 @@ services:
         max-size: "10m"
         max-file: "3"
     restart: unless-stopped
+
+  # 数据库初始化服务
+  db-init:
+    image: mysql:8.0
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - ../../docker/mysql/init-db.sh:/usr/local/bin/init-db.sh:ro
+      - ../../docker/dev/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ../../generated_sql_imports/_设备.sql:/docker-entrypoint-initdb.d/_设备.sql:ro
+      - ../../generated_sql_imports/_耗材.sql:/docker-entrypoint-initdb.d/_耗材.sql:ro
+    command: ["/usr/local/bin/init-db.sh"]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - bjt_network
+    restart: "no"  # 只运行一次
 
   # 数据库备份服务
   mysql-backup:
