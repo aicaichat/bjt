@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
 import { Button, Select, InputNumber, Tabs, Tag, Tooltip } from 'antd';
-import { ShoppingCartOutlined, InfoCircleOutlined, PlusOutlined, ExclamationCircleOutlined, ReloadOutlined, RightOutlined, MenuOutlined, DeleteOutlined, MinusOutlined } from '@ant-design/icons';
+import { ShoppingCartOutlined, InfoCircleOutlined, PlusOutlined, ExclamationCircleOutlined, ReloadOutlined, RightOutlined, MenuOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { cartService, accessoryService } from '../../api/services';
 import { useMockData, DEFAULT_REGION } from '../../config/env';
@@ -1394,7 +1394,7 @@ const MachinesPage: React.FC = () => {
                     <Button 
                       size="small"
                       icon={<InfoCircleOutlined />}
-                      className="bg-accent-light text-accent hover:bg-accent hover:text-white border-accent transition-colors duration-200"
+                      className="bg-accent-light text-primary hover:bg-accent hover:text-white border-accent transition-colors duration-200"
                     >
                       更多信息
                     </Button>
@@ -1446,10 +1446,10 @@ const MachinesPage: React.FC = () => {
                 <div className="space-y-3">
                   <div className="flex items-center justify-center gap-2 bg-card-alt rounded-lg p-2">
                     <Button 
+                      size="small"
                       icon={<MenuOutlined />}
                       onClick={() => handleQuantityChange(machine.id.toString(), (quantities[machine.id.toString()] || 1) - 1)}
                       disabled={(quantities[machine.id.toString()] || 1) <= 1}
-                      size="small"
                       style={{
                         backgroundColor: '#f3f4f6',
                         borderColor: '#d1d5db',
@@ -2293,7 +2293,7 @@ const MachinesPage: React.FC = () => {
                 <Button 
                   size="small"
                   icon={<InfoCircleOutlined />}
-                  className="bg-accent-light text-accent hover:bg-accent hover:text-white border-accent transition-colors duration-200"
+                  className="bg-accent-light text-primary hover:bg-accent hover:text-white border-accent transition-colors duration-200"
                 >
                   更多信息
                 </Button>
@@ -2333,7 +2333,7 @@ const MachinesPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 <Button 
                   size="small"
-                  icon={<MinusOutlined />}
+                  icon={<DeleteOutlined />}
                   onClick={() => handleQuantityChange(accessory.id.toString(), (quantities[accessory.id.toString()] || 1) - 1)}
                   disabled={(quantities[accessory.id.toString()] || 1) <= 1}
                   className="bg-card-alt border-border hover:border-primary hover:bg-primary hover:text-white transition-colors duration-200"

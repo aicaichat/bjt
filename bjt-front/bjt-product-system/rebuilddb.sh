@@ -86,6 +86,11 @@ echo "Importing data from 耗材 Excel..."
 docker-compose -f docker/dev/docker-compose.nginx.yml exec -T mysql \
  mysql -uwordpress -pwordpress bjt_product --default-character-set=utf8mb4 < generated_sql_imports/_耗材.sql || exit 1
 
+# 导入测试用户数据
+echo "Importing test users data..."
+docker-compose -f docker/dev/docker-compose.nginx.yml exec -T mysql \
+ mysql -uwordpress -pwordpress bjt_product --default-character-set=utf8mb4 < docker/dev/mysql/test_users.sql || exit 1
+
 # 验证表结构
 echo "Verifying BJT plugin database structure..."
 docker-compose -f docker/dev/docker-compose.nginx.yml exec -T mysql \
