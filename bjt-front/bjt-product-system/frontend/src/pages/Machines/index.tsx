@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
 import { Button, Select, InputNumber, Tabs, Tag, Tooltip } from 'antd';
-import { ShoppingCartOutlined, InfoCircleOutlined, PlusOutlined, ExclamationCircleOutlined, ReloadOutlined, RightOutlined, MenuOutlined, DeleteOutlined } from '@ant-design/icons';
+import { ShoppingCartOutlined, InfoCircleOutlined, PlusOutlined, ExclamationCircleOutlined, ReloadOutlined, RightOutlined, MenuOutlined, DeleteOutlined, MinusOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { cartService, accessoryService } from '../../api/services';
 import { useMockData, DEFAULT_REGION } from '../../config/env';
@@ -842,7 +842,7 @@ const MachinesPage: React.FC = () => {
 
     try {
       // 3. 通过API获取配件的必选备件信息
-      const response = await fetch(`/wp-json/bjt/v1/accessories/${partNumber}`, {
+      const response = await fetch(`/wp-json/bjt/v1/accessories?part_number=${partNumber}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -859,30 +859,35 @@ const MachinesPage: React.FC = () => {
       console.log('📦 [addRequiredPartsToCartForAccessory] Fetched accessory data from API:', accessoryData);
 
       // 4. 从API响应中获取必选备件信息
-      let requiredParts: string | null = null;
-      let requiredQuantity: string | null = null;
+      let requiredPartsInfo: Array<{part_number: string, quantity: number}> = [];
 
-      if (accessoryData.success && accessoryData.data) {
-        requiredParts = accessoryData.data.required_parts || null;
-        requiredQuantity = accessoryData.data.required_quantity || null;
+      // API返回的是一个包含items数组的响应
+      if (accessoryData.items && accessoryData.items.length > 0) {
+        const accessoryItem = accessoryData.items[0]; // 取第一个匹配的配件
+        if (accessoryItem.required_parts && Array.isArray(accessoryItem.required_parts)) {
+          requiredPartsInfo = accessoryItem.required_parts;
+        }
       }
 
-      if (!requiredParts || !requiredQuantity) {
+      if (requiredPartsInfo.length === 0) {
         console.log('📝 [addRequiredPartsToCartForAccessory] No required parts found for accessory from API');
         return;
       }
 
       console.log('📋 [addRequiredPartsToCartForAccessory] Found required parts from API:', {
         part_number: partNumber,
-        required_parts: requiredParts,
-        required_quantity: requiredQuantity,
+        required_parts_info: requiredPartsInfo,
         mainQuantity
       });
 
-      // 5. 使用现有的必选备件工具函数
+      // 5. 转换为必选备件工具函数需要的格式
+      const requiredPartsString = requiredPartsInfo.map(p => p.part_number).join(',');
+      const requiredQuantityString = requiredPartsInfo.map(p => p.quantity.toString()).join(',');
+
+      // 6. 使用现有的必选备件工具函数
       const requiredPartsFullInfo = await fetchRequiredPartsFullInfo(
-        requiredParts,
-        requiredQuantity,
+        requiredPartsString,
+        requiredQuantityString,
         partNumber
       );
 
@@ -891,7 +896,7 @@ const MachinesPage: React.FC = () => {
       const addedParts = [];
       const failedParts = [];
 
-      // 6. 添加每个必选备件到购物车
+      // 7. 添加每个必选备件到购物车
       for (const requiredPart of requiredPartsFullInfo) {
         try {
           const totalQuantity = requiredPart.quantity * mainQuantity;
@@ -1122,6 +1127,14 @@ const MachinesPage: React.FC = () => {
       // 🔥 **关键逻辑：配件必选备件处理**
       if (productType === 'accessory') {
         console.log('🔍 [handleAddToCart] Processing accessory, checking for required parts...');
+        console.log('🔍 [handleAddToCart] Accessory details:', {
+          accessory: product,
+          accessoryId: product.id,
+          accessoryTitle: (product as MachineAccessory).title,
+          accessoryModel: (product as MachineAccessory).model,
+          selectedAccessories,
+          selectedMachine
+        });
         
         // 确定配件的级别
         let accessoryLevel = 1;
@@ -1136,13 +1149,21 @@ const MachinesPage: React.FC = () => {
         }
         
         console.log('📍 [handleAddToCart] Determined accessory level:', accessoryLevel);
+        console.log('📍 [handleAddToCart] Selected accessories state:', selectedAccessories);
         
         // 调用必选备件处理函数
-        await addRequiredPartsToCartForAccessory(
-          product as MachineAccessory,
-          quantity,
-          accessoryLevel
-        );
+        try {
+          await addRequiredPartsToCartForAccessory(
+            product as MachineAccessory,
+            quantity,
+            accessoryLevel
+          );
+          console.log('✅ [handleAddToCart] Required parts processing completed');
+        } catch (error) {
+          console.error('❌ [handleAddToCart] Required parts processing failed:', error);
+        }
+      } else {
+        console.log('📝 [handleAddToCart] Product is not accessory, skipping required parts processing');
       }
       
       setNotificationProduct(productName);
@@ -1979,10 +2000,7 @@ const MachinesPage: React.FC = () => {
   const renderAccessory = (accessory: MachineAccessory, level: number, index: number) => {
     const accessoryPart = accessory.parts?.[0];
     const partSpecs = accessoryPart?.specs;
-    const partPrices = accessoryPart?.prices;
-    const partInventory = accessoryPart?.inventory;
-
-    // 添加调试信息
+    
     console.log('🔍 [renderAccessory] Accessory data:', {
       accessory,
       accessoryPart,
@@ -1991,7 +2009,6 @@ const MachinesPage: React.FC = () => {
       index
     });
 
-    // 尝试从多个位置获取数据
     const getFieldValue = (field: string) => {
       // 首先尝试从 partSpecs 获取
       if (partSpecs && partSpecs.hasOwnProperty(field)) {
@@ -2032,6 +2049,97 @@ const MachinesPage: React.FC = () => {
       const voltage = getFieldValue('voltage');
       const frequency = getFieldValue('frequency');
       return voltage !== 'N/A' || frequency !== 'N/A';
+    };
+
+    // 🔥 **新增：必选备件显示组件**
+    const RequiredPartsSection = () => {
+      const [requiredPartsData, setRequiredPartsData] = React.useState<{
+        requiredParts: string;
+        requiredQuantity: string;
+      } | null>(null);
+      const [loading, setLoading] = React.useState(false);
+
+      React.useEffect(() => {
+        const fetchRequiredParts = async () => {
+          const partNumber = accessoryPart?.part_number || 
+                            (accessory as any).part_number ||
+                            accessory.model;
+
+          if (!partNumber) {
+            console.log('📝 [RequiredPartsSection] No part number found, skipping required parts fetch');
+            return;
+          }
+
+          setLoading(true);
+          try {
+            console.log('🔍 [RequiredPartsSection] Fetching required parts for:', partNumber);
+            
+            const response = await fetch(`/wp-json/bjt/v1/accessories?part_number=${partNumber}`, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+              }
+            });
+
+            if (!response.ok) {
+              console.warn('⚠️ [RequiredPartsSection] API request failed:', response.status);
+              return;
+            }
+
+            const data = await response.json();
+            console.log('📦 [RequiredPartsSection] API response:', data);
+
+            if (data.items && data.items.length > 0) {
+              const accessoryItem = data.items[0];
+              if (accessoryItem.required_parts && Array.isArray(accessoryItem.required_parts)) {
+                const requiredParts = accessoryItem.required_parts.map((p: {part_number: string, quantity: number}) => p.part_number).join(',');
+                const requiredQuantity = accessoryItem.required_parts.map((p: {part_number: string, quantity: number}) => p.quantity.toString()).join(',');
+                
+                console.log('✅ [RequiredPartsSection] Found required parts:', {
+                  requiredParts,
+                  requiredQuantity
+                });
+                
+                setRequiredPartsData({
+                  requiredParts,
+                  requiredQuantity
+                });
+              } else {
+                console.log('📝 [RequiredPartsSection] No required parts found in API response');
+              }
+            }
+          } catch (error) {
+            console.error('❌ [RequiredPartsSection] Error fetching required parts:', error);
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        fetchRequiredParts();
+      }, [accessoryPart?.part_number, accessory.model]);
+
+      if (loading) {
+        return (
+          <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+            <div className="text-sm text-orange-600">正在加载必选备件信息...</div>
+          </div>
+        );
+      }
+
+      if (!requiredPartsData) {
+        return null;
+      }
+
+      return (
+        <div className="mt-4">
+          <RequiredPartsDisplay 
+            requiredParts={requiredPartsData.requiredParts}
+            requiredQuantity={requiredPartsData.requiredQuantity}
+            className="border border-orange-200 rounded-lg"
+          />
+        </div>
+      );
     };
 
     return (
@@ -2193,138 +2301,73 @@ const MachinesPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Column 3: Price, Stock, Actions */}
-          <div className="w-full md:w-1/5 md:pl-6 mt-6 md:mt-0 border-t md:border-t-0 md:border-l border-border pt-6 md:pt-0">
-            {/* Price */}
+          {/* Column 3: Pricing & Actions */}
+          <div className="w-full md:w-1/5 flex flex-col justify-between md:pl-6 mt-6 md:mt-0">
             <div className="mb-4">
-              <div className="font-medium text-sm text-label mb-2">
-                价格:
-              </div>
-              
-              <div className="text-2xl font-bold text-price mb-2">
-                {getCurrencySymbol(userRegion)}{formatPrice(partPrices?.base || 0)}
-              </div>
+              {accessory.parts?.[0]?.prices ? (
+                <div className="bg-card-alt rounded-lg p-3 shadow-sm">
+                  <div className="text-sm font-medium text-label mb-2">价格信息</div>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-label">基础价:</span>
+                      <span className="font-bold text-primary">{getCurrencySymbol(userRegion)}{accessory.parts[0].prices.base}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-label">5-9件:</span>
+                      <span className="font-bold text-accent">{getCurrencySymbol(userRegion)}{accessory.parts[0].prices.tier1}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-label">10+件:</span>
+                      <span className="font-bold text-success">{getCurrencySymbol(userRegion)}{accessory.parts[0].prices.tier2}</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-card-alt rounded-lg p-3 shadow-sm">
+                  <div className="text-sm text-label">价格待询</div>
+                </div>
+              )}
             </div>
-            
-            {/* Inventory (Sales View) */}
-            {isSales && partInventory && partInventory.length > 0 && (
-              <div className="mb-4">
-                <div className="font-medium text-sm text-label mb-2">
-                  库存:
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {partInventory.map((inv, invIndex) => (
-                    <Tag 
-                      key={`accessory-${accessory.id}-level-${level}-index-${index}-inventory-${inv.region}-${invIndex}`}
-                      color={getStockStatus(inv.amount).colorClass}
-                      className="text-xs"
-                    >
-                      {inv.region}: {inv.amount}
-                    </Tag>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {/* Actions */}
+
             <div className="space-y-3">
-              <div className="flex items-center justify-center gap-2 bg-card-alt rounded-lg p-2">
+              <div className="flex items-center gap-2">
                 <Button 
-                  icon={<MenuOutlined />}
+                  size="small"
+                  icon={<MinusOutlined />}
                   onClick={() => handleQuantityChange(accessory.id.toString(), (quantities[accessory.id.toString()] || 1) - 1)}
                   disabled={(quantities[accessory.id.toString()] || 1) <= 1}
-                  size="small"
-                  style={{
-                    backgroundColor: '#f3f4f6',
-                    borderColor: '#d1d5db',
-                    color: '#374151'
-                  }}
-                  className="hover:border-primary hover:bg-primary hover:text-white transition-colors duration-200"
+                  className="bg-card-alt border-border hover:border-primary hover:bg-primary hover:text-white transition-colors duration-200"
                 />
                 <InputNumber
                   min={1}
                   value={quantities[accessory.id.toString()] || 1}
                   onChange={(value: number | null) => handleQuantityChange(accessory.id.toString(), value as number)}
-                  className="w-16 text-center quantity-input-field"
+                  className="w-16 text-center"
                   size="small"
-                  style={{
-                    backgroundColor: '#ffffff',
-                    color: '#333333',
-                    borderColor: '#d1d5db'
-                  }}
                 />
                 <Button 
+                  size="small"
                   icon={<PlusOutlined />}
                   onClick={() => handleQuantityChange(accessory.id.toString(), (quantities[accessory.id.toString()] || 1) + 1)}
-                  size="small"
-                  style={{
-                    backgroundColor: '#f3f4f6',
-                    borderColor: '#d1d5db',
-                    color: '#374151'
-                  }}
-                  className="hover:border-primary hover:bg-primary hover:text-white transition-colors duration-200"
+                  className="bg-card-alt border-border hover:border-primary hover:bg-primary hover:text-white transition-colors duration-200"
                 />
               </div>
               
-              <Button
+              <Button 
                 type="primary"
                 icon={<ShoppingCartOutlined />}
                 onClick={() => handleAddToCart(accessory, 'accessory')}
-                className="w-full bg-primary hover:bg-primary-dark text-white font-medium py-2 h-10 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
-                size="large"
+                className="w-full bg-primary hover:bg-primary-dark border-primary hover:border-primary-dark transition-colors duration-200"
+                size="small"
               >
-                {t('buttons.addToCart')}
+                加入购物车
               </Button>
             </div>
           </div>
         </div>
 
         {/* 🔥 必选备件显示区域 */}
-        <div className="mt-4">
-          <RequiredPartsDisplay 
-            requiredParts={getFieldValue('required_parts')}
-            requiredQuantity={getFieldValue('required_quantity')}
-            className="border border-orange-200 rounded-lg"
-          />
-        </div>
-
-        <div className="mt-4 flex gap-3">
-          <Button 
-            size="small"
-            icon={<MenuOutlined />}
-            onClick={() => handleQuantityChange(accessory.id.toString(), (quantities[accessory.id.toString()] || 1) - 1)}
-            disabled={(quantities[accessory.id.toString()] || 1) <= 1}
-            style={{
-              backgroundColor: '#f3f4f6',
-              borderColor: '#d1d5db',
-              color: '#374151'
-            }}
-            className="hover:border-primary hover:bg-primary hover:text-white transition-colors duration-200"
-          />
-          <InputNumber
-            min={1}
-            value={quantities[accessory.id.toString()] || 1}
-            onChange={(value: number | null) => handleQuantityChange(accessory.id.toString(), value as number)}
-            className="w-16 text-center quantity-input-field"
-            size="small"
-            style={{
-              backgroundColor: '#ffffff',
-              color: '#333333',
-              borderColor: '#d1d5db'
-            }}
-          />
-          <Button 
-            size="small"
-            icon={<PlusOutlined />}
-            onClick={() => handleQuantityChange(accessory.id.toString(), (quantities[accessory.id.toString()] || 1) + 1)}
-            style={{
-              backgroundColor: '#f3f4f6',
-              borderColor: '#d1d5db',
-              color: '#374151'
-            }}
-            className="hover:border-primary hover:bg-primary hover:text-white transition-colors duration-200"
-          />
-        </div>
+        <RequiredPartsSection />
       </div>
     );
   };
