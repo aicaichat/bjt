@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>材料筛选测试 - 重量/厚度切换</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .filter-group {
+            margin-bottom: 20px;
+        }
+        .filter-label {
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .material-selector {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .material-btn {
+            padding: 8px 16px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .material-btn:hover {
+            border-color: #007bff;
+        }
+        .material-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .spec-filter {
+            margin-top: 20px;
+        }
+        .spec-select {
+            width: 200px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .result {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .debug-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>材料筛选测试 - 重量/厚度切换功能</h1>
+    
+    <div class="test-container">
+        <h2>测试说明</h2>
+        <p>此页面测试当用户选择不同材料时，筛选标签是否正确切换：</p>
+        <ul>
+            <li><strong>非纸质材料</strong>（HDPE, LDPE, Nylon）：显示 "Thickness" 筛选</li>
+            <li><strong>纸质材料</strong>（PAPER, PAPER+PE）：显示 "Weight" 筛选</li>
+        </ul>
+    </div>
+
+    <div class="test-container">
+        <div class="filter-group">
+            <label class="filter-label">Material:</label>
+            <div class="material-selector">
+                <button class="material-btn active" data-material="HDPE">HDPE</button>
+                <button class="material-btn" data-material="LDPE">LDPE</button>
+                <button class="material-btn" data-material="Nylon">Nylon</button>
+                <button class="material-btn" data-material="PAPER+PE">PAPER+PE</button>
+                <button class="material-btn" data-material="PAPER">PAPER</button>
+            </div>
+        </div>
+
+        <div class="spec-filter">
+            <label class="filter-label" id="spec-label">Thickness:</label>
+            <select class="spec-select" id="spec-select">
+                <option value="all">ALL</option>
+                <option value="13um">13 um</option>
+                <option value="15um">15 um</option>
+                <option value="20um">20 um</option>
+                <option value="25um">25 um</option>
+            </select>
+        </div>
+
+        <div class="result">
+            <strong>当前选择:</strong>
+            <div id="current-selection">材料: HDPE, 规格类型: Thickness</div>
+        </div>
+
+        <div class="debug-info">
+            <strong>调试信息:</strong>
+            <div id="debug-info">
+                isPaperMaterial('HDPE') = false<br>
+                显示筛选类型: Thickness
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 判断是否为纸质材料的函数（与前端代码一致）
+        function isPaperMaterial(materialId) {
+            return materialId === 'PAPER' || materialId === 'paper_pe' || materialId.toLowerCase().includes('paper');
+        }
+
+        // 厚度选项
+        const thicknessOptions = [
+            { value: 'all', text: 'ALL' },
+            { value: '13um', text: '13 um' },
+            { value: '15um', text: '15 um' },
+            { value: '20um', text: '20 um' },
+            { value: '25um', text: '25 um' },
+            { value: '35um', text: '35 um' }
+        ];
+
+        // 重量选项
+        const weightOptions = [
+            { value: 'all', text: 'ALL' },
+            { value: '50gsm', text: '50 gsm' },
+            { value: '75gsm', text: '75 gsm' },
+            { value: '100gsm', text: '100 gsm' }
+        ];
+
+        let currentMaterial = 'HDPE';
+
+        function updateSpecFilter() {
+            const specLabel = document.getElementById('spec-label');
+            const specSelect = document.getElementById('spec-select');
+            const currentSelection = document.getElementById('current-selection');
+            const debugInfo = document.getElementById('debug-info');
+
+            const isPaper = isPaperMaterial(currentMaterial);
+            const specType = isPaper ? 'Weight' : 'Thickness';
+            const options = isPaper ? weightOptions : thicknessOptions;
+
+            // 更新标签
+            specLabel.textContent = specType + ':';
+
+            // 更新选项
+            specSelect.innerHTML = '';
+            options.forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option.value;
+                optionElement.textContent = option.text;
+                specSelect.appendChild(optionElement);
+            });
+
+            // 更新显示信息
+            currentSelection.textContent = `材料: ${currentMaterial}, 规格类型: ${specType}`;
+            
+            // 更新调试信息
+            debugInfo.innerHTML = `
+                isPaperMaterial('${currentMaterial}') = ${isPaper}<br>
+                显示筛选类型: ${specType}<br>
+                可用选项: ${options.map(o => o.text).join(', ')}
+            `;
+        }
+
+        // 材料按钮点击事件
+        document.querySelectorAll('.material-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // 移除所有active类
+                document.querySelectorAll('.material-btn').forEach(b => b.classList.remove('active'));
+                
+                // 添加active类到当前按钮
+                this.classList.add('active');
+                
+                // 更新当前材料
+                currentMaterial = this.dataset.material;
+                
+                // 更新筛选器
+                updateSpecFilter();
+            });
+        });
+
+        // 初始化
+        updateSpecFilter();
+    </script>
+</body>
+</html> 

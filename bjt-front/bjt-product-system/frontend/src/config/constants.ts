@@ -86,4 +86,67 @@ export const IMAGES = {
   LOGO: `${IMAGE_BASE_URL}/logo-1.webp`,
   LOGO_FOOTER: `${IMAGE_BASE_URL}/logo-footer.webp`,
   BARCODE: `${IMAGE_BASE_URL}/barcode.webp`,
-} as const; 
+} as const;
+
+// 应用常量配置
+export const APP_CONFIG = {
+  name: 'BJT产品管理系统',
+  version: '1.0.0',
+  description: 'BJT Product Management System',
+  author: 'BJT Team'
+};
+
+export const API_CONFIG = {
+  baseURL: import.meta.env.VITE_API_URL || '/wp-json/bjt/v1',
+  timeout: 10000,
+  retryAttempts: 3
+};
+
+export const UI_CONFIG = {
+  pageSize: 20,
+  maxPageSize: 100,
+  debounceDelay: 300,
+  animationDuration: 200
+};
+
+export const STORAGE_KEYS = {
+  token: 'bjt_token',
+  user: 'bjt_user',
+  language: 'bjt_language',
+  theme: 'bjt_theme',
+  cart: 'bjt_cart'
+};
+
+export const ROUTES = {
+  home: '/',
+  login: '/login',
+  machines: '/machines',
+  accessories: '/accessories',
+  consumables: '/consumables',
+  spareParts: '/spare-parts',
+  cart: '/cart',
+  orders: '/orders',
+  profile: '/profile',
+  admin: '/admin'
+};
+
+export const LANGUAGES = {
+  zh: '中文',
+  en: 'English'
+};
+
+export const CURRENCIES = {
+  CNY: '人民币',
+  USD: '美元',
+  EUR: '欧元'
+};
+
+export default {
+  APP_CONFIG,
+  API_CONFIG,
+  UI_CONFIG,
+  STORAGE_KEYS,
+  ROUTES,
+  LANGUAGES,
+  CURRENCIES
+}; 
