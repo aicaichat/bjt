@@ -1,0 +1,113 @@
+# BJT产品管理系统 - 简化生产环境配置
+# 基于开发环境，适用于快速生产部署
+
+services:
+  # 前端应用（使用已构建的镜像）
+  frontend:
+    image: dev-frontend:latest
+    ports:
+      - "5173:5173"
+    networks:
+      - bjt_network
+    volumes:
+      - ../../frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=production
+      - VITE_API_URL=http://localhost:8080/wp-json/bjt/v1
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:5173 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+
+  # WordPress应用服务器
+  wordpress:
+    build:
+      context: ../dev/wordpress
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    environment:
+      WORDPRESS_DB_HOST: mysql
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+      WORDPRESS_DB_NAME: bjt_product
+      WORDPRESS_DB_CHARSET: utf8mb4
+      WORDPRESS_DB_COLLATE: ''
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_HOME', 'http://localhost:8080');
+        define('WP_SITEURL', 'http://localhost:8080');
+        define('WP_CONTENT_URL', 'http://localhost:8080/wp-content');
+        define('WP_CONTENT_DIR', '/var/www/html/wp-content');
+        define('JWT_AUTH_SECRET_KEY', 'bjt-secret-key-2023');
+      WORDPRESS_DEBUG: 0
+    volumes:
+      - ../../backend:/var/www/html
+      - ../../plugins:/var/www/html/wp-content/plugins
+      - wordpress_uploads:/var/www/html/wp-content/uploads
+    depends_on:
+      - mysql
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/wp-admin/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks:
+      - bjt_network
+    restart: unless-stopped
+
+  # MySQL数据库
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bjt_product
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ../../docker/dev/mysql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ../../generated_sql_imports/_设备.sql:/docker-entrypoint-initdb.d/02-devices.sql:ro
+      - ../../generated_sql_imports/_耗材.sql:/docker-entrypoint-initdb.d/03-consumables.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - bjt_network
+    command: --default-authentication-plugin=mysql_native_password
+    restart: unless-stopped
+
+  # Nginx反向代理（生产环境）
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ../../docker/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf
+      - ../../backend:/var/www/html:ro
+      - ../../plugins:/var/www/html/wp-content/plugins:ro
+    depends_on:
+      - frontend
+      - wordpress
+    networks:
+      - bjt_network
+    restart: unless-stopped
+
+networks:
+  bjt_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
+  wordpress_uploads:
+    driver: local 

@@ -9,15 +9,28 @@ const useProxy = import.meta.env.VITE_USE_PROXY === 'true';
 export const API_BASE_URL = (() => {
   // 如果设置了VITE_API_URL环境变量，直接使用
   if (import.meta.env.VITE_API_URL) {
+    console.log('🔧 使用环境变量API地址:', import.meta.env.VITE_API_URL);
     return import.meta.env.VITE_API_URL;
   }
   
   // 开发环境且启用代理时使用相对路径
   if (isDevelopment && useProxy) {
+    console.log('🔧 使用代理模式API地址: /wp-json/bjt/v1');
     return '/wp-json/bjt/v1';
   }
   
-  // 默认使用完整URL
+  // 检查是否在远程环境（通过hostname判断）
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+      // 远程环境使用相对路径，让nginx代理处理
+      console.log('🔧 检测到远程环境，使用相对路径: /wp-json/bjt/v1');
+      return '/wp-json/bjt/v1';
+    }
+  }
+  
+  // 默认使用完整URL（本地开发）
+  console.log('🔧 使用默认API地址: http://localhost:8080/wp-json/bjt/v1');
   return 'http://localhost:8080/wp-json/bjt/v1';
 })();
 
@@ -26,6 +39,7 @@ console.log('🔧 API配置信息:', {
   useProxy,
   VITE_API_URL: import.meta.env.VITE_API_URL,
   VITE_USE_PROXY: import.meta.env.VITE_USE_PROXY,
+  hostname: typeof window !== 'undefined' ? window.location.hostname : 'server-side',
   finalApiBaseUrl: API_BASE_URL
 });
 
@@ -43,6 +57,7 @@ export const getDefaultHeaders = () => {
   return {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
   };
 };
 
@@ -103,6 +118,7 @@ export const logDebug = (...args: any[]) => {
 
 export default {
   API_BASE_URL,
+  getBaseUrl,
   getDefaultHeaders,
   getAuthHeaders,
   REQUEST_TIMEOUT,

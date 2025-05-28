@@ -1,0 +1,62 @@
+# WordPress开发环境
+FROM wordpress:6.4-php8.2-apache
+
+# 安装必要的PHP扩展和工具
+RUN apt-get update && apt-get install -y \
+    curl \
+    zip \
+    unzip \
+    git \
+    vim \
+    nano \
+    wget \
+    && docker-php-ext-install mysqli pdo pdo_mysql \
+    && docker-php-ext-enable mysqli \
+    && rm -rf /var/lib/apt/lists/*
+
+# 安装WP-CLI
+RUN curl -O https://raw.githubusercontent.com/wp-cli/wp-cli/v2.8.1/wp-cli.phar \
+    && chmod +x wp-cli.phar \
+    && mv wp-cli.phar /usr/local/bin/wp
+
+# 复制开发环境PHP配置
+COPY php.ini /usr/local/etc/php/conf.d/custom.ini
+
+# 复制Apache配置
+COPY apache.conf /etc/apache2/sites-available/000-default.conf
+
+# 启用Apache模块
+RUN a2enmod rewrite headers
+
+# 开发环境特定配置
+RUN echo "error_reporting = E_ALL" >> /usr/local/etc/php/conf.d/dev.ini \
+    && echo "display_errors = On" >> /usr/local/etc/php/conf.d/dev.ini \
+    && echo "display_startup_errors = On" >> /usr/local/etc/php/conf.d/dev.ini \
+    && echo "log_errors = On" >> /usr/local/etc/php/conf.d/dev.ini \
+    && echo "error_log = /var/log/php_errors.log" >> /usr/local/etc/php/conf.d/dev.ini
+
+# 设置正确的权限
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html
+
+# 创建必要的目录
+RUN mkdir -p /var/www/html/wp-content/uploads \
+    && mkdir -p /var/www/html/wp-content/cache \
+    && mkdir -p /var/www/html/wp-content/debug \
+    && chown -R www-data:www-data /var/www/html/wp-content \
+    && chmod -R 777 /var/www/html/wp-content/uploads \
+    && chmod -R 777 /var/www/html/wp-content/cache
+
+# 创建日志目录
+RUN mkdir -p /var/log \
+    && touch /var/log/php_errors.log \
+    && chown www-data:www-data /var/log/php_errors.log
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost/wp-admin/admin-ajax.php || exit 1
+
+EXPOSE 80
+
+# 启动Apache
+CMD ["apache2-foreground"] 

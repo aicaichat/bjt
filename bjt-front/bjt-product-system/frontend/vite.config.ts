@@ -29,23 +29,47 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    host: '0.0.0.0',
+    host: '0.0.0.0', // 允许外部访问
     cors: true,
     strictPort: true, // 确保使用指定端口
     hmr: {
       port: 5173,
-      host: 'localhost'
+      host: '0.0.0.0' // 允许外部HMR连接
     },
     proxy: {
       '/wp-json': {
-        target: 'http://localhost:8080',
+        target: process.env.VITE_PROXY_TARGET || 'http://localhost:8080',
         changeOrigin: true,
-        secure: false
+        secure: false,
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            console.log('proxy error', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            console.log('Sending Request to the Target:', req.method, req.url);
+          });
+          proxy.on('proxyRes', (proxyRes, req, _res) => {
+            console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
+          });
+        },
       }
     }
   },
   build: {
     outDir: 'build',
-    sourcemap: true
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          antd: ['antd'],
+          utils: ['axios']
+        }
+      }
+    }
+  },
+  define: {
+    // 确保环境变量在构建时可用
+    __DEV__: JSON.stringify(process.env.NODE_ENV === 'development'),
   }
 })

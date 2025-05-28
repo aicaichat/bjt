@@ -7,7 +7,24 @@
  * API配置
  */
 export const API_CONFIG = {
-  BASE_URL: '/wp-json/bjt/v1',
+  // 使用统一的API配置逻辑
+  BASE_URL: (() => {
+    // 优先使用环境变量
+    if (import.meta.env.VITE_API_URL) {
+      return import.meta.env.VITE_API_URL;
+    }
+    
+    // 检查是否在远程环境
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname;
+      if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+        return '/wp-json/bjt/v1';
+      }
+    }
+    
+    // 默认本地开发地址
+    return 'http://localhost:8080/wp-json/bjt/v1';
+  })(),
   USE_MOCK_DATA: import.meta.env.VITE_USE_MOCK_DATA === 'true',
   TIMEOUT: 8000, // 请求超时时间（毫秒）
   RETRY_COUNT: 2, // 请求失败重试次数

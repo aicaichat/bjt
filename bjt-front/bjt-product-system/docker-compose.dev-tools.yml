@@ -1,0 +1,62 @@
+# BJT产品管理系统 - 开发工具配置
+version: '3.8'
+
+services:
+  # phpMyAdmin - 数据库管理工具
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      UPLOAD_LIMIT: 64M
+    networks:
+      - bjt_network
+    depends_on:
+      - mysql
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Adminer - 轻量级数据库管理工具
+  adminer:
+    image: adminer:latest
+    ports:
+      - "8082:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: mysql
+    networks:
+      - bjt_network
+    depends_on:
+      - mysql
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # 日志聚合器 - 方便查看所有服务日志
+  log-viewer:
+    image: goharbor/harbor-log:v2.8.0
+    ports:
+      - "8083:8080"
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - bjt_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  bjt_network:
+    external: true 
