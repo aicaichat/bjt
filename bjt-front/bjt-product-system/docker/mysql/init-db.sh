@@ -57,7 +57,16 @@ if [ "$INIT_CHECK" = "0" ]; then
         echo "警告: _耗材.sql 文件不存在，跳过耗材数据导入"
     fi
     
-    # 5. 验证初始化结果
+    # 5. 导入测试用户数据
+    if [ -f "/docker-entrypoint-initdb.d/_test_users.sql" ]; then
+        echo "导入测试用户数据..."
+        mysql -h"$MYSQL_HOST" -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" < /docker-entrypoint-initdb.d/_test_users.sql
+        echo "测试用户数据导入完成"
+    else
+        echo "警告: _test_users.sql 文件不存在，跳过测试用户数据导入"
+    fi
+    
+    # 6. 验证初始化结果
     echo "验证数据库初始化结果..."
     TABLE_COUNT=$(mysql -h"$MYSQL_HOST" -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -e "
         SELECT COUNT(*) as count 

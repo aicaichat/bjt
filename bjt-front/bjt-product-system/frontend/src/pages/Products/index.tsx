@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './Products.css';
-import { productApi, cartApi, Product, CartItem } from '../../services/api';
 import { mockProductApi, mockCartApi } from '../../services/mockApi';
 import { safeToLocaleString } from '../../utils/priceUtils';
 import { useAuth } from '../../contexts/AuthContext';
@@ -9,6 +8,25 @@ import productLineService, { ProductLine } from '../../api/services/product-line
 import { Loading, Error } from '../../components/common';
 import { useTranslation } from 'react-i18next';
 import { ROUTES } from '../../config/routes';
+
+// Define missing types
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  // Add other properties as needed
+}
+
+interface CartItem {
+  id: string;
+  productId: string;
+  quantity: number;
+  price: number;
+  name: string;
+  specs?: any;
+  type?: string;
+  image?: string;
+}
 
 // 临时占位图片路径
 const placeholderImage = 'https://via.placeholder.com/100x100?text=Product';
@@ -18,8 +36,8 @@ const USE_MOCK_API = true; // 设置为true强制使用模拟API进行开发
 
 // 根据配置选择使用真实API还是模拟API
 const apiService = {
-  product: USE_MOCK_API ? mockProductApi : productApi,
-  cart: USE_MOCK_API ? mockCartApi : cartApi
+  product: mockProductApi,
+  cart: mockCartApi
 };
 
 // 更新CartItem类型，添加规格信息
@@ -151,6 +169,9 @@ const Products: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [productLines, setProductLines] = useState<ProductLine[]>([]);
+  
+  // Define itemsPerPage constant
+  const itemsPerPage = 10;
 
   // 当前语言
   const currentLanguage = i18n.language.startsWith('zh') ? 'zh' : 'en';

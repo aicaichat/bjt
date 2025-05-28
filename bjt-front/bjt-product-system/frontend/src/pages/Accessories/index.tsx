@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Spin, Input, Select, Button, Row, Col, Card, Tag, Typography, Space, message, Image } from 'antd';
 import { SearchOutlined, ShoppingCartOutlined, InfoCircleOutlined } from '@ant-design/icons';
-import { accessoriesMock } from '../../mock/accessoriesMock';
+// import { accessoriesMock } from '../../mock/accessoriesMock';
 import { AccessoryProduct } from '../../types/accessories';
 import { RequiredPartsDisplay } from '../../components/RequiredPartsDisplay';
 import { useCart } from '../../contexts/CartContext';

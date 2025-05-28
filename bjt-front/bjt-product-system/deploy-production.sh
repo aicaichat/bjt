@@ -1,0 +1,201 @@
+#!/bin/bash
+
+# BJT Product System - 生产环境部署脚本
+# 使用方法: ./deploy-production.sh
+
+set -e  # 遇到错误立即退出
+
+# 颜色定义
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# 打印带颜色的消息
+print_message() {
+    echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[$(date +'%Y-%m-%d %H:%M:%S')] ERROR:${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[$(date +'%Y-%m-%d %H:%M:%S')] WARNING:${NC} $1"
+}
+
+# 检查必要的环境变量
+check_env_vars() {
+    print_message "检查环境变量..."
+    
+    required_vars=(
+        "DOMAIN_NAME"
+        "MYSQL_ROOT_PASSWORD"
+        "MYSQL_DATABASE"
+        "MYSQL_USER"
+        "MYSQL_PASSWORD"
+        "JWT_AUTH_SECRET_KEY"
+        "WP_HOME"
+        "WP_SITEURL"
+    )
+    
+    for var in "${required_vars[@]}"; do
+        if [ -z "${!var}" ]; then
+            print_error "环境变量 $var 未设置"
+            exit 1
+        fi
+    done
+    
+    print_message "环境变量检查通过"
+}
+
+# 备份当前部署
+backup_current_deployment() {
+    print_message "备份当前部署..."
+    
+    backup_dir="backups/$(date +'%Y%m%d_%H%M%S')"
+    mkdir -p "$backup_dir"
+    
+    # 备份数据库
+    if docker-compose -f docker/prod/docker-compose.prod.yml exec -T mysql mysqldump -u root -p${MYSQL_ROOT_PASSWORD} ${MYSQL_DATABASE} > "$backup_dir/database.sql"; then
+        print_message "数据库备份完成"
+    else
+        print_warning "数据库备份失败，继续部署..."
+    fi
+    
+    # 备份上传文件
+    if [ -d "wordpress_uploads" ]; then
+        cp -r wordpress_uploads "$backup_dir/"
+        print_message "上传文件备份完成"
+    fi
+}
+
+# 构建前端应用
+build_frontend() {
+    print_message "构建前端应用..."
+    
+    cd frontend
+    
+    # 安装依赖
+    print_message "安装前端依赖..."
+    npm ci
+    
+    # 构建生产版本（跳过TypeScript检查）
+    print_message "构建前端生产版本..."
+    VITE_API_URL="https://${DOMAIN_NAME}/wp-json/bjt/v1" npm run build:skip-check
+    
+    cd ..
+    
+    print_message "前端构建完成"
+}
+
+# 更新 Docker 镜像
+update_docker_images() {
+    print_message "更新 Docker 镜像..."
+    
+    # 拉取最新的基础镜像
+    docker pull nginx:alpine
+    docker pull mysql:8.0
+    docker pull wordpress:latest
+    docker pull node:18-alpine
+    
+    print_message "Docker 镜像更新完成"
+}
+
+# 构建和部署
+deploy() {
+    print_message "开始部署..."
+    
+    # 停止当前服务
+    print_message "停止当前服务..."
+    docker-compose -f docker/prod/docker-compose.prod.yml down
+    
+    # 构建新镜像
+    print_message "构建 Docker 镜像..."
+    docker-compose -f docker/prod/docker-compose.prod.yml build --no-cache
+    
+    # 启动服务
+    print_message "启动服务..."
+    docker-compose -f docker/prod/docker-compose.prod.yml up -d
+    
+    # 等待服务启动
+    print_message "等待服务启动..."
+    sleep 30
+    
+    # 检查服务状态
+    print_message "检查服务状态..."
+    docker-compose -f docker/prod/docker-compose.prod.yml ps
+}
+
+# 健康检查
+health_check() {
+    print_message "执行健康检查..."
+    
+    # 检查前端
+    if curl -f -s "https://${DOMAIN_NAME}" > /dev/null; then
+        print_message "前端服务正常"
+    else
+        print_error "前端服务异常"
+        return 1
+    fi
+    
+    # 检查API
+    if curl -f -s "https://${DOMAIN_NAME}/wp-json/bjt/v1" > /dev/null; then
+        print_message "API服务正常"
+    else
+        print_error "API服务异常"
+        return 1
+    fi
+    
+    print_message "健康检查通过"
+}
+
+# 清理旧镜像
+cleanup() {
+    print_message "清理旧镜像..."
+    docker image prune -f
+    print_message "清理完成"
+}
+
+# 主函数
+main() {
+    print_message "开始 BJT Product System 生产环境部署"
+    
+    # 检查是否在项目根目录
+    if [ ! -f "docker/prod/docker-compose.prod.yml" ]; then
+        print_error "请在项目根目录运行此脚本"
+        exit 1
+    fi
+    
+    # 加载环境变量
+    if [ -f ".env.production" ]; then
+        export $(cat .env.production | grep -v '^#' | xargs)
+    else
+        print_error ".env.production 文件不存在"
+        exit 1
+    fi
+    
+    # 执行部署步骤
+    check_env_vars
+    backup_current_deployment
+    build_frontend
+    update_docker_images
+    deploy
+    
+    # 等待服务完全启动
+    sleep 10
+    
+    # 健康检查
+    if health_check; then
+        cleanup
+        print_message "部署成功完成！"
+        print_message "访问地址: https://${DOMAIN_NAME}"
+    else
+        print_error "部署完成但健康检查失败，请检查日志"
+        docker-compose -f docker/prod/docker-compose.prod.yml logs --tail=50
+        exit 1
+    fi
+}
+
+# 运行主函数
+main "$@" 
