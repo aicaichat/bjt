@@ -7,7 +7,7 @@
  * API配置
  */
 export const API_CONFIG = {
-  BASE_URL: '/wp-json/bjt/v1',
+  BASE_URL: import.meta.env.VITE_API_URL || '/wp-json/bjt/v1',
   USE_MOCK_DATA: import.meta.env.VITE_USE_MOCK_DATA === 'true',
   TIMEOUT: 8000, // 请求超时时间（毫秒）
   RETRY_COUNT: 2, // 请求失败重试次数
