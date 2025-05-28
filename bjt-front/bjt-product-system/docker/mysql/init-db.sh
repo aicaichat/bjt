@@ -33,6 +33,8 @@ if [ "$INIT_CHECK" = "0" ]; then
     # 2. 初始化BJT插件的数据库结构
     if [ -f "/docker-entrypoint-initdb.d/init.sql" ]; then
         echo "导入数据库结构..."
+        # 先选择数据库，然后导入SQL
+        mysql -h"$MYSQL_HOST" -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -e "USE $MYSQL_DATABASE;" 
         mysql -h"$MYSQL_HOST" -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" < /docker-entrypoint-initdb.d/init.sql
         echo "数据库结构导入完成"
     else

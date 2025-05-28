@@ -1,10 +1,11 @@
 -- Create WordPress database and user
-CREATE DATABASE IF NOT EXISTS bjt_product;
+-- Database name will be created by Docker/init script
+-- CREATE DATABASE IF NOT EXISTS bjt_product;
 -- CREATE USER IF NOT EXISTS 'wordpress'@'%' IDENTIFIED BY 'wordpress';
 -- GRANT ALL PRIVILEGES ON bjt_product.* TO 'wordpress'@'%';
 -- FLUSH PRIVILEGES;
 
-USE bjt_product;
+-- USE bjt_product;
 
 -- Set default character set
 SET NAMES utf8mb4;
