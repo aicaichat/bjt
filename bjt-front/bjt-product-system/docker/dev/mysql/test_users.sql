@@ -1,5 +1,5 @@
 -- 插入测试用户数据到wp_bjt_users表
-USE bjt_product;
+-- 数据库已经由初始化脚本选择
 
 -- 清空现有用户数据（如果存在）
 DELETE FROM wp_bjt_users;
