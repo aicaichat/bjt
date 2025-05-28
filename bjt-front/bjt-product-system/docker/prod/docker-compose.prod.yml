@@ -7,7 +7,7 @@ services:
       context: ../../
       dockerfile: docker/nginx/Dockerfile.prod
       args:
-        - VITE_API_URL=https://${DOMAIN_NAME}/wp-json/bjt/v1
+        - VITE_API_URL=/wp-json/bjt/v1
     ports:
       - "80:80"
       - "443:443"
