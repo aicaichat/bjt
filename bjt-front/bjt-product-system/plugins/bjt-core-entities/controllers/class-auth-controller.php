@@ -142,7 +142,14 @@ class BJT_Auth_Controller extends BJT_API_Controller {
         }
         
         // 验证密码
-        if (!password_verify($password, $user->password)) {
+        error_log('[BJT_Auth_Controller] About to verify password for user: ' . $username);
+        error_log('[BJT_Auth_Controller] Password from request: ' . $password);
+        error_log('[BJT_Auth_Controller] Stored hash: ' . $user->password);
+        
+        $password_valid = password_verify($password, $user->password);
+        error_log('[BJT_Auth_Controller] Password verification result: ' . ($password_valid ? 'TRUE' : 'FALSE'));
+        
+        if (!$password_valid) {
             error_log('[BJT_Auth_Controller] Password verification failed for user: ' . $username);
             return $this->error_response('用户名或密码不正确', 'invalid_credentials', 401);
         }
