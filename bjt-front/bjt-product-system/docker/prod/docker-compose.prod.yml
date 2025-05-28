@@ -155,17 +155,21 @@ services:
 
   # 数据库备份服务
   mysql-backup:
-    image: mysql:8.0
+    image: alpine:3.18
     environment:
+      MYSQL_HOST: mysql
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
+      BACKUP_SCHEDULE: ${BACKUP_SCHEDULE:-0 2 * * *}
     volumes:
       - mysql_backup:/backup
-      - ../../scripts/backup.sh:/backup.sh
+      - ../../scripts/backup.sh:/backup.sh:ro
     command: >
       sh -c "
-        echo '${BACKUP_SCHEDULE} /backup.sh' > /etc/crontabs/root &&
-        crond -f
+        apk add --no-cache mysql-client bash &&
+        mkdir -p /etc/crontabs &&
+        echo '${BACKUP_SCHEDULE:-0 2 * * *} /backup.sh' > /etc/crontabs/root &&
+        crond -f -l 2
       "
     depends_on:
       - mysql
