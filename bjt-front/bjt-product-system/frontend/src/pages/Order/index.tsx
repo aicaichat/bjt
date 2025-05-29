@@ -48,6 +48,20 @@ interface ShippingInfo {
   notes: string;
 }
 
+// 使用内联SVG作为fallback图片，避免无限循环 - 修复base64编码错误
+const fallbackImageSvg = 'data:image/svg+xml,%3Csvg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg"%3E%3Crect width="80" height="80" fill="%23F3F4F6"/%3E%3Cpath d="M24 40H56V48H24V40Z" fill="%239CA3AF"/%3E%3Cpath d="M32 32H48V34H32V32Z" fill="%239CA3AF"/%3E%3C/svg%3E';
+
+// 安全的图片错误处理函数
+const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+  const target = e.target as HTMLImageElement;
+  // 防止无限循环：如果已经是fallback图片，就不再替换
+  if (target.src.startsWith('data:')) {
+    console.warn('Fallback image failed to load');
+    return;
+  }
+  target.src = fallbackImageSvg;
+};
+
 const OrderPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -72,6 +86,17 @@ const OrderPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [fromCart, setFromCart] = useState(false);
 
+  // 安全的数据提取函数 - 移到组件内部以访问i18n
+  const safeExtractString = (value: any, fallback: string = ''): string => {
+    if (typeof value === 'string' && value.trim()) return value.trim();
+    if (value && typeof value === 'object') {
+      // 尝试多语言字段
+      const langKey = i18n.language.startsWith('zh') ? 'zh-CN' : 'en-US';
+      return value[langKey] || value['zh-CN'] || value['en-US'] || Object.values(value)[0] || fallback;
+    }
+    return fallback;
+  };
+
   // 从服务加载数据
   useEffect(() => {
     const loadOrderData = async () => {
@@ -80,18 +105,158 @@ const OrderPage: React.FC = () => {
         
         // Check if we have data from location state (navigation from cart)
         const locationState = location.state as any;
+        let rawOrderItems: any[] = [];
+        
         if (locationState && locationState.orderItems) {
-          setOrderItems(locationState.orderItems);
+          rawOrderItems = locationState.orderItems;
           setFromCart(locationState.fromCart || false);
         } else {
           // Get data from API if not from cart
           const itemsResponse = await orderService.getCartItems();
           if (itemsResponse && itemsResponse.data) {
-            setOrderItems(Array.isArray(itemsResponse.data) ? itemsResponse.data : []);
-          } else {
-            setOrderItems([]);
+            rawOrderItems = Array.isArray(itemsResponse.data) ? itemsResponse.data : [];
           }
         }
+        
+        // 🔧 增强数据处理：如果购物车数据不完整，通过part_number获取完整信息
+        const enhancedOrderItems = await Promise.all(
+          rawOrderItems.map(async (item) => {
+            try {
+              // 检查数据是否完整
+              const hasCompleteData = item.name && item.name !== 'Invalid Type' && 
+                                      item.image_url && !item.image_url.includes('placeholder') &&
+                                      item.properties && Object.keys(item.properties).length > 0;
+              
+              if (hasCompleteData) {
+                return item; // 数据完整，直接返回
+              }
+              
+              console.log('🔍 [loadOrderData] Incomplete data detected for item:', item.part_number, 'fetching from API...');
+              
+              // 根据product_type决定API endpoint
+              let apiResponse = null;
+              if (item.product_type === 'machine' && item.product_id) {
+                try {
+                  // 🔧 修复：使用正确的主机API端点，通过ID而不是part_number查询
+                  const response = await fetch(`/wp-json/bjt/v1/host-parts/${item.product_id}`, {
+                    headers: {
+                      'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                    }
+                  });
+                  if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.data) {
+                      apiResponse = data.data;
+                    }
+                  }
+                } catch (apiError) {
+                  console.warn('⚠️ [loadOrderData] Failed to fetch host part data:', apiError);
+                }
+              } else if (item.product_type === 'accessory' && item.product_id) {
+                try {
+                  // 🔧 修复：配件API端点保持不变，继续使用ID查询
+                  const response = await fetch(`/wp-json/bjt/v1/accessories/${item.product_id}`, {
+                    headers: {
+                      'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                    }
+                  });
+                  if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.data) {
+                      apiResponse = data.data;
+                    } else if (data.id) {
+                      // 有些接口直接返回数据而不包装在success/data中
+                      apiResponse = data;
+                    }
+                  }
+                } catch (apiError) {
+                  console.warn('⚠️ [loadOrderData] Failed to fetch accessory data:', apiError);
+                }
+              }
+              
+              // 如果成功获取到API数据，合并到原item中
+              if (apiResponse) {
+                console.log('✅ [loadOrderData] Successfully fetched complete data for:', item.part_number);
+                
+                // 构建完整的properties对象
+                const enhancedProperties = {
+                  // 保留原有properties
+                  ...(item.properties || {}),
+                  
+                  // 基础信息
+                  part_number: apiResponse.part_number || item.part_number,
+                  model: apiResponse.model || apiResponse.app_model || '',
+                  
+                  // 🔧 改善名称映射：主机和配件的名称字段可能不同
+                  name_zh: apiResponse.name_zh || apiResponse.name || '',
+                  name_en: apiResponse.name_en || apiResponse.name || '',
+                  image_url: apiResponse.image_url || item.image_url,
+                  
+                  // 规格信息
+                  voltage: apiResponse.voltage || '',
+                  frequency: apiResponse.frequency || '',
+                  spec: apiResponse.spec || '',
+                  spec_imperial: apiResponse.spec_imperial || '',
+                  
+                  // 包装信息
+                  package_size_cm: apiResponse.package_size_cm || '',
+                  package_size_inch: apiResponse.package_size_inch || '',
+                  pallet_size_cm: apiResponse.pallet_size_cm || '',
+                  pallet_size_inch: apiResponse.pallet_size_inch || '',
+                  net_weight_kg: apiResponse.net_weight_kg || '',
+                  net_weight_lbs: apiResponse.net_weight_lbs || '',
+                  gross_weight_kg: apiResponse.gross_weight_kg || '',
+                  gross_weight_lbs: apiResponse.gross_weight_lbs || '',
+                  pcs_per_box: apiResponse.pcs_per_box || '',
+                  pcs_per_pallet: apiResponse.pcs_per_pallet || '',
+                  
+                  // 其他信息
+                  brand: apiResponse.brand || '',
+                  unit: apiResponse.unit || 'pcs',
+                  status: apiResponse.status || 'publish'
+                };
+                
+                // 🔧 改善名称提取逻辑：根据产品类型和语言选择合适的名称
+                let productName = '';
+                if (item.product_type === 'machine') {
+                  // 主机名称逻辑：使用name字段（根据API文档，主机直接有name字段）
+                  productName = apiResponse.name || item.part_number;
+                } else {
+                  // 配件名称逻辑：根据语言选择name_zh/name_en，或使用name字段
+                  if (i18n.language.startsWith('zh')) {
+                    productName = apiResponse.name_zh || apiResponse.name || item.part_number;
+                  } else {
+                    productName = apiResponse.name_en || apiResponse.name || item.part_number;
+                  }
+                }
+                
+                return {
+                  ...item,
+                  name: productName,
+                  image_url: apiResponse.image_url || item.image_url,
+                  properties: enhancedProperties
+                };
+              }
+              
+              // 如果API调用失败，至少确保基本显示信息
+              return {
+                ...item,
+                name: item.part_number || 'Unknown Product',
+                properties: {
+                  ...(item.properties || {}),
+                  part_number: item.part_number,
+                  model: item.part_number
+                }
+              };
+              
+            } catch (error) {
+              console.error('❌ [loadOrderData] Error processing item:', item.part_number, error);
+              return item; // 发生错误时返回原item
+            }
+          })
+        );
+        
+        setOrderItems(enhancedOrderItems);
         
         // 获取默认收货信息
         const defaultShippingResponse = await orderService.getDefaultShippingInfo();
@@ -359,94 +524,104 @@ const OrderPage: React.FC = () => {
             <h2 className="form-title">{t('order.details.title', 'Order Details')}</h2>
             
             {Array.isArray(orderItems) && orderItems.length > 0 ? orderItems.map(item => {
-              // 从购物车数据中提取商品信息
-              const itemData = item as any; // 购物车传递的ExtendedCartItem数据
+              // 🔧 使用改进的数据提取逻辑
+              const itemData = item as any;
               
-              // 提取图片URL，支持多种字段名
-              let imageUrl = itemData.image_url || itemData.image || '';
-              if (!imageUrl && itemData.properties?.image_url) {
-                imageUrl = itemData.properties.image_url;
-              }
-              if (!imageUrl) {
-                imageUrl = `https://via.placeholder.com/80x80?text=${encodeURIComponent(itemData.model || itemData.part_number || 'Product')}`;
+              // 🖼️ 安全提取图片URL - 优先级：image_url -> properties.image_url -> 默认fallback
+              let imageUrl = '';
+              if (itemData.image_url && typeof itemData.image_url === 'string' && itemData.image_url.trim()) {
+                imageUrl = itemData.image_url.trim();
+              } else if (itemData.properties?.image_url && typeof itemData.properties.image_url === 'string' && itemData.properties.image_url.trim()) {
+                imageUrl = itemData.properties.image_url.trim();
+              } else if (itemData.image && typeof itemData.image === 'string' && itemData.image.trim()) {
+                imageUrl = itemData.image.trim();
+              } else {
+                // 直接使用fallback SVG，避免网络请求
+                imageUrl = fallbackImageSvg;
               }
               
-              // 提取商品名称，支持多种字段名和多语言
+              // 📝 安全提取商品名称 - 支持多语言和多字段回退
               let productName = '';
-              if (typeof item.name === 'object') {
-                productName = item.name[i18n.language.startsWith('zh') ? 'zh-CN' : 'en-US'] || 
-                             item.name['zh-CN'] || item.name['en-US'] || '';
-              } else if (typeof item.name === 'string') {
-                productName = item.name;
-              }
               
-              // 如果名称为空，尝试从properties中获取
-              if (!productName) {
+              // 优先从name字段提取
+              productName = safeExtractString(item.name);
+              
+              // 如果name为空，尝试从properties提取
+              if (!productName && itemData.properties) {
                 if (i18n.language.startsWith('zh')) {
-                  productName = itemData.properties?.name_zh || itemData.properties?.productName || itemData.properties?.name || '';
+                  productName = itemData.properties.name_zh || itemData.properties.productName || itemData.properties.name || '';
                 } else {
-                  productName = itemData.properties?.name_en || itemData.properties?.productName || itemData.properties?.name || '';
+                  productName = itemData.properties.name_en || itemData.properties.productName || itemData.properties.name || '';
                 }
               }
               
-              // 最后的fallback
+              // 最终回退到基础字段
               if (!productName) {
-                productName = itemData.model || itemData.part_number || 'Unknown Product';
+                productName = itemData.model || itemData.part_number || itemData.sku || 'Unknown Product';
               }
               
-              // 提取商品类型
-              let productType = item.type || itemData.product_type || itemData.category || '';
+              // 🏷️ 提取商品类型
+              const productType = itemData.type || itemData.product_type || itemData.category || 'machine';
               
-              // 构建显示用的properties
+              // 📊 构建显示属性 - 改进的属性提取逻辑
               const displayProperties: Record<string, string> = {};
               
-              // 从购物车properties中提取所有显示字段
               if (itemData.properties) {
                 const props = itemData.properties;
                 
-                // 基础字段
+                // 基础信息（最重要的字段优先显示）
                 if (props.part_number) displayProperties['料号'] = props.part_number;
                 if (props.model) displayProperties['型号'] = props.model;
-                if (props.voltage) displayProperties['电压'] = props.voltage;
-                if (props.frequency) displayProperties['频率'] = props.frequency;
-                if (props.pcs_per_box) displayProperties['单箱数量'] = props.pcs_per_box.toString();
-                if (props.pcs_per_pallet) displayProperties['一托数量'] = props.pcs_per_pallet.toString();
+                if (props.voltage && props.voltage !== 'N/A') displayProperties['电压'] = props.voltage + (props.voltage.includes('V') ? '' : 'V');
+                if (props.frequency && props.frequency !== 'N/A') displayProperties['频率'] = props.frequency + (props.frequency.includes('Hz') ? '' : 'Hz');
                 
-                // 包装字段
-                if (props.package_size_cm) displayProperties['包装尺寸(cm)'] = props.package_size_cm;
-                if (props.package_size_inch) displayProperties['包装尺寸(inch)'] = props.package_size_inch;
-                if (props.pallet_size_cm) displayProperties['托盘尺寸(cm)'] = props.pallet_size_cm;
-                if (props.pallet_size_inch) displayProperties['托盘尺寸(inch)'] = props.pallet_size_inch;
+                // 规格信息
+                if (props.spec && props.spec !== 'N/A') displayProperties['规格'] = props.spec;
+                if (props.spec_imperial && props.spec_imperial !== 'N/A') displayProperties['规格(英制)'] = props.spec_imperial;
                 
-                // 重量字段
-                if (props.net_weight_kg) displayProperties['净重(kg)'] = props.net_weight_kg.toString();
-                if (props.net_weight_lbs) displayProperties['净重(lbs)'] = props.net_weight_lbs.toString();
-                if (props.gross_weight_kg) displayProperties['毛重(kg)'] = props.gross_weight_kg.toString();
-                if (props.gross_weight_lbs) displayProperties['毛重(lbs)'] = props.gross_weight_lbs.toString();
+                // 包装信息（按重要性排序）
+                if (props.pcs_per_box && props.pcs_per_box !== '0') displayProperties['单箱数量'] = props.pcs_per_box + ' pcs';
+                if (props.pcs_per_pallet && props.pcs_per_pallet !== '0') displayProperties['一托数量'] = props.pcs_per_pallet + ' pcs';
                 
-                // 规格字段
-                if (props.spec) displayProperties['规格'] = props.spec;
-                if (props.spec_imperial) displayProperties['规格(英制)'] = props.spec_imperial;
-                if (props.brand) displayProperties['品牌'] = props.brand;
-                if (props.unit) displayProperties['单位'] = props.unit;
+                // 尺寸信息（优先显示用户区域的单位）
+                const useImperial = ['NA', 'US'].includes(itemData.userRegion || '');
+                if (useImperial) {
+                  if (props.package_size_inch) displayProperties['包装尺寸'] = props.package_size_inch;
+                  if (props.pallet_size_inch) displayProperties['托盘尺寸'] = props.pallet_size_inch;
+                } else {
+                  if (props.package_size_cm) displayProperties['包装尺寸'] = props.package_size_cm;
+                  if (props.pallet_size_cm) displayProperties['托盘尺寸'] = props.pallet_size_cm;
+                }
+                
+                // 重量信息（优先显示用户区域的单位）
+                if (useImperial) {
+                  if (props.net_weight_lbs && props.net_weight_lbs !== '0') displayProperties['净重'] = props.net_weight_lbs + ' lbs';
+                  if (props.gross_weight_lbs && props.gross_weight_lbs !== '0') displayProperties['毛重'] = props.gross_weight_lbs + ' lbs';
+                } else {
+                  if (props.net_weight_kg && props.net_weight_kg !== '0') displayProperties['净重'] = props.net_weight_kg + ' kg';
+                  if (props.gross_weight_kg && props.gross_weight_kg !== '0') displayProperties['毛重'] = props.gross_weight_kg + ' kg';
+                }
+                
+                // 其他信息
+                if (props.brand && props.brand !== 'N/A') displayProperties['品牌'] = props.brand;
+                if (props.unit && props.unit !== 'N/A') displayProperties['单位'] = props.unit;
               }
               
-              // 如果没有从properties提取到足够信息，使用默认字段
+              // 🔄 如果properties为空，从item直接字段提取
               if (Object.keys(displayProperties).length === 0) {
                 if (itemData.part_number) displayProperties['料号'] = itemData.part_number;
                 if (itemData.model) displayProperties['型号'] = itemData.model;
+                if (itemData.sku) displayProperties['SKU'] = itemData.sku;
               }
 
               return (
-                <div key={item.id} className="order-item">
+                <div key={item.id || itemData.part_number || Math.random()} className="order-item">
                   <div className="item-image">
                     <img 
                       src={imageUrl} 
                       alt={productName}
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = `https://via.placeholder.com/80x80?text=${encodeURIComponent(itemData.model || itemData.part_number || 'Product')}`;
-                      }}
+                      onError={handleImageError}
+                      loading="lazy"
                     />
                   </div>
                   <div className="item-details">
