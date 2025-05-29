@@ -25,9 +25,16 @@ interface OrderItem {
     }>;
   };
   price: number;
+  unit_price?: number;
   quantity: number;
   shippingInfo?: ShippingInfo;
   specs?: Record<string, string>;
+  part_number?: string;
+  image_url?: string;
+  product_type?: string;
+  category?: string;
+  item_id?: number;
+  product_id?: number;
 }
 
 // 定义收货信息类型
@@ -101,7 +108,13 @@ const OrderPage: React.FC = () => {
         
         // 计算订单摘要
         const summaryResponse = await orderService.calculateOrderSummary();
-        const summary = summaryResponse?.data || {};
+        const summary = summaryResponse?.data || {
+          subtotal: 0,
+          tax: 0,
+          shipping: 0,
+          discount: 0,
+          total: 0
+        };
         setOrderSummary({
           subtotal: summary.subtotal || 0,
           tax: summary.tax || 0,
@@ -345,52 +358,139 @@ const OrderPage: React.FC = () => {
           <div className="order-details">
             <h2 className="form-title">{t('order.details.title', 'Order Details')}</h2>
             
-            {Array.isArray(orderItems) && orderItems.length > 0 ? orderItems.map(item => (
-              <div key={item.id} className="order-item">
-                <div className="item-image">
-                  <img src={item.image || `https://via.placeholder.com/80x80?text=${item.model || 'Product'}`} alt={typeof item.name === 'object' ? item.name['en-US'] : item.name} />
-                </div>
-                <div className="item-details">
-                  <div className="item-model">
-                    {item.model || (typeof item.name === 'object' ? item.name[i18n.language.startsWith('zh') ? 'zh-CN' : 'en-US'] : item.name)}
-                    <span className={`item-type-tag tag-${item.type?.toLowerCase() || 'machine'}`}>
-                      {getTypeText(item.type)}
-                    </span>
-                    
-                    {item.detailInfo && (
-                      <div className="info-tooltip">i
-                        <div className="tooltip-content">
-                          <div className="tooltip-title">{t('products.detailInfo', '{{name}} Detailed Information', { name: item.detailInfo.title })}</div>
-                          {item.detailInfo.sections.map((section, idx) => (
-                            <div key={idx} className="tooltip-section">
-                              {section.title && <div className="tooltip-title">{t(`products.sections.${section.title}`, section.title)}</div>}
-                              {section.properties.map((prop, propIdx) => (
-                                <div key={propIdx} className="tooltip-property">
-                                  <span className="tooltip-property-label">{t(`products.properties.${prop.label}`, prop.label)}:</span>
-                                  <span>{prop.value}</span>
-                                </div>
-                              ))}
-                            </div>
-                          ))}
+            {Array.isArray(orderItems) && orderItems.length > 0 ? orderItems.map(item => {
+              // 从购物车数据中提取商品信息
+              const itemData = item as any; // 购物车传递的ExtendedCartItem数据
+              
+              // 提取图片URL，支持多种字段名
+              let imageUrl = itemData.image_url || itemData.image || '';
+              if (!imageUrl && itemData.properties?.image_url) {
+                imageUrl = itemData.properties.image_url;
+              }
+              if (!imageUrl) {
+                imageUrl = `https://via.placeholder.com/80x80?text=${encodeURIComponent(itemData.model || itemData.part_number || 'Product')}`;
+              }
+              
+              // 提取商品名称，支持多种字段名和多语言
+              let productName = '';
+              if (typeof item.name === 'object') {
+                productName = item.name[i18n.language.startsWith('zh') ? 'zh-CN' : 'en-US'] || 
+                             item.name['zh-CN'] || item.name['en-US'] || '';
+              } else if (typeof item.name === 'string') {
+                productName = item.name;
+              }
+              
+              // 如果名称为空，尝试从properties中获取
+              if (!productName) {
+                if (i18n.language.startsWith('zh')) {
+                  productName = itemData.properties?.name_zh || itemData.properties?.productName || itemData.properties?.name || '';
+                } else {
+                  productName = itemData.properties?.name_en || itemData.properties?.productName || itemData.properties?.name || '';
+                }
+              }
+              
+              // 最后的fallback
+              if (!productName) {
+                productName = itemData.model || itemData.part_number || 'Unknown Product';
+              }
+              
+              // 提取商品类型
+              let productType = item.type || itemData.product_type || itemData.category || '';
+              
+              // 构建显示用的properties
+              const displayProperties: Record<string, string> = {};
+              
+              // 从购物车properties中提取所有显示字段
+              if (itemData.properties) {
+                const props = itemData.properties;
+                
+                // 基础字段
+                if (props.part_number) displayProperties['料号'] = props.part_number;
+                if (props.model) displayProperties['型号'] = props.model;
+                if (props.voltage) displayProperties['电压'] = props.voltage;
+                if (props.frequency) displayProperties['频率'] = props.frequency;
+                if (props.pcs_per_box) displayProperties['单箱数量'] = props.pcs_per_box.toString();
+                if (props.pcs_per_pallet) displayProperties['一托数量'] = props.pcs_per_pallet.toString();
+                
+                // 包装字段
+                if (props.package_size_cm) displayProperties['包装尺寸(cm)'] = props.package_size_cm;
+                if (props.package_size_inch) displayProperties['包装尺寸(inch)'] = props.package_size_inch;
+                if (props.pallet_size_cm) displayProperties['托盘尺寸(cm)'] = props.pallet_size_cm;
+                if (props.pallet_size_inch) displayProperties['托盘尺寸(inch)'] = props.pallet_size_inch;
+                
+                // 重量字段
+                if (props.net_weight_kg) displayProperties['净重(kg)'] = props.net_weight_kg.toString();
+                if (props.net_weight_lbs) displayProperties['净重(lbs)'] = props.net_weight_lbs.toString();
+                if (props.gross_weight_kg) displayProperties['毛重(kg)'] = props.gross_weight_kg.toString();
+                if (props.gross_weight_lbs) displayProperties['毛重(lbs)'] = props.gross_weight_lbs.toString();
+                
+                // 规格字段
+                if (props.spec) displayProperties['规格'] = props.spec;
+                if (props.spec_imperial) displayProperties['规格(英制)'] = props.spec_imperial;
+                if (props.brand) displayProperties['品牌'] = props.brand;
+                if (props.unit) displayProperties['单位'] = props.unit;
+              }
+              
+              // 如果没有从properties提取到足够信息，使用默认字段
+              if (Object.keys(displayProperties).length === 0) {
+                if (itemData.part_number) displayProperties['料号'] = itemData.part_number;
+                if (itemData.model) displayProperties['型号'] = itemData.model;
+              }
+
+              return (
+                <div key={item.id} className="order-item">
+                  <div className="item-image">
+                    <img 
+                      src={imageUrl} 
+                      alt={productName}
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = `https://via.placeholder.com/80x80?text=${encodeURIComponent(itemData.model || itemData.part_number || 'Product')}`;
+                      }}
+                    />
+                  </div>
+                  <div className="item-details">
+                    <div className="item-model">
+                      {productName}
+                      <span className={`item-type-tag tag-${productType?.toLowerCase() || 'machine'}`}>
+                        {getTypeText(productType)}
+                      </span>
+                      
+                      {item.detailInfo && (
+                        <div className="info-tooltip">i
+                          <div className="tooltip-content">
+                            <div className="tooltip-title">{t('products.detailInfo', '{{name}} Detailed Information', { name: item.detailInfo.title })}</div>
+                            {item.detailInfo.sections.map((section, idx) => (
+                              <div key={idx} className="tooltip-section">
+                                {section.title && <div className="tooltip-title">{t(`products.sections.${section.title}`, section.title)}</div>}
+                                {section.properties.map((prop, propIdx) => (
+                                  <div key={propIdx} className="tooltip-property">
+                                    <span className="tooltip-property-label">{t(`products.properties.${prop.label}`, prop.label)}:</span>
+                                    <span>{prop.value}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {item.properties && Object.entries(item.properties).map(([key, value]) => (
-                    <div key={key} className="item-property">
-                      <span className="property-label">{t(`products.properties.${key}`, key)}:</span>
-                      <span className="property-value">{value}</span>
+                      )}
                     </div>
-                  ))}
-                  
-                  <div className="item-price-quantity">
-                    <div className="item-quantity-badge">{t('products.quantity', 'Quantity')}: {item.quantity}</div>
-                    <div className="item-price-value">{formatPrice(item.price * item.quantity)}</div>
+                    
+                    {Object.entries(displayProperties).map(([key, value]) => (
+                      <div key={key} className="item-property">
+                        <span className="property-label">{t(`products.properties.${key}`, key)}:</span>
+                        <span className="property-value">{value}</span>
+                      </div>
+                    ))}
+                    
+                    <div className="item-price-quantity">
+                      <div className="item-quantity-badge">{t('products.quantity', 'Quantity')}: {item.quantity}</div>
+                      <div className="item-price-value">{formatPrice((item.price || item.unit_price || 0) * item.quantity)}</div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )) : (
+              );
+            }) : (
               <div className="empty-order-items">
                 {t('order.noItems', 'No items in your order. Please add some items to your cart first.')}
               </div>

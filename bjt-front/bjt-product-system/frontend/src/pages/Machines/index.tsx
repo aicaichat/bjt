@@ -838,11 +838,17 @@ const MachinesPage: React.FC = () => {
       return;
     }
 
-    console.log('🔍 [addRequiredPartsToCartForAccessory] Fetching required parts for part number:', partNumber);
+    console.log('🔍 [addRequiredPartsToCartForAccessory] Fetching required parts for accessory ID:', mainAccessory.id);
 
     try {
-      // 3. 通过API获取配件的必选备件信息
-      const response = await fetch(`/wp-json/bjt/v1/accessories?part_number=${partNumber}`, {
+      // 根据API文档，只有配件（60A开头，非60A01）才有必选备件
+      if (!partNumber.startsWith('60A') || partNumber.startsWith('60A01')) {
+        console.log('📝 [addRequiredPartsToCartForAccessory] Not a valid accessory for required parts');
+        return;
+      }
+
+      // 使用正确的API端点：/accessories/{accessoryId}/required
+      const response = await fetch(`/wp-json/bjt/v1/accessories/${mainAccessory.id}/required`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -851,6 +857,10 @@ const MachinesPage: React.FC = () => {
       });
 
       if (!response.ok) {
+        if (response.status === 404) {
+          console.log('📝 [addRequiredPartsToCartForAccessory] No required parts found for this accessory');
+          return;
+        }
         console.warn('⚠️ [addRequiredPartsToCartForAccessory] Failed to fetch accessory details from API');
         return;
       }
@@ -858,15 +868,14 @@ const MachinesPage: React.FC = () => {
       const accessoryData = await response.json();
       console.log('📦 [addRequiredPartsToCartForAccessory] Fetched accessory data from API:', accessoryData);
 
-      // 4. 从API响应中获取必选备件信息
+      // 从API响应中获取必选备件信息
       let requiredPartsInfo: Array<{part_number: string, quantity: number}> = [];
 
-      // API返回的是一个包含items数组的响应
-      if (accessoryData.items && accessoryData.items.length > 0) {
-        const accessoryItem = accessoryData.items[0]; // 取第一个匹配的配件
-        if (accessoryItem.required_parts && Array.isArray(accessoryItem.required_parts)) {
-          requiredPartsInfo = accessoryItem.required_parts;
-        }
+      if (accessoryData.success && accessoryData.data && accessoryData.data.items && accessoryData.data.items.length > 0) {
+        requiredPartsInfo = accessoryData.data.items.map((item: any) => ({
+          part_number: item.part_number,
+          quantity: item.quantity || 1
+        }));
       }
 
       if (requiredPartsInfo.length === 0) {
@@ -951,27 +960,60 @@ const MachinesPage: React.FC = () => {
                     (product as any).code || 
                     product.model || 
                     `MACHINE-${product.id}`;
-        
         console.log('🔍 [handleAddToCart] Machine partNumber extracted:', partNumber);
         
+        // 构建完整的主机properties，包含购物车需要的所有字段
         properties = {
-          'part_number': partNumber, // 使用提取的partNumber
-          'model': product.model,
-          'voltage': product.voltage,
-          'spec': product.spec,
-          'spec_imperial': product.spec_imperial,
-          'selected_voltage': selectedVoltage
+          // 基础字段
+          image_url: product.image_url,
+          model: product.model,
+          part_number: partNumber,
+          name: getMachineName(product),
+          productName: getMachineName(product),
+          id: product.id,
+          
+          // 规格字段
+          voltage: product.voltage || '',
+          frequency: '', // 主机没有 frequency 字段，兜底空字符串
+          
+          // 包装字段
+          pcs_per_box: product.pcs_per_box || '',
+          pcs_per_pallet: product.pcs_per_pallet || '',
+          package_size_cm: product.package_size_cm || '',
+          package_size_inch: product.package_size_inch || '',
+          pallet_size_cm: product.pallet_size_cm || '',
+          pallet_size_inch: product.pallet_size_inch || '',
+          
+          // 重量字段
+          net_weight_kg: product.net_weight_kg || '',
+          net_weight_lbs: product.net_weight_lbs || '',
+          gross_weight_kg: product.gross_weight_kg || '',
+          gross_weight_lbs: product.gross_weight_lbs || '',
+          pallet_height_cm: product.pallet_height_cm || '',
+          pallet_height_inch: product.pallet_height_inch || '',
+          pallet_gross_weight_kg: product.pallet_gross_weight_kg || '',
+          pallet_gross_weight_lbs: product.pallet_gross_weight_lbs || '',
+          
+          // 其他规格字段
+          spec: product.spec || '',
+          spec_imperial: product.spec_imperial || '',
+          brand: product.brand || '',
+          unit: product.unit || 'pcs'
         };
+        
         itemSpecs = {
-          'part_number': partNumber, // 使用提取的partNumber
-          'model': product.model,
-          'voltage': product.voltage,
-          'spec': product.spec,
-          'spec_imperial': product.spec_imperial,
-          'net_weight_kg': product.net_weight_kg,
-          'partNumber': partNumber, // 使用提取的partNumber
-          'productName': getMachineName(product)
+          part_number: partNumber,
+          model: product.model,
+          voltage: product.voltage || '',
+          frequency: '', // 主机没有 frequency 字段，兜底空字符串
+          pcs_per_box: product.pcs_per_box || '',
+          pcs_per_pallet: product.pcs_per_pallet || '',
+          id: product.id,
+          name: getMachineName(product),
+          productName: getMachineName(product)
         };
+        
+        console.log('🔍 [handleAddToCart] Final machine properties:', properties);
       } else {
         const accessory = product as MachineAccessory;
         const accessoryPart = accessory.parts?.[0];
@@ -994,30 +1036,49 @@ const MachinesPage: React.FC = () => {
         
         console.log('🔍 [handleAddToCart] Accessory partNumber extracted:', partNumber);
         
+        // 构建完整的配件properties，包含购物车需要的所有字段
+        const baseProperties = {
+          // 基础字段
+          'part_number': partNumber,
+          'model': accessory.model,
+          'name': accessory.title,
+          'productName': accessory.title,
+          'image_url': accessory.image_url,
+          
+          // 规格字段（从accessoryPart获取）
+          'voltage': accessoryPart?.specs?.['电压'] || accessoryPart?.specs?.['Voltage'] || '',
+          'frequency': accessoryPart?.specs?.['频率'] || accessoryPart?.specs?.['Frequency'] || '',
+          'pcs_per_box': accessoryPart?.specs?.['单箱数量'] || accessoryPart?.specs?.['Box Qty'] || '',
+          'pcs_per_pallet': accessoryPart?.specs?.['一托数量'] || accessoryPart?.specs?.['Pallet Qty'] || '',
+          
+          // 包装规格字段
+          'package_size_cm': accessoryPart?.specs?.['包装尺寸（厘米）'] || accessoryPart?.specs?.['Package Size (cm)'] || '',
+          'package_size_inch': accessoryPart?.specs?.['包装尺寸（英寸）'] || accessoryPart?.specs?.['Package Size (inch)'] || '',
+          'pallet_size_cm': accessoryPart?.specs?.['托盘尺寸（厘米）'] || accessoryPart?.specs?.['Pallet Size (cm)'] || '',
+          'pallet_size_inch': accessoryPart?.specs?.['托盘尺寸（英寸）'] || accessoryPart?.specs?.['Pallet Size (inch)'] || '',
+          
+          // 其他规格字段
+          'spec': accessoryPart?.spec || '',
+          'spec_imperial': accessoryPart?.spec_imperial || ''
+        };
+        
         if (partSpecs) {
+          // 合并partSpecs和基础properties，以基础properties为准
           properties = { 
             ...partSpecs,
-            'part_number': partNumber // 确保part_number在properties中
+            ...baseProperties  // 基础properties覆盖partSpecs中的同名字段
           };
           itemSpecs = {
             ...partSpecs,
-            'part_number': partNumber,
-            'partNumber': partNumber,
-            'productName': accessory.title
+            ...baseProperties
           };
         } else {
-          // 如果没有partSpecs，创建基本的properties
-          properties = {
-            'part_number': partNumber,
-            'model': accessory.model,
-            'title': accessory.title
-          };
-          itemSpecs = {
-            'part_number': partNumber,
-            'partNumber': partNumber,
-            'productName': accessory.title
-          };
+          // 如果没有partSpecs，使用基础properties
+          properties = baseProperties;
+          itemSpecs = baseProperties;
         }
+        
+        console.log('🔍 [handleAddToCart] Final accessory properties:', properties);
       }
 
       // 确保part_number不为空 - 强化检查
@@ -1166,10 +1227,7 @@ const MachinesPage: React.FC = () => {
         console.log('📝 [handleAddToCart] Product is not accessory, skipping required parts processing');
       }
       
-      setNotificationProduct(productName);
-      setNotificationQuantity(quantity);
-      setShowNotification(true);
-      setTimeout(hideCartNotification, 3000);
+      // 只保留全局 success 通知，避免重复弹窗
       success(t('messages.addedToCart'));
 
     } catch (err: any) {
@@ -1317,10 +1375,9 @@ const MachinesPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="mt-4 flex gap-3">
-                  <Button 
-                    size="small"
-                    icon={<InfoCircleOutlined />}
+                <div className="info-buttons-container">
+                  <button 
+                    className="spec-details-btn"
                     onClick={() => {
                       if (machine.model_explosion_diagram_pdf) {
                         window.open(machine.model_explosion_diagram_pdf, '_blank');
@@ -1328,10 +1385,10 @@ const MachinesPage: React.FC = () => {
                         info('暂无规格详情PDF文件');
                       }
                     }}
-                    className="bg-secondary-light text-secondary hover:bg-secondary hover:text-white border-secondary transition-colors duration-200"
                   >
+                    <InfoCircleOutlined />
                     规格详情
-                  </Button>
+                  </button>
                   
                   <Tooltip
                     title={
@@ -1391,13 +1448,10 @@ const MachinesPage: React.FC = () => {
                     color="white"
                     arrow={true}
                   >
-                    <Button 
-                      size="small"
-                      icon={<InfoCircleOutlined />}
-                      className="bg-accent-light text-primary hover:bg-accent hover:text-white border-accent transition-colors duration-200"
-                    >
+                    <button className="more-info-btn">
+                      <InfoCircleOutlined />
                       更多信息
-                    </Button>
+                    </button>
                   </Tooltip>
                 </div>
               </div>
@@ -2061,20 +2115,31 @@ const MachinesPage: React.FC = () => {
 
       React.useEffect(() => {
         const fetchRequiredParts = async () => {
-          const partNumber = accessoryPart?.part_number || 
-                            (accessory as any).part_number ||
-                            accessory.model;
-
+          // 根据API文档，主机（60A01xxx）没有必选备件，直接返回
+          const partNumber = accessoryPart?.part_number || accessory.model;
           if (!partNumber) {
             console.log('📝 [RequiredPartsSection] No part number found, skipping required parts fetch');
             return;
           }
 
+          // 如果是主机（60A01开头），直接跳过，主机没有必选备件
+          if (partNumber.startsWith('60A01')) {
+            console.log('📝 [RequiredPartsSection] Host part detected, hosts have no required parts');
+            return;
+          }
+
+          // 如果不是配件（60A开头），也跳过
+          if (!partNumber.startsWith('60A')) {
+            console.log('📝 [RequiredPartsSection] Not an accessory part, skipping required parts fetch');
+            return;
+          }
+
           setLoading(true);
           try {
-            console.log('🔍 [RequiredPartsSection] Fetching required parts for:', partNumber);
+            console.log('🔍 [RequiredPartsSection] Fetching required parts for accessory ID:', accessory.id);
             
-            const response = await fetch(`/wp-json/bjt/v1/accessories?part_number=${partNumber}`, {
+            // 使用正确的API端点：/accessories/{accessoryId}/required
+            const response = await fetch(`/wp-json/bjt/v1/accessories/${accessory.id}/required`, {
               method: 'GET',
               headers: {
                 'Content-Type': 'application/json',
@@ -2083,6 +2148,10 @@ const MachinesPage: React.FC = () => {
             });
 
             if (!response.ok) {
+              if (response.status === 404) {
+                console.log('📝 [RequiredPartsSection] No required parts found for this accessory');
+                return;
+              }
               console.warn('⚠️ [RequiredPartsSection] API request failed:', response.status);
               return;
             }
@@ -2090,24 +2159,21 @@ const MachinesPage: React.FC = () => {
             const data = await response.json();
             console.log('📦 [RequiredPartsSection] API response:', data);
 
-            if (data.items && data.items.length > 0) {
-              const accessoryItem = data.items[0];
-              if (accessoryItem.required_parts && Array.isArray(accessoryItem.required_parts)) {
-                const requiredParts = accessoryItem.required_parts.map((p: {part_number: string, quantity: number}) => p.part_number).join(',');
-                const requiredQuantity = accessoryItem.required_parts.map((p: {part_number: string, quantity: number}) => p.quantity.toString()).join(',');
-                
-                console.log('✅ [RequiredPartsSection] Found required parts:', {
-                  requiredParts,
-                  requiredQuantity
-                });
-                
-                setRequiredPartsData({
-                  requiredParts,
-                  requiredQuantity
-                });
-              } else {
-                console.log('📝 [RequiredPartsSection] No required parts found in API response');
-              }
+            if (data.success && data.data && data.data.items && data.data.items.length > 0) {
+              const requiredParts = data.data.items.map((item: any) => item.part_number).join(',');
+              const requiredQuantity = data.data.items.map((item: any) => item.quantity || 1).join(',');
+              
+              console.log('✅ [RequiredPartsSection] Found required parts:', {
+                requiredParts,
+                requiredQuantity
+              });
+              
+              setRequiredPartsData({
+                requiredParts,
+                requiredQuantity
+              });
+            } else {
+              console.log('📝 [RequiredPartsSection] No required parts found in API response');
             }
           } catch (error) {
             console.error('❌ [RequiredPartsSection] Error fetching required parts:', error);
@@ -2116,8 +2182,11 @@ const MachinesPage: React.FC = () => {
           }
         };
 
-        fetchRequiredParts();
-      }, [accessoryPart?.part_number, accessory.model]);
+        // 只有当accessory.id存在且稳定时才执行
+        if (accessory.id) {
+          fetchRequiredParts();
+        }
+      }, [accessory.id]); // 只依赖于accessory.id，避免频繁变化的part_number
 
       if (loading) {
         return (
@@ -2222,7 +2291,18 @@ const MachinesPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-4 flex gap-3">
+            <div className="info-buttons-container">
+              <button 
+                className="spec-details-btn"
+                onClick={() => {
+                  // 配件暂时没有PDF文档，显示提示信息
+                  info('配件规格详情请咨询客服');
+                }}
+              >
+                <InfoCircleOutlined />
+                规格详情
+              </button>
+              
               <Tooltip
                 title={
                   <div className="p-3 bg-white rounded-lg shadow-lg border border-gray-200">
@@ -2290,13 +2370,10 @@ const MachinesPage: React.FC = () => {
                 color="white"
                 arrow={true}
               >
-                <Button 
-                  size="small"
-                  icon={<InfoCircleOutlined />}
-                  className="bg-accent-light text-primary hover:bg-accent hover:text-white border-accent transition-colors duration-200"
-                >
+                <button className="more-info-btn">
+                  <InfoCircleOutlined />
                   更多信息
-                </Button>
+                </button>
               </Tooltip>
             </div>
           </div>

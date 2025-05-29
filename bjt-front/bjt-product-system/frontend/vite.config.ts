@@ -33,11 +33,6 @@ export default defineConfig({
     cors: true,
     strictPort: true, // 确保使用指定端口
     allowedHosts: ['frontend', 'localhost'],
-    hmr: {
-      protocol: 'ws',
-      host: 'localhost',
-      port: 80,
-    },
     proxy: {
       '/wp-json': {
         target: 'http://wordpress:80',

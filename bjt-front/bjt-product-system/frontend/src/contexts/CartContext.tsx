@@ -178,12 +178,24 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [syncError, setSyncError] = useState<string | null>(null);
   
+  // 本地 properties 缓存，part_number 为 key
+  const cartPropertiesMap = React.useRef<Record<string, any>>({});
+  
   // 从API加载购物车数据
   const fetchCart = async () => {
     try {
       setLoading(true);
       const response = await cartService.getCart();
-      const cartItems = response.items.map(mapServiceCartItemToUICartItem);
+      let cartItems = response.items.map(mapServiceCartItemToUICartItem);
+      // 合并本地 properties 字段，key 用 part_number
+      cartItems = cartItems.map(item => {
+        const key = item.part_number || item.code;
+        const localProps = key ? cartPropertiesMap.current[key] : undefined;
+        if (localProps) {
+          item.properties = { ...localProps, ...(item.properties || {}) };
+        }
+        return item;
+      });
       setItems(cartItems);
       setSyncError(null);
     } catch (error) {
@@ -203,9 +215,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const addItem = async (newItem: ExtendedCartItem) => {
     try {
       setLoading(true);
-      
       console.log('🛒 [CartContext.addItem] Starting with newItem:', newItem);
-      
       // 准备添加购物车请求数据，确保包含所有必需字段和产品信息
       const addToCartRequest = {
         product_type: newItem.product_type, // 使用原始的 product_type
@@ -222,25 +232,22 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
           price: newItem.unit_price,
           unit_price: newItem.unit_price,
           currency: newItem.currency,
-          
           // 从原始properties中复制所有其他信息
           ...(newItem.properties || {}),
-          
           // 确保关键字段不被覆盖
           id: newItem.product_id,
           productId: newItem.product_id
         }
       };
-      
+      // 本地缓存 properties，key 用 part_number
+      if (newItem.part_number) {
+        cartPropertiesMap.current[newItem.part_number] = addToCartRequest.properties;
+      }
       console.log('🛒 [CartContext.addItem] Calling cartService.addToCart with:', addToCartRequest);
-      
       await cartService.addToCart(addToCartRequest);
-      
       console.log('🛒 [CartContext.addItem] cartService.addToCart completed, fetching updated cart...');
-      
       // 重新获取购物车数据
       await fetchCart();
-      
       console.log('🛒 [CartContext.addItem] Cart updated successfully');
     } catch (error) {
       console.error('❌ [CartContext.addItem] Failed to add item to cart:', error);
@@ -372,7 +379,16 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     try {
       const cartData = await cartService.getCart();
       // 使用现有的映射函数转换CartItem
-      const extendedItems: ExtendedCartItem[] = (cartData.items || []).map(mapServiceCartItemToUICartItem);
+      let extendedItems: ExtendedCartItem[] = (cartData.items || []).map(mapServiceCartItemToUICartItem);
+      // 合并本地 properties 字段，key 用 part_number
+      extendedItems = extendedItems.map(item => {
+        const key = item.part_number || item.code;
+        const localProps = key ? cartPropertiesMap.current[key] : undefined;
+        if (localProps) {
+          item.properties = { ...localProps, ...(item.properties || {}) };
+        }
+        return item;
+      });
       setItems(extendedItems);
       console.log('🛒 [CartContext.refreshCart] Cart refreshed with', extendedItems.length, 'items');
     } catch (error) {

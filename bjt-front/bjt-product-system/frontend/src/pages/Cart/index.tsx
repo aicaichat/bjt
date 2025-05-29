@@ -8,7 +8,7 @@ import { useToastNotifications } from '../../components/ui';
 const CartPage: React.FC = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation(['cart', 'translation']);
-  const { items, updateQuantity, removeItem, clearCart } = useContext(CartContext);
+  const { items, updateQuantity, removeItem, clearCart, isItemSelected, toggleItemSelection, selectAll, selectedItems, selectedTotal, selectedCount } = useContext(CartContext);
   const { success, warning } = useToastNotifications();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
@@ -30,11 +30,12 @@ const CartPage: React.FC = () => {
 
   // 处理结算
   const handleCheckout = () => {
-    if (items.length === 0) {
+    if (selectedItems.length === 0) {
       warning(t('emptyCartWarning', { ns: 'cart' }));
       return;
     }
-    navigate('/order');
+    // 只结算选中的商品
+    navigate('/order', { state: { orderItems: selectedItems, fromCart: true } });
   };
 
   return (
@@ -73,6 +74,9 @@ const CartPage: React.FC = () => {
                 onUpdateQuantity={updateQuantity}
                 onRemove={removeItem}
                 language={currentLanguage as 'zh' | 'en'}
+                isItemSelected={isItemSelected}
+                toggleItemSelection={toggleItemSelection}
+                selectAll={selectAll}
               />
             </div>
           </div>
@@ -87,8 +91,8 @@ const CartPage: React.FC = () => {
               {/* 价格明细 */}
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">{t('subtotal', { ns: 'cart' })}:</span>
-                  <span className="font-medium">¥{calculateTotal().toFixed(2)}</span>
+                  <span className="text-gray-600">{t('selectedSubtotal', { ns: 'cart', defaultValue: '选中小计' })}:</span>
+                  <span className="font-medium">¥{selectedTotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">{t('shipping', { ns: 'cart' })}:</span>
@@ -96,8 +100,12 @@ const CartPage: React.FC = () => {
                 </div>
                 <div className="border-t pt-3">
                   <div className="flex justify-between text-lg font-semibold">
-                    <span>{t('total', { ns: 'cart' })}:</span>
-                    <span className="text-primary">¥{calculateTotal().toFixed(2)}</span>
+                    <span>{t('selectedTotal', { ns: 'cart', defaultValue: '选中合计' })}:</span>
+                    <span className="text-primary">¥{selectedTotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-gray-500 mt-1">
+                    <span>{t('selectedCount', { ns: 'cart', defaultValue: '已选商品数' })}:</span>
+                    <span>{selectedCount}</span>
                   </div>
                 </div>
               </div>
@@ -105,7 +113,7 @@ const CartPage: React.FC = () => {
               {/* 结算按钮 */}
               <button
                 onClick={handleCheckout}
-                disabled={items.length === 0}
+                disabled={selectedItems.length === 0}
                 className="w-full bg-primary hover:bg-primary-dark disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-3 rounded-lg transition-colors duration-200"
               >
                 {t('proceedToCheckout', { ns: 'cart' })}

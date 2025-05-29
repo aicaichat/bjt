@@ -13,11 +13,58 @@ export interface ConsumableProduct {
   model_imperial?: string | null;
   spec?: string | null;
   spec_imperial?: string | null;
+  
+  // 基础信息字段
+  part_number?: string | null;
+  brand?: string | null;
+  app_model?: string | null;
+  bag_type?: string | null;
+  material?: string | null;
+  
+  // 尺寸规格字段
+  thickness_met?: number | null;
+  thickness_imp?: number | null;
+  width_met?: number | null;
+  width_imp?: number | null;
+  length_met?: number | null;
+  length_imp?: number | null;
   bubble_diameter_met?: number | null;
   bubble_diameter_imp?: number | null;
+  total_length_met?: number | null;
+  total_length_imp?: number | null;
+  
+  // 包装属性字段
+  package_type?: string | null;
+  package_size_cm?: string | null;
+  package_size_inch?: string | null;
+  net_weight_kg?: number | null;
+  net_weight_lbs?: number | null;
+  gross_weight_kg?: number | null;
+  gross_weight_lbs?: number | null;
   pcs_per_box?: number | null;
-  brand?: string | null;
-  part_number?: string | null;
+  package_image_url?: string | null;
+  
+  // 打托属性字段
+  pallet_size_cm?: string | null;
+  pallet_size_inch?: string | null;
+  pcs_per_pallet_a?: number | null;
+  pallet_gross_weight_a_kg?: number | null;
+  pallet_gross_weight_a_lbs?: number | null;
+  pallet_height_a_cm?: number | null;
+  pallet_height_a_inch?: number | null;
+  pcs_per_pallet_b?: number | null;
+  pallet_gross_weight_b_kg?: number | null;
+  pallet_gross_weight_b_lbs?: number | null;
+  pallet_height_b_cm?: number | null;
+  pallet_height_b_inch?: number | null;
+  pcs_per_pallet_c?: number | null;
+  pallet_gross_weight_c_kg?: number | null;
+  pallet_gross_weight_c_lbs?: number | null;
+  pallet_height_c_cm?: number | null;
+  pallet_height_c_inch?: number | null;
+  tube_inner_diameter_cm?: number | null;
+  tube_inner_diameter_inch?: number | null;
+  
   image_url: string;
   specs: {
     material: string;
@@ -210,10 +257,10 @@ const mockGetConsumables_local = async (filters: ConsumableFilters): Promise<Con
         compatibility: product.specs?.compatibility || '',
       },
       pricing: product.pricing || [],
-      inventory: product.inventory.reduce((acc: Record<string, number>, inv: CentralConsumableInventory) => {
-        acc[inv.region] = inv.quantity;
+      inventory: product.inventory.reduce((acc: {[key: string]: number}, inv: any) => {
+        acc[inv.region] = +inv.quantity;
         return acc;
-      }, {} as Record<string, number>)
+      }, {})
     };
   });
 
@@ -294,10 +341,10 @@ const transformCentralConsumableToLocal = (product?: CentralConsumable): Consuma
         compatibility: product.specs?.compatibility || '',
       },
       pricing: product.pricing || [],
-      inventory: product.inventory.reduce((acc: Record<string, number>, inv: CentralConsumableInventory) => {
-        acc[inv.region] = inv.quantity;
+      inventory: product.inventory.reduce((acc: {[key: string]: number}, inv: any) => {
+        acc[inv.region] = +inv.quantity;
         return acc;
-      }, {} as Record<string, number>)
+      }, {})
     };
 }
 

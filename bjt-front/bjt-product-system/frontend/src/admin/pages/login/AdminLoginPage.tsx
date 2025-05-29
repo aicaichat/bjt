@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, message, Typography, Row, Col, Card, Switch, Badge, Tag } from 'antd';
 import { UserOutlined, LockOutlined, CrownOutlined, ShoppingCartOutlined, TeamOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import AdminService from '../../api/adminService';
 import '../../styles/login.css'; // 假设我们创建类似的样式文件
 
@@ -20,6 +20,7 @@ const AdminLoginPage: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [showTestAccounts, setShowTestAccounts] = useState(true); // 默认显示测试账户
   const navigate = useNavigate();
+  const location = useLocation();
 
   const testAccounts: TestAccount[] = [
     {
@@ -49,8 +50,12 @@ const AdminLoginPage: React.FC = () => {
         
         message.success('登录成功');
         
-        // 导航到admin主页
-        navigate('/admin/machines');
+        // 获取用户之前试图访问的页面，如果没有则默认到settings页面
+        const from = (location.state as any)?.from;
+        const redirectTo = from || '/admin/settings';
+        
+        console.log('🔗 [AdminLogin] Redirecting to:', redirectTo);
+        navigate(redirectTo, { replace: true });
       } else {
         throw new Error(response.message || '登录失败');
       }

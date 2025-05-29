@@ -43,11 +43,11 @@ interface RegionPrices {
   cn: number;
 }
 
-// 替换为ASSETS配置中的占位图片路径
-const placeholderImage = ASSETS.getUrl('/images/placeholders/placeholder-80x80.svg');
-const shapePlaceholderImage = ASSETS.getUrl('/images/placeholders/placeholder-80x60.svg');
-const dimensionGuidePlaceholder = ASSETS.getUrl('/images/placeholders/placeholder-480x220.svg');
-const infoIconPlaceholder = ASSETS.getUrl('/images/icons/info-icon.svg');
+// 使用内联SVG数据URI作为占位图片，避免404请求
+const placeholderImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yNCA0MEg1NlY0OEgyNFY0MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPHA+ZxGQ9Ik0zMiAzMkgzMFYzNEgzMlYzMloiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
+const shapePlaceholderImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA4MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yNCAzMEg1NlYzOEgyNFYzMFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
+const dimensionGuidePlaceholder = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgwIiBoZWlnaHQ9IjIyMCIgdmlld0JveD0iMCAwIDQ4MCAyMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0ODAiIGhlaWdodD0iMjIwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yMDAgMTEwSDI4MFYxMzBIMjAwVjExMFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
+const infoIconPlaceholder = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiIGZpbGw9IiM2QjdCODQiLz4KPHBhdGggZD0iTTEyIDhIMTJWMTZIMTJWOFoiIGZpbGw9IndoaXRlIi8+CjxjaXJjbGUgY3g9IjEyIiBjeT0iNiIgcj0iMSIgZmlsbD0id2hpdGUiLz4KPC9zdmc+';
 
 // 根据登录账号确定用户区域
 const getUserRegionFromEmail = (email: string) => {
@@ -65,6 +65,672 @@ const isVipUser = (email: string) => {
 // 判断是否为纸质材料
 const isPaperMaterial = (materialId: string): boolean => {
   return materialId === 'PAPER' || materialId === 'paper_pe' || materialId.toLowerCase().includes('paper');
+};
+
+// 工具函数：清理图片路径，去除多余引号并标准化斜杠
+function cleanImageUrl(url: string | undefined | null): string {
+  if (!url) return placeholderImage;
+  let fixed = url.trim().replace(/^'+|'+$/g, '');
+  fixed = fixed.replace(/\\/g, '/');
+  if (!fixed.startsWith('/')) fixed = '/' + fixed;
+  
+  // 如果是相对路径，添加基础URL
+  if (fixed.startsWith('/')) {
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+    // 去掉API路径部分，只保留域名
+    const domainUrl = baseUrl.replace('/wp-json/bjt/v1', '');
+    return `${domainUrl}${fixed}`;
+  }
+  
+  return fixed;
+}
+
+// 动态Tooltip内容组件
+interface ConsumableTooltipContentProps {
+  item: ConsumableProduct;
+  userRegion: string;
+}
+
+const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ item, userRegion }) => {
+  const [detailData, setDetailData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string>('');
+  
+  // 使用useRef防止重复请求
+  const isRequestInProgress = useRef(false);
+  const requestTimeoutRef = useRef<NodeJS.Timeout>();
+
+  useEffect(() => {
+    // 清理之前的超时
+    if (requestTimeoutRef.current) {
+      clearTimeout(requestTimeoutRef.current);
+    }
+
+    const fetchDetailData = async () => {
+      // 防止重复请求
+      if (isRequestInProgress.current) {
+        console.log('🚫 [ConsumableTooltipContent] Request already in progress, skipping');
+        return;
+      }
+      
+      if (!item.id) {
+        console.warn('⚠️ [ConsumableTooltipContent] No item ID found:', item);
+        setDebugInfo(`无产品ID信息: ${JSON.stringify(item, null, 2)}`);
+        return;
+      }
+
+      // 添加防抖延迟
+      requestTimeoutRef.current = setTimeout(async () => {
+        isRequestInProgress.current = true;
+        setLoading(true);
+        setError(null);
+        setDebugInfo('');
+
+        try {
+          console.log('🔍 [ConsumableTooltipContent] Fetching details for item ID:', item.id);
+          
+          // 使用现有的WordPress API URL格式和item.id
+          const token = localStorage.getItem('auth_token');
+          const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1';
+          const apiUrl = `${baseUrl}/consumables/${item.id}?lang=${navigator.language.startsWith('zh') ? 'zh' : 'en'}&region=${userRegion}`;
+          
+          console.log('🔍 [ConsumableTooltipContent] API URL:', apiUrl);
+          setDebugInfo(`API调用: ${apiUrl}`);
+          
+          const response = await fetch(apiUrl, {
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              ...(token && { 'Authorization': `Bearer ${token}` })
+            }
+          });
+          
+          console.log('🔍 [ConsumableTooltipContent] Response status:', response.status);
+          setDebugInfo(prev => `${prev}\nHTTP状态: ${response.status}`);
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          
+          const jsonData = await response.json();
+          console.log('✅ [ConsumableTooltipContent] Detail data loaded:', jsonData);
+          
+          // 添加详细的数据结构调试信息
+          setDebugInfo(prev => `${prev}\nAPI原始响应: ${JSON.stringify(jsonData, null, 2)}`);
+          
+          let finalData = null;
+          
+          if (jsonData.success && jsonData.data) {
+            finalData = jsonData.data;
+          } else if (jsonData.data) {
+            finalData = jsonData.data;
+          } else if (Array.isArray(jsonData) && jsonData.length > 0) {
+            finalData = jsonData[0];
+          } else if (jsonData && typeof jsonData === 'object') {
+            finalData = jsonData;
+          } else {
+            throw new Error('No valid data structure found in API response');
+          }
+          
+          console.log('🔍 [ConsumableTooltipContent] Final mapped data:', finalData);
+          setDebugInfo(prev => `${prev}\n最终数据: ${JSON.stringify(finalData, null, 2)}`);
+          setDetailData(finalData);
+          
+        } catch (err: any) {
+          console.error('❌ [ConsumableTooltipContent] Failed to fetch detail data:', err);
+          setError(err.message || 'Failed to fetch detail data');
+          setDebugInfo(prev => `${prev}\n错误信息: ${err.message}`);
+          
+          // 使用基础数据作为fallback
+          const fallbackData = {
+            // 基本信息
+            material: item.specs?.material || 'N/A',
+            thickness: item.specs?.thickness || 'N/A',
+            width: item.specs?.width || 'N/A',
+            width_cm: item.specs?.width || 'N/A',
+            width_inch: item.specs?.width || 'N/A',
+            length: item.specs?.length || 'N/A',
+            length_cm: item.specs?.length || 'N/A',
+            length_inch: item.specs?.length || 'N/A',
+            rollLength: item.specs?.rollLength || 'N/A',
+            roll_length_m: item.specs?.rollLength || 'N/A',
+            roll_length_ft: item.specs?.rollLength || 'N/A',
+            
+            // 包装属性
+            packaging_type: '纸箱装',
+            package_size_cm: '待补充',
+            package_size_inch: '待补充',
+            unit_weight_kg: '待补充',
+            unit_weight_lbs: '待补充',
+            pallet_size_cm: '待补充',
+            package_image_url: '',
+            
+            // 打托属性
+            pallet_rolls_a: '待补充',
+            pallet_weight_a_kg: '待补充',
+            pallet_weight_a_lbs: '待补充',
+            pallet_height_a_cm: '待补充',
+            pallet_height_a_inch: '待补充',
+            pallet_rolls_b: '待补充',
+            pallet_weight_b_kg: '待补充',
+            pallet_weight_b_lbs: '待补充',
+            pallet_height_b_cm: '待补充',
+            pallet_height_b_inch: '待补充',
+            pallet_rolls_c: '待补充',
+            pallet_weight_c_kg: '待补充',
+            pallet_weight_c_lbs: '待补充',
+            pallet_height_c_cm: '待补充',
+            pallet_height_c_inch: '待补充',
+            core_diameter_cm: '待补充',
+            core_diameter_inch: '待补充'
+          };
+          setDetailData(fallbackData);
+          setDebugInfo(prev => `${prev}\n使用Fallback数据: ${JSON.stringify(fallbackData, null, 2)}`);
+        } finally {
+          setLoading(false);
+          isRequestInProgress.current = false;
+        }
+      }, 300); // 300ms 防抖延迟
+    };
+
+    fetchDetailData();
+    
+    // 清理函数
+    return () => {
+      if (requestTimeoutRef.current) {
+        clearTimeout(requestTimeoutRef.current);
+      }
+      isRequestInProgress.current = false;
+    };
+  }, [item.id]); // 移除userRegion依赖，避免频繁重复请求
+
+  if (loading) {
+    return (
+      <div className="p-4 bg-white rounded-lg shadow-lg border border-gray-200">
+        <div className="flex items-center justify-center py-8">
+          <Spin size="small" />
+          <span className="ml-2 text-gray-600">加载详细信息中...</span>
+        </div>
+      </div>
+    );
+  }
+
+  const data = detailData || {};
+  
+  // 安全获取数据的辅助函数
+  const safeGet = (field: string, fallback: string = 'N/A'): string => {
+    let value = data[field];
+    
+    // 如果直接字段不存在，尝试从specs中获取
+    if ((value === null || value === undefined || value === '') && data.specs) {
+      value = data.specs[field];
+    }
+    
+    // 特殊字段映射
+    const fieldMappings: { [key: string]: string[] } = {
+      // 基本信息映射
+      'material': ['material', 'specs.material'],
+      'thickness': ['thickness', 'specs.thickness'], 
+      'width': ['width', 'specs.width'],
+      'length': ['length', 'specs.length'],
+      'rollLength': ['rollLength', 'specs.rollLength'],
+      
+      // 单位转换字段映射
+      'width_cm': ['width_met_val', 'specs.width', 'width'],
+      'width_inch': ['width_imp_val', 'specs.width_imperial', 'model_imperial'],
+      'length_cm': ['length_met_val', 'specs.length', 'length'],
+      'length_inch': ['length_imp_val', 'specs.length_imperial', 'model_imperial'],
+      'roll_length_m': ['total_length_met_val', 'specs.rollLength', 'rollLength'],
+      'roll_length_ft': ['total_length_imp_val', 'specs.rollLength_imperial', 'model_imperial'],
+      
+      // 包装属性映射
+      'packaging_type': ['package_type', 'specs.package_type'],
+      'package_size_cm': ['package_size_cm', 'specs.package_size_cm'],
+      'package_size_inch': ['package_size_inch', 'specs.package_size_inch'],
+      'unit_weight_kg': ['net_weight_kg', 'specs.net_weight_kg'],
+      'unit_weight_lbs': ['net_weight_lbs', 'specs.net_weight_lbs'],
+      'pallet_size_cm': ['pallet_size_cm', 'specs.pallet_size_cm'],
+      'package_image_url': ['package_image_url', 'specs.package_image_url'],
+      
+      // 打托属性映射
+      'pallet_rolls_a': ['pcs_per_pallet_a', 'specs.pcs_per_pallet_a'],
+      'pallet_weight_a_kg': ['pallet_gross_weight_a_kg', 'specs.pallet_gross_weight_a_kg'],
+      'pallet_weight_a_lbs': ['pallet_gross_weight_a_lbs', 'specs.pallet_gross_weight_a_lbs'],
+      'pallet_height_a_cm': ['pallet_height_a_cm', 'specs.pallet_height_a_cm'],
+      'pallet_height_a_inch': ['pallet_height_a_inch', 'specs.pallet_height_a_inch'],
+      'pallet_rolls_b': ['pcs_per_pallet_b', 'specs.pcs_per_pallet_b'],
+      'pallet_weight_b_kg': ['pallet_gross_weight_b_kg', 'specs.pallet_gross_weight_b_kg'],
+      'pallet_weight_b_lbs': ['pallet_gross_weight_b_lbs', 'specs.pallet_gross_weight_b_lbs'],
+      'pallet_height_b_cm': ['pallet_height_b_cm', 'specs.pallet_height_b_cm'],
+      'pallet_height_b_inch': ['pallet_height_b_inch', 'specs.pallet_height_b_inch'],
+      'pallet_rolls_c': ['pcs_per_pallet_c', 'specs.pcs_per_pallet_c'],
+      'pallet_weight_c_kg': ['pallet_gross_weight_c_kg', 'specs.pallet_gross_weight_c_kg'],
+      'pallet_weight_c_lbs': ['pallet_gross_weight_c_lbs', 'specs.pallet_gross_weight_c_lbs'],
+      'pallet_height_c_cm': ['pallet_height_c_cm', 'specs.pallet_height_c_cm'],
+      'pallet_height_c_inch': ['pallet_height_c_inch', 'specs.pallet_height_c_inch'],
+      'core_diameter_cm': ['tube_inner_diameter_cm', 'specs.tube_inner_diameter_cm'],
+      'core_diameter_inch': ['tube_inner_diameter_inch', 'specs.tube_inner_diameter_inch']
+    };
+    
+    // 尝试映射字段
+    if (fieldMappings[field]) {
+      for (const mappedField of fieldMappings[field]) {
+        let mappedValue;
+        
+        // 处理嵌套字段如 'specs.width'
+        if (mappedField.includes('.')) {
+          const [parentKey, childKey] = mappedField.split('.');
+          mappedValue = data[parentKey]?.[childKey];
+        } else {
+          mappedValue = data[mappedField];
+        }
+        
+        if (mappedValue !== null && mappedValue !== undefined && mappedValue !== '') {
+          value = mappedValue;
+          break;
+        }
+      }
+    }
+    
+    if (value === null || value === undefined || value === '') {
+      return fallback;
+    }
+    return String(value);
+  };
+
+  return (
+    <div className="p-4 bg-white rounded-lg shadow-lg border border-gray-200">
+      <div className="flex items-center mb-4 pb-3 border-b border-gray-100">
+        <InfoCircleOutlined className="text-blue-500 mr-2" />
+        <span className="font-bold text-gray-800 text-base">{item.name} - 详细信息</span>
+      </div>
+      
+      {error && (
+        <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-700">
+          ⚠️ API调用失败，显示基础信息: {error}
+        </div>
+      )}
+      
+      {/* 调试信息展示 (开发环境) */}
+      {process.env.NODE_ENV === 'development' && debugInfo && (
+        <details className="mb-3 p-2 bg-gray-50 border border-gray-200 rounded text-xs">
+          <summary className="cursor-pointer font-medium">🔍 调试信息 (点击展开)</summary>
+          <pre className="mt-2 whitespace-pre-wrap overflow-x-auto">{debugInfo}</pre>
+        </details>
+      )}
+      
+      {/* 包装图片调试信息 (开发环境) */}
+      {process.env.NODE_ENV === 'development' && (
+        <details className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
+          <summary className="cursor-pointer font-medium">📦 包装图片调试信息</summary>
+          <div className="mt-2 space-y-1">
+            <div><strong>原始URL:</strong> {data.package_image_url || 'undefined'}</div>
+            <div><strong>SafeGet结果:</strong> {safeGet('package_image_url', '')}</div>
+            <div><strong>清理后URL:</strong> {cleanImageUrl(safeGet('package_image_url', ''))}</div>
+            <div><strong>是否显示图片:</strong> {safeGet('package_image_url', '') !== 'N/A' && safeGet('package_image_url', '') !== '' ? '是' : '否'}</div>
+          </div>
+        </details>
+      )}
+      
+      {/* 基本规格 */}
+      <div className="mb-5">
+        <div className="font-bold text-gray-700 text-sm mb-3 bg-gray-50 px-3 py-2 rounded">基本规格</div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex justify-between items-center py-2">
+            <span className="text-gray-700 font-medium text-sm">材质:</span>
+            <span className="text-gray-900 font-semibold text-sm bg-blue-50 px-3 py-1 rounded">
+              {safeGet('material', item.specs?.material || 'N/A')}
+            </span>
+          </div>
+          <div className="flex justify-between items-center py-2">
+            <span className="text-gray-700 font-medium text-sm">
+              {userRegion === 'na' || userRegion === 'au' ? '厚度/克重 mil/#:' : '厚度/克重 um/gsm:'}
+            </span>
+            <span className="text-gray-900 font-semibold text-sm bg-green-50 px-3 py-1 rounded">
+              {(() => {
+                const material = safeGet('material', '').toUpperCase();
+                const thickness = safeGet('thickness', 'N/A');
+                
+                // 如果是纸质材料，显示格式可能不同
+                if (material === 'PAPER' || material.includes('PAPER')) {
+                  if (userRegion === 'na' || userRegion === 'au') {
+                    // 英制：显示mil/#格式 
+                    return thickness !== 'N/A' ? thickness : 'N/A';
+                  } else {
+                    // 公制：显示um/gsm格式
+                    return thickness !== 'N/A' ? thickness : 'N/A';
+                  }
+                } else {
+                  // 非纸质材料，显示厚度
+                  if (userRegion === 'na' || userRegion === 'au') {
+                    return thickness !== 'N/A' ? `${thickness} mil` : 'N/A';
+                  } else {
+                    return thickness !== 'N/A' ? thickness : 'N/A';
+                  }
+                }
+              })()}
+            </span>
+          </div>
+          <div className="flex justify-between items-center py-2">
+            <span className="text-gray-700 font-medium text-sm">
+              {userRegion === 'na' || userRegion === 'au' ? '膜宽 inch:' : '膜宽 cm:'}
+            </span>
+            <span className="text-gray-900 font-semibold text-sm bg-yellow-50 px-3 py-1 rounded">
+              {(() => {
+                if (userRegion === 'na' || userRegion === 'au') {
+                  const widthInch = safeGet('width_inch', '');
+                  const width = safeGet('width', '');
+                  if (widthInch !== 'N/A' && widthInch !== '') {
+                    return widthInch.includes('inch') ? widthInch : `${widthInch} inch`;
+                  } else if (width !== 'N/A' && width !== '') {
+                    return width.includes('inch') || width.includes('mm') ? width : `${width} inch`;
+                  }
+                  return 'N/A';
+                } else {
+                  const widthCm = safeGet('width_cm', '');
+                  const width = safeGet('width', '');
+                  if (widthCm !== 'N/A' && widthCm !== '') {
+                    return widthCm.includes('cm') || widthCm.includes('mm') ? widthCm : `${widthCm} cm`;
+                  } else if (width !== 'N/A' && width !== '') {
+                    return width;
+                  }
+                  return 'N/A';
+                }
+              })()}
+            </span>
+          </div>
+          <div className="flex justify-between items-center py-2">
+            <span className="text-gray-700 font-medium text-sm">
+              {userRegion === 'na' || userRegion === 'au' ? '袋长 inch:' : '袋长 cm:'}
+            </span>
+            <span className="text-gray-900 font-semibold text-sm bg-purple-50 px-3 py-1 rounded">
+              {(() => {
+                if (userRegion === 'na' || userRegion === 'au') {
+                  const lengthInch = safeGet('length_inch', '');
+                  const length = safeGet('length', '');
+                  if (lengthInch !== 'N/A' && lengthInch !== '') {
+                    return lengthInch.includes('inch') ? lengthInch : `${lengthInch} inch`;
+                  } else if (length !== 'N/A' && length !== '') {
+                    return length.includes('inch') || length.includes('m') ? length : `${length} inch`;
+                  }
+                  return 'N/A';
+                } else {
+                  const lengthCm = safeGet('length_cm', '');
+                  const length = safeGet('length', '');
+                  if (lengthCm !== 'N/A' && lengthCm !== '') {
+                    return lengthCm.includes('cm') || lengthCm.includes('m') ? lengthCm : `${lengthCm} cm`;
+                  } else if (length !== 'N/A' && length !== '') {
+                    return length;
+                  }
+                  return 'N/A';
+                }
+              })()}
+            </span>
+          </div>
+          <div className="flex justify-between items-center py-2 col-span-2">
+            <span className="text-gray-700 font-medium text-sm">
+              {userRegion === 'na' || userRegion === 'au' ? '总长 ft:' : '总长 m:'}
+            </span>
+            <span className="text-gray-900 font-semibold text-sm bg-pink-50 px-3 py-1 rounded">
+              {(() => {
+                if (userRegion === 'na' || userRegion === 'au') {
+                  const rollLengthFt = safeGet('roll_length_ft', '');
+                  const rollLength = safeGet('rollLength', '');
+                  if (rollLengthFt !== 'N/A' && rollLengthFt !== '') {
+                    return rollLengthFt.includes('ft') ? rollLengthFt : `${rollLengthFt} ft`;
+                  } else if (rollLength !== 'N/A' && rollLength !== '') {
+                    return rollLength.includes('ft') || rollLength.includes('m') ? rollLength : `${rollLength} ft`;
+                  }
+                  return 'N/A';
+                } else {
+                  const rollLengthM = safeGet('roll_length_m', '');
+                  const rollLength = safeGet('rollLength', '');
+                  if (rollLengthM !== 'N/A' && rollLengthM !== '') {
+                    return rollLengthM.includes('m') ? rollLengthM : `${rollLengthM} m`;
+                  } else if (rollLength !== 'N/A' && rollLength !== '') {
+                    return rollLength;
+                  }
+                  return 'N/A';
+                }
+              })()}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* 包装属性 Package Info */}
+      <div className="mb-5">
+        <div className="font-bold text-gray-700 text-sm mb-3 bg-gray-50 px-3 py-2 rounded">包装属性 Package Info</div>
+        <div className="grid grid-cols-2 gap-4">
+          {/* 左侧：包装信息 */}
+          <div className="space-y-3">
+            <div className="flex justify-between items-center py-2">
+              <span className="text-gray-700 font-medium text-sm">包装方式:</span>
+              <span className="text-gray-900 font-semibold text-sm bg-blue-50 px-3 py-1 rounded">
+                {(() => {
+                  const packagingType = safeGet('packaging_type', '');
+                  const salesUnit = safeGet('sales_unit', '');
+                  if (packagingType !== 'N/A' && packagingType !== '') {
+                    return packagingType;
+                  } else if (salesUnit !== 'N/A' && salesUnit !== '') {
+                    return salesUnit === 'Carton' ? '纸箱装' : salesUnit;
+                  }
+                  return '纸箱装'; // 默认值
+                })()}
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-2">
+              <span className="text-gray-700 font-medium text-sm">
+                {userRegion === 'na' || userRegion === 'au' ? '包装尺寸 inch:' : '包装尺寸 cm:'}
+              </span>
+              <span className="text-gray-900 font-semibold text-sm bg-green-50 px-3 py-1 rounded">
+                {(() => {
+                  const sizeField = userRegion === 'na' || userRegion === 'au' ? 'package_size_inch' : 'package_size_cm';
+                  const size = safeGet(sizeField, '');
+                  return size !== 'N/A' && size !== '' ? size : '待补充';
+                })()}
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-2">
+              <span className="text-gray-700 font-medium text-sm">
+                {userRegion === 'na' || userRegion === 'au' ? '单件净重 lbs:' : '单件净重 kg:'}
+              </span>
+              <span className="text-gray-900 font-semibold text-sm bg-yellow-50 px-3 py-1 rounded">
+                {(() => {
+                  const weightField = userRegion === 'na' || userRegion === 'au' ? 'unit_weight_lbs' : 'unit_weight_kg';
+                  const weight = safeGet(weightField, '');
+                  return weight !== 'N/A' && weight !== '' ? weight : '待补充';
+                })()}
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-2">
+              <span className="text-gray-700 font-medium text-sm">托盘尺寸 cm:</span>
+              <span className="text-gray-900 font-semibold text-sm bg-purple-50 px-3 py-1 rounded">
+                {(() => {
+                  const palletSize = safeGet('pallet_size_cm', '');
+                  return palletSize !== 'N/A' && palletSize !== '' ? palletSize : '待补充';
+                })()}
+              </span>
+            </div>
+          </div>
+          
+          {/* 右侧：包装实物图片 */}
+          <div className="flex flex-col items-center">
+            <div className="text-gray-700 font-medium text-sm mb-2">包装实物图片</div>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 w-full h-32 flex items-center justify-center">
+              {safeGet('package_image_url', '') !== 'N/A' && safeGet('package_image_url', '') !== '' ? (
+                <img 
+                  src={cleanImageUrl(safeGet('package_image_url', ''))} 
+                  alt="包装实物图片"
+                  className="max-w-full max-h-full object-contain rounded"
+                  onError={(e) => {
+                    const originalUrl = safeGet('package_image_url', '');
+                    const cleanedUrl = cleanImageUrl(originalUrl);
+                    console.error('包装图片加载失败:');
+                    console.error('  原始URL:', originalUrl);
+                    console.error('  清理后URL:', cleanedUrl);
+                    console.error('  实际请求URL:', (e.target as HTMLImageElement).src);
+                    
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent) {
+                      const fallback = parent.querySelector('.package-fallback') as HTMLElement;
+                      if (fallback) {
+                        fallback.classList.remove('hidden');
+                      }
+                    }
+                  }}
+                />
+              ) : null}
+              <div className={`text-center text-gray-500 text-xs package-fallback ${safeGet('package_image_url', '') !== 'N/A' && safeGet('package_image_url', '') !== '' ? 'hidden' : ''}`}>
+                <div>📦</div>
+                <div>暂无包装图片</div>
+                {/* 调试信息 */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="text-xs text-gray-500 mt-1">
+                    图片URL: {safeGet('package_image_url', '')}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 打托属性 Pallet Info */}
+      <div className="mb-4">
+        <div className="font-bold text-gray-700 text-sm mb-3 bg-gray-50 px-3 py-2 rounded">打托属性 Pallet Info</div>
+        <div className="grid grid-cols-3 gap-4">
+          {/* 配置A */}
+          <div className="bg-blue-50 p-3 rounded-lg">
+            <div className="font-semibold text-blue-800 text-sm mb-2">配置A</div>
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-gray-700">一托卷数:</span>
+                <span className="font-semibold text-gray-800">{safeGet('pallet_rolls_a', '') !== 'N/A' ? safeGet('pallet_rolls_a', '') : '待补充'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-700">
+                  {userRegion === 'na' || userRegion === 'au' ? '毛重 lbs:' : '毛重 kg:'}
+                </span>
+                <span className="font-semibold text-gray-800">
+                  {(() => {
+                    const weightField = userRegion === 'na' || userRegion === 'au' ? 'pallet_weight_a_lbs' : 'pallet_weight_a_kg';
+                    const weight = safeGet(weightField, '');
+                    return weight !== 'N/A' ? weight : '待补充';
+                  })()}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-700">
+                  {userRegion === 'na' || userRegion === 'au' ? '高度 inch:' : '高度 cm:'}
+                </span>
+                <span className="font-semibold text-gray-800">
+                  {(() => {
+                    const heightField = userRegion === 'na' || userRegion === 'au' ? 'pallet_height_a_inch' : 'pallet_height_a_cm';
+                    const height = safeGet(heightField, '');
+                    return height !== 'N/A' ? height : '待补充';
+                  })()}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* 配置B */}
+          <div className="bg-green-50 p-3 rounded-lg">
+            <div className="font-semibold text-green-800 text-sm mb-2">配置B</div>
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-gray-700">一托卷数:</span>
+                <span className="font-semibold text-gray-800">{safeGet('pallet_rolls_b', '') !== 'N/A' ? safeGet('pallet_rolls_b', '') : '待补充'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-700">
+                  {userRegion === 'na' || userRegion === 'au' ? '毛重 lbs:' : '毛重 kg:'}
+                </span>
+                <span className="font-semibold text-gray-800">
+                  {(() => {
+                    const weightField = userRegion === 'na' || userRegion === 'au' ? 'pallet_weight_b_lbs' : 'pallet_weight_b_kg';
+                    const weight = safeGet(weightField, '');
+                    return weight !== 'N/A' ? weight : '待补充';
+                  })()}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-700">
+                  {userRegion === 'na' || userRegion === 'au' ? '高度 inch:' : '高度 cm:'}
+                </span>
+                <span className="font-semibold text-gray-800">
+                  {(() => {
+                    const heightField = userRegion === 'na' || userRegion === 'au' ? 'pallet_height_b_inch' : 'pallet_height_b_cm';
+                    const height = safeGet(heightField, '');
+                    return height !== 'N/A' ? height : '待补充';
+                  })()}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* 配置C */}
+          <div className="bg-yellow-50 p-3 rounded-lg">
+            <div className="font-semibold text-yellow-800 text-sm mb-2">配置C</div>
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-gray-700">一托卷数:</span>
+                <span className="font-semibold text-gray-800">{safeGet('pallet_rolls_c', '') !== 'N/A' ? safeGet('pallet_rolls_c', '') : '待补充'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-700">
+                  {userRegion === 'na' || userRegion === 'au' ? '毛重 lbs:' : '毛重 kg:'}
+                </span>
+                <span className="font-semibold text-gray-800">
+                  {(() => {
+                    const weightField = userRegion === 'na' || userRegion === 'au' ? 'pallet_weight_c_lbs' : 'pallet_weight_c_kg';
+                    const weight = safeGet(weightField, '');
+                    return weight !== 'N/A' ? weight : '待补充';
+                  })()}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-700">
+                  {userRegion === 'na' || userRegion === 'au' ? '高度 inch:' : '高度 cm:'}
+                </span>
+                <span className="font-semibold text-gray-800">
+                  {(() => {
+                    const heightField = userRegion === 'na' || userRegion === 'au' ? 'pallet_height_c_inch' : 'pallet_height_c_cm';
+                    const height = safeGet(heightField, '');
+                    return height !== 'N/A' ? height : '待补充';
+                  })()}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* 纸筒内径 */}
+        <div className="mt-3 bg-purple-50 p-3 rounded-lg">
+          <div className="flex justify-between items-center">
+            <span className="text-gray-700 font-medium text-sm">
+              {userRegion === 'na' || userRegion === 'au' ? '纸筒内径 inch:' : '纸筒内径 cm:'}
+            </span>
+            <span className="text-gray-900 font-semibold text-sm bg-white px-3 py-1 rounded shadow-sm">
+              {(() => {
+                const diameterField = userRegion === 'na' || userRegion === 'au' ? 'core_diameter_inch' : 'core_diameter_cm';
+                const diameter = safeGet(diameterField, '');
+                return diameter !== 'N/A' ? diameter : '待补充';
+              })()}
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <div className="mt-4 pt-3 border-t border-gray-100 text-center">
+        <span className="text-sm text-gray-500">💡 产品详细规格信息</span>
+      </div>
+    </div>
+  );
 };
 
 const ConsumablesPage: React.FC = () => {
@@ -213,11 +879,34 @@ const ConsumablesPage: React.FC = () => {
         console.log('ConsumableData received in Page:', JSON.stringify(consumableData, null, 2));
         console.log('🔍 Debug - FilterOptions shapes:', consumableData.filterOptions?.shapes);
         
-        setConsumables(consumableData.items);
-        setTotalItems(consumableData.total || 0);
-        setTotalPages(Math.max(1, consumableData.total_pages || 1));
-        setCurrentPage(Math.max(1, consumableData.page || 1));
+        // 添加翻页数据调试信息
+        console.log('📄 [Pagination Debug] API Response Pagination Data:');
+        console.log('  - Total Items:', consumableData.total);
+        console.log('  - Total Pages:', consumableData.total_pages);
+        console.log('  - Current Page:', consumableData.page);
+        console.log('  - Items Length:', consumableData.items?.length);
+        console.log('  - Page Size:', consumableData.page_size);
+        console.log('  - Request Filters:', filters);
+        
+        setConsumables(consumableData.items || []);
+        
+        // 确保翻页数据都是有效数字
+        const totalFromAPI = Number(consumableData.total) || 0;
+        const totalPagesFromAPI = Number(consumableData.total_pages) || 1;
+        
+        setTotalItems(totalFromAPI);
+        setTotalPages(Math.max(1, totalPagesFromAPI));
+        
+        // 注释掉这行代码，它会重置用户选择的页码，导致页数变了但内容没变
+        // setCurrentPage(prev => Math.max(1, Math.min(prev, totalPagesFromAPI)));
+        
         setFilterOptions(consumableData.filterOptions);
+        
+        // 添加状态设置后的调试信息
+        console.log('📄 [Pagination Debug] State After Setting:');
+        console.log('  - totalItems will be set to:', totalFromAPI);
+        console.log('  - totalPages will be set to:', Math.max(1, totalPagesFromAPI));
+        console.log('  - currentPage preserved as:', currentPage, '(user choice maintained)');
           
           // 初始化数量状态
           const initialQuantities: Record<string, number> = {};
@@ -319,28 +1008,51 @@ const ConsumablesPage: React.FC = () => {
 
     try {
       const quantity = quantities[itemId];
-      
-      // 准备购物车项目数据 - 简化版本，只包含必需字段
+      // 手动补全 properties 字段，合并 specs 并兜底
+      const specs: Partial<{
+        width: string;
+        length: string;
+        thickness: string;
+        material: string;
+        shape: string;
+        rollLength: string;
+        compatibility: string;
+      }> = product.specs || {};
+      const image_url = cleanImageUrl(product.image_url);
+      const properties = {
+        ...product,
+        ...specs,
+        image_url,
+        brand: product.brand || 'N/A',
+        model: product.model || 'N/A',
+        spec: product.spec || 'N/A',
+        part_number: product.part_number || product.code || product.id,
+        name: product.name || 'N/A',
+        width: specs?.width || 'N/A',
+        length: specs?.length || 'N/A',
+        thickness: specs?.thickness || 'N/A',
+        material: specs?.material || 'N/A',
+        shape: specs?.shape || 'N/A',
+        rollLength: specs?.rollLength || 'N/A',
+        compatibility: specs?.compatibility || 'N/A',
+      };
       const cartItem: ExtendedCartItem = {
-        // OriginalCartItem 必需字段
         item_id: parseInt(itemId) || 0,
         product_type: 'consumable',
         product_id: parseInt(itemId) || 0,
-        part_number: product.code,
-        quantity: quantity,
-        name: product.name,
-        image_url: product.image_url || '/images/placeholder.png',
+        part_number: properties.part_number,
+        quantity,
+        name: properties.name,
+        image_url: properties.image_url,
         unit_price: getRegionalPrice(product, quantity),
         currency: getCurrencySymbolByRegion(),
         line_total: getRegionalPrice(product, quantity) * quantity,
         inventory_status: 'in_stock',
         added_at: new Date().toISOString(),
-        
-        // ExtendedCartItem 额外字段
         id: itemId,
-        code: product.code,
-        partNumber: product.code,
-        image: product.image_url || '/images/placeholder.png',
+        code: properties.part_number,
+        partNumber: properties.part_number,
+        image: properties.image_url,
         category: 'consumable',
         productId: parseInt(itemId) || 0,
         priceTiers: product.pricing?.map(p => {
@@ -355,34 +1067,16 @@ const ConsumablesPage: React.FC = () => {
         selected: false,
         type: 'consumable',
         specs: {
-          partNumber: product.code,
-          productName: product.name
+          partNumber: properties.part_number,
+          productName: properties.name
         },
         price: getRegionalPrice(product, quantity),
-        properties: {
-          model: product.model,
-          model_imperial: product.model_imperial || '',
-          spec: product.spec || '',
-          spec_imperial: product.spec_imperial || '',
-          bubble_diameter_met: product.bubble_diameter_met ?? '',
-          bubble_diameter_imp: product.bubble_diameter_imp ?? '',
-          pcs_per_box: product.pcs_per_box ?? '',
-          brand: product.brand || '',
-          part_number: product.code,
-          image_url: product.image_url,
-          id: product.id,
-          width: product.specs?.width || '',
-          length: product.specs?.length || '',
-          thickness: product.specs?.thickness || '',
-          weight: product.specs?.weight || '',
-          rollLength: product.specs?.rollLength || '',
-          compatibility: product.specs?.compatibility || '',
-          material: product.specs?.material || '',
-          shape: product.specs?.shape || '',
-          // 可按需补充其它字段
-        }
+        properties
       };
-      
+      // 调试日志
+      console.log('[addToCart] product:', product);
+      console.log('[addToCart] cartItem:', cartItem);
+      console.log('[addToCart] cartItem.properties:', cartItem.properties);
       await addItem(cartItem);
       
       // 触发购物车动画
@@ -493,9 +1187,17 @@ const ConsumablesPage: React.FC = () => {
     setCurrentPage(1);
   };
 
-  // 处理图片错误
+  // 处理图片错误 - 简化版本，使用数据URI避免404
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const target = e.target as HTMLImageElement;
+    
+    // 如果当前图片已经是数据URI，说明出现了更严重的问题，不再处理
+    if (target.src.startsWith('data:')) {
+      console.warn('数据URI图片加载失败，可能是浏览器问题');
+      return;
+    }
+    
+    // 直接使用数据URI作为fallback，避免网络请求
     target.src = placeholderImage;
   };
 
@@ -573,7 +1275,7 @@ const ConsumablesPage: React.FC = () => {
               <div className="w-full md:w-1/6 flex items-center justify-center md:justify-start mb-4 md:mb-0">
                 <div className="relative">
                   <img 
-                    src={item.image_url || placeholderImage} 
+                    src={cleanImageUrl(item.image_url) || placeholderImage} 
                     alt={item.name} 
                     className="w-32 h-32 object-contain border-2 border-border rounded-lg bg-card-alt p-2 shadow-sm hover:shadow-md transition-shadow duration-200"
                     onError={handleImageError}
@@ -627,15 +1329,26 @@ const ConsumablesPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="mt-4 flex gap-2">
-                  <Button 
-                    size="small"
-                    icon={<EyeOutlined />}
-                    onClick={() => showProductDetail(item)}
-                    className="bg-accent-light text-accent hover:bg-accent"
+                <div className="info-buttons-container">
+                  <Tooltip
+                    title={<ConsumableTooltipContent item={item} userRegion={userRegion} />}
+                    placement="topRight"
+                    styles={{ 
+                      root: {
+                        maxWidth: '650px',
+                        zIndex: 10000
+                      }
+                    }}
+                    classNames={{ root: "consumables-custom-tooltip" }}
+                    color="white"
+                    arrow={true}
+                    trigger="hover"
                   >
-                    更多信息
-                  </Button>
+                    <button className="more-info-btn">
+                      <InfoCircleOutlined />
+                      更多信息
+                    </button>
+                  </Tooltip>
                 </div>
               </div>
 
@@ -949,12 +1662,31 @@ const ConsumablesPage: React.FC = () => {
           {/* 表格式布局 */}
           {renderConsumablesTable()}
           
-          {totalPages > 1 && !isNaN(totalPages) && !isNaN(currentPage) && (
+          {/* 翻页组件 */}
+          {(() => {
+            console.log('📄 [Render] Pagination check - totalPages:', totalPages, 'currentPage:', currentPage, 'totalItems:', totalItems);
+            return null;
+          })()}
+          {totalPages > 1 && (
             <div className="flex justify-center mt-6">
+              {/* 调试信息 (开发环境显示) */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="mb-4 p-3 bg-gray-100 rounded text-xs text-gray-600 border">
+                  <strong>翻页调试信息:</strong> 当前页={currentPage}, 总页数={totalPages}, 总记录={totalItems}, 
+                  每页={10}条
+                </div>
+              )}
               <div className="pagination">
                 <button 
                   className="pagination-button"
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  onClick={() => {
+                    const targetPage = Math.max(1, currentPage - 1);
+                    console.log('📄 [Previous Page] Click Event:');
+                    console.log('  - Current Page:', currentPage);
+                    console.log('  - Target Page:', targetPage);
+                    console.log('  - Will trigger useEffect:', targetPage !== currentPage);
+                    setCurrentPage(targetPage);
+                  }}
                   disabled={currentPage === 1}
                 >
                   上一页
@@ -963,14 +1695,20 @@ const ConsumablesPage: React.FC = () => {
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                     const page = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
                     // 确保page是有效数字且在合理范围内
-                    if (isNaN(page) || page < 1 || page > totalPages) {
+                    if (page < 1 || page > totalPages) {
                       return null;
                     }
                     return (
                       <button
                         key={`page-${page}`}
                         className={`pagination-page ${currentPage === page ? 'active' : ''}`}
-                        onClick={() => setCurrentPage(page)}
+                        onClick={() => {
+                          console.log('📄 [Page] Click Event:');
+                          console.log('  - Current Page:', currentPage);
+                          console.log('  - Target Page:', page);
+                          console.log('  - Will trigger useEffect:', page !== currentPage);
+                          setCurrentPage(page);
+                        }}
                       >
                         {page}
                       </button>
@@ -979,7 +1717,15 @@ const ConsumablesPage: React.FC = () => {
                 </div>
                 <button 
                   className="pagination-button"
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  onClick={() => {
+                    const targetPage = Math.min(totalPages, currentPage + 1);
+                    console.log('📄 [Next Page] Click Event:');
+                    console.log('  - Current Page:', currentPage);
+                    console.log('  - Target Page:', targetPage);
+                    console.log('  - Total Pages:', totalPages);
+                    console.log('  - Will trigger useEffect:', targetPage !== currentPage);
+                    setCurrentPage(targetPage);
+                  }}
                   disabled={currentPage === totalPages}
                 >
                   下一页
@@ -1047,7 +1793,7 @@ const ConsumablesPage: React.FC = () => {
             <div className="flex flex-col md:flex-row gap-6 mb-6">
               <div className="w-full md:w-1/3">
                 <img 
-                  src={selectedProduct.image_url || placeholderImage}
+                  src={cleanImageUrl(selectedProduct.image_url) || placeholderImage}
                   alt={selectedProduct.name}
                   className="w-full h-64 object-contain border border-border rounded-lg bg-card-alt p-4"
                   onError={handleImageError}

@@ -8,12 +8,13 @@ import { useNotification } from '../../contexts/NotificationContext';
 import { ROUTES } from '../../config/routes';
 import { format, addDays } from 'date-fns';
 import { useTranslation } from 'react-i18next';
-import { Form, Input, Button, Spin, Space, Drawer, Table, message } from 'antd';
+import { Form, Input, Button, Spin, Space, Table, message } from 'antd';
 import { useAuth } from '../../contexts/AuthContext';
 import { safeToLocaleString } from '../../utils/priceUtils';
 import logo from '../../assets/logo.svg';
 import orderService, { Order, OrderStatus, CreateOrderRequest } from '../../api/services/order.service';
 import { Loading, Error } from '../../components/common';
+import * as XLSX from 'xlsx';
 
 // 定义类型
 export interface POProduct {
@@ -66,6 +67,39 @@ interface POLocationState {
     summary: POSummary;
   };
 }
+
+// 1. 新增仿Excel模板的表格CSS
+const poExcelTableStyle = `
+.po-excel-table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 32px;
+}
+.po-excel-table th, .po-excel-table td {
+  border: 1px solid #000;
+  padding: 8px;
+  font-size: 15px;
+}
+.po-excel-table th {
+  font-weight: bold;
+  background: #f2f2f2;
+  text-align: center;
+}
+.po-excel-table .amount-cell {
+  color: #e74c3c;
+  font-weight: bold;
+  text-align: right;
+}
+.po-excel-table .summary-label {
+  font-weight: bold;
+  background: #f2f2f2;
+  text-align: right;
+}
+.po-excel-table .remarks-cell {
+  font-style: italic;
+  background: #fafafa;
+}
+`;
 
 const POPage: React.FC = () => {
   const { t, i18n } = useTranslation('po');
@@ -229,50 +263,72 @@ const POPage: React.FC = () => {
     }
   };
 
-  // 导出Excel
+  // 导出Excel（前端用模板填充）
   const exportToExcel = async () => {
     try {
-      setIsLoading(true);
-      notification.info(t('exportingExcel'));
-      
-      if (shouldUseMockData()) {
-        // 模拟导出延迟
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        notification.success(t('exportSuccess'));
-      } else {
-        // 实际API调用
-        try {
-          // 使用orderService的exportPO方法
-          const response = await orderService.exportPO(Number(poNumber), 'excel');
-          
-          if (response) {
-            // 创建Blob对象并下载
-            const blob = new Blob([response], { 
-              type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
-            });
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `PO-${poNumber}.xlsx`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url); // 释放URL对象
-            
-            notification.success(t('exportSuccess'));
-          } else {
-            notification.error(t('exportError'));
-          }
-        } catch (apiError) {
-          console.error('API调用失败:', apiError);
-          notification.error(t('exportError'));
-        }
-      }
+      // 1. 加载模板
+      const response = await fetch('/template/PO单模版 V1.0.xlsx');
+      const arrayBuffer = await response.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+
+      // 2. 获取第一个sheet（假设为PO信息页）
+      const sheetName = workbook.SheetNames[0];
+      const ws = workbook.Sheets[sheetName];
+
+      // 3. 填充右侧信息（Purchase Order Number、Date、Payment Method）
+      ws['D1'] = { t: 's', v: `Purchase Order Number: ${poNumber}` };
+      ws['D2'] = { t: 's', v: `Date: ${poDate}` };
+      ws['D3'] = { t: 's', v: `Payment Method: ${paymentMethod}` };
+
+      // 4. 填充Buyer信息
+      ws['A5'] = { t: 's', v: '公司名字' };
+      ws['B5'] = { t: 's', v: customerInfo.companyName };
+      ws['A6'] = { t: 's', v: '地址' };
+      ws['B6'] = { t: 's', v: customerInfo.address };
+
+      // 5. 填充Vendor信息
+      ws['A8'] = { t: 's', v: vendorAddress.companyName };
+      ws['A9'] = { t: 's', v: vendorAddress.address };
+      ws['A10'] = { t: 's', v: vendorAddress.city };
+
+      // 6. 填充Ship to信息
+      ws['D5'] = { t: 's', v: '联系人' };
+      ws['D6'] = { t: 's', v: shippingInfo.contactName };
+      ws['D7'] = { t: 's', v: '电话' };
+      ws['D8'] = { t: 's', v: shippingInfo.phone };
+      ws['D9'] = { t: 's', v: '地址' };
+      ws['D10'] = { t: 's', v: shippingInfo.address };
+      ws['D11'] = { t: 's', v: '备注' };
+      ws['D12'] = { t: 's', v: shippingInfo.notes };
+
+      // 7. 填充商品明细（假设明细从第15行开始，A15:H15）
+      let startRow = 15;
+      products.forEach((item, idx) => {
+        const row = startRow + idx;
+        ws[`A${row}`] = { t: 's', v: item.code || item.sku || '-' };
+        ws[`B${row}`] = { t: 's', v: typeof item.name === 'object' ? (item.name['zh-CN'] || item.name['en-US'] || '-') : item.name };
+        ws[`C${row}`] = { t: 's', v: item.model || '-' };
+        ws[`D${row}`] = { t: 's', v: typeof item.specs === 'string' ? item.specs : (item.specs ? Object.entries(item.specs).map(([k, v]) => `${k}: ${v}`).join(', ') : '-') };
+        ws[`E${row}`] = { t: 's', v: item.brand || '-' };
+        ws[`F${row}`] = { t: 'n', v: item.quantity };
+        ws[`G${row}`] = { t: 'n', v: item.price };
+        ws[`H${row}`] = { t: 'n', v: item.price * item.quantity };
+      });
+
+      // 8. 填充合计信息
+      const summaryStartRow = startRow + products.length + 2;
+      ws[`G${summaryStartRow}`] = { t: 's', v: 'Total' };
+      ws[`H${summaryStartRow}`] = { t: 'n', v: summary.subtotal };
+      ws[`G${summaryStartRow + 1}`] = { t: 's', v: 'Freight charge' };
+      ws[`H${summaryStartRow + 1}`] = { t: 'n', v: summary.shipping };
+      ws[`G${summaryStartRow + 2}`] = { t: 's', v: 'Total amount' };
+      ws[`H${summaryStartRow + 2}`] = { t: 'n', v: summary.total };
+
+      // 9. 导出
+      XLSX.writeFile(workbook, `PO-${poNumber}.xlsx`);
     } catch (error) {
-      console.error('Excel导出错误:', error);
-      notification.error(t('exportError'));
-    } finally {
-      setIsLoading(false);
+      console.error('导出Excel时出错:', error);
+      notification.error('导出Excel失败，请重试');
     }
   };
 
@@ -416,6 +472,155 @@ const POPage: React.FC = () => {
     }).format(amount);
   };
 
+  // 仿Excel模板表格组件，定义在POPage内部，props传递数据
+  const POExcelTable: React.FC<{products: POProduct[], language: string, shippingInfo: ShippingInfo, summary: POSummary}> = ({products, language, shippingInfo, summary}) => (
+    <>
+      <style>{poExcelTableStyle}</style>
+      {/* 第一页：PO元信息 - 按模板布局 */}
+      <table className="po-excel-table" style={{marginBottom: '32px', tableLayout: 'fixed'}}>
+        <tbody>
+          {/* 第一行：Logo和标题 */}
+          <tr>
+            <td rowSpan={3} style={{border: "1px solid #000", width: '25%', textAlign: "center", verticalAlign: "middle", padding: '10px'}}>
+              <img src="/images/logo-1.webp" alt="Company Logo" style={{maxWidth: '120px', maxHeight: '60px', objectFit: "contain"}} />
+            </td>
+            <td style={{border: "1px solid #000", width: '25%'}}></td>
+            <td rowSpan={3} style={{border: "1px solid #000", width: '25%', textAlign: "center", verticalAlign: "middle", fontSize: '24px', fontWeight: 'bold'}}>
+              PURCHASE<br/>ORDER
+            </td>
+            <td style={{border: "1px solid #000", width: '25%'}}>
+              <span style={{fontWeight: "bold"}}>Purchase Order Number: </span>
+              <span style={{color: '#ff0000', fontSize: '14px'}}>{poNumber}</span>
+            </td>
+          </tr>
+          <tr>
+            <td style={{border: "1px solid #000"}}></td>
+            <td style={{border: "1px solid #000"}}>
+              <span style={{fontWeight: "bold"}}>Date: </span>
+              <span style={{color: '#ff0000', fontSize: '14px'}}>{poDate}</span>
+            </td>
+          </tr>
+          <tr>
+            <td style={{border: "1px solid #000"}}></td>
+            <td style={{border: "1px solid #000"}}>
+              <span style={{fontWeight: "bold"}}>Payment Method: </span>
+              <span style={{color: '#ff0000', fontSize: '14px'}}>{paymentMethod}</span>
+            </td>
+          </tr>
+          
+          {/* Buyer区域 */}
+          <tr>
+            <td style={{border: "1px solid #000", fontWeight: "bold", background: '#f0f0f0'}}>Buyer</td>
+            <td style={{border: "1px solid #000"}}></td>
+            <td style={{border: "1px solid #000"}}></td>
+            <td style={{border: "1px solid #000", fontWeight: "bold", background: '#f0f0f0'}}>Ship to</td>
+          </tr>
+          <tr>
+            <td style={{border: "1px solid #000", fontWeight: "bold"}}>公司名字</td>
+            <td style={{border: "1px solid #000", height: '30px'}}>{customerInfo.companyName}</td>
+            <td style={{border: "1px solid #000"}}></td>
+            <td style={{border: "1px solid #000", fontWeight: "bold"}}>联系人</td>
+          </tr>
+          <tr>
+            <td style={{border: "1px solid #000", fontWeight: "bold"}}>地址</td>
+            <td style={{border: "1px solid #000", height: '30px'}}>{customerInfo.address}</td>
+            <td style={{border: "1px solid #000"}}></td>
+            <td style={{border: "1px solid #000"}}>{shippingInfo.contactName}</td>
+          </tr>
+          
+          {/* Vendor区域 */}
+          <tr>
+            <td style={{border: "1px solid #000", fontWeight: "bold", background: '#f0f0f0'}}>Vendor</td>
+            <td style={{border: "1px solid #000"}}></td>
+            <td style={{border: "1px solid #000"}}></td>
+            <td style={{border: "1px solid #000", fontWeight: "bold"}}>电话</td>
+          </tr>
+          <tr>
+            <td style={{border: "1px solid #000", fontWeight: "bold"}}>{vendorAddress.companyName}</td>
+            <td style={{border: "1px solid #000"}}></td>
+            <td style={{border: "1px solid #000"}}></td>
+            <td style={{border: "1px solid #000"}}>{shippingInfo.phone}</td>
+          </tr>
+          <tr>
+            <td style={{border: "1px solid #000"}}>{vendorAddress.address}</td>
+            <td style={{border: "1px solid #000"}}></td>
+            <td style={{border: "1px solid #000"}}></td>
+            <td style={{border: "1px solid #000", fontWeight: "bold"}}>地址</td>
+          </tr>
+          <tr>
+            <td style={{border: "1px solid #000"}}>{vendorAddress.city}</td>
+            <td style={{border: "1px solid #000"}}></td>
+            <td style={{border: "1px solid #000"}}></td>
+            <td style={{border: "1px solid #000"}}>{shippingInfo.address}</td>
+          </tr>
+          
+          {/* Ship to详细信息 */}
+          <tr>
+            <td style={{border: "1px solid #000"}}></td>
+            <td style={{border: "1px solid #000"}}></td>
+            <td style={{border: "1px solid #000"}}></td>
+            <td style={{border: "1px solid #000", fontWeight: "bold"}}>备注</td>
+          </tr>
+          <tr>
+            <td style={{border: "1px solid #000"}}></td>
+            <td style={{border: "1px solid #000"}}></td>
+            <td style={{border: "1px solid #000"}}></td>
+            <td style={{border: "1px solid #000", color: '#d00'}}>{shippingInfo.notes}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* 第二页：产品表格 */}
+      <table className="po-excel-table">
+        <thead>
+          <tr>
+            <th>Part No. #</th>
+            <th>Item</th>
+            <th>Model</th>
+            <th>Item description</th>
+            <th>Brand Name</th>
+            <th>Quantity</th>
+            <th>Unit Price</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {products.map((p, idx) => (
+            <tr key={idx}>
+              <td>{p.code || p.sku || '-'}</td>
+              <td>{typeof p.name === 'object' ? (p.name[language === 'cn' ? 'zh-CN' : 'en-US'] || p.name['en-US'] || '-') : p.name || '-'}</td>
+              <td>{p.model || '-'}</td>
+              <td>{typeof p.specs === 'string' ? p.specs : p.specs ? Object.entries(p.specs).map(([k, v]) => `${k}: ${v}`).join(', ') : '-'}</td>
+              <td>{p.brand || '-'}</td>
+              <td style={{ textAlign: 'center' }}>{p.quantity}</td>
+              <td className="amount-cell">{Number(p.price).toFixed(2)}</td>
+              <td className="amount-cell">{Number(p.price * p.quantity).toFixed(2)}</td>
+            </tr>
+          ))}
+          {/* 合计、备注等行 */}
+          <tr>
+            <td className="remarks-cell" colSpan={6}>Remarks: {shippingInfo.notes || ''}</td>
+            <td className="summary-label">Total</td>
+            <td className="amount-cell">{Number(summary.subtotal).toFixed(2)}</td>
+          </tr>
+          <tr>
+            <td colSpan={6}></td>
+            <td className="summary-label">Freight charge</td>
+            <td className="amount-cell">{Number(summary.shipping).toFixed(2)}</td>
+          </tr>
+          <tr>
+            <td colSpan={6}></td>
+            <td className="summary-label">Total amount</td>
+            <td className="amount-cell">{Number(summary.total).toFixed(2)}</td>
+          </tr>
+          <tr>
+            <td className="remarks-cell" colSpan={8} style={{fontSize: '13px', color: '#888'}}>如需美化表格样式，可在Excel中选中表格区域，点击"开始"-"套用为表格"，一键加粗表头、金额变色。</td>
+          </tr>
+        </tbody>
+      </table>
+    </>
+  );
+
   if (isLoading) {
     return <Loading fullPage={true} />;
   }
@@ -424,320 +629,24 @@ const POPage: React.FC = () => {
     return <Error message={error} />;
   }
 
-  // 修改PO单表格部分，完全按照图片精确实现
-  const renderPODocument = () => {
-    return (
-      <div className="po-container" ref={poRef}>
-        <table className="po-document">
-          <colgroup>
-            <col style={{width: "15%"}} />
-            <col style={{width: "40%"}} />
-            <col style={{width: "25%"}} />
-            <col style={{width: "20%"}} />
-          </colgroup>
-          <tbody>
-            {/* 顶部标题行 */}
-            <tr>
-              <td colSpan={2} style={{border: "1px solid #000", padding: "10px"}}>
-                <img src={logo} alt="BJT Logo" style={{maxWidth: "150px"}} />
-              </td>
-              <td colSpan={2} style={{border: "1px solid #000", textAlign: "center", padding: "10px"}}>
-                <div style={{fontSize: "24px", fontWeight: "bold"}}>PURCHASE ORDER</div>
-              </td>
-            </tr>
-            
-            {/* Buyer行 */}
-            <tr>
-              <td style={{border: "1px solid #000", padding: "10px", fontWeight: "bold"}}>Buyer</td>
-              <td style={{border: "1px solid #000", padding: "10px"}}>
-                {customerInfo.companyName}
-              </td>
-              <td style={{border: "1px solid #000", padding: "10px", textAlign: "right", fontWeight: "bold"}}>
-                Purchase Order Number:
-              </td>
-              <td style={{border: "1px solid #000", padding: "10px"}}>
-                {poNumber}
-              </td>
-            </tr>
-            
-            {/* 公司名字行 */}
-            <tr>
-              <td style={{border: "1px solid #000", padding: "10px"}}>公司名字</td>
-              <td style={{border: "1px solid #000", padding: "10px", height: "30px"}}>
-                {customerInfo.companyName}
-              </td>
-              <td style={{border: "1px solid #000", padding: "10px", textAlign: "right", fontWeight: "bold"}}>
-                Date:
-              </td>
-              <td style={{border: "1px solid #000", padding: "10px"}}>
-                {poDate}
-              </td>
-            </tr>
-            
-            {/* 地址行 */}
-            <tr>
-              <td style={{border: "1px solid #000", padding: "10px"}}>地址</td>
-              <td style={{border: "1px solid #000", padding: "10px", height: "60px"}}>
-                {customerInfo.address}
-              </td>
-              <td style={{border: "1px solid #000", padding: "10px", textAlign: "right", fontWeight: "bold"}}>
-                Payment Method:
-              </td>
-              <td style={{border: "1px solid #000", padding: "10px"}}>
-                {paymentMethod}
-              </td>
-            </tr>
-            
-            {/* Vendor行 */}
-            <tr>
-              <td style={{border: "1px solid #000", padding: "10px", fontWeight: "bold"}}>Vendor</td>
-              <td style={{border: "1px solid #000", padding: "10px"}}>
-                {vendorAddress.companyName}
-              </td>
-              <td style={{border: "1px solid #000", padding: "10px", fontWeight: "bold"}}>
-                Ship to 
-              </td>
-              <td style={{border: "1px solid #000", padding: "10px"}}>
-                {shippingInfo.address}
-              </td>
-            </tr>
-            
-            {/* BJT Pack行 */}
-            <tr>
-              <td style={{border: "1px solid #000", padding: "10px"}}>BJT Pack, Inc.</td>
-              <td style={{border: "1px solid #000", padding: "10px"}}></td>
-              <td style={{border: "1px solid #000", padding: "10px"}}>
-                公司名字
-              </td>
-              <td style={{border: "1px solid #000", padding: "10px"}}>
-                {customerInfo.companyName}
-              </td>
-            </tr>
-            
-            {/* 地址行1 */}
-            <tr>
-              <td style={{border: "1px solid #000", padding: "10px"}}>{vendorAddress.address}</td>
-              <td style={{border: "1px solid #000", padding: "10px"}}></td>
-              <td style={{border: "1px solid #000", padding: "10px"}}>
-                地址
-              </td>
-              <td style={{border: "1px solid #000", padding: "10px"}}>
-                {shippingInfo.address}
-              </td>
-            </tr>
-            
-            {/* 地址行2 */}
-            <tr>
-              <td style={{border: "1px solid #000", padding: "10px"}}>{vendorAddress.city}</td>
-              <td style={{border: "1px solid #000", padding: "10px"}}></td>
-              <td style={{border: "1px solid #000", padding: "10px"}}>
-                联系人/电话
-              </td>
-              <td style={{border: "1px solid #000", padding: "10px"}}>
-                {shippingInfo.contactName} / {shippingInfo.phone}
-              </td>
-            </tr>
-            
-            {/* 备注行 */}
-            <tr>
-              <td style={{border: "1px solid #000", padding: "10px"}}></td>
-              <td style={{border: "1px solid #000", padding: "10px"}}></td>
-              <td style={{border: "1px solid #000", padding: "10px"}}>
-                备注
-              </td>
-              <td style={{border: "1px solid #000", padding: "10px"}}>
-                {shippingInfo.notes}
-              </td>
-            </tr>
-            
-            {/* 页码水印 */}
-            <tr>
-              <td colSpan={4} style={{border: "1px solid #000", textAlign: "center", height: "45px", position: "relative"}}>
-                <div style={{position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", opacity: "0.3", fontSize: "22px"}}>
-                  {t('page')} {currentPage} {t('pageOf')} {totalPages} {t('pages')}
-                </div>
-              </td>
-            </tr>
-            
-            {/* 重置表格列数为8列，用于产品表头 */}
-          </tbody>
-        </table>
-        
-        {/* 产品表格部分 - 8列 */}
-        <table className="po-document product-table">
-          <colgroup>
-            <col style={{width: "12%"}} />
-            <col style={{width: "12%"}} />
-            <col style={{width: "12%"}} />
-            <col style={{width: "28%"}} />
-            <col style={{width: "9%"}} />
-            <col style={{width: "9%"}} />
-            <col style={{width: "9%"}} />
-            <col style={{width: "9%"}} />
-          </colgroup>
-          <tbody>
-            {/* 产品表头 - 8列表格 */}
-            <tr>
-              <th style={{border: "1px solid #000", padding: "6px", backgroundColor: "#f2f2f2", textAlign: "center"}}>
-                Part No. #
-              </th>
-              <th style={{border: "1px solid #000", padding: "6px", backgroundColor: "#f2f2f2", textAlign: "center"}}>
-                Item
-              </th>
-              <th style={{border: "1px solid #000", padding: "6px", backgroundColor: "#f2f2f2", textAlign: "center"}}>
-                Model
-              </th>
-              <th style={{border: "1px solid #000", padding: "6px", backgroundColor: "#f2f2f2", textAlign: "center"}}>
-                Item description
-              </th>
-              <th style={{border: "1px solid #000", padding: "6px", backgroundColor: "#f2f2f2", textAlign: "center"}}>
-                Brand Name
-              </th>
-              <th style={{border: "1px solid #000", padding: "6px", backgroundColor: "#f2f2f2", textAlign: "center"}}>
-                Quantity
-              </th>
-              <th style={{border: "1px solid #000", padding: "6px", backgroundColor: "#f2f2f2", textAlign: "center"}}>
-                Unit Price
-              </th>
-              <th style={{border: "1px solid #000", padding: "6px", backgroundColor: "#f2f2f2", textAlign: "center"}}>
-                Amount
-              </th>
-            </tr>
-            
-            {/* 产品行 */}
-            {getCurrentPageProducts().map((product, index) => (
-              <tr key={`product-${index}`}>
-                <td style={{textAlign: "center", padding: "8px", border: "1px solid #000"}}>
-                  {product.code || product.sku || '-'}
-                </td>
-                <td style={{padding: "8px", border: "1px solid #000"}}>
-                  {getProductName(product)}
-                </td>
-                <td style={{padding: "8px", border: "1px solid #000"}}>
-                  {product.model || '-'}
-                </td>
-                <td style={{padding: "8px", border: "1px solid #000"}}>
-                  {typeof product.specs === 'string' 
-                    ? product.specs 
-                    : product.specs 
-                      ? objectToString(product.specs)
-                      : '-'
-                  }
-                </td>
-                <td style={{padding: "8px", border: "1px solid #000"}}>
-                  {product.brand || '-'}
-                </td>
-                <td style={{textAlign: "center", padding: "8px", border: "1px solid #000"}}>
-                  {product.quantity}
-                </td>
-                <td style={{textAlign: "center", padding: "8px", border: "1px solid #000"}}>
-                  {formatCurrency(product.price)}
-                </td>
-                <td style={{textAlign: "right", padding: "8px", border: "1px solid #000"}}>
-                  {formatCurrency(product.price * product.quantity)}
-                </td>
-              </tr>
-            ))}
-            
-            {/* 空行填充 */}
-            {Array.from({length: Math.max(0, 10 - getCurrentPageProducts().length)}).map((_, index) => (
-              <tr key={`empty-${index}`}>
-                <td style={{border: "1px solid #000", height: "30px"}}>&nbsp;</td>
-                <td style={{border: "1px solid #000"}}>&nbsp;</td>
-                <td style={{border: "1px solid #000"}}>&nbsp;</td>
-                <td style={{border: "1px solid #000"}}>&nbsp;</td>
-                <td style={{border: "1px solid #000"}}>&nbsp;</td>
-                <td style={{border: "1px solid #000"}}>&nbsp;</td>
-                <td style={{border: "1px solid #000"}}>&nbsp;</td>
-                <td style={{border: "1px solid #000"}}>&nbsp;</td>
-              </tr>
-            ))}
-            
-            {/* 备注与总计行 */}
-            <tr>
-              <td style={{fontWeight: "bold", padding: "8px", border: "1px solid #000", textAlign: "left"}}>
-                Remarks:
-              </td>
-              <td colSpan={5} style={{padding: "8px", border: "1px solid #000"}}>{shippingInfo.notes}</td>
-              <td style={{textAlign: "right", padding: "8px", border: "1px solid #000", backgroundColor: "#f2f2f2", whiteSpace: "nowrap"}}>
-                Total
-              </td>
-              <td style={{textAlign: "right", padding: "8px", border: "1px solid #000", backgroundColor: "#f2f2f2"}}>
-                {formatCurrency(summary.subtotal)}
-              </td>
-            </tr>
-            
-            {/* 运费行 */}
-            <tr>
-              <td colSpan={6} style={{border: "1px solid #000"}}></td>
-              <td style={{textAlign: "right", padding: "8px", border: "1px solid #000", whiteSpace: "nowrap"}}>
-                Freight charge
-              </td>
-              <td style={{textAlign: "right", padding: "8px", border: "1px solid #000"}}>
-                {formatCurrency(summary.shipping)}
-              </td>
-            </tr>
-            
-            {/* 总金额行 */}
-            <tr>
-              <td colSpan={6} style={{border: "1px solid #000"}}></td>
-              <td style={{textAlign: "right", fontWeight: "bold", padding: "8px", border: "1px solid #000", backgroundColor: "#f2f2f2", whiteSpace: "nowrap"}}>
-                Total amount
-              </td>
-              <td style={{textAlign: "right", fontWeight: "bold", padding: "8px", border: "1px solid #000", backgroundColor: "#f2f2f2"}}>
-                {formatCurrency(summary.total)}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    );
-  };
-
   return (
     <div className="po-container">
-      {/* 水印效果 */}
-      <div className="po-watermark">PO-ORDER</div>
-      
-      {/* 操作按钮 - 包含导出Excel、打印PDF和语言切换 */}
-      <div className="action-buttons">
-        <div className="action-left">
-          <button className="btn btn-primary" onClick={exportToExcel}>
-            <i className="fas fa-file-excel"></i> {t('exportExcel')}
-          </button>
-          <button className="btn btn-primary" onClick={printPO}>
-            <i className="fas fa-print"></i> {t('printPO')}
-          </button>
-        </div>
-      
+      {/* 操作按钮 */}
+      <div className="action-buttons" style={{background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '16px 0', margin: '48px 0 24px 0', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 16}}>
+        <button className="btn btn-primary" style={{fontSize: 18, padding: '10px 28px', display: 'flex', alignItems: 'center', gap: 8}} onClick={exportToExcel}>
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20"><path d="M17 3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14zm0 2H3v10h14V5zm-7 2a1 1 0 0 1 1 1v2h2a1 1 0 1 1 0 2h-2v2a1 1 0 1 1-2 0v-2H7a1 1 0 1 1 0-2h2V8a1 1 0 0 1 1-1z"/></svg>
+          {t('exportExcel', '导出Excel')}
+        </button>
+        <div style={{width: 1, height: 32, background: '#eee', margin: '0 12px'}}></div>
+        <button className="btn btn-primary" style={{fontSize: 18, padding: '10px 28px', display: 'flex', alignItems: 'center', gap: 8}} onClick={printPO}>
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20"><path d="M6 2a2 2 0 0 0-2 2v2h12V4a2 2 0 0 0-2-2H6zm10 4H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2v2a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2h2a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2zm-4 10H8v-2h4v2z"/></svg>
+          {t('printPO', '打印PO单')}
+        </button>
       </div>
-      
-      {/* 采购单表格 */}
-      {renderPODocument()}
-      
-      {/* 分页控制 - 仅在打印之外显示 */}
-      {totalPages > 1 && (
-        <div className="po-pagination">
-          <button 
-            onClick={() => handlePageChange(currentPage - 1)} 
-            disabled={currentPage === 1}
-            className="po-page-btn"
-          >
-            {t('prevPage')}
-          </button>
-          <span className="po-page-info">
-            {`${t('page')} ${currentPage} ${t('pageOf')} ${totalPages} ${t('pages')}`}
-          </span>
-          <button 
-            onClick={() => handlePageChange(currentPage + 1)} 
-            disabled={currentPage === totalPages}
-            className="po-page-btn"
-          >
-            {t('nextPage')}
-          </button>
-        </div>
-      )}
-      
+
+      {/* 两页Excel样式表格 */}
+      <POExcelTable products={products} language={language} shippingInfo={shippingInfo} summary={summary} />
+
       {/* 底部按钮 */}
       <div className="footer">
         <button className="btn btn-secondary" onClick={handleGoBack}>{t('back')}</button>

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, ChangeEvent, createRef, useRef, useContext, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Tooltip } from 'antd';
+import { InfoCircleOutlined } from '@ant-design/icons';
 import { API_BASE_URL } from '../../api/config';
 
 // 导入现代化UI组件
@@ -240,7 +242,7 @@ const SparePartsPage = () => {
       console.error('Error parsing auth data:', err);
       navigate('/login');
     }
-  }, [navigate]);
+  }, []); // Remove navigate from dependencies
   
   // 获取用户角色的显示名称
   const getRoleDisplayName = (role: string): string => {
@@ -278,6 +280,12 @@ const SparePartsPage = () => {
   
   // 在筛选条件变化时重新加载数据
   useEffect(() => {
+    console.log('🔍 [useEffect] Filter change detected:', {
+      selectedIsConsumable,
+      currentProductType,
+      selectedModel,
+      currentPage
+    });
     loadSparePartsData();
   }, [selectedIsConsumable, currentProductType, selectedModel, currentPage]);
   
@@ -491,8 +499,12 @@ const SparePartsPage = () => {
       // 设置分页状态
       setTotalItems(paginationInfo.total);
       setTotalPages(Math.max(1, paginationInfo.totalPages));
-      // 只有当API明确返回了页码信息时才更新currentPage
-      if (jsonData && ((jsonData.success && jsonData.data && jsonData.data.page) || (jsonData.pagination && jsonData.pagination.currentPage))) {
+      // 只有当API明确返回了页码信息时才更新currentPage，并且新页码与当前页码不同时才更新
+      if (
+        jsonData &&
+        ((jsonData.success && jsonData.data && jsonData.data.page) || (jsonData.pagination && jsonData.pagination.currentPage)) &&
+        paginationInfo.currentPage !== currentPage // <--- Add this condition
+      ) {
         setCurrentPage(Math.max(1, paginationInfo.currentPage));
         console.log('📄 [loadSparePartsData] Updated currentPage to:', paginationInfo.currentPage);
       } else {
@@ -1782,16 +1794,99 @@ const SparePartsPage = () => {
                   </div>
 
                   <div className="mt-4 flex gap-3">
-                    <button 
-                      className="text-xs inline-flex items-center px-3 py-2 rounded bg-secondary-light text-secondary hover:bg-secondary hover:text-white border border-secondary transition-colors cursor-help"
-                      onMouseEnter={(e) => handleSpecMouseEnter(e, part)}
-                      onMouseLeave={handleSpecMouseLeave}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      更多规格详情
-                    </button>
+                    <div className="info-buttons-container">
+                      <Tooltip
+                        title={
+                          <div className="p-3 bg-white rounded-lg shadow-lg border border-gray-200">
+                            <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
+                              <InfoCircleOutlined className="text-blue-500 mr-2" />
+                              <span className="font-bold text-gray-800 text-sm">备件详细信息</span>
+                            </div>
+                            <div className="space-y-2">
+                              {/* 适配序列号 */}
+                              {part.app_sn && (
+                                <div className="flex justify-between items-center py-1">
+                                  <span className="text-gray-600 font-medium text-xs">🔗 适配序列号:</span>
+                                  <span className="text-gray-800 font-semibold text-xs bg-blue-50 px-2 py-1 rounded">
+                                    {part.app_sn}
+                                  </span>
+                                </div>
+                              )}
+                              
+                              {/* 包装尺寸 */}
+                              <div className="flex justify-between items-center py-1">
+                                <span className="text-gray-600 font-medium text-xs">📦 包装尺寸:</span>
+                                <span className="text-gray-800 font-semibold text-xs bg-green-50 px-2 py-1 rounded">
+                                  {(() => {
+                                    const unitSystem = (userRegion === 'na' || userRegion === 'au') ? 'imperial' : 'metric';
+                                    if (unitSystem === 'metric') {
+                                      return part.package_size_cm || 'N/A';
+                                    } else {
+                                      return part.package_size_inch || part.package_size_cm || 'N/A';
+                                    }
+                                  })()}
+                                </span>
+                              </div>
+                              
+                              {/* 单件净重 */}
+                              <div className="flex justify-between items-center py-1">
+                                <span className="text-gray-600 font-medium text-xs">⚖️ 单件净重:</span>
+                                <span className="text-gray-800 font-semibold text-xs bg-yellow-50 px-2 py-1 rounded">
+                                  {(() => {
+                                    const unitSystem = (userRegion === 'na' || userRegion === 'au') ? 'imperial' : 'metric';
+                                    if (unitSystem === 'metric') {
+                                      return part.net_weight_kg ? `${part.net_weight_kg} kg` : 'N/A';
+                                    } else {
+                                      return part.net_weight_lbs ? `${part.net_weight_lbs} lbs` : part.net_weight_kg ? `${part.net_weight_kg} kg` : 'N/A';
+                                    }
+                                  })()}
+                                </span>
+                              </div>
+                              
+                              {/* 包装毛重（可选） */}
+                              {(part.gross_weight_kg || part.gross_weight_lbs) && (
+                                <div className="flex justify-between items-center py-1">
+                                  <span className="text-gray-600 font-medium text-xs">📊 包装毛重:</span>
+                                  <span className="text-gray-800 font-semibold text-xs bg-orange-50 px-2 py-1 rounded">
+                                    {(() => {
+                                      const unitSystem = (userRegion === 'na' || userRegion === 'au') ? 'imperial' : 'metric';
+                                      if (unitSystem === 'metric') {
+                                        return part.gross_weight_kg ? `${part.gross_weight_kg} kg` : 'N/A';
+                                      } else {
+                                        return part.gross_weight_lbs ? `${part.gross_weight_lbs} lbs` : part.gross_weight_kg ? `${part.gross_weight_kg} kg` : 'N/A';
+                                      }
+                                    })()}
+                                  </span>
+                                </div>
+                              )}
+                              
+                              {/* 单箱数量（可选） */}
+                              {part.pcs_per_box && (
+                                <div className="flex justify-between items-center py-1">
+                                  <span className="text-gray-600 font-medium text-xs">📦 单箱数量:</span>
+                                  <span className="text-gray-800 font-semibold text-xs bg-purple-50 px-2 py-1 rounded">
+                                    {part.pcs_per_box} 件
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="mt-3 pt-2 border-t border-gray-100 text-center">
+                              <span className="text-xs text-gray-500">💡 悬停查看详细规格信息</span>
+                            </div>
+                          </div>
+                        }
+                        placement="top"
+                        overlayStyle={{ maxWidth: '350px', zIndex: 1000 }}
+                        overlayClassName="custom-tooltip"
+                        color="white"
+                        arrow={true}
+                      >
+                        <button className="more-info-btn">
+                          <InfoCircleOutlined />
+                          更多规格详情
+                        </button>
+                      </Tooltip>
+                    </div>
                   </div>
                 </div>
 

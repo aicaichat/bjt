@@ -2608,3 +2608,252 @@ header .container {
     font-size: 1em !important;
   }
 }
+
+/* 规格详情和更多信息按钮样式优化 */
+.info-buttons-container {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+/* 规格详情按钮 */
+.spec-details-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.spec-details-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.5s;
+}
+
+.spec-details-btn:hover::before {
+  left: 100%;
+}
+
+.spec-details-btn:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-color: #2563eb;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4), 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.spec-details-btn .anticon {
+  margin-right: 6px;
+  font-size: 16px;
+  transition: transform 0.3s ease;
+}
+
+.spec-details-btn:hover .anticon {
+  transform: scale(1.1);
+}
+
+/* 更多信息按钮 */
+.more-info-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #fef7ff 0%, #faf5ff 100%);
+  border: 1px solid #e9d5ff;
+  border-radius: 8px;
+  color: #7c3aed;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.more-info-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.5s;
+}
+
+.more-info-btn:hover::before {
+  left: 100%;
+}
+
+.more-info-btn:hover {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  border-color: #7c3aed;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4), 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.more-info-btn .anticon {
+  margin-right: 6px;
+  font-size: 16px;
+  transition: transform 0.3s ease;
+}
+
+.more-info-btn:hover .anticon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+/* 按钮激活状态 */
+.spec-details-btn:active,
+.more-info-btn:active {
+  transform: translateY(0);
+  transition: transform 0.1s;
+}
+
+/* 按钮禁用状态 */
+.spec-details-btn:disabled,
+.more-info-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.spec-details-btn:disabled:hover,
+.more-info-btn:disabled:hover {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-color: #e2e8f0;
+  color: #475569;
+  transform: none;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .info-buttons-container {
+    gap: 8px;
+    margin-top: 12px;
+  }
+  
+  .spec-details-btn,
+  .more-info-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+    border-radius: 6px;
+  }
+  
+  .spec-details-btn .anticon,
+  .more-info-btn .anticon {
+    font-size: 14px;
+    margin-right: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .info-buttons-container {
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .spec-details-btn,
+  .more-info-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 8px 12px;
+  }
+}
+
+/* 按钮组合效果 */
+.info-buttons-container:hover .spec-details-btn:not(:hover),
+.info-buttons-container:hover .more-info-btn:not(:hover) {
+  opacity: 0.8;
+  transform: scale(0.98);
+}
+
+/* 加载状态 */
+.spec-details-btn.loading,
+.more-info-btn.loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.spec-details-btn.loading .anticon,
+.more-info-btn.loading .anticon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 成功状态 */
+.spec-details-btn.success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-color: #059669;
+  color: white;
+}
+
+.more-info-btn.success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-color: #059669;
+  color: white;
+}
+
+/* 错误状态 */
+.spec-details-btn.error {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border-color: #dc2626;
+  color: white;
+}
+
+.more-info-btn.error {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border-color: #dc2626;
+  color: white;
+}
+
+/* 特殊效果：按钮聚焦时的光晕效果 */
+.spec-details-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+.more-info-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
+}
+
+/* 深色模式适配 */
+@media (prefers-color-scheme: dark) {
+  .spec-details-btn {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    border-color: #475569;
+    color: #e2e8f0;
+  }
+  
+  .more-info-btn {
+    background: linear-gradient(135deg, #2d1b69 0%, #3730a3 100%);
+    border-color: #5b21b6;
+    color: #e9d5ff;
+  }
+}

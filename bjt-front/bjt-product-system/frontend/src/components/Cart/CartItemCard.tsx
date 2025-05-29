@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Button, InputNumber, Typography, Space, Divider } from 'antd';
-import { DeleteOutlined, MinusOutlined, PlusOutlined } from '@ant-design/icons';
+import { DeleteOutlined, MenuOutlined, PlusOutlined } from '@ant-design/icons';
 import { CartItem } from '../../api/services/cart.service';
 import { formatCurrency } from '../../utils/priceUtils';
 import './CartItemCard.css';
@@ -37,12 +37,27 @@ const CartItemCard: React.FC<CartItemCardProps> = ({ item, onUpdateQuantity, onR
   // 计算最大可购买数量，默认为999
   const maxQuantity = 999;
 
+  // 优先从 properties 取字段
+  const props = (item as any).properties || {};
+  const imageUrl = props.image_url || item.image_url || (item as any).image || '/images/placeholder.jpg';
+  const name = props.name || item.name || '';
+  const partNumber = props.part_number || item.part_number || '';
+  const model = props.model || (item as any).model || '';
+  const voltage = props.voltage || (item as any).voltage || '';
+  const frequency = props.frequency || (item as any).frequency || '';
+  const pcsPerBox = props.pcs_per_box || (item as any).pcs_per_box || '';
+  const pcsPerPallet = props.pcs_per_pallet || (item as any).pcs_per_pallet || '';
+  const packageSizeCm = props.package_size_cm || (item as any).package_size_cm || '';
+  const packageSizeInch = props.package_size_inch || (item as any).package_size_inch || '';
+  const palletSizeCm = props.pallet_size_cm || (item as any).pallet_size_cm || '';
+  const palletSizeInch = props.pallet_size_inch || (item as any).pallet_size_inch || '';
+
   return (
     <Card className="cart-item-card" hoverable>
       <div className="cart-item-content">
         <div className="cart-item-image">
-          {item.image_url ? (
-            <img src={item.image_url} alt={item.name} />
+          {imageUrl ? (
+            <img src={imageUrl} alt={name} />
           ) : (
             <div className="placeholder-image">
               <Text type="secondary">No Image</Text>
@@ -51,15 +66,24 @@ const CartItemCard: React.FC<CartItemCardProps> = ({ item, onUpdateQuantity, onR
         </div>
         
         <div className="cart-item-details">
-          <Title level={5}>{item.name}</Title>
-          <Text type="secondary">Part Number: {item.part_number}</Text>
+          <Title level={5}>{name}</Title>
+          <Text type="secondary">Part Number: {partNumber}</Text>
+          {model && <div><Text type="secondary">Model: {model}</Text></div>}
+          {voltage && <div><Text type="secondary">Voltage: {voltage}</Text></div>}
+          {frequency && <div><Text type="secondary">Frequency: {frequency}</Text></div>}
+          {pcsPerBox && <div><Text type="secondary">Box Qty: {pcsPerBox}</Text></div>}
+          {pcsPerPallet && <div><Text type="secondary">Pallet Qty: {pcsPerPallet}</Text></div>}
+          {packageSizeCm && <div><Text type="secondary">Package Size (cm): {packageSizeCm}</Text></div>}
+          {packageSizeInch && <div><Text type="secondary">Package Size (inch): {packageSizeInch}</Text></div>}
+          {palletSizeCm && <div><Text type="secondary">Pallet Size (cm): {palletSizeCm}</Text></div>}
+          {palletSizeInch && <div><Text type="secondary">Pallet Size (inch): {palletSizeInch}</Text></div>}
           <Text>Unit Price: {formatCurrency(item.unit_price, item.currency)}</Text>
         </div>
         
         <div className="cart-item-actions">
           <div className="quantity-control">
             <Button 
-              icon={<MinusOutlined />} 
+              icon={<MenuOutlined />} 
               onClick={handleDecrement}
               disabled={item.quantity <= 1}
             />

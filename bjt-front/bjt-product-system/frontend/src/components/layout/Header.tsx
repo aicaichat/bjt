@@ -106,25 +106,25 @@ const Header = ({
         { 
           title: 'Air Cushioning System',
           items: [
-            { label: 'Air Cushion Machine & Accessory', url: '/products?category=air&type=machine' },
-            { label: 'Film options', url: '/products?category=air&type=film' },
-            { label: 'Spare parts', url: '/products?category=air&type=spare' },
+            { label: 'Air Cushion Machine & Accessory', url: '/machines?category=1' },
+            { label: 'Film options', url: '/consumables?category=1' },
+            { label: 'Spare parts', url: '/spare-parts?category=1' },
           ] 
         },
         { 
           title: 'Paper Cushioning System',
           items: [
-            { label: 'Paper Cushion Machine & Accessory', url: '/products?category=paper&type=machine' },
-            { label: 'Paper options', url: '/products?category=paper&type=options' },
-            { label: 'Spare parts', url: '/products?category=paper&type=spare' },
+            { label: 'Paper Cushion Machine & Accessory', url: '/machines?category=1' },
+            { label: 'Paper options', url: '/consumables?category=1' },
+            { label: 'Spare parts', url: '/spare-parts?category=1' },
           ] 
         },
         { 
           title: 'Water Cushioning System',
           items: [
-            { label: 'Water Activated Tape Dispenser & Accessory', url: '/products?category=water&type=dispenser' },
-            { label: 'Water Activated Tape options', url: '/products?category=water&type=tape' },
-            { label: 'Spare parts', url: '/products?category=water&type=spare' },
+            { label: 'Water Activated Tape Dispenser & Accessory', url: '/machines?category=1' },
+            { label: 'Water Activated Tape options', url: '/consumables?category=1' },
+            { label: 'Spare parts', url: '/spare-parts?category=1' },
           ] 
         }
       ]

@@ -81,22 +81,22 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
       <div className="consumable-details">
         <div className="detail-row">
           <span className="label">料号:</span>
-          <span className="value">{props.part_number || item.part_number}</span>
+          <span className="value">{props.part_number || item.part_number || 'N/A'}</span>
         </div>
         <div className="detail-row">
           <span className="label">品牌:</span>
-          <span className="value">{props.brand || 'N/A'}</span>
+          <span className="value">{props.brand || item.brand || 'N/A'}</span>
         </div>
         <div className="detail-row">
           <span className="label">型号:</span>
           <span className="value">
-            {preferredUnit === 'metric' ? props.model : (props.model_imperial || props.model)}
+            {preferredUnit === 'metric' ? (props.model || item.model) : (props.model_imperial || item.model_imperial || props.model || item.model)}
           </span>
         </div>
         <div className="detail-row">
           <span className="label">规格:</span>
           <span className="value">
-            {preferredUnit === 'metric' ? props.spec : (props.spec_imperial || props.spec)}
+            {preferredUnit === 'metric' ? (props.spec || item.spec) : (props.spec_imperial || item.spec_imperial || props.spec || item.spec)}
           </span>
         </div>
         {(props.bubble_diameter_met || props.bubble_diameter_imp) && (
@@ -117,7 +117,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
         )}
         <div className="detail-row">
           <span className="label">产品ID:</span>
-          <span className="value">{props.id || item.product_id}</span>
+          <span className="value">{props.id || item.product_id || item.id || 'N/A'}</span>
         </div>
       </div>
     );
@@ -159,15 +159,15 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
         <div className="detail-section">
           <div className="detail-row">
             <span className="label">料号:</span>
-            <span className="value">{props.part_number || item.part_number}</span>
+            <span className="value">{props.part_number || item.part_number || 'N/A'}</span>
           </div>
           <div className="detail-row">
             <span className="label">型号:</span>
-            <span className="value">{props.model || specs.model}</span>
+            <span className="value">{props.model || specs.model || item.model || 'N/A'}</span>
           </div>
           <div className="detail-row">
             <span className="label">产品ID:</span>
-            <span className="value">{props.product_id || item.product_id}</span>
+            <span className="value">{props.product_id || item.product_id || item.id || 'N/A'}</span>
           </div>
         </div>
 
@@ -176,7 +176,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
           <div className="detail-section">
             <div className="detail-row">
               <span className="label">适配机型:</span>
-              <span className="value app-model">{props.app_model || specs.app_model}</span>
+              <span className="value app-model">{props.app_model || specs.app_model || item.app_model || 'N/A'}</span>
             </div>
           </div>
         )}
@@ -184,7 +184,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
         {(props.app_sn || specs.app_sn) && (
           <div className="detail-row">
             <span className="label">适配序列号:</span>
-            <span className="value app-sn">{props.app_sn || specs.app_sn}</span>
+            <span className="value app-sn">{props.app_sn || specs.app_sn || item.app_sn || 'N/A'}</span>
           </div>
         )}
 
@@ -194,8 +194,8 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
             <span className="label">规格:</span>
             <span className="value">
               {preferredUnit === 'metric' 
-                ? (props.spec || specs.spec)
-                : (props.spec_imperial || specs.spec_imperial || props.spec || specs.spec)
+                ? (props.spec || specs.spec || item.spec || 'N/A')
+                : (props.spec_imperial || specs.spec_imperial || item.spec_imperial || 'N/A')
               }
             </span>
           </div>
@@ -205,14 +205,14 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
         {(props.pcs_per_box || specs.pcs_per_box) && (
           <div className="detail-row">
             <span className="label">单箱数量:</span>
-            <span className="value">{props.pcs_per_box || specs.pcs_per_box}</span>
+            <span className="value">{props.pcs_per_box || specs.pcs_per_box || item.pcs_per_box || 'N/A'}</span>
           </div>
         )}
 
         {(props.unit || specs.unit) && (
           <div className="detail-row">
             <span className="label">单位:</span>
-            <span className="value">{props.unit || specs.unit}</span>
+            <span className="value">{props.unit || specs.unit || item.unit || 'N/A'}</span>
           </div>
         )}
 
@@ -250,6 +250,45 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
     );
   };
 
+  // 渲染主机详细信息
+  const renderMachineDetails = (item: any) => {
+    const props = item.properties || {};
+    return (
+      <div className="spare-part-details">
+        <div className="detail-section">
+          <div className="detail-row">
+            <span className="label">料号:</span>
+            <span className="value">{props.part_number || item.part_number || 'N/A'}</span>
+          </div>
+          <div className="detail-row">
+            <span className="label">型号:</span>
+            <span className="value">{props.model || item.model || 'N/A'}</span>
+          </div>
+          <div className="detail-row">
+            <span className="label">电压:</span>
+            <span className="value">{props.voltage || item.voltage || 'N/A'}</span>
+          </div>
+          <div className="detail-row">
+            <span className="label">单箱数量:</span>
+            <span className="value">{props.pcs_per_box || item.pcs_per_box || 'N/A'}</span>
+          </div>
+          <div className="detail-row">
+            <span className="label">一托数量:</span>
+            <span className="value">{props.pcs_per_pallet || item.pcs_per_pallet || 'N/A'}</span>
+          </div>
+          <div className="detail-row">
+            <span className="label">包装尺寸:</span>
+            <span className="value">{props.package_size_cm || item.package_size_cm || 'N/A'}</span>
+          </div>
+          <div className="detail-row">
+            <span className="label">托盘尺寸:</span>
+            <span className="value">{props.pallet_size_cm || item.pallet_size_cm || 'N/A'}</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={`cart-sidebar ${isOpen ? 'open' : ''}`}>
       <div className="cart-sidebar-header">
@@ -283,13 +322,14 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
                   </div>
                   
                   <div className="cart-item-image">
-                    <img src={item.properties?.image_url || item.image} alt={item.name} />
+                    <img src={item.properties?.image_url || item.image_url || item.image || '/images/placeholder.jpg'} alt={item.properties?.name || item.name || 'Not Found'} />
                   </div>
                   
                   <div className="cart-item-details">
-                    <div className="cart-item-title">{item.name}</div>
+                    <div className="cart-item-title">{item.properties?.name || item.name || 'Not Found'}</div>
                     {item.product_type === 'consumable' && renderConsumableDetails(item)}
                     {item.product_type === 'spare_part' && renderSparePartDetails(item)}
+                    {["machine", "host", "设备"].includes(item.product_type) && renderMachineDetails(item)}
                     <div className="cart-item-price">
                       <div className="unit-price">单价: ¥{getTieredPrice(item).toFixed(2)}</div>
                       <div className="subtotal">小计: ¥{(getTieredPrice(item) * item.quantity).toFixed(2)}</div>

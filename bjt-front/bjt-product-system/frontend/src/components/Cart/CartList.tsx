@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useContext, useRef, useEffect } from 'react';
 import { ExtendedCartItem } from '../../contexts/CartContext';
 import { RequiredPartCartItem } from './RequiredPartCartItem';
+import { CartContext } from '../../contexts/CartContext';
 
 interface CartListProps {
   items: ExtendedCartItem[];
@@ -8,7 +9,68 @@ interface CartListProps {
   onRemove: (id: string) => void;
   language?: 'zh' | 'en';
   userRegion?: string;
+  isItemSelected: (id: string) => boolean;
+  toggleItemSelection: (id: string, selected: boolean) => void;
+  selectAll: (selected: boolean) => void;
 }
+
+// 详细字段渲染函数，参考侧边栏
+const renderDetails = (item: ExtendedCartItem, language: 'zh' | 'en' = 'zh') => {
+  const props = item.properties || {};
+  const type = item.product_type || item.type;
+  // 主机
+  if (["machine", "host", "设备"].includes(type)) {
+    return (
+      <div className="cart-item-properties">
+        <div className="property-item"><span className="property-label">料号:</span><span className="property-value">{props.part_number || item.part_number || 'N/A'}</span></div>
+        <div className="property-item"><span className="property-label">型号:</span><span className="property-value">{props.model || (item as any).model || 'N/A'}</span></div>
+        <div className="property-item"><span className="property-label">电压:</span><span className="property-value">{props.voltage || (item as any).voltage || 'N/A'}</span></div>
+        <div className="property-item"><span className="property-label">单箱数量:</span><span className="property-value">{props.pcs_per_box || (item as any).pcs_per_box || 'N/A'}</span></div>
+        <div className="property-item"><span className="property-label">一托数量:</span><span className="property-value">{props.pcs_per_pallet || (item as any).pcs_per_pallet || 'N/A'}</span></div>
+        <div className="property-item"><span className="property-label">包装尺寸:</span><span className="property-value">{props.package_size_cm || (item as any).package_size_cm || 'N/A'}</span></div>
+        <div className="property-item"><span className="property-label">托盘尺寸:</span><span className="property-value">{props.pallet_size_cm || (item as any).pallet_size_cm || 'N/A'}</span></div>
+      </div>
+    );
+  }
+  // 耗材
+  if (["consumable", "耗材"].includes(type)) {
+    return (
+      <div className="cart-item-properties">
+        <div className="property-item"><span className="property-label">料号:</span><span className="property-value">{props.part_number || item.part_number || 'N/A'}</span></div>
+        <div className="property-item"><span className="property-label">品牌:</span><span className="property-value">{props.brand || (item as any).brand || 'N/A'}</span></div>
+        <div className="property-item"><span className="property-label">型号:</span><span className="property-value">{props.model || (item as any).model || 'N/A'}</span></div>
+        <div className="property-item"><span className="property-label">规格:</span><span className="property-value">{props.spec || (item as any).spec || 'N/A'}</span></div>
+        <div className="property-item"><span className="property-label">单箱数量:</span><span className="property-value">{props.pcs_per_box || (item as any).pcs_per_box || 'N/A'}</span></div>
+      </div>
+    );
+  }
+  // 备件
+  if (["spare_part", "spare", "备件"].includes(type)) {
+    return (
+      <div className="cart-item-properties">
+        <div className="property-item"><span className="property-label">料号:</span><span className="property-value">{props.part_number || item.part_number || 'N/A'}</span></div>
+        <div className="property-item"><span className="property-label">型号:</span><span className="property-value">{props.model || (item as any).model || 'N/A'}</span></div>
+        <div className="property-item"><span className="property-label">规格:</span><span className="property-value">{props.spec || (item as any).spec || 'N/A'}</span></div>
+        <div className="property-item"><span className="property-label">适配机型:</span><span className="property-value">{props.app_model || (item as any).app_model || 'N/A'}</span></div>
+        <div className="property-item"><span className="property-label">单箱数量:</span><span className="property-value">{props.pcs_per_box || (item as any).pcs_per_box || 'N/A'}</span></div>
+      </div>
+    );
+  }
+  // 配件
+  if (["accessory", "配件"].includes(type)) {
+    return (
+      <div className="cart-item-properties">
+        <div className="property-item"><span className="property-label">料号:</span><span className="property-value">{props.part_number || item.part_number || 'N/A'}</span></div>
+        <div className="property-item"><span className="property-label">型号:</span><span className="property-value">{props.model || (item as any).model || 'N/A'}</span></div>
+        <div className="property-item"><span className="property-label">电压:</span><span className="property-value">{props.voltage || (item as any).voltage || 'N/A'}</span></div>
+        <div className="property-item"><span className="property-label">频率:</span><span className="property-value">{props.frequency || (item as any).frequency || 'N/A'}</span></div>
+        <div className="property-item"><span className="property-label">单箱数量:</span><span className="property-value">{props.pcs_per_box || (item as any).pcs_per_box || 'N/A'}</span></div>
+      </div>
+    );
+  }
+  // fallback
+  return <div className="cart-item-properties"><div className="property-item">Invalid Type</div></div>;
+};
 
 // 普通购物车项目组件
 const CartItem: React.FC<{
@@ -16,16 +78,30 @@ const CartItem: React.FC<{
   onUpdateQuantity: (id: string, quantity: number) => void;
   onRemove: (id: string) => void;
   language?: 'zh' | 'en';
-}> = ({ item, onUpdateQuantity, onRemove, language = 'zh' }) => {
-  const displayName = language === 'zh' ? (item.name_zh || item.name) : (item.name_en || item.name);
+  isSelected: boolean;
+  onSelect: (selected: boolean) => void;
+}> = ({ item, onUpdateQuantity, onRemove, language = 'zh', isSelected, onSelect }) => {
+  const props = item.properties || {};
+  // 优先取 properties 里的图片和标题
+  const imageUrl = props.image_url || props.image || item.image_url || item.image || '/images/placeholder.jpg';
+  const displayName = language === 'zh'
+    ? (props.name_zh || props.name || item.name_zh || item.name)
+    : (props.name_en || props.name || item.name_en || item.name);
   
   return (
-    <div className="cart-item border border-gray-200 bg-white p-4 rounded-lg mb-3">
+    <div className={`cart-item border border-gray-200 bg-white p-4 rounded-lg mb-3${isSelected ? ' ring-2 ring-primary' : ''}`}>
       <div className="flex gap-4">
+        {/* 选择框 */}
+        <input
+          type="checkbox"
+          className="mt-2 mr-2 accent-primary"
+          checked={isSelected}
+          onChange={e => onSelect(e.target.checked)}
+        />
         {/* 产品图片 */}
         <div className="w-16 h-16 flex-shrink-0">
           <img
-            src={item.image || '/images/placeholder.jpg'}
+            src={imageUrl}
             alt={displayName}
             className="w-full h-full object-cover rounded border"
             onError={(e) => {
@@ -40,6 +116,8 @@ const CartItem: React.FC<{
           <p className="text-sm text-gray-600 mb-2">
             {language === 'zh' ? '料号' : 'Part Number'}: {item.part_number}
           </p>
+          {/* 详细字段 */}
+          {renderDetails(item, language)}
           
           {/* 数量和价格 */}
           <div className="flex items-center justify-between">
@@ -93,11 +171,26 @@ export const CartList: React.FC<CartListProps> = ({
   onUpdateQuantity,
   onRemove,
   language = 'zh',
-  userRegion = 'cn'
+  userRegion = 'cn',
+  isItemSelected,
+  toggleItemSelection,
+  selectAll
 }) => {
   // 分离主要商品和必选备件
   const mainItems = items.filter(item => !item.is_required);
   const requiredItems = items.filter(item => item.is_required);
+
+  // 全选状态
+  const allSelected = items.length > 0 && items.every(item => isItemSelected(item.id));
+  const someSelected = items.some(item => isItemSelected(item.id));
+
+  // 修复 indeterminate
+  const selectAllRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = someSelected && !allSelected;
+    }
+  }, [someSelected, allSelected]);
 
   if (items.length === 0) {
     return (
@@ -112,6 +205,17 @@ export const CartList: React.FC<CartListProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* 全选栏 */}
+      <div className="flex items-center mb-2">
+        <input
+          type="checkbox"
+          className="accent-primary mr-2"
+          checked={allSelected}
+          ref={selectAllRef}
+          onChange={e => selectAll(e.target.checked)}
+        />
+        <span className="text-gray-700 text-sm">{language === 'zh' ? '全选' : 'Select All'}</span>
+      </div>
       {/* 主要商品区域 */}
       {mainItems.length > 0 && (
         <div>
@@ -126,6 +230,8 @@ export const CartList: React.FC<CartListProps> = ({
                 onUpdateQuantity={onUpdateQuantity}
                 onRemove={onRemove}
                 language={language}
+                isSelected={isItemSelected(item.id)}
+                onSelect={selected => toggleItemSelection(item.id, selected)}
               />
             ))}
           </div>

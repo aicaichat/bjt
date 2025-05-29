@@ -2,9 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './Home.css';
 import { useAuth } from '../../contexts/AuthContext';
-// 替换原有的API导入为SQL Mock服务
-import { useProductLines } from '../../hooks/useMockData';
-import MockServiceStatus from '../../components/MockServiceStatus';
+// 使用真实API替换Mock数据服务
+import { useProductLines } from '../../hooks/useRealProductLines';
 import { Loading, Error } from '../../components/common';
 import { useTranslation } from 'react-i18next';
 import { ROUTES } from '../../config/routes';
@@ -20,17 +19,19 @@ const Home: React.FC = () => {
   
   // 使用useCallback稳定回调函数引用
   const handleSuccess = useCallback((data: any) => {
-    console.log('✅ 首页产品线数据加载成功:', data);
+    console.log('✅ 首页产品线数据加载成功 (真实API):', data);
   }, []);
   
   const handleError = useCallback((error: string) => {
-    console.error('❌ 首页产品线数据加载失败:', error);
+    console.error('❌ 首页产品线数据加载失败 (真实API):', error);
   }, []);
   
-  // 使用SQL Mock数据服务Hook
+  // 使用真实API数据服务Hook
   const { data: productLines, loading, error } = useProductLines({
     onSuccess: handleSuccess,
-    onError: handleError
+    onError: handleError,
+    per_page: 20, // 首页显示更多产品线
+    status: 'publish' // 只显示已发布的产品线
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -86,9 +87,6 @@ const Home: React.FC = () => {
 
   return (
     <div className="home-page">
-      {/* SQL Mock服务状态组件 */}
-      <MockServiceStatus position="top-right" compact={true} hidden={true} />
-      
       <main className="container">
         {productLines && productLines.map((line: any) => (
           <div key={line.id} className="product-section">
@@ -144,6 +142,21 @@ const Home: React.FC = () => {
                 {page}
               </button>
             ))}
+          </div>
+        )}
+
+        {/* 显示从真实API获取数据的指示 */}
+        {productLines && productLines.length > 0 && (
+          <div style={{ 
+            marginTop: '20px', 
+            padding: '10px', 
+            backgroundColor: '#f0f8ff', 
+            border: '1px solid #0084ff',
+            borderRadius: '4px',
+            fontSize: '12px',
+            color: '#666'
+          }}>
+            ✅ 数据来源: 真实API ({productLines.length} 个产品线)
           </div>
         )}
       </main>

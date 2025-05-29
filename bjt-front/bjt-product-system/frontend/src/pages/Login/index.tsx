@@ -34,25 +34,25 @@ const Login: React.FC = () => {
     },
     {
       username: 'sales_user',
-      password: 'sales123',
+      password: 'password123',
       role: 'sales',
       description: '销售经理 - 可以访问报表、库存管理和销售相关功能'
     },
     {
       username: 'euvip_customer',
-      password: 'customer123',
+      password: 'password123',
       role: 'customer',
       description: '欧洲VIP客户 - 查看欧洲区域产品和价格（欧元）'
     },
     {
       username: 'au_customer',
-      password: 'customer123',
+      password: 'password123',
       role: 'customer',
       description: '澳洲普通客户 - 查看澳洲区域产品和价格（澳元）'
     },
     {
       username: 'na_customer',
-      password: 'customer123',
+      password: 'password123',
       role: 'customer',
       description: '北美客户 - 查看北美区域产品和价格（美元）'
     }

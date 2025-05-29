@@ -80,7 +80,7 @@ export const useToastNotifications = () => {
       type: 'success',
       title,
       message,
-      duration: 4000,
+      duration: 2000,
       ...options
     });
   }, [showToast]);
