@@ -1,0 +1,108 @@
+{
+  "title": "Cart",
+  "subtitle": "Cart Management",
+  "empty": {
+    "title": "Cart is Empty",
+    "description": "Add items to cart to continue checkout",
+    "continueShopping": "Continue Shopping"
+  },
+  "table": {
+    "columns": {
+      "product": "Product",
+      "price": "Price",
+      "quantity": "Quantity",
+      "total": "Total",
+      "actions": "Actions"
+    }
+  },
+  "actions": {
+    "update": "Update",
+    "remove": "Remove",
+    "clear": "Clear Cart",
+    "checkout": "Checkout",
+    "continueShopping": "Continue Shopping"
+  },
+  "summary": {
+    "title": "Order Summary",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "tax": "Tax",
+    "discount": "Discount",
+    "total": "Total",
+    "estimatedDelivery": "Estimated Delivery"
+  },
+  "messages": {
+    "loading": "Loading cart...",
+    "error": "Failed to load cart",
+    "updateSuccess": "Cart updated successfully",
+    "updateError": "Failed to update cart",
+    "removeConfirm": "Are you sure you want to remove this item?",
+    "clearConfirm": "Are you sure you want to clear the cart?",
+    "success": {
+      "added": "Item added to cart",
+      "updated": "Cart updated successfully",
+      "removed": "Item removed from cart",
+      "cleared": "Cart cleared"
+    },
+    "error": {
+      "add": "Failed to add item to cart",
+      "update": "Failed to update cart",
+      "remove": "Failed to remove item",
+      "clear": "Failed to clear cart"
+    }
+  },
+  "quantity": {
+    "increase": "Increase quantity",
+    "decrease": "Decrease quantity",
+    "update": "Update quantity"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "steps": {
+      "cart": "Cart",
+      "shipping": "Shipping",
+      "payment": "Payment",
+      "confirmation": "Confirmation"
+    },
+    "buttons": {
+      "continue": "Continue",
+      "back": "Back",
+      "placeOrder": "Place Order"
+    }
+  },
+  "cartTitle": "Cart",
+  "selectAll": "Select All",
+  "emptyCartMessage": "Your cart is empty, start shopping now!",
+  "clearCart": "Clear Cart",
+  "checkout": "Checkout",
+  "clearConfirmTitle": "Confirm Clear Cart",
+  "cancel": "Cancel",
+  "confirm": "Confirm",
+  "items": "items",
+  "itemsList": "Items List",
+  "clearAll": "Clear All",
+  "orderSummary": "Order Summary",
+  "selectedSubtotal": "Selected Subtotal",
+  "shipping": "Shipping",
+  "freeShipping": "Free Shipping",
+  "selectedTotal": "Selected Total",
+  "selectedCount": "Selected Items",
+  "proceedToCheckout": "Proceed to Checkout",
+  "continueShopping": "Continue Shopping",
+  "confirmClear": "Confirm Clear",
+  "confirmClearMessage": "Are you sure you want to clear the cart? This action cannot be undone.",
+  "cartCleared": "Cart Cleared",
+  "emptyCartWarning": "Cart is empty, cannot checkout",
+  "unitPrice": "Unit Price",
+  "subtotal": "Subtotal",
+  "remove": "Remove",
+  "total": "Total",
+  "mainItems": "Main Items",
+  "requiredParts": "Required Parts",
+  "cart": {
+    "clearConfirmTitle": "Confirm Clear Cart",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "emptyCartMessage": "Your cart is empty, start shopping now!"
+  }
+} 

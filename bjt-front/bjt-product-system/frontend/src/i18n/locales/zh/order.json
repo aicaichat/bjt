@@ -1,0 +1,99 @@
+{
+  "order": {
+    "title": "确认订单",
+    "steps": {
+      "cart": "购物车",
+      "confirmOrder": "确认订单",
+      "complete": "完成"
+    },
+    "shipping": {
+      "title": "收货信息",
+      "contactName": "联系人姓名",
+      "contactNamePlaceholder": "请输入联系人姓名",
+      "phone": "联系电话",
+      "phonePlaceholder": "请输入联系电话",
+      "email": "邮箱",
+      "emailPlaceholder": "请输入邮箱地址",
+      "company": "公司名称",
+      "companyPlaceholder": "请输入公司名称",
+      "country": "国家/地区",
+      "address": "详细地址",
+      "addressPlaceholder": "请输入详细地址",
+      "notes": "备注",
+      "notesPlaceholder": "选填：添加订单备注"
+    },
+    "details": {
+      "title": "订单明细"
+    },
+    "note": {
+      "inventory": "* 缺货商品仅支持PO订单",
+      "po": "* PO订单将生成PDF文件，可用于与销售沟通"
+    },
+    "summary": {
+      "title": "价格汇总",
+      "subtotal": "小计",
+      "tax": "税费",
+      "shipping": "运费",
+      "discount": "折扣",
+      "total": "订单总计"
+    },
+    "actions": {
+      "backToCart": "返回购物车",
+      "confirmSubmit": "确认并提交"
+    },
+    "errors": {
+      "loadingData": "加载订单数据出错",
+      "submitFailed": "提交订单失败",
+      "submitAlert": "订单提交失败，请重试。"
+    },
+    "noItems": "订单中没有商品，请先添加商品到购物车。",
+    "common": {
+      "loading": "加载中..."
+    },
+    "countries": {
+      "china": "中国",
+      "usa": "美国",
+      "uk": "英国",
+      "germany": "德国",
+      "japan": "日本",
+      "australia": "澳大利亚"
+    }
+  },
+  "products": {
+    "types": {
+      "machine": "主机",
+      "accessory": "配件",
+      "consumable": "耗材",
+      "spare_part": "备件",
+      "product": "产品"
+    },
+    "properties": {
+      "partNumber": "料号",
+      "part_number": "料号",
+      "model": "型号",
+      "voltage": "电压",
+      "frequency": "频率",
+      "spec": "规格",
+      "specImperial": "英制规格",
+      "spec_imperial": "英制规格",
+      "pcsPerBox": "单箱数量",
+      "pcs_per_box": "单箱数量",
+      "pcsPerPallet": "单托数量",
+      "pcs_per_pallet": "单托数量",
+      "packageSize": "包装尺寸",
+      "package_size_cm": "包装尺寸(cm)",
+      "palletSize": "托盘尺寸",
+      "pallet_size_cm": "托盘尺寸(cm)",
+      "netWeight": "净重",
+      "net_weight_kg": "净重(kg)",
+      "grossWeight": "毛重",
+      "gross_weight_kg": "毛重(kg)",
+      "brand": "品牌",
+      "unit": "单位"
+    },
+    "defaultValues": {
+      "notAvailable": "暂无"
+    },
+    "quantity": "数量"
+  }
+} 

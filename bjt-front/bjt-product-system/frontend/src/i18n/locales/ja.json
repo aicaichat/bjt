@@ -1,0 +1,53 @@
+{
+  "common": {
+    "loading": "読み込み中...",
+    "error": "エラーが発生しました",
+    "success": "成功",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "edit": "編集",
+    "view": "表示",
+    "search": "検索",
+    "filter": "フィルター",
+    "sort": "並び替え",
+    "actions": "操作",
+    "confirm": "確認",
+    "back": "戻る",
+    "next": "次へ",
+    "submit": "送信",
+    "reset": "リセット",
+    "close": "閉じる",
+    "yes": "はい",
+    "no": "いいえ",
+    "all": "すべて",
+    "none": "なし",
+    "required": "必須",
+    "optional": "任意"
+  },
+  "validation": {
+    "required": "{{field}}は必須項目です",
+    "invalid": "{{field}}の形式が正しくありません",
+    "minLength": "{{field}}は{{min}}文字以上で入力してください",
+    "maxLength": "{{field}}は{{max}}文字以下で入力してください",
+    "email": "有効なメールアドレスを入力してください",
+    "password": "パスワードは6文字以上で入力してください",
+    "confirmPassword": "パスワードが一致しません"
+  },
+  "errors": {
+    "general": "エラーが発生しました",
+    "network": "ネットワークエラーが発生しました",
+    "server": "サーバーエラーが発生しました",
+    "notFound": "リソースが見つかりません",
+    "unauthorized": "認証が必要です",
+    "forbidden": "アクセスが拒否されました"
+  },
+  "messages": {
+    "success": "操作が成功しました",
+    "error": "操作に失敗しました",
+    "confirmDelete": "本当に削除しますか？",
+    "confirmCancel": "変更を破棄しますか？",
+    "noData": "データがありません",
+    "loading": "読み込み中..."
+  }
+} 

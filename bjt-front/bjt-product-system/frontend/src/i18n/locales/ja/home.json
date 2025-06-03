@@ -1,0 +1,42 @@
+{
+  "title": "ホーム",
+  "welcome": "BJTエアクッション機へようこそ",
+  "navigation": {
+    "products": "製品",
+    "spareParts": "スペアパーツ",
+    "consumables": "消耗品",
+    "orders": "注文",
+    "support": "サポート"
+  },
+  "features": {
+    "title": "主な機能",
+    "airCushion": "エアクッション技術",
+    "packaging": "包装ソリューション",
+    "support": "技術サポート",
+    "spareParts": "スペアパーツ供給"
+  },
+  "stats": {
+    "title": "統計情報",
+    "totalOrders": "総注文数",
+    "activeUsers": "アクティブユーザー",
+    "products": "製品数",
+    "supportTickets": "サポートチケット"
+  },
+  "news": {
+    "title": "お知らせ",
+    "readMore": "続きを読む",
+    "noNews": "お知らせはありません"
+  },
+  "quickLinks": {
+    "title": "クイックリンク",
+    "productCatalog": "製品カタログ",
+    "userManual": "取扱説明書",
+    "supportCenter": "サポートセンター",
+    "contactUs": "お問い合わせ"
+  },
+  "messages": {
+    "loading": "読み込み中...",
+    "error": "エラーが発生しました",
+    "retry": "再試行"
+  }
+} 

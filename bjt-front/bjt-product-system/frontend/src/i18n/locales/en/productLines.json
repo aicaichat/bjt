@@ -1,0 +1,80 @@
+{
+  "title": "Product Line Management",
+  "actions": {
+    "add": "Add Product Line",
+    "edit": "Edit",
+    "delete": "Delete",
+    "publish": "Publish",
+    "draft": "Draft",
+    "trash": "Trash"
+  },
+  "table": {
+    "columns": {
+      "image": "Image",
+      "code": "Code",
+      "name": "Name",
+      "description": "Description",
+      "status": "Status",
+      "products": "Products Count"
+    }
+  },
+  "filters": {
+    "search": "Search product lines",
+    "status": {
+      "publish": "Published",
+      "draft": "Draft",
+      "trash": "Trash"
+    }
+  },
+  "batchActions": {
+    "publish": "Publish Selected",
+    "draft": "Move to Draft",
+    "trash": "Move to Trash"
+  },
+  "messages": {
+    "loading": "Loading product lines...",
+    "error": "Error loading product lines",
+    "noData": "No product lines found",
+    "batchSuccess": "Batch operation completed successfully",
+    "total": "Total {{total}} items",
+    "deleteConfirm": "Are you sure you want to delete this product line?",
+    "publishConfirm": "Are you sure you want to publish this product line?",
+    "draftConfirm": "Are you sure you want to move this product line to draft?",
+    "trashConfirm": "Are you sure you want to move this product line to trash?",
+    "success": {
+      "created": "Product line created successfully",
+      "updated": "Product line updated successfully",
+      "deleted": "Product line deleted successfully",
+      "published": "Product line published successfully",
+      "drafted": "Product line moved to draft successfully",
+      "trashed": "Product line moved to trash successfully"
+    },
+    "error": {
+      "create": "Failed to create product line",
+      "update": "Failed to update product line",
+      "delete": "Failed to delete product line",
+      "publish": "Failed to publish product line",
+      "draft": "Failed to move product line to draft",
+      "trash": "Failed to move product line to trash"
+    }
+  },
+  "form": {
+    "title": {
+      "add": "Add New Product Line",
+      "edit": "Edit Product Line"
+    },
+    "fields": {
+      "code": "Product Line Code",
+      "name": "Product Line Name",
+      "description": "Description",
+      "image": "Product Line Image",
+      "status": "Status"
+    },
+    "validation": {
+      "codeRequired": "Product line code is required",
+      "nameRequired": "Product line name is required",
+      "descriptionRequired": "Description is required",
+      "imageRequired": "Product line image is required"
+    }
+  }
+} 

@@ -1,0 +1,50 @@
+{
+  "title": "Login",
+  "subtitle": "Welcome back",
+  "form": {
+    "username": "Username",
+    "email": "Email",
+    "password": "Password",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?",
+    "login": "Login",
+    "register": "Register",
+    "or": "or"
+  },
+  "validation": {
+    "usernameRequired": "Username is required",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Please enter a valid email address",
+    "passwordRequired": "Password is required",
+    "passwordMinLength": "Password must be at least 6 characters"
+  },
+  "messages": {
+    "loading": "Logging in...",
+    "success": "Login successful",
+    "error": {
+      "invalidCredentials": "Invalid username or password",
+      "accountLocked": "Account is locked",
+      "serverError": "Server error, please try again later",
+      "networkError": "Network error, please check your connection"
+    }
+  },
+  "social": {
+    "title": "Login with",
+    "google": "Continue with Google",
+    "microsoft": "Continue with Microsoft",
+    "github": "Continue with GitHub"
+  },
+  "register": {
+    "title": "Don't have an account?",
+    "link": "Register now"
+  },
+  "resetPassword": {
+    "title": "Reset Password",
+    "description": "Enter your email address and we'll send you a link to reset your password",
+    "email": "Email",
+    "submit": "Send Reset Link",
+    "back": "Back to Login",
+    "success": "Reset link sent successfully",
+    "error": "Failed to send reset link"
+  }
+} 

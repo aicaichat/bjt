@@ -33,6 +33,7 @@ import { useAuth, UnitSystem, UserRole } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { REGIONS } from '../../config/constants';
 import './Profile.css';
+import { useTranslation } from 'react-i18next';
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -62,6 +63,7 @@ const Profile: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
   const [avatarLoading, setAvatarLoading] = useState(false);
+  const { t: profileT } = useTranslation('profile');
 
   // 初始化表单数据
   useEffect(() => {
@@ -96,9 +98,9 @@ const Profile: React.FC = () => {
         customerCode: values.customerCode,
         companyLogo: values.companyLogo
       });
-      message.success(t('profileUpdateSuccess', '个人资料更新成功'));
+      message.success(profileT('profileUpdateSuccess', '个人资料更新成功'));
     } catch (error) {
-      message.error(t('profileUpdateFailed', '更新失败，请重试'));
+      message.error(profileT('profileUpdateFailed', '更新失败，请重试'));
       console.error('Profile update failed:', error);
     } finally {
       setLoading(false);
@@ -110,9 +112,9 @@ const Profile: React.FC = () => {
     try {
       setLoading(true);
       await updatePreferredUnit(values.preferredUnit);
-      message.success('单位制偏好更新成功');
+      message.success(profileT('unitSystemUpdateSuccess', '单位制偏好更新成功'));
     } catch (error) {
-      message.error('单位制偏好更新失败，请重试');
+      message.error(profileT('unitSystemUpdateFailed', '单位制偏好更新失败，请重试'));
       console.error('Unit system update failed:', error);
     } finally {
       setLoading(false);
@@ -124,16 +126,16 @@ const Profile: React.FC = () => {
     try {
       setLoading(true);
       if (values.newPassword !== values.confirmPassword) {
-        message.error(t('passwordsDoNotMatch', '两次输入的密码不一致'));
+        message.error(profileT('passwordsDoNotMatch', '两次输入的密码不一致'));
         return;
       }
 
       // 模拟更新密码 - 实际应用中应调用真实API
       await new Promise(resolve => setTimeout(resolve, 1000));
-      message.success(t('passwordUpdateSuccess', '密码更新成功'));
+      message.success(profileT('passwordUpdateSuccess', '密码更新成功'));
       passwordForm.resetFields();
     } catch (error) {
-      message.error(t('passwordUpdateFailed', '密码更新失败，请重试'));
+      message.error(profileT('passwordUpdateFailed', '密码更新失败，请重试'));
       console.error('Password update failed:', error);
     } finally {
       setLoading(false);
@@ -147,9 +149,9 @@ const Profile: React.FC = () => {
       // 这里应该上传文件并获取URL，暂时模拟
       const avatarUrl = URL.createObjectURL(file);
       await updateProfile({ avatar: avatarUrl });
-      message.success('头像更新成功');
+      message.success(profileT('avatarUpdateSuccess', '头像更新成功'));
     } catch (error) {
-      message.error('头像更新失败');
+      message.error(profileT('avatarUpdateFailed', '头像更新失败'));
       console.error('Avatar upload failed:', error);
     } finally {
       setAvatarLoading(false);
@@ -167,6 +169,7 @@ const Profile: React.FC = () => {
   if (!user) {
     return (
       <div className="profile-error">
+        <p>{profileT('userNotFound', '用户信息未找到')}</p>
         <p>{t('userNotFound', '用户信息未找到')}</p>
       </div>
     );

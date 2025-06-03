@@ -4,7 +4,7 @@ import { DeleteOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import CartService, { CartItem, CartResponse } from '../../api/services/cart.service';
 import { formatCurrency } from '../../utils/priceUtils';
-import CartItemCard from '../../components/cart/CartItemCard';
+import CartItemCard from '../../components/Cart/CartItemCard';
 import './CartPage.scss';
 
 const { Title, Text } = Typography;

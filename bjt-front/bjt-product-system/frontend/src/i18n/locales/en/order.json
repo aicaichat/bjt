@@ -1,0 +1,99 @@
+{
+  "order": {
+    "title": "Confirm Order",
+    "steps": {
+      "cart": "Cart",
+      "confirmOrder": "Confirm Order",
+      "complete": "Complete"
+    },
+    "shipping": {
+      "title": "Shipping Information",
+      "contactName": "Contact Name",
+      "contactNamePlaceholder": "Please enter contact name",
+      "phone": "Phone",
+      "phonePlaceholder": "Please enter contact phone",
+      "email": "Email",
+      "emailPlaceholder": "Please enter email address",
+      "company": "Company Name",
+      "companyPlaceholder": "Please enter company name",
+      "country": "Country/Region",
+      "address": "Detailed Address",
+      "addressPlaceholder": "Please enter detailed address",
+      "notes": "Notes",
+      "notesPlaceholder": "Optional: Add order notes"
+    },
+    "details": {
+      "title": "Order Details"
+    },
+    "note": {
+      "inventory": "* Out of stock items are only available for PO orders",
+      "po": "* PO order will be generated as a PDF file, which can be used to communicate with sales representatives"
+    },
+    "summary": {
+      "title": "Price Summary",
+      "subtotal": "Subtotal",
+      "tax": "Tax",
+      "shipping": "Shipping",
+      "discount": "Discount",
+      "total": "Order Total"
+    },
+    "actions": {
+      "backToCart": "Back to Cart",
+      "confirmSubmit": "Confirm & Submit"
+    },
+    "errors": {
+      "loadingData": "Error loading order data",
+      "submitFailed": "Failed to submit order",
+      "submitAlert": "Order submission failed, please try again."
+    },
+    "noItems": "No items in order, please add items to cart first.",
+    "common": {
+      "loading": "Loading..."
+    },
+    "countries": {
+      "china": "China",
+      "usa": "United States",
+      "uk": "United Kingdom",
+      "germany": "Germany",
+      "japan": "Japan",
+      "australia": "Australia"
+    }
+  },
+  "products": {
+    "types": {
+      "machine": "Machine",
+      "accessory": "Accessory",
+      "consumable": "Consumable",
+      "spare_part": "Spare Part",
+      "product": "Product"
+    },
+    "properties": {
+      "partNumber": "Part Number",
+      "part_number": "Part Number",
+      "model": "Model",
+      "voltage": "Voltage",
+      "frequency": "Frequency",
+      "spec": "Specification",
+      "specImperial": "Imperial Specification",
+      "spec_imperial": "Imperial Specification",
+      "pcsPerBox": "Pieces per Box",
+      "pcs_per_box": "Pieces per Box",
+      "pcsPerPallet": "Pieces per Pallet",
+      "pcs_per_pallet": "Pieces per Pallet",
+      "packageSize": "Package Size",
+      "package_size_cm": "Package Size (cm)",
+      "palletSize": "Pallet Size",
+      "pallet_size_cm": "Pallet Size (cm)",
+      "netWeight": "Net Weight",
+      "net_weight_kg": "Net Weight (kg)",
+      "grossWeight": "Gross Weight",
+      "gross_weight_kg": "Gross Weight (kg)",
+      "brand": "Brand",
+      "unit": "Unit"
+    },
+    "defaultValues": {
+      "notAvailable": "Not Available"
+    },
+    "quantity": "Quantity"
+  }
+} 

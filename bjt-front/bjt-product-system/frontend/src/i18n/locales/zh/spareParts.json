@@ -1,67 +1,309 @@
 {
-  "title": "备件列表",
-  "subtitle": "为您的设备提供正品原厂零部件",
-  "loading": "加载中...",
-  "type": "类型",
-  "consumable": "耗材",
-  "nonConsumable": "非耗材",
-  "productType": "产品类型",
-  "productTypes": {
-    "machine": "主机",
-    "accessory": "配件"
+  "title": "备件",
+  "subtitle": "备件管理",
+  "properties": {
+    "model": "型号",
+    "partNumber": "料号",
+    "voltage": "电压",
+    "frequency": "频率",
+    "pcsPerBox": "单箱数量",
+    "pcsPerPallet": "单托数量",
+    "packageSizeCm": "包装尺寸(cm)",
+    "packageSizeInch": "包装尺寸(inch)",
+    "palletSizeCm": "托盘尺寸(cm)",
+    "palletSizeInch": "托盘尺寸(inch)",
+    "netWeight": "净重",
+    "grossWeight": "毛重",
+    "brand": "品牌",
+    "unit": "单位",
+    "productId": "产品ID",
+    "appModel": "适配机型",
+    "appSn": "适配序列号"
   },
-  "table": {
-    "viewDetails": "查看详情"
-  },
-  "price": "价格",
-  "addToCart": "加入购物车",
   "filters": {
-    "title": "筛选条件",
+    "title": "筛选",
+    "category": "分类",
+    "compatibility": "兼容性",
+    "price": "价格",
+    "stock": "库存状态",
+    "all": "全部",
+    "allProductTypes": "全部产品类型",
+    "allModels": "全部型号",
     "label": {
       "productType": "产品类型",
-      "model": "型号",
-      "partType": "部件类型"
+      "model": "配件型号",
+      "partType": "零件类型"
     },
     "model": {
       "allModels": "所有型号"
     },
     "partType": {
       "allTypes": "所有类型",
-      "consumables": "耗材",
-      "nonConsumables": "非耗材"
+      "consumables": "易损件",
+      "nonConsumables": "非易损件"
     },
-    "reset": "重置筛选条件"
+    "reset": "重置筛选"
+  },
+  "categories": {
+    "all": "全部分类",
+    "mechanical": "机械零件",
+    "electrical": "电气零件",
+    "hydraulic": "液压零件",
+    "pneumatic": "气动零件",
+    "consumables": "消耗品零件"
+  },
+  "compatibility": {
+    "title": "机器兼容性",
+    "all": "全部机器",
+    "compatible": "兼容",
+    "notCompatible": "不兼容"
+  },
+  "productTypes": {
+    "machine": "主机",
+    "accessory": "配件"
+  },
+  "table": {
+    "columns": {
+      "partNumber": "零件号",
+      "name": "名称",
+      "model": "型号",
+      "compatibility": "适配机型",
+      "spec": "规格",
+      "price": "价格",
+      "stock": "库存",
+      "actions": "操作"
+    }
   },
   "specs": {
     "spec": "规格",
-    "pcsPerBox": "每盒数量",
-    "compatibleModels": "兼容型号"
+    "specImperial": "规格(英制)",
+    "material": "材质",
+    "dimensions": "尺寸",
+    "weight": "重量"
   },
-  "inventory": {
-    "noInfo": "无库存信息",
-    "outOfStock": "缺货",
-    "lowStock": "低库存",
-    "inStock": "有库存",
-    "highStock": "高库存"
+  "details": {
+    "properties": {
+      "appSn": "适配序列号",
+      "pcsPerBox": "单箱数量",
+      "packageSize": "包装尺寸",
+      "netWeight": "净重",
+      "unit": "单位"
+    },
+    "title": "备件详细信息",
+    "description": "产品描述",
+    "specifications": "技术规格",
+    "compatibility": "兼容性信息"
+  },
+  "defaultValues": {
+    "defaultPartName": "备件名称",
+    "unknown": "通用型号",
+    "universalModel": "通用型号",
+    "notAvailable": "未指定",
+    "notSpecified": "未指定",
+    "contactService": "请咨询客服",
+    "contactServiceSpecs": "规格详情请咨询客服",
+    "universal": "通用",
+    "unknownError": "未知错误",
+    "category": "备件"
+  },
+  "partTypes": {
+    "consumable": "易损件",
+    "nonConsumable": "非易损件"
+  },
+  "fields": {
+    "compatibleModels": "适配机型",
+    "partModel": "配件型号",
+    "partType": "类型",
+    "specifications": "规格",
+    "compatibleSerialNumber": "适配序列号",
+    "pcsPerBox": "单箱数量",
+    "packageSize": "包装尺寸",
+    "partNumber": "配件料号",
+    "voltage": "电压",
+    "frequency": "频率",
+    "boxQty": "单箱数量",
+    "palletQty": "单托盘数量",
+    "palletSize": "托盘尺寸",
+    "brand": "品牌",
+    "bubbleDiameter": "气泡直径",
+    "pcsPerPallet": "单托盘数量",
+    "productId": "产品ID",
+    "appModel": "适配机型",
+    "appSn": "适配序列号",
+    "unit": "单位",
+    "type": "类型",
+    "requiredParts": "必选备件",
+    "consumable": "易损件",
+    "standardPart": "标准件"
+  },
+  "actions": {
+    "addToCart": "加入购物车",
+    "viewDetails": "查看详情",
+    "quickOrder": "快速订购",
+    "compare": "比较",
+    "favorite": "收藏"
   },
   "cart": {
     "title": "购物车",
+    "total": "总计",
+    "clear": "清空",
+    "checkout": "结算",
     "viewCart": "查看购物车",
     "empty": "购物车为空",
-    "total": "总计",
-    "clear": "清空购物车",
-    "checkout": "去结算",
+    "sku": "SKU",
     "cartCleared": "购物车已清空",
-    "sku": "SKU"
+    "addedToCart": "商品已添加到购物车",
+    "confirmClearTitle": "确认清空购物车",
+    "confirmClearMessage": "此操作将清空购物车中所有商品，且无法恢复。确定要继续吗？",
+    "cancel": "取消",
+    "confirmClear": "确认清空",
+    "requiredParts": "必选备件"
+  },
+  "success": {
+    "addedToCart": "备件已添加到购物车",
+    "addedToCartWithRequired": "备件已添加到购物车，同时自动添加了 {{count}} 个必选备件",
+    "requiredPartsAdded": "自动添加必选备件: {{parts}}"
   },
   "error": {
-    "noResults": "没有找到符合条件的备件",
-    "tryAgain": "请尝试调整筛选条件",
-    "retry": "重试"
+    "loadingData": "加载备件数据失败: {{message}}",
+    "loadingDataGeneral": "无法加载备件数据，请检查网络连接或联系技术支持",
+    "partialRequiredParts": "部分必选备件添加失败",
+    "failedRequiredParts": "以下必选备件未能添加: {{parts}}",
+    "requiredPartsProcessing": "必选备件处理失败",
+    "requiredPartsInfo": "无法获取必选备件信息，请重试",
+    "noResults": "没有找到匹配的备件",
+    "tryAgain": "请尝试调整筛选条件或重新加载数据",
+    "retry": "重试",
+    "addToCartFailed": "添加到购物车失败",
+    "partNumberMissing": "产品料号信息缺失，请刷新页面重试或联系技术支持",
+    "authenticationFailed": "认证失效，请刷新页面重新登录",
+    "parameterError": "请求参数错误，请检查产品信息",
+    "apiConnectionFailed": "API连接失败，正在显示示例数据",
+    "fetchModelsFailed": "获取型号失败",
+    "requiredPartsInconsistent": "必选备件料号和数量不匹配"
   },
-  "defaultValues": {
-    "unknown": "未知",
-    "notAvailable": "不可用"
+  "loading": {
+    "text": "加载中...",
+    "data": "正在加载数据...",
+    "idle": "空闲"
   },
-  "invalidInventory": "无效库存数据"
+  "status": {
+    "loading": "加载中...",
+    "idle": "空闲",
+    "noError": "无错误",
+    "noSelection": "无",
+    "loaded": "已加载",
+    "notLoaded": "未加载",
+    "all": "全部",
+    "consumable": "耗材",
+    "nonConsumable": "非耗材"
+  },
+  "debug": {
+    "userInfo": "用户信息",
+    "region": "区域",
+    "reloadData": "重新加载数据",
+    "reloadFilters": "重新加载筛选项",
+    "consoleOutput": "控制台输出数据",
+    "testPagination": "测试分页(跳转第2页)",
+    "loadingStatus": "加载状态",
+    "errorStatus": "错误状态",
+    "dataItems": "数据项数",
+    "paginationStatus": "分页状态",
+    "selectedModel": "已选型号",
+    "currentProductType": "当前产品类型",
+    "consumableFilter": "耗材类型筛选",
+    "filterConfig": "可用筛选配置",
+    "hostModels": "机器型号",
+    "accessoryModels": "配件型号",
+    "filterOptions": "筛选选项",
+    "sparePartsData": "备件数据",
+    "pageOf": "第{{current}}页 / 共{{total}}页",
+    "totalItems": "总计{{total}}项"
+  },
+  "models": {
+    "LA-E4S": "气垫机E4S",
+    "LA-E5P": "气垫机E5P",
+    "LA-E6L": "气垫机E6L",
+    "AC-E4-FP1": "气垫机E4系列充气泵",
+    "AC-E5-FP2": "气垫机E5系列充气泵",
+    "AC-E6-FP3": "气垫机E6系列充气泵",
+    "AC-E4-CTR": "气垫机E4系列控制器",
+    "AC-E5-CTR": "气垫机E5系列控制器",
+    "EC402": "EC402 大支架",
+    "EC401": "EC401 小支架",
+    "EC403": "EC403 配件",
+    "EC404": "EC404 配件"
+  },
+  "testComments": {
+    "8AFuse": "为8A保险丝添加测试必选备件",
+    "wrinkleRemover": "为去皱硅胶添加测试数据",
+    "ceramicBlade": "为陶瓷刀片添加测试数据"
+  },
+  "roles": {
+    "admin": "管理员",
+    "sales": "销售",
+    "customer": "客户",
+    "partner": "合作伙伴",
+    "guest": "访客"
+  },
+  "pricing": {
+    "tiers": "个价格阶梯"
+  },
+  "inventory": {
+    "regions": "个区域",
+    "noInfo": "库存信息暂无",
+    "inStock": "有库存",
+    "lowStock": "库存紧张",
+    "outOfStock": "缺货",
+    "highStock": "库存充足"
+  },
+  "pagination": {
+    "previous": "上一页",
+    "next": "下一页"
+  },
+  "moreInfo": {
+    "specsDetail": "更多规格详情",
+    "hoverForSpecs": "悬停查看详细规格信息"
+  },
+  "buttons": {
+    "relogin": "重新登录",
+    "onlyRetry": "仅重试"
+  },
+  "products": {
+    "properties": {
+      "partNumber": "料号",
+      "model": "型号",
+      "voltage": "电压",
+      "frequency": "频率",
+      "spec": "规格",
+      "specImperial": "英制规格",
+      "pcsPerBox": "单箱数量",
+      "pcsPerPallet": "单托数量",
+      "packageSize": "包装尺寸",
+      "packageSizeCm": "包装尺寸(cm)",
+      "packageSizeInch": "包装尺寸(inch)",
+      "palletSize": "托盘尺寸",
+      "palletSizeCm": "托盘尺寸(cm)",
+      "palletSizeInch": "托盘尺寸(inch)",
+      "netWeight": "净重",
+      "grossWeight": "毛重",
+      "brand": "品牌",
+      "unit": "单位",
+      "productId": "产品ID",
+      "appModel": "适配机型",
+      "appSn": "适配序列号"
+    },
+    "defaultValues": {
+      "notAvailable": "暂无",
+      "unknown": "未知",
+      "notSpecified": "未指定"
+    },
+    "types": {
+      "machine": "主机",
+      "accessory": "配件",
+      "consumable": "耗材",
+      "spare_part": "备件",
+      "product": "产品"
+    }
+  }
 } 

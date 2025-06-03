@@ -1,0 +1,83 @@
+{
+  "title": "スペアパーツ",
+  "subtitle": "BJTエアクッション機のスペアパーツ",
+  "filters": {
+    "title": "フィルター",
+    "category": "カテゴリー",
+    "compatibility": "互換性",
+    "price": "価格",
+    "stock": "在庫状況",
+    "all": "すべて"
+  },
+  "categories": {
+    "all": "すべてのカテゴリー",
+    "electrical": "電気部品",
+    "mechanical": "機械部品",
+    "pneumatic": "空気圧部品",
+    "sensors": "センサー",
+    "other": "その他"
+  },
+  "compatibility": {
+    "all": "すべての機種",
+    "la-e4s": "LA-E4S",
+    "mex-10-20": "MEX-10/20",
+    "lp-v1": "LP-V1"
+  },
+  "price": {
+    "all": "すべての価格",
+    "under1k": "1,000円未満",
+    "1k-5k": "1,000-5,000円",
+    "5k-10k": "5,000-10,000円",
+    "above10k": "10,000円以上"
+  },
+  "stock": {
+    "all": "すべての在庫状況",
+    "inStock": "在庫あり",
+    "lowStock": "在庫わずか",
+    "outOfStock": "在庫切れ"
+  },
+  "table": {
+    "partNumber": "部品番号",
+    "name": "部品名",
+    "category": "カテゴリー",
+    "compatibility": "互換性",
+    "price": "価格",
+    "stock": "在庫",
+    "actions": "操作",
+    "columns": {
+      "partNumber": "部品番号",
+      "name": "部品名",
+      "category": "カテゴリー",
+      "compatibility": "互換性",
+      "price": "価格",
+      "stock": "在庫",
+      "actions": "操作"
+    }
+  },
+  "actions": {
+    "addToCart": "カートに追加",
+    "viewDetails": "詳細を見る",
+    "select": "選択"
+  },
+  "details": {
+    "title": "部品詳細",
+    "specifications": "仕様",
+    "compatibility": "互換性",
+    "installation": "取付方法",
+    "warranty": "保証情報"
+  },
+  "messages": {
+    "noParts": "部品が見つかりません",
+    "loading": "部品を読み込み中...",
+    "error": "部品の読み込みに失敗しました",
+    "addToCartSuccess": "カートに追加しました",
+    "addToCartError": "カートへの追加に失敗しました"
+  },
+  "batchActions": {
+    "title": "一括操作",
+    "addToCart": "カートに追加",
+    "export": "エクスポート",
+    "print": "印刷",
+    "selected": "{{count}}件選択中"
+  }
+} 

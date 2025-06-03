@@ -36,7 +36,7 @@ interface Order {
 const OrderListPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useTranslation();
+  const { t } = useTranslation(['orderList']);
   const { user } = useAuth();
   const notification = useNotification();
   
@@ -120,7 +120,7 @@ const OrderListPage: React.FC = () => {
                 date: apiOrder.created_at ? new Date(apiOrder.created_at).toLocaleDateString() : '',
                 status: mapApiStatusToUIStatus(apiOrder.status),
                 total: apiOrder.total_amount || 0,
-                paymentMethod: apiOrder.payment_method || '未知',
+                paymentMethod: apiOrder.payment_method || t('payment.method.other'),
                 shippingInfo: formatAddressInfo(apiOrder.shipping_address),
                 items: (apiOrder.items || []).map((item: any) => ({
                   id: String(item.order_item_id || item.id),
@@ -163,7 +163,7 @@ const OrderListPage: React.FC = () => {
             date: '2023-10-15 14:30:25',
             status: 'shipped',
             total: 234670,
-            paymentMethod: '银行转账',
+            paymentMethod: t('payment.method.bankTransfer'),
             shippingInfo: '李四 | 浙江省杭州市滨江区滨盛路1508号 | 13800138000',
             items: [
               {
@@ -190,7 +190,7 @@ const OrderListPage: React.FC = () => {
             date: '2023-10-12 09:15:10',
             status: 'completed',
             total: 45000,
-            paymentMethod: '支付宝',
+            paymentMethod: t('payment.method.alipay'),
             shippingInfo: '王五 | 上海市浦东新区张江高科技园区博云路100号 | 13900139000',
             items: [
               {
@@ -204,104 +204,83 @@ const OrderListPage: React.FC = () => {
             ]
           },
           {
-            id: 'BJT20231001015',
-            orderNumber: 'BJT20231001015',
-            date: '2023-10-01 16:45:33',
+            id: 'BJT20231010003',
+            orderNumber: 'BJT20231010003',
+            date: '2023-10-10 16:45:30',
             status: 'pending',
-            total: 15800,
-            paymentMethod: '待选择',
-            shippingInfo: '赵六 | 北京市海淀区中关村南大街5号 | 13700137000',
+            total: 124000,
+            paymentMethod: t('payment.method.bankTransfer'),
+            shippingInfo: '张三 | 北京市海淀区中关村软件园2号楼 | 13700137000',
             items: [
               {
                 id: '1',
-                part_number: '08A0105795', // 8A 保险丝
-                name: '8A 保险丝',
-                specs: '08A0105795',
-                price: 150,
-                quantity: 20
+                part_number: '60A01142',
+                name: 'LA-E4S V2.0主机-欧标版',
+                specs: '60A01142',
+                price: 62000,
+                quantity: 2
               }
             ]
           }
         ];
         
-        // 合并本地存储的订单和模拟订单
-        const combinedOrders = [...savedOrders, ...mockOrders];
+        // 合并保存的订单和模拟订单
+        const allOrders = [...savedOrders, ...mockOrders];
         
-        // 应用筛选
-        let filteredOrders = combinedOrders;
-        
-        // 状态筛选
+        // 根据状态过滤
+        let filteredOrders = allOrders;
         if (currentTab !== 'all') {
-          filteredOrders = filteredOrders.filter(order => order.status === currentTab);
+          filteredOrders = allOrders.filter(order => order.status === currentTab);
         }
         
-        // 搜索筛选
+        // 根据搜索条件过滤
         if (searchValue) {
-          const searchLower = searchValue.toLowerCase();
           filteredOrders = filteredOrders.filter(order => 
-            order.id.toLowerCase().includes(searchLower) || 
-            (order.orderNumber && order.orderNumber.toLowerCase().includes(searchLower)) ||
-            order.items.some(item => {
-              // 搜索part_number和名称
-              return (item.part_number && item.part_number.toLowerCase().includes(searchLower)) ||
-                     (item.name && item.name.toLowerCase().includes(searchLower));
-            })
+            order.orderNumber?.toLowerCase().includes(searchValue.toLowerCase()) ||
+            order.items.some(item => 
+              item.name?.toLowerCase().includes(searchValue.toLowerCase()) ||
+              item.part_number?.toLowerCase().includes(searchValue.toLowerCase())
+            )
           );
         }
         
-        // 日期筛选
-        if (startDate && endDate) {
-          const start = new Date(startDate).getTime();
-          const end = new Date(endDate).getTime() + (24 * 60 * 60 * 1000);
-          
-          filteredOrders = filteredOrders.filter(order => {
-            const orderDate = new Date(order.date.split(' ')[0]).getTime();
-            return orderDate >= start && orderDate <= end;
-          });
-        }
-        
-        setIsEmptyResults(filteredOrders.length === 0);
         setOrders(filteredOrders);
+        setIsEmptyResults(filteredOrders.length === 0);
         setLoading(false);
-        
       } catch (error) {
         console.error('获取订单数据失败:', error);
-        setError('获取订单数据失败，请稍后重试');
+        setError(t('messages.error'));
         setLoading(false);
-        setIsEmptyResults(true);
       }
     };
     
     fetchOrders();
-  }, [currentTab, searchValue, startDate, endDate, user, currentPage]);
-  
-  // 映射API状态到UI状态
+  }, [t, currentPage, currentTab, searchValue, user]);
+
+  // API状态映射到UI状态
   const mapApiStatusToUIStatus = (apiStatus: string): 'pending' | 'paid' | 'shipped' | 'completed' | 'cancelled' => {
     const statusMap: Record<string, 'pending' | 'paid' | 'shipped' | 'completed' | 'cancelled'> = {
-      'pending_payment': 'pending',
+      'pending': 'pending',
       'processing': 'paid',
       'shipped': 'shipped',
+      'delivered': 'completed',
       'completed': 'completed',
-      'cancelled': 'cancelled',
-      'refunded': 'cancelled'
+      'cancelled': 'cancelled'
     };
     return statusMap[apiStatus] || 'pending';
   };
 
   // 格式化地址信息
   const formatAddressInfo = (address: any): string => {
-    if (!address) return '暂无地址信息';
+    if (!address) return '';
     if (typeof address === 'string') return address;
-    
-    const parts = [];
-    if (address.name) parts.push(address.name);
-    if (address.address) parts.push(address.address);
-    if (address.phone) parts.push(address.phone);
-    
-    return parts.join(' | ');
+    if (typeof address === 'object') {
+      return `${address.name || ''} | ${address.address || ''} | ${address.phone || ''}`.replace(/\|\s*\|/g, '|').trim();
+    }
+    return String(address);
   };
   
-  // 展开/收起订单详情
+  // 切换订单展开状态
   const toggleOrderExpansion = (orderId: string) => {
     setExpandedOrders(prev => ({
       ...prev,
@@ -309,18 +288,18 @@ const OrderListPage: React.FC = () => {
     }));
   };
   
-  // 处理状态标签切换
+  // 处理标签切换
   const handleTabChange = (status: string) => {
     setCurrentTab(status);
     setCurrentPage(1);
   };
   
-  // 处理搜索
+  // 搜索功能
   const handleSearch = () => {
     setCurrentPage(1);
   };
   
-  // 处理日期更改
+  // 处理日期变化
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     if (id === 'start-date') {
@@ -328,73 +307,74 @@ const OrderListPage: React.FC = () => {
     } else if (id === 'end-date') {
       setEndDate(value);
     }
-    setCurrentPage(1);
   };
   
   // 导出PO单
   const handleExportPO = (orderId: string) => {
-    setNotificationMsg(`正在导出订单 ${orderId} 的PO单...`);
-    setTimeout(() => setNotificationMsg(''), 3000);
+    // 这里应该调用导出PO单的服务
+    console.log('导出PO单:', orderId);
   };
   
   // 查看订单详情
   const handleViewOrderDetail = (orderId: string) => {
-    // 找到对应订单并传递数据到PO页面
     const order = orders.find(o => o.id === orderId);
-    if (order) {
-      navigate('/po', {
-        state: {
-          poData: {
-            orderId: order.id,
-            orderItems: order.items,
-            customerInfo: {
-              companyName: '客户公司',
-              contactName: '客户联系人',
-              address: '客户地址',
-              phone: '13800138000',
-              email: 'customer@example.com'
-            },
-            shippingInfo: {
-              address: typeof order.shippingInfo === 'string' ? order.shippingInfo : formatShippingInfo(order.shippingInfo),
-              contactName: '收货人',
-              phone: '13800138000',
-              notes: '订单备注'
-            },
-            summary: {
-              subtotal: order.total * 0.9,
-              shipping: order.total * 0.05,
-              tax: order.total * 0.05,
-              total: order.total
-            }
-          }
-        }
-      });
-    }
+    if (!order) return;
+    
+    // 构建PO页面需要的数据格式
+    const poData = {
+      orderId: order.id,
+      orderItems: order.items.map(item => ({
+        id: item.id,
+        code: item.part_number,
+        sku: item.part_number,
+        name: item.name || item.part_number,
+        quantity: item.quantity,
+        price: item.price,
+        specs: item.specs
+      })),
+      customerInfo: {
+        companyName: '',
+        contactName: '',
+        address: '',
+        phone: '',
+        email: ''
+      },
+      shippingInfo: {
+        address: typeof order.shippingInfo === 'string' ? order.shippingInfo : formatShippingInfo(order.shippingInfo),
+        contactName: '',
+        phone: '',
+        notes: ''
+      },
+      summary: {
+        subtotal: order.total,
+        shipping: 0,
+        tax: 0,
+        total: order.total
+      }
+    };
+    
+    // 导航到PO页面
+    navigate('/po', { 
+      state: { 
+        poData 
+      } 
+    });
   };
   
-  // Format shipping info object to string
+  // 格式化收货信息显示
   const formatShippingInfo = (info: any): string => {
-    if (!info) return '-';
+    if (!info) return '';
     
     if (typeof info === 'string') {
       return info;
     }
     
-    // If it's an object with shipping info properties
-    if (typeof info === 'object' && info !== null) {
-      try {
-        const parts = [];
-        
-        if (info.contactName) parts.push(info.contactName);
-        if (info.company) parts.push(info.company);
-        if (info.address) parts.push(info.address);
-        if (info.phone) parts.push(info.phone);
-        
-        return parts.join(' | ');
-      } catch (error) {
-        console.error('Error formatting shipping info:', error);
-        return JSON.stringify(info);
-      }
+    if (typeof info === 'object') {
+      const parts = [];
+      if (info.name) parts.push(info.name);
+      if (info.address) parts.push(info.address);
+      if (info.phone) parts.push(info.phone);
+      return parts.join(' | ');
     }
     
     return String(info);
@@ -402,8 +382,8 @@ const OrderListPage: React.FC = () => {
   
   // 取消订单
   const handleCancelOrder = (orderId: string) => {
-    if (window.confirm(`确认要取消订单 ${orderId} 吗？`)) {
-      setNotificationMsg(`订单 ${orderId} 已成功取消`);
+    if (window.confirm(t('messages.deleteConfirm', { orderId }))) {
+      setNotificationMsg(t('messages.orderCanceled', { orderId }));
       setTimeout(() => setNotificationMsg(''), 3000);
     }
   };
@@ -430,25 +410,18 @@ const OrderListPage: React.FC = () => {
   
   // 获取状态文字
   const getStatusText = (status: string) => {
-    const statusMap = {
-      pending: '待支付',
-      paid: '已支付',
-      shipped: '已发货',
-      completed: '已完成',
-      cancelled: '已取消'
-    };
-    return statusMap[status as keyof typeof statusMap] || status;
+    return t(`status.${status}`, status);
   };
   
   // 渲染状态标签
   const renderStatusTabs = () => {
     const tabs = [
-      { id: 'all', text: '全部订单' },
-      { id: 'pending', text: '待支付' },
-      { id: 'paid', text: '已支付' },
-      { id: 'shipped', text: '已发货' },
-      { id: 'completed', text: '已完成' },
-      { id: 'cancelled', text: '已取消' }
+      { id: 'all', text: t('status.all') },
+      { id: 'pending', text: t('status.pending') },
+      { id: 'paid', text: t('status.paid') },
+      { id: 'shipped', text: t('status.shipped') },
+      { id: 'completed', text: t('status.completed') },
+      { id: 'cancelled', text: t('status.cancelled') }
     ];
     
     return (
@@ -471,7 +444,7 @@ const OrderListPage: React.FC = () => {
     return (
       <div className="filter-section">
         <div className="date-range">
-          <span>日期范围：</span>
+          <span>{t('filters.dateRangeLabel')}</span>
           <input 
             type="date" 
             className="date-input" 
@@ -479,7 +452,7 @@ const OrderListPage: React.FC = () => {
             value={startDate}
             onChange={handleDateChange}
           />
-          <span>至</span>
+          <span>{t('filters.dateTo')}</span>
           <input 
             type="date" 
             className="date-input" 
@@ -492,12 +465,12 @@ const OrderListPage: React.FC = () => {
           <input 
             type="text" 
             className="search-input" 
-            placeholder="搜索订单号或商品名称"
+            placeholder={t('filters.searchPlaceholder')}
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           />
-          <button className="search-button" onClick={handleSearch}>搜索</button>
+          <button className="search-button" onClick={handleSearch}>{t('filters.searchButton')}</button>
         </div>
       </div>
     );
@@ -510,8 +483,8 @@ const OrderListPage: React.FC = () => {
     return (
       <div className={`order-card ${isExpanded ? 'expanded' : ''}`} key={order.id}>
         <div className="order-header">
-          <div className="order-id">订单号：{order.orderNumber || order.id}</div>
-          <div className="order-date">订单日期：{order.date}</div>
+          <div className="order-id">{t('orderCard.orderNumber')}{order.orderNumber || order.id}</div>
+          <div className="order-date">{t('orderCard.orderDate')}{order.date}</div>
           <div>
             <span className={`order-status status-${order.status}`}>
               {getStatusText(order.status)}
@@ -521,17 +494,17 @@ const OrderListPage: React.FC = () => {
         <div className="order-details">
           <div className="detail-row">
             <div>
-              <span className="detail-label">总金额：</span>
+              <span className="detail-label">{t('orderCard.totalAmount')}</span>
               <span className="detail-value">¥{formatPrice(order.total)}</span>
             </div>
             <div>
-              <span className="detail-label">支付方式：</span>
+              <span className="detail-label">{t('orderCard.paymentMethod')}</span>
               <span className="detail-value">{order.paymentMethod}</span>
             </div>
           </div>
           <div className="detail-row">
             <div>
-              <span className="detail-label">收货信息：</span>
+              <span className="detail-label">{t('orderCard.shippingInfo')}</span>
               <span className="detail-value">
                 {typeof order.shippingInfo === 'object' 
                   ? formatShippingInfo(order.shippingInfo)
@@ -553,7 +526,7 @@ const OrderListPage: React.FC = () => {
               }
             }}
           >
-            <span className="expand-icon">▶</span> 查看商品
+            <span className="expand-icon">▶</span> {t('actions.viewProducts')}
           </button>
           <div>
             {order.status === 'pending' ? (
@@ -562,13 +535,13 @@ const OrderListPage: React.FC = () => {
                   className="action-button secondary-button" 
                   onClick={() => handleCancelOrder(order.id)}
                 >
-                  取消订单
+                  {t('actions.cancel')}
                 </button>
                 <button 
                   className="action-button primary-button"
                   onClick={() => handleGoToPay(order.id)}
                 >
-                  去支付
+                  {t('actions.goToPay')}
                 </button>
               </>
             ) : (
@@ -577,13 +550,13 @@ const OrderListPage: React.FC = () => {
                   className="action-button secondary-button"
                   onClick={() => handleExportPO(order.id)}
                 >
-                  导出PO单
+                  {t('actions.exportPO')}
                 </button>
                 <button 
                   className="action-button primary-button"
                   onClick={() => handleViewOrderDetail(order.id)}
                 >
-                  查看详情
+                  {t('actions.viewDetails')}
                 </button>
               </>
             )}
@@ -661,8 +634,8 @@ const OrderListPage: React.FC = () => {
     return (
       <div className="empty-orders">
         <div className="empty-icon">📂</div>
-        <h3>未找到订单</h3>
-        <p>请尝试调整筛选条件或搜索关键词</p>
+        <h3>{t('messages.noOrders')}</h3>
+        <p>{t('messages.emptyOrdersSubtitle')}</p>
       </div>
     );
   };
@@ -697,14 +670,14 @@ const OrderListPage: React.FC = () => {
     return (
       <div className="loading-container">
         <div className="spinner"></div>
-        <p>加载订单列表中...</p>
+        <p>{t('loading')}</p>
       </div>
     );
   }
   
   return (
     <div className="order-list-container">
-      <h1 className="page-title">订单管理</h1>
+      <h1 className="page-title">{t('pageTitle')}</h1>
       
       {/* 错误和通知 */}
       {renderError()}
@@ -714,7 +687,7 @@ const OrderListPage: React.FC = () => {
       {newOrderAdded && (
         <div className="new-order-notification">
           <span className="success-icon">✓</span>
-          <span className="notification-text">订单创建成功</span>
+          <span className="notification-text">{t('messages.orderCreated')}</span>
           <button className="close-button" onClick={() => setNewOrderAdded(false)}>×</button>
         </div>
       )}

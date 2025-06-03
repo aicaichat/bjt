@@ -34,14 +34,42 @@ export interface MachineProduct {
   
   export interface MachineAccessory {
     id: string;
-    model: string;
+    product_line_id?: number;
+    model?: string;
+    brand?: string;
+    part_number: string;
+    name_zh: string;
+    name_en: string;
     title: string;
-    level: number;
+    spec?: string;
+    spec_imperial?: string;
+    voltage?: string;
+    frequency?: string;
+    package_size_cm?: string;
+    package_size_inch?: string;
+    net_weight_kg?: number;
+    net_weight_lbs?: number;
+    gross_weight_kg?: number;
+    gross_weight_lbs?: number;
+    pcs_per_box?: number;
+    pallet_size_cm?: string;
+    pallet_size_inch?: string;
+    pcs_per_pallet?: number;
+    pallet_height_cm?: number;
+    pallet_height_inch?: number;
+    pallet_gross_weight_kg?: number;
+    pallet_gross_weight_lbs?: number;
     image_url: string;
+    level: number;
     parts: AccessoryPart[];
     parent_id?: string;
     compatible_machines?: string[];
     child_accessories?: MachineAccessory[];
+    children?: MachineAccessory[];
+    status?: string;
+    unit?: string;
+    created_at?: string;
+    updated_at?: string;
   }
   
   export interface AccessoryPart {

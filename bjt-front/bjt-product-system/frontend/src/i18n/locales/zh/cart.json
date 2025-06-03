@@ -1,0 +1,108 @@
+{
+  "title": "购物车",
+  "subtitle": "购物车管理",
+  "empty": {
+    "title": "购物车为空",
+    "description": "添加商品到购物车以继续结账",
+    "continueShopping": "继续购物"
+  },
+  "table": {
+    "columns": {
+      "product": "商品",
+      "price": "价格",
+      "quantity": "数量",
+      "total": "总计",
+      "actions": "操作"
+    }
+  },
+  "actions": {
+    "update": "更新",
+    "remove": "移除",
+    "clear": "清空购物车",
+    "checkout": "去结算",
+    "continueShopping": "继续购物"
+  },
+  "summary": {
+    "title": "订单摘要",
+    "subtotal": "小计",
+    "shipping": "运费",
+    "tax": "税费",
+    "discount": "折扣",
+    "total": "总计",
+    "estimatedDelivery": "预计送达时间"
+  },
+  "messages": {
+    "loading": "正在加载购物车...",
+    "error": "加载购物车失败",
+    "updateSuccess": "购物车更新成功",
+    "updateError": "更新购物车失败",
+    "removeConfirm": "确定要移除此商品吗？",
+    "clearConfirm": "确定要清空购物车吗？",
+    "success": {
+      "added": "商品已添加到购物车",
+      "updated": "购物车更新成功",
+      "removed": "商品已从购物车移除",
+      "cleared": "购物车已清空"
+    },
+    "error": {
+      "add": "添加商品到购物车失败",
+      "update": "更新购物车失败",
+      "remove": "移除商品失败",
+      "clear": "清空购物车失败"
+    }
+  },
+  "quantity": {
+    "increase": "增加数量",
+    "decrease": "减少数量",
+    "update": "更新数量"
+  },
+  "checkout": {
+    "title": "结算",
+    "steps": {
+      "cart": "购物车",
+      "shipping": "配送",
+      "payment": "支付",
+      "confirmation": "确认"
+    },
+    "buttons": {
+      "continue": "继续",
+      "back": "返回",
+      "placeOrder": "提交订单"
+    }
+  },
+  "cartTitle": "购物车",
+  "selectAll": "全选",
+  "emptyCartMessage": "购物车为空，快去添加商品吧！",
+  "clearCart": "清空购物车",
+  "checkout": "去结算",
+  "clearConfirmTitle": "确认清空购物车",
+  "cancel": "取消",
+  "confirm": "确认",
+  "items": "件商品",
+  "itemsList": "商品列表",
+  "clearAll": "全部清空",
+  "orderSummary": "订单摘要",
+  "selectedSubtotal": "选中小计",
+  "shipping": "运费",
+  "freeShipping": "包邮",
+  "selectedTotal": "选中合计",
+  "selectedCount": "已选商品数",
+  "proceedToCheckout": "去结算",
+  "continueShopping": "继续购物",
+  "confirmClear": "确认清空",
+  "confirmClearMessage": "确定要清空购物车吗？此操作不可恢复。",
+  "cartCleared": "购物车已清空",
+  "emptyCartWarning": "购物车为空，无法结算",
+  "unitPrice": "单价",
+  "subtotal": "小计",
+  "remove": "移除",
+  "total": "总计",
+  "mainItems": "主商品",
+  "requiredParts": "必选备件",
+  "cart": {
+    "clearConfirmTitle": "确认清空购物车",
+    "cancel": "取消",
+    "confirm": "确认",
+    "emptyCartMessage": "购物车为空，快去添加商品吧！"
+  }
+} 

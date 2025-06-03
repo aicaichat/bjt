@@ -118,9 +118,77 @@ export function fixMojibake(text: string): string {
   if (!text) return '';
   
   try {
-    // This magic approach fixes the common encoding issue we're seeing
-    // where UTF-8 bytes were incorrectly interpreted as Latin1/ISO-8859-1
-    return decodeURIComponent(escape(text));
+    // 安全的编码转换方法，避免使用废弃的 escape() 函数
+    // 直接尝试处理常见的 mojibake 模式
+    
+    // 检查是否包含可能的 mojibake 字符
+    if (!/[\u00e0-\u00ff]/.test(text)) {
+      return text; // 如果没有可疑的Latin1字符，直接返回
+    }
+    
+    // 硬编码常见的 mojibake 替换表（针对中文）
+    const mojibakeReplacements: Record<string, string> = {
+      'æ°"': '气',
+      'åž«': '垫',
+      'æœº': '机',
+      'çº¸': '纸',
+      'èƒ¶': '胶',
+      'å¸¦': '带',
+      'æŸ±': '柱',
+      'è¢‹': '袋',
+      'é«˜': '高',
+      'è´¨': '质',
+      'è®¾': '设',
+      'å¤‡': '备',
+      'å°': '封',
+      'è£…': '装',
+      'æ ‡': '标',
+      'ç‰ˆ': '版',
+      'ä¸»': '主',
+      'é…': '配',
+      'ä»¶': '件'
+    };
+    
+    let result = text;
+    
+    // 应用替换
+    for (const [mojibake, correct] of Object.entries(mojibakeReplacements)) {
+      if (result.includes(mojibake)) {
+        result = result.replace(new RegExp(mojibake, 'g'), correct);
+        console.log(`🔧 [fixMojibake] 替换 "${mojibake}" -> "${correct}"`);
+      }
+    }
+    
+    // 如果有替换发生，返回结果
+    if (result !== text) {
+      console.log(`✅ [fixMojibake] 修复完成: "${text}" -> "${result}"`);
+      return result;
+    }
+    
+    // 尝试更安全的编码转换方法
+    try {
+      // 将字符串转换为字节数组，然后重新解释为UTF-8
+      const bytes = new Uint8Array(text.length);
+      for (let i = 0; i < text.length; i++) {
+        bytes[i] = text.charCodeAt(i);
+      }
+      
+      // 使用TextDecoder进行UTF-8解码
+      const decoder = new TextDecoder('utf-8');
+      const decoded = decoder.decode(bytes);
+      
+      // 验证解码结果是否有效（包含中文字符）
+      if (/[\u4e00-\u9fa5]/.test(decoded)) {
+        console.log(`✅ [fixMojibake] TextDecoder修复: "${text}" -> "${decoded}"`);
+        return decoded;
+      }
+    } catch (e) {
+      console.warn('TextDecoder解码失败:', e);
+    }
+    
+    // 如果所有方法都失败，返回原始文本
+    return text;
+    
   } catch (e) {
     console.warn('Failed to fix mojibake:', text, e);
     return text;

@@ -1,0 +1,80 @@
+{
+  "title": "产品线管理",
+  "actions": {
+    "add": "添加产品线",
+    "edit": "编辑",
+    "delete": "删除",
+    "publish": "发布",
+    "draft": "草稿",
+    "trash": "回收站"
+  },
+  "table": {
+    "columns": {
+      "image": "图片",
+      "code": "编码",
+      "name": "名称",
+      "description": "描述",
+      "status": "状态",
+      "products": "产品数量"
+    }
+  },
+  "filters": {
+    "search": "搜索产品线",
+    "status": {
+      "publish": "已发布",
+      "draft": "草稿",
+      "trash": "回收站"
+    }
+  },
+  "batchActions": {
+    "publish": "发布所选",
+    "draft": "移至草稿",
+    "trash": "移至回收站"
+  },
+  "messages": {
+    "loading": "正在加载产品线...",
+    "error": "加载产品线失败",
+    "noData": "未找到产品线",
+    "batchSuccess": "批量操作完成",
+    "total": "共 {{total}} 条记录",
+    "deleteConfirm": "确定要删除此产品线吗？",
+    "publishConfirm": "确定要发布此产品线吗？",
+    "draftConfirm": "确定要将此产品线移至草稿吗？",
+    "trashConfirm": "确定要将此产品线移至回收站吗？",
+    "success": {
+      "created": "产品线创建成功",
+      "updated": "产品线更新成功",
+      "deleted": "产品线删除成功",
+      "published": "产品线发布成功",
+      "drafted": "产品线已移至草稿",
+      "trashed": "产品线已移至回收站"
+    },
+    "error": {
+      "create": "创建产品线失败",
+      "update": "更新产品线失败",
+      "delete": "删除产品线失败",
+      "publish": "发布产品线失败",
+      "draft": "移至草稿失败",
+      "trash": "移至回收站失败"
+    }
+  },
+  "form": {
+    "title": {
+      "add": "添加新产品线",
+      "edit": "编辑产品线"
+    },
+    "fields": {
+      "code": "产品线编码",
+      "name": "产品线名称",
+      "description": "描述",
+      "image": "产品线图片",
+      "status": "状态"
+    },
+    "validation": {
+      "codeRequired": "请输入产品线编码",
+      "nameRequired": "请输入产品线名称",
+      "descriptionRequired": "请输入描述",
+      "imageRequired": "请上传产品线图片"
+    }
+  }
+} 

@@ -7,6 +7,7 @@ import './Login.css';
 import logo from '../../assets/logo.svg';
 import { authService } from '../../services/auth';
 import testAuthFlow from '../../utils/authTest';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Paragraph } = Typography;
 
@@ -24,6 +25,7 @@ const Login: React.FC = () => {
   const [showTestAccounts, setShowTestAccounts] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { t } = useTranslation('login');
 
   const testAccounts: TestAccount[] = [
     {
@@ -144,9 +146,9 @@ const Login: React.FC = () => {
     <div className="login-page">
       <div className="login-container">
         <img src={logo} alt="BJT Logo" className="logo" />
-        <Title level={2} className="login-title">Welcome to BJT Management System</Title>
+        <Title level={2} className="login-title">{t('login:pageTitle')}</Title>
         <Paragraph className="login-subtitle">
-          Sign in to access your account
+          {t('login:signInToAccessYourAccount')}
         </Paragraph>
 
         {errorMsg && (
@@ -169,7 +171,7 @@ const Login: React.FC = () => {
               { required: true, message: 'Please input your Username!' },
             ]}
           >
-            <Input prefix={<UserOutlined />} placeholder="Username" size="large" />
+            <Input prefix={<UserOutlined />} placeholder={t('login:username')} size="large" />
           </Form.Item>
           <Form.Item
             name="password"
@@ -177,7 +179,7 @@ const Login: React.FC = () => {
           >
             <Input.Password
               prefix={<LockOutlined />}
-              placeholder="Password"
+              placeholder={t('login:password')}
               size="large"
             />
           </Form.Item>
@@ -191,14 +193,14 @@ const Login: React.FC = () => {
               loading={loading}
               className="login-button"
             >
-              Sign in
+              {t('login:login')}
             </Button>
           </Form.Item>
         </Form>
 
         <div className="test-accounts-section">
           <div className="test-accounts-header">
-            <span>Test Accounts</span>
+            <span>{t('login:testAccounts')}</span>
             <Switch 
               checked={showTestAccounts}
               onChange={(checked: boolean) => setShowTestAccounts(checked)}
@@ -231,7 +233,7 @@ const Login: React.FC = () => {
                         {account.description}
                       </div>
                       <div className="account-password">
-                        Password: <code>{account.password}</code>
+                        {t('login:password')}: <code>{account.password}</code>
                       </div>
                     </div>
                   </Col>
@@ -249,7 +251,7 @@ const Login: React.FC = () => {
         >
           <Form.Item>
             <Button type="default" onClick={runAuthTest} block>
-              运行认证测试
+              {t('login:runAuthTest')}
             </Button>
           </Form.Item>
         </Form>

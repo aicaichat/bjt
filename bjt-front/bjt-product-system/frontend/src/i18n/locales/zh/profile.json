@@ -1,0 +1,80 @@
+{
+  "title": "个人资料",
+  "subtitle": "个人资料管理",
+  "sections": {
+    "basic": "基本信息",
+    "security": "安全设置",
+    "preferences": "偏好设置",
+    "notifications": "通知设置"
+  },
+  "basic": {
+    "title": "基本信息",
+    "fields": {
+      "avatar": "头像",
+      "name": "姓名",
+      "email": "邮箱",
+      "phone": "电话",
+      "company": "公司",
+      "position": "职位",
+      "department": "部门",
+      "address": "地址"
+    },
+    "actions": {
+      "update": "更新资料",
+      "upload": "上传头像",
+      "remove": "移除头像"
+    }
+  },
+  "security": {
+    "title": "安全设置",
+    "fields": {
+      "currentPassword": "当前密码",
+      "newPassword": "新密码",
+      "confirmPassword": "确认密码"
+    },
+    "actions": {
+      "changePassword": "修改密码",
+      "enable2FA": "启用两步验证",
+      "disable2FA": "禁用两步验证"
+    }
+  },
+  "preferences": {
+    "title": "偏好设置",
+    "fields": {
+      "language": "语言",
+      "timezone": "时区",
+      "dateFormat": "日期格式",
+      "timeFormat": "时间格式",
+      "currency": "货币"
+    },
+    "actions": {
+      "save": "保存偏好"
+    }
+  },
+  "notifications": {
+    "title": "通知设置",
+    "fields": {
+      "email": "邮件通知",
+      "sms": "短信通知",
+      "push": "推送通知",
+      "orderUpdates": "订单更新",
+      "productUpdates": "产品更新",
+      "systemUpdates": "系统更新"
+    },
+    "actions": {
+      "save": "保存设置"
+    }
+  },
+  "messages": {
+    "loading": "正在加载个人资料...",
+    "error": "加载个人资料失败",
+    "updateSuccess": "个人资料更新成功",
+    "updateError": "更新个人资料失败",
+    "passwordSuccess": "密码修改成功",
+    "passwordError": "修改密码失败",
+    "preferencesSuccess": "偏好设置保存成功",
+    "preferencesError": "保存偏好设置失败",
+    "notificationsSuccess": "通知设置保存成功",
+    "notificationsError": "保存通知设置失败"
+  }
+} 

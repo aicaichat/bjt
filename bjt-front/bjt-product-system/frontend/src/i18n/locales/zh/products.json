@@ -1,0 +1,107 @@
+{
+  "title": "产品",
+  "filters": {
+    "title": "筛选",
+    "type": "类型",
+    "capacity": "产能",
+    "price": "价格",
+    "sort": "排序",
+    "all": "全部"
+  },
+  "types": {
+    "all": "全部类型",
+    "airCushion": "气垫机",
+    "packaging": "包装机",
+    "sealing": "封箱机",
+    "wrapping": "缠绕机"
+  },
+  "capacity": {
+    "all": "全部产能",
+    "small": "小型 (<100m³/h)",
+    "medium": "中型 (100-150m³/h)",
+    "large": "大型 (>150m³/h)"
+  },
+  "price": {
+    "all": "全部价格",
+    "under20k": "2万以下",
+    "20k-50k": "2-5万",
+    "50k-100k": "5-10万",
+    "above100k": "10万以上"
+  },
+  "sort": {
+    "default": "默认排序",
+    "priceAsc": "价格从低到高",
+    "priceDesc": "价格从高到低",
+    "nameAsc": "名称A-Z",
+    "nameDesc": "名称Z-A"
+  },
+  "tableHeaders": {
+    "index": "序号",
+    "model": "型号",
+    "name": "名称",
+    "type": "类型",
+    "capacity": "产能",
+    "price": "价格",
+    "inventory": "库存",
+    "actions": "操作"
+  },
+  "actions": {
+    "viewDetails": "查看详情",
+    "addToCart": "加入购物车",
+    "select": "选择"
+  },
+  "messages": {
+    "noProducts": "未找到产品",
+    "loading": "正在加载产品...",
+    "error": "加载产品失败",
+    "mockDataHint": "使用模拟数据进行演示"
+  },
+  "detailInfo": {
+    "title": "{{name}} 详细信息",
+    "sections": {
+      "specifications": "规格参数",
+      "features": "产品特点",
+      "compatibility": "兼容性"
+    },
+    "properties": {
+      "model": "型号",
+      "partNumber": "料号",
+      "voltage": "电压",
+      "power": "功率",
+      "dimensions": "尺寸",
+      "weight": "重量",
+      "capacity": "产能"
+    }
+  },
+  "compare": {
+    "title": "产品对比",
+    "selected": "已选择 {{count}} 台设备",
+    "button": "对比所选"
+  },
+  "stock": {
+    "in_stock": "库存充足",
+    "low_stock": "库存紧张",
+    "out_of_stock": "缺货",
+    "pre_order": "预订",
+    "quantity": "库存: {{count}}"
+  },
+  "properties": {
+    "partNumber": "料号",
+    "model": "型号",
+    "voltage": "电压",
+    "frequency": "频率",
+    "spec": "规格",
+    "specImperial": "规格(英制)",
+    "pcsPerBox": "单箱数量",
+    "pcsPerPallet": "一托数量",
+    "packageSize": "包装尺寸",
+    "palletSize": "托盘尺寸",
+    "netWeight": "净重",
+    "grossWeight": "毛重",
+    "brand": "品牌",
+    "unit": "单位"
+  },
+  "defaultValues": {
+    "notAvailable": "未填写"
+  }
+} 

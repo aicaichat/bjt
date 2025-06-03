@@ -16,12 +16,13 @@
     "failedToLoadProducts": "Failed to load products",
     "productLineNotFound": "Product line not found",
     "authenticationFailed": "Authentication failed",
+    "authFailed": "Authentication Failed",
     "loadingFailed": "Loading failed",
     "networkError": "Network error",
-    "failedToLoadMachines": "Failed to load machines list",
+    "failedToLoadMachines": "Failed to load machine list, please try again",
     "systemError": "System error, please contact administrator",
     "failedToAddToCart": "Failed to add to cart",
-    "failedToLoadAccessories": "Failed to load accessories"
+    "failedToLoadAccessories": "Failed to load accessories, please try again"
   },
   "messages": {
     "loginRequired": "Please log in to view this page",
@@ -33,15 +34,14 @@
     "viewDetails": "View Details",
     "loadMore": "Load More",
     "checkout": "Go to Cart",
-    "close": "Close"
+    "close": "Close",
+    "retry": "Retry"
   },
   "nav": {
     "home": "Home",
     "products": "Products",
     "support": "Support",
-    "contactUs": "Contact Us",
-    "login": "Login",
-    "account": "Account"
+    "contactUs": "Contact Us"
   },
   "header": {
     "cart": "Cart",
@@ -90,13 +90,13 @@
   },
   "menu": {
     "Air Cushioning System": "Air Cushioning System",
-    "Paper Cushioning System": "Paper Cushioning System",
-    "Water Cushioning System": "Water Cushioning System",
     "Air Cushion Machine & Accessory": "Air Cushion Machine & Accessory",
     "Film options": "Film options",
+    "Spare parts": "Spare parts",
+    "Paper Cushioning System": "Paper Cushioning System",
     "Paper Cushion Machine & Accessory": "Paper Cushion Machine & Accessory",
     "Paper options": "Paper options",
-    "Spare parts": "Spare parts",
+    "Water Cushioning System": "Water Cushioning System",
     "Water Activated Tape Dispenser & Accessory": "Water Activated Tape Dispenser & Accessory",
     "Water Activated Tape options": "Water Activated Tape options",
     "After-sales service": "After-sales service",

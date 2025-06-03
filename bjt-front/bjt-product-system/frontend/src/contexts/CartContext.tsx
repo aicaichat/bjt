@@ -51,7 +51,13 @@ export interface ExtendedCartItem extends OriginalCartItem {
   net_weight_lbs?: number | null;
   gross_weight_kg?: number | null;
   gross_weight_lbs?: number | null;
-  pcs_per_box?: number | null;
+  pcs_per_box?: number | string | null;
+  pcs_per_pallet?: number | string | null;
+  
+  // 新增主层字段，便于购物车直接访问
+  voltage?: string;
+  frequency?: string;
+  model?: string;
   
   // 定价和库存信息
   pricing?: any[];
@@ -122,6 +128,12 @@ const mapServiceCartItemToUICartItem = (item: OriginalCartItem): ExtendedCartIte
     gross_weight_kg: item.properties?.gross_weight_kg || null,
     gross_weight_lbs: item.properties?.gross_weight_lbs || null,
     pcs_per_box: item.properties?.pcs_per_box || null,
+    pcs_per_pallet: item.properties?.pcs_per_pallet || null,
+    
+    // 新增主层字段，便于购物车直接访问
+    voltage: item.properties?.voltage || '',
+    frequency: item.properties?.frequency || '',
+    model: item.properties?.model || '',
     
     // 定价和库存信息
     pricing: item.properties?.pricing || [],

@@ -48,7 +48,7 @@ export const machinesService = {
     }
     
     console.log('⚠️ [machinesService] Using REAL API mode');
-    // 修改API调用：使用主机料号接口而不是机器型号接口
+    // 🔧 使用正确的 /machineparts 端点（返回wp_bjt_parts数据，包含part_number字段）
     const responseUntyped = await HttpServiceInstance.get(`/machineparts`, params);
     // Adjust type assertion if necessary based on actual API response structure
     const response = responseUntyped as ApiResponse<MachinePartListData>; 
@@ -77,7 +77,7 @@ export const machinesService = {
       return machine;
     }
     
-    // 修改API调用：使用主机料号详情接口
+    // 🔧 使用正确的 /machineparts 端点（返回wp_bjt_parts数据，包含part_number字段）
     const response: ApiResponse<MachinePart> = await HttpServiceInstance.get<MachinePart>(`/machineparts/${machineId}`, params);
     return response.data;
   },

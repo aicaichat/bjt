@@ -1,0 +1,80 @@
+{
+  "title": "Profile",
+  "subtitle": "Profile Management",
+  "sections": {
+    "basic": "Basic Information",
+    "security": "Security",
+    "preferences": "Preferences",
+    "notifications": "Notifications"
+  },
+  "basic": {
+    "title": "Basic Information",
+    "fields": {
+      "avatar": "Avatar",
+      "name": "Full Name",
+      "email": "Email",
+      "phone": "Phone",
+      "company": "Company",
+      "position": "Position",
+      "department": "Department",
+      "address": "Address"
+    },
+    "actions": {
+      "update": "Update Profile",
+      "upload": "Upload Avatar",
+      "remove": "Remove Avatar"
+    }
+  },
+  "security": {
+    "title": "Security Settings",
+    "fields": {
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm Password"
+    },
+    "actions": {
+      "changePassword": "Change Password",
+      "enable2FA": "Enable 2FA",
+      "disable2FA": "Disable 2FA"
+    }
+  },
+  "preferences": {
+    "title": "Preferences",
+    "fields": {
+      "language": "Language",
+      "timezone": "Timezone",
+      "dateFormat": "Date Format",
+      "timeFormat": "Time Format",
+      "currency": "Currency"
+    },
+    "actions": {
+      "save": "Save Preferences"
+    }
+  },
+  "notifications": {
+    "title": "Notification Settings",
+    "fields": {
+      "email": "Email Notifications",
+      "sms": "SMS Notifications",
+      "push": "Push Notifications",
+      "orderUpdates": "Order Updates",
+      "productUpdates": "Product Updates",
+      "systemUpdates": "System Updates"
+    },
+    "actions": {
+      "save": "Save Settings"
+    }
+  },
+  "messages": {
+    "loading": "Loading profile...",
+    "error": "Error loading profile",
+    "updateSuccess": "Profile updated successfully",
+    "updateError": "Failed to update profile",
+    "passwordSuccess": "Password changed successfully",
+    "passwordError": "Failed to change password",
+    "preferencesSuccess": "Preferences saved successfully",
+    "preferencesError": "Failed to save preferences",
+    "notificationsSuccess": "Notification settings saved successfully",
+    "notificationsError": "Failed to save notification settings"
+  }
+} 

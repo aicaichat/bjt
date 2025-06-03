@@ -1,0 +1,101 @@
+{
+  "title": "产品详情",
+  "tabs": {
+    "description": "产品描述",
+    "specifications": "规格参数",
+    "features": "产品特点",
+    "compatibility": "兼容性",
+    "reviews": "用户评价",
+    "documents": "产品文档",
+    "videos": "产品视频"
+  },
+  "price": {
+    "current": "当前价格",
+    "original": "原价",
+    "discount": "折扣",
+    "tiers": {
+      "title": "数量折扣",
+      "range": "{{min}}-{{max}}件"
+    }
+  },
+  "stock": {
+    "title": "库存状态",
+    "quantity": "库存数量",
+    "status": {
+      "in_stock": "库存充足",
+      "low_stock": "库存紧张",
+      "out_of_stock": "缺货",
+      "pre_order": "预订"
+    }
+  },
+  "actions": {
+    "addToCart": "加入购物车",
+    "addToWishlist": "加入收藏",
+    "removeFromWishlist": "取消收藏",
+    "quantity": "数量",
+    "download": "下载",
+    "share": "分享",
+    "print": "打印"
+  },
+  "reviews": {
+    "title": "用户评价",
+    "rating": "评分",
+    "total": "{{total}}条评价",
+    "write": "写评价",
+    "helpful": "有帮助",
+    "notHelpful": "没帮助",
+    "sort": {
+      "title": "排序方式",
+      "newest": "最新",
+      "highest": "最高评分",
+      "lowest": "最低评分",
+      "helpful": "最有帮助"
+    }
+  },
+  "documents": {
+    "title": "产品文档",
+    "types": {
+      "manual": "用户手册",
+      "datasheet": "数据表",
+      "certificate": "证书",
+      "drawing": "技术图纸",
+      "other": "其他文档"
+    },
+    "download": "下载",
+    "preview": "预览"
+  },
+  "videos": {
+    "title": "产品视频",
+    "types": {
+      "overview": "产品概览",
+      "installation": "安装指南",
+      "tutorial": "使用教程",
+      "review": "产品评测"
+    },
+    "play": "播放视频",
+    "download": "下载视频"
+  },
+  "related": {
+    "title": "相关产品",
+    "viewAll": "查看所有相关产品"
+  },
+  "errors": {
+    "loadFailed": "无法加载产品信息，请稍后再试",
+    "reviewFailed": "提交评价失败",
+    "downloadFailed": "下载文档失败",
+    "videoFailed": "加载视频失败"
+  },
+  "messages": {
+    "loading": "正在加载产品详情...",
+    "success": {
+      "review": "评价提交成功",
+      "wishlist": "已加入收藏",
+      "cart": "已加入购物车"
+    },
+    "error": {
+      "review": "提交评价失败",
+      "wishlist": "加入收藏失败",
+      "cart": "加入购物车失败"
+    }
+  }
+} 

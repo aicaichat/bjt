@@ -1,0 +1,159 @@
+{
+  "title": "Equipment List",
+  "subtitle": "Product Equipment",
+  "loading": "Loading...",
+  "error": "Loading failed",
+  "noData": "No data available",
+  "skipToMainContent": "Skip to main content",
+  "unitSystem": "Unit System",
+  "metric": "Metric",
+  "imperial": "Imperial",
+  "close": "Close",
+  "noAccessories": "No accessories available",
+  "allPartNumbers": "All Part Numbers",
+  "pageTitle": "Machine Selection",
+  "addToCart": "Add to Cart",
+  "noPermissionAdd": "No permission to add",
+  "filters": {
+    "title": "Filters",
+    "voltage": "Voltage",
+    "region": "Region",
+    "partNumber": "Part Number",
+    "type": "Type",
+    "brand": "Brand",
+    "all": "All",
+    "clear": "Clear Filters"
+  },
+  "tableHeaders": {
+    "index": "No.",
+    "model": "Model",
+    "name": "Name",
+    "price": "Price",
+    "inventory": "Inventory",
+    "quantity": "Quantity",
+    "actions": "Actions",
+    "selection": "Select",
+    "image": "Image",
+    "specs": "Specifications",
+    "palletQty": "Pallet Quantity",
+    "palletSize": "Pallet Size",
+    "packSize": "Package Size"
+  },
+  "table": {
+    "model": "Model",
+    "partNumber": "Part Number",
+    "voltage": "Voltage",
+    "price": "Price",
+    "inventory": "Inventory",
+    "actions": "Actions",
+    "addToCart": "Add to Cart",
+    "viewDetails": "View Details"
+  },
+  "pricing": {
+    "from": "From",
+    "tier": "Tiered Pricing",
+    "quantity": "Quantity",
+    "unitPrice": "Unit Price"
+  },
+  "inventory": {
+    "inStock": "In Stock",
+    "lowStock": "Low Stock",
+    "outOfStock": "Out of Stock",
+    "available": "Available"
+  },
+  "actions": {
+    "addToCart": "Add to Cart",
+    "viewDetails": "View Details",
+    "selectAccessory": "Select Accessory",
+    "configure": "Configure"
+  },
+  "messages": {
+    "addedToCart": "Added to cart",
+    "addToCartFailed": "Failed to add to cart"
+  },
+  "stock": {
+    "outOfStock": "Out of Stock",
+    "lowStock": "Low Stock",
+    "mediumStock": "Medium Stock",
+    "highStock": "In Stock"
+  },
+  "notification": {
+    "added": "Added to cart",
+    "quantity": "Quantity"
+  },
+  "accessory": {
+    "title": "Accessories",
+    "selectFor": "Select accessories for chosen equipment",
+    "level": "Level",
+    "path": "Selection Path",
+    "details": "Accessory Details",
+    "description": "Description",
+    "specifications": "Specifications",
+    "loading": "Loading accessories...",
+    "noItems": "No accessories available",
+    "selectMachine": "Please select a machine first"
+  },
+  "packaging": {
+    "title": "Packaging Information",
+    "size": "Package Size",
+    "weight": "Gross Weight"
+  },
+  "pallet": {
+    "title": "Pallet Information",
+    "size": "Pallet Size",
+    "height": "Pallet Height",
+    "quantity": "Quantity per Pallet"
+  },
+  "unit": {
+    "metric": "Metric",
+    "imperial": "Imperial"
+  },
+  "noSpecPdf": "No specification PDF available",
+  "priceInquiry": "Price inquiry required",
+  "specDetails": "Specifications",
+  "moreInfo": "More Info",
+  "packSize": "Package Size",
+  "boxQty": "Pieces per Box",
+  "palletSize": "Pallet Size",
+  "palletQty": "Pieces per Pallet",
+  "netWeight": "Net Weight",
+  "grossWeight": "Gross Weight",
+  "palletHeight": "Pallet Height",
+  "palletGrossWeight": "Total Pallet Gross Weight",
+  "loadingAccessories": "Loading accessories...",
+  "loadingRequiredParts": "Loading required parts information...",
+  "selectAccessory": "Select Accessory",
+  "accessoryDetails": "Accessory Details",
+  "priceInfo": "Price Information",
+  "basePrice": "Base Price",
+  "tier1": "5-9 pieces",
+  "tier2": "10+ pieces",
+  "types": {
+    "all": "All Types",
+    "airCushion": "Air Cushion Machine",
+    "packaging": "Packaging Machine",
+    "sealing": "Sealing Machine",
+    "wrapping": "Wrapping Machine"
+  },
+  "status": {
+    "all": "All Status",
+    "available": "Available",
+    "inUse": "In Use",
+    "maintenance": "Under Maintenance",
+    "retired": "Retired"
+  },
+  "categories": {
+    "all": "All Categories",
+    "standard": "Standard",
+    "premium": "Premium",
+    "professional": "Professional",
+    "industrial": "Industrial"
+  },
+  "price": {
+    "all": "All Prices",
+    "under50k": "Under 50k",
+    "50k-100k": "50k-100k",
+    "100k-200k": "100k-200k",
+    "above200k": "Above 200k"
+  }
+} 

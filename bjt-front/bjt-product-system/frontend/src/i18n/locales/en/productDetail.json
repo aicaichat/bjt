@@ -1,0 +1,101 @@
+{
+  "title": "Product Details",
+  "tabs": {
+    "description": "Description",
+    "specifications": "Specifications",
+    "features": "Features",
+    "compatibility": "Compatibility",
+    "reviews": "Reviews",
+    "documents": "Documents",
+    "videos": "Videos"
+  },
+  "price": {
+    "current": "Current Price",
+    "original": "Original Price",
+    "discount": "Discount",
+    "tiers": {
+      "title": "Quantity Discount",
+      "range": "{{min}}-{{max}} pcs"
+    }
+  },
+  "stock": {
+    "title": "Stock Status",
+    "quantity": "Stock Quantity",
+    "status": {
+      "in_stock": "In Stock",
+      "low_stock": "Low Stock",
+      "out_of_stock": "Out of Stock",
+      "pre_order": "Pre-order"
+    }
+  },
+  "actions": {
+    "addToCart": "Add to Cart",
+    "addToWishlist": "Add to Wishlist",
+    "removeFromWishlist": "Remove from Wishlist",
+    "quantity": "Quantity",
+    "download": "Download",
+    "share": "Share",
+    "print": "Print"
+  },
+  "reviews": {
+    "title": "Customer Reviews",
+    "rating": "Rating",
+    "total": "{{total}} reviews",
+    "write": "Write a Review",
+    "helpful": "Helpful",
+    "notHelpful": "Not Helpful",
+    "sort": {
+      "title": "Sort by",
+      "newest": "Newest",
+      "highest": "Highest Rating",
+      "lowest": "Lowest Rating",
+      "helpful": "Most Helpful"
+    }
+  },
+  "documents": {
+    "title": "Product Documents",
+    "types": {
+      "manual": "User Manual",
+      "datasheet": "Datasheet",
+      "certificate": "Certificate",
+      "drawing": "Technical Drawing",
+      "other": "Other Documents"
+    },
+    "download": "Download",
+    "preview": "Preview"
+  },
+  "videos": {
+    "title": "Product Videos",
+    "types": {
+      "overview": "Product Overview",
+      "installation": "Installation Guide",
+      "tutorial": "Tutorial",
+      "review": "Product Review"
+    },
+    "play": "Play Video",
+    "download": "Download Video"
+  },
+  "related": {
+    "title": "Related Products",
+    "viewAll": "View All Related Products"
+  },
+  "errors": {
+    "loadFailed": "Failed to load product information, please try again later",
+    "reviewFailed": "Failed to submit review",
+    "downloadFailed": "Failed to download document",
+    "videoFailed": "Failed to load video"
+  },
+  "messages": {
+    "loading": "Loading product details...",
+    "success": {
+      "review": "Review submitted successfully",
+      "wishlist": "Product added to wishlist",
+      "cart": "Product added to cart"
+    },
+    "error": {
+      "review": "Failed to submit review",
+      "wishlist": "Failed to add to wishlist",
+      "cart": "Failed to add to cart"
+    }
+  }
+} 

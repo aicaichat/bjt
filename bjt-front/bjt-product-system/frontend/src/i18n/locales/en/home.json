@@ -1,10 +1,32 @@
 {
+  "title": "Home",
+  "introduction": "Welcome to BJT Product Management System",
   "links": {
     "machines": "View Machines",
     "consumables": "View Consumables",
     "spareParts": "View Spare Parts"
   },
-  "introduction": "Welcome to BJT Product Management System",
+  "sections": {
+    "title": "Product Categories",
+    "description": "Browse our complete range of products"
+  },
+  "features": {
+    "title": "Features",
+    "airCushion": "Air Cushion Technology",
+    "packaging": "Packaging Solutions",
+    "support": "Technical Support",
+    "spareParts": "Spare Parts Supply"
+  },
+  "messages": {
+    "loading": "Loading...",
+    "error": "Failed to load data",
+    "retry": "Retry"
+  },
+  "pagination": {
+    "prev": "Previous",
+    "next": "Next"
+  },
+  "apiData": "Data Source: Real API ({{count}} product lines)",
   "browseProducts": "Browse Products",
   "welcome": "Welcome to BJT Product Management System",
   "slogan": "Integrated solution for efficient management of product lines, machines, accessories, spare parts and consumables",
@@ -14,8 +36,6 @@
   "viewProducts": "View Products",
   "noProductLines": "No product lines available at the moment",
   "noProductsDescription": "Please check back later or contact our support team for assistance.",
-  "features": "System Features",
-  "productManagement": "Product Management",
   "productManagementDesc": "Centralized management of product lines, equipment, accessories, spare parts and consumables",
   "productSearch": "Product Search",
   "productSearchDesc": "Multi-dimensional search for products by category, model, specifications and more",

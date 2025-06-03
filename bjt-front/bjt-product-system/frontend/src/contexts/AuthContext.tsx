@@ -56,7 +56,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const token = authService.getToken();
         
         if (storedUser && token) {
-          console.log('🔍 [AuthProvider] Found stored user and token, attempting to get current user');
+          console.log('🔍 [AuthProvider] Found stored user and token, checking validity...');
+          
+          // 🔧 检查token是否过期
+          try {
+            const payload = token.split('.')[1];
+            if (payload) {
+              const decoded = JSON.parse(atob(payload));
+              const tokenExpiry = decoded.exp * 1000;
+              const now = Date.now();
+              
+              console.log('🔐 [AuthProvider] Token expiry check:', {
+                tokenExpiry: new Date(tokenExpiry),
+                currentTime: new Date(now),
+                isExpired: tokenExpiry < now
+              });
+              
+              if (tokenExpiry < now) {
+                console.warn('⚠️ [AuthProvider] Token has expired, clearing auth state');
+                // 清除过期的认证信息
+                await authService.logout();
+                setUser(null);
+                setLoading(false);
+                return;
+              }
+            }
+          } catch (tokenParseError) {
+            console.error('❌ [AuthProvider] Failed to parse token, clearing auth state:', tokenParseError);
+            await authService.logout();
+            setUser(null);
+            setLoading(false);
+            return;
+          }
           
           try {
             // 尝试获取最新的用户信息
@@ -64,9 +95,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setUser(currentUser);
             console.log('✅ [AuthProvider] Successfully loaded current user:', currentUser.username);
           } catch (error) {
-            console.warn('⚠️ [AuthProvider] Failed to get current user, using stored user:', error);
-            // 如果获取当前用户失败，使用存储的用户信息
-            setUser(storedUser);
+            console.error('❌ [AuthProvider] Failed to get current user, token may be invalid:', error);
+            
+            // 🔧 当获取用户信息失败时，检查是否是认证错误
+            if (error instanceof Error && (
+              error.message.includes('401') || 
+              error.message.includes('未授权') ||
+              error.message.includes('Unauthorized')
+            )) {
+              console.warn('🔄 [AuthProvider] Token invalid, clearing auth state');
+              await authService.logout();
+              setUser(null);
+            } else {
+              // 对于其他错误（如网络错误），使用存储的用户信息但记录警告
+              console.warn('⚠️ [AuthProvider] Using stored user due to API error:', error);
+              setUser(storedUser);
+            }
           }
         } else {
           console.log('🔍 [AuthProvider] No stored user or token found');
@@ -74,6 +118,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       } catch (error) {
         console.error('❌ [AuthProvider] Failed to initialize auth:', error);
+        // 清除可能损坏的认证状态
+        await authService.logout();
         setUser(null);
       } finally {
         setLoading(false);

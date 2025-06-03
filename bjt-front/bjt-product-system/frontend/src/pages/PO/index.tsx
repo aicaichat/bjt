@@ -276,14 +276,14 @@ const POPage: React.FC = () => {
       const ws = workbook.Sheets[sheetName];
 
       // 3. 填充右侧信息（Purchase Order Number、Date、Payment Method）
-      ws['D1'] = { t: 's', v: `Purchase Order Number: ${poNumber}` };
-      ws['D2'] = { t: 's', v: `Date: ${poDate}` };
-      ws['D3'] = { t: 's', v: `Payment Method: ${paymentMethod}` };
+      ws['D1'] = { t: 's', v: `${t('header.purchaseOrderNumber')}${poNumber}` };
+      ws['D2'] = { t: 's', v: `${t('header.date')}${poDate}` };
+      ws['D3'] = { t: 's', v: `${t('header.paymentMethod')}${paymentMethod}` };
 
       // 4. 填充Buyer信息
-      ws['A5'] = { t: 's', v: '公司名字' };
+      ws['A5'] = { t: 's', v: t('fields.companyName') };
       ws['B5'] = { t: 's', v: customerInfo.companyName };
-      ws['A6'] = { t: 's', v: '地址' };
+      ws['A6'] = { t: 's', v: t('fields.address') };
       ws['B6'] = { t: 's', v: customerInfo.address };
 
       // 5. 填充Vendor信息
@@ -292,13 +292,13 @@ const POPage: React.FC = () => {
       ws['A10'] = { t: 's', v: vendorAddress.city };
 
       // 6. 填充Ship to信息
-      ws['D5'] = { t: 's', v: '联系人' };
+      ws['D5'] = { t: 's', v: t('fields.contactName') };
       ws['D6'] = { t: 's', v: shippingInfo.contactName };
-      ws['D7'] = { t: 's', v: '电话' };
+      ws['D7'] = { t: 's', v: t('fields.phone') };
       ws['D8'] = { t: 's', v: shippingInfo.phone };
-      ws['D9'] = { t: 's', v: '地址' };
+      ws['D9'] = { t: 's', v: t('fields.address') };
       ws['D10'] = { t: 's', v: shippingInfo.address };
-      ws['D11'] = { t: 's', v: '备注' };
+      ws['D11'] = { t: 's', v: t('fields.notes') };
       ws['D12'] = { t: 's', v: shippingInfo.notes };
 
       // 7. 填充商品明细（假设明细从第15行开始，A15:H15）
@@ -306,9 +306,44 @@ const POPage: React.FC = () => {
       products.forEach((item, idx) => {
         const row = startRow + idx;
         ws[`A${row}`] = { t: 's', v: item.code || item.sku || '-' };
-        ws[`B${row}`] = { t: 's', v: typeof item.name === 'object' ? (item.name['zh-CN'] || item.name['en-US'] || '-') : item.name };
+        // 🔧 优先使用处理后的name字段
+        ws[`B${row}`] = { t: 's', v: 
+          item.name && typeof item.name === 'string' ? item.name :
+          typeof item.name === 'object' ? (item.name['zh-CN'] || item.name['en-US'] || '-') : 
+          item.model || item.code || item.sku || '-'
+        };
         ws[`C${row}`] = { t: 's', v: item.model || '-' };
-        ws[`D${row}`] = { t: 's', v: typeof item.specs === 'string' ? item.specs : (item.specs ? Object.entries(item.specs).map(([k, v]) => `${k}: ${v}`).join(', ') : '-') };
+        // 🔧 按照PO单模版格式，简化Item description
+        ws[`D${row}`] = { t: 's', v: (() => {
+          const descriptions = [];
+          
+          // 添加规格信息
+          if (item.specs && typeof item.specs === 'string') {
+            descriptions.push(item.specs);
+          } else if (item.specs && typeof item.specs === 'object') {
+            const specsText = Object.entries(item.specs)
+              .filter(([k, v]) => v && v !== 'N/A' && v !== 'Not Specified')
+              .map(([k, v]) => `${k}: ${v}`)
+              .join(', ');
+            if (specsText) descriptions.push(specsText);
+          }
+          
+          // 从properties中添加关键规格
+          if (item.properties) {
+            const importantSpecs = [];
+            if (item.properties.voltage && item.properties.voltage !== 'N/A') {
+              importantSpecs.push(`${item.properties.voltage}${item.properties.voltage.includes('V') ? '' : 'V'}`);
+            }
+            if (item.properties.frequency && item.properties.frequency !== 'N/A') {
+              importantSpecs.push(`${item.properties.frequency}${item.properties.frequency.includes('Hz') ? '' : 'Hz'}`);
+            }
+            if (importantSpecs.length > 0) {
+              descriptions.push(importantSpecs.join(', '));
+            }
+          }
+          
+          return descriptions.length > 0 ? descriptions.join(' | ') : '-';
+        })() };
         ws[`E${row}`] = { t: 's', v: item.brand || '-' };
         ws[`F${row}`] = { t: 'n', v: item.quantity };
         ws[`G${row}`] = { t: 'n', v: item.price };
@@ -317,18 +352,18 @@ const POPage: React.FC = () => {
 
       // 8. 填充合计信息
       const summaryStartRow = startRow + products.length + 2;
-      ws[`G${summaryStartRow}`] = { t: 's', v: 'Total' };
+      ws[`G${summaryStartRow}`] = { t: 's', v: t('table.summary.total') };
       ws[`H${summaryStartRow}`] = { t: 'n', v: summary.subtotal };
-      ws[`G${summaryStartRow + 1}`] = { t: 's', v: 'Freight charge' };
+      ws[`G${summaryStartRow + 1}`] = { t: 's', v: t('table.summary.freightCharge') };
       ws[`H${summaryStartRow + 1}`] = { t: 'n', v: summary.shipping };
-      ws[`G${summaryStartRow + 2}`] = { t: 's', v: 'Total amount' };
+      ws[`G${summaryStartRow + 2}`] = { t: 's', v: t('table.summary.totalAmount') };
       ws[`H${summaryStartRow + 2}`] = { t: 'n', v: summary.total };
 
       // 9. 导出
       XLSX.writeFile(workbook, `PO-${poNumber}.xlsx`);
     } catch (error) {
       console.error('导出Excel时出错:', error);
-      notification.error('导出Excel失败，请重试');
+      notification.error(t('exportError'));
     }
   };
 
@@ -435,10 +470,18 @@ const POPage: React.FC = () => {
 
   // 获取产品名称
   const getProductName = (product: POProduct) => {
+    // 🔧 优先使用处理后的name字段
+    if (product.name && typeof product.name === 'string') {
+      return product.name;
+    }
+    
+    // 如果name是对象，按语言选择
     if (typeof product.name === 'object') {
       return product.name[language === 'cn' ? 'zh-CN' : 'en-US'] || product.name['en-US'] || '-';
     }
-    return product.name || '-';
+    
+    // 最后的回退
+    return product.model || product.code || product.sku || 'Unknown Product';
   };
 
   // 根据语言或地区获取供应商地址
@@ -486,43 +529,43 @@ const POPage: React.FC = () => {
             </td>
             <td style={{border: "1px solid #000", width: '25%'}}></td>
             <td rowSpan={3} style={{border: "1px solid #000", width: '25%', textAlign: "center", verticalAlign: "middle", fontSize: '24px', fontWeight: 'bold'}}>
-              PURCHASE<br/>ORDER
+              {t('header.purchaseOrder')}
             </td>
             <td style={{border: "1px solid #000", width: '25%'}}>
-              <span style={{fontWeight: "bold"}}>Purchase Order Number: </span>
+              <span style={{fontWeight: "bold"}}>{t('header.purchaseOrderNumber')}</span>
               <span style={{color: '#ff0000', fontSize: '14px'}}>{poNumber}</span>
             </td>
           </tr>
           <tr>
             <td style={{border: "1px solid #000"}}></td>
             <td style={{border: "1px solid #000"}}>
-              <span style={{fontWeight: "bold"}}>Date: </span>
+              <span style={{fontWeight: "bold"}}>{t('header.date')}</span>
               <span style={{color: '#ff0000', fontSize: '14px'}}>{poDate}</span>
             </td>
           </tr>
           <tr>
             <td style={{border: "1px solid #000"}}></td>
             <td style={{border: "1px solid #000"}}>
-              <span style={{fontWeight: "bold"}}>Payment Method: </span>
+              <span style={{fontWeight: "bold"}}>{t('header.paymentMethod')}</span>
               <span style={{color: '#ff0000', fontSize: '14px'}}>{paymentMethod}</span>
             </td>
           </tr>
           
           {/* Buyer区域 */}
           <tr>
-            <td style={{border: "1px solid #000", fontWeight: "bold", background: '#f0f0f0'}}>Buyer</td>
+            <td style={{border: "1px solid #000", fontWeight: "bold", background: '#f0f0f0'}}>{t('sections.buyer')}</td>
             <td style={{border: "1px solid #000"}}></td>
             <td style={{border: "1px solid #000"}}></td>
-            <td style={{border: "1px solid #000", fontWeight: "bold", background: '#f0f0f0'}}>Ship to</td>
+            <td style={{border: "1px solid #000", fontWeight: "bold", background: '#f0f0f0'}}>{t('sections.shipTo')}</td>
           </tr>
           <tr>
-            <td style={{border: "1px solid #000", fontWeight: "bold"}}>公司名字</td>
+            <td style={{border: "1px solid #000", fontWeight: "bold"}}>{t('fields.companyName')}</td>
             <td style={{border: "1px solid #000", height: '30px'}}>{customerInfo.companyName}</td>
             <td style={{border: "1px solid #000"}}></td>
-            <td style={{border: "1px solid #000", fontWeight: "bold"}}>联系人</td>
+            <td style={{border: "1px solid #000", fontWeight: "bold"}}>{t('fields.contactName')}</td>
           </tr>
           <tr>
-            <td style={{border: "1px solid #000", fontWeight: "bold"}}>地址</td>
+            <td style={{border: "1px solid #000", fontWeight: "bold"}}>{t('fields.address')}</td>
             <td style={{border: "1px solid #000", height: '30px'}}>{customerInfo.address}</td>
             <td style={{border: "1px solid #000"}}></td>
             <td style={{border: "1px solid #000"}}>{shippingInfo.contactName}</td>
@@ -530,10 +573,10 @@ const POPage: React.FC = () => {
           
           {/* Vendor区域 */}
           <tr>
-            <td style={{border: "1px solid #000", fontWeight: "bold", background: '#f0f0f0'}}>Vendor</td>
+            <td style={{border: "1px solid #000", fontWeight: "bold", background: '#f0f0f0'}}>{t('sections.vendor')}</td>
             <td style={{border: "1px solid #000"}}></td>
             <td style={{border: "1px solid #000"}}></td>
-            <td style={{border: "1px solid #000", fontWeight: "bold"}}>电话</td>
+            <td style={{border: "1px solid #000", fontWeight: "bold"}}>{t('fields.phone')}</td>
           </tr>
           <tr>
             <td style={{border: "1px solid #000", fontWeight: "bold"}}>{vendorAddress.companyName}</td>
@@ -545,7 +588,7 @@ const POPage: React.FC = () => {
             <td style={{border: "1px solid #000"}}>{vendorAddress.address}</td>
             <td style={{border: "1px solid #000"}}></td>
             <td style={{border: "1px solid #000"}}></td>
-            <td style={{border: "1px solid #000", fontWeight: "bold"}}>地址</td>
+            <td style={{border: "1px solid #000", fontWeight: "bold"}}>{t('fields.address')}</td>
           </tr>
           <tr>
             <td style={{border: "1px solid #000"}}>{vendorAddress.city}</td>
@@ -559,7 +602,7 @@ const POPage: React.FC = () => {
             <td style={{border: "1px solid #000"}}></td>
             <td style={{border: "1px solid #000"}}></td>
             <td style={{border: "1px solid #000"}}></td>
-            <td style={{border: "1px solid #000", fontWeight: "bold"}}>备注</td>
+            <td style={{border: "1px solid #000", fontWeight: "bold"}}>{t('fields.notes')}</td>
           </tr>
           <tr>
             <td style={{border: "1px solid #000"}}></td>
@@ -573,48 +616,92 @@ const POPage: React.FC = () => {
       {/* 第二页：产品表格 */}
       <table className="po-excel-table">
         <thead>
-          <tr>
-            <th>Part No. #</th>
-            <th>Item</th>
-            <th>Model</th>
-            <th>Item description</th>
-            <th>Brand Name</th>
-            <th>Quantity</th>
-            <th>Unit Price</th>
-            <th>Amount</th>
+          <tr style={{backgroundColor: '#f8f9fa'}}>
+            <th style={{width: '12%', minWidth: '100px'}}>{t('table.columns.partNumber')}</th>
+            <th style={{width: '25%', minWidth: '200px'}}>{t('table.columns.item')}</th>
+            <th style={{width: '12%', minWidth: '100px'}}>{t('table.columns.model')}</th>
+            <th style={{width: '30%', minWidth: '250px'}}>{t('table.columns.description')}</th>
+            <th style={{width: '10%', minWidth: '80px'}}>{t('table.columns.brandName')}</th>
+            <th style={{width: '8%', minWidth: '60px'}}>{t('table.columns.quantity')}</th>
+            <th style={{width: '10%', minWidth: '80px'}}>{t('table.columns.unitPrice')}</th>
+            <th style={{width: '10%', minWidth: '80px'}}>{t('table.columns.amount')}</th>
           </tr>
         </thead>
         <tbody>
           {products.map((p, idx) => (
-            <tr key={idx}>
-              <td>{p.code || p.sku || '-'}</td>
-              <td>{typeof p.name === 'object' ? (p.name[language === 'cn' ? 'zh-CN' : 'en-US'] || p.name['en-US'] || '-') : p.name || '-'}</td>
-              <td>{p.model || '-'}</td>
-              <td>{typeof p.specs === 'string' ? p.specs : p.specs ? Object.entries(p.specs).map(([k, v]) => `${k}: ${v}`).join(', ') : '-'}</td>
-              <td>{p.brand || '-'}</td>
-              <td style={{ textAlign: 'center' }}>{p.quantity}</td>
-              <td className="amount-cell">{Number(p.price).toFixed(2)}</td>
-              <td className="amount-cell">{Number(p.price * p.quantity).toFixed(2)}</td>
+            <tr key={idx} style={{backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8f9fa'}}>
+              <td style={{textAlign: 'center', fontFamily: 'monospace'}}>{p.code || p.sku || '-'}</td>
+              <td style={{fontWeight: '500'}}>
+                {
+                  // 🔧 优先使用处理后的name字段，这应该已经包含正确的产品名称
+                  p.name && typeof p.name === 'string' ? p.name :
+                  // 如果name是对象，按语言选择
+                  typeof p.name === 'object' ? 
+                    (p.name[language === 'cn' ? 'zh-CN' : 'en-US'] || p.name['en-US'] || '-') : 
+                  // 最后的回退
+                  p.model || p.code || p.sku || '-'
+                }
+              </td>
+              <td style={{textAlign: 'center'}}>{p.model || '-'}</td>
+              <td style={{fontSize: '13px', lineHeight: '1.4'}}>
+                {
+                  // 🔧 按照PO单模版格式，简化Item description显示
+                  (() => {
+                    const descriptions = [];
+                    
+                    // 添加规格信息
+                    if (p.specs && typeof p.specs === 'string') {
+                      descriptions.push(p.specs);
+                    } else if (p.specs && typeof p.specs === 'object') {
+                      const specsText = Object.entries(p.specs)
+                        .filter(([k, v]) => v && v !== 'N/A' && v !== 'Not Specified')
+                        .map(([k, v]) => `${k}: ${v}`)
+                        .join(', ');
+                      if (specsText) descriptions.push(specsText);
+                    }
+                    
+                    // 从properties中添加关键规格
+                    if (p.properties) {
+                      const importantSpecs = [];
+                      if (p.properties.voltage && p.properties.voltage !== 'N/A') {
+                        importantSpecs.push(`${p.properties.voltage}${p.properties.voltage.includes('V') ? '' : 'V'}`);
+                      }
+                      if (p.properties.frequency && p.properties.frequency !== 'N/A') {
+                        importantSpecs.push(`${p.properties.frequency}${p.properties.frequency.includes('Hz') ? '' : 'Hz'}`);
+                      }
+                      if (importantSpecs.length > 0) {
+                        descriptions.push(importantSpecs.join(', '));
+                      }
+                    }
+                    
+                    return descriptions.length > 0 ? descriptions.join(' | ') : '-';
+                  })()
+                }
+              </td>
+              <td style={{textAlign: 'center'}}>{p.brand || '-'}</td>
+              <td style={{textAlign: 'center', fontWeight: 'bold'}}>{p.quantity}</td>
+              <td className="amount-cell" style={{textAlign: 'right', fontFamily: 'monospace'}}>{Number(p.price).toFixed(2)}</td>
+              <td className="amount-cell" style={{textAlign: 'right', fontFamily: 'monospace', fontWeight: 'bold'}}>{Number(p.price * p.quantity).toFixed(2)}</td>
             </tr>
           ))}
           {/* 合计、备注等行 */}
-          <tr>
-            <td className="remarks-cell" colSpan={6}>Remarks: {shippingInfo.notes || ''}</td>
-            <td className="summary-label">Total</td>
-            <td className="amount-cell">{Number(summary.subtotal).toFixed(2)}</td>
+          <tr style={{backgroundColor: '#e9ecef'}}>
+            <td className="remarks-cell" colSpan={6} style={{fontStyle: 'italic', padding: '12px 8px'}}>{t('table.summary.remarks')}{shippingInfo.notes || ''}</td>
+            <td className="summary-label" style={{fontWeight: 'bold', textAlign: 'right'}}>{t('table.summary.total')}</td>
+            <td className="amount-cell" style={{fontWeight: 'bold', textAlign: 'right', fontFamily: 'monospace'}}>{Number(summary.subtotal).toFixed(2)}</td>
           </tr>
-          <tr>
+          <tr style={{backgroundColor: '#e9ecef'}}>
             <td colSpan={6}></td>
-            <td className="summary-label">Freight charge</td>
-            <td className="amount-cell">{Number(summary.shipping).toFixed(2)}</td>
+            <td className="summary-label" style={{fontWeight: 'bold', textAlign: 'right'}}>{t('table.summary.freightCharge')}</td>
+            <td className="amount-cell" style={{fontWeight: 'bold', textAlign: 'right', fontFamily: 'monospace'}}>{Number(summary.shipping).toFixed(2)}</td>
           </tr>
-          <tr>
+          <tr style={{backgroundColor: '#d4edda', border: '2px solid #28a745'}}>
             <td colSpan={6}></td>
-            <td className="summary-label">Total amount</td>
-            <td className="amount-cell">{Number(summary.total).toFixed(2)}</td>
+            <td className="summary-label" style={{fontWeight: 'bold', textAlign: 'right', fontSize: '16px'}}>{t('table.summary.totalAmount')}</td>
+            <td className="amount-cell" style={{fontWeight: 'bold', textAlign: 'right', fontFamily: 'monospace', fontSize: '16px', color: '#28a745'}}>{Number(summary.total).toFixed(2)}</td>
           </tr>
           <tr>
-            <td className="remarks-cell" colSpan={8} style={{fontSize: '13px', color: '#888'}}>如需美化表格样式，可在Excel中选中表格区域，点击"开始"-"套用为表格"，一键加粗表头、金额变色。</td>
+            <td className="remarks-cell" colSpan={8} style={{fontSize: '11px', color: '#6c757d', padding: '8px', textAlign: 'center', fontStyle: 'italic'}}>{t('tips.excelStyling')}</td>
           </tr>
         </tbody>
       </table>

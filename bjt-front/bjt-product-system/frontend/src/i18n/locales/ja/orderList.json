@@ -1,0 +1,152 @@
+{
+  "pageTitle": "注文管理",
+  "title": "注文履歴",
+  "subtitle": "注文の詳細と追跡",
+  "loading": "注文リストを読み込み中...",
+  "filters": {
+    "title": "フィルター",
+    "status": "ステータス",
+    "dateRange": "日付範囲",
+    "orderNumber": "注文番号",
+    "customer": "顧客",
+    "all": "すべて",
+    "dateRangeLabel": "日付範囲：",
+    "dateTo": "から",
+    "searchPlaceholder": "注文番号または商品名で検索",
+    "searchButton": "検索"
+  },
+  "status": {
+    "all": "すべての注文",
+    "pending": "支払い待ち",
+    "paid": "支払い済み",
+    "shipped": "発送済み",
+    "completed": "完了",
+    "cancelled": "キャンセル済み",
+    "processing": "処理中",
+    "delivered": "配達完了",
+    "refunded": "返金済み"
+  },
+  "dateRange": {
+    "today": "今日",
+    "yesterday": "昨日",
+    "last7Days": "過去7日",
+    "last30Days": "過去30日",
+    "thisMonth": "今月",
+    "lastMonth": "先月",
+    "custom": "カスタム範囲"
+  },
+  "table": {
+    "orderNumber": "注文番号",
+    "date": "注文日",
+    "customer": "顧客",
+    "total": "合計",
+    "status": "ステータス",
+    "actions": "操作",
+    "columns": {
+      "orderNumber": "注文番号",
+      "date": "注文日",
+      "customer": "顧客",
+      "total": "合計金額",
+      "status": "ステータス",
+      "payment": "支払いステータス",
+      "paymentMethod": "支払い方法",
+      "shippingInfo": "配送情報",
+      "actions": "操作"
+    }
+  },
+  "actions": {
+    "viewProducts": "商品を見る",
+    "viewDetails": "詳細を見る",
+    "edit": "編集",
+    "cancel": "キャンセル",
+    "goToPay": "支払いへ",
+    "exportPO": "PO出力",
+    "print": "印刷",
+    "export": "エクスポート",
+    "delete": "削除"
+  },
+  "payment": {
+    "status": {
+      "pending": "支払い待ち",
+      "paid": "支払い済み",
+      "failed": "支払い失敗",
+      "refunded": "返金済み"
+    },
+    "method": {
+      "creditCard": "クレジットカード",
+      "bankTransfer": "銀行振込",
+      "cash": "現金",
+      "alipay": "Alipay",
+      "wechatPay": "WeChat Pay",
+      "other": "その他"
+    }
+  },
+  "orderCard": {
+    "orderNumber": "注文番号：",
+    "orderDate": "注文日：",
+    "totalAmount": "総額：",
+    "paymentMethod": "支払い方法：",
+    "shippingInfo": "配送情報："
+  },
+  "details": {
+    "title": "注文詳細",
+    "orderInfo": "注文情報",
+    "customerInfo": "顧客情報",
+    "shippingInfo": "配送情報",
+    "paymentInfo": "支払い情報",
+    "items": "注文商品",
+    "summary": "注文サマリー",
+    "subtotal": "小計",
+    "tax": "税金",
+    "shipping": "送料",
+    "discount": "割引",
+    "total": "合計"
+  },
+  "items": {
+    "product": "商品",
+    "quantity": "数量",
+    "price": "価格",
+    "total": "小計"
+  },
+  "summary": {
+    "subtotal": "小計",
+    "shipping": "送料",
+    "tax": "税金",
+    "total": "合計"
+  },
+  "messages": {
+    "noOrders": "注文が見つかりません",
+    "emptyOrdersSubtitle": "フィルターまたは検索キーワードを調整してください",
+    "loading": "注文を読み込み中...",
+    "error": "注文の読み込みに失敗しました",
+    "deleteConfirm": "注文 {{orderId}} をキャンセルしますか？",
+    "cancelConfirm": "この注文をキャンセルしますか？",
+    "orderCanceled": "注文 {{orderId}} が正常にキャンセルされました",
+    "orderCreated": "注文が正常に作成されました",
+    "cancelSuccess": "注文がキャンセルされました",
+    "cancelError": "注文のキャンセルに失敗しました",
+    "success": {
+      "created": "注文が正常に作成されました",
+      "updated": "注文が正常に更新されました",
+      "cancelled": "注文が正常にキャンセルされました",
+      "deleted": "注文が正常に削除されました"
+    },
+    "error": {
+      "create": "注文の作成に失敗しました",
+      "update": "注文の更新に失敗しました",
+      "cancel": "注文のキャンセルに失敗しました",
+      "delete": "注文の削除に失敗しました"
+    }
+  },
+  "pagination": {
+    "previous": "前へ",
+    "next": "次へ"
+  },
+  "batchActions": {
+    "title": "一括操作",
+    "export": "エクスポート",
+    "print": "印刷",
+    "delete": "削除",
+    "selected": "{{count}}件選択中"
+  }
+} 

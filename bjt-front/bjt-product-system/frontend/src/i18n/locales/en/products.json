@@ -1,0 +1,107 @@
+{
+  "title": "Products",
+  "filters": {
+    "title": "Filters",
+    "type": "Type",
+    "capacity": "Capacity",
+    "price": "Price",
+    "sort": "Sort",
+    "all": "All"
+  },
+  "types": {
+    "all": "All Types",
+    "airCushion": "Air Cushion Machine",
+    "packaging": "Packaging Machine",
+    "sealing": "Sealing Machine",
+    "wrapping": "Wrapping Machine"
+  },
+  "capacity": {
+    "all": "All Capacity",
+    "small": "Small (<100m³/h)",
+    "medium": "Medium (100-150m³/h)",
+    "large": "Large (>150m³/h)"
+  },
+  "price": {
+    "all": "All Prices",
+    "under20k": "Under ¥20,000",
+    "20k-50k": "¥20,000-50,000",
+    "50k-100k": "¥50,000-100,000",
+    "above100k": "Above ¥100,000"
+  },
+  "sort": {
+    "default": "Default",
+    "priceAsc": "Price: Low to High",
+    "priceDesc": "Price: High to Low",
+    "nameAsc": "Name: A to Z",
+    "nameDesc": "Name: Z to A"
+  },
+  "tableHeaders": {
+    "index": "No.",
+    "model": "Model",
+    "name": "Name",
+    "type": "Type",
+    "capacity": "Capacity",
+    "price": "Price",
+    "inventory": "Inventory",
+    "actions": "Actions"
+  },
+  "actions": {
+    "viewDetails": "View Details",
+    "addToCart": "Add to Cart",
+    "select": "Select"
+  },
+  "messages": {
+    "noProducts": "No products found",
+    "loading": "Loading products...",
+    "error": "Error loading products",
+    "mockDataHint": "Using mock data for demonstration"
+  },
+  "detailInfo": {
+    "title": "{{name}} Detailed Information",
+    "sections": {
+      "specifications": "Specifications",
+      "features": "Features",
+      "compatibility": "Compatibility"
+    },
+    "properties": {
+      "model": "Model",
+      "partNumber": "Part Number",
+      "voltage": "Voltage",
+      "power": "Power",
+      "dimensions": "Dimensions",
+      "weight": "Weight",
+      "capacity": "Capacity"
+    }
+  },
+  "compare": {
+    "title": "Product Comparison",
+    "selected": "{{count}} devices selected",
+    "button": "Compare Selected"
+  },
+  "stock": {
+    "in_stock": "In Stock",
+    "low_stock": "Low Stock",
+    "out_of_stock": "Out of Stock",
+    "pre_order": "Pre-order",
+    "quantity": "Stock: {{count}}"
+  },
+  "properties": {
+    "partNumber": "Part Number",
+    "model": "Part Model",
+    "voltage": "Voltage",
+    "frequency": "Frequency",
+    "spec": "Specification",
+    "specImperial": "Specification (Imperial)",
+    "pcsPerBox": "Pieces Per Box",
+    "pcsPerPallet": "Pieces Per Pallet",
+    "packageSize": "Package Size",
+    "palletSize": "Pallet Size",
+    "netWeight": "Net Weight",
+    "grossWeight": "Gross Weight",
+    "brand": "Brand",
+    "unit": "Unit"
+  },
+  "defaultValues": {
+    "notAvailable": "Not Specified"
+  }
+} 

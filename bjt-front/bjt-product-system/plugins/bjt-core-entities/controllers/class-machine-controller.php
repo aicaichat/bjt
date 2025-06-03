@@ -493,7 +493,7 @@ class BJT_Machine_Controller extends BJT_API_Controller {
         $prices_table = $wpdb->prefix . 'bjt_prices';
         $inventory_table = $wpdb->prefix . 'bjt_inventory';
 
-        // Step 1: Find child part numbers (accessories) related to the host_part_number
+        // Step 1: Find child part numbers (accessories) related to the part_number
         $child_part_numbers_query = $wpdb->prepare(
             "SELECT DISTINCT child_part_number FROM {$relations_table} WHERE part_number = %s",
             $host_part_number
@@ -526,7 +526,7 @@ class BJT_Machine_Controller extends BJT_API_Controller {
                 am.id AS model_id, am.title_zh AS model_title_zh, am.title_en AS model_title_en,
                 am.description_zh AS model_description_zh, am.description_en AS model_description_en,
                 am.type AS model_type, am.image1_url AS model_image1_url, am.image2_url AS model_image2_url,
-                am.diagram_pdf AS model_diagram_pdf, am.status AS model_status
+                am.explosion_diagram_pdf AS model_diagram_pdf, am.status AS model_status
             FROM {$accessories_table} a
             LEFT JOIN {$accessory_models_table} am ON a.model = am.model
             WHERE a.part_number IN ($placeholders) AND a.status = 'publish'",

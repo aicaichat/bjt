@@ -7,7 +7,7 @@ import { useToastNotifications } from '../../components/ui';
 
 const CartPage: React.FC = () => {
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation(['cart', 'translation']);
+  const { t, i18n } = useTranslation('cart');
   const { items, updateQuantity, removeItem, clearCart, isItemSelected, toggleItemSelection, selectAll, selectedItems, selectedTotal, selectedCount } = useContext(CartContext);
   const { success, warning } = useToastNotifications();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -44,7 +44,7 @@ const CartPage: React.FC = () => {
         {/* 页面标题 */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {t('title', { ns: 'cart' })}
+            {t('pageTitle', { ns: 'cart' })}
           </h1>
           <p className="text-gray-600">
             {t('subtitle', { ns: 'cart' })} ({items.length} {t('items', { ns: 'cart' })})
@@ -91,7 +91,7 @@ const CartPage: React.FC = () => {
               {/* 价格明细 */}
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">{t('selectedSubtotal', { ns: 'cart', defaultValue: '选中小计' })}:</span>
+                  <span className="text-gray-600">{t('selectedSubtotal', { ns: 'cart' })}:</span>
                   <span className="font-medium">¥{selectedTotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -100,11 +100,11 @@ const CartPage: React.FC = () => {
                 </div>
                 <div className="border-t pt-3">
                   <div className="flex justify-between text-lg font-semibold">
-                    <span>{t('selectedTotal', { ns: 'cart', defaultValue: '选中合计' })}:</span>
+                    <span>{t('selectedTotal', { ns: 'cart' })}:</span>
                     <span className="text-primary">¥{selectedTotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm text-gray-500 mt-1">
-                    <span>{t('selectedCount', { ns: 'cart', defaultValue: '已选商品数' })}:</span>
+                    <span>{t('selectedCount', { ns: 'cart' })}:</span>
                     <span>{selectedCount}</span>
                   </div>
                 </div>

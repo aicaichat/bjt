@@ -1,47 +1,129 @@
 {
-  "title": "Order Management",
-  "loading": "Loading orders...",
-  "fetchError": "Failed to fetch orders",
-  "fetchErrorMessage": "Could not load orders. Please try again later.",
-  "noOrdersFound": "No orders found",
-  "tryAdjustFilters": "Try adjusting your filters or search criteria",
-  
-  "tabs": {
-    "all": "All Orders",
-    "pending": "Pending",
-    "paid": "Paid",
-    "shipped": "Shipped",
-    "completed": "Completed",
-    "cancelled": "Cancelled"
+  "pageTitle": "Order Management",
+  "title": "Orders",
+  "subtitle": "Order Management",
+  "loading": "Loading order list...",
+  "filters": {
+    "title": "Filters",
+    "status": "Status",
+    "dateRange": "Date Range",
+    "orderNumber": "Order Number",
+    "customer": "Customer",
+    "all": "All",
+    "dateRangeLabel": "Date Range:",
+    "dateTo": "to",
+    "searchPlaceholder": "Search order number or product name",
+    "searchButton": "Search"
   },
-  
   "status": {
-    "pending": "Pending",
+    "all": "All Orders",
+    "pending": "Pending Payment",
     "paid": "Paid",
     "shipped": "Shipped",
     "completed": "Completed",
-    "cancelled": "Cancelled"
+    "cancelled": "Cancelled",
+    "processing": "Processing",
+    "delivered": "Delivered",
+    "refunded": "Refunded"
   },
-  
-  "orderNumber": "Order Number",
-  "orderDate": "Order Date",
-  "totalAmount": "Total Amount",
-  "shippingInfo": "Shipping Information",
-  "paymentMethod": "Payment Method",
-  
-  "viewItems": "View Items",
-  "viewDetails": "View Details",
-  "exportPO": "Export PO",
-  "cancelOrder": "Cancel Order",
-  
-  "search": "Search",
-  "searchPlaceholder": "Search by order number or product",
-  
-  "confirmCancel": "Are you sure you want to cancel order {{orderId}}?",
-  "cancelSuccess": "Order {{orderId}} has been cancelled",
-  "cancelError": "Failed to cancel order {{orderId}}",
-  
-  "exportingPO": "Preparing PO for order {{orderId}}...",
-  "exportSuccess": "PO for order {{orderId}} ready for download",
-  "exportError": "Failed to export PO for order {{orderId}}"
+  "dateRange": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "last7Days": "Last 7 Days",
+    "last30Days": "Last 30 Days",
+    "thisMonth": "This Month",
+    "lastMonth": "Last Month",
+    "custom": "Custom Range"
+  },
+  "table": {
+    "columns": {
+      "orderNumber": "Order Number",
+      "date": "Order Date",
+      "customer": "Customer",
+      "total": "Total Amount",
+      "status": "Status",
+      "payment": "Payment Status",
+      "paymentMethod": "Payment Method",
+      "shippingInfo": "Shipping Information",
+      "actions": "Actions"
+    }
+  },
+  "actions": {
+    "viewProducts": "View Products",
+    "viewDetails": "View Details",
+    "edit": "Edit Order",
+    "cancel": "Cancel Order",
+    "goToPay": "Go to Pay",
+    "exportPO": "Export PO",
+    "print": "Print Order",
+    "export": "Export",
+    "delete": "Delete"
+  },
+  "payment": {
+    "status": {
+      "pending": "Pending",
+      "paid": "Paid",
+      "failed": "Failed",
+      "refunded": "Refunded"
+    },
+    "method": {
+      "creditCard": "Credit Card",
+      "bankTransfer": "Bank Transfer",
+      "cash": "Cash",
+      "alipay": "Alipay",
+      "wechatPay": "WeChat Pay",
+      "other": "Other"
+    }
+  },
+  "orderCard": {
+    "orderNumber": "Order Number: ",
+    "orderDate": "Order Date: ",
+    "totalAmount": "Total Amount: ",
+    "paymentMethod": "Payment Method: ",
+    "shippingInfo": "Shipping Info: "
+  },
+  "details": {
+    "title": "Order Details",
+    "customerInfo": "Customer Information",
+    "shippingInfo": "Shipping Information",
+    "paymentInfo": "Payment Information",
+    "items": "Order Items",
+    "summary": "Order Summary",
+    "subtotal": "Subtotal",
+    "tax": "Tax",
+    "shipping": "Shipping",
+    "discount": "Discount",
+    "total": "Total"
+  },
+  "messages": {
+    "noOrders": "No orders found",
+    "emptyOrdersSubtitle": "Please try adjusting filters or search keywords",
+    "loading": "Loading orders...",
+    "error": "Error loading orders",
+    "deleteConfirm": "Are you sure you want to cancel order {{orderId}}?",
+    "cancelConfirm": "Are you sure you want to cancel this order?",
+    "orderCanceled": "Order {{orderId}} has been successfully cancelled",
+    "orderCreated": "Order created successfully",
+    "success": {
+      "created": "Order created successfully",
+      "updated": "Order updated successfully",
+      "cancelled": "Order cancelled successfully",
+      "deleted": "Order deleted successfully"
+    },
+    "error": {
+      "create": "Failed to create order",
+      "update": "Failed to update order",
+      "cancel": "Failed to cancel order",
+      "delete": "Failed to delete order"
+    }
+  },
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "batchActions": {
+    "export": "Export Selected",
+    "delete": "Delete Selected",
+    "print": "Print Selected"
+  }
 } 

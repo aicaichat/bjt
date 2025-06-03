@@ -1,0 +1,159 @@
+{
+  "title": "设备列表",
+  "subtitle": "产品设备",
+  "loading": "加载中...",
+  "error": "加载失败",
+  "noData": "暂无数据",
+  "skipToMainContent": "跳转到主要内容",
+  "unitSystem": "单位制",
+  "metric": "公制",
+  "imperial": "英制",
+  "close": "关闭",
+  "noAccessories": "暂无配件",
+  "allPartNumbers": "所有型号",
+  "pageTitle": "机器选择",
+  "addToCart": "加入购物车",
+  "noPermissionAdd": "无权限添加",
+  "filters": {
+    "title": "筛选",
+    "voltage": "电压",
+    "region": "地区",
+    "partNumber": "型号",
+    "type": "类型",
+    "brand": "品牌",
+    "all": "全部",
+    "clear": "清除筛选"
+  },
+  "tableHeaders": {
+    "index": "序号",
+    "model": "型号",
+    "name": "名称",
+    "price": "价格",
+    "inventory": "库存",
+    "quantity": "数量",
+    "actions": "操作",
+    "selection": "选择",
+    "image": "图片",
+    "specs": "规格",
+    "palletQty": "卡板数量",
+    "palletSize": "卡板尺寸",
+    "packSize": "包装尺寸"
+  },
+  "table": {
+    "model": "型号",
+    "partNumber": "零件号",
+    "voltage": "电压",
+    "price": "价格",
+    "inventory": "库存",
+    "actions": "操作",
+    "addToCart": "加入购物车",
+    "viewDetails": "查看详情"
+  },
+  "pricing": {
+    "from": "起价",
+    "tier": "阶梯价格",
+    "quantity": "数量",
+    "unitPrice": "单价"
+  },
+  "inventory": {
+    "inStock": "有库存",
+    "lowStock": "库存偏低",
+    "outOfStock": "缺货",
+    "available": "可用"
+  },
+  "actions": {
+    "addToCart": "加入购物车",
+    "viewDetails": "查看详情",
+    "selectAccessory": "选择配件",
+    "configure": "配置"
+  },
+  "messages": {
+    "addedToCart": "已加入购物车",
+    "addToCartFailed": "加入购物车失败"
+  },
+  "stock": {
+    "outOfStock": "缺货",
+    "lowStock": "库存偏低",
+    "mediumStock": "库存适中",
+    "highStock": "有库存"
+  },
+  "notification": {
+    "added": "已加入购物车",
+    "quantity": "数量"
+  },
+  "accessory": {
+    "title": "配件",
+    "selectFor": "为选中设备选择配件",
+    "level": "级别",
+    "path": "选择路径",
+    "details": "配件详情",
+    "description": "描述",
+    "specifications": "规格",
+    "loading": "加载配件中...",
+    "noItems": "暂无配件",
+    "selectMachine": "请先选择机器"
+  },
+  "packaging": {
+    "title": "包装信息",
+    "size": "包装尺寸",
+    "weight": "毛重"
+  },
+  "pallet": {
+    "title": "卡板信息",
+    "size": "卡板尺寸",
+    "height": "卡板高度",
+    "quantity": "每卡板数量"
+  },
+  "unit": {
+    "metric": "公制",
+    "imperial": "英制"
+  },
+  "noSpecPdf": "暂无规格说明文档",
+  "priceInquiry": "需要询价",
+  "specDetails": "规格说明",
+  "moreInfo": "更多信息",
+  "packSize": "包装尺寸",
+  "boxQty": "每箱数量",
+  "palletSize": "卡板尺寸",
+  "palletQty": "每卡板数量",
+  "netWeight": "净重",
+  "grossWeight": "毛重",
+  "palletHeight": "卡板高度",
+  "palletGrossWeight": "卡板总毛重",
+  "loadingAccessories": "加载配件中...",
+  "loadingRequiredParts": "加载必选配件信息中...",
+  "selectAccessory": "选择配件",
+  "accessoryDetails": "配件详情",
+  "priceInfo": "价格信息",
+  "basePrice": "基础价格",
+  "tier1": "5-9件",
+  "tier2": "10+件",
+  "types": {
+    "all": "全部类型",
+    "airCushion": "气垫机",
+    "packaging": "包装机",
+    "sealing": "封口机",
+    "wrapping": "包装机"
+  },
+  "status": {
+    "all": "全部状态",
+    "available": "可用",
+    "inUse": "使用中",
+    "maintenance": "维护中",
+    "retired": "已退役"
+  },
+  "categories": {
+    "all": "全部分类",
+    "standard": "标准",
+    "premium": "高级",
+    "professional": "专业",
+    "industrial": "工业"
+  },
+  "price": {
+    "all": "全部价格",
+    "under50k": "5万以下",
+    "50k-100k": "5-10万",
+    "100k-200k": "10-20万",
+    "above200k": "20万以上"
+  }
+} 

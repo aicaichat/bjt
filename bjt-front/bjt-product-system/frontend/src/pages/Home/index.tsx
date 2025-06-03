@@ -38,7 +38,7 @@ const Home: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   
   // 当前语言，基于i18n.language
-  const currentLanguage = i18n.language.startsWith('zh') ? 'zh' : 'en';
+  const currentLanguage = i18n.language.includes('zh') ? 'zh' : 'en';
   
   // 检查用户是否已登录，如果需要认证但未登录则重定向
   useEffect(() => {
@@ -69,11 +69,18 @@ const Home: React.FC = () => {
     setCurrentPage(page);
   };
 
-  // 根据当前语言获取标题
-  const getTitle = (line: any) => currentLanguage === 'en' ? line.title_en : line.title_zh;
-  
-  // 根据当前语言获取描述
-  const getDescription = (line: any) => currentLanguage === 'en' ? line.description_en : line.description_zh;
+  // 健壮获取标题
+  const getTitle = (line: any) => {
+    if (currentLanguage === 'en' && line.title_en) return line.title_en;
+    if (currentLanguage === 'zh' && line.title_zh) return line.title_zh;
+    return line.title_en || line.title_zh || '';
+  };
+  // 健壮获取描述
+  const getDescription = (line: any) => {
+    if (currentLanguage === 'en' && line.description_en) return line.description_en;
+    if (currentLanguage === 'zh' && line.description_zh) return line.description_zh;
+    return line.description_en || line.description_zh || '';
+  };
   
   // 使用统一的加载组件
   if (loading) {
@@ -95,7 +102,7 @@ const Home: React.FC = () => {
             </div>
             <div className="section-content">
               <div className="section-text">
-                <p className="introduction">{t('introduction')}</p>
+                <p className="introduction">{t('home:introduction')}</p>
                 <div className="divider"></div>
                 <p>{getDescription(line)}</p>
                 
@@ -105,21 +112,21 @@ const Home: React.FC = () => {
                     className="product-link" 
                     onClick={(e) => handleProductLinkClick(e, `${ROUTES.MACHINES}?category=${line.id}`)}
                   >
-                    {t('links.machines')} 
+                    {t('home:links.machines')} 
                   </Link>
                   <Link 
                     to={`${ROUTES.CONSUMABLES}?category=${line.id}`} 
                     className="product-link" 
                     onClick={(e) => handleProductLinkClick(e, `${ROUTES.CONSUMABLES}?category=${line.id}`)}
                   >
-                    {t('links.consumables')}
+                    {t('home:links.consumables')}
                   </Link>
                   <Link 
                     to={`${ROUTES.SPARE_PARTS}?category=${line.id}`} 
                     className="product-link" 
                     onClick={(e) => handleProductLinkClick(e, `${ROUTES.SPARE_PARTS}?category=${line.id}`)}
                   >
-                    {t('links.spareParts')}
+                    {t('home:links.spareParts')}
                   </Link>
                 </div>
               </div>
@@ -142,21 +149,6 @@ const Home: React.FC = () => {
                 {page}
               </button>
             ))}
-          </div>
-        )}
-
-        {/* 显示从真实API获取数据的指示 */}
-        {productLines && productLines.length > 0 && (
-          <div style={{ 
-            marginTop: '20px', 
-            padding: '10px', 
-            backgroundColor: '#f0f8ff', 
-            border: '1px solid #0084ff',
-            borderRadius: '4px',
-            fontSize: '12px',
-            color: '#666'
-          }}>
-            ✅ 数据来源: 真实API ({productLines.length} 个产品线)
           </div>
         )}
       </main>

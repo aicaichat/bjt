@@ -2857,3 +2857,147 @@ header .container {
     color: #e9d5ff;
   }
 }
+
+/* 更多信息区域样式 */
+.more-info-section {
+  margin-top: 18px;
+  display: flex;
+  gap: 15px;
+}
+
+.more-info-section a {
+  color: #1a57a5;
+  text-decoration: none;
+  padding: 6px 12px;
+  border: 1px solid #1a57a5;
+  border-radius: 4px;
+  font-size: 13px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.more-info-section a:hover {
+  background-color: #1a57a5;
+  color: white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.info-icon {
+  margin-right: 5px;
+  font-weight: bold;
+}
+
+/* 规格说明和更多信息按钮样式 */
+.bg-secondary-light {
+  background-color: #e3f2fd;
+}
+
+.text-secondary {
+  color: #1976d2;
+}
+
+.border-secondary {
+  border-color: #1976d2;
+}
+
+.bg-secondary:hover {
+  background-color: #1976d2 !important;
+}
+
+.bg-info-light {
+  background-color: #f3e5f5;
+}
+
+.text-info {
+  color: #7b1fa2;
+}
+
+.border-info {
+  border-color: #7b1fa2;
+}
+
+.bg-info:hover {
+  background-color: #7b1fa2 !important;
+}
+
+/* 机器信息弹出框样式 */
+.machine-info-tooltip .ant-tooltip-content {
+  max-width: none !important;
+}
+
+.machine-info-popover {
+  min-width: 300px;
+  max-width: 400px;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  background: white;
+}
+
+.machine-info-popover .info-section {
+  margin-bottom: 16px;
+}
+
+.machine-info-popover .info-section:last-child {
+  margin-bottom: 0;
+}
+
+.machine-info-popover h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 4px;
+}
+
+.machine-info-popover p {
+  margin: 4px 0;
+  color: #666;
+  line-height: 1.5;
+}
+
+.machine-info-popover strong {
+  color: #333;
+  font-weight: 600;
+  min-width: 100px;
+  display: inline-block;
+}
+
+/* PDF下载按钮测试标识 */
+[data-testid="pdf-download"] {
+  transition: all 0.3s ease;
+}
+
+[data-testid="pdf-download"]:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+[data-testid="more-info"] {
+  transition: all 0.3s ease;
+}
+
+[data-testid="more-info"]:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .machine-info-popover {
+    min-width: 280px;
+    max-width: 320px;
+    padding: 12px;
+  }
+  
+  .machine-info-popover h4 {
+    font-size: 14px;
+  }
+  
+  .machine-info-popover p {
+    font-size: 13px;
+  }
+}

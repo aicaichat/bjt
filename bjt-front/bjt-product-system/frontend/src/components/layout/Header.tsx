@@ -99,47 +99,47 @@ const Header = ({
   navItems = [
     { label: 'nav.home', path: '/', requiresAuth: false },
     { 
-      label: 'nav.products', // 确保使用翻译键，而不是对象
+      label: 'nav.products',
       path: '/products',
       requiresAuth: false,
       children: [
         { 
-          title: 'Air Cushioning System',
+          title: 'menu.Air Cushioning System',
           items: [
-            { label: 'Air Cushion Machine & Accessory', url: '/machines?category=1' },
-            { label: 'Film options', url: '/consumables?category=1' },
-            { label: 'Spare parts', url: '/spare-parts?category=1' },
+            { label: 'menu.Air Cushion Machine & Accessory', url: '/machines?category=1' },
+            { label: 'menu.Film options', url: '/consumables?category=1' },
+            { label: 'menu.Spare parts', url: '/spare-parts?category=1' },
           ] 
         },
         { 
-          title: 'Paper Cushioning System',
+          title: 'menu.Paper Cushioning System',
           items: [
-            { label: 'Paper Cushion Machine & Accessory', url: '/machines?category=1' },
-            { label: 'Paper options', url: '/consumables?category=1' },
-            { label: 'Spare parts', url: '/spare-parts?category=1' },
+            { label: 'menu.Paper Cushion Machine & Accessory', url: '/machines?category=1' },
+            { label: 'menu.Paper options', url: '/consumables?category=1' },
+            { label: 'menu.Spare parts', url: '/spare-parts?category=1' },
           ] 
         },
         { 
-          title: 'Water Cushioning System',
+          title: 'menu.Water Cushioning System',
           items: [
-            { label: 'Water Activated Tape Dispenser & Accessory', url: '/machines?category=1' },
-            { label: 'Water Activated Tape options', url: '/consumables?category=1' },
-            { label: 'Spare parts', url: '/spare-parts?category=1' },
+            { label: 'menu.Water Activated Tape Dispenser & Accessory', url: '/machines?category=1' },
+            { label: 'menu.Water Activated Tape options', url: '/consumables?category=1' },
+            { label: 'menu.Spare parts', url: '/spare-parts?category=1' },
           ] 
         }
       ]
     },
     { 
-      label: 'support', 
+      label: 'nav.support',
       path: '/support',
       requiresAuth: false,
       simpleDropdown: [
-        { label: 'After-sales service', url: '/support?type=service' },
-        { label: 'Document Download', url: '/support?type=download' },
-        { label: 'FAQ', url: '/support?type=faq' },
+        { label: 'menu.After-sales service', url: '/support?type=service' },
+        { label: 'menu.Document Download', url: '/support?type=download' },
+        { label: 'menu.FAQ', url: '/support?type=faq' },
       ]
     },
-    { label: 'contactUs', path: '/contact', requiresAuth: false }
+    { label: 'nav.contactUs', path: '/contact', requiresAuth: false }
   ],
   className = '',
   onLanguageChange,
@@ -224,13 +224,13 @@ const Header = ({
               menu={{
                 items: navItem.children.map((section, sectionIndex) => ({
                   key: `section-${sectionIndex}`,
+                  label: safeRender(t(section.title)),
                   type: 'group',
-                  label: safeRender(section.title),
                   children: section.items.map((item, itemIndex) => ({
                     key: `${sectionIndex}-${itemIndex}`,
                     label: (
                       <Link to={item.url}>
-                        {safeRender(item.label)}
+                        {safeRender(t(item.label))}
                       </Link>
                     ),
                   })),
@@ -270,7 +270,7 @@ const Header = ({
                   key: `simple-${itemIndex}`,
                   label: (
                     <Link to={item.url}>
-                      {safeRender(item.label)}
+                      {safeRender(t(item.label))}
                     </Link>
                   ),
                 })),

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import './CartSidebar.css';
 
 interface CartSidebarProps {
@@ -22,6 +23,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
   } = useCart();
   const { user } = useAuth();
   const preferredUnit = user?.preferred_unit || 'metric';
+  const { t, i18n } = useTranslation(['spareParts', 'cart']);
 
   const hasItems = items.length > 0;
   const allSelected = hasItems && items.every(item => isItemSelected(item.id));
@@ -73,6 +75,30 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
     return tier ? tier.price : item.price || 0;
   };
 
+  // 属性key到i18n key映射
+  const propertyKeyMap: Record<string, string> = {
+    part_number: 'partNumber',
+    model: 'model',
+    voltage: 'voltage',
+    frequency: 'frequency',
+    spec: 'spec',
+    spec_imperial: 'specImperial',
+    pcs_per_box: 'pcsPerBox',
+    pcs_per_pallet: 'pcsPerPallet',
+    package_size_cm: 'packageSize',
+    package_size_inch: 'packageSize',
+    pallet_size_cm: 'palletSize',
+    pallet_size_inch: 'palletSize',
+    net_weight_kg: 'netWeight',
+    net_weight_lbs: 'netWeight',
+    gross_weight_kg: 'grossWeight',
+    gross_weight_lbs: 'grossWeight',
+    brand: 'brand',
+    unit: 'unit'
+  };
+  const getLabel = (key: string, t: any) => t(`products.properties.${propertyKeyMap[key] || key}`, key);
+  const getValue = (value: any, t: any) => value && value !== 'N/A' && value !== 'Not Specified' ? value : t('products.defaultValues.notAvailable');
+
   // 渲染耗材详细信息
   const renderConsumableDetails = (item: any) => {
     const props = item.properties || {};
@@ -80,44 +106,44 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
     return (
       <div className="consumable-details">
         <div className="detail-row">
-          <span className="label">料号:</span>
-          <span className="value">{props.part_number || item.part_number || 'N/A'}</span>
+          <span className="label">{getLabel('partNumber', t)}:</span>
+          <span className="value">{getValue(props.part_number || item.part_number, t)}</span>
         </div>
         <div className="detail-row">
-          <span className="label">品牌:</span>
-          <span className="value">{props.brand || item.brand || 'N/A'}</span>
+          <span className="label">{getLabel('brand', t)}:</span>
+          <span className="value">{getValue(props.brand || item.brand, t)}</span>
         </div>
         <div className="detail-row">
-          <span className="label">型号:</span>
+          <span className="label">{getLabel('model', t)}:</span>
           <span className="value">
-            {preferredUnit === 'metric' ? (props.model || item.model) : (props.model_imperial || item.model_imperial || props.model || item.model)}
+            {preferredUnit === 'metric' ? (getValue(props.model, t)) : (getValue(props.model_imperial || item.model_imperial || props.model || item.model, t))}
           </span>
         </div>
         <div className="detail-row">
-          <span className="label">规格:</span>
+          <span className="label">{getLabel('spec', t)}:</span>
           <span className="value">
-            {preferredUnit === 'metric' ? (props.spec || item.spec) : (props.spec_imperial || item.spec_imperial || props.spec || item.spec)}
+            {preferredUnit === 'metric' ? (getValue(props.spec, t)) : (getValue(props.spec_imperial || item.spec_imperial || props.spec || item.spec, t))}
           </span>
         </div>
         {(props.bubble_diameter_met || props.bubble_diameter_imp) && (
           <div className="detail-row">
-            <span className="label">泡径:</span>
+            <span className="label">{getLabel('bubbleDiameter', t)}:</span>
             <span className="value">
               {preferredUnit === 'metric' 
-                ? `${props.bubble_diameter_met} cm` 
-                : `${props.bubble_diameter_imp} inch`}
+                ? `${getValue(props.bubble_diameter_met, t)} cm` 
+                : `${getValue(props.bubble_diameter_imp, t)} inch`}
             </span>
           </div>
         )}
         {props.pcs_per_box && (
           <div className="detail-row">
-            <span className="label">单箱数量:</span>
-            <span className="value">{props.pcs_per_box}</span>
+            <span className="label">{getLabel('pcsPerBox', t)}:</span>
+            <span className="value">{getValue(props.pcs_per_box, t)}</span>
           </div>
         )}
         <div className="detail-row">
-          <span className="label">产品ID:</span>
-          <span className="value">{props.id || item.product_id || item.id || 'N/A'}</span>
+          <span className="label">{getLabel('productId', t)}:</span>
+          <span className="value">{getValue(props.id || item.product_id || item.id, t)}</span>
         </div>
       </div>
     );
@@ -158,16 +184,16 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
         {/* 基本信息 */}
         <div className="detail-section">
           <div className="detail-row">
-            <span className="label">料号:</span>
-            <span className="value">{props.part_number || item.part_number || 'N/A'}</span>
+            <span className="label">{getLabel('partNumber', t)}:</span>
+            <span className="value">{getValue(props.part_number || item.part_number, t)}</span>
           </div>
           <div className="detail-row">
-            <span className="label">型号:</span>
-            <span className="value">{props.model || specs.model || item.model || 'N/A'}</span>
+            <span className="label">{getLabel('model', t)}:</span>
+            <span className="value">{getValue(props.model || specs.model || item.model || t('defaultValues.notAvailable'), t)}</span>
           </div>
           <div className="detail-row">
-            <span className="label">产品ID:</span>
-            <span className="value">{props.product_id || item.product_id || item.id || 'N/A'}</span>
+            <span className="label">{getLabel('productId', t)}:</span>
+            <span className="value">{getValue(props.product_id || item.product_id || item.id, t)}</span>
           </div>
         </div>
 
@@ -175,27 +201,27 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
         {(props.app_model || specs.app_model) && (
           <div className="detail-section">
             <div className="detail-row">
-              <span className="label">适配机型:</span>
-              <span className="value app-model">{props.app_model || specs.app_model || item.app_model || 'N/A'}</span>
+              <span className="label">{getLabel('appModel', t)}:</span>
+              <span className="value app-model">{getValue(props.app_model || specs.app_model || item.app_model, t)}</span>
             </div>
           </div>
         )}
 
         {(props.app_sn || specs.app_sn) && (
           <div className="detail-row">
-            <span className="label">适配序列号:</span>
-            <span className="value app-sn">{props.app_sn || specs.app_sn || item.app_sn || 'N/A'}</span>
+            <span className="label">{getLabel('appSn', t)}:</span>
+            <span className="value app-sn">{getValue(props.app_sn || specs.app_sn || item.app_sn, t)}</span>
           </div>
         )}
 
         {/* 规格信息 */}
         <div className="detail-section">
           <div className="detail-row">
-            <span className="label">规格:</span>
+            <span className="label">{getLabel('spec', t)}:</span>
             <span className="value">
               {preferredUnit === 'metric' 
-                ? (props.spec || specs.spec || item.spec || 'N/A')
-                : (props.spec_imperial || specs.spec_imperial || item.spec_imperial || 'N/A')
+                ? getValue(props.spec || specs.spec || item.spec || t('defaultValues.notAvailable'), t)
+                : getValue(props.spec_imperial || specs.spec_imperial || item.spec_imperial || t('defaultValues.notAvailable'), t)
               }
             </span>
           </div>
@@ -204,25 +230,25 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
         {/* 包装信息 */}
         {(props.pcs_per_box || specs.pcs_per_box) && (
           <div className="detail-row">
-            <span className="label">单箱数量:</span>
-            <span className="value">{props.pcs_per_box || specs.pcs_per_box || item.pcs_per_box || 'N/A'}</span>
+            <span className="label">{getLabel('pcsPerBox', t)}:</span>
+            <span className="value">{getValue(props.pcs_per_box || specs.pcs_per_box || item.pcs_per_box, t)}</span>
           </div>
         )}
 
         {(props.unit || specs.unit) && (
           <div className="detail-row">
-            <span className="label">单位:</span>
-            <span className="value">{props.unit || specs.unit || item.unit || 'N/A'}</span>
+            <span className="label">{getLabel('unit', t)}:</span>
+            <span className="value">{getValue(props.unit || specs.unit || item.unit, t)}</span>
           </div>
         )}
 
         {/* 易损件标识 */}
         {(props.is_consumable !== undefined || specs.is_consumable !== undefined) && (
           <div className="detail-row">
-            <span className="label">类型:</span>
+            <span className="label">{getLabel('type', t)}:</span>
             <span className="value">
               <span className="consumable-badge">
-                {(props.is_consumable || specs.is_consumable) ? '易损件' : '标准备件'}
+                {(props.is_consumable || specs.is_consumable) ? t('fields.consumable') : t('fields.standardPart')}
               </span>
             </span>
           </div>
@@ -232,7 +258,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
         {requiredParts.length > 0 && (
           <div className="detail-section">
             <div className="detail-row">
-              <span className="label">必选备件:</span>
+              <span className="label">{getLabel('requiredParts', t)}:</span>
               <span className="value">
                 <div className="required-parts-list">
                   {requiredParts.map((reqPart, index) => (
@@ -257,33 +283,131 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
       <div className="spare-part-details">
         <div className="detail-section">
           <div className="detail-row">
-            <span className="label">料号:</span>
-            <span className="value">{props.part_number || item.part_number || 'N/A'}</span>
+            <span className="label">{getLabel('partNumber', t)}:</span>
+            <span className="value">{getValue(props.part_number || item.part_number, t)}</span>
           </div>
           <div className="detail-row">
-            <span className="label">型号:</span>
-            <span className="value">{props.model || item.model || 'N/A'}</span>
+            <span className="label">{getLabel('model', t)}:</span>
+            <span className="value">{getValue(props.model || item.model || t('defaultValues.notAvailable'), t)}</span>
           </div>
           <div className="detail-row">
-            <span className="label">电压:</span>
-            <span className="value">{props.voltage || item.voltage || 'N/A'}</span>
+            <span className="label">{getLabel('voltage', t)}:</span>
+            <span className="value">{getValue(props.voltage || item.voltage, t)}</span>
           </div>
           <div className="detail-row">
-            <span className="label">单箱数量:</span>
-            <span className="value">{props.pcs_per_box || item.pcs_per_box || 'N/A'}</span>
+            <span className="label">{getLabel('pcsPerBox', t)}:</span>
+            <span className="value">{getValue(props.pcs_per_box || item.pcs_per_box, t)}</span>
           </div>
           <div className="detail-row">
-            <span className="label">一托数量:</span>
-            <span className="value">{props.pcs_per_pallet || item.pcs_per_pallet || 'N/A'}</span>
+            <span className="label">{getLabel('pcsPerPallet', t)}:</span>
+            <span className="value">{getValue(props.pcs_per_pallet || item.pcs_per_pallet, t)}</span>
           </div>
           <div className="detail-row">
-            <span className="label">包装尺寸:</span>
-            <span className="value">{props.package_size_cm || item.package_size_cm || 'N/A'}</span>
+            <span className="label">{getLabel('packageSize', t)}:</span>
+            <span className="value">{getValue(props.package_size_cm || item.package_size_cm, t)}</span>
           </div>
           <div className="detail-row">
-            <span className="label">托盘尺寸:</span>
-            <span className="value">{props.pallet_size_cm || item.pallet_size_cm || 'N/A'}</span>
+            <span className="label">{getLabel('palletSize', t)}:</span>
+            <span className="value">{getValue(props.pallet_size_cm || item.pallet_size_cm, t)}</span>
           </div>
+        </div>
+      </div>
+    );
+  };
+
+  // 渲染配件详细信息
+  const renderAccessoryDetails = (item: any) => {
+    const getFieldValue = (field: string): string => {
+      // 从item根级别获取
+      if (item[field] !== undefined && item[field] !== null && item[field] !== '') {
+        return String(item[field]);
+      }
+      
+      // 从properties获取
+      if (item.properties && item.properties[field] !== undefined && item.properties[field] !== null && item.properties[field] !== '') {
+        return String(item.properties[field]);
+      }
+      
+      return '';
+    };
+
+    return (
+      <div className="accessory-details">
+        <div className="detail-row">
+          <span className="detail-label">{t('properties.model', { ns: 'spareParts' })}:</span>
+          <span className="detail-value">
+            {getFieldValue('model') || t('defaultValues.notAvailable', { ns: 'spareParts' })}
+          </span>
+        </div>
+        
+        <div className="detail-row">
+          <span className="detail-label">{t('properties.partNumber', { ns: 'spareParts' })}:</span>
+          <span className="detail-value">
+            {getFieldValue('part_number') || t('defaultValues.notAvailable', { ns: 'spareParts' })}
+          </span>
+        </div>
+        
+        <div className="detail-row">
+          <span className="detail-label">PRODUCTID:</span>
+          <span className="detail-value">
+            {getFieldValue('product_id') || t('defaultValues.notAvailable', { ns: 'spareParts' })}
+          </span>
+        </div>
+        
+        <div className="detail-row">
+          <span className="detail-label">{t('properties.voltage', { ns: 'spareParts' })}:</span>
+          <span className="detail-value">
+            {getFieldValue('voltage') || t('defaultValues.notAvailable', { ns: 'spareParts' })}
+          </span>
+        </div>
+        
+        <div className="detail-row">
+          <span className="detail-label">{t('properties.frequency', { ns: 'spareParts' })}:</span>
+          <span className="detail-value">
+            {getFieldValue('frequency') || t('defaultValues.notAvailable', { ns: 'spareParts' })}
+          </span>
+        </div>
+        
+        <div className="detail-row">
+          <span className="detail-label">{t('properties.pcsPerBox', { ns: 'spareParts' })}:</span>
+          <span className="detail-value">
+            {getFieldValue('pcs_per_box') || t('defaultValues.notAvailable', { ns: 'spareParts' })}
+          </span>
+        </div>
+        
+        <div className="detail-row">
+          <span className="detail-label">{t('properties.pcsPerPallet', { ns: 'spareParts' })}:</span>
+          <span className="detail-value">
+            {getFieldValue('pcs_per_pallet') || t('defaultValues.notAvailable', { ns: 'spareParts' })}
+          </span>
+        </div>
+        
+        <div className="detail-row">
+          <span className="detail-label">{t('properties.packageSizeCm', { ns: 'spareParts' })}:</span>
+          <span className="detail-value">
+            {getFieldValue('package_size_cm') || t('defaultValues.notAvailable', { ns: 'spareParts' })}
+          </span>
+        </div>
+        
+        <div className="detail-row">
+          <span className="detail-label">{t('properties.packageSizeInch', { ns: 'spareParts' })}:</span>
+          <span className="detail-value">
+            {getFieldValue('package_size_inch') || t('defaultValues.notAvailable', { ns: 'spareParts' })}
+          </span>
+        </div>
+        
+        <div className="detail-row">
+          <span className="detail-label">{t('properties.palletSizeCm', { ns: 'spareParts' })}:</span>
+          <span className="detail-value">
+            {getFieldValue('pallet_size_cm') || t('defaultValues.notAvailable', { ns: 'spareParts' })}
+          </span>
+        </div>
+        
+        <div className="detail-row">
+          <span className="detail-label">{t('properties.palletSizeInch', { ns: 'spareParts' })}:</span>
+          <span className="detail-value">
+            {getFieldValue('pallet_size_inch') || t('defaultValues.notAvailable', { ns: 'spareParts' })}
+          </span>
         </div>
       </div>
     );
@@ -292,7 +416,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
   return (
     <div className={`cart-sidebar ${isOpen ? 'open' : ''}`}>
       <div className="cart-sidebar-header">
-        <h3 className="cart-sidebar-title">购物车</h3>
+        <h3 className="cart-sidebar-title">{t('cartTitle', {ns: 'cart'})}</h3>
         <button className="cart-sidebar-close" onClick={onClose}>×</button>
       </div>
       
@@ -306,7 +430,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
               >
                 {allSelected && <span className="checkbox-tick">✓</span>}
               </div>
-              <span>全选</span>
+              <span>{t('selectAll', {ns: 'cart'})}</span>
             </div>
             
             <div className="cart-sidebar-items">
@@ -322,17 +446,24 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
                   </div>
                   
                   <div className="cart-item-image">
-                    <img src={item.properties?.image_url || item.image_url || item.image || '/images/placeholder.jpg'} alt={item.properties?.name || item.name || 'Not Found'} />
+                    <img src={item.properties?.image_url || item.image_url || item.image || '/images/placeholder.jpg'} alt={item.properties?.name || item.name || t('defaultValues.notAvailable', {ns: 'spareParts'})} />
                   </div>
                   
                   <div className="cart-item-details">
-                    <div className="cart-item-title">{item.properties?.name || item.name || 'Not Found'}</div>
+                    <div className="cart-item-title">{
+                      i18n.language === 'zh'
+                        ? (item.properties?.name_zh || item.name_zh || item.properties?.name || item.name)
+                        : (item.properties?.name_en || item.name_en || item.properties?.name || item.name)
+                      || t('defaultValues.notAvailable', {ns: 'spareParts'})
+                    }</div>
+                    {/* 根据产品类型显示详细信息 */}
                     {item.product_type === 'consumable' && renderConsumableDetails(item)}
                     {item.product_type === 'spare_part' && renderSparePartDetails(item)}
+                    {item.product_type === 'accessory' && renderAccessoryDetails(item)}
                     {["machine", "host", "设备"].includes(item.product_type) && renderMachineDetails(item)}
                     <div className="cart-item-price">
-                      <div className="unit-price">单价: ¥{getTieredPrice(item).toFixed(2)}</div>
-                      <div className="subtotal">小计: ¥{(getTieredPrice(item) * item.quantity).toFixed(2)}</div>
+                      <div className="unit-price">{t('unitPrice', {ns: 'cart'})}: ¥{getTieredPrice(item).toFixed(2)}</div>
+                      <div className="subtotal">{t('subtotal', {ns: 'cart'})}: ¥{(getTieredPrice(item) * item.quantity).toFixed(2)}</div>
                     </div>
                     
                     <div className="cart-item-actions">
@@ -356,9 +487,9 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
                         className="cart-item-remove"
                         style={{ color: '#ff4d4f', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}
                         onClick={() => removeItem(item.id)}
-                        title="删除"
+                        title={t('remove', {ns: 'cart'})}
                       >
-                        <span role="img" aria-label="delete">🗑️</span> 删除
+                        <span role="img" aria-label="delete">🗑️</span> {t('remove', {ns: 'cart'})}
                       </button>
                     </div>
                   </div>
@@ -368,14 +499,14 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
           </>
         ) : (
           <div className="cart-empty">
-            <p>购物车还是空的哦，快去挑选商品吧！</p>
+            <p>{t('cart.emptyCartMessage', {ns: 'cart'})}</p>
           </div>
         )}
       </div>
       
       <div className="cart-sidebar-footer">
         <div className="cart-sidebar-total">
-          <span>合计:</span>
+          <span>{t('total', {ns: 'cart'})}:</span>
           <span className="cart-sidebar-price">¥{(selectedTotal || 0).toFixed(2)}</span>
         </div>
         
@@ -394,25 +525,25 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
               marginRight: 8
             }}
           >
-            清空购物车
+            {t('clearCart', {ns: 'cart'})}
           </button>
           
           <Link 
             to="/cart" 
-            className={`cart-sidebar-checkout ${!hasItems ? 'disabled' : ''}`}
+            className={`cart-sidebar-checkout-btn ${!hasItems ? 'disabled' : ''}`}
             onClick={onClose}
           >
-            去结算
+            {t('checkout', {ns: 'cart'})}
           </Link>
         </div>
         {/* 清空购物车确认弹窗 */}
         {showClearConfirm && (
           <div className="cart-clear-confirm-modal">
             <div className="cart-clear-confirm-content">
-              <div className="cart-clear-confirm-title">确定要清空购物车吗？</div>
+              <div className="cart-clear-confirm-title">{t('cart.clearConfirmTitle', {ns: 'cart'})}</div>
               <div className="cart-clear-confirm-actions">
-                <button className="cart-clear-cancel-btn" onClick={handleCancelClear}>取消</button>
-                <button className="cart-clear-confirm-btn" onClick={handleConfirmClear}>确定</button>
+                <button className="cart-clear-cancel-btn" onClick={handleCancelClear}>{t('cart.cancel', {ns: 'cart'})}</button>
+                <button className="cart-clear-confirm-btn" onClick={handleConfirmClear}>{t('cart.confirm', {ns: 'cart'})}</button>
               </div>
             </div>
           </div>

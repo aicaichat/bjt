@@ -92,6 +92,7 @@ interface ConsumableTooltipContentProps {
 }
 
 const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ item, userRegion }) => {
+  const { t } = useTranslation('consumables'); // 添加翻译hook
   const [detailData, setDetailData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -343,19 +344,19 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
     <div className="p-4 bg-white rounded-lg shadow-lg border border-gray-200">
       <div className="flex items-center mb-4 pb-3 border-b border-gray-100">
         <InfoCircleOutlined className="text-blue-500 mr-2" />
-        <span className="font-bold text-gray-800 text-base">{item.name} - 详细信息</span>
+        <span className="font-bold text-gray-800 text-base">{String(item.name || '')} - {String(t('tooltip.detailInfo') || '详细信息')}</span>
       </div>
       
       {error && (
         <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-700">
-          ⚠️ API调用失败，显示基础信息: {error}
+          ⚠️ {String(t('tooltip.apiError') || 'API调用失败，显示基础信息')}: {error}
         </div>
       )}
       
       {/* 调试信息展示 (开发环境) */}
       {process.env.NODE_ENV === 'development' && debugInfo && (
         <details className="mb-3 p-2 bg-gray-50 border border-gray-200 rounded text-xs">
-          <summary className="cursor-pointer font-medium">🔍 调试信息 (点击展开)</summary>
+          <summary className="cursor-pointer font-medium">🔍 {String(t('tooltip.debugInfo') || '调试信息')} ({String(t('tooltip.clickToExpand') || '点击展开')})</summary>
           <pre className="mt-2 whitespace-pre-wrap overflow-x-auto">{debugInfo}</pre>
         </details>
       )}
@@ -363,29 +364,32 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
       {/* 包装图片调试信息 (开发环境) */}
       {process.env.NODE_ENV === 'development' && (
         <details className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
-          <summary className="cursor-pointer font-medium">📦 包装图片调试信息</summary>
+          <summary className="cursor-pointer font-medium">📦 {String(t('tooltip.packageImageDebug') || '包装图片调试信息')}</summary>
           <div className="mt-2 space-y-1">
-            <div><strong>原始URL:</strong> {data.package_image_url || 'undefined'}</div>
-            <div><strong>SafeGet结果:</strong> {safeGet('package_image_url', '')}</div>
-            <div><strong>清理后URL:</strong> {cleanImageUrl(safeGet('package_image_url', ''))}</div>
-            <div><strong>是否显示图片:</strong> {safeGet('package_image_url', '') !== 'N/A' && safeGet('package_image_url', '') !== '' ? '是' : '否'}</div>
+            <div><strong>{String(t('tooltip.originalUrl') || '原始URL')}:</strong> {data.package_image_url || 'undefined'}</div>
+            <div><strong>{String(t('tooltip.safeGetResult') || 'SafeGet结果')}:</strong> {safeGet('package_image_url', '')}</div>
+            <div><strong>{String(t('tooltip.cleanedUrl') || '清理后URL')}:</strong> {cleanImageUrl(safeGet('package_image_url', ''))}</div>
+            <div><strong>{String(t('tooltip.showImage') || '是否显示图片')}:</strong> {safeGet('package_image_url', '') !== 'N/A' && safeGet('package_image_url', '') !== '' ? String(t('common.yes') || '是') : String(t('common.no') || '否')}</div>
           </div>
         </details>
       )}
       
       {/* 基本规格 */}
       <div className="mb-5">
-        <div className="font-bold text-gray-700 text-sm mb-3 bg-gray-50 px-3 py-2 rounded">基本规格</div>
+        <div className="font-bold text-gray-700 text-sm mb-3 bg-gray-50 px-3 py-2 rounded">{String(t('tooltip.basicSpecs') || '基本规格')}</div>
         <div className="grid grid-cols-2 gap-3">
           <div className="flex justify-between items-center py-2">
-            <span className="text-gray-700 font-medium text-sm">材质:</span>
+            <span className="text-gray-700 font-medium text-sm">{String(t('filter.material') || '材质')}:</span>
             <span className="text-gray-900 font-semibold text-sm bg-blue-50 px-3 py-1 rounded">
               {safeGet('material', item.specs?.material || 'N/A')}
             </span>
           </div>
           <div className="flex justify-between items-center py-2">
             <span className="text-gray-700 font-medium text-sm">
-              {userRegion === 'na' || userRegion === 'au' ? '厚度/克重 mil/#:' : '厚度/克重 um/gsm:'}
+              {userRegion === 'na' || userRegion === 'au' ? 
+                String(t('tooltip.thickness.imperial') || '厚度/克重 mil/#') : 
+                String(t('tooltip.thickness.metric') || '厚度/克重 um/gsm')
+              }:
             </span>
             <span className="text-gray-900 font-semibold text-sm bg-green-50 px-3 py-1 rounded">
               {(() => {
@@ -414,7 +418,10 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
           </div>
           <div className="flex justify-between items-center py-2">
             <span className="text-gray-700 font-medium text-sm">
-              {userRegion === 'na' || userRegion === 'au' ? '膜宽 inch:' : '膜宽 cm:'}
+              {userRegion === 'na' || userRegion === 'au' ? 
+                String(t('tooltip.width.imperial') || '膜宽 inch') : 
+                String(t('tooltip.width.metric') || '膜宽 cm')
+              }:
             </span>
             <span className="text-gray-900 font-semibold text-sm bg-yellow-50 px-3 py-1 rounded">
               {(() => {
@@ -442,7 +449,10 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
           </div>
           <div className="flex justify-between items-center py-2">
             <span className="text-gray-700 font-medium text-sm">
-              {userRegion === 'na' || userRegion === 'au' ? '袋长 inch:' : '袋长 cm:'}
+              {userRegion === 'na' || userRegion === 'au' ? 
+                String(t('tooltip.length.imperial') || '袋长 inch') : 
+                String(t('tooltip.length.metric') || '袋长 cm')
+              }:
             </span>
             <span className="text-gray-900 font-semibold text-sm bg-purple-50 px-3 py-1 rounded">
               {(() => {
@@ -470,7 +480,10 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
           </div>
           <div className="flex justify-between items-center py-2 col-span-2">
             <span className="text-gray-700 font-medium text-sm">
-              {userRegion === 'na' || userRegion === 'au' ? '总长 ft:' : '总长 m:'}
+              {userRegion === 'na' || userRegion === 'au' ? 
+                String(t('tooltip.rollLength.imperial') || '总长 ft') : 
+                String(t('tooltip.rollLength.metric') || '总长 m')
+              }:
             </span>
             <span className="text-gray-900 font-semibold text-sm bg-pink-50 px-3 py-1 rounded">
               {(() => {
@@ -501,12 +514,12 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
 
       {/* 包装属性 Package Info */}
       <div className="mb-5">
-        <div className="font-bold text-gray-700 text-sm mb-3 bg-gray-50 px-3 py-2 rounded">包装属性 Package Info</div>
+        <div className="font-bold text-gray-700 text-sm mb-3 bg-gray-50 px-3 py-2 rounded">{String(t('tooltip.packageInfo') || '包装属性 Package Info')}</div>
         <div className="grid grid-cols-2 gap-4">
           {/* 左侧：包装信息 */}
           <div className="space-y-3">
             <div className="flex justify-between items-center py-2">
-              <span className="text-gray-700 font-medium text-sm">包装方式:</span>
+              <span className="text-gray-700 font-medium text-sm">{String(t('tooltip.packagingMethod') || '包装方式')}:</span>
               <span className="text-gray-900 font-semibold text-sm bg-blue-50 px-3 py-1 rounded">
                 {(() => {
                   const packagingType = safeGet('packaging_type', '');
@@ -514,42 +527,48 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
                   if (packagingType !== 'N/A' && packagingType !== '') {
                     return packagingType;
                   } else if (salesUnit !== 'N/A' && salesUnit !== '') {
-                    return salesUnit === 'Carton' ? '纸箱装' : salesUnit;
+                    return salesUnit === 'Carton' ? String(t('tooltip.cartonPack') || '纸箱装') : salesUnit;
                   }
-                  return '纸箱装'; // 默认值
+                  return String(t('tooltip.cartonPack') || '纸箱装'); // 默认值
                 })()}
               </span>
             </div>
             <div className="flex justify-between items-center py-2">
               <span className="text-gray-700 font-medium text-sm">
-                {userRegion === 'na' || userRegion === 'au' ? '包装尺寸 inch:' : '包装尺寸 cm:'}
+                {userRegion === 'na' || userRegion === 'au' ? 
+                  String(t('tooltip.packageSize.imperial') || '包装尺寸 inch') : 
+                  String(t('tooltip.packageSize.metric') || '包装尺寸 cm')
+                }:
               </span>
               <span className="text-gray-900 font-semibold text-sm bg-green-50 px-3 py-1 rounded">
                 {(() => {
                   const sizeField = userRegion === 'na' || userRegion === 'au' ? 'package_size_inch' : 'package_size_cm';
                   const size = safeGet(sizeField, '');
-                  return size !== 'N/A' && size !== '' ? size : '待补充';
+                  return size !== 'N/A' && size !== '' ? size : String(t('common.toBeFilled') || '待补充');
                 })()}
               </span>
             </div>
             <div className="flex justify-between items-center py-2">
               <span className="text-gray-700 font-medium text-sm">
-                {userRegion === 'na' || userRegion === 'au' ? '单件净重 lbs:' : '单件净重 kg:'}
+                {userRegion === 'na' || userRegion === 'au' ? 
+                  String(t('tooltip.unitWeight.imperial') || '单件净重 lbs') : 
+                  String(t('tooltip.unitWeight.metric') || '单件净重 kg')
+                }:
               </span>
               <span className="text-gray-900 font-semibold text-sm bg-yellow-50 px-3 py-1 rounded">
                 {(() => {
                   const weightField = userRegion === 'na' || userRegion === 'au' ? 'unit_weight_lbs' : 'unit_weight_kg';
                   const weight = safeGet(weightField, '');
-                  return weight !== 'N/A' && weight !== '' ? weight : '待补充';
+                  return weight !== 'N/A' && weight !== '' ? weight : String(t('common.toBeFilled') || '待补充');
                 })()}
               </span>
             </div>
             <div className="flex justify-between items-center py-2">
-              <span className="text-gray-700 font-medium text-sm">托盘尺寸 cm:</span>
+              <span className="text-gray-700 font-medium text-sm">{String(t('tooltip.palletSize') || '托盘尺寸 cm')}:</span>
               <span className="text-gray-900 font-semibold text-sm bg-purple-50 px-3 py-1 rounded">
                 {(() => {
                   const palletSize = safeGet('pallet_size_cm', '');
-                  return palletSize !== 'N/A' && palletSize !== '' ? palletSize : '待补充';
+                  return palletSize !== 'N/A' && palletSize !== '' ? palletSize : String(t('common.toBeFilled') || '待补充');
                 })()}
               </span>
             </div>
@@ -557,12 +576,12 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
           
           {/* 右侧：包装实物图片 */}
           <div className="flex flex-col items-center">
-            <div className="text-gray-700 font-medium text-sm mb-2">包装实物图片</div>
+            <div className="text-gray-700 font-medium text-sm mb-2">{String(t('tooltip.packageImage') || '包装实物图片')}</div>
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 w-full h-32 flex items-center justify-center">
               {safeGet('package_image_url', '') !== 'N/A' && safeGet('package_image_url', '') !== '' ? (
                 <img 
                   src={cleanImageUrl(safeGet('package_image_url', ''))} 
-                  alt="包装实物图片"
+                  alt={String(t('tooltip.packageImage') || '包装实物图片')}
                   className="max-w-full max-h-full object-contain rounded"
                   onError={(e) => {
                     const originalUrl = safeGet('package_image_url', '');
@@ -586,11 +605,11 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
               ) : null}
               <div className={`text-center text-gray-500 text-xs package-fallback ${safeGet('package_image_url', '') !== 'N/A' && safeGet('package_image_url', '') !== '' ? 'hidden' : ''}`}>
                 <div>📦</div>
-                <div>暂无包装图片</div>
+                <div>{String(t('tooltip.noPackageImage') || '暂无包装图片')}</div>
                 {/* 调试信息 */}
                 {process.env.NODE_ENV === 'development' && (
                   <div className="text-xs text-gray-500 mt-1">
-                    图片URL: {safeGet('package_image_url', '')}
+                    {String(t('tooltip.imageUrl') || '图片URL')}: {safeGet('package_image_url', '')}
                   </div>
                 )}
               </div>
@@ -601,37 +620,43 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
 
       {/* 打托属性 Pallet Info */}
       <div className="mb-4">
-        <div className="font-bold text-gray-700 text-sm mb-3 bg-gray-50 px-3 py-2 rounded">打托属性 Pallet Info</div>
+        <div className="font-bold text-gray-700 text-sm mb-3 bg-gray-50 px-3 py-2 rounded">{String(t('tooltip.palletInfo') || '打托属性 Pallet Info')}</div>
         <div className="grid grid-cols-3 gap-4">
           {/* 配置A */}
           <div className="bg-blue-50 p-3 rounded-lg">
-            <div className="font-semibold text-blue-800 text-sm mb-2">配置A</div>
+            <div className="font-semibold text-blue-800 text-sm mb-2">{String(t('tooltip.configA') || '配置A')}</div>
             <div className="space-y-2 text-xs">
               <div className="flex justify-between">
-                <span className="text-gray-700">一托卷数:</span>
-                <span className="font-semibold text-gray-800">{safeGet('pallet_rolls_a', '') !== 'N/A' ? safeGet('pallet_rolls_a', '') : '待补充'}</span>
+                <span className="text-gray-700">{String(t('tooltip.palletRolls') || '一托卷数')}:</span>
+                <span className="font-semibold text-gray-800">{safeGet('pallet_rolls_a', '') !== 'N/A' ? safeGet('pallet_rolls_a', '') : String(t('common.toBeFilled') || '待补充')}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-700">
-                  {userRegion === 'na' || userRegion === 'au' ? '毛重 lbs:' : '毛重 kg:'}
+                  {userRegion === 'na' || userRegion === 'au' ? 
+                    String(t('tooltip.grossWeight.imperial') || '毛重 lbs') : 
+                    String(t('tooltip.grossWeight.metric') || '毛重 kg')
+                  }:
                 </span>
                 <span className="font-semibold text-gray-800">
                   {(() => {
                     const weightField = userRegion === 'na' || userRegion === 'au' ? 'pallet_weight_a_lbs' : 'pallet_weight_a_kg';
                     const weight = safeGet(weightField, '');
-                    return weight !== 'N/A' ? weight : '待补充';
+                    return weight !== 'N/A' ? weight : String(t('common.toBeFilled') || '待补充');
                   })()}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-700">
-                  {userRegion === 'na' || userRegion === 'au' ? '高度 inch:' : '高度 cm:'}
+                  {userRegion === 'na' || userRegion === 'au' ? 
+                    String(t('tooltip.height.imperial') || '高度 inch') : 
+                    String(t('tooltip.height.metric') || '高度 cm')
+                  }:
                 </span>
                 <span className="font-semibold text-gray-800">
                   {(() => {
                     const heightField = userRegion === 'na' || userRegion === 'au' ? 'pallet_height_a_inch' : 'pallet_height_a_cm';
                     const height = safeGet(heightField, '');
-                    return height !== 'N/A' ? height : '待补充';
+                    return height !== 'N/A' ? height : String(t('common.toBeFilled') || '待补充');
                   })()}
                 </span>
               </div>
@@ -640,33 +665,39 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
 
           {/* 配置B */}
           <div className="bg-green-50 p-3 rounded-lg">
-            <div className="font-semibold text-green-800 text-sm mb-2">配置B</div>
+            <div className="font-semibold text-green-800 text-sm mb-2">{String(t('tooltip.configB') || '配置B')}</div>
             <div className="space-y-2 text-xs">
               <div className="flex justify-between">
-                <span className="text-gray-700">一托卷数:</span>
-                <span className="font-semibold text-gray-800">{safeGet('pallet_rolls_b', '') !== 'N/A' ? safeGet('pallet_rolls_b', '') : '待补充'}</span>
+                <span className="text-gray-700">{String(t('tooltip.palletRolls') || '一托卷数')}:</span>
+                <span className="font-semibold text-gray-800">{safeGet('pallet_rolls_b', '') !== 'N/A' ? safeGet('pallet_rolls_b', '') : String(t('common.toBeFilled') || '待补充')}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-700">
-                  {userRegion === 'na' || userRegion === 'au' ? '毛重 lbs:' : '毛重 kg:'}
+                  {userRegion === 'na' || userRegion === 'au' ? 
+                    String(t('tooltip.grossWeight.imperial') || '毛重 lbs') : 
+                    String(t('tooltip.grossWeight.metric') || '毛重 kg')
+                  }:
                 </span>
                 <span className="font-semibold text-gray-800">
                   {(() => {
                     const weightField = userRegion === 'na' || userRegion === 'au' ? 'pallet_weight_b_lbs' : 'pallet_weight_b_kg';
                     const weight = safeGet(weightField, '');
-                    return weight !== 'N/A' ? weight : '待补充';
+                    return weight !== 'N/A' ? weight : String(t('common.toBeFilled') || '待补充');
                   })()}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-700">
-                  {userRegion === 'na' || userRegion === 'au' ? '高度 inch:' : '高度 cm:'}
+                  {userRegion === 'na' || userRegion === 'au' ? 
+                    String(t('tooltip.height.imperial') || '高度 inch') : 
+                    String(t('tooltip.height.metric') || '高度 cm')
+                  }:
                 </span>
                 <span className="font-semibold text-gray-800">
                   {(() => {
                     const heightField = userRegion === 'na' || userRegion === 'au' ? 'pallet_height_b_inch' : 'pallet_height_b_cm';
                     const height = safeGet(heightField, '');
-                    return height !== 'N/A' ? height : '待补充';
+                    return height !== 'N/A' ? height : String(t('common.toBeFilled') || '待补充');
                   })()}
                 </span>
               </div>
@@ -675,33 +706,39 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
 
           {/* 配置C */}
           <div className="bg-yellow-50 p-3 rounded-lg">
-            <div className="font-semibold text-yellow-800 text-sm mb-2">配置C</div>
+            <div className="font-semibold text-yellow-800 text-sm mb-2">{String(t('tooltip.configC') || '配置C')}</div>
             <div className="space-y-2 text-xs">
               <div className="flex justify-between">
-                <span className="text-gray-700">一托卷数:</span>
-                <span className="font-semibold text-gray-800">{safeGet('pallet_rolls_c', '') !== 'N/A' ? safeGet('pallet_rolls_c', '') : '待补充'}</span>
+                <span className="text-gray-700">{String(t('tooltip.palletRolls') || '一托卷数')}:</span>
+                <span className="font-semibold text-gray-800">{safeGet('pallet_rolls_c', '') !== 'N/A' ? safeGet('pallet_rolls_c', '') : String(t('common.toBeFilled') || '待补充')}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-700">
-                  {userRegion === 'na' || userRegion === 'au' ? '毛重 lbs:' : '毛重 kg:'}
+                  {userRegion === 'na' || userRegion === 'au' ? 
+                    String(t('tooltip.grossWeight.imperial') || '毛重 lbs') : 
+                    String(t('tooltip.grossWeight.metric') || '毛重 kg')
+                  }:
                 </span>
                 <span className="font-semibold text-gray-800">
                   {(() => {
                     const weightField = userRegion === 'na' || userRegion === 'au' ? 'pallet_weight_c_lbs' : 'pallet_weight_c_kg';
                     const weight = safeGet(weightField, '');
-                    return weight !== 'N/A' ? weight : '待补充';
+                    return weight !== 'N/A' ? weight : String(t('common.toBeFilled') || '待补充');
                   })()}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-700">
-                  {userRegion === 'na' || userRegion === 'au' ? '高度 inch:' : '高度 cm:'}
+                  {userRegion === 'na' || userRegion === 'au' ? 
+                    String(t('tooltip.height.imperial') || '高度 inch') : 
+                    String(t('tooltip.height.metric') || '高度 cm')
+                  }:
                 </span>
                 <span className="font-semibold text-gray-800">
                   {(() => {
                     const heightField = userRegion === 'na' || userRegion === 'au' ? 'pallet_height_c_inch' : 'pallet_height_c_cm';
                     const height = safeGet(heightField, '');
-                    return height !== 'N/A' ? height : '待补充';
+                    return height !== 'N/A' ? height : String(t('common.toBeFilled') || '待补充');
                   })()}
                 </span>
               </div>
@@ -713,13 +750,16 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
         <div className="mt-3 bg-purple-50 p-3 rounded-lg">
           <div className="flex justify-between items-center">
             <span className="text-gray-700 font-medium text-sm">
-              {userRegion === 'na' || userRegion === 'au' ? '纸筒内径 inch:' : '纸筒内径 cm:'}
+              {userRegion === 'na' || userRegion === 'au' ? 
+                String(t('tooltip.coreDiameter.imperial') || '纸筒内径 inch') : 
+                String(t('tooltip.coreDiameter.metric') || '纸筒内径 cm')
+              }:
             </span>
             <span className="text-gray-900 font-semibold text-sm bg-white px-3 py-1 rounded shadow-sm">
               {(() => {
                 const diameterField = userRegion === 'na' || userRegion === 'au' ? 'core_diameter_inch' : 'core_diameter_cm';
                 const diameter = safeGet(diameterField, '');
-                return diameter !== 'N/A' ? diameter : '待补充';
+                return diameter !== 'N/A' ? diameter : String(t('common.toBeFilled') || '待补充');
               })()}
             </span>
           </div>
@@ -727,7 +767,7 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
       </div>
       
       <div className="mt-4 pt-3 border-t border-gray-100 text-center">
-        <span className="text-sm text-gray-500">💡 产品详细规格信息</span>
+        <span className="text-sm text-gray-500">{String(t('tooltip.hoverInfo') || '悬停查看更多规格信息')}</span>
       </div>
     </div>
   );
@@ -857,6 +897,18 @@ const ConsumablesPage: React.FC = () => {
         setLoading(true);
         setError(null);
         
+        console.log('🔍 [fetchConsumables] Starting with filters:', {
+          selectedModel,
+          selectedShape,
+          selectedMaterial,
+          selectedThickness,
+          selectedWeight,
+          selectedWidth,
+          selectedLength,
+          currentPage,
+          userRegion
+        });
+        
         const categoryFilter = searchParams.get('category') ? parseInt(searchParams.get('category')!) : undefined;
         
         // 构建筛选参数
@@ -874,6 +926,8 @@ const ConsumablesPage: React.FC = () => {
           lang: navigator.language.startsWith('zh') ? 'zh' : 'en',
           category_id: categoryFilter
         };
+        
+        console.log('📡 [fetchConsumables] API call with filters:', filters);
         
         const consumableData = await consumablesService.getConsumables(filters);
         console.log('ConsumableData received in Page:', JSON.stringify(consumableData, null, 2));
@@ -1123,52 +1177,10 @@ const ConsumablesPage: React.FC = () => {
     setShowCartModal(!showCartModal);
   };
   
-  // 处理型号变更
-  const handleModelChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedModel(event.target.value);
-  };
-  
-  // 处理形状变更
-  const handleShapeChange = (value: string) => {
-    setSelectedShape(value);
-    
-    // 查找选中形状的image_url2并更新尺寸图片
-    const selectedShapeData = shapesData?.find(shape => shape.id === value);
-    if (selectedShapeData && selectedShapeData.image_url2) {
-      setCurrentDimensionImage(selectedShapeData.image_url2);
-    } else {
-      // 如果没有image_url2，回退到默认图片
-      setCurrentDimensionImage(dimensionGuidePlaceholder);
-    }
-  };
-  
-  // 处理材质变更
-  const handleMaterialChange = (value: string) => {
-    setSelectedMaterial(value);
-  };
-  
-  // 处理厚度变更
-  const handleThicknessChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedThickness(event.target.value);
-  };
-  
-  // 处理重量变更
-  const handleWeightChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedWeight(event.target.value);
-  };
-  
-  // 处理宽度变更
-  const handleWidthChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedWidth(event.target.value);
-  };
-  
-  // 处理长度变更
-  const handleLengthChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedLength(event.target.value);
-  };
-  
   // 重置筛选
   const handleResetFilters = () => {
+    console.log('🔄 [handleResetFilters] Resetting all filters to default values');
+    
     setSelectedModel('all');
     setSelectedShape('MEX');
     setSelectedMaterial('hdpe');
@@ -1177,14 +1189,225 @@ const ConsumablesPage: React.FC = () => {
     setSelectedWidth('all');
     setSelectedLength('all');
     
-    // 重置后自动应用筛选
+    // 重置后自动应用筛选 - 强制触发重新加载
     setCurrentPage(1);
+    
+    // 等待状态更新后再触发数据加载
+    setTimeout(() => {
+      console.log('🔄 [handleResetFilters] Triggering data reload after reset');
+      handleApplyFilters();
+    }, 200);
   };
   
   // 应用筛选
   const handleApplyFilters = () => {
-    // 重置页码并触发数据加载
+    // 重置页码并强制触发数据重新加载
     setCurrentPage(1);
+    // 通过更新加载状态来强制 useEffect 重新执行
+    setLoading(true);
+    
+    // 添加一个强制刷新标记
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        console.log('🔍 [handleApplyFilters] Forced refresh with filters:', {
+          selectedModel,
+          selectedShape,
+          selectedMaterial,
+          selectedThickness,
+          selectedWeight,
+          selectedWidth,
+          selectedLength,
+          currentPage: 1,
+          userRegion
+        });
+        
+        const categoryFilter = searchParams.get('category') ? parseInt(searchParams.get('category')!) : undefined;
+        
+        // 构建筛选参数
+        const filters: ConsumableFilters = {
+          model: selectedModel,
+          shape: selectedShape,
+          material: selectedMaterial,
+          thickness: selectedThickness === 'all' ? undefined : selectedThickness,
+          weight: selectedWeight === 'all' ? undefined : selectedWeight,
+          width: selectedWidth === 'all' ? undefined : selectedWidth,
+          length: selectedLength === 'all' ? undefined : selectedLength,
+          page: 1,
+          page_size: 10,
+          region: userRegion,
+          lang: navigator.language.startsWith('zh') ? 'zh' : 'en',
+          category_id: categoryFilter
+        };
+        
+        console.log('📡 [handleApplyFilters] Force API call with filters:', filters);
+        
+        // 🔥 **新增：详细的API参数调试**
+        console.log('🔍 [API Debug] Detailed filter parameters being sent:');
+        console.log('  - model:', filters.model, '(type:', typeof filters.model, ')');
+        console.log('  - shape:', filters.shape, '(type:', typeof filters.shape, ')');
+        console.log('  - material:', filters.material, '(type:', typeof filters.material, ')');
+        console.log('  - thickness:', filters.thickness, '(type:', typeof filters.thickness, ')');
+        console.log('  - weight:', filters.weight, '(type:', typeof filters.weight, ')');
+        console.log('  - width:', filters.width, '(type:', typeof filters.width, ')');
+        console.log('  - length:', filters.length, '(type:', typeof filters.length, ')');
+        console.log('  - page:', filters.page, '(type:', typeof filters.page, ')');
+        console.log('  - page_size:', filters.page_size, '(type:', typeof filters.page_size, ')');
+        console.log('  - region:', filters.region, '(type:', typeof filters.region, ')');
+        console.log('  - lang:', filters.lang, '(type:', typeof filters.lang, ')');
+        console.log('  - category_id:', filters.category_id, '(type:', typeof filters.category_id, ')');
+        
+        const consumableData = await consumablesService.getConsumables(filters);
+        console.log('✅ [handleApplyFilters] Force refresh completed:', consumableData);
+        
+        // 🔥 **新增：API响应数据调试**
+        console.log('🔍 [API Response Debug] Detailed response analysis:');
+        console.log('  - Items returned:', consumableData.items?.length || 0);
+        console.log('  - Total items:', consumableData.total || 0);
+        console.log('  - Total pages:', consumableData.total_pages || 0);
+        console.log('  - Current page:', consumableData.page || 'undefined');
+        console.log('  - First item sample:', consumableData.items?.[0] || 'No items');
+        
+        // 🔥 **检查筛选是否真正生效**
+        if (consumableData.items && consumableData.items.length > 0) {
+          const firstItem = consumableData.items[0];
+          console.log('🔍 [Filter Effectiveness Check] First item analysis:');
+          console.log('  - Item ID:', firstItem.id);
+          console.log('  - Item specs material:', firstItem.specs?.material);
+          console.log('  - Item specs shape:', firstItem.specs?.shape);
+          console.log('  - Item specs compatibility:', firstItem.specs?.compatibility);
+          console.log('  - Expected material filter:', filters.material);
+          console.log('  - Expected shape filter:', filters.shape);
+          console.log('  - Expected model filter:', filters.model);
+          
+          // 检查是否匹配筛选条件
+          const materialMatches = !filters.material || filters.material === 'all' || 
+                                 firstItem.specs?.material?.toLowerCase().includes(filters.material.toLowerCase());
+          const shapeMatches = !filters.shape || filters.shape === 'all' || 
+                              firstItem.specs?.shape?.toLowerCase().includes(filters.shape.toLowerCase());
+          const modelMatches = !filters.model || filters.model === 'all' || 
+                              firstItem.specs?.compatibility?.includes(filters.model);
+          
+          console.log('🔍 [Filter Match Analysis]:');
+          console.log('  - Material matches:', materialMatches);
+          console.log('  - Shape matches:', shapeMatches);
+          console.log('  - Model matches:', modelMatches);
+          console.log('  - Overall filter applied correctly:', materialMatches && shapeMatches && modelMatches);
+        }
+        
+        setConsumables(consumableData.items || []);
+        
+        // 确保翻页数据都是有效数字
+        const totalFromAPI = Number(consumableData.total) || 0;
+        const totalPagesFromAPI = Number(consumableData.total_pages) || 1;
+        
+        setTotalItems(totalFromAPI);
+        setTotalPages(Math.max(1, totalPagesFromAPI));
+        setFilterOptions(consumableData.filterOptions);
+        
+        // 初始化数量状态
+        const initialQuantities: Record<string, number> = {};
+        consumableData.items.forEach(item => {
+          initialQuantities[item.id] = 1;
+        });
+        setQuantities(initialQuantities);
+
+      } catch (err) {
+        const errorMessage = (err instanceof Error) ? err.message : t('error.systemError');
+        console.error('❌ [handleApplyFilters] Force refresh failed:', err);
+        setError(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  };
+
+  // 处理机器型号变更
+  const handleModelChange = (value: string) => {
+    console.log('🔧 [handleModelChange] Model changed from', selectedModel, 'to', value);
+    setSelectedModel(value);
+    setCurrentPage(1); // 重置页码
+    
+    // 立即触发数据重新加载
+    setTimeout(() => {
+      handleApplyFilters();
+    }, 100);
+  };
+
+  // 处理形状变更
+  const handleShapeChange = (value: string) => {
+    console.log('🔧 [handleShapeChange] Shape changed from', selectedShape, 'to', value);
+    setSelectedShape(value);
+    setCurrentPage(1); // 重置页码
+    
+    // 立即触发数据重新加载
+    setTimeout(() => {
+      handleApplyFilters();
+    }, 100);
+  };
+
+  // 处理材质变更
+  const handleMaterialChange = (value: string) => {
+    console.log('🔧 [handleMaterialChange] Material changed from', selectedMaterial, 'to', value);
+    setSelectedMaterial(value);
+    setCurrentPage(1); // 重置页码
+    
+    // 立即触发数据重新加载
+    setTimeout(() => {
+      handleApplyFilters();
+    }, 100);
+  };
+
+  // 处理厚度变更
+  const handleThicknessChange = (value: string) => {
+    console.log('🔧 [handleThicknessChange] Thickness changed from', selectedThickness, 'to', value);
+    setSelectedThickness(value);
+    setCurrentPage(1); // 重置页码
+    
+    // 立即触发数据重新加载
+    setTimeout(() => {
+      handleApplyFilters();
+    }, 100);
+  };
+
+  // 处理重量变更
+  const handleWeightChange = (value: string) => {
+    console.log('🔧 [handleWeightChange] Weight changed from', selectedWeight, 'to', value);
+    setSelectedWeight(value);
+    setCurrentPage(1); // 重置页码
+    
+    // 立即触发数据重新加载
+    setTimeout(() => {
+      handleApplyFilters();
+    }, 100);
+  };
+
+  // 处理宽度变更
+  const handleWidthChange = (value: string) => {
+    console.log('🔧 [handleWidthChange] Width changed from', selectedWidth, 'to', value);
+    setSelectedWidth(value);
+    setCurrentPage(1); // 重置页码
+    
+    // 立即触发数据重新加载
+    setTimeout(() => {
+      handleApplyFilters();
+    }, 100);
+  };
+
+  // 处理长度变更
+  const handleLengthChange = (value: string) => {
+    console.log('🔧 [handleLengthChange] Length changed from', selectedLength, 'to', value);
+    setSelectedLength(value);
+    setCurrentPage(1); // 重置页码
+    
+    // 立即触发数据重新加载
+    setTimeout(() => {
+      handleApplyFilters();
+    }, 100);
   };
 
   // 处理图片错误 - 简化版本，使用数据URI避免404
@@ -1220,7 +1443,7 @@ const ConsumablesPage: React.FC = () => {
         <div className="flex justify-center items-center p-16 bg-card rounded-lg shadow-md border border-border transition-all duration-300">
           <LoadingState 
             size="large" 
-            text={t('loading', 'Loading data...')} 
+            text={String(t('loading') || 'Loading data...')} 
             type="spinner"
           />
         </div>
@@ -1242,7 +1465,7 @@ const ConsumablesPage: React.FC = () => {
             className="flex items-center"
           >
             <ReloadOutlined className="mr-2" />
-            {t('error.retry', '重试')}
+            {String(t('error.retry') || '重试')}
           </Button>
         </div>
       );
@@ -1254,10 +1477,10 @@ const ConsumablesPage: React.FC = () => {
           <svg className="h-16 w-16 text-content-light" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
           </svg>
-          <h3 className="mt-4 text-lg font-medium text-title">{t('noProducts.title', '没有找到符合条件的产品')}</h3>
-          <p className="mt-2 text-content-light">{t('noProducts.message', '请尝试调整筛选条件')}</p>
+          <h3 className="mt-4 text-lg font-medium text-title">{String(t('noProducts.title') || '没有找到符合条件的产品')}</h3>
+          <p className="mt-2 text-content-light">{String(t('noProducts.message') || '请尝试调整筛选条件')}</p>
           <Button type="primary" onClick={handleResetFilters} className="mt-4">
-            {t('button.resetFilters', '重置筛选条件')}
+            {String(t('button.resetFilters') || '重置筛选条件')}
           </Button>
         </div>
       );
@@ -1276,7 +1499,7 @@ const ConsumablesPage: React.FC = () => {
                 <div className="relative">
                   <img 
                     src={cleanImageUrl(item.image_url) || placeholderImage} 
-                    alt={item.name} 
+                    alt={String(item.name || '')} 
                     className="w-32 h-32 object-contain border-2 border-border rounded-lg bg-card-alt p-2 shadow-sm hover:shadow-md transition-shadow duration-200"
                     onError={handleImageError}
                   />
@@ -1286,22 +1509,22 @@ const ConsumablesPage: React.FC = () => {
               {/* 列2: 信息与规格 */}
               <div className="w-full md:w-3/6 md:px-4">
                 <div className="mb-4">
-                  <span className="inline-block bg-primary text-white px-3 py-1 text-sm font-bold rounded-lg shadow-sm">{item.code}</span>
-                  <h3 className="text-xl font-bold text-title mt-2 leading-tight line-clamp-2">{item.name}</h3>
+                  <span className="inline-block bg-primary text-white px-3 py-1 text-sm font-bold rounded-lg shadow-sm">{String(item.code || '')}</span>
+                  <h3 className="text-xl font-bold text-title mt-2 leading-tight line-clamp-2">{String(item.name || '')}</h3>
                   {item.model && (
                     <div className="text-sm text-content-light mt-1">
-                      <span>型号: {item.model}</span>
+                      <span>型号: {String(item.model || '')}</span>
                     </div>
                   )}
                   {/* 可选显示 productId */}
-                  <div className="text-xs text-content-light mt-1 opacity-60">ID: {item.id}</div>
+                  <div className="text-xs text-content-light mt-1 opacity-60">ID: {String(item.id || '')}</div>
                 </div>
 
                 {/* 规格信息（公制/英制自动切换） */}
                 <div className="bg-card-alt rounded-lg p-4 shadow-sm">
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div className="flex items-center">
-                      <strong className="w-16 text-label font-medium">宽度:</strong>
+                      <strong className="w-16 text-label font-medium">{String(t('filter.width') || 'Width')}:</strong>
                       <span className="text-content font-medium ml-2">
                         {userRegion === 'na' || userRegion === 'au' ? 
                           (item.specs?.width ? item.specs.width + ' inch' : 'N/A') : 
@@ -1310,7 +1533,7 @@ const ConsumablesPage: React.FC = () => {
                       </span>
                     </div>
                     <div className="flex items-center">
-                      <strong className="w-16 text-label font-medium">长度:</strong>
+                      <strong className="w-16 text-label font-medium">{String(t('filter.length') || 'Length')}:</strong>
                       <span className="text-content font-medium ml-2">
                         {userRegion === 'na' || userRegion === 'au' ? 
                           (item.specs?.length ? item.specs.length + ' inch' : 'N/A') : 
@@ -1319,11 +1542,11 @@ const ConsumablesPage: React.FC = () => {
                       </span>
                     </div>
                     <div className="flex items-center">
-                      <strong className="w-16 text-label font-medium">卷长:</strong>
+                      <strong className="w-16 text-label font-medium">{String(t('rollLength') || 'Roll Length')}:</strong>
                       <span className="text-content font-medium ml-2">{item.specs?.rollLength || 'N/A'}</span>
                     </div>
                     <div className="flex items-center">
-                      <strong className="w-16 text-label font-medium">材质:</strong>
+                      <strong className="w-16 text-label font-medium">{String(t('filter.material') || 'Material')}:</strong>
                       <span className="text-content font-medium ml-2">{item.specs?.material || 'N/A'}</span>
                     </div>
                   </div>
@@ -1346,7 +1569,7 @@ const ConsumablesPage: React.FC = () => {
                   >
                     <button className="more-info-btn">
                       <InfoCircleOutlined />
-                      更多信息
+                      {String(t('actions.moreInfo') || 'More Info')}
                     </button>
                   </Tooltip>
                 </div>
@@ -1355,7 +1578,7 @@ const ConsumablesPage: React.FC = () => {
               {/* 列3: 价格与操作 */}
               <div className="w-full md:w-2/6 flex flex-col justify-between mt-4 md:mt-0 md:pl-4 md:border-l md:border-border">
                 <div>
-                  <h4 className="font-medium text-sm text-label mb-2">价格:</h4>
+                  <h4 className="font-medium text-sm text-label mb-2">{String(t('price') || 'Price')}:</h4>
                   <div className="space-y-1">
                     {item.pricing.map((price, idx) => {
                       const quantity = parseInt(price.range.replace(/[^0-9]/g, '') || '1') || 1;
@@ -1376,13 +1599,13 @@ const ConsumablesPage: React.FC = () => {
                   {/* 库存信息（仅管理员/销售可见） */}
                   {(user?.role === 'sales' || user?.role === 'admin') && (
                     <div className="mt-3 bg-background p-2 rounded border border-border">
-                      <h4 className="font-medium text-sm text-label mb-1">库存:</h4>
+                      <h4 className="font-medium text-sm text-label mb-1">{String(t('inventory') || 'Inventory')}:</h4>
                       <div className="grid grid-cols-2 gap-2 text-xs">
                         {Object.entries(item.inventory).map(([region, count]) => (
                           <div key={region} className="flex justify-between items-center px-2 py-1 rounded border border-border">
                             <span className="font-medium">{region.toUpperCase()}:</span>
                             <span className={`font-medium ${(count || 0) > 0 ? 'text-success' : 'text-error'}`}>
-                              {isNaN(count) ? 0 : count}
+                              {typeof count === 'number' ? count : (isNaN(Number(count)) ? 0 : Number(count))}
                             </span>
                           </div>
                         ))}
@@ -1394,7 +1617,7 @@ const ConsumablesPage: React.FC = () => {
                 <div className="mt-4 flex items-center justify-between">
                   {/* 自定义数量选择器 */}
                   <div className="quantity-selector-container">
-                    <label className="quantity-label">数量:</label>
+                    <label className="quantity-label">{String(t('quantity') || 'Quantity')}:</label>
                     <div className="quantity-selector">
                       <button 
                         className="quantity-btn quantity-decrease"
@@ -1428,7 +1651,7 @@ const ConsumablesPage: React.FC = () => {
                     icon={<ShoppingCartOutlined />}
                     size="large"
                   >
-                    加入购物车
+                    {String(t('actions.addToCart') || 'Add to Cart')}
                   </Button>
                 </div>
               </div>
@@ -1439,14 +1662,14 @@ const ConsumablesPage: React.FC = () => {
     );
   };
   
-  // 获取筛选选项
-  const shapes = filterOptions?.shapes || [];
-  const materials = filterOptions?.materials || [];
-  const models = filterOptions?.models || [];
-  const thicknesses = filterOptions?.thicknesses || [];
-  const weights = filterOptions?.weights || [];
-  const widths = filterOptions?.widths || [];
-  const lengths = filterOptions?.lengths || [];
+  // 获取筛选选项，确保过滤掉无效数据
+  const shapes = (filterOptions?.shapes || []).filter(item => item && item.id && item.name);
+  const materials = (filterOptions?.materials || []).filter(item => item && item.id && item.name);
+  const models = (filterOptions?.models || []).filter(item => item && item.id && item.name);
+  const thicknesses = (filterOptions?.thicknesses || []).filter(item => item && item.id && item.name);
+  const weights = (filterOptions?.weights || []).filter(item => item && item.id && item.name);
+  const widths = (filterOptions?.widths || []).filter(item => item && item.id && item.name);
+  const lengths = (filterOptions?.lengths || []).filter(item => item && item.id && item.name);
   const modelExplodedViews = filterOptions?.modelExplodedViews || {};
   
   // 调试日志
@@ -1467,8 +1690,8 @@ const ConsumablesPage: React.FC = () => {
         <div className="container">
           <div className="loading-container">
             <div className="loading-spinner"></div>
-            <h3>{t('loading', 'Loading data...')}</h3>
-            <p>{t('loading.description', 'Please wait while we fetch the product information.')}</p>
+            <h3>{String(t('loading') || 'Loading data...')}</h3>
+            <p>{String(t('loading.description') || 'Please wait while we fetch the product information.')}</p>
           </div>
         </div>
       </div>
@@ -1481,13 +1704,13 @@ const ConsumablesPage: React.FC = () => {
       <div className="consumables-page">
         <div className="container">
           <div className="error-container">
-            <h3>{t('error.title', 'Error')}</h3>
+            <h3>{String(t('error.title') || 'Error')}</h3>
             <p>{error}</p>
             <Button 
               type="primary" 
               onClick={() => window.location.reload()}
             >
-              {t('error.retry', 'Retry')}
+              {String(t('error.retry') || 'Retry')}
             </Button>
           </div>
         </div>
@@ -1503,8 +1726,8 @@ const ConsumablesPage: React.FC = () => {
       <div className="container">
         <div className="section-title">
           <div className="title-text">
-            <h2>{t('title', 'Consumable Products')}</h2>
-            <p>{t('subtitle', 'BJT Bubble Films, Cushioning Bags and Other Products')}</p>
+            <h2>{String(t('title') || 'Consumables')}</h2>
+            <p>{String(t('subtitle') || 'BJT Products')}</p>
           </div>
           <div className="ml-auto flex items-center">
             <Button
@@ -1514,7 +1737,7 @@ const ConsumablesPage: React.FC = () => {
               className="flex items-center cart-button"
               ref={cartButtonRef}
             >
-              {t('button.cart', 'View Cart')}
+              {String(t('button.cart') || 'View Cart')}
             </Button>
           </div>
         </div>
@@ -1523,7 +1746,7 @@ const ConsumablesPage: React.FC = () => {
           {/* 优化筛选区标题 */}
           <div className="mb-4 flex items-center">
             <FilterOutlined className="mr-2 text-brand-primary" />
-            <h3 className="text-lg font-semibold m-0 text-title">{t('filter.title', 'Product Filters')}</h3>
+            <h3 className="text-lg font-semibold m-0 text-title">{String(t('filter.title') || 'Filters')}</h3>
             <Button 
               type="text" 
               icon={<ReloadOutlined />} 
@@ -1531,25 +1754,25 @@ const ConsumablesPage: React.FC = () => {
               className="ml-auto text-sm"
               size="small"
             >
-              {t('button.reset', 'Reset')}
+              {String(t('button.reset') || 'Reset')}
             </Button>
           </div>
 
           <div className="filter-section">
             <div className="filter-group">
-              <label className="block text-sm font-medium mb-2 text-label">{t('filter.machine', 'Machine Model')}:</label>
+              <label className="block text-sm font-medium mb-2 text-label">{String(t('filter.machine') || 'Machine Model')}:</label>
               <div className="flex items-center">
                 <Select 
                   value={selectedModel} 
-                  onChange={(value: string) => setSelectedModel(value)}
+                  onChange={handleModelChange}
                   style={{ width: '100%', maxWidth: '300px' }}
                   className="mr-2"
                 >
-                {models.map(model => (
-                    <Option key={model.id} value={model.id}>{model.name}</Option>
+                {models.map((model, index) => (
+                    <Option key={`model-${model.id}-${index}`} value={model.id}>{model.name}</Option>
                   ))}
                 </Select>
-                <Tooltip title={t('help.machineModel', 'Select the machine model to filter compatible consumables')}>
+                <Tooltip title={String(t('help.machineModel') || 'Select the machine model to filter compatible consumables')}>
                   <Button type="text" shape="circle" icon={<InfoCircleOutlined />} />
                 </Tooltip>
               </div>
@@ -1557,10 +1780,10 @@ const ConsumablesPage: React.FC = () => {
           </div>
           
           <div className="filter-section">
-            <h3 className="text-base font-medium mb-3 text-label">{t('filter.shape', 'Shape')}</h3>
+            <h3 className="text-base font-medium mb-3 text-label">{String(t('filter.shape') || 'Shape')}</h3>
             <div className="shape-selector">
-              {shapes.map(shape => (
-                <div key={shape.id} className="shape-option">
+              {shapes.map((shape, index) => (
+                <div key={`shape-${shape.id}-${index}`} className="shape-option">
                   <input 
                     type="radio"
                     id={`shape-${shape.id}`}
@@ -1580,11 +1803,11 @@ const ConsumablesPage: React.FC = () => {
           <div className="filter-section">
             <div className="filter-row mb-3">
               <div className="filter-group">
-                <label className="block text-sm font-medium mb-2 text-label">{t('filter.material', 'Material')}:</label>
+                <label className="block text-sm font-medium mb-2 text-label">{String(t('filter.material') || 'Material')}:</label>
                 <div className="material-selector">
-                  {materials.map(material => (
+                  {materials.map((material, index) => (
                     <button 
-                      key={material.id}
+                      key={`material-${material.id}-${index}`}
                       className={`material-btn ${selectedMaterial === material.id ? 'active' : ''}`}
                       onClick={() => handleMaterialChange(material.id)}
                     >
@@ -1598,14 +1821,14 @@ const ConsumablesPage: React.FC = () => {
             <div className="dimensions-container">
               <div className="dimensions-filters grid grid-cols-1 md:grid-cols-3 gap-4 w-full md:w-7/12">
                 <div className="filter-group vertical">
-                  <label className="block text-sm font-medium mb-2 text-label">{isPaperMaterial(selectedMaterial) ? t('filter.weight', 'Weight') : t('filter.thickness', 'Thickness')}:</label>
+                  <label className="block text-sm font-medium mb-2 text-label">{isPaperMaterial(selectedMaterial) ? String(t('filter.weight') || 'Weight') : String(t('filter.thickness') || 'Thickness')}:</label>
                   <Select 
                     value={isPaperMaterial(selectedMaterial) ? selectedWeight : selectedThickness}
-                    onChange={isPaperMaterial(selectedMaterial) ? (value: string) => setSelectedWeight(value) : (value: string) => setSelectedThickness(value)}
+                    onChange={isPaperMaterial(selectedMaterial) ? handleWeightChange : handleThicknessChange}
                     style={{ width: '100%' }}
                   >
-                    {(isPaperMaterial(selectedMaterial) ? weights : thicknesses).map(item => (
-                      <Option key={item.id} value={item.id}>{item.name}</Option>
+                    {(isPaperMaterial(selectedMaterial) ? weights : thicknesses).map((item, index) => (
+                      <Option key={`thickness-weight-${item.id}-${index}`} value={item.id}>{item.name}</Option>
                     ))}
                   </Select>
                 </div>
@@ -1614,11 +1837,11 @@ const ConsumablesPage: React.FC = () => {
                   <label className="block text-sm font-medium mb-2 text-label">{t('filter.width', 'Width')}:</label>
                   <Select
                     value={selectedWidth}
-                    onChange={(value: string) => setSelectedWidth(value)}
+                    onChange={handleWidthChange}
                     style={{ width: '100%' }}
                   >
-                    {widths.map(width => (
-                      <Option key={width.id} value={width.id}>{width.name}</Option>
+                    {widths.map((width, index) => (
+                      <Option key={`width-${width.id}-${index}`} value={width.id}>{width.name}</Option>
                     ))}
                   </Select>
                 </div>
@@ -1627,11 +1850,11 @@ const ConsumablesPage: React.FC = () => {
                   <label className="block text-sm font-medium mb-2 text-label">{t('filter.length', 'Length')}:</label>
                   <Select
                     value={selectedLength}
-                    onChange={(value: string) => setSelectedLength(value)}
+                    onChange={handleLengthChange}
                     style={{ width: '100%' }}
                   >
-                    {lengths.map(length => (
-                      <Option key={length.id} value={length.id}>{length.name}</Option>
+                    {lengths.map((length, index) => (
+                      <Option key={`length-${length.id}-${index}`} value={length.id}>{length.name}</Option>
                     ))}
                   </Select>
                 </div>
@@ -1640,20 +1863,27 @@ const ConsumablesPage: React.FC = () => {
               <div className="dimension-image w-full md:w-5/12 flex justify-center items-center">
                 <img 
                   src={currentDimensionImage} 
-                  alt={t('filter.dimensions', 'Product Dimensions')} 
+                  alt={String(t('filter.dimensions') || 'Product Dimensions')} 
                   className="object-contain max-h-60 border border-border rounded p-2 bg-card"
                 />
               </div>
             </div>
           </div>
           
-          <div className="filter-actions flex justify-end mt-4">
+          <div className="filter-actions flex justify-between items-center mt-4">
+            <Button 
+              type="default" 
+              onClick={handleResetFilters} 
+              className="btn-reset"
+            >
+              {String(t('button.resetFilters') || '重置筛选条件')}
+            </Button>
             <Button 
               type="primary" 
               onClick={handleApplyFilters} 
               className="btn-apply"
             >
-              {t('button.apply', 'Apply Filters')}
+              {String(t('button.apply') || 'Apply')}
             </Button>
           </div>
         </div>
@@ -1763,7 +1993,7 @@ const ConsumablesPage: React.FC = () => {
       
       {/* 产品详细信息Modal */}
       <Modal
-        title={selectedProduct ? `${selectedProduct.name} - 详细信息` : '产品详细信息'}
+        title={selectedProduct ? `${String(selectedProduct.name || '')} - 详细信息` : '产品详细信息'}
         open={detailModalVisible}
         onCancel={closeDetailModal}
         footer={[
@@ -1794,7 +2024,7 @@ const ConsumablesPage: React.FC = () => {
               <div className="w-full md:w-1/3">
                 <img 
                   src={cleanImageUrl(selectedProduct.image_url) || placeholderImage}
-                  alt={selectedProduct.name}
+                  alt={String(selectedProduct.name || '')}
                   className="w-full h-64 object-contain border border-border rounded-lg bg-card-alt p-4"
                   onError={handleImageError}
                 />
@@ -1802,18 +2032,18 @@ const ConsumablesPage: React.FC = () => {
               <div className="w-full md:w-2/3">
                 <div className="mb-4">
                   <span className="inline-block bg-primary text-white px-3 py-1 text-sm font-bold rounded-lg mb-2">
-                    {selectedProduct.code}
+                    {String(selectedProduct.code || '')}
                   </span>
-                  <h3 className="text-xl font-bold text-title mb-2">{selectedProduct.name}</h3>
+                  <h3 className="text-xl font-bold text-title mb-2">{String(selectedProduct.name || '')}</h3>
                   {selectedProduct.model && (
-                    <p className="text-content-light mb-2">型号: {selectedProduct.model}</p>
+                    <p className="text-content-light mb-2">型号: {String(selectedProduct.model || '')}</p>
                   )}
-                  <p className="text-xs text-content-light opacity-60">产品ID: {selectedProduct.id}</p>
+                  <p className="text-xs text-content-light opacity-60">产品ID: {String(selectedProduct.id || '')}</p>
                 </div>
                 
                 {/* 价格信息 */}
                 <div className="bg-card-alt rounded-lg p-4 mb-4">
-                  <h4 className="font-medium text-sm text-label mb-2">价格信息:</h4>
+                  <h4 className="font-medium text-sm text-label mb-2">{String(t('price') || 'Price')}:</h4>
                   <div className="space-y-2">
                     {selectedProduct.pricing.map((price, idx) => {
                       const quantity = parseInt(price.range.replace(/[^0-9]/g, '') || '1') || 1;
@@ -1836,11 +2066,11 @@ const ConsumablesPage: React.FC = () => {
             
             {/* 详细规格 */}
             <div className="bg-card-alt rounded-lg p-4 mb-4">
-              <h4 className="font-medium text-base text-label mb-3">详细规格:</h4>
+              <h4 className="font-medium text-base text-label mb-3">{String(t('specs') || 'Specifications')}:</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-label font-medium">宽度:</span>
+                    <span className="text-label font-medium">{String(t('width') || 'Width')}:</span>
                     <span className="text-content">
                       {userRegion === 'na' || userRegion === 'au' ? 
                         (selectedProduct.specs?.width ? selectedProduct.specs.width + ' inch' : 'N/A') : 
@@ -1849,7 +2079,7 @@ const ConsumablesPage: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-label font-medium">长度:</span>
+                    <span className="text-label font-medium">{String(t('length') || 'Length')}:</span>
                     <span className="text-content">
                       {userRegion === 'na' || userRegion === 'au' ? 
                         (selectedProduct.specs?.length ? selectedProduct.specs.length + ' inch' : 'N/A') : 
@@ -1858,25 +2088,25 @@ const ConsumablesPage: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-label font-medium">卷长:</span>
+                    <span className="text-label font-medium">{String(t('rollLength') || 'Roll Length')}:</span>
                     <span className="text-content">{selectedProduct.specs?.rollLength || 'N/A'}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-label font-medium">材质:</span>
+                    <span className="text-label font-medium">{String(t('filter.material') || 'Material')}:</span>
                     <span className="text-content">{selectedProduct.specs?.material || 'N/A'}</span>
                   </div>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-label font-medium">厚度:</span>
+                    <span className="text-label font-medium">{String(t('filter.thickness') || 'Thickness')}:</span>
                     <span className="text-content">{selectedProduct.specs?.thickness || 'N/A'}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-label font-medium">形状:</span>
+                    <span className="text-label font-medium">{String(t('filter.shape') || 'Shape')}:</span>
                     <span className="text-content">{selectedProduct.specs?.shape || 'N/A'}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-label font-medium">兼容性:</span>
+                    <span className="text-label font-medium">{String(t('product.model') || 'Model')}:</span>
                     <span className="text-content">{selectedProduct.specs?.compatibility || 'N/A'}</span>
                   </div>
                 </div>
@@ -1886,13 +2116,13 @@ const ConsumablesPage: React.FC = () => {
             {/* 库存信息（仅管理员/销售可见） */}
             {(user?.role === 'sales' || user?.role === 'admin') && (
               <div className="bg-card-alt rounded-lg p-4">
-                <h4 className="font-medium text-base text-label mb-3">库存信息:</h4>
+                <h4 className="font-medium text-base text-label mb-3">{String(t('inventory') || 'Inventory')}:</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {Object.entries(selectedProduct.inventory).map(([region, count]) => (
                     <div key={region} className="bg-background rounded-lg p-3 text-center">
                       <div className="text-sm text-label font-medium mb-1">{region.toUpperCase()}</div>
                       <div className={`text-lg font-bold ${(count || 0) > 0 ? 'text-success' : 'text-error'}`}>
-                        {isNaN(count) ? 0 : count}
+                        {typeof count === 'number' ? count : (isNaN(Number(count)) ? 0 : Number(count))}
                       </div>
                     </div>
                   ))}

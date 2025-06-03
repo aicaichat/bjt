@@ -20,5 +20,163 @@
   "nextPage": "下一页",
   "page": "第",
   "pageOf": "页，共",
-  "pages": "页"
+  "pages": "页",
+  "header": {
+    "purchaseOrder": "采购订单",
+    "purchaseOrderNumber": "采购订单编号：",
+    "date": "日期：",
+    "paymentMethod": "付款方式："
+  },
+  "sections": {
+    "buyer": "买方",
+    "vendor": "卖方",
+    "shipTo": "收货方"
+  },
+  "fields": {
+    "companyName": "公司名称",
+    "address": "地址",
+    "contactName": "联系人",
+    "phone": "电话",
+    "notes": "备注"
+  },
+  "table": {
+    "columns": {
+      "partNumber": "零件号",
+      "item": "项目",
+      "model": "型号",
+      "description": "项目描述",
+      "brandName": "品牌名称",
+      "quantity": "数量",
+      "unitPrice": "单价",
+      "amount": "金额",
+      "poNumber": "订单编号",
+      "date": "下单日期",
+      "supplier": "供应商",
+      "total": "总金额",
+      "status": "状态",
+      "expectedDate": "预计到货日期",
+      "actions": "操作"
+    },
+    "summary": {
+      "remarks": "备注：",
+      "total": "小计",
+      "freightCharge": "运费",
+      "totalAmount": "总计"
+    }
+  },
+  "title": "采购订单",
+  "subtitle": "采购订单管理",
+  "filters": {
+    "title": "筛选",
+    "status": "状态",
+    "dateRange": "日期范围",
+    "poNumber": "订单编号",
+    "supplier": "供应商",
+    "all": "全部"
+  },
+  "status": {
+    "all": "全部状态",
+    "draft": "草稿",
+    "pending": "待审批",
+    "approved": "已审批",
+    "ordered": "已下单",
+    "received": "已收货",
+    "cancelled": "已取消",
+    "closed": "已关闭"
+  },
+  "dateRange": {
+    "today": "今天",
+    "yesterday": "昨天",
+    "last7Days": "最近7天",
+    "last30Days": "最近30天",
+    "thisMonth": "本月",
+    "lastMonth": "上月",
+    "custom": "自定义范围"
+  },
+  "actions": {
+    "create": "创建采购单",
+    "view": "查看详情",
+    "edit": "编辑",
+    "delete": "删除",
+    "approve": "审批",
+    "reject": "驳回",
+    "receive": "收货",
+    "close": "关闭",
+    "print": "打印",
+    "export": "导出"
+  },
+  "details": {
+    "title": "采购订单详情",
+    "basicInfo": "基本信息",
+    "items": "订单项目",
+    "summary": "订单汇总",
+    "approval": "审批信息",
+    "receiving": "收货信息",
+    "properties": {
+      "poNumber": "订单编号",
+      "orderDate": "下单日期",
+      "supplier": "供应商",
+      "contact": "联系人",
+      "phone": "电话",
+      "email": "邮箱",
+      "address": "地址",
+      "expectedDate": "预计到货日期",
+      "notes": "备注"
+    }
+  },
+  "items": {
+    "title": "订单项目",
+    "add": "添加项目",
+    "remove": "移除项目",
+    "columns": {
+      "item": "项目",
+      "description": "描述",
+      "quantity": "数量",
+      "unit": "单位",
+      "price": "单价",
+      "total": "总价"
+    }
+  },
+  "summary": {
+    "subtotal": "小计",
+    "tax": "税费",
+    "shipping": "运费",
+    "discount": "折扣",
+    "total": "总计"
+  },
+  "messages": {
+    "noOrders": "未找到采购订单",
+    "loading": "正在加载采购订单...",
+    "error": "加载采购订单失败",
+    "deleteConfirm": "确定要删除此采购订单吗？",
+    "cancelConfirm": "确定要取消此采购订单吗？",
+    "success": {
+      "created": "采购订单创建成功",
+      "updated": "采购订单更新成功",
+      "approved": "采购订单审批成功",
+      "rejected": "采购订单驳回成功",
+      "received": "采购订单收货成功",
+      "closed": "采购订单关闭成功",
+      "deleted": "采购订单删除成功"
+    },
+    "error": {
+      "create": "创建采购订单失败",
+      "update": "更新采购订单失败",
+      "approve": "审批采购订单失败",
+      "reject": "驳回采购订单失败",
+      "receive": "收货失败",
+      "close": "关闭采购订单失败",
+      "delete": "删除采购订单失败"
+    }
+  },
+  "batchActions": {
+    "export": "导出所选",
+    "delete": "删除所选",
+    "print": "打印所选",
+    "approve": "审批所选",
+    "reject": "驳回所选"
+  },
+  "tips": {
+    "excelStyling": "如需美化表格样式，可在Excel中选中表格区域，点击\"开始\"-\"套用为表格\"，一键加粗表头、金额变色。"
+  }
 } 

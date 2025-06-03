@@ -1,0 +1,115 @@
+{
+  "title": "消耗品",
+  "subtitle": "BJTエアクッションフィルム、緩衝包装袋およびその他の製品",
+  "filters": {
+    "machineModel": "機器モデル",
+    "units": "単位",
+    "metric": "メートル法",
+    "imperial": "ヤード・ポンド法",
+    "shape": "形状",
+    "material": "材質",
+    "dimensions": {
+      "thickness": "厚さ",
+      "weight": "重量",
+      "width": "幅",
+      "length": "長さ"
+    },
+    "reset": "リセット",
+    "apply": "フィルターを適用",
+    "modelUsageGuide": "モデル使用ガイド",
+    "modelUsagePrompt": "特定の機器モデルを選択して、対応する使用ガイドを表示してください。",
+    "modelUsageNote": "この分解図は、選択した{{model}}モデルでの消耗品の使用方法を示しています。",
+    "title": "フィルター",
+    "type": "タイプ",
+    "category": "カテゴリー",
+    "price": "価格",
+    "all": "すべて"
+  },
+  "compatibility": {
+    "title": "機器互換性情報",
+    "models": {
+      "la-e4s": "標準エアクッションフィルム材のみ対応",
+      "mex-10-20": "すべてのシリーズ材に対応、異なる仕様に特定の要件あり",
+      "lp-v1": "すべての材質と仕様に対応"
+    }
+  },
+  "table": {
+    "image": "画像",
+    "code": "製品コード",
+    "specs": "仕様",
+    "price": "価格",
+    "inventory": "在庫",
+    "actions": "操作",
+    "columns": {
+      "image": "画像",
+      "code": "製品コード",
+      "specs": "仕様",
+      "price": "価格",
+      "inventory": "在庫",
+      "actions": "操作"
+    }
+  },
+  "product": {
+    "code": "製品コード",
+    "name": "製品名",
+    "model": "モデル"
+  },
+  "types": {
+    "all": "すべてのタイプ",
+    "film": "フィルム",
+    "paper": "紙",
+    "tape": "テープ",
+    "other": "その他"
+  },
+  "categories": {
+    "all": "すべてのカテゴリー",
+    "airCushion": "エアクッション",
+    "paperCushion": "紙クッション",
+    "waterActivated": "水活性型"
+  },
+  "price": {
+    "all": "すべての価格",
+    "under1k": "1,000円未満",
+    "1k-5k": "1,000-5,000円",
+    "5k-10k": "5,000-10,000円",
+    "above10k": "10,000円以上"
+  },
+  "actions": {
+    "addToCart": "カートに追加",
+    "viewDetails": "詳細を見る",
+    "close": "閉じる",
+    "select": "選択"
+  },
+  "pricing": {
+    "per": "1点あたり",
+    "rangePricing": "範囲価格"
+  },
+  "inventory": {
+    "inStock": "在庫あり",
+    "lowStock": "在庫わずか",
+    "outOfStock": "在庫切れ",
+    "count": "在庫数：{{count}}"
+  },
+  "cart": {
+    "title": "カート",
+    "added": "カートに追加しました",
+    "total": "合計",
+    "checkout": "レジに進む",
+    "items": "点",
+    "empty": "カートは空です",
+    "continue": "買い物を続ける"
+  },
+  "loading": "消耗品データを読み込み中...",
+  "error": {
+    "title": "エラー",
+    "retry": "再試行",
+    "failedToLoad": "消耗品データの読み込みに失敗しました",
+    "systemError": "システムエラー、後でもう一度お試しください"
+  },
+  "quantity": "数量",
+  "messages": {
+    "noProducts": "消耗品が見つかりません",
+    "loading": "消耗品を読み込み中...",
+    "error": "消耗品の読み込みに失敗しました"
+  }
+} 

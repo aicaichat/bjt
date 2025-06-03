@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { SparePart } from '../types/spareParts';
+import { useTranslation } from 'react-i18next';
 
 interface SparePartTooltipProps {
   sparePart: SparePart | null;
@@ -21,6 +22,7 @@ export const SparePartTooltip: React.FC<SparePartTooltipProps> = ({
   userRegion = 'cn'
 }) => {
   const tooltipRef = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation(['spareParts']);
 
   // 调整tooltip位置，避免超出屏幕边界
   useEffect(() => {
@@ -128,7 +130,7 @@ export const SparePartTooltip: React.FC<SparePartTooltipProps> = ({
         {sparePart.pcs_per_box && (
           <div className="flex justify-between text-sm">
             <span className="text-gray-400">{language === 'zh' ? '单箱数量' : 'Pcs per Box'}:</span>
-            <span className="text-white">{sparePart.pcs_per_box}</span>
+            <span className="text-white">{sparePart.pcs_per_box} {t('details.properties.unit', { ns: 'spareParts' })}</span>
           </div>
         )}
       </div>

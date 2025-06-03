@@ -1,0 +1,56 @@
+{
+  "title": "機器一覧",
+  "subtitle": "製品機器",
+  "loading": "読み込み中...",
+  "error": "読み込み失敗",
+  "noData": "データがありません",
+  "skipToMainContent": "メインコンテンツへスキップ",
+  "unitSystem": "単位系",
+  "metric": "メートル法",
+  "imperial": "ヤード・ポンド法",
+  "close": "閉じる",
+  "noAccessories": "アクセサリーはありません",
+  "allPartNumbers": "すべての部品番号",
+  "filters": {
+    "title": "フィルター",
+    "voltage": "電圧",
+    "region": "地域",
+    "partNumber": "部品番号",
+    "type": "タイプ",
+    "brand": "ブランド",
+    "all": "すべて",
+    "clear": "フィルターをクリア"
+  },
+  "table": {
+    "model": "モデル",
+    "partNumber": "部品番号",
+    "voltage": "電圧",
+    "price": "価格",
+    "inventory": "在庫",
+    "actions": "アクション",
+    "addToCart": "カートに追加",
+    "viewDetails": "詳細を見る"
+  },
+  "pricing": {
+    "from": "から",
+    "tier": "段階価格",
+    "quantity": "数量",
+    "unitPrice": "単価"
+  },
+  "inventory": {
+    "inStock": "在庫あり",
+    "lowStock": "在庫少",
+    "outOfStock": "在庫切れ",
+    "available": "利用可能"
+  },
+  "actions": {
+    "addToCart": "カートに追加",
+    "viewDetails": "詳細を見る",
+    "selectAccessory": "アクセサリーを選択",
+    "configure": "設定"
+  },
+  "messages": {
+    "addedToCart": "カートに追加されました",
+    "addToCartFailed": "追加に失敗しました"
+  }
+} 

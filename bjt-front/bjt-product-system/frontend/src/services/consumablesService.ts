@@ -294,17 +294,31 @@ const apiGetConsumables_local = async (filters: ConsumableFilters): Promise<Cons
     lang: filters.lang,
     product_line_id: filters.productLineId,
     category_id: filters.category_id,
-    // Map other filters like model, shape, material if API supports them directly
     model: filters.model === 'all' ? undefined : filters.model,
-    bag_type: filters.shape === 'all' ? undefined : filters.shape,
+    shape: filters.shape === 'all' ? undefined : filters.shape,
     material: filters.material === 'all' ? undefined : filters.material,
-    // Pass generic filters if any
+    thickness: filters.thickness === 'all' ? undefined : filters.thickness,
+    weight: filters.weight === 'all' ? undefined : filters.weight,
+    width: filters.width === 'all' ? undefined : filters.width,
+    length: filters.length === 'all' ? undefined : filters.length,
     ...(filters.filters || {})
   };
+  
   // Remove undefined params
   Object.keys(apiParams).forEach(key => apiParams[key] === undefined && delete apiParams[key]);
 
+  console.log('🔍 [apiGetConsumables_local] Sending API request with params:', apiParams);
+  console.log('🔍 [apiGetConsumables_local] Original filters object:', filters);
+  
   const response = await HttpServiceInstance.get<ConsumableListData>('/consumables', { params: apiParams });
+  
+  console.log('🔍 [apiGetConsumables_local] Received API response:', {
+    dataItemsLength: response.data?.items?.length || 0,
+    dataTotal: response.data?.total || 0,
+    dataTotalPages: response.data?.total_pages || 0,
+    firstItem: response.data?.items?.[0] || null
+  });
+  
   // Here, ConsumableListData is the local one. API must return data matching ConsumableProduct.
   // If API returns CentralConsumable[], transformation will be needed here too.
   // For now, assume API returns data matching local ConsumableProduct for simplicity.

@@ -316,6 +316,8 @@ export function createRequiredPartCartItem(
     properties: {
       productName: requiredPart.name_zh,
       name: requiredPart.name_zh,
+      name_zh: requiredPart.name_zh,
+      name_en: requiredPart.name_en,
       part_number: requiredPart.part_number,
       image_url: requiredPart.image_url,
       is_required: true,

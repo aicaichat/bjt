@@ -1,0 +1,88 @@
+{
+  "title": "製品",
+  "filters": {
+    "title": "フィルター",
+    "type": "タイプ",
+    "capacity": "容量",
+    "price": "価格",
+    "sort": "並び替え",
+    "all": "すべて"
+  },
+  "types": {
+    "all": "すべてのタイプ",
+    "airCushion": "エアクッション機",
+    "packaging": "包装機",
+    "sealing": "シーリング機",
+    "wrapping": "ラッピング機"
+  },
+  "capacity": {
+    "all": "すべての容量",
+    "small": "小型 (<100m³/h)",
+    "medium": "中型 (100-150m³/h)",
+    "large": "大型 (>150m³/h)"
+  },
+  "price": {
+    "all": "すべての価格",
+    "under20k": "20万円未満",
+    "20k-50k": "20-50万円",
+    "50k-100k": "50-100万円",
+    "above100k": "100万円以上"
+  },
+  "sort": {
+    "default": "デフォルト",
+    "priceAsc": "価格：安い順",
+    "priceDesc": "価格：高い順",
+    "nameAsc": "名前：A-Z",
+    "nameDesc": "名前：Z-A"
+  },
+  "tableHeaders": {
+    "index": "番号",
+    "model": "モデル",
+    "name": "名前",
+    "type": "タイプ",
+    "capacity": "容量",
+    "price": "価格",
+    "inventory": "在庫",
+    "actions": "操作"
+  },
+  "actions": {
+    "viewDetails": "詳細を見る",
+    "addToCart": "カートに追加",
+    "select": "選択"
+  },
+  "messages": {
+    "noProducts": "製品が見つかりません",
+    "loading": "製品を読み込み中...",
+    "error": "製品の読み込みに失敗しました",
+    "mockDataHint": "デモ用のモックデータを使用しています"
+  },
+  "detailInfo": {
+    "title": "{{name}}の詳細情報",
+    "sections": {
+      "specifications": "仕様",
+      "features": "特徴",
+      "compatibility": "互換性"
+    },
+    "properties": {
+      "model": "モデル",
+      "partNumber": "部品番号",
+      "voltage": "電圧",
+      "power": "電力",
+      "dimensions": "寸法",
+      "weight": "重量",
+      "capacity": "容量"
+    }
+  },
+  "compare": {
+    "title": "製品比較",
+    "selected": "{{count}}台のデバイスを選択中",
+    "button": "選択した製品を比較"
+  },
+  "stock": {
+    "in_stock": "在庫あり",
+    "low_stock": "在庫わずか",
+    "out_of_stock": "在庫切れ",
+    "pre_order": "予約受付中",
+    "quantity": "在庫数：{{count}}"
+  }
+} 

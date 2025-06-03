@@ -1,10 +1,27 @@
 {
+  "title": "首页",
+  "introduction": "欢迎使用BJT产品管理系统",
   "links": {
     "machines": "查看设备",
     "consumables": "查看耗材",
     "spareParts": "查看备件"
   },
-  "introduction": "欢迎使用BJT产品管理系统",
+  "sections": {
+    "title": "产品分类",
+    "description": "浏览我们的完整产品系列"
+  },
+  "features": {
+    "title": "功能介绍",
+    "airCushion": "气垫技术",
+    "packaging": "包装解决方案",
+    "support": "技术支持",
+    "spareParts": "备件供应"
+  },
+  "messages": {
+    "loading": "加载中...",
+    "error": "数据加载失败",
+    "retry": "重试"
+  },
   "browseProducts": "浏览产品",
   "welcome": "欢迎使用BJT产品管理系统",
   "slogan": "高效管理产品线、设备、配件、备件和耗材的一体化解决方案",
@@ -14,8 +31,6 @@
   "viewProducts": "查看产品",
   "noProductLines": "暂无可用产品线",
   "noProductsDescription": "请稍后再试或联系我们的支持团队获取帮助。",
-  "features": "系统功能",
-  "productManagement": "产品管理",
   "productManagementDesc": "集中管理产品线、设备、配件、备件和耗材",
   "productSearch": "产品查询",
   "productSearchDesc": "按类别、型号、规格等多维度查询产品",
@@ -30,5 +45,10 @@
   "errors": {
     "failedToLoadProducts": "加载产品失败，请稍后重试。",
     "noProductLines": "暂无可用产品线。"
-  }
+  },
+  "pagination": {
+    "prev": "上一页",
+    "next": "下一页"
+  },
+  "apiData": "数据来源：真实API（{{count}}个产品线）"
 } 

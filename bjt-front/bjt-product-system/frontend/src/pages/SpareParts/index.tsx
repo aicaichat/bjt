@@ -84,11 +84,11 @@ const SparePartsPage = () => {
   
   // 使用useCallback稳定回调函数引用
   const handleSparePartsSuccess = useCallback((data: any) => {
-    console.log('✅ 备件页面数据加载成功:', data);
+    console.log('✅ Spare parts page data loaded successfully:', data);
   }, []);
   
   const handleSparePartsError = useCallback((error: string) => {
-    console.error('❌ 备件页面数据加载失败:', error);
+    console.error('❌ Spare parts page data loading failed:', error);
   }, []);
   
   // SQL Mock数据服务Hook
@@ -174,10 +174,10 @@ const SparePartsPage = () => {
   
   // 添加产品类型和型号过滤选项状态
   const [productTypes, setProductTypes] = useState<Array<{ value: string; label: string }>>([
-    { value: 'all', label: '全部产品类型' }
+    { value: 'all', label: String(t('filters.allProductTypes', { ns: 'spareParts' }) || '全部产品类型') }
   ]);
   const [models, setModels] = useState<Array<{ value: string; label: string }>>([
-    { value: 'all', label: '全部型号' }
+    { value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || '全部型号') }
   ]);
   
   // 添加tooltip状态管理
@@ -202,7 +202,7 @@ const SparePartsPage = () => {
       if (authData) {
         const userData = JSON.parse(authData);
         if (userData && userData.role && userData.role !== userRole) {
-          console.log(`用户角色不一致: AuthContext=${userRole}, localStorage=${userData.role}`);
+          console.log(`User role inconsistency: AuthContext=${userRole}, localStorage=${userData.role}`);
           // 优先使用localStorage中的角色，因为它可能是最新的
           userRole = userData.role;
         }
@@ -597,8 +597,8 @@ const SparePartsPage = () => {
       }
       
       // 如果所有重试都失败，显示错误信息
-      const errorMessage = err instanceof Error ? err.message : '未知错误';
-      setError(`加载备件数据失败: ${errorMessage}`);
+      const errorMessage = err instanceof Error ? err.message : String(t('defaultValues.unknownError', { ns: 'spareParts' }) || 'Unknown error');
+      setError(String(t('error.loadingData', { ns: 'spareParts', message: errorMessage }) || `Failed to load spare parts data: ${errorMessage}`));
       setSpareParts([]);
       
       // 可选：作为最后的fallback，使用Mock数据
@@ -609,10 +609,10 @@ const SparePartsPage = () => {
           const mockParts = getAllMockSpareParts();
           console.log('🔍 [loadSparePartsData] Fallback Mock data loaded:', mockParts.length, 'items');
           setSpareParts(mockParts);
-          setError('API连接失败，正在显示示例数据');
+          setError(String(t('error.apiConnectionFailed', { ns: 'spareParts' }) || 'API connection failed, displaying sample data'));
         } catch (mockError) {
           console.error('Even Mock data fallback failed:', mockError);
-          setError('无法加载备件数据，请检查网络连接或联系技术支持');
+          setError(String(t('error.loadingDataGeneral', { ns: 'spareParts' }) || 'Unable to load spare parts data, please check network connection or contact technical support'));
         }
       }
     } finally {
@@ -675,15 +675,15 @@ const SparePartsPage = () => {
 
         // 设置过滤选项
         setProductTypes([
-          { value: 'all', label: '全部产品类型' },
+          { value: 'all', label: String(t('filters.allProductTypes', { ns: 'spareParts' }) || 'All Product Types') },
           ...Array.from(productTypes).map(type => ({
             value: type,
-            label: `产品线 ${type}`
+            label: `Product Line ${type}`
           }))
         ]);
 
         setModels([
-          { value: 'all', label: '全部型号' },
+          { value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || 'All Models') },
           ...Array.from(models).map(model => ({
             value: model,
             label: model
@@ -697,8 +697,8 @@ const SparePartsPage = () => {
       } else {
         console.warn('⚠️ [loadFilterOptions] No spare parts data in response:', jsonData);
         // 设置默认的空选项
-        setProductTypes([{ value: 'all', label: '全部产品类型' }]);
-        setModels([{ value: 'all', label: '全部型号' }]);
+        setProductTypes([{ value: 'all', label: String(t('filters.allProductTypes', { ns: 'spareParts' }) || 'All Product Types') }]);
+        setModels([{ value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || 'All Models') }]);
       }
       
     } catch (error) {
@@ -710,9 +710,9 @@ const SparePartsPage = () => {
       } else {
         console.error('❌ [loadFilterOptions] All retry attempts failed');
         // 设置默认的空选项
-        setProductTypes([{ value: 'all', label: '全部产品类型' }]);
-        setModels([{ value: 'all', label: '全部型号' }]);
-        setError(`加载过滤选项失败: ${(error as Error).message}`);
+        setProductTypes([{ value: 'all', label: String(t('filters.allProductTypes', { ns: 'spareParts' }) || 'All Product Types') }]);
+        setModels([{ value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || 'All Models') }]);
+        setError(`Failed to load filter options: ${(error as Error).message}`);
       }
     }
   };
@@ -887,9 +887,9 @@ const SparePartsPage = () => {
       console.log('🔍 [addToCart] Parsed required parts:', requiredParts);
       
       if (requiredParts.length > 0) {
-        success(`备件已添加到购物车，同时自动添加了 ${requiredParts.length} 个必选备件`);
+        success(String(t('success.addedToCartWithRequired', { ns: 'spareParts', count: requiredParts.length }) || `备件已添加到购物车，同时自动添加了 ${requiredParts.length} 个必选备件`));
       } else {
-        success('备件已添加到购物车');
+        success(String(t('success.addedToCart', { ns: 'spareParts' }) || '备件已添加到购物车'));
         console.log('ℹ️ [addToCart] No required parts found for this spare part');
       }
 
@@ -903,17 +903,17 @@ const SparePartsPage = () => {
       });
       
       // 提供更详细的错误信息
-      let errorMessage = err.message || '添加到购物车失败';
+      let errorMessage = err.message || String(t('error.addToCartFailed', { ns: 'spareParts' }) || 'Failed to add to cart');
       if (err.message?.includes('part_number')) {
-        errorMessage = '产品料号信息缺失，请刷新页面重试或联系技术支持';
+        errorMessage = String(t('error.partNumberMissing', { ns: 'spareParts' }) || 'Product part number information missing, please refresh page and try again or contact technical support');
       } else if (err.message?.includes('401') || err.message?.includes('unauthorized')) {
-        errorMessage = '认证失效，请刷新页面重新登录';
+        errorMessage = String(t('error.authenticationFailed', { ns: 'spareParts' }) || 'Authentication failed, please refresh page and log in again');
       } else if (err.message?.includes('400')) {
-        errorMessage = '请求参数错误，请检查产品信息';
+        errorMessage = String(t('error.parameterError', { ns: 'spareParts' }) || 'Request parameter error, please check product information');
       }
       
       // 使用 showErrorToast 替代 error 函数
-      showErrorToast('添加到购物车失败', errorMessage);
+      showErrorToast(String(t('error.addToCartFailed', { ns: 'spareParts' }) || 'Failed to add to cart'), errorMessage);
     }
   };
 
@@ -935,7 +935,7 @@ const SparePartsPage = () => {
     const quantities = requiredQuantity.split(',').map(q => parseInt(q.trim(), 10)).filter(q => !isNaN(q));
 
     if (partNumbers.length !== quantities.length) {
-      console.warn('⚠️ [parseRequiredParts] 必选备件料号和数量不匹配:', { requiredParts, requiredQuantity });
+      console.warn('⚠️ [parseRequiredParts] Required parts numbers and quantities do not match:', { requiredParts, requiredQuantity });
       return [];
     }
 
@@ -955,7 +955,7 @@ const SparePartsPage = () => {
   const getTestRequiredParts = (sparePart: SparePart): { required_parts: string | null; required_quantity: string | null } => {
     // 为8A保险丝添加测试必选备件 - 使用实际存在的备件料号
     if (sparePart.part_number === '08A0105795') {
-      console.log('🧪 [getTestRequiredParts] Adding test required parts for 8A保险丝');
+      console.log('🧪 [getTestRequiredParts] Adding test required parts for 8A fuse');
       return {
         required_parts: '11A0103002,11A0101003', // 平垫圈, 内六角圆柱头螺钉
         required_quantity: '2,1'
@@ -964,7 +964,7 @@ const SparePartsPage = () => {
     
     // 为去皱硅胶添加测试数据
     if (sparePart.part_number === '01A0101038') {
-      console.log('🧪 [getTestRequiredParts] Adding test required parts for 去皱硅胶');
+      console.log('🧪 [getTestRequiredParts] Adding test required parts for wrinkle remover');
       return {
         required_parts: '11A0103002', // 平垫圈
         required_quantity: '1'
@@ -973,7 +973,7 @@ const SparePartsPage = () => {
     
     // 为陶瓷刀片添加测试数据
     if (sparePart.part_number === '07A0105325') {
-      console.log('🧪 [getTestRequiredParts] Adding test required parts for 陶瓷刀片');
+      console.log('🧪 [getTestRequiredParts] Adding test required parts for ceramic blade');
       return {
         required_parts: '11A0103157,11A0101002', // 尼龙垫圈, 内六角圆柱头螺钉
         required_quantity: '1,2'
@@ -1018,6 +1018,8 @@ const SparePartsPage = () => {
       // 基本信息
       part_number: sparePart.part_number,
       productName: sparePart.name_zh || sparePart.name_en,
+      name_zh: sparePart.name_zh,
+      name_en: sparePart.name_en,
       model: sparePart.model,
       image_url: sparePart.image_url,
       
@@ -1207,17 +1209,17 @@ const SparePartsPage = () => {
       // 显示必选备件添加结果
       if (addedParts.length > 0) {
         console.log('✅ [addRequiredPartsToCart] Successfully added required parts:', addedParts);
-        info(`自动添加必选备件: ${addedParts.join(', ')}`);
+        info(String(t('success.requiredPartsAdded', { ns: 'spareParts', parts: addedParts.join(', ') }) || `自动添加必选备件: ${addedParts.join(', ')}`));
       }
       
       if (failedParts.length > 0) {
         console.warn('⚠️ [addRequiredPartsToCart] Failed to add some required parts:', failedParts);
-        showErrorToast('部分必选备件添加失败', `以下必选备件未能添加: ${failedParts.join(', ')}`);
+        showErrorToast(String(t('error.partialRequiredParts', { ns: 'spareParts' }) || '部分必选备件添加失败'), String(t('error.failedRequiredParts', { ns: 'spareParts', parts: failedParts.join(', ') }) || `以下必选备件未能添加: ${failedParts.join(', ')}`));
       }
       
     } catch (error) {
       console.error('❌ [addRequiredPartsToCart] Error processing required parts:', error);
-      showErrorToast('必选备件处理失败', '无法获取必选备件信息，请重试');
+      showErrorToast(String(t('error.requiredPartsProcessing', { ns: 'spareParts' }) || '必选备件处理失败'), String(t('error.requiredPartsInfo', { ns: 'spareParts' }) || '无法获取必选备件信息，请重试'));
     }
   };
   
@@ -1510,7 +1512,7 @@ const SparePartsPage = () => {
         <div className="flex justify-center items-center p-16 bg-card rounded-lg shadow-md border border-border transition-all duration-300">
           <LoadingState 
             size="large" 
-            text={t('loading', {ns: 'spareParts'})} 
+            text={String(t('loading.text', {ns: 'spareParts'}) || 'Loading...')} 
             type="spinner"
           />
         </div>
@@ -1610,7 +1612,7 @@ const SparePartsPage = () => {
                   </div>
                   <div className="text-center md:text-left">
                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${part.is_consumable ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}`}>
-                      {part.is_consumable ? '易损件' : '非易损件'}
+                      {part.is_consumable ? String(t('partTypes.consumable', { ns: 'spareParts' }) || 'Consumable') : String(t('partTypes.nonConsumable', { ns: 'spareParts' }) || 'Non-Consumable')}
                     </span>
                   </div>
                 </div>
@@ -1623,8 +1625,8 @@ const SparePartsPage = () => {
                       {(() => {
                         // 根据当前语言选择显示的名称
                         const displayName = currentLanguage === 'zh' 
-                          ? (part.name_zh || part.name_en || part.model || '备件名称')
-                          : (part.name_en || part.name_zh || part.model || 'Spare Part');
+                          ? (part.name_zh || part.name_en || part.model || String(t('defaultValues.defaultPartName', { ns: 'spareParts' }) || '备件名称'))
+                          : (part.name_en || part.name_zh || part.model || String(t('defaultValues.defaultPartName', { ns: 'spareParts' }) || 'Spare Part'));
                         
                         console.log('🔍 [renderSpareParts] Part name display:', {
                           partId: part.id,
@@ -1645,7 +1647,7 @@ const SparePartsPage = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                       {/* 适配机型 - 重要字段，优先显示 */}
                       <div className="flex items-start sm:col-span-2">
-                        <strong className="w-20 text-label font-medium flex-shrink-0">适配机型:</strong>
+                        <strong className="w-20 text-label font-medium flex-shrink-0">{String(t('table.columns.compatibility', { ns: 'spareParts' }) || '适配机型')}:</strong>
                         <span className="text-content font-medium line-clamp-2 ml-2">
                           {(() => {
                             // 处理app_model字段，可能是字符串或数组
@@ -1665,27 +1667,27 @@ const SparePartsPage = () => {
                       
                       {/* 配件型号 - 来自model字段 */}
                       <div className="flex items-center">
-                        <strong className="w-16 text-label font-medium">配件型号:</strong>
+                        <strong className="w-16 text-label font-medium">{String(t('fields.partModel', { ns: 'spareParts' }) || 'Part Model')}:</strong>
                         <span className="text-content font-medium ml-2">
-                          {part.model || '未指定'}
+                          {part.model || String(t('defaultValues.notSpecified', { ns: 'spareParts' }) || 'Not Specified')}
                         </span>
                       </div>
                       
                       {/* 是否易损件 */}
                       <div className="flex items-center">
-                        <strong className="w-16 text-label font-medium">类型:</strong>
+                        <strong className="w-16 text-label font-medium">{String(t('fields.partType', { ns: 'spareParts' }) || 'Type')}:</strong>
                         <span className={`ml-2 px-2 py-1 rounded text-xs font-medium ${
                           part.is_consumable 
                             ? 'bg-orange-100 text-orange-800' 
                             : 'bg-green-100 text-green-800'
                         }`}>
-                          {part.is_consumable ? '易损件' : '非易损件'}
+                          {part.is_consumable ? String(t('partTypes.consumable', { ns: 'spareParts' }) || 'Consumable') : String(t('partTypes.nonConsumable', { ns: 'spareParts' }) || 'Non-Consumable')}
                         </span>
                       </div>
                       
                       {/* 规格参数 */}
                       <div className="flex items-start">
-                        <strong className="w-16 text-label font-medium flex-shrink-0">规格:</strong>
+                        <strong className="w-16 text-label font-medium flex-shrink-0">{String(t('fields.specifications', { ns: 'spareParts' }) || 'Specifications')}:</strong>
                         <span className="text-content font-medium line-clamp-2 ml-2">
                           {(() => {
                             console.log('🔍 [renderSpareParts] Part spec data:', {
@@ -1711,14 +1713,14 @@ const SparePartsPage = () => {
                             }
                             
                             // 如果规格为空，显示友好提示
-                            return '规格详情请咨询客服';
+                            return String(t('defaultValues.contactServiceSpecs', { ns: 'spareParts' }) || 'Please contact service for specification details');
                           })()}
                         </span>
                       </div>
                       
                       {/* 适配序列号 */}
                       <div className="flex items-start">
-                        <strong className="w-20 text-label font-medium flex-shrink-0">适配序列号:</strong>
+                        <strong className="w-20 text-label font-medium flex-shrink-0">{String(t('fields.compatibleSerialNumber', { ns: 'spareParts' }) || 'Compatible Serial Number')}:</strong>
                         <span className="text-content font-medium line-clamp-1 ml-2">
                           {(() => {
                             console.log('🔍 [renderSpareParts] Part app_sn data:', {
@@ -1736,14 +1738,14 @@ const SparePartsPage = () => {
                             }
                             
                             // 如果序列号为空，显示通用
-                            return '通用';
+                            return String(t('defaultValues.universal', { ns: 'spareParts' }) || 'Universal');
                           })()}
                         </span>
                       </div>
                       
                       {/* 单箱数量 */}
                       <div className="flex items-center">
-                        <strong className="w-16 text-label font-medium">单箱数量:</strong>
+                        <strong className="w-16 text-label font-medium">{String(t('fields.pcsPerBox', { ns: 'spareParts' }) || 'Pieces Per Box')}:</strong>
                         <span className="text-content font-medium ml-2">
                           {(() => {
                             console.log('🔍 [renderSpareParts] Part pcs_per_box data:', {
@@ -1762,7 +1764,7 @@ const SparePartsPage = () => {
                       
                       {/* 包装尺寸 - 根据单位制显示 */}
                       <div className="flex items-center">
-                        <strong className="w-16 text-label font-medium">包装尺寸:</strong>
+                        <strong className="w-16 text-label font-medium">{String(t('fields.packageSize', { ns: 'spareParts' }) || 'Package Size')}:</strong>
                         <span className="text-content font-medium ml-2">
                           {(() => {
                             console.log('🔍 [renderSpareParts] Part package size data:', {
@@ -1786,7 +1788,7 @@ const SparePartsPage = () => {
                             }
                             
                             // 如果包装尺寸为空，显示友好提示
-                            return '请咨询客服';
+                            return String(t('defaultValues.contactService', { ns: 'spareParts' }) || 'Please contact service');
                           })()}
                         </span>
                       </div>
@@ -1800,13 +1802,13 @@ const SparePartsPage = () => {
                           <div className="p-3 bg-white rounded-lg shadow-lg border border-gray-200">
                             <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
                               <InfoCircleOutlined className="text-blue-500 mr-2" />
-                              <span className="font-bold text-gray-800 text-sm">备件详细信息</span>
+                              <span className="font-bold text-gray-800 text-sm">{String(t('details.title', { ns: 'spareParts' }) || 'Spare Part Details')}</span>
                             </div>
                             <div className="space-y-2">
                               {/* 适配序列号 */}
                               {part.app_sn && (
                                 <div className="flex justify-between items-center py-1">
-                                  <span className="text-gray-600 font-medium text-xs">🔗 适配序列号:</span>
+                                  <span className="text-gray-600 font-medium text-xs">🔗 {String(t('details.properties.appSn', { ns: 'spareParts' }) || 'Compatible Serial Number')}:</span>
                                   <span className="text-gray-800 font-semibold text-xs bg-blue-50 px-2 py-1 rounded">
                                     {part.app_sn}
                                   </span>
@@ -1815,7 +1817,7 @@ const SparePartsPage = () => {
                               
                               {/* 包装尺寸 */}
                               <div className="flex justify-between items-center py-1">
-                                <span className="text-gray-600 font-medium text-xs">📦 包装尺寸:</span>
+                                <span className="text-gray-600 font-medium text-xs">📦 {String(t('details.properties.packageSize', { ns: 'spareParts' }) || 'Package Size')}:</span>
                                 <span className="text-gray-800 font-semibold text-xs bg-green-50 px-2 py-1 rounded">
                                   {(() => {
                                     const unitSystem = (userRegion === 'na' || userRegion === 'au') ? 'imperial' : 'metric';
@@ -1830,7 +1832,7 @@ const SparePartsPage = () => {
                               
                               {/* 单件净重 */}
                               <div className="flex justify-between items-center py-1">
-                                <span className="text-gray-600 font-medium text-xs">⚖️ 单件净重:</span>
+                                <span className="text-gray-600 font-medium text-xs">⚖️ {String(t('details.properties.netWeight', { ns: 'spareParts' }) || 'Net Weight')}:</span>
                                 <span className="text-gray-800 font-semibold text-xs bg-yellow-50 px-2 py-1 rounded">
                                   {(() => {
                                     const unitSystem = (userRegion === 'na' || userRegion === 'au') ? 'imperial' : 'metric';
@@ -1846,7 +1848,7 @@ const SparePartsPage = () => {
                               {/* 包装毛重（可选） */}
                               {(part.gross_weight_kg || part.gross_weight_lbs) && (
                                 <div className="flex justify-between items-center py-1">
-                                  <span className="text-gray-600 font-medium text-xs">📊 包装毛重:</span>
+                                  <span className="text-gray-600 font-medium text-xs">📊 Gross Weight:</span>
                                   <span className="text-gray-800 font-semibold text-xs bg-orange-50 px-2 py-1 rounded">
                                     {(() => {
                                       const unitSystem = (userRegion === 'na' || userRegion === 'au') ? 'imperial' : 'metric';
@@ -1863,9 +1865,9 @@ const SparePartsPage = () => {
                               {/* 单箱数量（可选） */}
                               {part.pcs_per_box && (
                                 <div className="flex justify-between items-center py-1">
-                                  <span className="text-gray-600 font-medium text-xs">📦 单箱数量:</span>
+                                  <span className="text-gray-600 font-medium text-xs">📦 {String(t('details.properties.pcsPerBox', { ns: 'spareParts' }) || 'Pieces Per Box')}:</span>
                                   <span className="text-gray-800 font-semibold text-xs bg-purple-50 px-2 py-1 rounded">
-                                    {part.pcs_per_box} 件
+                                    {part.pcs_per_box} {String(t('details.properties.unit', { ns: 'spareParts' }) || 'pieces')}
                                   </span>
                                 </div>
                               )}
@@ -1883,7 +1885,7 @@ const SparePartsPage = () => {
                       >
                         <button className="more-info-btn">
                           <InfoCircleOutlined />
-                          更多规格详情
+                          {String(t('moreInfo.specsDetail', { ns: 'spareParts' }) || '更多规格详情')}
                         </button>
                       </Tooltip>
                     </div>
@@ -1894,7 +1896,7 @@ const SparePartsPage = () => {
                 <div className="w-full md:w-1/5 md:pl-6 mt-6 md:mt-0 border-t md:border-t-0 md:border-l border-border pt-6 md:pt-0">
                   <div className="mb-4">
                     <div className="font-medium text-sm text-label mb-2">
-                      价格 ({getCurrencySymbol(userRegion)}):
+                      {String(t('table.columns.price', { ns: 'spareParts' }) || '价格')} ({getCurrencySymbol(userRegion)}):
                     </div>
                     
                     {/* 价格展示 */}
@@ -1940,7 +1942,7 @@ const SparePartsPage = () => {
                               })}
                               {regionPrices.tiers.length > 2 && (
                                 <div className="text-xs text-gray-500">
-                                  +{regionPrices.tiers.length - 2}个价格阶梯
+                                  +{regionPrices.tiers.length - 2}{String(t('pricing.tiers', { ns: 'spareParts' }) || '个价格阶梯')}
                                 </div>
                               )}
                             </div>
@@ -1954,7 +1956,7 @@ const SparePartsPage = () => {
                   {(userRole === 'admin' || userRole === 'sales') && part.inventory && (
                     <div className="mb-4">
                       <div className="font-medium text-sm text-label mb-2">
-                        库存:
+                        {String(t('table.columns.stock', { ns: 'spareParts' }) || '库存')}:
                       </div>
                       <div className="bg-card-alt rounded-lg p-2">
                         {(() => {
@@ -1972,7 +1974,7 @@ const SparePartsPage = () => {
                                 ))}
                                 {part.inventory.length > 2 && (
                                   <div className="text-xs text-content-light text-center">
-                                    +{part.inventory.length - 2}个区域
+                                    +{part.inventory.length - 2}{String(t('inventory.regions', { ns: 'spareParts' }) || '个区域')}
                                   </div>
                                 )}
                               </div>
@@ -1999,7 +2001,7 @@ const SparePartsPage = () => {
                           } else {
                             return (
                               <div className="text-center text-content-light text-xs">
-                                库存信息暂无
+                                {String(t('inventory.noInfo', { ns: 'spareParts' }) || '库存信息暂无')}
                               </div>
                             );
                           }
@@ -2055,7 +2057,7 @@ const SparePartsPage = () => {
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
-                      加入购物车
+                      {String(t('actions.addToCart', { ns: 'spareParts' }) || '加入购物车')}
                     </button>
                   </div>
                 </div>
@@ -2073,7 +2075,7 @@ const SparePartsPage = () => {
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
               >
-                上一页
+                {String(t('pagination.previous', { ns: 'spareParts' }) || '上一页')}
               </button>
               <div className="pagination-pages">
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -2098,7 +2100,7 @@ const SparePartsPage = () => {
                 onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
               >
-                下一页
+                {String(t('pagination.next', { ns: 'spareParts' }) || '下一页')}
               </button>
             </div>
           </div>
@@ -2254,23 +2256,23 @@ const SparePartsPage = () => {
         
         // 使用与最新数据库结构一致的备用数据
         let fallbackModels: Array<{ value: string; label: string }> = [
-          { value: 'all', label: '全部型号' }
+          { value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || '全部型号') }
         ];
         
         // 添加主机型号（基于最新数据库数据）
         fallbackModels.push(
-          { value: 'LA-E4S', label: currentLanguage === 'zh' ? '气垫机E4S' : 'Air Cushion E4S' },
-          { value: 'LA-E5P', label: currentLanguage === 'zh' ? '气垫机E5P' : 'Air Cushion E5P' },
-          { value: 'LA-E6L', label: currentLanguage === 'zh' ? '气垫机E6L' : 'Air Cushion E6L' }
+          { value: 'LA-E4S', label: currentLanguage === 'zh' ? String(t('models.LA-E4S', { ns: 'spareParts' }) || 'Air Cushion E4S') : 'Air Cushion E4S' },
+          { value: 'LA-E5P', label: currentLanguage === 'zh' ? String(t('models.LA-E5P', { ns: 'spareParts' }) || 'Air Cushion E5P') : 'Air Cushion E5P' },
+          { value: 'LA-E6L', label: currentLanguage === 'zh' ? String(t('models.LA-E6L', { ns: 'spareParts' }) || 'Air Cushion E6L') : 'Air Cushion E6L' }
         );
         
         // 添加配件型号（基于最新数据库数据）
         fallbackModels.push(
-          { value: 'AC-E4-FP1', label: currentLanguage === 'zh' ? '气垫机E4系列充气泵' : 'Air Pump for E4 Series' },
-          { value: 'AC-E5-FP2', label: currentLanguage === 'zh' ? '气垫机E5系列充气泵' : 'Air Pump for E5 Series' },
-          { value: 'AC-E6-FP3', label: currentLanguage === 'zh' ? '气垫机E6系列充气泵' : 'Air Pump for E6 Series' },
-          { value: 'AC-E4-CTR', label: currentLanguage === 'zh' ? '气垫机E4系列控制器' : 'Controller for E4 Series' },
-          { value: 'AC-E5-CTR', label: currentLanguage === 'zh' ? '气垫机E5系列控制器' : 'Controller for E5 Series' }
+          { value: 'AC-E4-FP1', label: currentLanguage === 'zh' ? String(t('models.AC-E4-FP1', { ns: 'spareParts' }) || '气垫机E4系列充气泵') : 'Air Pump for E4 Series' },
+          { value: 'AC-E5-FP2', label: currentLanguage === 'zh' ? String(t('models.AC-E5-FP2', { ns: 'spareParts' }) || '气垫机E5系列充气泵') : 'Air Pump for E5 Series' },
+          { value: 'AC-E6-FP3', label: currentLanguage === 'zh' ? String(t('models.AC-E6-FP3', { ns: 'spareParts' }) || '气垫机E6系列充气泵') : 'Air Pump for E6 Series' },
+          { value: 'AC-E4-CTR', label: currentLanguage === 'zh' ? String(t('models.AC-E4-CTR', { ns: 'spareParts' }) || '气垫机E4系列控制器') : 'Controller for E4 Series' },
+          { value: 'AC-E5-CTR', label: currentLanguage === 'zh' ? String(t('models.AC-E5-CTR', { ns: 'spareParts' }) || '气垫机E5系列控制器') : 'Controller for E5 Series' }
         );
         
         // 设置型号列表
@@ -2422,7 +2424,7 @@ const SparePartsPage = () => {
       } else {
         // 转换为前端需要的格式
         const convertedModels = [
-          { value: 'all', label: '全部型号' },
+          { value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || 'All Models') },
           ...modelsData.map((model: any) => {
             // 尝试多种可能的字段名
             const modelValue = model.model || model.code || model.name || model.id || String(model);
@@ -2456,7 +2458,7 @@ const SparePartsPage = () => {
       
       // 使用与最新数据库结构一致的备用数据
       let fallbackModels: Array<{ value: string; label: string }> = [
-        { value: 'all', label: '全部型号' }
+        { value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || '全部型号') }
       ];
       
       if (productType === 'machine' || productType === 'all') {
@@ -2474,10 +2476,10 @@ const SparePartsPage = () => {
       if (productType === 'accessory' || productType === 'all') {
         // 添加配件型号（基于真实API数据）
         fallbackModels.push(
-          { value: 'EC402', label: currentLanguage === 'zh' ? 'EC402 大支架' : 'EC402 Big Bracket' },
-          { value: 'EC401', label: currentLanguage === 'zh' ? 'EC401 小支架' : 'EC401 Small Bracket' },
-          { value: 'EC403', label: currentLanguage === 'zh' ? 'EC403 配件' : 'EC403 Accessory' },
-          { value: 'EC404', label: currentLanguage === 'zh' ? 'EC404 配件' : 'EC404 Accessory' }
+          { value: 'EC402', label: currentLanguage === 'zh' ? String(t('models.EC402', { ns: 'spareParts' }) || 'EC402 Big Bracket') : 'EC402 Big Bracket' },
+          { value: 'EC401', label: currentLanguage === 'zh' ? String(t('models.EC401', { ns: 'spareParts' }) || 'EC401 Small Bracket') : 'EC401 Small Bracket' },
+          { value: 'EC403', label: currentLanguage === 'zh' ? String(t('models.EC403', { ns: 'spareParts' }) || 'EC403 Accessory') : 'EC403 Accessory' },
+          { value: 'EC404', label: currentLanguage === 'zh' ? String(t('models.EC404', { ns: 'spareParts' }) || 'EC404 Accessory') : 'EC404 Accessory' }
         );
         
         // 设置配件型号列表（基于真实数据）
@@ -2489,7 +2491,7 @@ const SparePartsPage = () => {
       
       // 只在真正的网络错误或严重错误时显示错误提示
       if (error instanceof Error && !error.message.includes('No array data found')) {
-        showErrorToast('获取型号失败', error.message);
+        showErrorToast(String(t('error.fetchModelsFailed', { ns: 'spareParts' }) || 'Failed to fetch models'), error.message);
       }
     } finally {
       setLoading(false);
@@ -2597,26 +2599,26 @@ const SparePartsPage = () => {
                   <strong>配件型号:</strong> {accessoryModels?.length || 0} 项
                 </div>
                 <div className="text-gray-700">
-                  <strong>用户信息:</strong> {userRole}, 区域: {userRegion}
+                  <strong>{String(t('debug.userInfo', { ns: 'spareParts' }) || '用户信息')}:</strong> {userRole}, {String(t('debug.region', { ns: 'spareParts' }) || '区域')}: {userRegion}
                 </div>
                 <div className="mt-2">
                   <button 
                     onClick={handleReloadData} 
                     className="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
                   >
-                    重新加载数据
+                    {String(t('debug.reloadData', { ns: 'spareParts' }) || '重新加载数据')}
                   </button>
                   <button 
                     onClick={handleReloadFilterOptions} 
                     className="ml-2 px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
                   >
-                    重新加载筛选项
+                    {String(t('debug.reloadFilters', { ns: 'spareParts' }) || '重新加载筛选项')}
                   </button>
                   <button 
                     onClick={() => console.log('筛选选项:', filterOptions, '备件数据:', spareParts)} 
                     className="ml-2 px-2 py-1 bg-purple-500 text-white text-xs rounded hover:bg-purple-600"
                   >
-                    控制台输出数据
+                    {String(t('debug.consoleOutput', { ns: 'spareParts' }) || '控制台输出数据')}
                   </button>
                   <button 
                     onClick={() => {
@@ -2625,7 +2627,7 @@ const SparePartsPage = () => {
                     }} 
                     className="ml-2 px-2 py-1 bg-orange-500 text-white text-xs rounded hover:bg-orange-600"
                   >
-                    测试分页(跳转第2页)
+                    {String(t('debug.testPagination', { ns: 'spareParts' }) || '测试分页(跳转第2页)')}
                   </button>
                 </div>
               </div>
@@ -2759,7 +2761,7 @@ const SparePartsPage = () => {
               🛒
             </div>
             <div className="cart-notification-text">
-              商品已添加到购物车
+              {String(t('cart.addedToCart', { ns: 'spareParts' }) || '商品已添加到购物车')}
             </div>
             <button 
               className="cart-notification-close"
@@ -2779,23 +2781,23 @@ const SparePartsPage = () => {
             ⚠️
           </div>
           <div className="cart-confirm-title">
-            确认清空购物车
+            {String(t('cart.confirmClearTitle', { ns: 'spareParts' }) || '确认清空购物车')}
           </div>
           <div className="cart-confirm-text">
-            此操作将清空购物车中所有商品，且无法恢复。确定要继续吗？
+            {String(t('cart.confirmClearMessage', { ns: 'spareParts' }) || '此操作将清空购物车中所有商品，且无法恢复。确定要继续吗？')}
           </div>
           <div className="cart-confirm-buttons">
             <button 
               className="cart-confirm-button cart-confirm-cancel"
               onClick={() => setShowConfirmClear(false)}
             >
-              取消
+              {String(t('cart.cancel', { ns: 'spareParts' }) || '取消')}
             </button>
             <button 
               className="cart-confirm-button cart-confirm-proceed"
               onClick={handleConfirmClearCart}
             >
-              确认清空
+              {String(t('cart.confirmClear', { ns: 'spareParts' }) || '确认清空')}
             </button>
           </div>
         </div>

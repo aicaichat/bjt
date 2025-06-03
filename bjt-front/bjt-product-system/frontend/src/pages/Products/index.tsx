@@ -14,18 +14,34 @@ interface Product {
   id: string;
   name: string;
   price: number;
-  // Add other properties as needed
+  model: string;
+  image_url?: string;
+  partnerPrice?: number;
+  stock: {
+    status: string;
+    text: string;
+    days: number;
+  };
+  description?: string;
+  features?: string[];
+  type: 'machine' | 'accessory' | 'consumable' | 'spare';
 }
 
+// 更新 CartItem 接口
 interface CartItem {
   id: string;
   productId: string;
   quantity: number;
   price: number;
   name: string;
-  specs?: any;
-  type?: string;
-  image?: string;
+  model: string;
+  image_url?: string;
+  type: 'machine' | 'accessory' | 'consumable' | 'spare';
+  specs?: {
+    status: string;
+    text: string;
+    days: number;
+  };
 }
 
 // 临时占位图片路径
@@ -53,9 +69,11 @@ interface CartItemSpec {
 
 // 修改购物车项类型
 interface EnhancedCartItem extends CartItem {
-  specs: CartItemSpec;
-  type: 'machine' | 'accessory';
-  image?: string;
+  specs: {
+    status: string;
+    text: string;
+    days: number;
+  };
 }
 
 // 模拟数据
@@ -146,15 +164,15 @@ const filterOptions = {
 };
 
 const Products: React.FC = () => {
-  const { t, i18n } = useTranslation('products');
+  const { t, i18n } = useTranslation(['products', 'translation']);
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [products, setProducts] = useState<typeof mockProducts>([]);
-  const [selectedType, setSelectedType] = useState<string>('全部类型');
-  const [selectedCapacity, setSelectedCapacity] = useState<string>('全部产能');
-  const [selectedPrice, setSelectedPrice] = useState<string>('全部价格');
-  const [selectedSort, setSelectedSort] = useState<string>('默认排序');
+  const [products, setProducts] = useState<Product[]>([]);
+  const [selectedType, setSelectedType] = useState<string>(t('products.types.all'));
+  const [selectedCapacity, setSelectedCapacity] = useState<string>(t('products.capacity.all'));
+  const [selectedPrice, setSelectedPrice] = useState<string>(t('products.price.all'));
+  const [selectedSort, setSelectedSort] = useState<string>(t('products.sort.default'));
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [userRole, setUserRole] = useState<string>('customer');
   const [activeTab, setActiveTab] = useState<string>('all');
@@ -162,7 +180,7 @@ const Products: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<string>('');
   const [selectedVoltage, setSelectedVoltage] = useState<string>('220');
-  const [cartItems, setCartItems] = useState<EnhancedCartItem[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [showCartModal, setShowCartModal] = useState<boolean>(false);
   const [showClearConfirm, setShowClearConfirm] = useState<boolean>(false);
@@ -201,7 +219,7 @@ const Products: React.FC = () => {
         setTotalPages(response.total_pages);
       } catch (error: any) {
         console.error('Failed to fetch product lines:', error);
-        setError(t('errors.failedToLoadProducts'));
+        setError(t('products.messages.error'));
       } finally {
         setLoading(false);
       }
@@ -212,57 +230,33 @@ const Products: React.FC = () => {
 
   // 加载产品数据
   useEffect(() => {
-    const fetchProducts = async () => {
+    const loadProducts = async () => {
       try {
         setLoading(true);
-        const data = await apiService.product.getProducts();
-        
-        // Use mockProducts for now to avoid type mismatches
-        setProducts(mockProducts);
-        
-        // 初始化数量状态和选中第一个产品
-        const quantitiesInit: {[key: string]: number} = {};
-        mockProducts.forEach(product => {
-          quantitiesInit[product.id] = 1;
-        });
-        setQuantities(quantitiesInit);
-        
-        if (mockProducts.length > 0) {
-          setSelectedProduct(mockProducts[0].id);
-        }
-        
+        const response = await mockProductApi.getProducts();
+        setProducts(response);
         setLoading(false);
       } catch (err) {
-        console.error('Error fetching products:', err);
-        setError('无法加载产品数据，请稍后再试');
+        setError(t('products.messages.error'));
         setLoading(false);
       }
     };
 
-    fetchProducts();
-  }, []);
+    loadProducts();
+  }, [t]);
 
   // 加载购物车数据
   useEffect(() => {
-    const fetchCart = async () => {
+    const loadCart = async () => {
       try {
-        const cartData = await apiService.cart.getCart();
-        // Transform cart data to match EnhancedCartItem
-        const enhancedItems: EnhancedCartItem[] = cartData.map(item => ({
-          ...item,
-          specs: item.specs || {} as CartItemSpec,
-          type: (item.type as 'machine' | 'accessory') || 'machine',
-          image: item.image || placeholderImage
-        }));
-        setCartItems(enhancedItems);
+        const response = await mockCartApi.getCart();
+        setCartItems(response);
       } catch (err) {
-        console.error('Error fetching cart:', err);
-        // 如果API不可用，使用空购物车
-        setCartItems([]);
+        console.error('Failed to load cart:', err);
       }
     };
 
-    fetchCart();
+    loadCart();
   }, []);
 
   useEffect(() => {
@@ -272,79 +266,50 @@ const Products: React.FC = () => {
     setCurrentPage(1);
   }, [products, itemsPerPage, selectedType, selectedCapacity, selectedPrice]);
 
-  // 更新数量
-  const handleQuantityChange = (productId: string, value: string) => {
-    const newValue = parseInt(value, 10);
-    if (isNaN(newValue) || newValue < 1) return;
-    
-    setQuantities(prev => ({
-      ...prev,
-      [productId]: newValue
-    }));
-  };
-
-  // 添加产品到购物车，包含规格信息
-  const addToCart = async (productId: string, basePrice: number) => {
-    try {
-      const quantity = quantities[productId] || 1;
-      
-      // Find the product to add
-      const product = products.find(p => p.id === productId);
-      if (!product) {
-        throw new Error('Product not found');
-      }
-      
-      // Call the mockApi addToCart method with the correct parameters
-      await apiService.cart.addToCart(
-        productId, 
-        quantity, 
-        selectedVoltage, 
-        {
-          productName: product.name,
-          // Other specs can be added as needed
-        }, 
-        'machine'
-      );
-      
-      // Reload the cart after adding
-      const cartData = await apiService.cart.getCart();
-      
-      // Transform to EnhancedCartItem[]
-      const enhancedItems = cartData.map((item: CartItem) => ({
-        ...item,
-        specs: item.specs || {} as CartItemSpec,
-        type: (item.type as 'machine' | 'accessory') || 'machine',
-        image: item.image || placeholderImage
-      }));
-      
-      setCartItems(enhancedItems);
-      
-      // Show notification
-      alert(`已添加 ${quantity} 件 ${product.name} 到购物车`);
-      
-    } catch (err) {
-      console.error('Error adding to cart:', err);
-      alert('添加到购物车失败，请稍后再试');
+  // 处理筛选变化
+  const handleFilterChange = (type: string, value: string) => {
+    switch (type) {
+      case 'type':
+        setSelectedType(value);
+        break;
+      case 'capacity':
+        setSelectedCapacity(value);
+        break;
+      case 'price':
+        setSelectedPrice(value);
+        break;
+      case 'sort':
+        setSelectedSort(value);
+        break;
     }
   };
 
-  // 从购物车移除物品
-  const removeFromCart = async (itemId: string) => {
+  // 处理添加到购物车
+  const handleAddToCart = async (product: Product) => {
     try {
-      await apiService.cart.removeFromCart(itemId);
-      
-      // 更新本地购物车状态
-      setCartItems(prev => prev.filter(item => item.id !== itemId));
+      await mockCartApi.addToCart(product.id, 1);
+      const response = await mockCartApi.getCart();
+      setCartItems(response);
     } catch (err) {
-      console.error('Error removing from cart:', err);
-      alert('从购物车移除商品失败，请稍后再试');
+      console.error('Failed to add to cart:', err);
+    }
+  };
+
+  // 处理数量变化
+  const handleQuantityChange = async (productId: string, quantity: number) => {
+    try {
+      await mockCartApi.updateCartItem(productId, quantity);
+      const response = await mockCartApi.getCart();
+      setCartItems(response);
+    } catch (err) {
+      console.error('Failed to update quantity:', err);
     }
   };
 
   // 清空购物车
   const clearCart = async () => {
     try {
-      await apiService.cart.clearCart();
+      await mockCartApi.clearCart();
       setCartItems([]);
       setShowClearConfirm(false);
     } catch (err) {
@@ -370,16 +335,6 @@ const Products: React.FC = () => {
 
   // 计算购物车中的物品总数
   const cartItemCount = cartItems.reduce((count, item) => count + item.quantity, 0);
-
-  // 处理筛选变更
-  const handleFilterChange = (type: string, value: string) => {
-    if (type === 'type') setSelectedType(value);
-    else if (type === 'capacity') setSelectedCapacity(value);
-    else if (type === 'price') setSelectedPrice(value);
-    
-    // 在实际应用中，这里会根据筛选条件从API获取数据
-    // 在当前模拟环境中，我们保持原始数据
-  };
 
   // 处理排序变更
   const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -410,7 +365,7 @@ const Products: React.FC = () => {
   };
 
   // 计算当前价格
-  const getPrice = (product: typeof mockProducts[0]) => {
+  const getPrice = (product: Product) => {
     if (userRole === 'partner') {
       return product.partnerPrice;
     }
@@ -454,8 +409,19 @@ const Products: React.FC = () => {
   // 根据当前语言获取描述
   const getDescription = (line: ProductLine) => currentLanguage === 'en' ? line.description_en : line.description_zh;
 
+  // 更新产品状态显示
+  const getStatusDisplay = (status: number) => {
+    const statusMap: Record<number, { text: string; days: number }> = {
+      0: { text: t('products.status.inStock'), days: 0 },
+      1: { text: t('products.status.available'), days: 7 },
+      2: { text: t('products.status.available'), days: 14 },
+      3: { text: t('products.status.available'), days: 30 }
+    };
+    return statusMap[status] || statusMap[0];
+  };
+
   if (loading) {
-    return <Loading fullPage={true} />;
+    return <Loading />;
   }
 
   if (error) {
@@ -486,15 +452,15 @@ const Products: React.FC = () => {
         <div className="container">
           {/* 订单表单标题 */}
           <div className="order-title">
-            <h1>BJT 包装设备选型</h1>
-            <p>选择最适合您业务需求的包装解决方案</p>
+            <h1>{t('products.title')}</h1>
+            <p>{t('products.subtitle')}</p>
           </div>
           
           {/* 筛选区域 */}
           <div className="filter-section">
             <div className="filter-row">
               <div className="filter-group">
-                <label>设备类型:</label>
+                <label>{t('products.filters.type')}:</label>
                 <div className="filter-options">
                   {filterOptions.type.map(type => (
                     <label key={type} className="filter-option">
@@ -513,7 +479,7 @@ const Products: React.FC = () => {
             
             <div className="filter-row">
               <div className="filter-group">
-                <label>产能需求:</label>
+                <label>{t('products.filters.capacity')}:</label>
                 <div className="filter-options">
                   {filterOptions.capacity.map(capacity => (
                     <label key={capacity} className="filter-option">
@@ -532,7 +498,7 @@ const Products: React.FC = () => {
             
             <div className="filter-row">
               <div className="filter-group">
-                <label>价格区间:</label>
+                <label>{t('products.filters.price')}:</label>
                 <div className="filter-options">
                   {filterOptions.price.map(price => (
                     <label key={price} className="filter-option">
@@ -581,7 +547,7 @@ const Products: React.FC = () => {
                 </div>
                 
                 <div className="item-image">
-                  <img src={product.image} alt={product.name} />
+                  <img src={product.image_url || placeholderImage} alt={product.name} />
                 </div>
                 
                 <div className="item-details">
@@ -598,7 +564,7 @@ const Products: React.FC = () => {
                   </div>
                   
                   <div className="item-features">
-                    {product.features.map((feature, index) => (
+                    {product.features?.map((feature, index) => (
                       <div key={index} className="feature-item">
                         ✓ {feature}
                       </div>
@@ -634,7 +600,7 @@ const Products: React.FC = () => {
                 disabled={currentPage === 1}
                 className="pagination-button"
               >
-                上一页
+                {t('common.previous')}
               </button>
               
               <div className="pagination-pages">
@@ -654,7 +620,7 @@ const Products: React.FC = () => {
                 disabled={currentPage === totalPages}
                 className="pagination-button"
               >
-                下一页
+                {t('common.next')}
               </button>
             </div>
           )}
@@ -675,13 +641,13 @@ const Products: React.FC = () => {
               
               {cartItems.length === 0 ? (
                 <div style={{ padding: "20px", textAlign: "center", color: "#666" }}>
-                  购物车为空
+                  {t('products.messages.emptyCart')}
                 </div>
               ) : (
                 <>
                   {/* 机器类别标题 */}
                   {cartItems.some(item => item.type === 'machine') && (
-                    <div className="cart-type-heading">主机</div>
+                    <div className="cart-type-heading">{t('products.cart.machine')}</div>
                   )}
                   
                   {/* 机器类别商品 */}
@@ -691,21 +657,19 @@ const Products: React.FC = () => {
                       .map((item, index) => (
                         <div key={`machine-${index}`} className="cart-item">
                           <img 
-                            src={item.image || placeholderImage} 
+                            src={item.image_url || placeholderImage} 
                             alt={item.name} 
                             className="cart-item-image"
                           />
                           <div className="cart-item-info">
                             <div className="cart-item-title">{item.name}</div>
                             <div className="cart-item-specs">
-                              {item.specs.partNumber && (
-                                <span className="cart-item-spec">料号: {item.specs.partNumber}</span>
-                              )}
-                              {item.specs.voltage && item.specs.voltage !== 'N/A' && (
-                                <span className="cart-item-spec">电压: {item.specs.voltage}</span>
-                              )}
-                              {item.specs.frequency && item.specs.frequency !== 'N/A' && (
-                                <span className="cart-item-spec">频率: {item.specs.frequency}</span>
+                              {item.specs && (
+                                <div className="item-specs">
+                                  <span className="status">{item.specs.status}</span>
+                                  <span className="text">{item.specs.text}</span>
+                                  <span className="days">{item.specs.days} {t('products.days')}</span>
+                                </div>
                               )}
                             </div>
                             <div className="cart-item-price">¥{safeToLocaleString(item.price, 'en-US', {
@@ -722,9 +686,9 @@ const Products: React.FC = () => {
                             </div>
                             <button 
                               className="cart-btn-delete"
-                              onClick={() => removeFromCart(item.id)}
+                              onClick={() => handleQuantityChange(item.id, 0)}
                             >
-                              ×
+                              {t('products.actions.remove')}
                             </button>
                           </div>
                         </div>
@@ -733,7 +697,7 @@ const Products: React.FC = () => {
                   
                   {/* 配件类别标题 */}
                   {cartItems.some(item => item.type === 'accessory') && (
-                    <div className="cart-type-heading">配件</div>
+                    <div className="cart-type-heading">{t('products.cart.accessory')}</div>
                   )}
                   
                   {/* 配件类别商品 */}
@@ -743,21 +707,19 @@ const Products: React.FC = () => {
                       .map((item, index) => (
                         <div key={`accessory-${index}`} className="cart-item">
                           <img 
-                            src={item.image || placeholderImage} 
+                            src={item.image_url || placeholderImage} 
                             alt={item.name} 
                             className="cart-item-image"
                           />
                           <div className="cart-item-info">
                             <div className="cart-item-title">{item.name}</div>
                             <div className="cart-item-specs">
-                              {item.specs.model && (
-                                <span className="cart-item-spec">型号: {item.specs.model}</span>
-                              )}
-                              {item.specs.partNumber && (
-                                <span className="cart-item-spec">料号: {item.specs.partNumber}</span>
-                              )}
-                              {item.specs.voltage && item.specs.voltage !== 'N/A' && (
-                                <span className="cart-item-spec">电压: {item.specs.voltage}</span>
+                              {item.specs && (
+                                <div className="item-specs">
+                                  <span className="status">{item.specs.status}</span>
+                                  <span className="text">{item.specs.text}</span>
+                                  <span className="days">{item.specs.days} {t('products.days')}</span>
+                                </div>
                               )}
                             </div>
                             <div className="cart-item-price">¥{safeToLocaleString(item.price, 'en-US', {
@@ -774,9 +736,9 @@ const Products: React.FC = () => {
                             </div>
                             <button 
                               className="cart-btn-delete"
-                              onClick={() => removeFromCart(item.id)}
+                              onClick={() => handleQuantityChange(item.id, 0)}
                             >
-                              ×
+                              {t('products.actions.remove')}
                             </button>
                           </div>
                         </div>
@@ -785,7 +747,7 @@ const Products: React.FC = () => {
                   
                   <div className="cart-summary">
                     <div className="cart-total">
-                      <div className="cart-total-label">总计:</div>
+                      <div className="cart-total-label">{t('products.cart.total')}:</div>
                       <div className="cart-total-amount">¥{safeToLocaleString(calculateTotal(), 'en-US', {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2
@@ -802,7 +764,7 @@ const Products: React.FC = () => {
                   disabled={cartItems.length === 0}
                 >
                   <span>
-                    清空购物车
+                    {t('products.actions.clearCart')}
                   </span>
                 </button>
                 <button 
@@ -810,7 +772,7 @@ const Products: React.FC = () => {
                   disabled={cartItems.length === 0}
                   onClick={() => alert('前往结算页面')}
                 >
-                  <span>结算</span>
+                  <span>{t('products.actions.checkout')}</span>
                 </button>
               </div>
               
@@ -820,22 +782,22 @@ const Products: React.FC = () => {
                   <div className="cart-confirm-icon">
                     🗑️
                   </div>
-                  <div className="cart-confirm-title">确认清空购物车</div>
+                  <div className="cart-confirm-title">{t('products.cart.confirmTitle')}</div>
                   <div className="cart-confirm-text">
-                    清空购物车后，所有商品将被移除且无法恢复。确定要继续吗？
+                    {t('products.cart.confirmText')}
                   </div>
                   <div className="cart-confirm-buttons">
                     <button 
                       className="cart-confirm-button cart-confirm-cancel"
                       onClick={() => setShowClearConfirm(false)}
                     >
-                      取消
+                      {t('products.cart.confirmCancel')}
                     </button>
                     <button 
                       className="cart-confirm-button cart-confirm-proceed"
                       onClick={clearCart}
                     >
-                      确认清空
+                      {t('products.cart.confirmProceed')}
                     </button>
                   </div>
                 </div>
@@ -858,7 +820,7 @@ const Products: React.FC = () => {
           color: '#856404',
           zIndex: 900
         }}>
-          使用模拟数据进行开发
+          {t('products.messages.mockDataHint')}
         </div>
       )}
     </>

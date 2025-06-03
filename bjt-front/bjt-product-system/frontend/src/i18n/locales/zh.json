@@ -33,7 +33,8 @@
     "viewDetails": "查看详情",
     "loadMore": "加载更多",
     "checkout": "去购物车结算",
-    "close": "关闭"
+    "close": "关闭",
+    "retry": "重试"
   },
   "nav": {
     "home": "首页",
@@ -90,13 +91,13 @@
   },
   "menu": {
     "Air Cushioning System": "气垫系统",
-    "Paper Cushioning System": "纸垫系统",
-    "Water Cushioning System": "湿水胶带系统",
     "Air Cushion Machine & Accessory": "气垫机与配件",
     "Film options": "气垫膜选项",
+    "Spare parts": "备件",
+    "Paper Cushioning System": "纸垫系统",
     "Paper Cushion Machine & Accessory": "纸垫机与配件",
     "Paper options": "纸张选项",
-    "Spare parts": "备件",
+    "Water Cushioning System": "湿水胶带系统",
     "Water Activated Tape Dispenser & Accessory": "湿水胶带分配器与配件",
     "Water Activated Tape options": "湿水胶带选项",
     "After-sales service": "售后服务",

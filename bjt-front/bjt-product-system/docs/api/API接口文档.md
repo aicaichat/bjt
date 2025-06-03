@@ -1,10 +1,20 @@
 # BJT Core Entities API 接口文档
 
-**版本**: v1.3.0  
-**最后更新**: 2025-05-27  
+**版本**: v1.4.0  
+**最后更新**: 2025-05-28  
 **基础URL**: `/wp-json/bjt/v1`
 
 ## 更新日志
+
+### v1.4.0 (2025-05-28)
+- ✨ **新增系统设置接口**: 实现完整的系统设置管理功能
+  - **GET /settings**: 获取系统设置信息，包括基础信息、邮件设置、API设置和安全设置
+  - **PUT /settings**: 更新系统设置，支持管理员权限验证
+  - **GET /settings/test**: 公开测试端点，用于验证API功能
+- 🔧 **数据验证和安全**: 全面的输入验证、数据清理和权限控制
+- 🗄️ **自动数据库管理**: 自动创建 `wp_bjt_settings` 表，JSON格式存储配置
+- 📝 **完善文档**: 详细的API文档、使用示例和权限说明
+- 🔐 **权限控制**: 读取权限可配置，写入权限限制为管理员
 
 ### v1.3.0 (2025-05-27)
 - 🔧 **重要修正**: 修正必选备件逻辑，明确主机、配件、备件的必选备件关系
@@ -44,8 +54,9 @@
 12. [数据字典接口](#12-数据字典接口)
 13. [主机料号接口](#13-主机料号接口)
 14. [关系接口](#14-关系接口)
-15. [必选备件逻辑说明](#15-必选备件逻辑说明)
-16. [错误码](#16-错误码)
+15. [系统设置接口](#15-系统设置接口)
+16. [必选备件逻辑说明](#16-必选备件逻辑说明)
+17. [错误码](#17-错误码)
 
 ---
 
@@ -4148,7 +4159,18 @@ php test-required-parts-logic.php
 | 404 | part_not_found | 指定料号不存在 |
 | 404 | no_accessories_found | 未找到相关配件 |
 
-### 16.8 错误响应格式
+### 16.8 系统设置相关错误码
+
+| 状态码 | 错误码 | 描述 |
+|--------|--------|------|
+| 400 | missing_settings_data | 缺少设置数据 |
+| 400 | settings_validation_failed | 设置数据验证失败 |
+| 400 | json_encode_failed | JSON编码失败 |
+| 500 | settings_get_failed | 获取设置失败 |
+| 500 | settings_update_failed | 更新设置失败 |
+| 500 | database_save_failed | 数据库保存失败 |
+
+### 16.9 错误响应格式
 
 错误响应的JSON格式如下：
 
@@ -4162,4 +4184,351 @@ php test-required-parts-logic.php
   },
   "status": 400 // HTTP状态码
 }
+```
+
+## 17. 系统设置接口
+
+系统设置接口用于管理全局系统配置，包括基础信息、邮件设置、API设置和安全设置等。
+
+### 17.1 获取系统设置
+
+获取系统的完整设置信息
+
+**请求**:  
+- 方法: `GET`
+- 路径: `/settings`
+- 认证: 需要
+
+**成功响应** (状态码: 200):
+```json
+{
+  "success": true,
+  "message": "Settings retrieved successfully",
+  "data": {
+    // 基础信息
+    "company_name": "BJT Technology",
+    "contact_info": "contact@bjt.com",
+    "logo_url": "/images/logo-1.webp",
+    
+    // 系统设置
+    "default_language": "zh",
+    "theme": "default",
+    "timezone": "Asia/Shanghai",
+    "date_format": "YYYY-MM-DD",
+    
+    // 邮件设置
+    "smtp_host": "smtp.example.com",
+    "smtp_port": 587,
+    "smtp_username": "user@example.com",
+    "smtp_password": "encrypted_password",
+    "smtp_encryption": "tls",
+    "mail_from_address": "noreply@bjt.com",
+    "mail_from_name": "BJT System",
+    
+    // API设置
+    "payment_api": "https://api.payment.com",
+    "logistics_api": "https://api.logistics.com",
+    "inventory_api": "https://api.inventory.com",
+    
+    // 安全设置
+    "session_timeout": 3600,
+    "password_policy": {
+      "min_length": 8,
+      "require_uppercase": true,
+      "require_lowercase": true,
+      "require_numbers": true,
+      "require_symbols": false
+    },
+    "login_attempts": 5,
+    "lockout_duration": 900
+  }
+}
+```
+
+**字段说明**:
+
+#### 基础信息字段
+- `company_name`: 公司名称
+- `contact_info`: 联系信息（邮箱格式）
+- `logo_url`: 公司Logo URL
+
+#### 系统设置字段
+- `default_language`: 默认语言，可选值: `zh`, `en`
+- `theme`: 主题设置
+- `timezone`: 时区设置
+- `date_format`: 日期格式
+
+#### 邮件设置字段
+- `smtp_host`: SMTP服务器地址
+- `smtp_port`: SMTP端口号
+- `smtp_username`: SMTP用户名
+- `smtp_password`: SMTP密码
+- `smtp_encryption`: 加密方式，可选值: `none`, `ssl`, `tls`
+- `mail_from_address`: 发件人邮箱
+- `mail_from_name`: 发件人名称
+
+#### API设置字段
+- `payment_api`: 支付API地址
+- `logistics_api`: 物流API地址
+- `inventory_api`: 库存API地址
+
+#### 安全设置字段
+- `session_timeout`: 会话超时时间（秒）
+- `password_policy`: 密码策略对象
+  - `min_length`: 最小长度
+  - `require_uppercase`: 是否需要大写字母
+  - `require_lowercase`: 是否需要小写字母
+  - `require_numbers`: 是否需要数字
+  - `require_symbols`: 是否需要特殊符号
+- `login_attempts`: 最大登录尝试次数
+- `lockout_duration`: 锁定时长（秒）
+
+### 17.2 更新系统设置
+
+更新系统设置信息
+
+**请求**:  
+- 方法: `PUT`
+- 路径: `/settings`
+- 认证: 需要（管理员权限）
+
+**请求体**:
+```json
+{
+  "company_name": "BJT Technology Updated",
+  "contact_info": "updated@bjt.com",
+  "default_language": "en",
+  "smtp_host": "smtp.gmail.com",
+  "smtp_port": 587,
+  "smtp_encryption": "tls",
+  "session_timeout": 7200,
+  "password_policy": {
+    "min_length": 10,
+    "require_uppercase": true,
+    "require_lowercase": true,
+    "require_numbers": true,
+    "require_symbols": true
+  }
+}
+```
+
+**成功响应** (状态码: 200):
+```json
+{
+  "success": true,
+  "message": "Settings updated successfully",
+  "data": {
+    // 更新后的完整设置信息
+    "company_name": "BJT Technology Updated",
+    "contact_info": "updated@bjt.com",
+    "logo_url": "/images/logo-1.webp",
+    "default_language": "en",
+    "theme": "default",
+    "timezone": "Asia/Shanghai",
+    "date_format": "YYYY-MM-DD",
+    "smtp_host": "smtp.gmail.com",
+    "smtp_port": 587,
+    "smtp_username": "",
+    "smtp_password": "",
+    "smtp_encryption": "tls",
+    "mail_from_address": "",
+    "mail_from_name": "BJT System",
+    "payment_api": "",
+    "logistics_api": "",
+    "inventory_api": "",
+    "session_timeout": 7200,
+    "password_policy": {
+      "min_length": 10,
+      "require_uppercase": true,
+      "require_lowercase": true,
+      "require_numbers": true,
+      "require_symbols": true
+    },
+    "login_attempts": 5,
+    "lockout_duration": 900
+  }
+}
+```
+
+**失败响应**:
+- 状态码 `400`: 请求参数错误或验证失败
+```json
+{
+  "success": false,
+  "code": "settings_validation_failed",
+  "message": "Settings validation failed: Invalid email format",
+  "data": {
+    "status": 400
+  }
+}
+```
+- 状态码 `401`: 未授权访问
+```json
+{
+  "success": false,
+  "code": "rest_forbidden", 
+  "message": "Sorry, you are not allowed to do that.",
+  "data": {
+    "status": 401
+  }
+}
+```
+- 状态码 `500`: 服务器内部错误
+```json
+{
+  "success": false,
+  "code": "database_save_failed",
+  "message": "Failed to save settings to database",
+  "data": {
+    "status": 500
+  }
+}
+```
+
+### 17.3 测试系统设置API
+
+测试系统设置API是否正常工作
+
+**请求**:  
+- 方法: `GET`
+- 路径: `/settings/test`
+- 认证: 不需要（公开测试端点）
+
+**成功响应** (状态码: 200):
+```json
+{
+  "success": true,
+  "message": "Settings API test successful",
+  "data": {
+    "status": "ok",
+    "message": "Settings API is working correctly",
+    "endpoints": {
+      "GET /wp-json/bjt/v1/settings": "Get system settings",
+      "PUT /wp-json/bjt/v1/settings": "Update system settings",
+      "GET /wp-json/bjt/v1/settings/test": "Test endpoint (current)"
+    },
+    "timestamp": "2025-05-28 23:01:25"
+  }
+}
+```
+
+### 17.4 数据验证规则
+
+#### 基础信息验证
+- `company_name`: 文本清理，不能为空
+- `contact_info`: 邮箱格式验证
+- `logo_url`: URL格式验证
+
+#### 系统设置验证
+- `default_language`: 枚举值验证（zh, en）
+- `theme`: 文本清理
+- `timezone`: 文本清理
+- `date_format`: 文本清理
+
+#### 邮件设置验证
+- `smtp_host`: 文本清理
+- `smtp_port`: 整数验证，范围1-65535
+- `smtp_username`: 文本清理
+- `smtp_password`: 不进行清理（保持原始值）
+- `smtp_encryption`: 枚举值验证（none, ssl, tls）
+- `mail_from_address`: 邮箱格式验证
+- `mail_from_name`: 文本清理
+
+#### 安全设置验证
+- `session_timeout`: 整数验证，最小值300秒（5分钟）
+- `login_attempts`: 整数验证，最小值3次
+- `lockout_duration`: 整数验证，最小值300秒（5分钟）
+- `password_policy.min_length`: 整数验证，最小值6
+- 其他密码策略字段: 布尔值验证
+
+### 17.5 权限管理
+
+#### 读取权限
+- **当前实现**: 允许所有人读取（用于测试）
+- **生产环境**: 应限制为登录用户
+- **建议**: `return is_user_logged_in();`
+
+#### 写入权限
+- **当前实现**: 仅管理员可写入
+- **验证**: `return current_user_can('manage_options');`
+- **说明**: 只有具有WordPress管理员权限的用户才能修改系统设置
+
+### 17.6 数据存储
+
+#### 数据库表结构
+```sql
+CREATE TABLE wp_bjt_settings (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  option_key varchar(100) NOT NULL,
+  option_value longtext NOT NULL,
+  created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_option_key (option_key)
+);
+```
+
+#### 存储格式
+- **键**: `system` (用于系统设置)
+- **值**: JSON格式的设置数据
+- **编码**: UTF-8，支持中文字符
+- **自动管理**: 表不存在时自动创建
+
+### 17.7 使用示例
+
+#### JavaScript/TypeScript示例
+```javascript
+// 获取系统设置
+const getSettings = async () => {
+  try {
+    const response = await fetch('/wp-json/bjt/v1/settings');
+    const result = await response.json();
+    if (result.success) {
+      return result.data;
+    }
+    throw new Error(result.message);
+  } catch (error) {
+    console.error('Failed to get settings:', error);
+  }
+};
+
+// 更新系统设置
+const updateSettings = async (settings) => {
+  try {
+    const response = await fetch('/wp-json/bjt/v1/settings', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(settings),
+    });
+    const result = await response.json();
+    if (result.success) {
+      return result.data;
+    }
+    throw new Error(result.message);
+  } catch (error) {
+    console.error('Failed to update settings:', error);
+  }
+};
+```
+
+#### PHP示例
+```php
+// 获取系统设置
+$response = wp_remote_get('http://localhost:5173/wp-json/bjt/v1/settings');
+$body = wp_remote_retrieve_body($response);
+$data = json_decode($body, true);
+
+// 更新系统设置
+$settings = [
+  'company_name' => 'New Company Name',
+  'contact_info' => 'new@example.com'
+];
+
+$response = wp_remote_request('http://localhost:5173/wp-json/bjt/v1/settings', [
+  'method' => 'PUT',
+  'headers' => ['Content-Type' => 'application/json'],
+  'body' => json_encode($settings)
+]);
 ```
