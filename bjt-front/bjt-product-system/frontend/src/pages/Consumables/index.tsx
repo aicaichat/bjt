@@ -1899,19 +1899,6 @@ const ConsumablesPage: React.FC = () => {
       <div className="container">
         {/* 现代化页面标题 */}
         <div className="mb-8">
-          {/* 调试信息面板 - 仅开发环境显示 */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <h4 className="text-sm font-semibold text-yellow-800 mb-2">🐛 语言调试信息</h4>
-              <div className="text-xs text-yellow-700 space-y-1">
-                <div><strong>i18n.language:</strong> {i18n.language}</div>
-                <div><strong>currentLanguage:</strong> {currentLanguage}</div>
-                <div><strong>筛选选项数量:</strong> 形状({shapes.length}) 材质({materials.length}) 型号({models.length})</div>
-                <div><strong>示例形状数据:</strong> {shapes[0] ? JSON.stringify(shapes[0]) : '无数据'}</div>
-              </div>
-            </div>
-          )}
-          
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -2012,7 +1999,7 @@ const ConsumablesPage: React.FC = () => {
                   <InfoCircleOutlined className="text-gray-400 hover:text-blue-500 cursor-help transition-colors duration-200" />
                 </Tooltip>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
                 {/* 全部选项 */}
                 <div className="relative">
                   <input 
@@ -2026,27 +2013,27 @@ const ConsumablesPage: React.FC = () => {
                   <label 
                     htmlFor="shape-all" 
                     className={`
-                      block p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 text-center
+                      block p-5 rounded-xl border-2 cursor-pointer transition-all duration-300 text-center
                       ${selectedShape === 'all' 
                         ? 'border-blue-500 bg-blue-50 shadow-lg scale-105' 
                         : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md hover:bg-blue-25'
                       }
                     `}
                   >
-                    <div className="mb-3 flex justify-center">
-                      <div className="h-16 w-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-xs font-medium">
+                    <div className="mb-4 flex justify-center">
+                      <div className="h-28 w-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-sm font-medium">
                         {String(t('filter.all') || '全部')}
                       </div>
                     </div>
                     <div className={`
-                      text-sm font-medium transition-colors duration-200
+                      text-base font-medium transition-colors duration-200
                       ${selectedShape === 'all' ? 'text-blue-700' : 'text-gray-700'}
                     `}>
                       {String(t('ui.allShapes') || '全部形状')}
                     </div>
                     {selectedShape === 'all' && (
-                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <div className="absolute -top-1 -right-1 w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
                       </div>
@@ -2066,29 +2053,29 @@ const ConsumablesPage: React.FC = () => {
                     <label 
                       htmlFor={`shape-${shape.id}`} 
                       className={`
-                        block p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 text-center
+                        block p-5 rounded-xl border-2 cursor-pointer transition-all duration-300 text-center
                         ${selectedShape === shape.id 
                           ? 'border-blue-500 bg-blue-50 shadow-lg scale-105' 
                           : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md hover:bg-blue-25'
                         }
                       `}
                     >
-                      <div className="mb-3 flex justify-center">
+                      <div className="mb-4 flex justify-center">
                         <img
                           src={shape.image_url || shapePlaceholderImage}
                           alt={getLocalizedOptionName(shape)}
-                          className="h-16 w-20 object-contain"
+                          className="h-28 w-32 object-contain"
                         />
                       </div>
                       <div className={`
-                        text-sm font-medium transition-colors duration-200
+                        text-base font-medium transition-colors duration-200
                         ${selectedShape === shape.id ? 'text-blue-700' : 'text-gray-700'}
                       `}>
                         {getLocalizedOptionName(shape)}
                       </div>
                       {selectedShape === shape.id && (
-                        <div className="absolute -top-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <div className="absolute -top-1 -right-1 w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                         </div>
