@@ -153,9 +153,22 @@ const Header = ({
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileSubMenuOpen, setMobileSubMenuOpen] = useState<string | null>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   // 获取购物车数据
   const { items: cartItems = [], itemCount } = useCart();
+
+  // 检测是否为移动设备
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -198,6 +211,13 @@ const Header = ({
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
+    if (isMobileMenuOpen) {
+      setMobileSubMenuOpen(null);
+    }
+  };
+
+  const toggleMobileSubMenu = (label: string) => {
+    setMobileSubMenuOpen(mobileSubMenuOpen === label ? null : label);
   };
 
   const changeLanguage = (lang: string) => {
@@ -208,6 +228,102 @@ const Header = ({
     if (onLanguageChange) {
       onLanguageChange(lang);
     }
+  };
+
+  // 移动端原生语言切换
+  const handleMobileLanguageChange = () => {
+    const newLang = language === 'cn' ? 'en' : 'zh';
+    changeLanguage(newLang);
+  };
+
+  // 渲染移动端菜单项
+  const renderMobileNavItems = () => {
+    return filteredNavItems.map((navItem, index) => {
+      const navLabel = typeof navItem.label === 'string' ? navItem.label : 'nav.products';
+      
+      if (navItem.children) {
+        return (
+          <li key={`mobile-nav-${index}`} className="mobile-nav-item">
+            <div 
+              className={classNames('mobile-nav-link', {
+                'mobile-submenu-open': mobileSubMenuOpen === navLabel
+              })}
+              onClick={() => toggleMobileSubMenu(navLabel)}
+            >
+              <span>{safeRender(t(navLabel))}</span>
+              <DownOutlined className={classNames('mobile-dropdown-icon', {
+                'open': mobileSubMenuOpen === navLabel
+              })} />
+            </div>
+            
+            {mobileSubMenuOpen === navLabel && (
+              <div className="mobile-submenu">
+                {navItem.children.map((section, sectionIndex) => (
+                  <div key={`mobile-section-${sectionIndex}`} className="mobile-submenu-section">
+                    <div className="mobile-submenu-title">{safeRender(t(section.title))}</div>
+                    {section.items.map((item, itemIndex) => (
+                      <Link 
+                        key={`mobile-item-${itemIndex}`}
+                        to={item.url}
+                        className="mobile-submenu-item"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        {safeRender(t(item.label))}
+                      </Link>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
+          </li>
+        );
+      } else if (navItem.simpleDropdown) {
+        return (
+          <li key={`mobile-nav-${index}`} className="mobile-nav-item">
+            <div 
+              className={classNames('mobile-nav-link', {
+                'mobile-submenu-open': mobileSubMenuOpen === navLabel
+              })}
+              onClick={() => toggleMobileSubMenu(navLabel)}
+            >
+              <span>{safeRender(t(navLabel))}</span>
+              <DownOutlined className={classNames('mobile-dropdown-icon', {
+                'open': mobileSubMenuOpen === navLabel
+              })} />
+            </div>
+            
+            {mobileSubMenuOpen === navLabel && (
+              <div className="mobile-submenu">
+                {navItem.simpleDropdown.map((item, itemIndex) => (
+                  <Link 
+                    key={`mobile-simple-${itemIndex}`}
+                    to={item.url}
+                    className="mobile-submenu-item"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {safeRender(t(item.label))}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </li>
+        );
+      } else {
+        return (
+          <li key={`mobile-nav-${index}`} className="mobile-nav-item">
+            <Link
+              to={navItem.path}
+              className={classNames('mobile-nav-link', {
+                active: location.pathname === navItem.path,
+              })}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              {safeRender(t(navLabel))}
+            </Link>
+          </li>
+        );
+      }
+    });
   };
 
   // 渲染导航项目
@@ -373,36 +489,87 @@ const Header = ({
           <span className="bar"></span>
         </button>
 
-        <nav className={`main-nav ${isMobileMenuOpen ? 'open' : ''}`}>
-          <ul className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-6">
-            {renderNavItems()}
-          </ul>
-        </nav>
+        {/* 移动端导航 */}
+        {isMobile ? (
+          <nav className={`main-nav mobile-nav ${isMobileMenuOpen ? 'open' : ''}`}>
+            <ul className="mobile-nav-list">
+              {renderMobileNavItems()}
+              
+              {/* 移动端语言切换 */}
+              <li className="mobile-nav-item mobile-language-item">
+                <div className="mobile-nav-link" onClick={handleMobileLanguageChange}>
+                  <GlobalOutlined style={{ marginRight: 8 }} />
+                  <span>{currentLanguageDisplay}</span>
+                </div>
+              </li>
+              
+              {/* 移动端用户菜单 */}
+              {user ? (
+                <>
+                  <li className="mobile-nav-item">
+                    <Link to="/profile" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                      <UserOutlined style={{ marginRight: 8 }} />
+                      {t('header.profile')}
+                    </Link>
+                  </li>
+                  <li className="mobile-nav-item">
+                    <Link to="/orders" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                      {t('header.orders')}
+                    </Link>
+                  </li>
+                  <li className="mobile-nav-item">
+                    <div className="mobile-nav-link" onClick={handleLogout}>
+                      {t('header.logout')}
+                    </div>
+                  </li>
+                </>
+              ) : (
+                <li className="mobile-nav-item">
+                  <Link to="/login" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                    <UserOutlined style={{ marginRight: 8 }} />
+                    {t('header.login')}
+                  </Link>
+                </li>
+              )}
+            </ul>
+          </nav>
+        ) : (
+          /* 桌面端导航 */
+          <nav className={`main-nav desktop-nav ${isMobileMenuOpen ? 'open' : ''}`}>
+            <ul className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-6">
+              {renderNavItems()}
+            </ul>
+          </nav>
+        )}
 
         <div className="right-section flex items-center space-x-4">
-          <Dropdown 
-            menu={{ items: languageMenuItems }} 
-            trigger={['click']}
-            placement="bottomRight"
-          >
-            <Button type="text" icon={<GlobalOutlined />} className="action-button language-button">
-              <SafeContent>
-                {safeRender(currentLanguageDisplay)}
-              </SafeContent>
-            </Button>
-          </Dropdown>
+          {/* 桌面端语言切换 */}
+          {!isMobile && (
+            <Dropdown 
+              menu={{ items: languageMenuItems }} 
+              trigger={['click']}
+              placement="bottomRight"
+            >
+              <Button type="text" icon={<GlobalOutlined />} className="action-button language-button">
+                <SafeContent>
+                  {safeRender(currentLanguageDisplay)}
+                </SafeContent>
+              </Button>
+            </Dropdown>
+          )}
 
           {(user || location.pathname !== '/') && (
             <Link to="/cart" className="cart-link">
               <Badge count={itemCount} size="small">
                 <Button type="text" icon={<ShoppingCartOutlined />} className="action-button">
-                  {safeRender(t('header.cart'))}
+                  {!isMobile && safeRender(t('header.cart'))}
                 </Button>
               </Badge>
             </Link>
           )}
 
-          {user ? (
+          {/* 桌面端用户菜单 */}
+          {!isMobile && user ? (
             <Dropdown
               menu={{ items: userMenuItems }}
               trigger={['click']}
@@ -414,11 +581,11 @@ const Header = ({
                 </div>
               </Button>
             </Dropdown>
-          ) : (
+          ) : !isMobile && !user ? (
             <button className="login-button" onClick={handleLogin}>
               {safeRender(t('header.login'))}
             </button>
-          )}
+          ) : null}
         </div>
       </div>
     </header>

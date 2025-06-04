@@ -344,7 +344,8 @@
     gap: var(--bjt-space-xs);
   }
 
-  .main-nav {
+  /* 移动端导航基础样式 */
+  .main-nav.mobile-nav {
     position: absolute;
     top: 100%;
     left: 0;
@@ -363,10 +364,135 @@
     overflow-y: auto;
   }
 
-  .main-nav.open {
+  .main-nav.mobile-nav.open {
     transform: translateY(0);
     opacity: 1;
     visibility: visible;
+  }
+
+  /* 移动端菜单列表 */
+  .mobile-nav-list {
+    flex-direction: column;
+    padding: var(--bjt-space-md);
+    gap: 0;
+    width: 100%;
+    list-style: none;
+    margin: 0;
+  }
+
+  /* 移动端菜单项 */
+  .mobile-nav-item {
+    width: 100%;
+    border-bottom: 1px solid var(--bjt-border-secondary);
+  }
+
+  .mobile-nav-item:last-child {
+    border-bottom: none;
+  }
+
+  /* 移动端菜单链接 */
+  .mobile-nav-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: var(--bjt-space-md);
+    color: var(--bjt-text-secondary);
+    text-decoration: none;
+    font-size: var(--bjt-font-size-base);
+    font-weight: var(--bjt-font-weight-medium);
+    transition: all var(--bjt-transition-normal);
+    cursor: pointer;
+    background: none;
+    border: none;
+  }
+  
+  .mobile-nav-link:hover,
+  .mobile-nav-link.active {
+    color: var(--bjt-primary-blue);
+    background-color: var(--bjt-bg-accent);
+  }
+
+  .mobile-nav-link.mobile-submenu-open {
+    background-color: var(--bjt-bg-accent);
+    color: var(--bjt-primary-blue);
+  }
+
+  /* 移动端下拉图标 */
+  .mobile-dropdown-icon {
+    font-size: 12px;
+    transition: transform var(--bjt-transition-normal);
+  }
+
+  .mobile-dropdown-icon.open {
+    transform: rotate(180deg);
+  }
+
+  /* 移动端子菜单 */
+  .mobile-submenu {
+    background-color: var(--bjt-bg-secondary);
+    border-top: 1px solid var(--bjt-border-secondary);
+    animation: slideDown 0.3s ease-out;
+  }
+
+  .mobile-submenu-section {
+    padding: var(--bjt-space-sm) 0;
+  }
+
+  .mobile-submenu-section:not(:last-child) {
+    border-bottom: 1px solid var(--bjt-border-secondary);
+  }
+
+  .mobile-submenu-title {
+    padding: var(--bjt-space-sm) var(--bjt-space-lg);
+    font-size: var(--bjt-font-size-sm);
+    font-weight: var(--bjt-font-weight-semibold);
+    color: var(--bjt-text-primary);
+    background-color: var(--bjt-bg-tertiary);
+  }
+
+  .mobile-submenu-item {
+    display: block;
+    padding: var(--bjt-space-sm) var(--bjt-space-xl);
+    color: var(--bjt-text-secondary);
+    text-decoration: none;
+    font-size: var(--bjt-font-size-sm);
+    transition: all var(--bjt-transition-normal);
+  }
+
+  .mobile-submenu-item:hover {
+    color: var(--bjt-primary-blue);
+    background-color: var(--bjt-bg-accent);
+  }
+
+  /* 移动端语言切换 */
+  .mobile-language-item {
+    border-top: 2px solid var(--bjt-border-primary);
+    margin-top: var(--bjt-space-sm);
+  }
+
+  .mobile-language-item .mobile-nav-link {
+    font-weight: var(--bjt-font-weight-semibold);
+    color: var(--bjt-primary-blue);
+  }
+
+  /* 子菜单动画 */
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      max-height: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      max-height: 300px;
+      transform: translateY(0);
+    }
+  }
+
+  /* 桌面端导航在移动端隐藏 */
+  .main-nav.desktop-nav {
+    display: none;
   }
 
   .main-nav ul {
