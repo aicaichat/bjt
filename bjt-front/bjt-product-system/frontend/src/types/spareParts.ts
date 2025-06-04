@@ -93,7 +93,7 @@ export interface SparePart {
   product_line_id: number;
   app_model: string | null;
   model: string;
-  is_consumable: boolean;
+  is_consumable: number; // 0=不展示，1=易耗，2=非易耗
   image_url: string | null;
   part_number: string;
   name_zh: string;

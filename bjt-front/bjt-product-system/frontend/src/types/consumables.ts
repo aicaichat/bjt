@@ -24,6 +24,7 @@ export interface ConsumableSpecs {
   material?: string | null;
   shape?: string | null; // Corresponds to backend's bag_type
   thickness?: string | null; // e.g., "25 um"
+  weight?: string | null; // e.g., "50g/m²"
   width?: string | null; // e.g., "200 mm"
   length?: string | null; // e.g., "500 m"
   rollLength?: string | null; // e.g., "700 m"

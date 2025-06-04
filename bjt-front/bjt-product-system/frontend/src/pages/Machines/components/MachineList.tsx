@@ -46,15 +46,15 @@ export const MachineList: React.FC<MachineListProps> = ({
   const renderMoreInfoContent = useCallback((machine: MachinePart) => (
     <div className="machine-info-popover">
       <div className="info-section">
-        <h4>{t('machines.packaging.title')}</h4>
-        <p><strong>{t('machines.packaging.size')}:</strong> {machine.package_size_cm || 'N/A'}</p>
-        <p><strong>{t('machines.packaging.weight')}:</strong> {machine.gross_weight_kg || 'N/A'} kg</p>
+        <h4>{t('packaging.title')}</h4>
+        <p><strong>{t('packaging.size')}:</strong> {machine.package_size_cm || 'N/A'}</p>
+        <p><strong>{t('packaging.weight')}:</strong> {machine.gross_weight_kg || 'N/A'} kg</p>
       </div>
       <div className="info-section">
-        <h4>{t('machines.pallet.title')}</h4>
-        <p><strong>{t('machines.pallet.size')}:</strong> {machine.pallet_size_cm || 'N/A'}</p>
-        <p><strong>{t('machines.pallet.height')}:</strong> {machine.pallet_height_cm || 'N/A'} cm</p>
-        <p><strong>{t('machines.pallet.quantity')}:</strong> {machine.pcs_per_pallet || 'N/A'} pcs</p>
+        <h4>{t('pallet.title')}</h4>
+        <p><strong>{t('pallet.size')}:</strong> {machine.pallet_size_cm || 'N/A'}</p>
+        <p><strong>{t('pallet.height')}:</strong> {machine.pallet_height_cm || 'N/A'} cm</p>
+        <p><strong>{t('pallet.quantity')}:</strong> {machine.pcs_per_pallet || 'N/A'} pcs</p>
       </div>
     </div>
   ), [t]);
@@ -77,7 +77,7 @@ export const MachineList: React.FC<MachineListProps> = ({
           />
         ) : (
           <div className="image-placeholder">
-            <span>{t('machines.noImage')}</span>
+            <span>{t('noImage')}</span>
           </div>
         )}
       </div>
@@ -94,16 +94,16 @@ export const MachineList: React.FC<MachineListProps> = ({
 
         <div className="machine-specs">
           {machine.voltage && (
-            <Tag color="blue">{t('machines.voltage')}: {machine.voltage}</Tag>
+            <Tag color="blue">{t('voltage')}: {machine.voltage}</Tag>
           )}
           {machine.model_type && (
-            <Tag color="green">{t('machines.type')}: {machine.model_type}</Tag>
+            <Tag color="green">{t('type')}: {machine.model_type}</Tag>
           )}
         </div>
 
         <div className="machine-actions">
           <div className="quantity-control">
-            <label>{t('machines.quantity')}:</label>
+            <label>{t('quantity')}:</label>
             <InputNumber
               min={1}
               max={999}
@@ -116,7 +116,7 @@ export const MachineList: React.FC<MachineListProps> = ({
           <div className="action-buttons">
             <Popover
               content={renderMoreInfoContent(machine)}
-              title={t('machines.moreInfo')}
+              title={t('moreInfo')}
               trigger="hover"
               placement="top"
             >
@@ -125,7 +125,7 @@ export const MachineList: React.FC<MachineListProps> = ({
                 size="small"
                 type="text"
               >
-                {t('machines.moreInfo')}
+                {t('moreInfo')}
               </Button>
             </Popover>
 
@@ -138,7 +138,7 @@ export const MachineList: React.FC<MachineListProps> = ({
               }}
               size="small"
             >
-              {t('machines.addToCart')}
+              {t('addToCart')}
             </Button>
           </div>
         </div>
@@ -154,13 +154,13 @@ export const MachineList: React.FC<MachineListProps> = ({
       <table className="machine-table">
         <thead>
           <tr>
-            <th>{t('machines.image')}</th>
-            <th>{t('machines.name')}</th>
-            <th>{t('machines.code')}</th>
-            <th>{t('machines.type')}</th>
-            <th>{t('machines.specs')}</th>
-            <th>{t('machines.quantity')}</th>
-            <th>{t('machines.actions')}</th>
+            <th>{t('image')}</th>
+            <th>{t('name')}</th>
+            <th>{t('code')}</th>
+            <th>{t('type')}</th>
+            <th>{t('specs')}</th>
+            <th>{t('quantity')}</th>
+            <th>{t('actions')}</th>
           </tr>
         </thead>
         <tbody>
@@ -225,7 +225,7 @@ export const MachineList: React.FC<MachineListProps> = ({
                 <div className="table-actions">
                   <Popover
                     content={renderMoreInfoContent(machine)}
-                    title={t('machines.moreInfo')}
+                    title={t('moreInfo')}
                     trigger="hover"
                   >
                     <Button
@@ -245,7 +245,7 @@ export const MachineList: React.FC<MachineListProps> = ({
                       onAddToCart(machine);
                     }}
                   >
-                    {t('machines.add')}
+                    {t('add')}
                   </Button>
                 </div>
               </td>
@@ -273,8 +273,8 @@ export const MachineList: React.FC<MachineListProps> = ({
     return (
       <div className="machine-list-empty">
         <div className="empty-content">
-          <h3>{t('machines.noMachines')}</h3>
-          <p>{t('machines.noMachinesDesc')}</p>
+          <h3>{t('noMachines')}</h3>
+          <p>{t('noMachinesDesc')}</p>
         </div>
       </div>
     );

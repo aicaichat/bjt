@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './Home.css';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 // 使用真实API替换Mock数据服务
 import { useProductLines } from '../../hooks/useRealProductLines';
 import { Loading, Error } from '../../components/common';
@@ -11,9 +12,20 @@ import { ROUTES } from '../../config/routes';
 // 占位图片路径
 const placeholderImage = '/images/placeholders/placeholder-300x200.svg';
 
+// 产品链接图标映射 - 专业to B版本
+const getProductLinkIcon = (index: number) => {
+  const icons = [
+    'machine', // 机器设备 - 使用专业机械图标
+    'supply',  // 耗材 - 使用供应链图标
+    'service'  // 备件 - 使用服务图标
+  ];
+  return icons[index] || 'machine';
+};
+
 const Home: React.FC = () => {
   const { t, i18n } = useTranslation('home');
   const { user } = useAuth();
+  const { theme, mode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -81,6 +93,44 @@ const Home: React.FC = () => {
     if (currentLanguage === 'zh' && line.description_zh) return line.description_zh;
     return line.description_en || line.description_zh || '';
   };
+  // 获取子标题/子链接文案
+  const getSubitem1 = (line: any) => {
+    if (currentLanguage === 'en' && line.subitem1_en) return line.subitem1_en;
+    if (currentLanguage === 'zh' && line.subitem1_zh) return line.subitem1_zh;
+    return line.subitem1_en || line.subitem1_zh || '';
+  };
+  const getSubitem2 = (line: any) => {
+    if (currentLanguage === 'en' && line.subitem2_en) return line.subitem2_en;
+    if (currentLanguage === 'zh' && line.subitem2_zh) return line.subitem2_zh;
+    return line.subitem2_en || line.subitem2_zh || '';
+  };
+  const getSubitem3 = (line: any) => {
+    if (currentLanguage === 'en' && line.subitem3_en) return line.subitem3_en;
+    if (currentLanguage === 'zh' && line.subitem3_zh) return line.subitem3_zh;
+    return line.subitem3_en || line.subitem3_zh || '';
+  };
+
+  // 创建产品链接数据
+  const createProductLinks = (line: any) => {
+    const links = [
+      {
+        text: getSubitem1(line),
+        path: `${ROUTES.MACHINES}?category=${line.id}`,
+        icon: getProductLinkIcon(0)
+      },
+      {
+        text: getSubitem2(line),
+        path: `${ROUTES.CONSUMABLES}?category=${line.id}`,
+        icon: getProductLinkIcon(1)
+      },
+      {
+        text: getSubitem3(line),
+        path: `${ROUTES.SPARE_PARTS}?category=${line.id}`,
+        icon: getProductLinkIcon(2)
+      }
+    ];
+    return links.filter(link => link.text); // 过滤掉空文本的链接
+  };
   
   // 使用统一的加载组件
   if (loading) {
@@ -95,41 +145,41 @@ const Home: React.FC = () => {
   return (
     <div className="home-page">
       <main className="container">
-        {productLines && productLines.map((line: any) => (
+        {/* 产品线展示 */}
+        {productLines && productLines.map((line: any, lineIndex: number) => (
           <div key={line.id} className="product-section">
             <div className="section-header">
               {getTitle(line)}
             </div>
             <div className="section-content">
               <div className="section-text">
-                <p className="introduction">{t('home:introduction')}</p>
+                <h3 className="introduction">{getTitle(line)}</h3>
                 <div className="divider"></div>
                 <p>{getDescription(line)}</p>
                 
+                {/* 革命性的产品链接设计 */}
                 <div className="product-links">
-                  <Link 
-                    to={`${ROUTES.MACHINES}?category=${line.id}`} 
-                    className="product-link" 
-                    onClick={(e) => handleProductLinkClick(e, `${ROUTES.MACHINES}?category=${line.id}`)}
-                  >
-                    {t('home:links.machines')} 
-                  </Link>
-                  <Link 
-                    to={`${ROUTES.CONSUMABLES}?category=${line.id}`} 
-                    className="product-link" 
-                    onClick={(e) => handleProductLinkClick(e, `${ROUTES.CONSUMABLES}?category=${line.id}`)}
-                  >
-                    {t('home:links.consumables')}
-                  </Link>
-                  <Link 
-                    to={`${ROUTES.SPARE_PARTS}?category=${line.id}`} 
-                    className="product-link" 
-                    onClick={(e) => handleProductLinkClick(e, `${ROUTES.SPARE_PARTS}?category=${line.id}`)}
-                  >
-                    {t('home:links.spareParts')}
-                  </Link>
+                  {createProductLinks(line).map((linkData, index) => (
+                    <Link 
+                      key={index}
+                      to={linkData.path}
+                      className="product-link" 
+                      onClick={(e) => handleProductLinkClick(e, linkData.path)}
+                    >
+                      <div className="product-link-content">
+                        <div 
+                          className="product-link-icon"
+                          data-icon={linkData.icon}
+                        ></div>
+                        <div className="product-link-text">
+                          {linkData.text}
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
                 </div>
               </div>
+              
               <div className="section-image">
                 <img src={line.image_url || placeholderImage} alt={getTitle(line)} />
               </div>
@@ -146,7 +196,7 @@ const Home: React.FC = () => {
                 className={`pagination-button ${page === currentPage ? 'active' : ''}`}
                 onClick={() => handlePageChange(page)}
               >
-                {page}
+                <span>{page}</span>
               </button>
             ))}
           </div>

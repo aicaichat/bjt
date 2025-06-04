@@ -360,6 +360,10 @@ class BJT_Cart_Controller extends BJT_API_Controller {
                 $item_data['line_total'] = $item_data['unit_price'] * $item_data['quantity'];
                 $item_data['inventory_status'] = $item_inventory_info['status'] ?? 'unknown';
                 // --- End TODO ---
+
+                // 新增：查找详细字段并合并
+                $detail_fields = $this->get_product_detail_fields($item_db->part_number, $item_db->product_type);
+                $item_data = array_merge($item_data, $detail_fields);
                 
                 // Update cart totals
                 $total_quantity += $item_data['quantity'];
@@ -371,7 +375,8 @@ class BJT_Cart_Controller extends BJT_API_Controller {
                 // We need to ensure the final item data respects the schema context
                 $context = ! empty( $request['context'] ) ? $request['context'] : 'view';
                 $final_item_data = $this->filter_response_by_context($item_data, $this->get_item_schema()['properties'], $context);
-                $formatted_items[] = $final_item_data;
+                // 直接返回所有字段（不做context过滤）
+                $formatted_items[] = $item_data;
             }
         }
 
@@ -436,6 +441,7 @@ class BJT_Cart_Controller extends BJT_API_Controller {
         // Determine table and potentially specific name/image columns based on type
          switch ($product_type) {
             case 'host':
+            case 'machine':
                 $table_name = $wpdb->prefix . 'bjt_parts';
                 break;
             case 'accessory':
@@ -600,6 +606,7 @@ class BJT_Cart_Controller extends BJT_API_Controller {
         // This mapping needs to be accurate based on your DB schema
         switch ($product_type) {
             case 'host':
+            case 'machine':
                 $table_name = $wpdb->prefix . 'bjt_parts'; // Assuming 'bjt_parts' stores hosts by part_number
                 break;
             case 'accessory':
@@ -910,5 +917,41 @@ class BJT_Cart_Controller extends BJT_API_Controller {
        // Return the basic structure here.
        $response = rest_ensure_response( $data );
        return $response;
+    }
+
+    // 新增：获取详细字段
+    protected function get_product_detail_fields($part_number, $product_type) {
+        global $wpdb;
+        $table = '';
+        switch ($product_type) {
+            case 'host':
+            case 'machine':
+                $table = $wpdb->prefix . 'bjt_parts';
+                break;
+            case 'accessory':
+                $table = $wpdb->prefix . 'bjt_accessories';
+                break;
+            case 'consumable':
+                $table = $wpdb->prefix . 'bjt_consumables';
+                break;
+            case 'spare_part':
+                $table = $wpdb->prefix . 'bjt_spare_parts';
+                break;
+            default:
+                return [];
+        }
+        $product = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE part_number = %s", $part_number), ARRAY_A);
+        if (!$product) return [];
+        $fields = [
+            'model', 'voltage', 'frequency', 'spec', 'spec_imperial',
+            'package_size_cm', 'package_size_inch', 'net_weight_kg', 'net_weight_lbs',
+            'gross_weight_kg', 'gross_weight_lbs', 'pcs_per_box', 'pcs_per_pallet',
+            'pallet_size_cm', 'pallet_size_inch', 'brand', 'unit'
+        ];
+        $result = [];
+        foreach ($fields as $f) {
+            $result[$f] = isset($product[$f]) && $product[$f] !== '' ? $product[$f] : 'N/A';
+        }
+        return $result;
     }
 } 

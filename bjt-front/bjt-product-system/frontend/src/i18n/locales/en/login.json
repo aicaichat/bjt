@@ -46,5 +46,12 @@
     "back": "Back to Login",
     "success": "Reset link sent successfully",
     "error": "Failed to send reset link"
-  }
+  },
+  "runAuthTest": "Run Auth Test",
+  "testAccounts": "Test Accounts",
+  "pageTitle": "Sign In",
+  "signInToAccessYourAccount": "Sign in to access your account",
+  "username": "Username",
+  "password": "Password",
+  "login": "Login"
 } 

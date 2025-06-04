@@ -141,9 +141,35 @@ const CartItem: React.FC<{
   console.log('[CartList.CartItem] item:', item, 'props:', props);
   // 优先取 properties 里的图片和标题
   const imageUrl = props.image_url || props.image || item.image_url || item.image || '/images/placeholder.jpg';
-  const displayName = language === 'zh'
-    ? (props.name_zh || props.name || item.name_zh || item.name)
-    : (props.name_en || props.name || item.name_en || item.name);
+  
+  // 修复商品名称获取逻辑，添加更完善的兜底处理
+  const getDisplayName = (): string => {
+    if (language === 'zh') {
+      return props.name_zh || 
+             props.name || 
+             props.code || 
+             props.part_number ||
+             item.name_zh || 
+             item.name || 
+             item.code ||
+             item.part_number ||
+             item.id ||
+             '商品';
+    } else {
+      return props.name_en || 
+             props.name || 
+             props.code ||
+             props.part_number ||
+             item.name_en || 
+             item.name || 
+             item.code ||
+             item.part_number ||
+             item.id ||
+             'Product';
+    }
+  };
+  
+  const displayName = getDisplayName();
   
   return (
     <div className={`cart-item border border-gray-200 bg-white p-4 rounded-lg mb-3${isSelected ? ' ring-2 ring-primary' : ''}`}>

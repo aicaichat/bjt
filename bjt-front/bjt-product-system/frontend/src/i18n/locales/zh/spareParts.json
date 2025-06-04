@@ -29,6 +29,9 @@
     "all": "全部",
     "allProductTypes": "全部产品类型",
     "allModels": "全部型号",
+    "allTypes": "全部类型",
+    "consumable": "耗材",
+    "nonConsumable": "非耗材",
     "label": {
       "productType": "产品类型",
       "model": "配件型号",

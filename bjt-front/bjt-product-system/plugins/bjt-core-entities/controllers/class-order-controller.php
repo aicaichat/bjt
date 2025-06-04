@@ -758,10 +758,19 @@ class BJT_Order_Controller extends BJT_API_Controller {
         $image_col = 'image_url';
         
          switch ($product_type) {
-            case 'host': $table_name = $wpdb->prefix . 'bjt_parts'; break;
-            case 'accessory': $table_name = $wpdb->prefix . 'bjt_accessories'; break;
-            case 'consumable': $table_name = $wpdb->prefix . 'bjt_consumables'; break;
-            case 'spare_part': $table_name = $wpdb->prefix . 'bjt_spare_parts'; break;
+            case 'host': 
+            case 'machine':
+                $table_name = $wpdb->prefix . 'bjt_parts'; 
+                break;
+            case 'accessory': 
+                $table_name = $wpdb->prefix . 'bjt_accessories'; 
+                break;
+            case 'consumable': 
+                $table_name = $wpdb->prefix . 'bjt_consumables'; 
+                break;
+            case 'spare_part': 
+                $table_name = $wpdb->prefix . 'bjt_spare_parts'; 
+                break;
             default: return ['name' => 'Invalid Type', 'image_url' => null];
         }
 
@@ -787,10 +796,19 @@ class BJT_Order_Controller extends BJT_API_Controller {
         global $wpdb;
          $table_name = '';
          switch ($product_type) {
-            case 'host': $table_name = $wpdb->prefix . 'bjt_parts'; break;
-            case 'accessory': $table_name = $wpdb->prefix . 'bjt_accessories'; break;
-            case 'consumable': $table_name = $wpdb->prefix . 'bjt_consumables'; break;
-            case 'spare_part': $table_name = $wpdb->prefix . 'bjt_spare_parts'; break;
+            case 'host': 
+            case 'machine':
+                $table_name = $wpdb->prefix . 'bjt_parts'; 
+                break;
+            case 'accessory': 
+                $table_name = $wpdb->prefix . 'bjt_accessories'; 
+                break;
+            case 'consumable': 
+                $table_name = $wpdb->prefix . 'bjt_consumables'; 
+                break;
+            case 'spare_part': 
+                $table_name = $wpdb->prefix . 'bjt_spare_parts'; 
+                break;
             default: return 0;
         }
         $product_line_id = $wpdb->get_var($wpdb->prepare(

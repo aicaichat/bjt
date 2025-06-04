@@ -1,0 +1,95 @@
+{
+  "machines": {
+    "pageTitle": "Machine List",
+    "loading": "Loading...",
+    "error": "Loading Failed",
+    "retry": "Retry",
+    "pending": "Pending",
+    "unknownMachine": "Unknown Machine",
+    "noSpecPdf": "No Specification PDF Available",
+    "specDetails": "Specification Details",
+    "moreInfo": "More Info",
+    "hoverDetails": "Hover for Details",
+    "noAccessories": "No Accessories Available",
+    "chooseOther": "Please Choose Another Machine",
+    "stockStatus": {
+      "sufficient": "In Stock",
+      "low": "Low Stock",
+      "outOfStock": "Out of Stock"
+    },
+    "filters": {
+      "voltage": "Voltage",
+      "model": "Model",
+      "all": "All",
+      "allModels": "All Models"
+    },
+    "tableHeaders": {
+      "model": "Model",
+      "voltage": "Voltage",
+      "frequency": "Frequency",
+      "pcsPerBox": "PCS/Box",
+      "pcsPerPallet": "PCS/Pallet",
+      "palletSize": "Pallet Size",
+      "packSize": "Package Size",
+      "netWeight": "Net Weight",
+      "palletHeight": "Pallet Height",
+      "palletGrossWeight": "Pallet Gross Weight",
+      "price": "Price",
+      "priceRange": "Price Range",
+      "stock": "Stock"
+    },
+    "pricing": {
+      "from": "from",
+      "pieces": "pcs"
+    },
+    "actions": {
+      "selectMachine": "Select Machine",
+      "selectAccessory": "Select Accessory",
+      "close": "Close"
+    },
+    "path": {
+      "machine": "Host"
+    },
+    "accessories": {
+      "title": "Accessories",
+      "level1": "Level 1",
+      "level2": "Level 2",
+      "level3": "Level 3",
+      "level4": "Level 4",
+      "level5": "Level 5",
+      "level": "Level",
+      "compatible": "Compatible Accessories",
+      "subCompatible": "Compatible Accessories"
+    },
+    "errors": {
+      "requiredAccessories": "Required Accessories",
+      "selectAllRequired": "Please Select All Required Accessories",
+      "invalidSelection": "Invalid Selection",
+      "selectParentFirst": "Please Select Parent Accessory First",
+      "processingFailed": "Processing Failed",
+      "unknownError": "Unknown Error"
+    },
+    "categories": {
+      "machine": "Machine",
+      "accessory": "Accessory"
+    },
+    "addToCart": "Add to Cart",
+    "noPermissionAdd": "No Permission to Add"
+  },
+  "regions": {
+    "china": "China",
+    "usa": "United States",
+    "europe": "Europe",
+    "asia": "Asia"
+  },
+  "messages": {
+    "addedToCart": "Added to Cart"
+  },
+  "errors": {
+    "systemError": "System Error",
+    "missingPartNumber": "Missing Part Number",
+    "authExpired": "Authentication Expired",
+    "invalidRequest": "Invalid Request",
+    "addToCartFailed": "Failed to Add to Cart"
+  }
+} 

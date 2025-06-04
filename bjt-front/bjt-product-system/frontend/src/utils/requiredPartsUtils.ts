@@ -67,8 +67,8 @@ export interface InventoryInfo {
  * 解析必选备件字符串
  */
 export function parseRequiredParts(
-  required_parts: string | null | undefined,
-  required_quantity: string | null | undefined
+  required_parts: string | string[] | null | undefined,
+  required_quantity: string | string[] | null | undefined
 ): RequiredPart[] {
   console.log('📋 [parseRequiredParts] Input:', { required_parts, required_quantity });
   
@@ -77,11 +77,36 @@ export function parseRequiredParts(
     return [];
   }
 
-  const partNumbers = required_parts.split(',').map(p => p.trim()).filter(p => p);
-  const quantities = required_quantity.split(',').map(q => parseInt(q.trim(), 10)).filter(q => !isNaN(q));
+  let partNumbers: string[] = [];
+  let quantities: number[] = [];
+
+  // Handle required_parts
+  if (typeof required_parts === 'string') {
+    partNumbers = required_parts.split(',').map(p => p.trim()).filter(p => p);
+  } else if (Array.isArray(required_parts)) {
+    partNumbers = required_parts.map(p => String(p).trim()).filter(p => p);
+  } else {
+    console.warn('⚠️ [parseRequiredParts] Invalid required_parts type:', typeof required_parts);
+    return [];
+  }
+
+  // Handle required_quantity
+  if (typeof required_quantity === 'string') {
+    quantities = required_quantity.split(',').map(q => parseInt(q.trim(), 10)).filter(q => !isNaN(q));
+  } else if (Array.isArray(required_quantity)) {
+    quantities = required_quantity.map(q => parseInt(String(q).trim(), 10)).filter(q => !isNaN(q));
+  } else {
+    console.warn('⚠️ [parseRequiredParts] Invalid required_quantity type:', typeof required_quantity);
+    return [];
+  }
 
   if (partNumbers.length !== quantities.length) {
-    console.warn('⚠️ [parseRequiredParts] 必选备件料号和数量不匹配:', { required_parts, required_quantity });
+    console.warn('⚠️ [parseRequiredParts] Required parts numbers and quantities do not match:', { 
+      partNumbers, 
+      quantities,
+      required_parts,
+      required_quantity 
+    });
     return [];
   }
 
@@ -192,7 +217,9 @@ export async function fetchRequiredPartsFullInfo(
         product_line_id: 1,
         name_zh: `备件 ${part.part_number}`,
         name_en: `Part ${part.part_number}`,
-        model: null,
+        quantity: part.quantity,
+        parent_part_number: parentPartNumber,
+        type: part.type,
         is_consumable: false,
         image_url: '',
         spec: '',
@@ -208,8 +235,6 @@ export async function fetchRequiredPartsFullInfo(
         gross_weight_kg: null,
         gross_weight_lbs: null,
         pcs_per_box: null,
-        quantity: part.quantity,
-        parent_part_number: parentPartNumber,
         pricing: [],
         inventory: [],
         required_parts: null,
@@ -338,4 +363,4 @@ export function createRequiredPartCartItem(
       pcs_per_box: requiredPart.pcs_per_box
     }
   };
-} 
+}

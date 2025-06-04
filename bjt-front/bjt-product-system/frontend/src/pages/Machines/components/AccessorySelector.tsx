@@ -64,7 +64,7 @@ export const AccessorySelector: React.FC<AccessorySelectorProps> = ({
     
     return pathItems.length > 0 ? (
       <div className="accessory-path">
-        <span className="path-label">{t('machines.accessory.path')}:</span>
+        <span className="path-label">{t('accessory.path')}:</span>
         {pathItems}
       </div>
     ) : null;
@@ -73,15 +73,15 @@ export const AccessorySelector: React.FC<AccessorySelectorProps> = ({
   const renderAccessoryInfo = useCallback((accessory: MachineAccessory) => (
     <div className="accessory-info-popover">
       <div className="info-section">
-        <h4>{t('machines.accessory.details')}</h4>
-        <p><strong>{t('machines.accessory.level')}:</strong> {accessory.level || 'N/A'}</p>
+        <h4>{t('accessory.details')}</h4>
+        <p><strong>{t('accessory.level')}:</strong> {accessory.level || 'N/A'}</p>
         {accessory.description_zh && (
-          <p><strong>{t('machines.accessory.description')}:</strong> {accessory.description_zh}</p>
+          <p><strong>{t('accessory.description')}:</strong> {accessory.description_zh}</p>
         )}
       </div>
       {accessory.specifications && (
         <div className="info-section">
-          <h4>{t('machines.accessory.specifications')}</h4>
+          <h4>{t('accessory.specifications')}</h4>
           <pre>{JSON.stringify(accessory.specifications, null, 2)}</pre>
         </div>
       )}
@@ -120,7 +120,7 @@ export const AccessorySelector: React.FC<AccessorySelectorProps> = ({
         <div className="accessory-actions">
           <Popover
             content={renderAccessoryInfo(accessory)}
-            title={t('machines.accessory.details')}
+            title={t('accessory.details')}
             trigger="hover"
             placement="top"
           >
@@ -130,7 +130,7 @@ export const AccessorySelector: React.FC<AccessorySelectorProps> = ({
               type="text"
               onClick={(e) => e.stopPropagation()}
             >
-              {t('machines.moreInfo')}
+              {t('moreInfo')}
             </Button>
           </Popover>
 
@@ -143,7 +143,7 @@ export const AccessorySelector: React.FC<AccessorySelectorProps> = ({
               onAddToCart(accessory);
             }}
           >
-            {t('machines.addToCart')}
+            {t('addToCart')}
           </Button>
         </div>
       </div>
@@ -155,7 +155,7 @@ export const AccessorySelector: React.FC<AccessorySelectorProps> = ({
       return (
         <div className="accessory-level-loading">
           <Spin size="small" />
-          <span>{t('machines.accessory.loading')}</span>
+          <span>{t('accessory.loading')}</span>
         </div>
       );
     }
@@ -165,7 +165,7 @@ export const AccessorySelector: React.FC<AccessorySelectorProps> = ({
         <div className="accessory-level-empty">
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description={t('machines.accessory.noItems')}
+            description={t('accessory.noItems')}
           />
         </div>
       );
@@ -185,7 +185,7 @@ export const AccessorySelector: React.FC<AccessorySelectorProps> = ({
     return (
       <div className="accessory-selector-empty">
         <Empty
-          description={t('machines.accessory.selectMachine')}
+          description={t('accessory.selectMachine')}
         />
       </div>
     );
@@ -194,8 +194,8 @@ export const AccessorySelector: React.FC<AccessorySelectorProps> = ({
   return (
     <div className="accessory-selector">
       <div className="accessory-header">
-        <h3>{t('machines.accessory.title')}</h3>
-        <p>{t('machines.accessory.selectFor')}</p>
+        <h3>{t('accessory.title')}</h3>
+        <p>{t('accessory.selectFor')}</p>
       </div>
 
       <Tabs
@@ -205,7 +205,7 @@ export const AccessorySelector: React.FC<AccessorySelectorProps> = ({
       >
         {accessories.length > 0 && (
           <TabPane
-            tab={`${t('machines.accessory.level')} 1 (${accessories.length})`}
+            tab={`${t('accessory.level')} 1 (${accessories.length})`}
             key="level1"
           >
             {renderAccessoryLevel(accessories, 1, false)}
@@ -214,7 +214,7 @@ export const AccessorySelector: React.FC<AccessorySelectorProps> = ({
 
         {(level2Accessories.length > 0 || loadingStates.level2) && (
           <TabPane
-            tab={`${t('machines.accessory.level')} 2 (${level2Accessories.length})`}
+            tab={`${t('accessory.level')} 2 (${level2Accessories.length})`}
             key="level2"
           >
             {renderAccessoryLevel(level2Accessories, 2, loadingStates.level2)}
@@ -223,7 +223,7 @@ export const AccessorySelector: React.FC<AccessorySelectorProps> = ({
 
         {(level3Accessories.length > 0 || loadingStates.level3) && (
           <TabPane
-            tab={`${t('machines.accessory.level')} 3 (${level3Accessories.length})`}
+            tab={`${t('accessory.level')} 3 (${level3Accessories.length})`}
             key="level3"
           >
             {renderAccessoryLevel(level3Accessories, 3, loadingStates.level3)}
@@ -232,7 +232,7 @@ export const AccessorySelector: React.FC<AccessorySelectorProps> = ({
 
         {(level4Accessories.length > 0 || loadingStates.level4) && (
           <TabPane
-            tab={`${t('machines.accessory.level')} 4 (${level4Accessories.length})`}
+            tab={`${t('accessory.level')} 4 (${level4Accessories.length})`}
             key="level4"
           >
             {renderAccessoryLevel(level4Accessories, 4, loadingStates.level4)}
@@ -241,7 +241,7 @@ export const AccessorySelector: React.FC<AccessorySelectorProps> = ({
 
         {(level5Accessories.length > 0 || loadingStates.level5) && (
           <TabPane
-            tab={`${t('machines.accessory.level')} 5 (${level5Accessories.length})`}
+            tab={`${t('accessory.level')} 5 (${level5Accessories.length})`}
             key="level5"
           >
             {renderAccessoryLevel(level5Accessories, 5, loadingStates.level5)}

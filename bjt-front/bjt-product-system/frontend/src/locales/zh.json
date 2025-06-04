@@ -1,0 +1,95 @@
+{
+  "machines": {
+    "pageTitle": "设备列表",
+    "loading": "加载中...",
+    "error": "加载失败",
+    "retry": "重试",
+    "pending": "待定",
+    "unknownMachine": "未知设备",
+    "noSpecPdf": "暂无规格说明书",
+    "specDetails": "规格详情",
+    "moreInfo": "更多信息",
+    "hoverDetails": "悬停查看详情",
+    "noAccessories": "暂无配件",
+    "chooseOther": "请选择其他设备",
+    "stockStatus": {
+      "sufficient": "库存充足",
+      "low": "库存不足",
+      "outOfStock": "无库存"
+    },
+    "filters": {
+      "voltage": "电压",
+      "model": "型号",
+      "all": "全部",
+      "allModels": "所有型号"
+    },
+    "tableHeaders": {
+      "model": "型号",
+      "voltage": "电压",
+      "frequency": "频率",
+      "pcsPerBox": "每箱数量",
+      "pcsPerPallet": "每托盘数量",
+      "palletSize": "托盘尺寸",
+      "packSize": "包装尺寸",
+      "netWeight": "净重",
+      "palletHeight": "托盘高度",
+      "palletGrossWeight": "托盘毛重",
+      "price": "价格",
+      "priceRange": "价格区间",
+      "stock": "库存"
+    },
+    "pricing": {
+      "from": "起",
+      "pieces": "件"
+    },
+    "actions": {
+      "selectMachine": "选择设备",
+      "selectAccessory": "选择配件",
+      "close": "关闭"
+    },
+    "path": {
+      "machine": "主机"
+    },
+    "accessories": {
+      "title": "配件",
+      "level1": "一级配件",
+      "level2": "二级配件",
+      "level3": "三级配件",
+      "level4": "四级配件",
+      "level5": "五级配件",
+      "level": "级别",
+      "compatible": "兼容配件",
+      "subCompatible": "兼容配件"
+    },
+    "errors": {
+      "requiredAccessories": "必选配件",
+      "selectAllRequired": "请选择所有必选配件",
+      "invalidSelection": "无效选择",
+      "selectParentFirst": "请先选择上级配件",
+      "processingFailed": "处理失败",
+      "unknownError": "未知错误"
+    },
+    "categories": {
+      "machine": "设备",
+      "accessory": "配件"
+    },
+    "addToCart": "加入购物车",
+    "noPermissionAdd": "无权限添加"
+  },
+  "regions": {
+    "china": "中国",
+    "usa": "美国",
+    "europe": "欧洲",
+    "asia": "亚洲"
+  },
+  "messages": {
+    "addedToCart": "已添加到购物车"
+  },
+  "errors": {
+    "systemError": "系统错误",
+    "missingPartNumber": "缺少料号",
+    "authExpired": "认证已过期",
+    "invalidRequest": "无效请求",
+    "addToCartFailed": "添加到购物车失败"
+  }
+} 

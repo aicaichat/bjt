@@ -29,6 +29,9 @@
     "all": "All",
     "allProductTypes": "All Product Types",
     "allModels": "All Models",
+    "allTypes": "All Types",
+    "consumable": "Consumable",
+    "nonConsumable": "Non-Consumable",
     "label": {
       "productType": "Product Type",
       "model": "Part Model",

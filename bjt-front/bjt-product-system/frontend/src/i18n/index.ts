@@ -31,6 +31,8 @@ import enCart from './locales/en/cart.json';
 import zhCart from './locales/zh/cart.json';
 import enOrder from './locales/en/order.json';
 import zhOrder from './locales/zh/order.json';
+import enLogin from './locales/en/login.json';
+import zhLogin from './locales/zh/login.json';
 
 i18n
   .use(LanguageDetector)
@@ -47,7 +49,8 @@ i18n
         machines: enMachines,
         products: enProducts,
         cart: enCart,
-        order: enOrder
+        order: enOrder,
+        login: enLogin
       },
       zh: {
         translation: zhTranslation,
@@ -59,7 +62,8 @@ i18n
         machines: zhMachines,
         products: zhProducts,
         cart: zhCart,
-        order: zhOrder
+        order: zhOrder,
+        login: zhLogin
       },
       ja: {
         translation: jaTranslation,
@@ -81,7 +85,7 @@ i18n
     nsSeparator: false,
     returnObjects: true, // Allow returning objects for nested translations
     defaultNS: 'translation',
-    ns: ['translation', 'home', 'consumables', 'orderList', 'po', 'spareParts', 'machines', 'products', 'cart', 'order'],
+    ns: ['translation', 'home', 'consumables', 'orderList', 'po', 'spareParts', 'machines', 'products', 'cart', 'order', 'login'],
     detection: {
       order: ['localStorage', 'navigator'],
       caches: ['localStorage'],

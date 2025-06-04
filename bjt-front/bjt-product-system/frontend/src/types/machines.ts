@@ -41,6 +41,8 @@ export interface MachineProduct {
     name_zh: string;
     name_en: string;
     title: string;
+    title_zh?: string;
+    title_en?: string;
     spec?: string;
     spec_imperial?: string;
     voltage?: string;
@@ -70,6 +72,7 @@ export interface MachineProduct {
     unit?: string;
     created_at?: string;
     updated_at?: string;
+    is_required?: boolean;
   }
   
   export interface AccessoryPart {

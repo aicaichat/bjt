@@ -16,6 +16,7 @@ docker-compose -f docker/dev/docker-compose.nginx.yml restart wordpress || exit 
 echo "Waiting for WordPress to potentially initialize... (e.g., 30 seconds)"
 sleep 30
 
+
 echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 echo "!!! ACTION REQUIRED: Open http://localhost:8080 in your browser                    !!!"
 echo "!!! and complete the WordPress installation steps if presented.                    !!!"

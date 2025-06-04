@@ -45,20 +45,44 @@ const CartItemCard: React.FC<CartItemCardProps> = ({ item, onUpdateQuantity, onR
   const imageUrl = props.image_url || item.image_url || (item as any).image || '/images/placeholder.jpg';
   
   // 根据当前语言选择正确的商品名称
-  const name = i18n.language === 'zh'
-    ? (props.name_zh || props.name || item.name_zh || item.name || '')
-    : (props.name_en || props.name || item.name_en || item.name || '');
-    
-  const partNumber = props.part_number || item.part_number || '';
+  const language = i18n.language;
+  const getDisplayName = (): string => {
+    const props = item.properties || {};
+    if (language === 'zh') {
+      return props.name_zh || 
+             (item as any).name_zh || 
+             props.name || 
+             item.name ||
+             props.code ||
+             (item as any).code ||
+             props.part_number ||
+             item.part_number ||
+             '商品';
+    } else {
+      return props.name_en || 
+             (item as any).name_en || 
+             props.name || 
+             item.name ||
+             props.code ||
+             (item as any).code ||
+             props.part_number ||
+             item.part_number ||
+             'Product';
+    }
+  };
+  
+  const displayName = getDisplayName();
+  
+  const partNumber = props.part_number || (item as any).part_number || '';
   const model = props.model || (item as any).model || '';
   const voltage = props.voltage || (item as any).voltage || '';
   const frequency = props.frequency || (item as any).frequency || '';
-  const pcsPerBox = props.pcs_per_box || (item as any).pcs_per_box || '';
-  const pcsPerPallet = props.pcs_per_pallet || (item as any).pcs_per_pallet || '';
-  const packageSizeCm = props.package_size_cm || (item as any).package_size_cm || '';
-  const packageSizeInch = props.package_size_inch || (item as any).package_size_inch || '';
-  const palletSizeCm = props.pallet_size_cm || (item as any).pallet_size_cm || '';
-  const palletSizeInch = props.pallet_size_inch || (item as any).pallet_size_inch || '';
+  const pcs_per_box = props.pcs_per_box || (item as any).pcs_per_box || '';
+  const pcs_per_pallet = props.pcs_per_pallet || (item as any).pcs_per_pallet || '';
+  const package_size_cm = props.package_size_cm || (item as any).package_size_cm || '';
+  const package_size_inch = props.package_size_inch || (item as any).package_size_inch || '';
+  const pallet_size_cm = props.pallet_size_cm || (item as any).pallet_size_cm || '';
+  const pallet_size_inch = props.pallet_size_inch || (item as any).pallet_size_inch || '';
 
   // 属性key到i18n key映射
   const propertyKeyMap: Record<string, string> = {
@@ -89,7 +113,7 @@ const CartItemCard: React.FC<CartItemCardProps> = ({ item, onUpdateQuantity, onR
       <div className="cart-item-content">
         <div className="cart-item-image">
           {imageUrl ? (
-            <img src={imageUrl} alt={name} />
+            <img src={imageUrl} alt={displayName} />
           ) : (
             <div className="placeholder-image">
               <Text type="secondary">No Image</Text>
@@ -98,17 +122,17 @@ const CartItemCard: React.FC<CartItemCardProps> = ({ item, onUpdateQuantity, onR
         </div>
         
         <div className="cart-item-details">
-          <Title level={5}>{name}</Title>
+          <Title level={5}>{displayName}</Title>
           <Text type="secondary">{getLabel('partNumber', t)}: {getValue(partNumber, t)}</Text>
           {model && <div><Text type="secondary">{getLabel('model', t)}: {getValue(model, t)}</Text></div>}
           {voltage && <div><Text type="secondary">{getLabel('voltage', t)}: {getValue(voltage, t)}</Text></div>}
           {frequency && <div><Text type="secondary">{getLabel('frequency', t)}: {getValue(frequency, t)}</Text></div>}
-          {pcsPerBox && <div><Text type="secondary">{getLabel('pcsPerBox', t)}: {getValue(pcsPerBox, t)}</Text></div>}
-          {pcsPerPallet && <div><Text type="secondary">{getLabel('pcsPerPallet', t)}: {getValue(pcsPerPallet, t)}</Text></div>}
-          {packageSizeCm && <div><Text type="secondary">{getLabel('packageSize', t)} (cm): {getValue(packageSizeCm, t)}</Text></div>}
-          {packageSizeInch && <div><Text type="secondary">{getLabel('packageSize', t)} (inch): {getValue(packageSizeInch, t)}</Text></div>}
-          {palletSizeCm && <div><Text type="secondary">{getLabel('palletSize', t)} (cm): {getValue(palletSizeCm, t)}</Text></div>}
-          {palletSizeInch && <div><Text type="secondary">{getLabel('palletSize', t)} (inch): {getValue(palletSizeInch, t)}</Text></div>}
+          {pcs_per_box && <div><Text type="secondary">{getLabel('pcsPerBox', t)}: {getValue(pcs_per_box, t)}</Text></div>}
+          {pcs_per_pallet && <div><Text type="secondary">{getLabel('pcsPerPallet', t)}: {getValue(pcs_per_pallet, t)}</Text></div>}
+          {package_size_cm && <div><Text type="secondary">{getLabel('packageSize', t)} (cm): {getValue(package_size_cm, t)}</Text></div>}
+          {package_size_inch && <div><Text type="secondary">{getLabel('packageSize', t)} (inch): {getValue(package_size_inch, t)}</Text></div>}
+          {pallet_size_cm && <div><Text type="secondary">{getLabel('palletSize', t)} (cm): {getValue(pallet_size_cm, t)}</Text></div>}
+          {pallet_size_inch && <div><Text type="secondary">{getLabel('palletSize', t)} (inch): {getValue(pallet_size_inch, t)}</Text></div>}
           <Text>{t('cart.unitPrice', {ns: 'spareParts'})}: {formatCurrency(item.unit_price, item.currency)}</Text>
         </div>
         

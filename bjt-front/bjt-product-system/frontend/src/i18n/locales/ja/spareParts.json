@@ -7,7 +7,12 @@
     "compatibility": "互換性",
     "price": "価格",
     "stock": "在庫状況",
-    "all": "すべて"
+    "all": "すべて",
+    "allProductTypes": "すべての製品タイプ",
+    "allModels": "すべてのモデル",
+    "allTypes": "すべてのタイプ",
+    "consumable": "消耗品",
+    "nonConsumable": "非消耗品"
   },
   "categories": {
     "all": "すべてのカテゴリー",

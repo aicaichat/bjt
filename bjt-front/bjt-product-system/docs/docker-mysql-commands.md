@@ -86,7 +86,7 @@ docker-compose -f docker/dev/docker-compose.nginx.yml exec mysql \
 docker-compose -f docker/dev/docker-compose.dev.yml exec -T mysql \
   mysql -uwordpress -pwordpress bjt_product < backup.sql
 ```
-
+docker exec -i prod_mysql_1 mysql -u root -pbjtpassword123 bjt_product < docker/dev/mysql/test_users.sql
 
 docker-compose -f docker/dev/docker-compose.nginx.yml exec -T mysql \
   mysql -uwordpress -pwordpress bjt_product  < docker/dev/mysql/consumable.sql
@@ -148,3 +148,17 @@ lsof -ti:5173,5174,5175,5176,5177,5178 | xargs kill -9
 
 
 venvzuodao@zuodaolizhiguodeMacBook-Air bjt-product-system % pkill -f vite && sleep 3 && npm run de
+
+
+docker exec -it prod_mysql_1 mysql -u root -pbjtpassword123 bjt_product
+
+
+docker exec -it prod_mysql_1 mysql -u root -pbjtpassword123 bjt_product < docker/dev/mysql/test_users.sql
+# 连接到MySQL容器
+docker exec -i mysql mysql -uwordpress -pwordpress bjt_product < docker/dev/mysql/init.sql
+docker exec -i mysql mysql -uwordpress -pwordpress bjt_product < docker/dev/mysql/test_users.sql
+docker exec -i mysql mysql -uwordpress -pwordpress bjt_product < generated_sql_imports/_设备.sql
+docker exec -i mysql mysql -uwordpress -pwordpress bjt_product < generated_sql_imports/_耗材.sql
+
+
+ open /Applications/Docker.app

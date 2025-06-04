@@ -35,28 +35,28 @@ export const MachineFilters: React.FC<MachineFiltersProps> = ({
       <div className="filters-row">
         {/* 机器类型筛选 */}
         <div className="filter-item">
-          <label>{t('machines.filters.type')}:</label>
+          <label>{t('filters.type')}:</label>
           <Select
             value={filterType}
             onChange={onFilterTypeChange}
             style={{ width: 150 }}
-            placeholder={t('machines.filters.selectType')}
+            placeholder={t('filters.selectType')}
           >
             <Option value="all">{t('common.all')}</Option>
-            <Option value="automatic">{t('machines.types.automatic')}</Option>
-            <Option value="manual">{t('machines.types.manual')}</Option>
-            <Option value="semi-automatic">{t('machines.types.semiAutomatic')}</Option>
+            <Option value="automatic">{t('types.automatic')}</Option>
+            <Option value="manual">{t('types.manual')}</Option>
+            <Option value="semi-automatic">{t('types.semiAutomatic')}</Option>
           </Select>
         </div>
 
         {/* 区域筛选 */}
         <div className="filter-item">
-          <label>{t('machines.filters.region')}:</label>
+          <label>{t('filters.region')}:</label>
           <Select
             value={filterRegion}
             onChange={onFilterRegionChange}
             style={{ width: 120 }}
-            placeholder={t('machines.filters.selectRegion')}
+            placeholder={t('filters.selectRegion')}
           >
             {regions.map(region => (
               <Option key={region.code} value={region.code}>
@@ -68,12 +68,12 @@ export const MachineFilters: React.FC<MachineFiltersProps> = ({
 
         {/* 电压筛选 */}
         <div className="filter-item">
-          <label>{t('machines.filters.voltage')}:</label>
+          <label>{t('filters.voltage')}:</label>
           <Select
             value={selectedVoltage}
             onChange={onVoltageChange}
             style={{ width: 100 }}
-            placeholder={t('machines.filters.selectVoltage')}
+            placeholder={t('filters.selectVoltage')}
           >
             {voltageOptions.map(voltage => (
               <Option key={voltage} value={voltage}>

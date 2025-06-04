@@ -62,6 +62,23 @@ class BJT_Spare_Part_Controller extends BJT_API_Controller {
             ],
         ]);
         
+        // 备件筛选选项API
+        register_rest_route($this->namespace, '/' . $this->resource_name . '/filter-options', [
+            [
+                'methods' => WP_REST_Server::READABLE,
+                'callback' => [$this, 'get_filter_options'],
+                'permission_callback' => [$this, 'check_read_permission'],
+                'args' => [
+                    'lang' => [
+                        'type' => 'string',
+                        'enum' => ['zh', 'en'],
+                        'default' => 'zh',
+                        'description' => '语言代码'
+                    ]
+                ]
+            ]
+        ]);
+        
         // 修正后的路由注册格式
         $id_arg = [
             'id' => [
@@ -205,7 +222,7 @@ class BJT_Spare_Part_Controller extends BJT_API_Controller {
         $formatted = [];
         foreach (array_keys(get_object_vars($item_db_object)) as $key) {
             if ($key === 'is_consumable') {
-                $formatted[$key] = (bool) $item_db_object->$key;
+                $formatted[$key] = (int) $item_db_object->$key; // 确保作为整数返回：0=不展示，1=易耗，2=非易耗
             } elseif (in_array($key, ['net_weight_kg', 'net_weight_lbs', 'gross_weight_kg', 'gross_weight_lbs'])) {
                  $formatted[$key] = $item_db_object->$key !== null ? floatval($item_db_object->$key) : null;
             } elseif (in_array($key, ['id', 'product_line_id', 'pcs_per_box'])) {
@@ -519,7 +536,10 @@ class BJT_Spare_Part_Controller extends BJT_API_Controller {
         $offset = $pagination_params['offset'];
         
         $base_query = "FROM {$this->table_name}";
-        $where_clauses = ["status = 'publish'"]; // Default to published, can add filters
+        $where_clauses = [
+            "status = 'publish'",
+            "is_consumable != 0"  // 排除不展示的记录（0=不展示）
+        ];
 
         // Example filter: by product_line_id
         if ($request->get_param('product_line_id')) {
@@ -529,9 +549,24 @@ class BJT_Spare_Part_Controller extends BJT_API_Controller {
         if ($request->get_param('part_number')) {
             $where_clauses[] = $wpdb->prepare("part_number = %s", sanitize_text_field($request->get_param('part_number')));
         }
-        // Example filter: is_consumable
-        if ($request->get_param('is_consumable') !== null) { // Check for null to allow filtering by false
-            $where_clauses[] = $wpdb->prepare("is_consumable = %d", rest_sanitize_boolean($request->get_param('is_consumable')));
+        // 添加配件型号筛选逻辑
+        if ($request->get_param('app_model')) {
+            $selected_model = sanitize_text_field($request->get_param('app_model'));
+            // 使用LIKE查询支持逗号分隔的模型列表匹配
+            $where_clauses[] = $wpdb->prepare(
+                "(app_model LIKE %s OR app_model LIKE %s OR app_model LIKE %s OR app_model = %s)",
+                '%' . $wpdb->esc_like($selected_model) . ',%',  // 模型在开头：ET1005,其他
+                '%,' . $wpdb->esc_like($selected_model) . ',%', // 模型在中间：其他,ET1005,其他
+                '%,' . $wpdb->esc_like($selected_model),        // 模型在结尾：其他,ET1005
+                $selected_model                                 // 完全匹配：ET1005
+            );
+        }
+        // Example filter: is_consumable - 支持1=易耗，2=非易耗
+        if ($request->get_param('is_consumable') !== null) {
+            $consumable_filter = (int)$request->get_param('is_consumable');
+            if (in_array($consumable_filter, [1, 2])) { // 只允许1或2
+                $where_clauses[] = $wpdb->prepare("is_consumable = %d", $consumable_filter);
+            }
         }
 
         $where_sql = implode(" AND ", $where_clauses);
@@ -780,5 +815,119 @@ class BJT_Spare_Part_Controller extends BJT_API_Controller {
      */
     public function check_delete_permission($request) {
         return current_user_can('manage_options'); // 只有管理员可以删除
+    }
+
+    /**
+     * 获取备件筛选选项
+     * 返回所有可用的产品类型、型号、品牌等筛选选项
+     *
+     * @param WP_REST_Request $request 请求对象
+     * @return WP_REST_Response 筛选选项响应
+     */
+    public function get_filter_options($request) {
+        global $wpdb;
+        
+        // 获取请求参数
+        $lang = $request->get_param('lang') ?: 'zh';
+        
+        // 查询所有已发布的备件，获取适用型号信息
+        $spare_parts = $wpdb->get_results($wpdb->prepare(
+            "SELECT DISTINCT app_model, is_consumable 
+             FROM {$this->table_name} 
+             WHERE status = 'publish' AND app_model IS NOT NULL AND app_model != ''"
+        ));
+        
+        // 获取主机型号和配件型号
+        $host_models_table = $wpdb->prefix . 'bjt_host_models';
+        $accessory_models_table = $wpdb->prefix . 'bjt_accessory_models';
+        $title_column = $lang === 'en' ? 'title_en' : 'title_zh';
+        
+        // 查询主机型号
+        $host_models_raw = $wpdb->get_results($wpdb->prepare(
+            "SELECT model, {$title_column} as title 
+             FROM {$host_models_table} 
+             WHERE status = 'publish' 
+             ORDER BY sort_order ASC, model ASC"
+        ));
+        
+        // 查询配件型号  
+        $accessory_models_raw = $wpdb->get_results($wpdb->prepare(
+            "SELECT model, {$title_column} as title 
+             FROM {$accessory_models_table} 
+             WHERE status = 'publish' 
+             ORDER BY sort_order ASC, model ASC"
+        ));
+        
+        // 构建主机型号列表（返回字符串数组，符合文档格式）
+        $host_models = [];
+        if ($host_models_raw) {
+            foreach ($host_models_raw as $model) {
+                $host_models[] = $model->model;
+            }
+        }
+        
+        // 构建配件型号列表
+        $accessory_models = [];
+        if ($accessory_models_raw) {
+            foreach ($accessory_models_raw as $model) {
+                $accessory_models[] = $model->model;
+            }
+        }
+        
+        // 如果没有从专门的型号表获取到数据，从备件的app_model字段中提取
+        if (empty($host_models) && empty($accessory_models) && $spare_parts) {
+            $all_models = [];
+            foreach ($spare_parts as $part) {
+                if (!empty($part->app_model)) {
+                    // 清理并分割模型字符串
+                    $clean_models = str_replace(['"', "'"], '', $part->app_model); // 移除引号
+                    $models_array = array_map('trim', explode(',', $clean_models));
+                    foreach ($models_array as $model) {
+                        $model = trim($model);
+                        if (!empty($model) && !in_array($model, $all_models)) {
+                            $all_models[] = $model;
+                        }
+                    }
+                }
+            }
+            
+            // 简单分类：LA-开头的归为主机型号，其他归为配件型号
+            sort($all_models);
+            foreach ($all_models as $model) {
+                // 检查是否为主机型号（以LA-开头）
+                if (preg_match('/^LA-/i', $model)) {
+                    $host_models[] = $model;
+                } else {
+                    $accessory_models[] = $model;
+                }
+            }
+        }
+        
+        // 对模型列表进行去重和排序
+        $host_models = array_unique($host_models);
+        $accessory_models = array_unique($accessory_models);
+        sort($host_models);
+        sort($accessory_models);
+        
+        // 构建备件类型选项（符合文档格式）
+        $part_types = [
+            [
+                'id' => 'consumable',
+                'name' => $lang === 'zh' ? '耗材' : 'Consumable'
+            ],
+            [
+                'id' => 'component', 
+                'name' => $lang === 'zh' ? '组件' : 'Component'
+            ]
+        ];
+        
+        // 构建响应数据（严格按照API文档格式）
+        $response_data = [
+            'hostModels' => $host_models,
+            'accessoryModels' => $accessory_models,
+            'partTypes' => $part_types
+        ];
+        
+        return $this->format_response($response_data, '筛选选项获取成功');
     }
 } 

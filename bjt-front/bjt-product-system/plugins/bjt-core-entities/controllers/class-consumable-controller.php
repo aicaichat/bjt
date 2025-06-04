@@ -684,20 +684,31 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
             $where_clauses[] = $wpdb->prepare("product_line_id = %d", absint($product_line_id));
         }
         
+        // 🔥 修复：正确处理category_id参数
+        $category_id = $request->get_param('category_id');
+        if (!empty($category_id) && is_numeric($category_id)) {
+            $where_clauses[] = $wpdb->prepare("product_line_id = %d", absint($category_id));
+        }
+        
         // Frontend specific filters (map to DB columns)
         // Model (maps to DB 'app_model' or 'model' depending on frontend intent)
         // For now, let's assume frontend 'model' filter maps to DB 'app_model' (compatible host machines)
         $filter_model = $request->get_param('model'); // machine model filter from frontend
         if (!empty($filter_model) && $filter_model !== 'all') {
-             $where_clauses[] = $wpdb->prepare("app_model LIKE %s", '%' . $wpdb->esc_like($filter_model) . '%');
+             // 🔥 修复：改用FIND_IN_SET来处理逗号分隔的值
+             $where_clauses[] = $wpdb->prepare("(app_model LIKE %s OR FIND_IN_SET(%s, REPLACE(app_model, '\"', '')))", 
+                '%' . $wpdb->esc_like($filter_model) . '%', $filter_model);
         }
         $filter_shape = $request->get_param('shape'); // maps to 'bag_type'
         if (!empty($filter_shape) && $filter_shape !== 'all') {
+             // 🔥 修复：正确映射shape到bag_type，处理不同的形状值
              $where_clauses[] = $wpdb->prepare("bag_type = %s", $filter_shape);
         }
         $filter_material = $request->get_param('material');
         if (!empty($filter_material) && $filter_material !== 'all') {
-             $where_clauses[] = $wpdb->prepare("material = %s", $filter_material);
+             // 🔥 修复：处理材质匹配，包括部分匹配情况
+             $where_clauses[] = $wpdb->prepare("(material = %s OR material LIKE %s)", 
+                $filter_material, '%' . $wpdb->esc_like($filter_material) . '%');
         }
         // Thickness, Weight, Width, Length filters are more complex as they might be ranges or specific values
         // and need to map to thickness_met, width_met, length_met.
@@ -705,22 +716,55 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
         // Example for thickness (exact match on thickness_met for now if param is numeric)
         $filter_thickness = $request->get_param('thickness');
         if (!empty($filter_thickness) && is_numeric($filter_thickness)) {
-            $where_clauses[] = $wpdb->prepare("thickness_met = %f", floatval($filter_thickness));
+            // 🔥 修复：使用近似匹配，允许小幅度差异
+            $thickness_val = floatval($filter_thickness);
+            $where_clauses[] = $wpdb->prepare("ABS(thickness_met - %f) < 0.1", $thickness_val);
         }
         $filter_width = $request->get_param('width');
         if (!empty($filter_width) && is_numeric($filter_width)) {
-            $where_clauses[] = $wpdb->prepare("width_met = %f", floatval($filter_width));
+            // 🔥 修复：使用近似匹配，允许小幅度差异
+            $width_val = floatval($filter_width);
+            $where_clauses[] = $wpdb->prepare("ABS(width_met - %f) < 0.1", $width_val);
         }
         $filter_length = $request->get_param('length');
         if (!empty($filter_length) && is_numeric($filter_length)) {
-            $where_clauses[] = $wpdb->prepare("length_met = %f", floatval($filter_length));
+            // 🔥 修复：使用近似匹配，允许小幅度差异
+            $length_val = floatval($filter_length);
+            $where_clauses[] = $wpdb->prepare("ABS(length_met - %f) < 0.1", $length_val);
         }
         // Note: 'weight' filter from frontend not directly mapped yet.
+        
+        // 🔥 新增：添加调试日志
+        error_log('[BJT Consumables API] Applied filters: ' . json_encode([
+            'model' => $filter_model,
+            'shape' => $filter_shape, 
+            'material' => $filter_material,
+            'thickness' => $filter_thickness,
+            'width' => $filter_width,
+            'length' => $filter_length,
+            'where_clauses_count' => count($where_clauses)
+        ]));
 
         $where_sql = implode(" AND ", $where_clauses);
+        
+        // 🔥 新增：调试完整的SQL查询
+        error_log('[BJT Consumables API] Final WHERE clause: ' . $where_sql);
+        
+        // 🔥 关键修复：确保where clause不为空时才添加WHERE关键词
+        if (empty($where_clauses)) {
+            $where_sql = "1=1"; // 默认条件，返回所有记录
+            error_log('[BJT Consumables API] WARNING: No filter conditions applied, showing all records');
+        }
 
         $total_items_query = "SELECT COUNT(id) {$base_query} WHERE {$where_sql}";
+        
+        // 🔥 增强调试：记录完整查询语句
+        error_log('[BJT Consumables API] Complete Query: ' . $total_items_query);
+        
         $total_items = $wpdb->get_var($total_items_query);
+        
+        // 🔥 记录查询结果
+        error_log('[BJT Consumables API] Total items found: ' . $total_items);
 
         $items_query = "SELECT * {$base_query} WHERE {$where_sql} ORDER BY id DESC LIMIT %d OFFSET %d";
         $items_db = $wpdb->get_results($wpdb->prepare($items_query, $per_page, $offset));

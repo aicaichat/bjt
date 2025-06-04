@@ -107,7 +107,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
       <div className="consumable-details">
         <div className="detail-row">
           <span className="label">{getLabel('partNumber', t)}:</span>
-          <span className="value">{getValue(props.part_number || item.part_number, t)}</span>
+          <span className="value">{getValue(props.part_number || item.part_number || props.code || item.code, t)}</span>
         </div>
         <div className="detail-row">
           <span className="label">{getLabel('brand', t)}:</span>
@@ -125,20 +125,35 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
             {preferredUnit === 'metric' ? (getValue(props.spec, t)) : (getValue(props.spec_imperial || item.spec_imperial || props.spec || item.spec, t))}
           </span>
         </div>
-        {(props.bubble_diameter_met || props.bubble_diameter_imp) && (
+        {/* 耗材特有字段 */}
+        {(props.material || (props.specs && props.specs.material)) && (
           <div className="detail-row">
-            <span className="label">{getLabel('bubbleDiameter', t)}:</span>
-            <span className="value">
-              {preferredUnit === 'metric' 
-                ? `${getValue(props.bubble_diameter_met, t)} cm` 
-                : `${getValue(props.bubble_diameter_imp, t)} inch`}
-            </span>
+            <span className="label">{getLabel('material', t)}:</span>
+            <span className="value">{getValue(props.material || props.specs?.material || item.material, t)}</span>
           </div>
         )}
-        {props.pcs_per_box && (
+        {(props.width || (props.specs && props.specs.width)) && (
           <div className="detail-row">
-            <span className="label">{getLabel('pcsPerBox', t)}:</span>
-            <span className="value">{getValue(props.pcs_per_box, t)}</span>
+            <span className="label">{getLabel('width', t)}:</span>
+            <span className="value">{getValue(props.width || props.specs?.width || item.width, t)}</span>
+          </div>
+        )}
+        {(props.length || (props.specs && props.specs.length)) && (
+          <div className="detail-row">
+            <span className="label">{getLabel('length', t)}:</span>
+            <span className="value">{getValue(props.length || props.specs?.length || item.length, t)}</span>
+          </div>
+        )}
+        {(props.rollLength || (props.specs && props.specs.rollLength)) && (
+          <div className="detail-row">
+            <span className="label">{getLabel('rollLength', t)}:</span>
+            <span className="value">{getValue(props.rollLength || props.specs?.rollLength || item.rollLength, t)}</span>
+          </div>
+        )}
+        {(props.thickness || (props.specs && props.specs.thickness)) && (
+          <div className="detail-row">
+            <span className="label">{getLabel('thickness', t)}:</span>
+            <span className="value">{getValue(props.thickness || props.specs?.thickness || item.thickness, t)}</span>
           </div>
         )}
         <div className="detail-row">
@@ -156,15 +171,31 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
     
     // 解析必选备件信息
     const parseRequiredParts = (
-      requiredParts: string | null | undefined,
-      requiredQuantity: string | null | undefined
+      requiredParts: string | string[] | null | undefined,
+      requiredQuantity: string | string[] | null | undefined
     ): { part_number: string; quantity: number }[] => {
       if (!requiredParts || !requiredQuantity) {
         return [];
       }
 
-      const partNumbers = requiredParts.split(',').map(p => p.trim()).filter(p => p);
-      const quantities = requiredQuantity.split(',').map(q => parseInt(q.trim(), 10)).filter(q => !isNaN(q));
+      let partNumbers: string[] = [];
+      let quantities: number[] = [];
+
+      if (typeof requiredParts === 'string') {
+        partNumbers = requiredParts.split(',').map(p => p.trim()).filter(p => p);
+      } else if (Array.isArray(requiredParts)) {
+        partNumbers = requiredParts.map(p => String(p).trim()).filter(p => p);
+      } else {
+        return [];
+      }
+
+      if (typeof requiredQuantity === 'string') {
+        quantities = requiredQuantity.split(',').map(q => parseInt(q.trim(), 10)).filter(q => !isNaN(q));
+      } else if (Array.isArray(requiredQuantity)) {
+        quantities = requiredQuantity.map(q => parseInt(String(q).trim(), 10)).filter(q => !isNaN(q));
+      } else {
+        return [];
+      }
 
       if (partNumbers.length !== quantities.length) {
         console.warn('必选备件料号和数量不匹配:', { requiredParts, requiredQuantity });
@@ -437,30 +468,96 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
               {items.map(item => (
                 <div key={item.id} className="cart-sidebar-item">
                   <div className="cart-item-checkbox">
-                    <div 
-                      className={`cart-checkbox ${isItemSelected(item.id) ? 'checked' : ''}`}
-                      onClick={() => handleToggleItem(item.id)}
-                    >
-                      {isItemSelected(item.id) && <span className="checkbox-tick">✓</span>}
-                    </div>
+                    <input
+                      type="checkbox"
+                      checked={isItemSelected(item.id)}
+                      onChange={(e) => toggleItemSelection(item.id, e.target.checked)}
+                    />
                   </div>
                   
                   <div className="cart-item-image">
-                    <img src={item.properties?.image_url || item.image_url || item.image || '/images/placeholder.jpg'} alt={item.properties?.name || item.name || t('defaultValues.notAvailable', {ns: 'spareParts'})} />
+                    <img src={(() => {
+                      // 优先从 properties 取图片，再从 item 本身取
+                      const props = item.properties || {};
+                      return props.image_url || 
+                             item.image_url || 
+                             props.image || 
+                             item.image || 
+                             '/images/placeholder.jpg';
+                    })()} alt={(() => {
+                      // 获取商品名称用于 alt 属性
+                      const props = item.properties || {};
+                      if (i18n.language === 'zh') {
+                        return props.name_zh || 
+                               item.name_zh || 
+                               props.name || 
+                               item.name ||
+                               props.code ||
+                               item.code ||
+                               props.part_number ||
+                               item.part_number ||
+                               item.id ||
+                               '商品';
+                      } else {
+                        return props.name_en || 
+                               item.name_en || 
+                               props.name || 
+                               item.name ||
+                               props.code ||
+                               item.code ||
+                               props.part_number ||
+                               item.part_number ||
+                               item.id ||
+                               'Product';
+                      }
+                    })()} />
                   </div>
                   
                   <div className="cart-item-details">
                     <div className="cart-item-title">{
-                      i18n.language === 'zh'
-                        ? (item.properties?.name_zh || item.name_zh || item.properties?.name || item.name)
-                        : (item.properties?.name_en || item.name_en || item.properties?.name || item.name)
-                      || t('defaultValues.notAvailable', {ns: 'spareParts'})
+                      (() => {
+                        // 更强的商品名称获取逻辑，确保耗材名称能正确显示
+                        const getDisplayName = (): string => {
+                          const props = item.properties || {};
+                          
+                          if (i18n.language === 'zh') {
+                            // 中文优先级：name_zh -> name -> code -> part_number -> id
+                            return props.name_zh || 
+                                   item.name_zh || 
+                                   props.name || 
+                                   item.name ||
+                                   props.code ||
+                                   item.code ||
+                                   props.part_number ||
+                                   item.part_number ||
+                                   String(item.id) ||
+                                   '商品';
+                          } else {
+                            // 英文优先级：name_en -> name -> code -> part_number -> id
+                            return props.name_en || 
+                                   item.name_en || 
+                                   props.name || 
+                                   item.name ||
+                                   props.code ||
+                                   item.code ||
+                                   props.part_number ||
+                                   item.part_number ||
+                                   String(item.id) ||
+                                   'Product';
+                          }
+                        };
+                        
+                        const displayName = getDisplayName();
+                        
+                        return displayName;
+                      })()
                     }</div>
                     {/* 根据产品类型显示详细信息 */}
                     {item.product_type === 'consumable' && renderConsumableDetails(item)}
                     {item.product_type === 'spare_part' && renderSparePartDetails(item)}
                     {item.product_type === 'accessory' && renderAccessoryDetails(item)}
                     {["machine", "host", "设备"].includes(item.product_type) && renderMachineDetails(item)}
+                    
                     <div className="cart-item-price">
                       <div className="unit-price">{t('unitPrice', {ns: 'cart'})}: ¥{getTieredPrice(item).toFixed(2)}</div>
                       <div className="subtotal">{t('subtotal', {ns: 'cart'})}: ¥{(getTieredPrice(item) * item.quantity).toFixed(2)}</div>

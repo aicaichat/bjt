@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
-import { Button, Select, InputNumber, Tabs, Tag, Tooltip } from 'antd';
+import { Button, Select, InputNumber, Tabs, Tag, Tooltip, Divider, Row, Col } from 'antd';
 import { ShoppingCartOutlined, InfoCircleOutlined, PlusOutlined, ExclamationCircleOutlined, ReloadOutlined, RightOutlined, MenuOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import MockServiceStatus from '../../components/MockServiceStatus';
@@ -31,88 +31,18 @@ const DEFAULT_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ
 // 常量定义
 const DEFAULT_REGION = 'CN';
 
-// 区域常量
-const REGIONS = {
-  CN: { nameCn: '中国', nameEn: 'China' },
-  US: { nameCn: '美国', nameEn: 'United States' },
-  EU: { nameCn: '欧洲', nameEn: 'Europe' },
-  ASIA: { nameCn: '亚洲', nameEn: 'Asia' }
-};
-
-// 工具函数
-const getCurrencySymbol = (region: string): string => {
-  switch (region) {
-    case 'CN': return '¥';
-    case 'US': return '$';
-    case 'EU': return '€';
-    default: return '¥';
-  }
-};
-
-const safeTextContent = (text: string): string => {
-  if (!text) return '';
-  return text.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
-};
-
-const hasPermission = (permission: string): boolean => {
-  return true; // 简化权限检查
-};
-
-const safeToLocaleString = (value: number): string => {
-  if (typeof value !== 'number' || isNaN(value)) return '0';
-  return value.toLocaleString();
-};
-
-const getStockStatus = (quantity: number) => {
-  if (quantity > 10) return { status: '充足', color: 'green' };
-  if (quantity > 0) return { status: '低库存', color: 'orange' };
-  return { status: '缺货', color: 'red' };
-};
-
-interface Machine {
-  id: number;
-  product_line_id: number;
-  model: string;
-  voltage: string;
-  image_url: string;
-  part_number: string;
-  name_zh: string;
-  name_en: string;
-  brand: string;
-  spec: string;
-  spec_imperial: string;
-  package_size_cm: string;
-  package_size_inch: string;
-  net_weight_kg: number;
-  net_weight_lbs: number;
-  gross_weight_kg: number;
-  gross_weight_lbs: number;
-  pcs_per_box: number;
-  pallet_size_cm: string;
-  pallet_size_inch: string;
-  pcs_per_pallet: number;
-  pallet_height_cm: number;
-  pallet_height_inch: number;
-  pallet_gross_weight_kg: number;
-  pallet_gross_weight_lbs: number;
-  status: string;
-  unit: string;
-  created_at: string;
-  updated_at: string;
-  model_title_zh: string;
-  model_title_en: string;
-  model_description_zh: string;
-  model_description_en: string;
-  model_explosion_diagram_pdf: string;
-  model_type: string;
-  model_image1_url: string;
-  model_image2_url: string;
-  inventory: InventoryData[];
-  prices: PriceTier[];
+export interface ConsumableSpecs {
+  material?: string | null;
+  shape?: string | null;
+  thickness?: string | null; // e.g., "25 μm"
+  width?: string | null; // e.g., "200 cm"
+  length?: string | null; // e.g., "500 m"
+  rollLength?: string | null; // e.g., "700 m"
+  compatibility?: string | null;
 }
 
 const MachinesPage: React.FC = () => {
-  const { t, i18n } = useTranslation();
+  const { t, i18n } = useTranslation('machines');
   const navigate = useNavigate();
   const { user } = useAuth();
   const { addItem } = useCart();
@@ -123,6 +53,44 @@ const MachinesPage: React.FC = () => {
   
   // 从URL参数获取category
   const category = searchParams.get('category') || '1';
+  
+  // Utility functions
+  const getCurrencySymbol = (region: string): string => {
+    switch (region) {
+      case 'CN': return '¥';
+      case 'US': return '$';
+      case 'EU': return '€';
+      default: return '¥';
+    }
+  };
+
+  const safeTextContent = (text: string): string => {
+    if (!text) return '';
+    return text.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+  };
+
+  const hasPermission = (permission: string): boolean => {
+    return true; // Simplified permission check
+  };
+
+  const safeToLocaleString = (value: number): string => {
+    if (typeof value !== 'number' || isNaN(value)) return '0';
+    return value.toLocaleString();
+  };
+
+  const getStockStatus = (quantity: number) => {
+    if (quantity > 10) return { status: t('stockStatus.sufficient'), color: 'green' };
+    if (quantity > 0) return { status: t('stockStatus.low'), color: 'orange' };
+    return { status: t('stockStatus.outOfStock'), color: 'red' };
+  };
+  
+  // Define REGIONS inside the component to access t function
+  const REGIONS = {
+    CN: { nameCn: t('regions.china'), nameEn: 'China' },
+    US: { nameCn: t('regions.usa'), nameEn: 'United States' },
+    EU: { nameCn: t('regions.europe'), nameEn: 'Europe' },
+    ASIA: { nameCn: t('regions.asia'), nameEn: 'Asia' }
+  };
   
   // 机器相关状态
   const [machines, setMachines] = useState<MachinePart[]>([]);
@@ -172,7 +140,7 @@ const MachinesPage: React.FC = () => {
   const previousMachineRef = useRef<string>('');
   
   // 判断用户角色和权限
-  const isSales = user && hasPermission('viewInventory');
+  const isSales = user && (user.role === 'admin' || user.role === 'sales');
   const canAddToCart = true;
   const userRegion = filterRegion || user?.region || DEFAULT_REGION;
   
@@ -351,7 +319,7 @@ const MachinesPage: React.FC = () => {
             
             // If all formats fail, fallback to mock data but log the issue
             console.warn('API response invalid, using fallback mock data');
-            const mockMachines: Machine[] = [
+            const mockMachines: MachinePart[] = [
               {
                 id: 1,
                 product_line_id: 1,
@@ -359,11 +327,11 @@ const MachinesPage: React.FC = () => {
                 voltage: '220V',
                 image_url: '/images/machines/LA-E4S.jpg',
                 part_number: '60A01140',
-                name_zh: 'LA-E4S主机-标准版',
-                name_en: 'LA-E4S Host-Standard',
+                name_zh: t('models.E4S.nameZh'),
+                name_en: t('models.E4S.nameEn'),
                 brand: 'Lockedair',
-                spec: 'Business Class Air Cushion Pillow & Bubble System,AC220V',
-                spec_imperial: 'Business Class Air Cushion Pillow & Bubble System,AC220V',
+                spec: t('models.E4S.spec'),
+                spec_imperial: t('models.E4S.specImperial'),
                 package_size_cm: '75*35*45cm',
                 package_size_inch: '29.5*13.8*17.7in',
                 net_weight_kg: 25.5,
@@ -382,12 +350,12 @@ const MachinesPage: React.FC = () => {
                 unit: 'pcs',
                 created_at: '2025-05-21 05:01:05',
                 updated_at: '2025-05-21 05:01:05',
-                model_title_zh: 'LA-E4S商用气垫制造机',
-                model_title_en: 'LA-E4S Business Air Cushion Machine',
-                model_description_zh: '商用级气垫枕和气泡系统，220V交流电源',
-                model_description_en: 'Business class air cushion pillow and bubble system, AC220V',
+                model_title_zh: t('models.E4S.titleZh'),
+                model_title_en: t('models.E4S.titleEn'),
+                model_description_zh: t('models.E4S.descriptionZh'),
+                model_description_en: t('models.E4S.descriptionEn'),
                 model_explosion_diagram_pdf: '/documents/LA-E4S-diagram.pdf',
-                model_type: '商用',
+                model_type: t('models.E4S.type'),
                 model_image1_url: '/images/models/LA-E4S-1.jpg',
                 model_image2_url: '/images/models/LA-E4S-2.jpg',
                 inventory: [
@@ -414,11 +382,11 @@ const MachinesPage: React.FC = () => {
                 voltage: '220V',
                 image_url: '/images/machines/LA-E5P.jpg',
                 part_number: '60A01150',
-                name_zh: 'LA-E5P主机-精密版',
-                name_en: 'LA-E5P Host-Precision',
+                name_zh: t('models.E5P.nameZh'),
+                name_en: t('models.E5P.nameEn'),
                 brand: 'Lockedair',
-                spec: 'Precision Air Cushion System,AC220V',
-                spec_imperial: 'Precision Air Cushion System,AC220V',
+                spec: t('models.E5P.spec'),
+                spec_imperial: t('models.E5P.specImperial'),
                 package_size_cm: '80*40*50cm',
                 package_size_inch: '31.5*15.7*19.7in',
                 net_weight_kg: 32.0,
@@ -437,12 +405,12 @@ const MachinesPage: React.FC = () => {
                 unit: 'pcs',
                 created_at: '2025-05-21 05:01:05',
                 updated_at: '2025-05-21 05:01:05',
-                model_title_zh: 'LA-E5P精密气垫制造机',
-                model_title_en: 'LA-E5P Precision Air Cushion Machine',
-                model_description_zh: '精密级气垫系统，220V交流电源',
-                model_description_en: 'Precision air cushion system, AC220V',
+                model_title_zh: t('models.E5P.titleZh'),
+                model_title_en: t('models.E5P.titleEn'),
+                model_description_zh: t('models.E5P.descriptionZh'),
+                model_description_en: t('models.E5P.descriptionEn'),
                 model_explosion_diagram_pdf: '/documents/LA-E5P-diagram.pdf',
-                model_type: '精密',
+                model_type: t('models.E5P.type'),
                 model_image1_url: '/images/models/LA-E5P-1.jpg',
                 model_image2_url: '/images/models/LA-E5P-2.jpg',
                 inventory: [
@@ -566,32 +534,50 @@ const MachinesPage: React.FC = () => {
               pallet_size_cm: item.pallet_size_cm || '',
               pallet_size_inch: item.pallet_size_inch || '',
               pcs_per_pallet: item.pcs_per_pallet || '',
-              parts: [{
-                id: item.id || '',
-                part_number: item.part_number || '',
-                title: item.name || '',
+              net_weight_kg: item.net_weight_kg || 0,
+              net_weight_lbs: item.net_weight_lbs || 0,
+              gross_weight_kg: item.gross_weight_kg || 0,
+              gross_weight_lbs: item.gross_weight_lbs || 0,
+              spec: item.spec || '',
+              spec_imperial: item.spec_imperial || '',
+              description_zh: item.description_zh || '',
+              description_en: item.description_en || '',
+              is_required: item.is_required || false,
+              parent_id: item.parent_id || '',
+              children: item.children || [],
+              parts: (item.parts || []).map((part: any) => ({
+                id: part.id || '',
+                part_number: part.part_number || '',
+                title: part.name || '',
                 specs: {
-                  spec: item.spec || '',
-                  voltage: item.voltage || '',
-                  frequency: item.frequency || '',
-                  package_size_cm: item.package_size_cm || '',
-                  package_size_inch: item.package_size_inch || '',
-                  pcs_per_box: item.pcs_per_box || '',
-                  pallet_size_cm: item.pallet_size_cm || '',
-                  pallet_size_inch: item.pallet_size_inch || '',
-                  pcs_per_pallet: item.pcs_per_pallet || ''
+                  spec: part.spec || '',
+                  voltage: part.voltage || '',
+                  frequency: part.frequency || '',
+                  package_size_cm: part.package_size_cm || '',
+                  package_size_inch: part.package_size_inch || '',
+                  pcs_per_box: part.pcs_per_box || '',
+                  pallet_size_cm: part.pallet_size_cm || '',
+                  pallet_size_inch: part.pallet_size_inch || '',
+                  pcs_per_pallet: part.pcs_per_pallet || '',
+                  net_weight_kg: part.net_weight_kg || 0,
+                  net_weight_lbs: part.net_weight_lbs || 0,
+                  gross_weight_kg: part.gross_weight_kg || 0,
+                  gross_weight_lbs: part.gross_weight_lbs || 0
                 },
-                spec: item.spec || '',
-                spec_imperial: item.spec_imperial || '',
+                spec: part.spec || '',
+                spec_imperial: part.spec_imperial || '',
                 prices: {
-                  base: item.pricing?.base_price || 0,
-                  tier1: 0,
-                  tier2: 0,
-                  vip: 0
+                  base: part.pricing?.base_price || 0,
+                  tier1: part.pricing?.tier1_price || 0,
+                  tier2: part.pricing?.tier2_price || 0,
+                  vip: part.pricing?.vip_price || 0
                 },
-                inventory: item.inventory || []
-              }],
-              children: item.children || [] // 保存子配件数据供后续使用
+                inventory: (part.inventory || []).map((inv: any) => ({
+                  region: inv.region || '',
+                  amount: inv.amount || 0,
+                  reserved: inv.reserved || 0
+                }))
+              }))
             }));
             
             if (!isCancelled) {
@@ -654,271 +640,191 @@ const MachinesPage: React.FC = () => {
   };
 
   // 获取区域库存
-  const getRegionInventory = (product: Machine, region: string): number => {
+  const getRegionInventory = (product: MachinePart, region: string): number => {
     const regionInventory = product.inventory?.find(inv => inv.region === region);
     return regionInventory ? regionInventory.quantity : 0;
   };
 
   // 过滤产品
   const filteredMachines = React.useMemo(() => {
-    if (!Array.isArray(machines)) {
-      return [];
-    }
-    
-    let filtered = machines;
-    if (filterType !== 'all') {
-      filtered = machines.filter(machine => {
-        if (!machine) return false;
-        const name = getMachineName(machine).toLowerCase();
-        const identifier = machine.part_number?.toLowerCase() || '';
-        return identifier.includes(filterType.toLowerCase()) || 
-               name.includes(filterType.toLowerCase());
-      });
-    }
-    
-    return filtered;
-  }, [machines, filterType, currentLanguage]);
+    if (!Array.isArray(machines)) return [];
+    return machines.filter(machine => {
+      // 型号筛选
+      const modelMatch = filterType === 'all' || machine.model === filterType;
+      // 电压筛选
+      const voltageMatch = selectedVoltage === 'ALL' || !selectedVoltage || machine.voltage === selectedVoltage;
+      return modelMatch && voltageMatch;
+    });
+  }, [machines, filterType, selectedVoltage]);
+
+  const modelOptions = React.useMemo(() => {
+    if (!Array.isArray(machines)) return [];
+    const uniqueModels = Array.from(new Set(machines.map(m => m.model).filter(Boolean)));
+    return [
+      { value: 'all', label: t('filters.allModels') },
+      ...uniqueModels.map(model => ({
+        value: model,
+        label: model
+      }))
+    ];
+  }, [machines, t]);
 
   // 添加到购物车
   const handleAddToCart = async (product: MachinePart | MachineAccessory, productType: 'machine' | 'accessory' = 'machine') => {
     try {
-      const isMachineProduct = (p: MachinePart | MachineAccessory): p is MachinePart => productType === 'machine';
-      
-      // 确定后端产品类型映射
-      let backendProductType: 'machine' | 'accessory' | 'spare_part' | 'consumable';
-      if (productType === 'machine') {
-        backendProductType = 'machine';
-      } else {
-        backendProductType = 'accessory';
-      }
-
       const quantity = quantities[product.id] || 1;
-      let partNumber: string;
-      let properties: any = {};
-      let itemSpecs: any = {};
 
-      if (isMachineProduct(product)) {
-        // 强化part_number提取逻辑，添加多个fallback选项
-        partNumber = product.part_number || 
-                    (product as any).partNumber || 
-                    (product as any).code || 
-                    product.model || 
-                    `MACHINE-${product.id}`;
-        
-        console.log('🔍 [handleAddToCart] Machine partNumber extracted:', partNumber);
-        
-        properties = {
-          'part_number': partNumber, // 使用提取的partNumber
-          'model': product.model,
-          'voltage': product.voltage,
-          'spec': product.spec,
-          'spec_imperial': product.spec_imperial,
-          'selected_voltage': selectedVoltage
-        };
-        itemSpecs = {
-          'part_number': partNumber, // 使用提取的partNumber
-          'model': product.model,
-          'voltage': product.voltage,
-          'spec': product.spec,
-          'spec_imperial': product.spec_imperial,
-          'net_weight_kg': product.net_weight_kg,
-          'partNumber': partNumber, // 使用提取的partNumber
-          'productName': getMachineName(product)
-        };
-      } else {
-        const accessory = product as MachineAccessory;
-        const accessoryPart = accessory.parts?.[0];
-        const partSpecs = accessoryPart?.specs;
-        
-        console.log('🔍 [handleAddToCart] Processing accessory product:', {
-          accessory,
-          accessoryPart,
-          partSpecs,
-          accessoryModel: accessory.model
-        });
-        
-        // 强化配件part_number提取逻辑，添加多个fallback选项
-        partNumber = accessoryPart?.part_number || 
-                    (accessory as any).part_number ||
-                    (accessory as any).partNumber ||
-                    (accessory as any).code ||
-                    accessory.model || 
-                    `ACCESSORY-${accessory.id}`;
-        
-        console.log('🔍 [handleAddToCart] Accessory partNumber extracted:', partNumber);
-        
-        if (partSpecs) {
-          properties = { 
-            ...partSpecs,
-            'part_number': partNumber // 确保part_number在properties中
-          };
-          itemSpecs = {
-            ...partSpecs,
-            'part_number': partNumber,
-            'partNumber': partNumber,
-            'productName': accessory.title
-          };
-        } else {
-          // 如果没有partSpecs，创建基本的properties
-          properties = {
-            'part_number': partNumber,
-            'model': accessory.model,
-            'title': accessory.title
-          };
-          itemSpecs = {
-            'part_number': partNumber,
-            'partNumber': partNumber,
-            'productName': accessory.title
-          };
-        }
-      }
-
-      // 确保part_number不为空 - 强化检查
-      if (!partNumber || partNumber.trim() === '') {
-        console.error('❌ [handleAddToCart] partNumber is empty after all fallbacks!', {
-          product,
-          productType,
-          isMachine: isMachineProduct(product),
-          productPartNumber: isMachineProduct(product) ? (product as MachinePart).part_number : 'N/A',
-          accessoryPartNumber: !isMachineProduct(product) ? (product as MachineAccessory).parts?.[0]?.part_number : 'N/A',
-          extractedPartNumber: partNumber,
-          allProductFields: Object.keys(product)
-        });
-        
-        // 作为最后的fallback，使用产品ID
-        partNumber = `FALLBACK-${productType.toUpperCase()}-${product.id}`;
-        console.warn('⚠️ [handleAddToCart] Using fallback part number:', partNumber);
-        
-        // 更新properties中的part_number
-        properties['part_number'] = partNumber;
-        itemSpecs['part_number'] = partNumber;
-        itemSpecs['partNumber'] = partNumber;
-      }
-
-      const productName = isMachineProduct(product) ? getMachineName(product) : product.title;
-      const productCode = partNumber;
-      const productImage = product.image_url || '';
-      const productCategory = productType === 'machine' ? '设备' : '配件';
-      const productIdNum = typeof product.id === 'number' ? product.id : parseInt(product.id, 10);
-      
-      let price = 0;
-      let priceTiers: any[] = [];
-
-      if (isMachineProduct(product)) {
-        if (product.prices && product.prices.length > 0 && product.prices[0].tiers && product.prices[0].tiers.length > 0) {
-          price = product.prices[0].tiers[0].base_price;
-          priceTiers = product.prices[0].tiers.map(t => ({ 
-            min: t.min_quantity, 
-            max: t.max_quantity, 
-            base_price: t.base_price,
-            discount_rate: t.discount_rate
-          }));
-        } else {
-          price = 0; 
-          priceTiers = [];
-        }
-      } else {
-        const accessory = product as MachineAccessory;
-        const accessoryPrices = accessory.parts?.[0]?.prices;
-        if (accessoryPrices) {
-          price = accessoryPrices.base || 0;
-          priceTiers = [
-            { min: 1, max: 4, base_price: accessoryPrices.base },
-            { min: 5, max: 9, base_price: accessoryPrices.tier1 },
-            { min: 10, max: null, base_price: accessoryPrices.tier2 }
-          ];
-        } else {
-          price = 0;
-          priceTiers = [];
-        }
-      }
-
-      console.log('🛒 [handleAddToCart] Calling addItem with data:', {
-        productName,
-        productCode,
-        productIdNum,
-        quantity,
-        price,
-        backendProductType,
-        properties
-      });
-
-      // 只调用 addItem，它会内部处理 cartService.addToCart 调用
-      await addItem({
-        // 原始CartItem字段
-        item_id: productIdNum,
-        product_type: backendProductType, // 修复类型错误
-        product_id: productIdNum,
-        part_number: productCode,
-        quantity: quantity,
-        name: productName,
-        image_url: productImage,
-        unit_price: price,
-        currency: getCurrencySymbol(userRegion),
-        line_total: price * quantity,
-        inventory_status: 'in_stock',
-        added_at: new Date().toISOString(),
-        
-        // ExtendedCartItem字段
-        id: product.id.toString(),
-        code: productCode,
-        partNumber: productCode,
-        image: productImage,
-        category: productCategory,
-        productId: productIdNum,
-        price: price,
-        selected: true,
-        priceTiers: priceTiers,
-        type: productType,
-        specs: {
-          partNumber: productCode,
-          productName: productName
-        },
-        properties: properties
-      });
-
-      // 🔥 **关键逻辑：配件必选备件处理**
+      // 验证配件选择
       if (productType === 'accessory') {
-        console.log('🔍 [handleAddToCart] Processing accessory, checking for required parts...');
-        console.log('🔍 [handleAddToCart] Accessory details:', {
-          accessory: product,
-          accessoryId: product.id,
-          accessoryTitle: (product as MachineAccessory).title,
-          accessoryModel: (product as MachineAccessory).model,
-          selectedAccessories,
-          selectedMachine
-        });
+        const accessory = product as MachineAccessory;
         
-        // 确定配件的级别
-        let accessoryLevel = 1;
-        
-        // 通过selectedAccessories状态确定当前配件的级别
-        for (let level = 1; level <= 5; level++) {
-          const levelKey = `level${level}`;
-          if (selectedAccessories[levelKey] === product.id.toString()) {
-            accessoryLevel = level;
-            break;
+        // 检查必选配件
+        if (accessory.is_required) {
+          const currentLevel = accessory.level;
+          const requiredAccessories = currentLevel === 1 ? accessories :
+            currentLevel === 2 ? level2Accessories :
+            currentLevel === 3 ? level3Accessories :
+            currentLevel === 4 ? level4Accessories : level5Accessories;
+            
+          const selectedRequiredAccessories = requiredAccessories.filter(acc => 
+            acc.is_required && selectedAccessories[`level${currentLevel}`] === acc.id
+          );
+          
+          if (selectedRequiredAccessories.length < requiredAccessories.filter(acc => acc.is_required).length) {
+            showErrorToast(
+              t('errors.requiredAccessories'),
+              t('errors.selectAllRequired')
+            );
+            return;
           }
         }
         
-        console.log('📍 [handleAddToCart] Determined accessory level:', accessoryLevel);
-        console.log('📍 [handleAddToCart] Selected accessories state:', selectedAccessories);
-        
-        // 调用必选备件处理函数
-        try {
-          await addRequiredPartsToCartForAccessory(
-            product as MachineAccessory,
-            quantity,
-            accessoryLevel
-          );
-          console.log('✅ [handleAddToCart] Required parts processing completed');
-        } catch (error) {
-          console.error('❌ [handleAddToCart] Required parts processing failed:', error);
+        // 检查父级配件
+        if (accessory.parent_id) {
+          const parentLevel = accessory.level - 1;
+          const parentId = selectedAccessories[`level${parentLevel}`];
+          
+          if (!parentId || parentId !== accessory.parent_id) {
+            showErrorToast(
+              t('errors.invalidSelection'),
+              t('errors.selectParentFirst')
+            );
+            return;
+          }
         }
-      } else {
-        console.log('📝 [handleAddToCart] Product is not accessory, skipping required parts processing');
       }
-      
+
+      // 创建购物车项
+      const cartItem = {
+        ...product,
+        properties: productType === 'machine'
+          ? {
+              part_number: (product as MachinePart).part_number || (product as MachinePart).model || `MACHINE-${product.id}`,
+              model: (product as MachinePart).model || '',
+              name_zh: (product as MachinePart).name_zh || '',
+              name_en: (product as MachinePart).name_en || '',
+              voltage: (product as MachinePart).voltage || '',
+              spec: (product as MachinePart).spec || '',
+              spec_imperial: (product as MachinePart).spec_imperial || '',
+              brand: (product as MachinePart).brand || '',
+              unit: (product as MachinePart).unit || 'pcs',
+              pcs_per_box: (product as MachinePart).pcs_per_box?.toString() || '',
+              pcs_per_pallet: (product as MachinePart).pcs_per_pallet?.toString() || '',
+              package_size_cm: (product as MachinePart).package_size_cm || '',
+              package_size_inch: (product as MachinePart).package_size_inch || '',
+              pallet_size_cm: (product as MachinePart).pallet_size_cm || '',
+              pallet_size_inch: (product as MachinePart).pallet_size_inch || '',
+              net_weight_kg: (product as MachinePart).net_weight_kg?.toString() || '',
+              net_weight_lbs: (product as MachinePart).net_weight_lbs?.toString() || '',
+              gross_weight_kg: (product as MachinePart).gross_weight_kg?.toString() || '',
+              gross_weight_lbs: (product as MachinePart).gross_weight_lbs?.toString() || '',
+              image_url: product.image_url || ''
+            }
+          : {
+              part_number: (product as MachineAccessory).part_number || (product as MachineAccessory).model || `ACCESSORY-${product.id}`,
+              model: (product as MachineAccessory).model || '',
+              name_zh: (product as MachineAccessory).title_zh || (product as MachineAccessory).title || '',
+              name_en: (product as MachineAccessory).title_en || (product as MachineAccessory).title || '',
+              voltage: (product as MachineAccessory).voltage || (product as MachineAccessory).parts?.[0]?.specs?.voltage || '',
+              frequency: (product as MachineAccessory).frequency || (product as MachineAccessory).parts?.[0]?.specs?.frequency || '',
+              spec: (product as MachineAccessory).parts?.[0]?.spec || '',
+              spec_imperial: (product as MachineAccessory).parts?.[0]?.spec_imperial || '',
+              pcs_per_box: (product as MachineAccessory).pcs_per_box?.toString() || (product as MachineAccessory).parts?.[0]?.specs?.pcs_per_box || '',
+              pcs_per_pallet: (product as MachineAccessory).pcs_per_pallet?.toString() || (product as MachineAccessory).parts?.[0]?.specs?.pcs_per_pallet || '',
+              package_size_cm: (product as MachineAccessory).package_size_cm || (product as MachineAccessory).parts?.[0]?.specs?.package_size_cm || '',
+              package_size_inch: (product as MachineAccessory).package_size_inch || (product as MachineAccessory).parts?.[0]?.specs?.package_size_inch || '',
+              pallet_size_cm: (product as MachineAccessory).pallet_size_cm || (product as MachineAccessory).parts?.[0]?.specs?.pallet_size_cm || '',
+              pallet_size_inch: (product as MachineAccessory).pallet_size_inch || (product as MachineAccessory).parts?.[0]?.specs?.pallet_size_inch || '',
+              net_weight_kg: (product as MachineAccessory).net_weight_kg?.toString() || (product as MachineAccessory).parts?.[0]?.specs?.net_weight_kg || '',
+              net_weight_lbs: (product as MachineAccessory).net_weight_lbs?.toString() || (product as MachineAccessory).parts?.[0]?.specs?.net_weight_lbs || '',
+              gross_weight_kg: (product as MachineAccessory).gross_weight_kg?.toString() || (product as MachineAccessory).parts?.[0]?.specs?.gross_weight_kg || '',
+              gross_weight_lbs: (product as MachineAccessory).gross_weight_lbs?.toString() || (product as MachineAccessory).parts?.[0]?.specs?.gross_weight_lbs || '',
+              image_url: product.image_url || ''
+            },
+        id: product.id.toString(),
+        quantity,
+        selected: true,
+        type: productType,
+        added_at: new Date().toISOString(),
+        partNumber: product.part_number || product.model || `${productType.toUpperCase()}-${product.id}`,
+        productName: productType === 'machine'
+          ? getMachineName(product as MachinePart)
+          : (product as MachineAccessory).title_zh || (product as MachineAccessory).title,
+        price: productType === 'machine'
+          ? (product as MachinePart).prices?.[0]?.tiers?.[0]?.base_price || 0
+          : (product as MachineAccessory).parts?.[0]?.prices?.base || 0,
+        code: product.part_number || product.model || `${productType.toUpperCase()}-${product.id}`,
+        image: product.image_url || '',
+        category: productType === 'machine' ? t('categories.machine') : t('categories.accessory'),
+        productId: Number(product.id),
+        priceTiers: productType === 'machine'
+          ? (product as MachinePart).prices?.[0]?.tiers?.map(t => ({
+              min: t.min_quantity,
+              max: t.max_quantity,
+              price: t.base_price
+            })) || []
+          : (product as MachineAccessory).parts?.[0]?.prices
+            ? [
+                { min: 1, max: 4, price: (product as MachineAccessory).parts![0].prices!.base },
+                { min: 5, max: 9, price: (product as MachineAccessory).parts![0].prices!.tier1 },
+                { min: 10, max: null, price: (product as MachineAccessory).parts![0].prices!.tier2 }
+              ]
+            : [],
+        item_id: Number(product.id),
+        product_id: Number(product.id),
+        part_number: product.part_number || product.model || `${productType.toUpperCase()}-${product.id}`,
+        name: productType === 'machine'
+          ? getMachineName(product as MachinePart)
+          : (product as MachineAccessory).title_zh || (product as MachineAccessory).title,
+        image_url: product.image_url || '',
+        unit_price: productType === 'machine'
+          ? (product as MachinePart).prices?.[0]?.tiers?.[0]?.base_price || 0
+          : (product as MachineAccessory).parts?.[0]?.prices?.base || 0,
+        currency: getCurrencySymbol(userRegion),
+        line_total: (productType === 'machine'
+          ? (product as MachinePart).prices?.[0]?.tiers?.[0]?.base_price || 0
+          : (product as MachineAccessory).parts?.[0]?.prices?.base || 0) * quantity,
+        inventory_status: 'in_stock' as const,
+        product_type: productType,
+        parent_id: productType === 'accessory' ? (product as MachineAccessory).parent_id : undefined,
+        level: productType === 'accessory' ? (product as MachineAccessory).level : undefined
+      };
+
+      await addItem(cartItem);
+
+      // 处理必选配件
+      if (productType === 'accessory') {
+        const accessory = product as MachineAccessory;
+        if (accessory.is_required) {
+          await addRequiredPartsToCartForAccessory(accessory, quantity, accessory.level);
+        }
+      }
+
+      // 显示成功提示
+      const productName = productType === 'machine' 
+        ? getMachineName(product as MachinePart) 
+        : (product as MachineAccessory).title_zh || (product as MachineAccessory).title;
+        
       setNotificationProduct(productName);
       setNotificationQuantity(quantity);
       setShowNotification(true);
@@ -934,17 +840,16 @@ const MachinesPage: React.FC = () => {
         productType: productType
       });
       
-      // 提供更详细的错误信息
       let errorMessage = err.message || t('errors.systemError');
       if (err.message?.includes('part_number')) {
-        errorMessage = '产品料号信息缺失，请刷新页面重试或联系技术支持';
+        errorMessage = t('errors.missingPartNumber');
       } else if (err.message?.includes('401') || err.message?.includes('unauthorized')) {
-        errorMessage = '认证失效，请刷新页面重新登录';
+        errorMessage = t('errors.authExpired');
       } else if (err.message?.includes('400')) {
-        errorMessage = '请求参数错误，请检查产品信息';
+        errorMessage = t('errors.invalidRequest');
       }
       
-      showErrorToast('添加到购物车失败', errorMessage);
+      showErrorToast(t('errors.addToCartFailed'), errorMessage);
     }
   };
 
@@ -978,182 +883,113 @@ const MachinesPage: React.FC = () => {
 
   // 处理配件选择
   const handleAccessorySelection = async (level: number, accessoryId: string, accessoryName: string) => {
-    setSelectedAccessories(prev => ({
-      ...prev,
-      [`level${level}`]: accessoryId
-    }));
-    setSelectedAccessoryNames(prev => ({
-      ...prev,
-      [`level${level}`]: accessoryName
-    }));
-    
-    // 隐藏更高级别的配件区域
-    for (let i = level + 1; i <= 5; i++) {
-      const accessoryDiv = document.getElementById(`accessory-level-${i}`);
-      if (accessoryDiv) {
-        accessoryDiv.style.display = 'none';
-      }
-    }
-    
-    // 清除更高级别的选择状态
-    setSelectedAccessories(prev => {
-      const newState = { ...prev };
-      for (let i = level + 1; i <= 5; i++) {
-        if (newState[`level${i}`]) delete newState[`level${i}`];
-      }
-      return newState;
-    });
-    
-    setSelectedAccessoryNames(prev => {
-      const newState = { ...prev };
-      for (let i = level + 1; i <= 5; i++) {
-        if (newState[`level${i}`]) delete newState[`level${i}`];
-      }
-      return newState;
-    });
-    
-    const nextLevel = level + 1;
-    if (nextLevel <= 5) {
-      const contextMessage = document.getElementById(`level${nextLevel}-context-message`);
-      if (contextMessage) {
-        let contextText = `${accessoryName} 的适配配件`;
-        if (level > 1) contextText = `${level}级配件 ${accessoryName} 的下级适配件`;
-        contextMessage.textContent = contextText;
-      }
-    }
-    
-    // 获取选中配件的子配件数据
-    let currentLevelAccessories: MachineAccessory[] = [];
-    if (level === 1) currentLevelAccessories = accessories;
-    else if (level === 2) currentLevelAccessories = level2Accessories;
-    else if (level === 3) currentLevelAccessories = level3Accessories;
-    else if (level === 4) currentLevelAccessories = level4Accessories;
-
-    const selectedAccessoryObject = currentLevelAccessories.find(acc => acc.id === accessoryId);
-
-    if (!selectedAccessoryObject) {
-      console.error(`Could not find selected accessory object for ID: ${accessoryId} at level ${level}`);
-      showErrorToast('配件选择失败', '无法找到选中的配件信息');
-      return;
-    }
-
-    // 检查是否有子配件数据
-    const childrenData = (selectedAccessoryObject as any).children || [];
-    
-    // 设置对应级别的加载状态
-    let setLoadingState: React.Dispatch<React.SetStateAction<boolean>> = () => {};
-    if (level === 1) setLoadingState = setLevel2Loading; 
-    else if (level === 2) setLoadingState = setLevel3Loading;
-    else if (level === 3) setLoadingState = setLevel4Loading;
-    else if (level === 4) setLoadingState = setLevel5Loading;
-
     try {
-      setLoadingState(true);
+      // Validate required accessories
+      const currentLevelAccessories = level === 1 ? accessories :
+        level === 2 ? level2Accessories :
+        level === 3 ? level3Accessories :
+        level === 4 ? level4Accessories : level5Accessories;
       
-      let convertedAccessories: MachineAccessory[] = [];
+      const selectedAccessory = currentLevelAccessories.find(acc => acc.id === accessoryId);
       
-      if (childrenData.length === 0) {
-        console.log(`🔍 [handleAccessorySelection] No children accessories found for ${accessoryName}`);
-        info(`${accessoryName} 没有下级配件`);
-        // 继续执行，设置空数组以显示"无可用配件"提示
-      } else {
-        console.log(`🔍 [handleAccessorySelection] Using cached children data for level ${nextLevel}:`, childrenData);
+      if (selectedAccessory?.is_required) {
+        const requiredAccessories = currentLevelAccessories.filter(acc => acc.is_required);
+        const selectedRequiredAccessories = requiredAccessories.filter(acc => 
+          selectedAccessories[`level${level}`] === acc.id
+        );
         
-        // 转换子配件数据为前端格式
-        convertedAccessories = childrenData.map((item: any) => ({
-          id: item.id || '',
-          model: item.model || '',
-          title: item.name || '',
-          level: nextLevel,
-          image_url: item.image_url || '',
-          // 在根级别保存这些字段，便于访问
-          part_number: item.part_number || '',
-          voltage: item.voltage || '',
-          frequency: item.frequency || '',
-          package_size_cm: item.package_size_cm || '',
-          package_size_inch: item.package_size_inch || '',
-          pcs_per_box: item.pcs_per_box || '',
-          pallet_size_cm: item.pallet_size_cm || '',
-          pallet_size_inch: item.pallet_size_inch || '',
-          pcs_per_pallet: item.pcs_per_pallet || '',
-          parts: [{
-            id: item.id || '',
-            part_number: item.part_number || '',
-            title: item.name || '',
-            specs: {
-              spec: item.spec || '',
-              voltage: item.voltage || '',
-              frequency: item.frequency || '',
-              package_size_cm: item.package_size_cm || '',
-              package_size_inch: item.package_size_inch || '',
-              pcs_per_box: item.pcs_per_box || '',
-              pallet_size_cm: item.pallet_size_cm || '',
-              pallet_size_inch: item.pallet_size_inch || '',
-              pcs_per_pallet: item.pcs_per_pallet || ''
-            },
-            spec: item.spec || '',
-            spec_imperial: item.spec_imperial || '',
-            prices: {
-              base: item.pricing?.base_price || 0,
-              tier1: 0,
-              tier2: 0,
-              vip: 0
-            },
-            inventory: item.inventory || []
-          }],
-          children: item.children || [] // 保存更深层级的子配件数据
-        }));
+        if (selectedRequiredAccessories.length < requiredAccessories.length) {
+          showErrorToast(
+            t('errors.requiredAccessories'),
+            t('errors.selectAllRequired')
+          );
+          return;
+        }
       }
+
+      // Update selection state
+      setSelectedAccessories(prev => ({
+        ...prev,
+        [`level${level}`]: accessoryId
+      }));
       
-      console.log('🔍 [handleAccessorySelection] Converted child accessories:', {
-        level: nextLevel,
-        count: convertedAccessories.length,
-        accessories: convertedAccessories
+      setSelectedAccessoryNames(prev => ({
+        ...prev,
+        [`level${level}`]: accessoryName
+      }));
+
+      // Clear higher level selections
+      for (let i = level + 1; i <= 5; i++) {
+        const accessoryDiv = document.getElementById(`accessory-level-${i}`);
+        if (accessoryDiv) {
+          accessoryDiv.style.display = 'none';
+        }
+      }
+
+      // Clear higher level selection states
+      setSelectedAccessories(prev => {
+        const newState = { ...prev };
+        for (let i = level + 1; i <= 5; i++) {
+          if (newState[`level${i}`]) delete newState[`level${i}`];
+        }
+        return newState;
       });
-      
-      // 设置对应级别的配件数据
-      let setNextLevelAccessories: React.Dispatch<React.SetStateAction<MachineAccessory[]>> = () => {};
-      let nextLevelDivId = '';
 
-      if (level === 1) { 
-        setNextLevelAccessories = setLevel2Accessories; 
-        nextLevelDivId = 'accessory-level-2'; 
-      } else if (level === 2) { 
-        setNextLevelAccessories = setLevel3Accessories; 
-        nextLevelDivId = 'accessory-level-3'; 
-      } else if (level === 3) { 
-        setNextLevelAccessories = setLevel4Accessories; 
-        nextLevelDivId = 'accessory-level-4'; 
-      } else if (level === 4) { 
-        setNextLevelAccessories = setLevel5Accessories; 
-        nextLevelDivId = 'accessory-level-5'; 
+      setSelectedAccessoryNames(prev => {
+        const newState = { ...prev };
+        for (let i = level + 1; i <= 5; i++) {
+          if (newState[`level${i}`]) delete newState[`level${i}`];
+        }
+        return newState;
+      });
+
+      // Update context message
+      const nextLevel = level + 1;
+      if (nextLevel <= 5) {
+        const contextMessage = document.getElementById(`level${nextLevel}-context-message`);
+        if (contextMessage) {
+          let contextText = `${accessoryName} ${t('accessories.compatible')}`;
+          if (level > 1) {
+            contextText = `${t('accessories.level')} ${level} ${accessoryName} ${t('accessories.subCompatible')}`;
+          }
+          contextMessage.textContent = contextText;
+        }
       }
 
-      if (setNextLevelAccessories && nextLevelDivId) {
-        setNextLevelAccessories(convertedAccessories);
-        const nextDiv = document.getElementById(nextLevelDivId);
-        if (nextDiv) {
-          // 总是显示下级配件区域，无论是否有配件
-          nextDiv.style.display = 'block';
-          
-          // 更新上下文消息
-          const contextMessage = document.getElementById(`level${nextLevel}-context-message`);
-          if (contextMessage) {
-            if (convertedAccessories.length === 0) {
-              contextMessage.textContent = `${accessoryName} 没有下级适配件`;
-            } else {
-              let contextText = `${accessoryName} 的适配配件`;
-              if (level > 1) contextText = `${level}级配件 ${accessoryName} 的下级适配件`;
-              contextMessage.textContent = contextText;
-            }
-          }
+      // Get child accessories data
+      if (selectedAccessory?.children?.length > 0) {
+        const nextLevelAccessories = selectedAccessory.children.map(child => ({
+          ...child,
+          level: nextLevel
+        }));
+        
+        switch (nextLevel) {
+          case 2:
+            setLevel2Accessories(nextLevelAccessories);
+            break;
+          case 3:
+            setLevel3Accessories(nextLevelAccessories);
+            break;
+          case 4:
+            setLevel4Accessories(nextLevelAccessories);
+            break;
+          case 5:
+            setLevel5Accessories(nextLevelAccessories);
+            break;
+        }
+        
+        // Show next level accessory area
+        const nextLevelDiv = document.getElementById(`accessory-level-${nextLevel}`);
+        if (nextLevelDiv) {
+          nextLevelDiv.style.display = 'block';
         }
       }
     } catch (err: any) {
-      console.error(`❌ [handleAccessorySelection] Failed to process level ${nextLevel} accessories:`, err);
-      showErrorToast('处理配件数据失败', err.message || '处理配件数据失败');
-    } finally {
-      setLoadingState(false);
+      console.error(`❌ [handleAccessorySelection] Failed to process level ${level} accessories:`, err);
+      showErrorToast(
+        t('errors.processingFailed'),
+        err.message || t('errors.unknownError')
+      );
     }
   };
 
@@ -1189,9 +1025,9 @@ const MachinesPage: React.FC = () => {
                     className="form-radio text-blue-500 mr-2"
                     checked={selectedMachine === machine.id.toString()}
                     onChange={() => handleMachineSelection(machine.id)}
-                    aria-label={`选择主机 ${machine.part_number}`}
+                    aria-label={`${t('actions.selectMachine')} ${machine.part_number}`}
                   />
-                  <span className="text-sm font-medium">选择主机</span>
+                  <span className="text-sm font-medium">{t('actions.selectMachine')}</span>
                 </label>
               </div>
                 
@@ -1205,23 +1041,23 @@ const MachinesPage: React.FC = () => {
                 <div className="bg-gray-50 rounded-lg p-4 mt-3 shadow-sm">
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div className="flex items-center">
-                      <strong className="w-24 text-gray-600 font-medium">型号:</strong>
+                      <strong className="w-24 text-gray-600 font-medium">{t('tableHeaders.model')}:</strong>
                       <span className="text-gray-800 font-medium">{machine.model}</span>
                     </div>
                     <div className="flex items-center">
-                      <strong className="w-24 text-gray-600 font-medium">电压:</strong>
-                      <span className="text-gray-800 font-medium">{machine.voltage || 'N/A'}</span>
+                      <strong className="w-24 text-gray-600 font-medium">{t('tableHeaders.voltage')}:</strong>
+                      <span className="text-gray-800 font-medium">{machine.voltage ? t('voltages.' + machine.voltage) : 'N/A'}</span>
                     </div>
                     <div className="flex items-center">
-                      <strong className="w-24 text-gray-600 font-medium">单箱数量:</strong>
+                      <strong className="w-24 text-gray-600 font-medium">{t('tableHeaders.pcsPerBox')}:</strong>
                       <span className="text-gray-800 font-medium">{machine.pcs_per_box !== null && machine.pcs_per_box !== undefined ? machine.pcs_per_box : 'N/A'}</span>
                     </div>
                     <div className="flex items-center">
-                      <strong className="w-24 text-gray-600 font-medium">一托数量:</strong>
+                      <strong className="w-24 text-gray-600 font-medium">{t('tableHeaders.pcsPerPallet')}:</strong>
                       <span className="text-gray-800 font-medium">{machine.pcs_per_pallet !== null && machine.pcs_per_pallet !== undefined ? machine.pcs_per_pallet : 'N/A'}</span>
                     </div>
                     <div className="flex items-center">
-                      <strong className="w-24 text-gray-600 font-medium">托盘尺寸:</strong>
+                      <strong className="w-24 text-gray-600 font-medium">{t('tableHeaders.palletSize')}:</strong>
                       <span className="text-gray-800 font-medium">
                         {unitSystem === 'metric' 
                           ? (machine.pallet_size_cm || 'N/A')
@@ -1230,7 +1066,7 @@ const MachinesPage: React.FC = () => {
                       </span>
                     </div>
                     <div className="flex items-center">
-                      <strong className="w-24 text-gray-600 font-medium">包装尺寸:</strong>
+                      <strong className="w-24 text-gray-600 font-medium">{t('tableHeaders.packSize')}:</strong>
                       <span className="text-gray-800 font-medium">
                         {unitSystem === 'metric' 
                           ? (machine.package_size_cm || 'N/A')
@@ -1249,12 +1085,12 @@ const MachinesPage: React.FC = () => {
                       if (machine.model_explosion_diagram_pdf) {
                         window.open(machine.model_explosion_diagram_pdf, '_blank');
                       } else {
-                        info('暂无规格详情PDF文件');
+                        info(t('noSpecPdf'));
                       }
                     }}
                     className="bg-gray-100 text-gray-600 hover:bg-gray-600 hover:text-white border-gray-300 transition-colors duration-200"
                   >
-                    规格详情
+                    {t('specDetails')}
                   </Button>
                   
                   <Tooltip
@@ -1262,45 +1098,45 @@ const MachinesPage: React.FC = () => {
                       <div className="p-3 bg-white rounded-lg shadow-lg border border-gray-200">
                         <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
                           <InfoCircleOutlined className="text-blue-500 mr-2" />
-                          <span className="font-bold text-gray-800 text-sm">产品详细信息</span>
+                          <span className="font-bold text-gray-800 text-sm">{t('moreInfo')}</span>
                         </div>
                         <div className="space-y-2">
                           <div className="flex justify-between items-center py-1">
-                            <span className="text-gray-600 font-medium text-xs">📦 包装尺寸:</span>
+                            <span className="text-gray-600 font-medium text-xs">{t('tableHeaders.packSize')}:</span>
                             <span className="text-gray-800 font-semibold text-xs bg-blue-50 px-2 py-1 rounded">
-                              {unitSystem === 'metric' ? (machine.package_size_cm || '待补充') : (machine.package_size_inch || '待补充')}
+                              {unitSystem === 'metric' ? (machine.package_size_cm || t('pending')) : (machine.package_size_inch || t('pending'))}
                             </span>
                           </div>
                           <div className="flex justify-between items-center py-1">
-                            <span className="text-gray-600 font-medium text-xs">⚖️ 单件净重:</span>
+                            <span className="text-gray-600 font-medium text-xs">{t('tableHeaders.netWeight')}:</span>
                             <span className="text-gray-800 font-semibold text-xs bg-green-50 px-2 py-1 rounded">
                               {unitSystem === 'metric' 
-                                ? (machine.net_weight_kg !== null && machine.net_weight_kg !== undefined ? `${machine.net_weight_kg} kg` : '待补充')
-                                : (machine.net_weight_lbs !== null && machine.net_weight_lbs !== undefined ? `${machine.net_weight_lbs} lbs` : '待补充')
+                                ? (machine.net_weight_kg !== null && machine.net_weight_kg !== undefined ? `${machine.net_weight_kg} kg` : t('pending'))
+                                : (machine.net_weight_lbs !== null && machine.net_weight_lbs !== undefined ? `${machine.net_weight_lbs} lbs` : t('pending'))
                               }
                             </span>
                           </div>
                           <div className="flex justify-between items-center py-1">
-                            <span className="text-gray-600 font-medium text-xs">📏 打托高度:</span>
+                            <span className="text-gray-600 font-medium text-xs">{t('tableHeaders.palletHeight')}:</span>
                             <span className="text-gray-800 font-semibold text-xs bg-yellow-50 px-2 py-1 rounded">
                               {unitSystem === 'metric' 
-                                ? (machine.pallet_height_cm !== null && machine.pallet_height_cm !== undefined ? `${machine.pallet_height_cm} cm` : '待补充')
-                                : (machine.pallet_height_inch !== null && machine.pallet_height_inch !== undefined ? `${machine.pallet_height_inch} inch` : '待补充')
+                                ? (machine.pallet_height_cm !== null && machine.pallet_height_cm !== undefined ? `${machine.pallet_height_cm} cm` : t('pending'))
+                                : (machine.pallet_height_inch !== null && machine.pallet_height_inch !== undefined ? `${machine.pallet_height_inch} inch` : t('pending'))
                               }
                             </span>
                           </div>
                           <div className="flex justify-between items-center py-1">
-                            <span className="text-gray-600 font-medium text-xs">🏗️ 整托毛重:</span>
+                            <span className="text-gray-600 font-medium text-xs">{t('tableHeaders.palletGrossWeight')}:</span>
                             <span className="text-gray-800 font-semibold text-xs bg-purple-50 px-2 py-1 rounded">
                               {unitSystem === 'metric' 
-                                ? (machine.pallet_gross_weight_kg !== null && machine.pallet_gross_weight_kg !== undefined ? `${machine.pallet_gross_weight_kg} kg` : '待补充')
-                                : (machine.pallet_gross_weight_lbs !== null && machine.pallet_gross_weight_lbs !== undefined ? `${machine.pallet_gross_weight_lbs} lbs` : '待补充')
+                                ? (machine.pallet_gross_weight_kg !== null && machine.pallet_gross_weight_kg !== undefined ? `${machine.pallet_gross_weight_kg} kg` : t('pending'))
+                                : (machine.pallet_gross_weight_lbs !== null && machine.pallet_gross_weight_lbs !== undefined ? `${machine.pallet_gross_weight_lbs} lbs` : t('pending'))
                               }
                             </span>
                           </div>
                         </div>
                         <div className="mt-3 pt-2 border-t border-gray-100 text-center">
-                          <span className="text-xs text-gray-500">💡 悬停查看详细规格信息</span>
+                          <span className="text-xs text-gray-500">{t('hoverDetails')}</span>
                         </div>
                       </div>
                     }
@@ -1317,7 +1153,7 @@ const MachinesPage: React.FC = () => {
                       icon={<InfoCircleOutlined />}
                       className="bg-blue-100 text-blue-600 hover:bg-blue-500 hover:text-white border-blue-300 transition-colors duration-200"
                     >
-                      更多信息
+                      {t('moreInfo')}
                     </Button>
                   </Tooltip>
                 </div>
@@ -1327,18 +1163,28 @@ const MachinesPage: React.FC = () => {
               <div className="w-full md:w-1/5 md:pl-6 mt-6 md:mt-0 border-t md:border-t-0 md:border-l border-gray-200 pt-6 md:pt-0">
                 <div className="mb-4">
                   <div className="font-medium text-sm text-gray-600 mb-2">
-                    价格 ({getCurrencySymbol(userRegion)}):
+                    {t('tableHeaders.price')} ({getCurrencySymbol(userRegion)}):
                   </div>
                   
+                  {/* 主显示最低价 */}
                   <div className="text-2xl font-bold text-blue-600 mb-2">
-                    {getCurrencySymbol(userRegion)}{formatPrice((machine.prices && machine.prices.length > 0 && machine.prices[0].tiers && machine.prices[0].tiers.length > 0) ? machine.prices[0].tiers[0].base_price : 0)}
+                    {getCurrencySymbol(userRegion)}
+                    {machine.prices && machine.prices.length > 0 && machine.prices[0].tiers && machine.prices[0].tiers.length > 0
+                      ? formatPrice(
+                          Math.min(...machine.prices[0].tiers.map(tier => tier.base_price || 0))
+                        )
+                      : 0}
+                    <span className="text-base text-gray-500 font-normal ml-2">
+                      {t('pricing.from')}
+                    </span>
                   </div>
                   
+                  {/* 梯度价格列表 */}
                   {machine.prices && machine.prices.length > 0 && machine.prices[0].tiers && machine.prices[0].tiers.length > 0 && (
                     <div className="text-xs text-gray-500">
                       {machine.prices[0].tiers.map((tier, index) => (
                         <div key={`machine-${machine.id}-price-tier-${index}-${tier.min_quantity}-${tier.max_quantity}`} className="mb-1">
-                          {getCurrencySymbol(userRegion)}{formatPrice(tier.base_price)} ({tier.min_quantity}-{tier.max_quantity || '+'})
+                          {getCurrencySymbol(userRegion)}{formatPrice(tier.base_price)}（{tier.min_quantity}-{tier.max_quantity || '+'}{t('pricing.pieces')}）
                         </div>
                       ))}
                     </div>
@@ -1348,7 +1194,7 @@ const MachinesPage: React.FC = () => {
                 {isSales && (
                   <div className="mb-4">
                     <div className="font-medium text-sm text-gray-600 mb-2">
-                      库存:
+                      {t('tableHeaders.stock')}:
                     </div>
                     <div className="flex flex-wrap gap-1">
                       {(Object.keys(REGIONS) as Array<keyof typeof REGIONS>).map((regionKey) => {
@@ -1402,7 +1248,7 @@ const MachinesPage: React.FC = () => {
                     className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 h-10 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
                     size="large"
                   >
-                    {canAddToCart ? '加入购物车' : '无权限添加'}
+                    {canAddToCart ? t('addToCart') : t('noPermissionAdd')}
                   </Button>
                 </div>
               </div>
@@ -1419,7 +1265,7 @@ const MachinesPage: React.FC = () => {
       <div className="flex justify-center items-center p-16 bg-white rounded-lg shadow-md border border-gray-200 transition-all duration-300">
         <LoadingState 
           size="large" 
-          text="加载机器中..." 
+          text={t('loading')} 
           type="spinner"
         />
       </div>
@@ -1432,10 +1278,10 @@ const MachinesPage: React.FC = () => {
       <div className="flex flex-col items-center justify-center p-8 bg-white rounded-lg shadow-md border border-gray-200 transition-all duration-300">
         <ExclamationCircleOutlined className="text-red-500 text-4xl mb-4" />
         <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          加载失败
+          {t('error')}
         </h3>
         <p className="text-gray-600 mb-4 text-center max-w-md">
-          {error || '系统错误'}
+          {error || t('error')}
         </p>
         <Button 
           type="primary" 
@@ -1443,7 +1289,7 @@ const MachinesPage: React.FC = () => {
           onClick={() => window.location.reload()} 
           className="bg-blue-500 hover:bg-blue-600 border-none"
         >
-          重试
+          {t('retry')}
         </Button>
       </div>
     );
@@ -1453,20 +1299,20 @@ const MachinesPage: React.FC = () => {
   const renderAccessoryPath = (level: number) => {
     const pathItems = [];
     
-    // 添加主机
+    // Add host machine
     if (selectedMachine) {
       const machine = machines.find(m => m.id.toString() === selectedMachine);
       if (machine) {
         pathItems.push(
           <div key={`machine-path-${level}-${machine.id}-${machine.part_number}`} className="flex items-center">
-            <span className="text-xs px-1.5 py-0.5 bg-gray-100 rounded mr-1">主机</span>
+            <span className="text-xs px-1.5 py-0.5 bg-gray-100 rounded mr-1">{t('path.machine')}</span>
             <span className="text-gray-800">{getMachineName(machine)}</span>
           </div>
         );
       }
     }
     
-    // 添加各级配件
+    // Add accessories for each level
     for (let i = 1; i < level; i++) {
       const accessoryId = selectedAccessories[`level${i}`];
       const accessoryName = selectedAccessoryNames[`level${i}`];
@@ -1474,7 +1320,9 @@ const MachinesPage: React.FC = () => {
       if (accessoryId && accessoryName) {
         pathItems.push(
           <div key={`accessory-level-${level}-path-${i}-${accessoryId}`} className="flex items-center">
-            <span className="text-xs px-1.5 py-0.5 bg-gray-100 rounded mr-1">{i}级配件</span>
+            <span className="text-xs px-1.5 py-0.5 bg-gray-100 rounded mr-1">
+              {t('accessories.level')} {i}
+            </span>
             <span className="text-gray-800">{accessoryName}</span>
           </div>
         );
@@ -1504,10 +1352,7 @@ const MachinesPage: React.FC = () => {
               level === 4 ? 'text-orange-600' :
               level === 5 ? 'text-red-600' : 'text-blue-600'
             }`}>
-              {level === 2 ? '二级配件' :
-               level === 3 ? '三级配件' :
-               level === 4 ? '四级配件' :
-               level === 5 ? '五级配件' : '配件'}
+              {t(`machines.accessories.level${level}`)}
             </span>
           </>
         )}
@@ -1541,30 +1386,13 @@ const MachinesPage: React.FC = () => {
       
       {/* Filter Section */}
       <div className="bg-white rounded-lg shadow-md p-4 mb-6 text-gray-900 border border-gray-200 transition-colors duration-300">
-        <h1 className="text-xl font-bold mb-4 text-gray-800">机器设备</h1>
+        <h1 className="text-xl font-bold mb-4 text-gray-800">{t('pageTitle')}</h1>
         
         <div className="flex flex-wrap gap-4">
-          {/* Unit System Filter */}
-          <div className="flex flex-col">
-            <label className="mb-1 text-sm font-medium text-gray-600">
-              {currentLanguage === 'zh' ? '单位制' : 'Unit System'}
-            </label>
-            <Select
-              value={unitSystem}
-              onChange={(value: 'metric' | 'imperial') => setUnitSystem(value)}
-              style={{ width: 120 }}
-              className="bg-white text-gray-900 border-gray-300 hover:border-blue-500"
-              options={[
-                { value: 'metric', label: currentLanguage === 'zh' ? '公制' : 'Metric' },
-                { value: 'imperial', label: currentLanguage === 'zh' ? '英制' : 'Imperial' }
-              ]}
-            />
-          </div>
-          
           {/* Voltage Filter */}
           <div className="flex flex-col">
             <label className="mb-1 text-sm font-medium text-gray-600">
-              电压
+              {t('filters.voltage')}
             </label>
             <Select
               value={selectedVoltage}
@@ -1572,47 +1400,24 @@ const MachinesPage: React.FC = () => {
               style={{ width: 120 }}
               className="bg-white text-gray-900 border-gray-300 hover:border-blue-500"
               options={[
+                { value: 'ALL', label: t('filters.all') },
                 { value: '220V', label: '220V' },
                 { value: '110V', label: '110V' }
               ]}
             />
           </div>
           
-          {/* Region Filter */}
-          <div className="flex flex-col">
-            <label className="mb-1 text-sm font-medium text-gray-600">
-              区域
-            </label>
-            <Select
-              value={filterRegion}
-              onChange={(value: string) => setFilterRegion(value)}
-              style={{ width: 120 }}
-              className="bg-white text-gray-900 border-gray-300 hover:border-blue-500"
-              options={Object.keys(REGIONS).map(key => ({
-                value: key,
-                label: REGIONS[key as keyof typeof REGIONS].nameCn
-              }))}
-            />
-          </div>
-          
           {/* Type Filter */}
           <div className="flex flex-col">
             <label className="mb-1 text-sm font-medium text-gray-600">
-              {currentLanguage === 'zh' ? '料号筛选' : 'Part Number'}
+              {t('filters.model')}
             </label>
             <Select
               value={filterType}
               onChange={(value: string) => setFilterType(value)}
               style={{ width: 180 }}
               className="bg-white text-gray-900 border-gray-300 hover:border-blue-500"
-              loading={hostModelsLoading}
-              options={[
-                { value: 'all', label: currentLanguage === 'zh' ? '全部料号' : 'All Part Numbers' },
-                ...hostModels.map(model => ({
-                  value: model.model,
-                  label: currentLanguage === 'zh' ? model.title_zh : model.title_en
-                }))
-              ]}
+              options={modelOptions}
             />
           </div>
         </div>
@@ -1628,8 +1433,8 @@ const MachinesPage: React.FC = () => {
         <div className="bg-white rounded-lg shadow-md p-4 mb-4 flex justify-between items-center border border-gray-200">
           <div>
             <h2 className="text-lg font-semibold flex items-center text-gray-800">
-              配件选择 
-              <span className="ml-2 px-2 py-0.5 text-xs bg-blue-500 text-white rounded">一级配件</span>
+              {t('accessories.title')} 
+              <span className="ml-2 px-2 py-0.5 text-xs bg-blue-500 text-white rounded">{t('accessories.level1')}</span>
             </h2>
             <span id="level1-context-message" className="text-sm text-gray-500"></span>
           </div>
@@ -1641,7 +1446,7 @@ const MachinesPage: React.FC = () => {
             }}
             className="bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200"
           >
-            关闭
+            {t('actions.close')}
           </Button>
         </div>
         
@@ -1649,17 +1454,17 @@ const MachinesPage: React.FC = () => {
           {/* 添加主机信息显示 */}
           {selectedMachine && (
             <div className="bg-white p-3 rounded-lg shadow-sm mb-4 flex items-center border border-gray-200">
-              <span className="text-xs px-1.5 py-0.5 bg-gray-100 rounded mr-2">主机</span>
+              <span className="text-xs px-1.5 py-0.5 bg-gray-100 rounded mr-2">{t('path.machine')}</span>
               <span className="text-gray-800">
                 {(() => {
                   const machine = machines.find(m => m.id.toString() === selectedMachine);
-                  return machine ? getMachineName(machine) : '未知主机';
+                  return machine ? getMachineName(machine) : t('unknownMachine');
                 })()}
               </span>
               <span className="mx-2 text-gray-400">
                 <RightOutlined style={{ fontSize: '10px' }} />
               </span>
-              <span className="text-blue-600 font-medium">一级配件</span>
+              <span className="text-blue-600 font-medium">{t('accessories.level1')}</span>
             </div>
           )}
           
@@ -1667,646 +1472,79 @@ const MachinesPage: React.FC = () => {
             <div className="flex justify-center items-center p-12 bg-white rounded-lg shadow-md border border-gray-200">
               <LoadingState 
                 size="medium" 
-                text="加载配件中..." 
+                text={t('loading')} 
                 type="spinner"
               />
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4">
-              {accessories.map((accessory, index) => (
-                <div key={`accessory-level-1-${accessory.id}-${index}`} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 overflow-hidden">
-                  <div className="flex flex-col md:flex-row p-6">
-                    {/* Accessory Image & Selection */}
-                    <div className="w-full md:w-1/4 flex flex-col items-center md:items-start mb-6 md:mb-0 md:pr-6">
-                      <div className="relative mb-4">
-                        <img 
-                          src={accessory.image_url || DEFAULT_IMAGE} 
-                          alt={accessory.title}
-                          className="w-32 h-32 object-contain border-2 border-gray-200 rounded-lg bg-gray-50 p-2 shadow-sm"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            if (target.src !== DEFAULT_IMAGE) {
-                              target.src = DEFAULT_IMAGE;
-                            }
-                          }}
-                        />
-                      </div>
-                      <label className="inline-flex items-center cursor-pointer bg-gray-100 px-3 py-2 rounded-lg hover:bg-blue-500 hover:text-white transition-colors duration-200">
-                        <input 
-                          type="radio" 
-                          name="accessory-level-1"
-                          className="form-radio text-blue-500 mr-2"
-                          checked={selectedAccessories['level1'] === accessory.id.toString()}
-                          onChange={() => {
-                            handleAccessorySelection(1, accessory.id.toString(), accessory.title);
-                          }}
-                        />
-                        <span className="text-sm font-medium">选择配件</span>
-                      </label>
-                    </div>
-
-                    {/* Accessory Info */}
-                    <div className="w-full md:w-1/2 md:px-6">
-                      <div className="mb-4">
-                        <span className="inline-block bg-blue-500 text-white px-3 py-1 text-sm font-bold rounded-lg shadow-sm">{accessory.parts?.[0]?.part_number || accessory.model}</span>
-                        <h3 className="text-xl font-bold text-gray-900 mt-2 leading-tight">{accessory.title}</h3>
-                      </div>
-
-                      <div className="bg-gray-50 rounded-lg p-4 mt-3 shadow-sm">
-                        <div className="grid grid-cols-2 gap-3 text-sm">
-                          <div className="flex items-center">
-                            <strong className="w-24 text-gray-600 font-medium">型号:</strong>
-                            <span className="text-gray-800 font-medium">{accessory.model}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <strong className="w-24 text-gray-600 font-medium">电压:</strong>
-                            <span className="text-gray-800 font-medium">{accessory.voltage || 'N/A'}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <strong className="w-24 text-gray-600 font-medium">频率:</strong>
-                            <span className="text-gray-800 font-medium">{accessory.frequency || 'N/A'}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <strong className="w-24 text-gray-600 font-medium">包装尺寸:</strong>
-                            <span className="text-gray-800 font-medium">
-                              {unitSystem === 'metric' 
-                                ? (accessory.package_size_cm || 'N/A')
-                                : (accessory.package_size_inch || 'N/A')
+              {accessories
+                .filter(accessory => {
+                  const accVoltage = accessory.voltage || (accessory.parts && accessory.parts[0] && accessory.parts[0].specs && accessory.parts[0].specs.voltage);
+                  return selectedVoltage === 'ALL' || !selectedVoltage || !accVoltage || accVoltage === selectedVoltage;
+                })
+                .map((accessory, index) => (
+                  <div key={`accessory-level-1-${accessory.id}-${index}`} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 overflow-hidden">
+                    <div className="flex flex-col md:flex-row p-6">
+                      {/* Accessory Image & Selection */}
+                      <div className="w-full md:w-1/4 flex flex-col items-center md:items-start mb-6 md:mb-0 md:pr-6">
+                        <div className="relative mb-4">
+                          <img 
+                            src={accessory.image_url || DEFAULT_IMAGE} 
+                            alt={accessory.title}
+                            className="w-32 h-32 object-contain border-2 border-gray-200 rounded-lg bg-gray-50 p-2 shadow-sm"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              if (target.src !== DEFAULT_IMAGE) {
+                                target.src = DEFAULT_IMAGE;
                               }
-                            </span>
-                          </div>
+                            }}
+                          />
                         </div>
+                        <label className="inline-flex items-center cursor-pointer bg-gray-100 px-3 py-2 rounded-lg hover:bg-blue-500 hover:text-white transition-colors duration-200">
+                          <input 
+                            type="radio" 
+                            name="accessory-level-1"
+                            className="form-radio text-blue-500 mr-2"
+                            checked={selectedAccessories['level1'] === accessory.id.toString()}
+                            onChange={() => {
+                              handleAccessorySelection(1, accessory.id.toString(), accessory.title);
+                            }}
+                          />
+                          <span className="text-sm font-medium">{t('actions.selectAccessory')}</span>
+                        </label>
                       </div>
 
-                      <div className="mt-4 flex gap-3">
-                        <Tooltip
-                          title={
-                            <div className="p-3 bg-white rounded-lg shadow-lg border border-gray-200">
-                              <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
-                                <InfoCircleOutlined className="text-green-500 mr-2" />
-                                <span className="font-bold text-gray-800 text-sm">配件详细信息</span>
-                              </div>
-                              <div className="space-y-2">
-                                <div className="flex justify-between items-center py-1">
-                                  <span className="text-gray-600 font-medium text-xs">📦 包装尺寸:</span>
-                                  <span className="text-gray-800 font-semibold text-xs bg-green-50 px-2 py-1 rounded">
-                                    {unitSystem === 'metric' ? (accessory.package_size_cm || 'N/A') : (accessory.package_size_inch || 'N/A')}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between items-center py-1">
-                                  <span className="text-gray-600 font-medium text-xs">📊 单箱数量:</span>
-                                  <span className="text-gray-800 font-semibold text-xs bg-blue-50 px-2 py-1 rounded">
-                                    {accessory.pcs_per_box || 'N/A'}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between items-center py-1">
-                                  <span className="text-gray-600 font-medium text-xs">🏗️ 托盘尺寸:</span>
-                                  <span className="text-gray-800 font-semibold text-xs bg-yellow-50 px-2 py-1 rounded">
-                                    {unitSystem === 'metric' ? (accessory.pallet_size_cm || 'N/A') : (accessory.pallet_size_inch || 'N/A')}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between items-center py-1">
-                                  <span className="text-gray-600 font-medium text-xs">📏 一托数量:</span>
-                                  <span className="text-gray-800 font-semibold text-xs bg-purple-50 px-2 py-1 rounded">
-                                    {accessory.pcs_per_pallet || 'N/A'}
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="mt-3 pt-2 border-t border-gray-100 text-center">
-                                <span className="text-xs text-gray-500">💡 悬停查看详细规格信息</span>
-                              </div>
+                      {/* Accessory Info */}
+                      <div className="w-full md:w-1/2 md:px-6">
+                        <div className="mb-4">
+                          <span className="inline-block bg-blue-500 text-white px-3 py-1 text-sm font-bold rounded-lg shadow-sm">{accessory.parts?.[0]?.part_number || accessory.model}</span>
+                          <h3 className="text-xl font-bold text-gray-900 mt-2 leading-tight">{accessory.title}</h3>
+                        </div>
+
+                        <div className="bg-gray-50 rounded-lg p-4 mt-3 shadow-sm">
+                          <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div className="flex items-center">
+                              <strong className="w-24 text-gray-600 font-medium">{t('tableHeaders.model')}:</strong>
+                              <span className="text-gray-800 font-medium">{accessory.model}</span>
                             </div>
-                          }
-                          placement="topRight"
-                          overlayStyle={{ 
-                            maxWidth: '350px',
-                            zIndex: 1000
-                          }}
-                          color="white"
-                          arrow={true}
-                        >
-                          <Button 
-                            size="small"
-                            icon={<InfoCircleOutlined />}
-                            className="bg-green-100 text-green-600 hover:bg-green-500 hover:text-white border-green-300 transition-colors duration-200"
-                          >
-                            更多信息
-                          </Button>
-                        </Tooltip>
-                      </div>
-                    </div>
-
-                    {/* Accessory Price & Actions */}
-                    <div className="w-full md:w-1/4 flex flex-col justify-between md:pl-6 mt-6 md:mt-0">
-                      <div className="mb-4">
-                        {accessory.parts?.[0]?.prices ? (
-                          <div className="bg-gray-50 rounded-lg p-3 shadow-sm">
-                            <div className="text-sm font-medium text-gray-600 mb-2">价格信息</div>
-                            <div className="space-y-1 text-sm">
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">基础价:</span>
-                                <span className="font-bold text-blue-600">{getCurrencySymbol(userRegion)}{accessory.parts[0].prices.base}</span>
-                              </div>
+                            <div className="flex items-center">
+                              <strong className="w-24 text-gray-600 font-medium">{t('tableHeaders.voltage')}:</strong>
+                              <span className="text-gray-800 font-medium">{accessory.voltage ? t('voltages.' + accessory.voltage) : 'N/A'}</span>
                             </div>
-                          </div>
-                        ) : (
-                          <div className="bg-gray-50 rounded-lg p-3 shadow-sm">
-                            <div className="text-sm text-gray-600">价格待询</div>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          <Button 
-                            size="small"
-                            icon={<MenuOutlined />}
-                            onClick={() => handleQuantityChange(accessory.id.toString(), (quantities[accessory.id.toString()] || 1) - 1)}
-                            disabled={(quantities[accessory.id.toString()] || 1) <= 1}
-                            className="bg-gray-100 border-gray-300 hover:border-blue-500 hover:bg-blue-500 hover:text-white transition-colors duration-200"
-                          />
-                          <InputNumber
-                            min={1}
-                            value={quantities[accessory.id.toString()] || 1}
-                            onChange={(value: number | null) => handleQuantityChange(accessory.id.toString(), value as number)}
-                            className="w-16 text-center"
-                            size="small"
-                          />
-                          <Button 
-                            size="small"
-                            icon={<PlusOutlined />}
-                            onClick={() => handleQuantityChange(accessory.id.toString(), (quantities[accessory.id.toString()] || 1) + 1)}
-                            className="bg-gray-100 border-gray-300 hover:border-blue-500 hover:bg-blue-500 hover:text-white transition-colors duration-200"
-                          />
-                        </div>
-                        
-                        <Button 
-                          type="primary"
-                          icon={<ShoppingCartOutlined />}
-                          onClick={() => {
-                            success('配件已添加到购物车');
-                          }}
-                          className="w-full bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600 transition-colors duration-200"
-                          size="small"
-                        >
-                          加入购物车
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {accessories.length === 0 && (
-                <div className="bg-card-alt p-12 text-center rounded-lg border border-border">
-                  <div className="text-content-light mb-2 text-lg">💭 当前主机无可用配件</div>
-                  <div className="text-content-light text-sm">请选择其他主机或联系客服咨询</div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-      
-      {/* Level 2 Accessories Section */}
-      <div id="accessory-level-2" className="accessory-level mt-6" style={{display: 'none'}}>
-        <div className="bg-white rounded-lg shadow-md p-4 mb-4 flex justify-between items-center border border-gray-200">
-          <div>
-            <h2 className="text-lg font-semibold flex items-center text-gray-800">
-              配件选择 
-              <span className="ml-2 px-2 py-0.5 text-xs bg-green-500 text-white rounded">二级配件</span>
-            </h2>
-            <span id="level2-context-message" className="text-sm text-gray-500"></span>
-          </div>
-          <Button 
-            icon={<DeleteOutlined />} 
-            onClick={() => {
-              const accessoryDiv = document.getElementById('accessory-level-2');
-              if (accessoryDiv) accessoryDiv.style.display = 'none';
-            }}
-            className="bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200"
-          >
-            关闭
-          </Button>
-        </div>
-        
-        <div className="accessory-content">
-          {renderAccessoryPath(2)}
-          
-          {level2Loading ? (
-            <div className="flex justify-center items-center p-12 bg-white rounded-lg shadow-md border border-gray-200">
-              <LoadingState 
-                size="medium" 
-                text="加载配件中..." 
-                type="spinner"
-              />
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4">
-              {level2Accessories.map((accessory, index) => (
-                <div key={`accessory-level-2-${accessory.id}-${index}`} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 overflow-hidden">
-                  <div className="flex flex-col md:flex-row p-6">
-                    {/* Accessory Image & Selection */}
-                    <div className="w-full md:w-1/4 flex flex-col items-center md:items-start mb-6 md:mb-0 md:pr-6">
-                      <div className="relative mb-4">
-                        <img 
-                          src={accessory.image_url || DEFAULT_IMAGE} 
-                          alt={accessory.title}
-                          className="w-32 h-32 object-contain border-2 border-gray-200 rounded-lg bg-gray-50 p-2 shadow-sm"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            if (target.src !== DEFAULT_IMAGE) {
-                              target.src = DEFAULT_IMAGE;
-                            }
-                          }}
-                        />
-                      </div>
-                      <label className="inline-flex items-center cursor-pointer bg-gray-100 px-3 py-2 rounded-lg hover:bg-green-500 hover:text-white transition-colors duration-200">
-                        <input 
-                          type="radio" 
-                          name="accessory-level-2"
-                          className="form-radio text-green-500 mr-2"
-                          checked={selectedAccessories['level2'] === accessory.id.toString()}
-                          onChange={() => {
-                            handleAccessorySelection(2, accessory.id.toString(), accessory.title);
-                          }}
-                        />
-                        <span className="text-sm font-medium">选择配件</span>
-                      </label>
-                    </div>
-
-                    {/* Accessory Info */}
-                    <div className="w-full md:w-1/2 md:px-6">
-                      <div className="mb-4">
-                        <span className="inline-block bg-green-500 text-white px-3 py-1 text-sm font-bold rounded-lg shadow-sm">{accessory.parts?.[0]?.part_number || accessory.model}</span>
-                        <h3 className="text-xl font-bold text-gray-900 mt-2 leading-tight">{accessory.title}</h3>
-                      </div>
-
-                      <div className="bg-gray-50 rounded-lg p-4 mt-3 shadow-sm">
-                        <div className="grid grid-cols-2 gap-3 text-sm">
-                          <div className="flex items-center">
-                            <strong className="w-24 text-gray-600 font-medium">型号:</strong>
-                            <span className="text-gray-800 font-medium">{accessory.model}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <strong className="w-24 text-gray-600 font-medium">电压:</strong>
-                            <span className="text-gray-800 font-medium">{accessory.voltage || 'N/A'}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <strong className="w-24 text-gray-600 font-medium">频率:</strong>
-                            <span className="text-gray-800 font-medium">{accessory.frequency || 'N/A'}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <strong className="w-24 text-gray-600 font-medium">包装尺寸:</strong>
-                            <span className="text-gray-800 font-medium">
-                              {unitSystem === 'metric' 
-                                ? (accessory.package_size_cm || 'N/A')
-                                : (accessory.package_size_inch || 'N/A')
-                              }
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Accessory Price & Actions */}
-                    <div className="w-full md:w-1/4 flex flex-col justify-between md:pl-6 mt-6 md:mt-0">
-                      <div className="mb-4">
-                        {accessory.parts?.[0]?.prices ? (
-                          <div className="bg-gray-50 rounded-lg p-3 shadow-sm">
-                            <div className="text-sm font-medium text-gray-600 mb-2">价格信息</div>
-                            <div className="space-y-1 text-sm">
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">基础价:</span>
-                                <span className="font-bold text-green-600">{getCurrencySymbol(userRegion)}{accessory.parts[0].prices.base}</span>
-                              </div>
+                            <div className="flex items-center">
+                              <strong className="w-24 text-gray-600 font-medium">{t('tableHeaders.frequency')}:</strong>
+                              <span className="text-gray-800 font-medium">{accessory.frequency || 'N/A'}</span>
                             </div>
-                          </div>
-                        ) : (
-                          <div className="bg-gray-50 rounded-lg p-3 shadow-sm">
-                            <div className="text-sm text-gray-600">价格待询</div>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          <Button 
-                            size="small"
-                            icon={<MenuOutlined />}
-                            onClick={() => handleQuantityChange(accessory.id.toString(), (quantities[accessory.id.toString()] || 1) - 1)}
-                            disabled={(quantities[accessory.id.toString()] || 1) <= 1}
-                            className="bg-gray-100 border-gray-300 hover:border-green-500 hover:bg-green-500 hover:text-white transition-colors duration-200"
-                          />
-                          <InputNumber
-                            min={1}
-                            value={quantities[accessory.id.toString()] || 1}
-                            onChange={(value: number | null) => handleQuantityChange(accessory.id.toString(), value as number)}
-                            className="w-16 text-center"
-                            size="small"
-                          />
-                          <Button 
-                            size="small"
-                            icon={<PlusOutlined />}
-                            onClick={() => handleQuantityChange(accessory.id.toString(), (quantities[accessory.id.toString()] || 1) + 1)}
-                            className="bg-gray-100 border-gray-300 hover:border-green-500 hover:bg-green-500 hover:text-white transition-colors duration-200"
-                          />
-                        </div>
-                        
-                        <Button 
-                          type="primary"
-                          icon={<ShoppingCartOutlined />}
-                          onClick={() => {
-                            success('配件已添加到购物车');
-                          }}
-                          className="w-full bg-green-500 hover:bg-green-600 border-green-500 hover:border-green-600 transition-colors duration-200"
-                          size="small"
-                        >
-                          加入购物车
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {level2Accessories.length === 0 && (
-                <div className="bg-card-alt p-12 text-center rounded-lg border border-border">
-                  <div className="text-content-light mb-2 text-lg">💭 当前配件无下级适配件</div>
-                  <div className="text-content-light text-sm">此配件已是最终选择，可直接添加到购物车</div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Level 3 Accessories Section */}
-      <div id="accessory-level-3" className="accessory-level mt-6" style={{display: 'none'}}>
-        <div className="bg-white rounded-lg shadow-md p-4 mb-4 flex justify-between items-center border border-gray-200">
-          <div>
-            <h2 className="text-lg font-semibold flex items-center text-gray-800">
-              配件选择 
-              <span className="ml-2 px-2 py-0.5 text-xs bg-yellow-500 text-white rounded">三级配件</span>
-            </h2>
-            <span id="level3-context-message" className="text-sm text-gray-500"></span>
-          </div>
-          <Button 
-            icon={<DeleteOutlined />} 
-            onClick={() => {
-              const accessoryDiv = document.getElementById('accessory-level-3');
-              if (accessoryDiv) accessoryDiv.style.display = 'none';
-            }}
-            className="bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200"
-          >
-            关闭
-          </Button>
-        </div>
-        
-        <div className="accessory-content">
-          {renderAccessoryPath(3)}
-          
-          {level3Loading ? (
-            <div className="flex justify-center items-center p-12 bg-white rounded-lg shadow-md border border-gray-200">
-              <LoadingState 
-                size="medium" 
-                text="加载配件中..." 
-                type="spinner"
-              />
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4">
-              {level3Accessories.map((accessory, index) => (
-                <div key={`accessory-level-3-${accessory.id}-${index}`} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 overflow-hidden">
-                  <div className="flex flex-col md:flex-row p-6">
-                    {/* Accessory Image & Selection */}
-                    <div className="w-full md:w-1/4 flex flex-col items-center md:items-start mb-6 md:mb-0 md:pr-6">
-                      <div className="relative mb-4">
-                        <img 
-                          src={accessory.image_url || DEFAULT_IMAGE} 
-                          alt={accessory.title}
-                          className="w-32 h-32 object-contain border-2 border-gray-200 rounded-lg bg-gray-50 p-2 shadow-sm"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            if (target.src !== DEFAULT_IMAGE) {
-                              target.src = DEFAULT_IMAGE;
-                            }
-                          }}
-                        />
-                      </div>
-                      <label className="inline-flex items-center cursor-pointer bg-gray-100 px-3 py-2 rounded-lg hover:bg-yellow-500 hover:text-white transition-colors duration-200">
-                        <input 
-                          type="radio" 
-                          name="accessory-level-3"
-                          className="form-radio text-yellow-500 mr-2"
-                          checked={selectedAccessories['level3'] === accessory.id.toString()}
-                          onChange={() => {
-                            handleAccessorySelection(3, accessory.id.toString(), accessory.title);
-                          }}
-                        />
-                        <span className="text-sm font-medium">选择配件</span>
-                      </label>
-                    </div>
-
-                    {/* Accessory Info */}
-                    <div className="w-full md:w-1/2 md:px-6">
-                      <div className="mb-4">
-                        <span className="inline-block bg-yellow-500 text-white px-3 py-1 text-sm font-bold rounded-lg shadow-sm">{accessory.parts?.[0]?.part_number || accessory.model}</span>
-                        <h3 className="text-xl font-bold text-gray-900 mt-2 leading-tight">{accessory.title}</h3>
-                      </div>
-
-                      <div className="bg-gray-50 rounded-lg p-4 mt-3 shadow-sm">
-                        <div className="grid grid-cols-2 gap-3 text-sm">
-                          <div className="flex items-center">
-                            <strong className="w-24 text-gray-600 font-medium">型号:</strong>
-                            <span className="text-gray-800 font-medium">{accessory.model}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <strong className="w-24 text-gray-600 font-medium">电压:</strong>
-                            <span className="text-gray-800 font-medium">{accessory.voltage || 'N/A'}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <strong className="w-24 text-gray-600 font-medium">频率:</strong>
-                            <span className="text-gray-800 font-medium">{accessory.frequency || 'N/A'}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <strong className="w-24 text-gray-600 font-medium">包装尺寸:</strong>
-                            <span className="text-gray-800 font-medium">
-                              {unitSystem === 'metric' 
-                                ? (accessory.package_size_cm || 'N/A')
-                                : (accessory.package_size_inch || 'N/A')
-                              }
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Accessory Price & Actions */}
-                    <div className="w-full md:w-1/4 flex flex-col justify-between md:pl-6 mt-6 md:mt-0">
-                      <div className="mb-4">
-                        {accessory.parts?.[0]?.prices ? (
-                          <div className="bg-gray-50 rounded-lg p-3 shadow-sm">
-                            <div className="text-sm font-medium text-gray-600 mb-2">价格信息</div>
-                            <div className="space-y-1 text-sm">
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">基础价:</span>
-                                <span className="font-bold text-yellow-600">{getCurrencySymbol(userRegion)}{accessory.parts[0].prices.base}</span>
-                              </div>
+                            <div className="flex items-center">
+                              <strong className="w-24 text-gray-600 font-medium">{t('tableHeaders.packSize')}:</strong>
+                              <span className="text-gray-800 font-medium">
+                                {unitSystem === 'metric' 
+                                  ? (accessory.package_size_cm || 'N/A')
+                                  : (accessory.package_size_inch || 'N/A')
+                                }
+                              </span>
                             </div>
-                          </div>
-                        ) : (
-                          <div className="bg-gray-50 rounded-lg p-3 shadow-sm">
-                            <div className="text-sm text-gray-600">价格待询</div>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          <Button 
-                            size="small"
-                            icon={<MenuOutlined />}
-                            onClick={() => handleQuantityChange(accessory.id.toString(), (quantities[accessory.id.toString()] || 1) - 1)}
-                            disabled={(quantities[accessory.id.toString()] || 1) <= 1}
-                            className="bg-gray-100 border-gray-300 hover:border-yellow-500 hover:bg-yellow-500 hover:text-white transition-colors duration-200"
-                          />
-                          <InputNumber
-                            min={1}
-                            value={quantities[accessory.id.toString()] || 1}
-                            onChange={(value: number | null) => handleQuantityChange(accessory.id.toString(), value as number)}
-                            className="w-16 text-center"
-                            size="small"
-                          />
-                          <Button 
-                            size="small"
-                            icon={<PlusOutlined />}
-                            onClick={() => handleQuantityChange(accessory.id.toString(), (quantities[accessory.id.toString()] || 1) + 1)}
-                            className="bg-gray-100 border-gray-300 hover:border-yellow-500 hover:bg-yellow-500 hover:text-white transition-colors duration-200"
-                          />
-                        </div>
-                        
-                        <Button 
-                          type="primary"
-                          icon={<ShoppingCartOutlined />}
-                          onClick={() => {
-                            success('配件已添加到购物车');
-                          }}
-                          className="w-full bg-yellow-500 hover:bg-yellow-600 border-yellow-500 hover:border-yellow-600 transition-colors duration-200"
-                          size="small"
-                        >
-                          加入购物车
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {level3Accessories.length === 0 && (
-                <div className="bg-card-alt p-12 text-center rounded-lg border border-border">
-                  <div className="text-content-light mb-2 text-lg">💭 当前配件无下级适配件</div>
-                  <div className="text-content-light text-sm">此配件已是最终选择，可直接添加到购物车</div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Level 4 Accessories Section */}
-      <div id="accessory-level-4" className="accessory-level mt-6" style={{display: 'none'}}>
-        <div className="bg-white rounded-lg shadow-md p-4 mb-4 flex justify-between items-center border border-gray-200">
-          <div>
-            <h2 className="text-lg font-semibold flex items-center text-gray-800">
-              配件选择 
-              <span className="ml-2 px-2 py-0.5 text-xs bg-orange-500 text-white rounded">四级配件</span>
-            </h2>
-            <span id="level4-context-message" className="text-sm text-gray-500"></span>
-          </div>
-          <Button 
-            icon={<DeleteOutlined />} 
-            onClick={() => {
-              const accessoryDiv = document.getElementById('accessory-level-4');
-              if (accessoryDiv) accessoryDiv.style.display = 'none';
-            }}
-            className="bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200"
-          >
-            关闭
-          </Button>
-        </div>
-        
-        <div className="accessory-content">
-          {renderAccessoryPath(4)}
-          
-          {level4Loading ? (
-            <div className="flex justify-center items-center p-12 bg-white rounded-lg shadow-md border border-gray-200">
-              <LoadingState 
-                size="medium" 
-                text="加载配件中..." 
-                type="spinner"
-              />
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4">
-              {level4Accessories.map((accessory, index) => (
-                <div key={`accessory-level-4-${accessory.id}-${index}`} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 overflow-hidden">
-                  <div className="flex flex-col md:flex-row p-6">
-                    {/* Accessory Image & Selection */}
-                    <div className="w-full md:w-1/4 flex flex-col items-center md:items-start mb-6 md:mb-0 md:pr-6">
-                      <div className="relative mb-4">
-                        <img 
-                          src={accessory.image_url || DEFAULT_IMAGE} 
-                          alt={accessory.title}
-                          className="w-32 h-32 object-contain border-2 border-gray-200 rounded-lg bg-gray-50 p-2 shadow-sm"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            if (target.src !== DEFAULT_IMAGE) {
-                              target.src = DEFAULT_IMAGE;
-                            }
-                          }}
-                        />
-                      </div>
-                      <label className="inline-flex items-center cursor-pointer bg-gray-100 px-3 py-2 rounded-lg hover:bg-orange-500 hover:text-white transition-colors duration-200">
-                        <input 
-                          type="radio" 
-                          name="accessory-level-4"
-                          className="form-radio text-orange-500 mr-2"
-                          checked={selectedAccessories['level4'] === accessory.id.toString()}
-                          onChange={() => {
-                            handleAccessorySelection(4, accessory.id.toString(), accessory.title);
-                          }}
-                        />
-                        <span className="text-sm font-medium">选择配件</span>
-                      </label>
-                    </div>
-
-                    {/* Accessory Info */}
-                    <div className="w-full md:w-1/2 md:px-6">
-                      <div className="mb-4">
-                        <span className="inline-block bg-orange-500 text-white px-3 py-1 text-sm font-bold rounded-lg shadow-sm">{accessory.parts?.[0]?.part_number || accessory.model}</span>
-                        <h3 className="text-xl font-bold text-gray-900 mt-2 leading-tight">{accessory.title}</h3>
-                      </div>
-
-                      <div className="bg-gray-50 rounded-lg p-4 mt-3 shadow-sm">
-                        <div className="grid grid-cols-2 gap-3 text-sm">
-                          <div className="flex items-center">
-                            <strong className="w-24 text-gray-600 font-medium">型号:</strong>
-                            <span className="text-gray-800 font-medium">{accessory.model}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <strong className="w-24 text-gray-600 font-medium">电压:</strong>
-                            <span className="text-gray-800 font-medium">{accessory.voltage || 'N/A'}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <strong className="w-24 text-gray-600 font-medium">频率:</strong>
-                            <span className="text-gray-800 font-medium">{accessory.frequency || 'N/A'}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <strong className="w-24 text-gray-600 font-medium">包装尺寸:</strong>
-                            <span className="text-gray-800 font-medium">
-                              {unitSystem === 'metric' 
-                                ? (accessory.package_size_cm || 'N/A')
-                                : (accessory.package_size_inch || 'N/A')
-                              }
-                            </span>
                           </div>
                         </div>
                       </div>
@@ -2314,22 +1552,65 @@ const MachinesPage: React.FC = () => {
                       {/* Accessory Price & Actions */}
                       <div className="w-full md:w-1/4 flex flex-col justify-between md:pl-6 mt-6 md:mt-0">
                         <div className="mb-4">
-                          {accessory.parts?.[0]?.prices ? (
-                            <div className="bg-gray-50 rounded-lg p-3 shadow-sm">
-                              <div className="text-sm font-medium text-gray-600 mb-2">价格信息</div>
-                              <div className="space-y-1 text-sm">
-                                <div className="flex justify-between">
-                                  <span className="text-gray-600">基础价:</span>
-                                  <span className="font-bold text-orange-600">{getCurrencySymbol(userRegion)}{accessory.parts[0].prices.base}</span>
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="bg-gray-50 rounded-lg p-3 shadow-sm">
-                              <div className="text-sm text-gray-600">价格待询</div>
+                          <div className="font-medium text-sm text-gray-600 mb-2">
+                            {t('tableHeaders.priceRange')} ({getCurrencySymbol(userRegion)}):
+                          </div>
+                          <div className="flex items-baseline gap-2 mb-1">
+                            <span className="text-2xl font-bold text-green-600">
+                              {getCurrencySymbol(userRegion)}
+                              {accessory.parts && accessory.parts[0] && accessory.parts[0].prices
+                                ? formatPrice(
+                                    Math.min(
+                                      ...['base', 'tier1', 'tier2']
+                                        .map(key => accessory.parts[0].prices?.[key] ?? Infinity)
+                                        .filter(v => typeof v === 'number' && v > 0)
+                                    )
+                                  )
+                                : 0}
+                            </span>
+                            <span className="text-base text-gray-500 font-normal">{t('pricing.from')}</span>
+                          </div>
+                          {accessory.parts && accessory.parts[0] && accessory.parts[0].prices && (
+                            <div className="rounded bg-green-50 px-3 py-2 text-xs text-green-800 space-y-1 border border-green-100">
+                              {[
+                                { min: 1, max: 4, price: accessory.parts[0].prices.base },
+                                { min: 5, max: 9, price: accessory.parts[0].prices.tier1 },
+                                { min: 10, max: null, price: accessory.parts[0].prices.tier2 }
+                              ]
+                                .filter(tier => tier.price && tier.price > 0)
+                                .map((tier, idx) => (
+                                  <div key={`accessory-${accessory.id}-price-tier-${idx}`}>
+                                    <span className="font-semibold">{getCurrencySymbol(userRegion)}{formatPrice(tier.price)}</span>
+                                    <span className="ml-2 text-gray-500">
+                                      ({tier.min}-{tier.max || '+'}{t('pricing.pieces')})
+                                    </span>
+                                  </div>
+                                ))}
                             </div>
                           )}
                         </div>
+
+                        {isSales && accessory.parts && accessory.parts[0] && accessory.parts[0].inventory && (
+                          <div className="mb-4">
+                            <div className="font-medium text-sm text-gray-600 mb-2">{t('tableHeaders.stock')}:</div>
+                            <div className="flex flex-wrap gap-1">
+                              {(Object.keys(REGIONS) as Array<keyof typeof REGIONS>).map((regionKey) => {
+                                const regionInventory = accessory.parts[0].inventory.find(inv => inv.region === regionKey);
+                                const amount = regionInventory ? regionInventory.amount : 0;
+                                const stockStatus = getStockStatus(amount);
+                                return (
+                                  <Tag
+                                    key={`${accessory.id}-inventory-${regionKey}`}
+                                    color={stockStatus.color}
+                                    className="text-xs"
+                                  >
+                                    {REGIONS[regionKey].nameCn}: {amount}
+                                  </Tag>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
 
                         <div className="space-y-3">
                           <div className="flex items-center gap-2">
@@ -2338,7 +1619,7 @@ const MachinesPage: React.FC = () => {
                               icon={<MenuOutlined />}
                               onClick={() => handleQuantityChange(accessory.id.toString(), (quantities[accessory.id.toString()] || 1) - 1)}
                               disabled={(quantities[accessory.id.toString()] || 1) <= 1}
-                              className="bg-gray-100 border-gray-300 hover:border-orange-500 hover:bg-orange-500 hover:text-white transition-colors duration-200"
+                              className="bg-gray-100 border-gray-300 hover:border-blue-500 hover:bg-blue-500 hover:text-white transition-colors duration-200"
                             />
                             <InputNumber
                               min={1}
@@ -2351,7 +1632,7 @@ const MachinesPage: React.FC = () => {
                               size="small"
                               icon={<PlusOutlined />}
                               onClick={() => handleQuantityChange(accessory.id.toString(), (quantities[accessory.id.toString()] || 1) + 1)}
-                              className="bg-gray-100 border-gray-300 hover:border-orange-500 hover:bg-orange-500 hover:text-white transition-colors duration-200"
+                              className="bg-gray-100 border-gray-300 hover:border-blue-500 hover:bg-blue-500 hover:text-white transition-colors duration-200"
                             />
                           </div>
                           
@@ -2359,260 +1640,22 @@ const MachinesPage: React.FC = () => {
                             type="primary"
                             icon={<ShoppingCartOutlined />}
                             onClick={() => {
-                              success('配件已添加到购物车');
+                              handleAddToCart(accessory, 'accessory');
                             }}
-                            className="w-full bg-orange-500 hover:bg-orange-600 border-orange-500 hover:border-orange-600 transition-colors duration-200"
+                            className="w-full bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600 transition-colors duration-200"
                             size="small"
                           >
-                            加入购物车
+                            {t('addToCart')}
                           </Button>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-              {level4Accessories.length === 0 && (
+                ))}
+              {accessories.length === 0 && (
                 <div className="bg-card-alt p-12 text-center rounded-lg border border-border">
-                  <div className="text-content-light mb-2 text-lg">💭 当前配件无下级适配件</div>
-                  <div className="text-content-light text-sm">此配件已是最终选择，可直接添加到购物车</div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Level 5 Accessories Section */}
-      <div id="accessory-level-5" className="accessory-level mt-6" style={{display: 'none'}}>
-        <div className="bg-white rounded-lg shadow-md p-4 mb-4 flex justify-between items-center border border-gray-200">
-          <div>
-            <h2 className="text-lg font-semibold flex items-center text-gray-800">
-              配件选择 
-              <span className="ml-2 px-2 py-0.5 text-xs bg-red-500 text-white rounded">五级配件</span>
-            </h2>
-            <span id="level5-context-message" className="text-sm text-gray-500"></span>
-          </div>
-          <Button 
-            icon={<DeleteOutlined />} 
-            onClick={() => {
-              const accessoryDiv = document.getElementById('accessory-level-5');
-              if (accessoryDiv) accessoryDiv.style.display = 'none';
-            }}
-            className="bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200"
-          >
-            关闭
-          </Button>
-        </div>
-        
-        <div className="accessory-content">
-          {renderAccessoryPath(5)}
-          
-          {level5Loading ? (
-            <div className="flex justify-center items-center p-12 bg-white rounded-lg shadow-md border border-gray-200">
-              <LoadingState 
-                size="medium" 
-                text="加载配件中..." 
-                type="spinner"
-              />
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4">
-              {level5Accessories.map((accessory, index) => (
-                <div key={`accessory-level-5-${accessory.id}-${index}`} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 overflow-hidden">
-                  <div className="flex flex-col md:flex-row p-6">
-                    {/* Accessory Image & Selection */}
-                    <div className="w-full md:w-1/4 flex flex-col items-center md:items-start mb-6 md:mb-0 md:pr-6">
-                      <div className="relative mb-4">
-                        <img 
-                          src={accessory.image_url || DEFAULT_IMAGE} 
-                          alt={accessory.title}
-                          className="w-32 h-32 object-contain border-2 border-gray-200 rounded-lg bg-gray-50 p-2 shadow-sm"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            if (target.src !== DEFAULT_IMAGE) {
-                              target.src = DEFAULT_IMAGE;
-                            }
-                          }}
-                        />
-                      </div>
-                      <label className="inline-flex items-center cursor-pointer bg-gray-100 px-3 py-2 rounded-lg hover:bg-red-500 hover:text-white transition-colors duration-200">
-                        <input 
-                          type="radio" 
-                          name="accessory-level-5"
-                          className="form-radio text-red-500 mr-2"
-                          checked={selectedAccessories['level5'] === accessory.id.toString()}
-                          onChange={() => {
-                            // 五级配件不会再有下级配件，所以只更新选择状态
-                            setSelectedAccessories(prev => ({
-                              ...prev,
-                              level5: accessory.id.toString()
-                            }));
-                            setSelectedAccessoryNames(prev => ({
-                              ...prev,
-                              level5: accessory.title
-                            }));
-                          }}
-                        />
-                        <span className="text-sm font-medium">选择配件</span>
-                      </label>
-                    </div>
-
-                    {/* Accessory Info */}
-                    <div className="w-full md:w-1/2 md:px-6">
-                      <div className="mb-4">
-                        <span className="inline-block bg-red-500 text-white px-3 py-1 text-sm font-bold rounded-lg shadow-sm">{accessory.parts?.[0]?.part_number || accessory.model}</span>
-                        <h3 className="text-xl font-bold text-gray-900 mt-2 leading-tight">{accessory.title}</h3>
-                      </div>
-
-                      <div className="bg-gray-50 rounded-lg p-4 mt-3 shadow-sm">
-                        <div className="grid grid-cols-2 gap-3 text-sm">
-                          <div className="flex items-center">
-                            <strong className="w-24 text-gray-600 font-medium">型号:</strong>
-                            <span className="text-gray-800 font-medium">{accessory.model}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <strong className="w-24 text-gray-600 font-medium">电压:</strong>
-                            <span className="text-gray-800 font-medium">{accessory.voltage || 'N/A'}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <strong className="w-24 text-gray-600 font-medium">频率:</strong>
-                            <span className="text-gray-800 font-medium">{accessory.frequency || 'N/A'}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <strong className="w-24 text-gray-600 font-medium">包装尺寸:</strong>
-                            <span className="text-gray-800 font-medium">
-                              {unitSystem === 'metric' 
-                                ? (accessory.package_size_cm || 'N/A')
-                                : (accessory.package_size_inch || 'N/A')
-                              }
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="mt-4 flex gap-3">
-                        <Tooltip
-                          title={
-                            <div className="p-3 bg-white rounded-lg shadow-lg border border-gray-200">
-                              <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
-                                <InfoCircleOutlined className="text-blue-500 mr-2" />
-                                <span className="font-bold text-gray-800 text-sm">配件详细信息</span>
-                              </div>
-                              <div className="space-y-2">
-                                <div className="flex justify-between items-center py-1">
-                                  <span className="text-gray-600 font-medium text-xs">📦 包装尺寸:</span>
-                                  <span className="text-gray-800 font-semibold text-xs bg-blue-50 px-2 py-1 rounded">
-                                    {unitSystem === 'metric' ? (accessory.package_size_cm || 'N/A') : (accessory.package_size_inch || 'N/A')}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between items-center py-1">
-                                  <span className="text-gray-600 font-medium text-xs">📊 单箱数量:</span>
-                                  <span className="text-gray-800 font-semibold text-xs bg-green-50 px-2 py-1 rounded">
-                                    {accessory.pcs_per_box || 'N/A'}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between items-center py-1">
-                                  <span className="text-gray-600 font-medium text-xs">🏗️ 托盘尺寸:</span>
-                                  <span className="text-gray-800 font-semibold text-xs bg-yellow-50 px-2 py-1 rounded">
-                                    {unitSystem === 'metric' ? (accessory.pallet_size_cm || 'N/A') : (accessory.pallet_size_inch || 'N/A')}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between items-center py-1">
-                                  <span className="text-gray-600 font-medium text-xs">📏 一托数量:</span>
-                                  <span className="text-gray-800 font-semibold text-xs bg-purple-50 px-2 py-1 rounded">
-                                    {accessory.pcs_per_pallet || 'N/A'}
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="mt-3 pt-2 border-t border-gray-100 text-center">
-                                <span className="text-xs text-gray-500">💡 悬停查看详细规格信息</span>
-                              </div>
-                            </div>
-                          }
-                          placement="topRight"
-                          overlayStyle={{ 
-                            maxWidth: '350px',
-                            zIndex: 1000
-                          }}
-                          color="white"
-                          arrow={true}
-                        >
-                          <Button 
-                            size="small"
-                            icon={<InfoCircleOutlined />}
-                            className="bg-blue-100 text-blue-600 hover:bg-blue-500 hover:text-white border-blue-300 transition-colors duration-200"
-                          >
-                            更多信息
-                          </Button>
-                        </Tooltip>
-                      </div>
-                    </div>
-
-                    {/* Accessory Price & Actions */}
-                    <div className="w-full md:w-1/4 flex flex-col justify-between md:pl-6 mt-6 md:mt-0">
-                      <div className="mb-4">
-                        {accessory.parts?.[0]?.prices ? (
-                          <div className="bg-gray-50 rounded-lg p-3 shadow-sm">
-                            <div className="text-sm font-medium text-gray-600 mb-2">价格信息</div>
-                            <div className="space-y-1 text-sm">
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">基础价:</span>
-                                <span className="font-bold text-red-600">{getCurrencySymbol(userRegion)}{accessory.parts[0].prices.base}</span>
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="bg-gray-50 rounded-lg p-3 shadow-sm">
-                            <div className="text-sm text-gray-600">价格待询</div>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          <Button 
-                            size="small"
-                            icon={<MenuOutlined />}
-                            onClick={() => handleQuantityChange(accessory.id.toString(), (quantities[accessory.id.toString()] || 1) - 1)}
-                            disabled={(quantities[accessory.id.toString()] || 1) <= 1}
-                            className="bg-gray-100 border-gray-300 hover:border-red-500 hover:bg-red-500 hover:text-white transition-colors duration-200"
-                          />
-                          <InputNumber
-                            min={1}
-                            value={quantities[accessory.id.toString()] || 1}
-                            onChange={(value: number | null) => handleQuantityChange(accessory.id.toString(), value as number)}
-                            className="w-16 text-center"
-                            size="small"
-                          />
-                          <Button 
-                            size="small"
-                            icon={<PlusOutlined />}
-                            onClick={() => handleQuantityChange(accessory.id.toString(), (quantities[accessory.id.toString()] || 1) + 1)}
-                            className="bg-gray-100 border-gray-300 hover:border-red-500 hover:bg-red-500 hover:text-white transition-colors duration-200"
-                          />
-                        </div>
-                        
-                        <Button 
-                          type="primary"
-                          icon={<ShoppingCartOutlined />}
-                          onClick={() => {
-                            success('配件已添加到购物车');
-                          }}
-                          className="w-full bg-red-500 hover:bg-red-600 border-red-500 hover:border-red-600 transition-colors duration-200"
-                          size="small"
-                        >
-                          加入购物车
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {level5Accessories.length === 0 && (
-                <div className="bg-card-alt p-12 text-center rounded-lg border border-border">
-                  <div className="text-content-light mb-2 text-lg">💭 当前配件无下级适配件</div>
-                  <div className="text-content-light text-sm">此配件已是最终选择，可直接添加到购物车</div>
+                  <div className="text-content-light mb-2 text-lg">{t('noAccessories')}</div>
+                  <div className="text-content-light text-sm">{t('chooseOther')}</div>
                 </div>
               )}
             </div>

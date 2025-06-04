@@ -33,6 +33,9 @@ import { REGIONS, getCurrencySymbol } from '../../config/constants';
 import { ASSETS } from '../../config/appConfig';
 import './Consumables.css';
 
+// 在文件顶部的import部分添加
+import { adminSpecificationService, SpecificationData } from '../../admin/services/admin-dictionary.service';
+
 const { Option } = Select;
 
 // Define interface for regional prices
@@ -773,6 +776,23 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
   );
 };
 
+// 在组件外部定义映射
+const shapeIdToSpecsShape: Record<string, string> = {
+  MEX: 'paper air Pillow',
+  MEY: 'paper Bubble',
+  MFB: 'Tube',
+  MFC: 'Tube',
+  MFF: 'Tube'
+};
+
+const materialIdToSpecsMaterial: Record<string, string> = {
+  'hdpe': 'HDPE',
+  'ldpe': 'LDPE',
+  'paper': 'PAPER',
+  'paper+pe': 'PAPER+PE',
+  'nylon': 'NYLON'
+};
+
 const ConsumablesPage: React.FC = () => {
   const { t, i18n } = useTranslation('consumables');
   const navigate = useNavigate();
@@ -785,6 +805,14 @@ const ConsumablesPage: React.FC = () => {
   
   // 获取当前语言
   const currentLanguage = i18n.language || 'zh';
+  
+  // 规格选项hooks - 必须在所有其他hooks之前定义
+  const [specOptions, setSpecOptions] = useState<{
+    thickness: SpecificationData[];
+    weight: SpecificationData[];
+    width: SpecificationData[];
+    length: SpecificationData[];
+  }>({ thickness: [], weight: [], width: [], length: [] });
   
   // 所有状态定义 - 必须在组件顶部，不能有条件调用
   const [consumables, setConsumables] = useState<ConsumableProduct[]>([]);
@@ -801,7 +829,7 @@ const ConsumablesPage: React.FC = () => {
   // 筛选条件状态
   const [selectedModel, setSelectedModel] = useState<string>('all');
   const [selectedShape, setSelectedShape] = useState<string>('MEX');
-  const [selectedMaterial, setSelectedMaterial] = useState<string>('hdpe');
+  const [selectedMaterial, setSelectedMaterial] = useState<string>('all');
   const [selectedThickness, setSelectedThickness] = useState<string>('all');
   const [selectedWeight, setSelectedWeight] = useState<string>('all');
   const [selectedWidth, setSelectedWidth] = useState<string>('all');
@@ -850,6 +878,22 @@ const ConsumablesPage: React.FC = () => {
   // 在组件开始处添加ref
   const cartButtonRef = useRef<HTMLElement>(null);
   
+  // 页面加载时获取规格数据
+  useEffect(() => {
+    adminSpecificationService.getSpecifications({ lang: currentLanguage }).then(res => {
+      if (res.success && res.data && res.data.items) {
+        const grouped = { thickness: [], weight: [], width: [], length: [] };
+        res.data.items.forEach(item => {
+          if (item.code === 'thickness') grouped.thickness.push(item);
+          if (item.code === 'weight') grouped.weight.push(item);
+          if (item.code === 'width') grouped.width.push(item);
+          if (item.code === 'length') grouped.length.push(item);
+        });
+        setSpecOptions(grouped);
+      }
+    });
+  }, [currentLanguage]);
+  
   // 使用useCallback稳定回调函数引用
   const handleConsumablesSuccess = useCallback((data: any) => {
     console.log('✅ 耗材页面数据加载成功:', data);
@@ -890,97 +934,174 @@ const ConsumablesPage: React.FC = () => {
     }
   }, [filterOptions?.shapes, selectedShape]);
 
-  // 获取耗材数据
-  useEffect(() => {
-    const fetchConsumables = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        console.log('🔍 [fetchConsumables] Starting with filters:', {
-          selectedModel,
-          selectedShape,
-          selectedMaterial,
-          selectedThickness,
-          selectedWeight,
-          selectedWidth,
-          selectedLength,
-          currentPage,
-          userRegion
-        });
-        
-        const categoryFilter = searchParams.get('category') ? parseInt(searchParams.get('category')!) : undefined;
-        
-        // 构建筛选参数
-        const filters: ConsumableFilters = {
-          model: selectedModel,
-          shape: selectedShape,
-          material: selectedMaterial,
-          thickness: selectedThickness === 'all' ? undefined : selectedThickness,
-          weight: selectedWeight === 'all' ? undefined : selectedWeight,
-          width: selectedWidth === 'all' ? undefined : selectedWidth,
-          length: selectedLength === 'all' ? undefined : selectedLength,
-          page: currentPage,
-          page_size: 10,
-          region: userRegion,
-          lang: navigator.language.startsWith('zh') ? 'zh' : 'en',
-          category_id: categoryFilter
-        };
-        
-        console.log('📡 [fetchConsumables] API call with filters:', filters);
-        
-        const consumableData = await consumablesService.getConsumables(filters);
-        console.log('ConsumableData received in Page:', JSON.stringify(consumableData, null, 2));
-        console.log('🔍 Debug - FilterOptions shapes:', consumableData.filterOptions?.shapes);
-        
-        // 添加翻页数据调试信息
-        console.log('📄 [Pagination Debug] API Response Pagination Data:');
-        console.log('  - Total Items:', consumableData.total);
-        console.log('  - Total Pages:', consumableData.total_pages);
-        console.log('  - Current Page:', consumableData.page);
-        console.log('  - Items Length:', consumableData.items?.length);
-        console.log('  - Page Size:', consumableData.page_size);
-        console.log('  - Request Filters:', filters);
-        
-        setConsumables(consumableData.items || []);
-        
-        // 确保翻页数据都是有效数字
-        const totalFromAPI = Number(consumableData.total) || 0;
-        const totalPagesFromAPI = Number(consumableData.total_pages) || 1;
-        
-        setTotalItems(totalFromAPI);
-        setTotalPages(Math.max(1, totalPagesFromAPI));
-        
-        // 注释掉这行代码，它会重置用户选择的页码，导致页数变了但内容没变
-        // setCurrentPage(prev => Math.max(1, Math.min(prev, totalPagesFromAPI)));
-        
-        setFilterOptions(consumableData.filterOptions);
-        
-        // 添加状态设置后的调试信息
-        console.log('📄 [Pagination Debug] State After Setting:');
-        console.log('  - totalItems will be set to:', totalFromAPI);
-        console.log('  - totalPages will be set to:', Math.max(1, totalPagesFromAPI));
-        console.log('  - currentPage preserved as:', currentPage, '(user choice maintained)');
-          
-          // 初始化数量状态
-          const initialQuantities: Record<string, number> = {};
-        consumableData.items.forEach(item => {
-            initialQuantities[item.id] = 1;
-          });
-          setQuantities(initialQuantities);
+  // 1. 新增全量数据状态
+  const [allConsumables, setAllConsumables] = useState<ConsumableProduct[]>([]);
 
-      } catch (err) {
-        const errorMessage = (err instanceof Error) ? err.message : t('error.systemError');
-        console.error('Failed to fetch consumables:', err);
-        setError(errorMessage);
-      } finally {
+  // 2. 页面加载时只请求一次全量数据
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    consumablesService.getConsumables({ page: 1, page_size: 1000 })
+      .then(data => {
+        setAllConsumables(data.items || []);
+        setFilterOptions(data.filterOptions);
         setLoading(false);
-      }
+      })
+      .catch(err => {
+        setError(err.message || '加载耗材数据失败');
+        setLoading(false);
+      });
+  }, []);
+
+  // 3. 本地筛选和分页逻辑全部放在一个useEffect
+  useEffect(() => {
+    // Shape筛选映射 - 仅处理bag_type字段
+    const shapeIdToBagType: Record<string, string> = {
+      'MEX': 'paper air Pillow',    // 气泡枕
+      'MEY': 'paper air Pillow',    // 开口气泡枕 (同样是paper air Pillow类型)
+      'MFB': 'Bubble',              // 葫芦膜 -> Bubble
+      'MFC': 'Tube',                // 气枕膜 -> Tube  
+      'MFF': 'paper Bubble'         // 葫芦膜变种 -> paper Bubble
     };
+
+    // Material筛选 - 直接对应material字段，无需映射
+    // Material选项ID直接对应数据中的material值：HDPE、LDPE、PAPER、PAPER+PE、Nylon
+
+    const normalize = (v: any) => (v ?? '').toString().toLowerCase().replace(/\s+/g, '');
+
+    // 打印当前筛选条件
+    console.log('【筛选条件】', {
+      model: selectedModel,
+      shape: selectedShape,
+      material: selectedMaterial,
+      thickness: selectedThickness,
+      weight: selectedWeight,
+      width: selectedWidth,
+      length: selectedLength
+    });
+
+    // 打印映射关系调试信息
+    console.log('🗺️ [Shape映射] 当前形状映射:', shapeIdToBagType);
+    console.log('🗺️ [Shape映射] selectedShape:', selectedShape, '-> expectedBagType:', shapeIdToBagType[selectedShape]);
+    console.log('🗺️ [Material映射] 材质直接匹配，无需映射。selectedMaterial:', selectedMaterial);
+
+    // 打印数据样本
+    allConsumables.slice(0, 3).forEach((item, idx) => {
+      console.log(`【数据${idx}分析】`, {
+        id: item.id,
+        name: item.name,
+        bag_type: item.bag_type,  // Shape对应字段
+        material: item.material,  // Material对应字段
+        app_model: item.app_model,
+        specs: item.specs
+      });
+    });
+
+    const filtered = allConsumables.filter(item => {
+      // 型号筛选 - 检查app_model字段（兼容性）
+      if (selectedModel !== 'all') {
+        const appModels = (item.app_model || '').split(',').map(m => m.trim());
+        const matches = appModels.some(m => normalize(m) === normalize(selectedModel));
+        if (!matches) {
+          console.log(`🔍 [型号筛选] ${item.id} 不匹配: ${item.app_model} vs ${selectedModel}`);
+          return false;
+        }
+      }
+
+      // 形状筛选 - 仅处理bag_type字段
+      if (selectedShape !== 'all') {
+        const expectedBagType = shapeIdToBagType[selectedShape];
+        if (!expectedBagType || normalize(item.bag_type) !== normalize(expectedBagType)) {
+          console.log(`🔍 [形状筛选] ${item.id} 不匹配: ${item.bag_type} vs ${expectedBagType} (from shape ${selectedShape})`);
+          return false;
+        }
+      }
+
+      // 材质筛选 - 仅处理material字段，直接比较
+      if (selectedMaterial !== 'all') {
+        if (normalize(item.material) !== normalize(selectedMaterial)) {
+          console.log(`🔍 [材质筛选] ${item.id} 不匹配: ${item.material} vs ${selectedMaterial}`);
+          return false;
+        }
+      }
+
+      // 数值筛选保持不变...
+      const extractNumber = (value: string | number | undefined | null): number | undefined => {
+        if (value === null || value === undefined) return undefined;
+        if (typeof value === 'number') return value;
+        const match = String(value).match(/(\d+(?:\.\d+)?)/);
+        return match ? parseFloat(match[1]) : undefined;
+      };
+
+      // 厚度筛选
+      if (selectedThickness !== 'all') {
+        const itemThickness = extractNumber(item.specs?.thickness) || extractNumber(item.thickness_met);
+        const targetThickness = extractNumber(selectedThickness);
+        if (itemThickness === undefined || targetThickness === undefined || 
+            Math.abs(itemThickness - targetThickness) > 0.01) {
+          console.log(`🔍 [厚度筛选] ${item.id} 不匹配: ${itemThickness} vs ${targetThickness}`);
+          return false;
+        }
+      }
+
+      // 重量筛选
+      if (selectedWeight !== 'all') {
+        const itemWeight = extractNumber(item.specs?.weight) || extractNumber(item.net_weight_kg);
+        const targetWeight = extractNumber(selectedWeight);
+        if (itemWeight === undefined || targetWeight === undefined || 
+            Math.abs(itemWeight - targetWeight) > 0.01) {
+          console.log(`🔍 [重量筛选] ${item.id} 不匹配: ${itemWeight} vs ${targetWeight}`);
+          return false;
+        }
+      }
+
+      // 宽度筛选
+      if (selectedWidth !== 'all') {
+        const itemWidth = extractNumber(item.specs?.width) || extractNumber(item.width_met);
+        const targetWidth = extractNumber(selectedWidth);
+        if (itemWidth === undefined || targetWidth === undefined || 
+            Math.abs(itemWidth - targetWidth) > 0.01) {
+          console.log(`🔍 [宽度筛选] ${item.id} 不匹配: ${itemWidth} vs ${targetWidth}`);
+          return false;
+        }
+      }
+
+      // 长度筛选
+      if (selectedLength !== 'all') {
+        const itemLength = extractNumber(item.specs?.length) || extractNumber(item.length_met);
+        const targetLength = extractNumber(selectedLength);
+        if (itemLength === undefined || targetLength === undefined || 
+            Math.abs(itemLength - targetLength) > 0.01) {
+          console.log(`🔍 [长度筛选] ${item.id} 不匹配: ${itemLength} vs ${targetLength}`);
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    console.log(`✅ [筛选结果] 从 ${allConsumables.length} 个耗材中筛选出 ${filtered.length} 个`);
+
+    // 分页逻辑
+    const pageSize = 10;
+    const total = filtered.length;
+    const pages = Math.max(1, Math.ceil(total / pageSize));
+    if (currentPage > pages) {
+      setCurrentPage(1);
+      return;
+    }
+    const paged = filtered.slice((currentPage-1)*pageSize, currentPage*pageSize);
+    setConsumables(paged);
+    setTotalItems(total);
+    setTotalPages(pages);
     
-    fetchConsumables();
-  }, [selectedModel, selectedShape, selectedMaterial, selectedThickness, 
-      selectedWeight, selectedWidth, selectedLength, currentPage, userRegion, t, searchParams]);
+    // 初始化数量状态
+    const initialQuantities = paged.reduce((acc, item) => {
+      acc[item.id] = 1;
+      return acc;
+    }, {} as Record<string, number>);
+    setQuantities(initialQuantities);
+  }, [allConsumables, selectedModel, selectedShape, selectedMaterial, selectedThickness, selectedWeight, selectedWidth, selectedLength, currentPage]);
   
   // 获取购物车数据
   useEffect(() => {
@@ -1073,6 +1194,24 @@ const ConsumablesPage: React.FC = () => {
         compatibility: string;
       }> = product.specs || {};
       const image_url = cleanImageUrl(product.image_url);
+      
+      // 添加更详细的名称兜底逻辑
+      const resolvedName = 
+        product.name || 
+        product.code || 
+        product.part_number ||
+        product.id || 
+        'N/A';
+
+      // 调试日志：分析名称来源
+      console.log('[addToCart] 耗材名称分析:', {
+        'product.name': product.name,
+        'product.code': product.code, 
+        'product.part_number': product.part_number,
+        'product.id': product.id,
+        'resolvedName': resolvedName
+      });
+
       const properties = {
         ...product,
         ...specs,
@@ -1081,7 +1220,15 @@ const ConsumablesPage: React.FC = () => {
         model: product.model || 'N/A',
         spec: product.spec || 'N/A',
         part_number: product.part_number || product.code || product.id,
-        name: product.name || 'N/A',
+        name: resolvedName,
+        // 添加多语言名称支持
+        name_zh: product.name || product.code || product.id,
+        name_en: product.name || product.code || product.id,
+        // 添加产品代码兜底
+        code: product.code || product.id,
+        // 确保图片字段完整
+        image: image_url,
+        // 规格信息
         width: specs?.width || 'N/A',
         length: specs?.length || 'N/A',
         thickness: specs?.thickness || 'N/A',
@@ -1089,14 +1236,26 @@ const ConsumablesPage: React.FC = () => {
         shape: specs?.shape || 'N/A',
         rollLength: specs?.rollLength || 'N/A',
         compatibility: specs?.compatibility || 'N/A',
+        // 添加完整的 specs 嵌套对象
+        specs: {
+          ...specs,
+          material: specs?.material || 'N/A',
+          shape: specs?.shape || 'N/A',
+          thickness: specs?.thickness || 'N/A',
+          width: specs?.width || 'N/A',
+          length: specs?.length || 'N/A',
+          rollLength: specs?.rollLength || 'N/A',
+          compatibility: specs?.compatibility || 'N/A'
+        }
       };
+
       const cartItem: ExtendedCartItem = {
         item_id: parseInt(itemId) || 0,
         product_type: 'consumable',
         product_id: parseInt(itemId) || 0,
         part_number: properties.part_number,
         quantity,
-        name: properties.name,
+        name: resolvedName,
         image_url: properties.image_url,
         unit_price: getRegionalPrice(product, quantity),
         currency: getCurrencySymbolByRegion(),
@@ -1122,13 +1281,22 @@ const ConsumablesPage: React.FC = () => {
         type: 'consumable',
         specs: {
           partNumber: properties.part_number,
-          productName: properties.name
+          productName: resolvedName
         },
         price: getRegionalPrice(product, quantity),
         properties
       };
       // 调试日志
       console.log('[addToCart] product:', product);
+      console.log('[addToCart] 耗材产品详细字段分析:');
+      console.log('  - product.id:', product.id, '(type:', typeof product.id, ')');
+      console.log('  - product.name:', product.name, '(type:', typeof product.name, ')');
+      console.log('  - product.code:', product.code, '(type:', typeof product.code, ')');
+      console.log('  - product.part_number:', product.part_number, '(type:', typeof product.part_number, ')');
+      console.log('  - product.image_url:', product.image_url, '(type:', typeof product.image_url, ')');
+      console.log('  - product.model:', product.model, '(type:', typeof product.model, ')');
+      console.log('  - product.brand:', product.brand, '(type:', typeof product.brand, ')');
+      console.log('  - resolvedName:', resolvedName);
       console.log('[addToCart] cartItem:', cartItem);
       console.log('[addToCart] cartItem.properties:', cartItem.properties);
       await addItem(cartItem);
@@ -1182,8 +1350,8 @@ const ConsumablesPage: React.FC = () => {
     console.log('🔄 [handleResetFilters] Resetting all filters to default values');
     
     setSelectedModel('all');
-    setSelectedShape('MEX');
-    setSelectedMaterial('hdpe');
+    setSelectedShape('all');  // 改为 'all'
+    setSelectedMaterial('all');  // 改为 'all'
     setSelectedThickness('all');
     setSelectedWeight('all');
     setSelectedWidth('all');
@@ -1284,11 +1452,11 @@ const ConsumablesPage: React.FC = () => {
           
           // 检查是否匹配筛选条件
           const materialMatches = !filters.material || filters.material === 'all' || 
-                                 firstItem.specs?.material?.toLowerCase().includes(filters.material.toLowerCase());
+                                 (firstItem.specs?.material || '').toLowerCase() === materialIdToSpecsMaterial[filters.material.toLowerCase()]?.toLowerCase();
           const shapeMatches = !filters.shape || filters.shape === 'all' || 
-                              firstItem.specs?.shape?.toLowerCase().includes(filters.shape.toLowerCase());
+                              (firstItem.specs?.shape || '') === shapeIdToSpecsShape[filters.shape];
           const modelMatches = !filters.model || filters.model === 'all' || 
-                              firstItem.specs?.compatibility?.includes(filters.model);
+                              (firstItem.specs?.compatibility || '').split(',').map(s => s.trim()).includes(filters.model);
           
           console.log('🔍 [Filter Match Analysis]:');
           console.log('  - Material matches:', materialMatches);
@@ -1307,12 +1475,18 @@ const ConsumablesPage: React.FC = () => {
         setTotalPages(Math.max(1, totalPagesFromAPI));
         setFilterOptions(consumableData.filterOptions);
         
-        // 初始化数量状态
-        const initialQuantities: Record<string, number> = {};
-        consumableData.items.forEach(item => {
-          initialQuantities[item.id] = 1;
-        });
+        // 初始化数量状态并设置
+        const initialQuantities = consumableData.items.reduce((acc, item) => {
+          acc[item.id] = 1;
+          return acc;
+        }, {} as Record<string, number>);
         setQuantities(initialQuantities);
+        
+        // 添加状态设置后的调试信息
+        console.log('📄 [Pagination Debug] State After Setting:');
+        console.log('  - totalItems will be set to:', totalFromAPI);
+        console.log('  - totalPages will be set to:', Math.max(1, totalPagesFromAPI));
+        console.log('  - currentPage preserved as:', currentPage, '(user choice maintained)');
 
       } catch (err) {
         const errorMessage = (err instanceof Error) ? err.message : t('error.systemError');
@@ -1328,86 +1502,62 @@ const ConsumablesPage: React.FC = () => {
 
   // 处理机器型号变更
   const handleModelChange = (value: string) => {
-    console.log('🔧 [handleModelChange] Model changed from', selectedModel, 'to', value);
+    console.log('🔧 [Model Filter] Changed:', selectedModel, '->', value);
     setSelectedModel(value);
     setCurrentPage(1); // 重置页码
-    
-    // 立即触发数据重新加载
-    setTimeout(() => {
-      handleApplyFilters();
-    }, 100);
+    // 移除setTimeout和handleApplyFilters调用，依赖useEffect触发
   };
 
   // 处理形状变更
   const handleShapeChange = (value: string) => {
-    console.log('🔧 [handleShapeChange] Shape changed from', selectedShape, 'to', value);
+    console.log('🔧 [Shape Filter] Changed:', selectedShape, '->', value);
     setSelectedShape(value);
     setCurrentPage(1); // 重置页码
-    
-    // 立即触发数据重新加载
-    setTimeout(() => {
-      handleApplyFilters();
-    }, 100);
+    // 移除setTimeout和handleApplyFilters调用
   };
 
   // 处理材质变更
   const handleMaterialChange = (value: string) => {
-    console.log('🔧 [handleMaterialChange] Material changed from', selectedMaterial, 'to', value);
+    console.log('🔧 [Material Filter] Changed:', selectedMaterial, '->', value);
     setSelectedMaterial(value);
     setCurrentPage(1); // 重置页码
-    
-    // 立即触发数据重新加载
-    setTimeout(() => {
-      handleApplyFilters();
-    }, 100);
+    // 移除setTimeout和handleApplyFilters调用
   };
 
   // 处理厚度变更
-  const handleThicknessChange = (value: string) => {
-    console.log('🔧 [handleThicknessChange] Thickness changed from', selectedThickness, 'to', value);
-    setSelectedThickness(value);
-    setCurrentPage(1); // 重置页码
-    
-    // 立即触发数据重新加载
-    setTimeout(() => {
-      handleApplyFilters();
-    }, 100);
+  const handleThicknessChange = (value: string | number) => {
+    const newValue = value === undefined ? 'all' : String(value);
+    console.log('🔧 [Thickness Filter] Changed:', selectedThickness, '->', newValue);
+    setSelectedThickness(newValue);
+    setCurrentPage(1);
+    // 移除setTimeout和handleApplyFilters调用
   };
 
   // 处理重量变更
-  const handleWeightChange = (value: string) => {
-    console.log('🔧 [handleWeightChange] Weight changed from', selectedWeight, 'to', value);
-    setSelectedWeight(value);
-    setCurrentPage(1); // 重置页码
-    
-    // 立即触发数据重新加载
-    setTimeout(() => {
-      handleApplyFilters();
-    }, 100);
+  const handleWeightChange = (value: string | number) => {
+    const newValue = value === undefined ? 'all' : String(value);
+    console.log('🔧 [Weight Filter] Changed:', selectedWeight, '->', newValue);
+    setSelectedWeight(newValue);
+    setCurrentPage(1);
+    // 移除setTimeout和handleApplyFilters调用
   };
 
   // 处理宽度变更
-  const handleWidthChange = (value: string) => {
-    console.log('🔧 [handleWidthChange] Width changed from', selectedWidth, 'to', value);
-    setSelectedWidth(value);
-    setCurrentPage(1); // 重置页码
-    
-    // 立即触发数据重新加载
-    setTimeout(() => {
-      handleApplyFilters();
-    }, 100);
+  const handleWidthChange = (value: string | number) => {
+    const newValue = value === undefined ? 'all' : String(value);
+    console.log('🔧 [Width Filter] Changed:', selectedWidth, '->', newValue);
+    setSelectedWidth(newValue);
+    setCurrentPage(1);
+    // 移除setTimeout和handleApplyFilters调用
   };
 
   // 处理长度变更
-  const handleLengthChange = (value: string) => {
-    console.log('🔧 [handleLengthChange] Length changed from', selectedLength, 'to', value);
-    setSelectedLength(value);
-    setCurrentPage(1); // 重置页码
-    
-    // 立即触发数据重新加载
-    setTimeout(() => {
-      handleApplyFilters();
-    }, 100);
+  const handleLengthChange = (value: string | number) => {
+    const newValue = value === undefined ? 'all' : String(value);
+    console.log('🔧 [Length Filter] Changed:', selectedLength, '->', newValue);
+    setSelectedLength(newValue);
+    setCurrentPage(1);
+    // 移除setTimeout和handleApplyFilters调用
   };
 
   // 处理图片错误 - 简化版本，使用数据URI避免404
@@ -1491,12 +1641,12 @@ const ConsumablesPage: React.FC = () => {
         {consumables.map((item) => (
           <div 
             key={item.id} 
-            className="bg-card rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-border text-content overflow-hidden"
+            className="bg-card rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-border text-content overflow-hidden group"
           >
             <div className="flex flex-col md:flex-row p-6">
               {/* 列1: 图片 */}
               <div className="w-full md:w-1/6 flex items-center justify-center md:justify-start mb-4 md:mb-0">
-                <div className="relative">
+                <div className="relative group-hover:scale-105 transition-transform duration-300">
                   <img 
                     src={cleanImageUrl(item.image_url) || placeholderImage} 
                     alt={String(item.name || '')} 
@@ -1510,7 +1660,7 @@ const ConsumablesPage: React.FC = () => {
               <div className="w-full md:w-3/6 md:px-4">
                 <div className="mb-4">
                   <span className="inline-block bg-primary text-white px-3 py-1 text-sm font-bold rounded-lg shadow-sm">{String(item.code || '')}</span>
-                  <h3 className="text-xl font-bold text-title mt-2 leading-tight line-clamp-2">{String(item.name || '')}</h3>
+                  <h3 className="text-xl font-bold text-title mt-2 leading-tight line-clamp-2 group-hover:text-primary transition-colors duration-200">{String(item.name || '')}</h3>
                   {item.model && (
                     <div className="text-sm text-content-light mt-1">
                       <span>型号: {String(item.model || '')}</span>
@@ -1521,7 +1671,7 @@ const ConsumablesPage: React.FC = () => {
                 </div>
 
                 {/* 规格信息（公制/英制自动切换） */}
-                <div className="bg-card-alt rounded-lg p-4 shadow-sm">
+                <div className="bg-card-alt rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div className="flex items-center">
                       <strong className="w-16 text-label font-medium">{String(t('filter.width') || 'Width')}:</strong>
@@ -1552,7 +1702,7 @@ const ConsumablesPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="info-buttons-container">
+                <div className="info-buttons-container mt-4">
                   <Tooltip
                     title={<ConsumableTooltipContent item={item} userRegion={userRegion} />}
                     placement="topRight"
@@ -1567,8 +1717,8 @@ const ConsumablesPage: React.FC = () => {
                     arrow={true}
                     trigger="hover"
                   >
-                    <button className="more-info-btn">
-                      <InfoCircleOutlined />
+                    <button className="more-info-btn bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-lg transition-colors duration-200 flex items-center">
+                      <InfoCircleOutlined className="mr-2" />
                       {String(t('actions.moreInfo') || 'More Info')}
                     </button>
                   </Tooltip>
@@ -1579,14 +1729,14 @@ const ConsumablesPage: React.FC = () => {
               <div className="w-full md:w-2/6 flex flex-col justify-between mt-4 md:mt-0 md:pl-4 md:border-l md:border-border">
                 <div>
                   <h4 className="font-medium text-sm text-label mb-2">{String(t('price') || 'Price')}:</h4>
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     {item.pricing.map((price, idx) => {
                       const quantity = parseInt(price.range.replace(/[^0-9]/g, '') || '1') || 1;
                       const priceValue = getRegionalPrice(item, quantity);
                       const displayPrice = isNaN(priceValue) ? 0 : priceValue;
                       
                       return (
-                        <div key={idx} className="flex justify-between items-center bg-background rounded px-3 py-1 text-sm hover:bg-brand-light transition-colors">
+                        <div key={idx} className="flex justify-between items-center bg-background rounded-lg px-4 py-2 text-sm hover:bg-brand-light transition-colors duration-200">
                           <span className="text-content-light">{price.range}:</span>
                           <span className="font-semibold text-brand-primary">
                             {getCurrencySymbolByRegion()}{displayPrice.toFixed(2)}
@@ -1595,64 +1745,25 @@ const ConsumablesPage: React.FC = () => {
                       );
                     })}
                   </div>
-                  
-                  {/* 库存信息（仅管理员/销售可见） */}
-                  {(user?.role === 'sales' || user?.role === 'admin') && (
-                    <div className="mt-3 bg-background p-2 rounded border border-border">
-                      <h4 className="font-medium text-sm text-label mb-1">{String(t('inventory') || 'Inventory')}:</h4>
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        {Object.entries(item.inventory).map(([region, count]) => (
-                          <div key={region} className="flex justify-between items-center px-2 py-1 rounded border border-border">
-                            <span className="font-medium">{region.toUpperCase()}:</span>
-                            <span className={`font-medium ${(count || 0) > 0 ? 'text-success' : 'text-error'}`}>
-                              {typeof count === 'number' ? count : (isNaN(Number(count)) ? 0 : Number(count))}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
-                
-                <div className="mt-4 flex items-center justify-between">
-                  {/* 自定义数量选择器 */}
-                  <div className="quantity-selector-container">
-                    <label className="quantity-label">{String(t('quantity') || 'Quantity')}:</label>
-                    <div className="quantity-selector">
-                      <button 
-                        className="quantity-btn quantity-decrease"
-                        onClick={() => handleQuantityChange(item.id, (quantities[item.id] || 1) - 1)}
-                        disabled={(quantities[item.id] || 1) <= 1}
-                        type="button"
-                      >
-                        -
-                      </button>
-                      <input
-                        type="number"
-                        className="quantity-input"
-                        value={quantities[item.id] || 1}
-                        onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 1)}
-                        min="1"
-                        max="9999"
-                      />
-                      <button 
-                        className="quantity-btn quantity-increase"
-                        onClick={() => handleQuantityChange(item.id, (quantities[item.id] || 1) + 1)}
-                        type="button"
-                      >
-                        +
-                      </button>
-                    </div>
+
+                <div className="mt-4 flex flex-col space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <InputNumber
+                      min={1}
+                      value={quantities[item.id] || 1}
+                      onChange={(value) => handleQuantityChange(item.id, value || 1)}
+                      className="w-24"
+                    />
+                    <Button
+                      type="primary"
+                      onClick={(e) => addToCart(item.id, e.currentTarget)}
+                      className="flex-1"
+                      icon={<ShoppingCartOutlined />}
+                    >
+                      {String(t('actions.addToCart') || 'Add to Cart')}
+                    </Button>
                   </div>
-                  <Button 
-                    type="primary"
-                    onClick={(e: React.MouseEvent<HTMLButtonElement>) => addToCart(item.id, e.currentTarget)}
-                    className="cart-add-button"
-                    icon={<ShoppingCartOutlined />}
-                    size="large"
-                  >
-                    {String(t('actions.addToCart') || 'Add to Cart')}
-                  </Button>
                 </div>
               </div>
             </div>
@@ -1822,13 +1933,15 @@ const ConsumablesPage: React.FC = () => {
               <div className="dimensions-filters grid grid-cols-1 md:grid-cols-3 gap-4 w-full md:w-7/12">
                 <div className="filter-group vertical">
                   <label className="block text-sm font-medium mb-2 text-label">{isPaperMaterial(selectedMaterial) ? String(t('filter.weight') || 'Weight') : String(t('filter.thickness') || 'Thickness')}:</label>
-                  <Select 
+                  <Select
                     value={isPaperMaterial(selectedMaterial) ? selectedWeight : selectedThickness}
                     onChange={isPaperMaterial(selectedMaterial) ? handleWeightChange : handleThicknessChange}
                     style={{ width: '100%' }}
+                    allowClear
                   >
-                    {(isPaperMaterial(selectedMaterial) ? weights : thicknesses).map((item, index) => (
-                      <Option key={`thickness-weight-${item.id}-${index}`} value={item.id}>{item.name}</Option>
+                    <Option value="all">all</Option>
+                    {(isPaperMaterial(selectedMaterial) ? specOptions.weight : specOptions.thickness).map((item) => (
+                      <Option key={item.id} value={item.metric_value}>{`${item.metric_value} ${item.metric_unit}`}</Option>
                     ))}
                   </Select>
                 </div>
@@ -1839,9 +1952,11 @@ const ConsumablesPage: React.FC = () => {
                     value={selectedWidth}
                     onChange={handleWidthChange}
                     style={{ width: '100%' }}
+                    allowClear
                   >
-                    {widths.map((width, index) => (
-                      <Option key={`width-${width.id}-${index}`} value={width.id}>{width.name}</Option>
+                    <Option value="all">all</Option>
+                    {specOptions.width.map((item) => (
+                      <Option key={item.id} value={item.metric_value}>{`${item.metric_value} ${item.metric_unit}`}</Option>
                     ))}
                   </Select>
                 </div>
@@ -1852,9 +1967,11 @@ const ConsumablesPage: React.FC = () => {
                     value={selectedLength}
                     onChange={handleLengthChange}
                     style={{ width: '100%' }}
+                    allowClear
                   >
-                    {lengths.map((length, index) => (
-                      <Option key={`length-${length.id}-${index}`} value={length.id}>{length.name}</Option>
+                    <Option value="all">all</Option>
+                    {specOptions.length.map((item) => (
+                      <Option key={item.id} value={item.metric_value}>{`${item.metric_value} ${item.metric_unit}`}</Option>
                     ))}
                   </Select>
                 </div>

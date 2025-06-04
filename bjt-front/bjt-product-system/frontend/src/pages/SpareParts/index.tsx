@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Tooltip } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import { API_BASE_URL } from '../../api/config';
-
+import { parseRequiredParts } from '../../utils/requiredPartsUtils';
 // 导入现代化UI组件
 import { 
   LoadingState, 
@@ -63,7 +63,6 @@ interface Prices {
 
 // 定义本地过滤选项接口，兼容旧代码
 interface LocalFilterOptions {
-  hostModels: string[];
   accessoryModels: string[];
   partTypes: Array<{ id: string; name: string; }>;
 }
@@ -161,10 +160,9 @@ const SparePartsPage = () => {
   const [spareParts, setSpareParts] = useState<SparePart[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [hostModels, setHostModels] = useState<string[]>([]);
-  const [accessoryModels, setAccessoryModels] = useState<string[]>([]);
   const [filterOptions, setFilterOptions] = useState<SparePartsFilterOptions | null>(null);
-  const [selectedIsConsumable, setSelectedIsConsumable] = useState<boolean | null>(null);
+  // 定义易耗类型状态：null=全部，1=易耗，2=非易耗
+  const [selectedIsConsumable, setSelectedIsConsumable] = useState<number | null>(null);
   
   // 分页状态
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -176,7 +174,17 @@ const SparePartsPage = () => {
   const [productTypes, setProductTypes] = useState<Array<{ value: string; label: string }>>([
     { value: 'all', label: String(t('filters.allProductTypes', { ns: 'spareParts' }) || '全部产品类型') }
   ]);
-  const [models, setModels] = useState<Array<{ value: string; label: string }>>([
+  
+  // 分开管理主机型号和配件型号
+  const [hostModels, setHostModels] = useState<Array<{ value: string; label: string }>>([
+    { value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || '全部型号') }
+  ]);
+  const [accessoryModels, setAccessoryModels] = useState<Array<{ value: string; label: string }>>([
+    { value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || '全部型号') }
+  ]);
+  
+  // 当前显示的型号列表（根据产品类型动态切换）
+  const [currentModels, setCurrentModels] = useState<Array<{ value: string; label: string }>>([
     { value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || '全部型号') }
   ]);
   
@@ -269,34 +277,22 @@ const SparePartsPage = () => {
   
   // 在组件首次渲染时从localStorage加载购物车数据并获取备件数据
   useEffect(() => {
-    // 设置默认的型号数据
-    setHostModels(['LA-E4S', 'LA-E5P', 'TM-200', 'TM-300', 'PM-100', 'PM-200', 'ACB-100', 'ACB-200']);
-    setAccessoryModels(['FS-001', 'FS-002', 'FB-100', 'FB-200']);
-    
     loadSparePartsData();
     loadFilterOptions();
-    fetchModels(currentProductType); // 初始化时加载当前产品类型的型号
+    // 初始化时根据当前产品类型加载对应型号
+    loadModelsForProductType(currentProductType);
   }, []);
   
-  // 在筛选条件变化时重新加载数据
+  // 在产品类型变化时重新加载模型
   useEffect(() => {
-    console.log('🔍 [useEffect] Filter change detected:', {
-      selectedIsConsumable,
-      currentProductType,
-      selectedModel,
-      currentPage
-    });
-    loadSparePartsData();
-  }, [selectedIsConsumable, currentProductType, selectedModel, currentPage]);
+    loadModelsForProductType(currentProductType);
+  }, [currentProductType]);
   
-  // 环境变量和Mock数据状态检查
+  // 在组件首次渲染时进行环境检查和初始化
   useEffect(() => {
-    console.log('🔧 [SpareParts] Environment check:', {
-      VITE_USE_MOCK_DATA: import.meta.env.VITE_USE_MOCK_DATA,
-      mockDataEnabled: import.meta.env.VITE_USE_MOCK_DATA === 'true',
-      NODE_ENV: import.meta.env.NODE_ENV,
-      MODE: import.meta.env.MODE
-    });
+    // 初始化加载备件数据
+    loadSparePartsData();
+    loadFilterOptions();
   }, []);
   
   // 添加直接测试Mock数据的useEffect
@@ -372,9 +368,32 @@ const SparePartsPage = () => {
       const currentToken: string = storedToken; // Type assertion after null check
 
       const baseUrl = API_BASE_URL;
-      const url = `${baseUrl}/spare-parts?page=${currentPage}&per_page=${pageSize}&lang=${currentLanguage}&status=publish`;
+      
+      // 构建查询参数
+      const queryParams = new URLSearchParams({
+        page: currentPage.toString(),
+        per_page: pageSize.toString(),
+        lang: currentLanguage,
+        status: 'publish'
+      });
+      
+      // 添加筛选参数
+      if (selectedModel && selectedModel !== 'all' && selectedModel !== '') {
+        queryParams.append('app_model', selectedModel);
+        console.log('🔍 [loadSparePartsData] Adding app_model filter:', selectedModel);
+      }
+      
+      if (selectedIsConsumable !== null) {
+        // 将 boolean 转换为数字：true -> 1, false -> 2
+        const consumableValue = selectedIsConsumable ? 1 : 2;
+        queryParams.append('is_consumable', consumableValue.toString());
+        console.log('🔍 [loadSparePartsData] Adding is_consumable filter:', consumableValue);
+      }
+      
+      const url = `${baseUrl}/spare-parts?${queryParams.toString()}`;
       
       console.log('🔍 [loadSparePartsData] Request URL:', url);
+      console.log('🔍 [loadSparePartsData] Query params:', Object.fromEntries(queryParams));
       
       const response = await fetch(url, {
         method: 'GET',
@@ -385,96 +404,47 @@ const SparePartsPage = () => {
         }
       });
 
-      if (!response.ok) {
-        if (response.status === 401 && retryCount < maxRetries) {
-          console.log('🔄 [loadSparePartsData] Token expired, attempting to refresh...');
-          try {
-            const refreshResponse = await fetch(`${baseUrl}/auth/refresh`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${currentToken}`
-              }
-            });
-
-            if (refreshResponse.ok) {
-              const refreshData = await refreshResponse.json();
-              if (refreshData.success && refreshData.data?.access_token) {
-                const newToken = refreshData.data.access_token;
-                localStorage.setItem('auth_token', newToken);
-                console.log('✅ [loadSparePartsData] Token refreshed successfully');
-                // Retry the original request with new token
-                return loadSparePartsData(retryCount + 1, maxRetries);
-              }
-            }
-          } catch (refreshError) {
-            console.error('❌ [loadSparePartsData] Token refresh failed:', refreshError);
-          }
+      if (response.status === 401) {
+        // Token expired, redirect to login
+        if (retryCount < maxRetries) {
+          navigate('/login');
+          return;
         }
+      }
+
+      if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const jsonData = await response.json();
       console.log('✅ [loadSparePartsData] Response received:', jsonData);
       
-      console.log('🔍 [loadSparePartsData] Response structure analysis:', {
-        hasSuccess: 'success' in jsonData,
-        successValue: jsonData.success,
-        hasData: 'data' in jsonData,
-        dataType: typeof jsonData.data,
-        dataIsArray: Array.isArray(jsonData.data),
-        dataLength: Array.isArray(jsonData.data) ? jsonData.data.length : 'N/A',
-        allKeys: Object.keys(jsonData || {}),
-        dataKeys: jsonData.data ? Object.keys(jsonData.data) : 'N/A'
-      });
-      
       // Ensure we always get an array
       let sparePartsData: SparePart[] = [];
       
       if (jsonData && Array.isArray(jsonData)) {
         sparePartsData = jsonData;
-        console.log('📦 [loadSparePartsData] Using root array');
       } else if (jsonData && jsonData.success && jsonData.data && jsonData.data.items && Array.isArray(jsonData.data.items)) {
         sparePartsData = jsonData.data.items;
-        console.log('📦 [loadSparePartsData] Using jsonData.data.items array (WordPress API format)');
       } else if (jsonData && jsonData.success && jsonData.data && Array.isArray(jsonData.data)) {
         sparePartsData = jsonData.data;
-        console.log('📦 [loadSparePartsData] Using jsonData.data array (success format)');
       } else if (jsonData && jsonData.data && jsonData.data.items && Array.isArray(jsonData.data.items)) {
         sparePartsData = jsonData.data.items;
-        console.log('📦 [loadSparePartsData] Using jsonData.data.items array');
       } else if (jsonData && jsonData.data && Array.isArray(jsonData.data)) {
         sparePartsData = jsonData.data;
-        console.log('📦 [loadSparePartsData] Using jsonData.data array');
       } else if (jsonData && jsonData.data && jsonData.data.results && Array.isArray(jsonData.data.results)) {
         sparePartsData = jsonData.data.results;
-        console.log('📦 [loadSparePartsData] Using jsonData.data.results array');
       } else if (jsonData && jsonData.items && Array.isArray(jsonData.items)) {
         sparePartsData = jsonData.items;
-        console.log('📦 [loadSparePartsData] Using jsonData.items array');
       } else {
-        console.warn('⚠️ [loadSparePartsData] Unexpected data structure, using empty array:', jsonData);
-        console.warn('Available properties:', Object.keys(jsonData || {}));
-        if (jsonData && jsonData.data) {
-          console.warn('jsonData.data properties:', Object.keys(jsonData.data || {}));
-        }
         sparePartsData = [];
       }
-      
-      console.log('✅ [loadSparePartsData] Spare parts data extracted:', {
-        count: sparePartsData.length,
-        firstItem: sparePartsData[0] || null,
-        isArray: Array.isArray(sparePartsData),
-        firstItemKeys: sparePartsData[0] ? Object.keys(sparePartsData[0]) : [],
-        firstItemPartNumber: sparePartsData[0] ? sparePartsData[0].part_number : 'N/A',
-        allPartNumbers: sparePartsData.map(p => ({ id: p.id, part_number: p.part_number })).slice(0, 3)
-      });
       
       // 提取分页信息
       let paginationInfo = {
         total: sparePartsData.length,
         totalPages: Math.ceil(sparePartsData.length / pageSize),
-        currentPage: currentPage // 保持当前页码，不重置
+        currentPage: currentPage
       };
       
       if (jsonData && jsonData.success && jsonData.data) {
@@ -482,81 +452,31 @@ const SparePartsPage = () => {
         paginationInfo = {
           total: jsonData.data.total || sparePartsData.length,
           totalPages: jsonData.data.total_pages || Math.ceil((jsonData.data.total || sparePartsData.length) / pageSize),
-          currentPage: jsonData.data.page || currentPage // 如果API没有返回页码，保持当前页码
+          currentPage: jsonData.data.page || currentPage
         };
       } else if (jsonData && jsonData.pagination) {
         // 标准分页格式
         paginationInfo = {
           total: jsonData.pagination.total || sparePartsData.length,
           totalPages: jsonData.pagination.totalPages || Math.ceil((jsonData.pagination.total || sparePartsData.length) / pageSize),
-          currentPage: jsonData.pagination.currentPage || currentPage // 如果API没有返回页码，保持当前页码
+          currentPage: jsonData.pagination.currentPage || currentPage
         };
       }
-      
-      console.log('📄 [loadSparePartsData] Pagination info:', paginationInfo);
-      console.log('📄 [loadSparePartsData] Current page before update:', currentPage);
       
       // 设置分页状态
       setTotalItems(paginationInfo.total);
       setTotalPages(Math.max(1, paginationInfo.totalPages));
-      // 只有当API明确返回了页码信息时才更新currentPage，并且新页码与当前页码不同时才更新
       if (
         jsonData &&
         ((jsonData.success && jsonData.data && jsonData.data.page) || (jsonData.pagination && jsonData.pagination.currentPage)) &&
-        paginationInfo.currentPage !== currentPage // <--- Add this condition
+        paginationInfo.currentPage !== currentPage
       ) {
         setCurrentPage(Math.max(1, paginationInfo.currentPage));
-        console.log('📄 [loadSparePartsData] Updated currentPage to:', paginationInfo.currentPage);
-      } else {
-        console.log('📄 [loadSparePartsData] Keeping currentPage as:', currentPage);
-      }
-      
-      // 详细检查第一个备件的数据结构
-      if (sparePartsData.length > 0) {
-        const firstPart = sparePartsData[0];
-        console.log('🔍 [loadSparePartsData] First spare part detailed structure:', {
-          id: firstPart.id,
-          part_number: firstPart.part_number,
-          name_zh: firstPart.name_zh,
-          name_en: firstPart.name_en,
-          spec: firstPart.spec,
-          spec_imperial: firstPart.spec_imperial,
-          app_sn: firstPart.app_sn,
-          app_model: firstPart.app_model,
-          package_size_cm: firstPart.package_size_cm,
-          package_size_inch: firstPart.package_size_inch,
-          pcs_per_box: firstPart.pcs_per_box,
-          is_consumable: firstPart.is_consumable,
-          allKeys: Object.keys(firstPart),
-          fullObject: firstPart
-        });
-        
-        // 检查是否有其他可能的字段名称
-        console.log('🔍 [loadSparePartsData] Checking for alternative field names:', {
-          // 可能的规格字段
-          specification: (firstPart as any).specification,
-          specifications: (firstPart as any).specifications,
-          // 可能的序列号字段
-          serial_number: (firstPart as any).serial_number,
-          serialNumber: (firstPart as any).serialNumber,
-          sn: (firstPart as any).sn,
-          // 可能的包装尺寸字段
-          packageSize: (firstPart as any).packageSize,
-          package_size: (firstPart as any).package_size,
-          packaging_size: (firstPart as any).packaging_size,
-          // 可能的数量字段
-          pcsPerBox: (firstPart as any).pcsPerBox,
-          pieces_per_box: (firstPart as any).pieces_per_box,
-          qty_per_box: (firstPart as any).qty_per_box
-        });
       }
       
       // 如果没有数据，尝试不带筛选条件重新获取
       if (sparePartsData.length === 0) {
-        console.log('⚠️ [loadSparePartsData] No data found with filters, trying without filters...');
-        
         const fallbackUrl = `${baseUrl}/spare-parts?page=${currentPage}&per_page=${pageSize}&lang=${currentLanguage}&status=publish`;
-        console.log('🔍 [loadSparePartsData] Fallback URL:', fallbackUrl);
         
         const fallbackResponse = await fetch(fallbackUrl, {
           method: 'GET',
@@ -569,22 +489,19 @@ const SparePartsPage = () => {
         
         if (fallbackResponse.ok) {
           const fallbackData = await fallbackResponse.json();
-          console.log('🔍 [loadSparePartsData] Fallback response:', fallbackData);
           
           if (fallbackData && fallbackData.success && fallbackData.data && fallbackData.data.items && Array.isArray(fallbackData.data.items)) {
             sparePartsData = fallbackData.data.items;
-            console.log('✅ [loadSparePartsData] Using fallback data (WordPress API format):', sparePartsData.length, 'items');
           } else if (fallbackData && fallbackData.data && Array.isArray(fallbackData.data)) {
             sparePartsData = fallbackData.data;
-            console.log('✅ [loadSparePartsData] Using fallback data:', sparePartsData.length, 'items');
           } else if (fallbackData && Array.isArray(fallbackData)) {
             sparePartsData = fallbackData;
-            console.log('✅ [loadSparePartsData] Using fallback array data:', sparePartsData.length, 'items');
           }
         }
       }
       
       setSpareParts(sparePartsData);
+      updateAccessoryModels(sparePartsData);
       
     } catch (err) {
       console.error(`Error loading spare parts data from API (attempt ${retryCount + 1}/${maxRetries + 1}):`, err);
@@ -620,17 +537,47 @@ const SparePartsPage = () => {
     }
   };
   
+  // 新增：动态更新配件模型集合
+  const updateAccessoryModels = (sparePartsData: SparePart[]) => {
+    // 只取配件类的备件
+    const accessoryParts = sparePartsData.filter(
+      part => part.product_type === 'accessory' || (part.product_line_id && part.product_line_id !== 1)
+    );
+    // 收集所有app_model，支持字符串和数组
+    const modelSet = new Set<string>();
+    accessoryParts.forEach(part => {
+      if (Array.isArray(part.app_model)) {
+        part.app_model.forEach(m => m && modelSet.add(m.trim()));
+      } else if (typeof part.app_model === 'string') {
+        part.app_model.split(',').forEach(m => m && modelSet.add(m.trim()));
+      }
+    });
+    
+    // 更新配件型号列表（保留现有API获取的数据，补充从备件数据提取的型号）
+    const extractedModels = Array.from(modelSet).map(m => ({ value: m, label: m }));
+    console.log('📦 [updateAccessoryModels] Extracted models from spare parts data:', extractedModels.length);
+    
+    // 如果配件型号列表为空或只有默认项，用提取的数据填充
+    if (accessoryModels.length <= 1 && extractedModels.length > 0) {
+      const newAccessoryModels = [
+        { value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || '全部型号') },
+        ...extractedModels
+      ];
+      setAccessoryModels(newAccessoryModels);
+      console.log('✅ [updateAccessoryModels] Updated accessory models from spare parts data');
+    }
+  };
+  
   // 加载筛选选项
   const loadFilterOptions = async (retryCount = 0, maxRetries = 2) => {
     try {
-      console.log(`Loading filter options from spare parts data (attempt ${retryCount + 1}/${maxRetries + 1})`);
+      console.log(`🔄 [loadFilterOptions] Loading filter options from API (attempt ${retryCount + 1}/${maxRetries + 1})`);
       
-      // 从备件数据中提取过滤选项，而不是调用不存在的API端点
       const token = localStorage.getItem('auth_token');
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1';
       
-      // 调用备件列表API获取所有数据，然后提取过滤选项
-      const response = await fetch(`${baseUrl}/spare-parts?page=1&per_page=100`, {
+      // 调用新的筛选选项API端点
+      const response = await fetch(`${baseUrl}/spare-parts/filter-options?lang=${currentLanguage}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -642,63 +589,81 @@ const SparePartsPage = () => {
       console.log('🔍 [loadFilterOptions] API response status:', response.status);
 
       if (!response.ok) {
-        throw new Error(`Spare parts API request failed with status ${response.status}: ${response.statusText}`);
+        throw new Error(`Filter options API request failed with status ${response.status}: ${response.statusText}`);
       }
 
       const jsonData = await response.json();
-      console.log('✅ [loadFilterOptions] Spare parts data received:', jsonData);
+      console.log('✅ [loadFilterOptions] Filter options received:', jsonData);
 
       if (jsonData.success && jsonData.data) {
-        const sparePartsData = jsonData.data.items || jsonData.data || [];
+        const filterData = jsonData.data;
         
-        // 从备件数据中提取过滤选项
-        const productTypes = new Set<string>();
-        const models = new Set<string>();
-        
-        sparePartsData.forEach((part: any) => {
-          // 提取产品类型（从part_number或其他字段）
-          if (part.product_line_id) {
-            productTypes.add(part.product_line_id.toString());
-          }
-          
-          // 提取适用机型
-          if (part.app_model) {
-            const modelList = part.app_model
-              .replace(/"/g, '') // 移除引号
-              .split(',')
-              .map((m: string) => m.trim());
-            modelList.forEach((model: string) => {
-              if (model) models.add(model);
-            });
-          }
-        });
+        // 处理主机型号
+        if (filterData.hostModels && Array.isArray(filterData.hostModels)) {
+          const hostModelOptions = [
+            { value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || '全部型号') },
+            ...filterData.hostModels.map(model => ({
+              value: model,
+              label: model
+            }))
+          ];
+          setHostModels(hostModelOptions);
+          console.log('✅ [loadFilterOptions] Host models loaded:', hostModelOptions.length - 1);
+        }
 
-        // 设置过滤选项
-        setProductTypes([
-          { value: 'all', label: String(t('filters.allProductTypes', { ns: 'spareParts' }) || 'All Product Types') },
-          ...Array.from(productTypes).map(type => ({
-            value: type,
-            label: `Product Line ${type}`
-          }))
-        ]);
-
-        setModels([
-          { value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || 'All Models') },
-          ...Array.from(models).map(model => ({
+        // 处理配件型号
+        if (filterData.accessoryModels && Array.isArray(filterData.accessoryModels)) {
+          const accessoryModelOptions = [
+            { value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || '全部型号') },
+            ...filterData.accessoryModels.map(model => ({
             value: model,
             label: model
           }))
-        ]);
+          ];
+          setAccessoryModels(accessoryModelOptions);
+          console.log('✅ [loadFilterOptions] Accessory models loaded:', accessoryModelOptions.length - 1);
+        }
+        
+        // 设置产品类型选项（根据partTypes构建产品类型选项）
+        const productTypeOptions = [
+          { value: 'all', label: String(t('filters.allProductTypes', { ns: 'spareParts' }) || '全部产品类型') },
+          { value: 'machine', label: String(t('productTypes.machine', { ns: 'spareParts' }) || '主机') },
+          { value: 'accessory', label: String(t('productTypes.accessory', { ns: 'spareParts' }) || '配件') }
+        ];
+        setProductTypes(productTypeOptions);
+        
+        // 根据当前产品类型设置当前显示的型号列表
+        if (currentProductType === 'machine') {
+          const hostModelsList = filterData.hostModels 
+            ? [{ value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || '全部型号') },
+               ...filterData.hostModels.map(model => ({ value: model, label: model }))]
+            : [{ value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || '全部型号') }];
+          setCurrentModels(hostModelsList);
+        } else if (currentProductType === 'accessory') {
+          const accessoryModelsList = filterData.accessoryModels
+            ? [{ value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || '全部型号') },
+               ...filterData.accessoryModels.map(model => ({ value: model, label: model }))]
+            : [{ value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || '全部型号') }];
+          setCurrentModels(accessoryModelsList);
+        } else {
+          // 合并所有型号
+          const allModelOptions = [
+            { value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || '全部型号') },
+            ...(filterData.hostModels || []).map(model => ({ value: model, label: model })),
+            ...(filterData.accessoryModels || []).map(model => ({ value: model, label: model }))
+          ];
+          setCurrentModels(allModelOptions);
+        }
 
-        console.log('✅ [loadFilterOptions] Filter options extracted:', {
-          productTypes: Array.from(productTypes),
-          models: Array.from(models)
+        console.log('✅ [loadFilterOptions] Filter options processed successfully:', {
+          hostModels: filterData.hostModels?.length || 0,
+          accessoryModels: filterData.accessoryModels?.length || 0,
+          partTypes: filterData.partTypes?.length || 0
         });
+        
       } else {
-        console.warn('⚠️ [loadFilterOptions] No spare parts data in response:', jsonData);
-        // 设置默认的空选项
-        setProductTypes([{ value: 'all', label: String(t('filters.allProductTypes', { ns: 'spareParts' }) || 'All Product Types') }]);
-        setModels([{ value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || 'All Models') }]);
+        console.warn('⚠️ [loadFilterOptions] Invalid response format:', jsonData);
+        throw new Error('Invalid filter options response format');
       }
       
     } catch (error) {
@@ -708,13 +673,53 @@ const SparePartsPage = () => {
         console.log(`🔄 [loadFilterOptions] Retrying in 1 second...`);
         setTimeout(() => loadFilterOptions(retryCount + 1, maxRetries), 1000);
       } else {
-        console.error('❌ [loadFilterOptions] All retry attempts failed');
-        // 设置默认的空选项
-        setProductTypes([{ value: 'all', label: String(t('filters.allProductTypes', { ns: 'spareParts' }) || 'All Product Types') }]);
-        setModels([{ value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || 'All Models') }]);
-        setError(`Failed to load filter options: ${(error as Error).message}`);
+        console.error('❌ [loadFilterOptions] All retry attempts failed, using fallback options');
+        
+        // 使用备用筛选选项
+        const fallbackProductTypes = [
+          { value: 'all', label: String(t('filters.allProductTypes', { ns: 'spareParts' }) || 'All Product Types') },
+          { value: 'machine', label: String(t('productTypes.machine', { ns: 'spareParts' }) || 'Machine') },
+          { value: 'accessory', label: String(t('productTypes.accessory', { ns: 'spareParts' }) || 'Accessory') }
+        ];
+        
+        const fallbackHostModels = [
+          { value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || '全部型号') },
+          { value: 'LA-E4S', label: currentLanguage === 'zh' ? '气垫机E4S' : 'Air Cushion E4S' },
+          { value: 'LA-E5P', label: currentLanguage === 'zh' ? '气垫机E5P' : 'Air Cushion E5P' },
+          { value: 'LA-E6L', label: currentLanguage === 'zh' ? '气垫机E6L' : 'Air Cushion E6L' }
+        ];
+        
+        const fallbackAccessoryModels = [
+          { value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || '全部型号') },
+          { value: 'EC402', label: currentLanguage === 'zh' ? 'EC402 大支架' : 'EC402 Big Bracket' },
+          { value: 'EC401', label: currentLanguage === 'zh' ? 'EC401 小支架' : 'EC401 Small Bracket' },
+          { value: 'EC403', label: currentLanguage === 'zh' ? 'EC403 配件' : 'EC403 Accessory' },
+          { value: 'EC404', label: currentLanguage === 'zh' ? 'EC404 配件' : 'EC404 Accessory' }
+        ];
+        
+        setProductTypes(fallbackProductTypes);
+        setHostModels(fallbackHostModels);
+        setAccessoryModels(fallbackAccessoryModels);
+        setCurrentModels(fallbackHostModels); // 默认显示主机型号
+        
+        console.log('✅ [loadFilterOptions] Fallback options loaded');
+        
+        // 只在真正的网络错误或严重错误时显示错误提示
+        if (error instanceof Error && !error.message.includes('Invalid response format')) {
+          showErrorToast(String(t('error.loadFilterOptionsFailed', { ns: 'spareParts' }) || 'Failed to load filter options'), error.message);
+        }
       }
     }
+  };
+  
+  // 标准化处理函数，移除引号、空格，转为小写
+  const normalize = (v: string): string => {
+    if (!v) return '';
+    return v.toString()
+      .toLowerCase()
+      .replace(/['"]/g, '') // 移除所有引号
+      .replace(/\s+/g, '')  // 移除所有空格
+      .trim();
   };
   
   // 根据筛选条件过滤备件
@@ -722,29 +727,131 @@ const SparePartsPage = () => {
     // 确保 spareParts 不是 null 或 undefined
     if (!Array.isArray(spareParts)) return [];
     
+    // 【调试日志】打印当前筛选条件
+    console.log('【筛选条件】', {
+      selectedModel,
+      currentProductType,
+      selectedIsConsumable
+    });
+
+    // 【调试日志】打印数据样本
+    spareParts.slice(0, 3).forEach((item, idx) => {
+      console.log(`【数据${idx}】`, {
+        id: item.id,
+        part_number: item.part_number,
+        name_zh: item.name_zh,
+        name_en: item.name_en,
+        app_model: item.app_model,
+        app_model_type: typeof item.app_model,
+        is_consumable: item.is_consumable,
+        product_line_id: item.product_line_id
+      });
+    });
+    
     let filteredResults = [...spareParts];
+    
+    // 标准化处理函数，移除引号、空格，转为小写
+    const normalize = (v: string): string => {
+      if (!v) return '';
+      return v.toString()
+        .toLowerCase()
+        .replace(/['"]/g, '') // 移除所有引号
+        .replace(/\s+/g, '')  // 移除所有空格
+        .trim();
+    };
     
     // 根据选定的型号进行筛选
     if (selectedModel && selectedModel !== 'all' && selectedModel !== '') {
+      console.log('🔍 [筛选] 应用型号筛选:', selectedModel);
+      
       filteredResults = filteredResults.filter(part => {
         // 检查app_model是否存在
-        if (!part.app_model) return false;
+        if (!part.app_model) {
+          console.log(`❌ [筛选] 备件 ${part.part_number} 没有 app_model 字段`);
+          return false;
+        }
+        
+        const normalizedSelectedModel = normalize(selectedModel);
         
         // 如果是数组，直接查找
         if (Array.isArray(part.app_model)) {
-          return part.app_model.includes(selectedModel);
+          const found = part.app_model.some(model => {
+            const normalizedModel = normalize(model);
+            return normalizedModel.includes(normalizedSelectedModel) || 
+                   normalizedSelectedModel.includes(normalizedModel);
+          });
+          console.log(`🔍 [筛选] 备件 ${part.part_number} (数组): ${part.app_model.join(', ')} ${found ? '✅匹配' : '❌不匹配'} ${selectedModel}`);
+          return found;
         }
         
         // 如果是字符串（兼容旧数据），转换为数组后查找
         const modelString = String(part.app_model);
-        return modelString
-          .replace(/"/g, '') // 移除引号
+        const modelArray = modelString
+          .replace(/['"]/g, '') // 移除引号
           .split(',')
           .map(m => m.trim())
-          .includes(selectedModel);
+          .filter(m => m.length > 0); // 过滤空字符串
+          
+        const found = modelArray.some(model => {
+          const normalizedModel = normalize(model);
+          // 双向匹配：选中的型号包含模型或模型包含选中的型号
+          return normalizedModel.includes(normalizedSelectedModel) || 
+                 normalizedSelectedModel.includes(normalizedModel);
+        });
+        
+        console.log(`🔍 [筛选] 备件 ${part.part_number} (字符串): [${modelArray.join(', ')}] ${found ? '✅匹配' : '❌不匹配'} ${selectedModel} (normalized: ${normalizedSelectedModel})`);
+        return found;
       });
+      
+      console.log(`🔍 [筛选] 型号筛选后剩余: ${filteredResults.length} 个备件`);
     }
     
+    // 根据产品类型筛选
+    if (currentProductType && currentProductType !== 'all') {
+      console.log('🔍 [筛选] 应用产品类型筛选:', currentProductType);
+      
+      filteredResults = filteredResults.filter(part => {
+        // 这里需要根据实际数据结构调整
+        // 如果数据中有 product_type 字段，使用它
+        if (part.product_type) {
+          const matches = normalize(part.product_type) === normalize(currentProductType);
+          console.log(`🔍 [筛选] 备件 ${part.part_number} product_type: ${part.product_type} ${matches ? '✅匹配' : '❌不匹配'} ${currentProductType}`);
+          return matches;
+        }
+        
+        // 如果没有 product_type，根据 product_line_id 判断
+        if (part.product_line_id) {
+          // 简单映射：product_line_id = 1 为主机，其他为配件
+          const isMainProduct = part.product_line_id === 1;
+          const matches = (currentProductType === 'machine' && isMainProduct) || 
+                         (currentProductType === 'accessory' && !isMainProduct);
+          console.log(`🔍 [筛选] 备件 ${part.part_number} product_line_id: ${part.product_line_id} ${matches ? '✅匹配' : '❌不匹配'} ${currentProductType}`);
+          return matches;
+        }
+        
+        // 默认显示所有
+        console.log(`🔍 [筛选] 备件 ${part.part_number} 无产品类型信息，默认显示`);
+        return true;
+      });
+      
+      console.log(`🔍 [筛选] 产品类型筛选后剩余: ${filteredResults.length} 个备件`);
+    }
+    
+    // 根据是否为耗材筛选
+    if (selectedIsConsumable !== null) {
+      console.log('🔍 [筛选] 应用耗材类型筛选:', selectedIsConsumable);
+      
+      filteredResults = filteredResults.filter(part => {
+        // 根据新的值定义进行筛选：1=易耗，2=非易耗
+        const matches = part.is_consumable === selectedIsConsumable;
+        console.log(`🔍 [筛选] 备件 ${part.part_number} is_consumable: ${part.is_consumable} ${matches ? '✅匹配' : '❌不匹配'} ${selectedIsConsumable}`);
+        return matches;
+      });
+      
+      console.log(`🔍 [筛选] 耗材类型筛选后剩余: ${filteredResults.length} 个备件`);
+    }
+    
+    console.log(`✅ [筛选] 最终筛选结果: ${filteredResults.length} 个备件`);
     return filteredResults;
   };
   
@@ -840,112 +947,105 @@ const SparePartsPage = () => {
     };
   };
   
-  // 添加到购物车
+  // 新增：获取完整备件详情
+  async function fetchSparePartDetail(idOrPartNumber: string) {
+    const baseUrl = API_BASE_URL;
+    let url = '';
+    if (/^\d+$/.test(idOrPartNumber)) {
+      url = `${baseUrl}/spare-parts/${idOrPartNumber}`;
+    } else {
+      url = `${baseUrl}/spare-parts?part_number=${idOrPartNumber}`;
+    }
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+      }
+    });
+    if (!response.ok) throw new Error('Failed to fetch spare part detail');
+    const data = await response.json();
+    if (data.success && data.data) {
+      if (Array.isArray(data.data)) return data.data[0];
+      return data.data;
+    }
+    if (Array.isArray(data)) return data[0];
+    return data;
+  }
+  
+  // 修改 addToCart
   const addToCart = async (sparePart: SparePart, quantity = 1) => {
-    console.log('🚀 [addToCart] Function called!', { sparePart, quantity });
+    console.log('🛒 [SpareParts.addToCart] Starting with:', { 
+      id: sparePart.id, 
+      part_number: sparePart.part_number, 
+      name: sparePart.name_zh || sparePart.name_en, 
+      quantity 
+    });
     
     try {
-      console.log('🔍 [addToCart] Starting with sparePart:', {
-        sparePart,
-        quantity,
-        sparePartId: sparePart.id,
-        sparePartKeys: Object.keys(sparePart)
-      });
-
-      // 🔍 详细检查必选备件信息
-      console.log('🔍 [addToCart] Required parts analysis:', {
-        part_number: sparePart.part_number,
-        name: sparePart.name_zh || sparePart.name_en,
-        required_parts: sparePart.required_parts,
-        required_parts_type: typeof sparePart.required_parts,
-        required_quantity: sparePart.required_quantity,
-        required_quantity_type: typeof sparePart.required_quantity,
-        has_required_parts: !!(sparePart.required_parts && sparePart.required_quantity),
-        required_parts_length: sparePart.required_parts ? sparePart.required_parts.length : 0,
-        required_quantity_length: sparePart.required_quantity ? sparePart.required_quantity.length : 0
-      });
-
-      // 🔍 使用API返回的真实必选备件数据
-      const requiredPartsData = {
-        required_parts: sparePart.required_parts,
-        required_quantity: sparePart.required_quantity
-      };
-      console.log('📋 [addToCart] Using API required parts data:', requiredPartsData);
-
-      // 1. 添加主备件到购物车
-      await addMainSparePartToCart(sparePart, quantity);
+      // 1. 获取完整商品信息
+      console.log('🛒 [SpareParts.addToCart] Step 1: Fetching spare part detail...');
+      const fullSparePart = await fetchSparePartDetail(String(sparePart.id || sparePart.part_number));
+      console.log('✅ [SpareParts.addToCart] Step 1 completed, full spare part:', fullSparePart);
       
-      // 2. 添加必选备件到购物车
-      await addRequiredPartsToCart({
-        ...sparePart,
-        required_parts: requiredPartsData.required_parts,
-        required_quantity: requiredPartsData.required_quantity
-      }, quantity);
+      // 2. 添加主商品到购物车
+      console.log('🛒 [SpareParts.addToCart] Step 2: Adding main spare part to cart...');
+      await addMainSparePartToCart(fullSparePart, quantity);
+      console.log('✅ [SpareParts.addToCart] Step 2 completed');
       
-      // 3. 显示成功消息
-      const requiredParts = parseRequiredParts(requiredPartsData.required_parts, requiredPartsData.required_quantity);
-      console.log('🔍 [addToCart] Parsed required parts:', requiredParts);
+      // 3. 添加必选件到购物车
+      console.log('🛒 [SpareParts.addToCart] Step 3: Adding required parts to cart...');
+      await addRequiredPartsToCart(fullSparePart, quantity);
+      console.log('✅ [SpareParts.addToCart] Step 3 completed');
       
+      // 4. 成功消息
+      console.log('🛒 [SpareParts.addToCart] Step 4: Showing success message...');
+      const requiredParts = parseRequiredParts(fullSparePart.required_parts, fullSparePart.required_quantity);
       if (requiredParts.length > 0) {
         success(String(t('success.addedToCartWithRequired', { ns: 'spareParts', count: requiredParts.length }) || `备件已添加到购物车，同时自动添加了 ${requiredParts.length} 个必选备件`));
       } else {
         success(String(t('success.addedToCart', { ns: 'spareParts' }) || '备件已添加到购物车'));
-        console.log('ℹ️ [addToCart] No required parts found for this spare part');
       }
-
+      console.log('✅ [SpareParts.addToCart] All steps completed successfully');
+      
     } catch (err: any) {
-      console.error('❌ [addToCart] Error details:', {
+      console.error('❌ [SpareParts.addToCart] Error occurred at some step:', {
         error: err,
-        message: err.message,
-        stack: err.stack,
-        sparePart: sparePart,
+        message: err?.message,
+        stack: err?.stack,
+        name: err?.name,
+        sparePart: { 
+          id: sparePart.id, 
+          part_number: sparePart.part_number, 
+          name: sparePart.name_zh || sparePart.name_en 
+        },
         quantity: quantity
       });
       
       // 提供更详细的错误信息
-      let errorMessage = err.message || String(t('error.addToCartFailed', { ns: 'spareParts' }) || 'Failed to add to cart');
-      if (err.message?.includes('part_number')) {
-        errorMessage = String(t('error.partNumberMissing', { ns: 'spareParts' }) || 'Product part number information missing, please refresh page and try again or contact technical support');
-      } else if (err.message?.includes('401') || err.message?.includes('unauthorized')) {
-        errorMessage = String(t('error.authenticationFailed', { ns: 'spareParts' }) || 'Authentication failed, please refresh page and log in again');
-      } else if (err.message?.includes('400')) {
-        errorMessage = String(t('error.parameterError', { ns: 'spareParts' }) || 'Request parameter error, please check product information');
+      let errorTitle = String(t('error.addToCartFailed', { ns: 'spareParts' }) || '添加到购物车失败');
+      let errorMessage = err?.message || 'Unknown error occurred';
+      
+      // 分析错误类型
+      if (err?.message?.includes('part_number') || err?.message?.includes('料号')) {
+        errorMessage = String(t('error.partNumberMissing', { ns: 'spareParts' }) || '产品料号信息缺失，请刷新页面重试或联系技术支持');
+      } else if (err?.message?.includes('401') || err?.message?.includes('unauthorized') || err?.message?.includes('认证')) {
+        errorMessage = String(t('error.authenticationFailed', { ns: 'spareParts' }) || '认证失效，请刷新页面重新登录');
+      } else if (err?.message?.includes('400') || err?.message?.includes('参数')) {
+        errorMessage = String(t('error.parameterError', { ns: 'spareParts' }) || '请求参数错误，请检查产品信息');
+      } else if (err?.message?.includes('500') || err?.message?.includes('服务器')) {
+        errorMessage = '服务器内部错误，请稍后重试或联系管理员';
+      } else if (err?.message?.includes('network') || err?.message?.includes('网络')) {
+        errorMessage = '网络连接错误，请检查网络连接后重试';
+      } else if (!err?.message || err?.message === '') {
+        errorMessage = '未知错误，请重试或联系技术支持';
       }
       
-      // 使用 showErrorToast 替代 error 函数
-      showErrorToast(String(t('error.addToCartFailed', { ns: 'spareParts' }) || 'Failed to add to cart'), errorMessage);
+      // 使用 showErrorToast 显示错误
+      showErrorToast(errorTitle, errorMessage);
+      console.error('❌ [SpareParts.addToCart] Final error details:', { errorTitle, errorMessage, originalError: err });
     }
-  };
-
-  /**
-   * 解析必选备件字符串
-   */
-  const parseRequiredParts = (
-    requiredParts: string | null | undefined,
-    requiredQuantity: string | null | undefined
-  ): { part_number: string; quantity: number }[] => {
-    console.log('📋 [parseRequiredParts] Input:', { requiredParts, requiredQuantity });
-    
-    if (!requiredParts || !requiredQuantity) {
-      console.log('❌ [parseRequiredParts] No required parts or quantity found');
-      return [];
-    }
-
-    const partNumbers = requiredParts.split(',').map(p => p.trim()).filter(p => p);
-    const quantities = requiredQuantity.split(',').map(q => parseInt(q.trim(), 10)).filter(q => !isNaN(q));
-
-    if (partNumbers.length !== quantities.length) {
-      console.warn('⚠️ [parseRequiredParts] Required parts numbers and quantities do not match:', { requiredParts, requiredQuantity });
-      return [];
-    }
-
-    const result = partNumbers.map((part_number, index) => ({
-      part_number,
-      quantity: quantities[index]
-    }));
-    
-    console.log('✅ [parseRequiredParts] Result:', result);
-    return result;
   };
 
   /**
@@ -1611,8 +1711,8 @@ const SparePartsPage = () => {
                     />
                   </div>
                   <div className="text-center md:text-left">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${part.is_consumable ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}`}>
-                      {part.is_consumable ? String(t('partTypes.consumable', { ns: 'spareParts' }) || 'Consumable') : String(t('partTypes.nonConsumable', { ns: 'spareParts' }) || 'Non-Consumable')}
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${part.is_consumable === 1 ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}`}>
+                      {part.is_consumable === 1 ? String(t('partTypes.consumable', { ns: 'spareParts' }) || 'Consumable') : String(t('partTypes.nonConsumable', { ns: 'spareParts' }) || 'Non-Consumable')}
                     </span>
                   </div>
                 </div>
@@ -1681,7 +1781,7 @@ const SparePartsPage = () => {
                             ? 'bg-orange-100 text-orange-800' 
                             : 'bg-green-100 text-green-800'
                         }`}>
-                          {part.is_consumable ? String(t('partTypes.consumable', { ns: 'spareParts' }) || 'Consumable') : String(t('partTypes.nonConsumable', { ns: 'spareParts' }) || 'Non-Consumable')}
+                          {part.is_consumable === 1 ? String(t('partTypes.consumable', { ns: 'spareParts' }) || 'Consumable') : String(t('partTypes.nonConsumable', { ns: 'spareParts' }) || 'Non-Consumable')}
                         </span>
                       </div>
                       
@@ -2235,58 +2335,95 @@ const SparePartsPage = () => {
 
   // 用于获取不同产品类型的型号
   const fetchModels = async (productType: string) => {
-    setLoading(true);
+    // 已被 loadModelsForProductType 替代，保留为兼容性
+    console.log('⚠️ [fetchModels] Deprecated function called, redirecting to loadModelsForProductType');
+    return loadModelsForProductType(productType);
+  };
+  
+  // 动态加载对应产品类型的型号列表
+  const loadModelsForProductType = async (productType: string) => {
+    console.log('🔄 [loadModelsForProductType] Loading models for product type:', productType);
+    
     try {
-      console.log(`🔍 [fetchModels] Fetching models for product type: ${productType}`);
-      
-      // 根据产品类型调用不同的API端点
-      const token = localStorage.getItem('auth_token');
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1';
-      
-      let apiEndpoint = '';
       if (productType === 'machine') {
-        // 获取主机型号 - 添加产品线筛选
-        apiEndpoint = `${baseUrl}/host-models?lang=${currentLanguage}&status=publish&product_line_id=1`;
+        // 如果主机型号为空或只有默认项，则从API加载
+        if (hostModels.length <= 1) {
+          console.log('📡 [loadModelsForProductType] Loading host models from API...');
+          await fetchHostModels();
+        }
+        setCurrentModels(hostModels);
+        console.log('✅ [loadModelsForProductType] Switched to host models:', hostModels.length);
       } else if (productType === 'accessory') {
-        // 获取配件型号 - 添加产品线筛选
-        apiEndpoint = `${baseUrl}/accessory-models?lang=${currentLanguage}&status=publish&product_line_id=1`;
+        // 如果配件型号为空或只有默认项，则从API加载
+        if (accessoryModels.length <= 1) {
+          console.log('📡 [loadModelsForProductType] Loading accessory models from API...');
+          await fetchAccessoryModels();
+        }
+        setCurrentModels(accessoryModels);
+        console.log('✅ [loadModelsForProductType] Switched to accessory models:', accessoryModels.length);
       } else {
-        // 如果是 'all' 或其他值，直接使用与最新数据库一致的备用数据
-        console.log('🔍 [fetchModels] Using fallback data for "all" product type');
-        
-        // 使用与最新数据库结构一致的备用数据
-        let fallbackModels: Array<{ value: string; label: string }> = [
+        // 'all' 或其他情况，合并显示所有型号
+        let allModels = [
           { value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || '全部型号') }
         ];
         
-        // 添加主机型号（基于最新数据库数据）
+        // 如果筛选选项还未加载，先尝试加载
+        if (hostModels.length <= 1 && accessoryModels.length <= 1) {
+          console.log('📡 [loadModelsForProductType] Loading all models from filter options API...');
+          await loadFilterOptions();
+          // 使用加载后的 currentModels
+          return;
+        } else {
+          // 合并现有的主机和配件型号
+          allModels = [
+            ...allModels,
+            ...hostModels.filter(m => m.value !== 'all'),
+            ...accessoryModels.filter(m => m.value !== 'all')
+          ];
+        }
+        
+        setCurrentModels(allModels);
+        console.log('✅ [loadModelsForProductType] Switched to all models:', allModels.length);
+      }
+    } catch (error) {
+      console.error('❌ [loadModelsForProductType] Error loading models:', error);
+      // 使用备用数据
+      const fallbackModels = [
+          { value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || '全部型号') }
+        ];
+        
+      if (productType === 'machine') {
         fallbackModels.push(
-          { value: 'LA-E4S', label: currentLanguage === 'zh' ? String(t('models.LA-E4S', { ns: 'spareParts' }) || 'Air Cushion E4S') : 'Air Cushion E4S' },
-          { value: 'LA-E5P', label: currentLanguage === 'zh' ? String(t('models.LA-E5P', { ns: 'spareParts' }) || 'Air Cushion E5P') : 'Air Cushion E5P' },
-          { value: 'LA-E6L', label: currentLanguage === 'zh' ? String(t('models.LA-E6L', { ns: 'spareParts' }) || 'Air Cushion E6L') : 'Air Cushion E6L' }
+          { value: 'LA-E4S', label: currentLanguage === 'zh' ? '气垫机E4S' : 'Air Cushion E4S' },
+          { value: 'LA-E5P', label: currentLanguage === 'zh' ? '气垫机E5P' : 'Air Cushion E5P' },
+          { value: 'LA-E6L', label: currentLanguage === 'zh' ? '气垫机E6L' : 'Air Cushion E6L' }
         );
-        
-        // 添加配件型号（基于最新数据库数据）
+        setHostModels(fallbackModels);
+      } else if (productType === 'accessory') {
         fallbackModels.push(
-          { value: 'AC-E4-FP1', label: currentLanguage === 'zh' ? String(t('models.AC-E4-FP1', { ns: 'spareParts' }) || '气垫机E4系列充气泵') : 'Air Pump for E4 Series' },
-          { value: 'AC-E5-FP2', label: currentLanguage === 'zh' ? String(t('models.AC-E5-FP2', { ns: 'spareParts' }) || '气垫机E5系列充气泵') : 'Air Pump for E5 Series' },
-          { value: 'AC-E6-FP3', label: currentLanguage === 'zh' ? String(t('models.AC-E6-FP3', { ns: 'spareParts' }) || '气垫机E6系列充气泵') : 'Air Pump for E6 Series' },
-          { value: 'AC-E4-CTR', label: currentLanguage === 'zh' ? String(t('models.AC-E4-CTR', { ns: 'spareParts' }) || '气垫机E4系列控制器') : 'Controller for E4 Series' },
-          { value: 'AC-E5-CTR', label: currentLanguage === 'zh' ? String(t('models.AC-E5-CTR', { ns: 'spareParts' }) || '气垫机E5系列控制器') : 'Controller for E5 Series' }
+          { value: 'EC402', label: currentLanguage === 'zh' ? 'EC402 大支架' : 'EC402 Big Bracket' },
+          { value: 'EC401', label: currentLanguage === 'zh' ? 'EC401 小支架' : 'EC401 Small Bracket' },
+          { value: 'EC403', label: currentLanguage === 'zh' ? 'EC403 配件' : 'EC403 Accessory' },
+          { value: 'EC404', label: currentLanguage === 'zh' ? 'EC404 配件' : 'EC404 Accessory' }
         );
-        
-        // 设置型号列表
-        setHostModels(['LA-E4S', 'LA-E5P', 'LA-E6L']);
-        setAccessoryModels(['AC-E4-FP1', 'AC-E5-FP2', 'AC-E6-FP3', 'AC-E4-CTR', 'AC-E5-CTR']);
-        
-        console.log('✅ [fetchModels] Using fallback models for "all":', fallbackModels);
-        setModels(fallbackModels);
-        setLoading(false);
-        return;
+        setAccessoryModels(fallbackModels);
       }
       
-      // 调用单一端点
-      console.log('🔍 [fetchModels] Calling API endpoint:', apiEndpoint);
+      setCurrentModels(fallbackModels);
+    }
+  };
+
+  // 获取主机型号列表
+  const fetchHostModels = async () => {
+    console.log('🔄 [fetchHostModels] Starting to fetch host models...');
+    
+    try {
+      const token = localStorage.getItem('auth_token');
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1';
+      const apiEndpoint = `${baseUrl}/host-models?lang=${currentLanguage}&status=publish&product_line_id=1`;
+      
+      console.log('📡 [fetchHostModels] API endpoint:', apiEndpoint);
+      
       const response = await fetch(apiEndpoint, {
         headers: {
           'Content-Type': 'application/json',
@@ -2295,206 +2432,123 @@ const SparePartsPage = () => {
         }
       });
 
-      console.log('🔍 [fetchModels] API response status:', response.status);
-      console.log('🔍 [fetchModels] API response headers:', Object.fromEntries(response.headers.entries()));
-
       if (!response.ok) {
-        throw new Error(`Models API request failed with status ${response.status}: ${response.statusText}`);
+        throw new Error(`Host models API failed: ${response.status}`);
       }
 
       const jsonData = await response.json();
-      console.log('✅ [fetchModels] Raw API response:', jsonData);
-      console.log('🔍 [fetchModels] Response analysis:', {
-        hasSuccess: 'success' in jsonData,
-        successValue: jsonData.success,
-        hasData: 'data' in jsonData,
-        dataType: typeof jsonData.data,
-        dataIsArray: Array.isArray(jsonData.data),
-        dataLength: Array.isArray(jsonData.data) ? jsonData.data.length : 'N/A',
-        allKeys: Object.keys(jsonData || {}),
-        dataKeys: jsonData.data ? Object.keys(jsonData.data) : 'N/A'
-      });
+      console.log('✅ [fetchHostModels] API response:', jsonData);
       
-      // 尝试多种可能的响应格式
       let modelsData: any[] = [];
       
-      // 格式1: { success: true, data: [...] }
-      if (jsonData.success === true && jsonData.data && Array.isArray(jsonData.data)) {
+      // 处理不同的响应格式
+      if (jsonData.success && jsonData.data && Array.isArray(jsonData.data)) {
         modelsData = jsonData.data;
-        console.log('✅ [fetchModels] Using format 1: jsonData.success === true && Array.isArray(jsonData.data)');
-      }
-      // 格式1b: { success: true, data: {...} } - data是对象但可能包含数组
-      else if (jsonData.success === true && jsonData.data && typeof jsonData.data === 'object') {
-        console.log('🔍 [fetchModels] Data is object, checking for nested arrays:', jsonData.data);
-        if (Array.isArray(jsonData.data.models)) {
-          modelsData = jsonData.data.models;
-          console.log('✅ [fetchModels] Using format 1b: jsonData.data.models');
-        } else if (Array.isArray(jsonData.data.items)) {
+      } else if (jsonData.success && jsonData.data && jsonData.data.items && Array.isArray(jsonData.data.items)) {
           modelsData = jsonData.data.items;
-          console.log('✅ [fetchModels] Using format 1b: jsonData.data.items');
-        } else if (Array.isArray(jsonData.data.results)) {
-          modelsData = jsonData.data.results;
-          console.log('✅ [fetchModels] Using format 1b: jsonData.data.results');
-        } else {
-          // 如果data是对象但没有已知的数组字段，尝试将其转换为数组
-          const dataKeys = Object.keys(jsonData.data);
-          console.log('🔍 [fetchModels] Data object keys:', dataKeys);
-          if (dataKeys.length > 0) {
-            // 尝试第一个键的值是否为数组
-            const firstKey = dataKeys[0];
-            if (Array.isArray(jsonData.data[firstKey])) {
-              modelsData = jsonData.data[firstKey];
-              console.log(`✅ [fetchModels] Using format 1b: jsonData.data.${firstKey}`);
-            }
-          }
-        }
-      }
-      // 格式2: { data: [...] }
-      else if (jsonData.data && Array.isArray(jsonData.data)) {
-        modelsData = jsonData.data;
-        console.log('✅ [fetchModels] Using format 2: Array.isArray(jsonData.data)');
-      }
-      // 格式3: 直接是数组 [...]
-      else if (Array.isArray(jsonData)) {
+      } else if (Array.isArray(jsonData)) {
         modelsData = jsonData;
-        console.log('✅ [fetchModels] Using format 3: direct array');
-      }
-      // 格式4: { models: [...] }
-      else if (jsonData.models && Array.isArray(jsonData.models)) {
-        modelsData = jsonData.models;
-        console.log('✅ [fetchModels] Using format 4: jsonData.models');
-      }
-      // 格式5: { items: [...] }
-      else if (jsonData.items && Array.isArray(jsonData.items)) {
-        modelsData = jsonData.items;
-        console.log('✅ [fetchModels] Using format 5: jsonData.items');
-      }
-      // 格式6: { results: [...] }
-      else if (jsonData.results && Array.isArray(jsonData.results)) {
-        modelsData = jsonData.results;
-        console.log('✅ [fetchModels] Using format 6: jsonData.results');
-      }
-      else {
-        console.warn('⚠️ [fetchModels] Unknown response format, detailed analysis:');
-        console.warn('- Available keys:', Object.keys(jsonData || {}));
-        console.warn('- Full response:', jsonData);
-        console.warn('- Success field:', jsonData.success, typeof jsonData.success);
-        console.warn('- Data field:', jsonData.data, typeof jsonData.data);
-        console.warn('- Data is array:', Array.isArray(jsonData.data));
-        
-        // 尝试从任何可能的位置提取数组数据
-        let foundArray = false;
-        const searchForArrays = (obj: any, path = ''): any[] | null => {
-          if (Array.isArray(obj)) {
-            console.log(`🔍 [fetchModels] Found array at path: ${path}`);
-            return obj;
-          }
-          if (obj && typeof obj === 'object') {
-            for (const [key, value] of Object.entries(obj)) {
-              const result = searchForArrays(value, path ? `${path}.${key}` : key);
-              if (result) return result;
-            }
-          }
-          return null;
-        };
-        
-        const foundArrayData = searchForArrays(jsonData);
-        if (foundArrayData && foundArrayData.length > 0) {
-          modelsData = foundArrayData;
-          foundArray = true;
-          console.log('✅ [fetchModels] Found array data through deep search:', modelsData);
-        }
-        
-        if (!foundArray) {
-          console.warn('❌ [fetchModels] No array data found, using fallback');
-          // 不抛出错误，直接使用备用数据
-          modelsData = [];
-        }
       }
       
-      console.log('🔍 [fetchModels] Extracted models data:', {
-        count: modelsData.length,
-        firstItem: modelsData[0] || null,
-        isArray: Array.isArray(modelsData)
-      });
-      
-      if (modelsData.length === 0) {
-        console.warn('⚠️ [fetchModels] No models found in response, using fallback data');
-        // 不抛出错误，直接使用备用数据
-      } else {
-        // 转换为前端需要的格式
-        const convertedModels = [
-          { value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || 'All Models') },
-          ...modelsData.map((model: any) => {
-            // 尝试多种可能的字段名
-            const modelValue = model.model || model.code || model.name || model.id || String(model);
-            const titleZh = model.title_zh || model.name_zh || model.title || model.name || modelValue;
-            const titleEn = model.title_en || model.name_en || model.title || model.name || modelValue;
-            
-            return {
-              value: modelValue,
-              label: currentLanguage === 'zh' ? titleZh : titleEn
-            };
-          })
+      if (modelsData.length > 0) {
+        const hostModelsList = [
+          { value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || '全部型号') },
+          ...modelsData.map((model: any) => ({
+            value: model.model || model.code || model.name || model.id || String(model),
+            label: currentLanguage === 'zh' 
+              ? (model.title_zh || model.name_zh || model.title || model.name || model.model)
+              : (model.title_en || model.name_en || model.title || model.name || model.model)
+          }))
         ];
         
-        console.log('✅ [fetchModels] Converted models:', convertedModels);
-        setModels(convertedModels);
-        
-        // 根据产品类型设置对应的型号列表
-        if (productType === 'machine') {
-          setHostModels(modelsData.map((m: any) => m.model || m.code || m.name || m.id || String(m)));
-        } else if (productType === 'accessory') {
-          setAccessoryModels(modelsData.map((m: any) => m.model || m.code || m.name || m.id || String(m)));
-        }
-        
-        // 成功处理，直接返回
-        setLoading(false);
-        return;
+        setHostModels(hostModelsList);
+        console.log('✅ [fetchHostModels] Host models loaded:', hostModelsList.length);
+      } else {
+        throw new Error('No host models data found');
       }
-      
     } catch (error) {
-      console.error('❌ [fetchModels] Failed to fetch models:', error);
+      console.error('❌ [fetchHostModels] Error:', error);
       
-      // 使用与最新数据库结构一致的备用数据
-      let fallbackModels: Array<{ value: string; label: string }> = [
-        { value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || '全部型号') }
+      // 使用备用主机型号数据
+      const fallbackHostModels = [
+        { value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || '全部型号') },
+        { value: 'LA-E4S', label: currentLanguage === 'zh' ? '气垫机E4S' : 'Air Cushion E4S' },
+        { value: 'LA-E5P', label: currentLanguage === 'zh' ? '气垫机E5P' : 'Air Cushion E5P' },
+        { value: 'LA-E6L', label: currentLanguage === 'zh' ? '气垫机E6L' : 'Air Cushion E6L' }
       ];
       
-      if (productType === 'machine' || productType === 'all') {
-        // 添加主机型号（基于最新数据库数据）
-        fallbackModels.push(
-          { value: 'LA-E4S', label: currentLanguage === 'zh' ? '气垫机E4S' : 'Air Cushion E4S' },
-          { value: 'LA-E5P', label: currentLanguage === 'zh' ? '气垫机E5P' : 'Air Cushion E5P' },
-          { value: 'LA-E6L', label: currentLanguage === 'zh' ? '气垫机E6L' : 'Air Cushion E6L' }
-        );
+      setHostModels(fallbackHostModels);
+      console.log('⚠️ [fetchHostModels] Using fallback host models:', fallbackHostModels.length);
+    }
+  };
+
+  // 获取配件型号列表
+  const fetchAccessoryModels = async () => {
+    console.log('🔄 [fetchAccessoryModels] Starting to fetch accessory models...');
+    
+    try {
+      const token = localStorage.getItem('auth_token');
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1';
+      const apiEndpoint = `${baseUrl}/accessory-models?lang=${currentLanguage}&status=publish&per_page=100`;
+      
+      console.log('📡 [fetchAccessoryModels] API endpoint:', apiEndpoint);
+      
+      const response = await fetch(apiEndpoint, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Accessory models API failed: ${response.status}`);
+      }
+
+      const jsonData = await response.json();
+      console.log('✅ [fetchAccessoryModels] API response:', jsonData);
+      
+      let modelsData: any[] = [];
+      
+      // 处理不同的响应格式
+      if (jsonData.success && jsonData.data && Array.isArray(jsonData.data)) {
+        modelsData = jsonData.data;
+      } else if (jsonData.success && jsonData.data && jsonData.data.items && Array.isArray(jsonData.data.items)) {
+        modelsData = jsonData.data.items;
+      } else if (Array.isArray(jsonData)) {
+        modelsData = jsonData;
+      }
+      
+      if (modelsData.length > 0) {
+        const accessoryModelsList = [
+          { value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || '全部型号') },
+          ...modelsData.map((model: any) => ({
+            value: model.model || model.code || model.name || model.id || String(model),
+            label: currentLanguage === 'zh' 
+              ? (model.title_zh || model.name_zh || model.title || model.name || model.model)
+              : (model.title_en || model.name_en || model.title || model.name || model.model)
+          }))
+        ];
         
-        // 设置主机型号列表
-        setHostModels(['LA-E4S', 'LA-E5P', 'LA-E6L']);
+        setAccessoryModels(accessoryModelsList);
+        console.log('✅ [fetchAccessoryModels] Accessory models loaded:', accessoryModelsList.length);
+      } else {
+        throw new Error('No accessory models data found');
       }
+    } catch (error) {
+      console.error('❌ [fetchAccessoryModels] Error:', error);
       
-      if (productType === 'accessory' || productType === 'all') {
-        // 添加配件型号（基于真实API数据）
-        fallbackModels.push(
-          { value: 'EC402', label: currentLanguage === 'zh' ? String(t('models.EC402', { ns: 'spareParts' }) || 'EC402 Big Bracket') : 'EC402 Big Bracket' },
-          { value: 'EC401', label: currentLanguage === 'zh' ? String(t('models.EC401', { ns: 'spareParts' }) || 'EC401 Small Bracket') : 'EC401 Small Bracket' },
-          { value: 'EC403', label: currentLanguage === 'zh' ? String(t('models.EC403', { ns: 'spareParts' }) || 'EC403 Accessory') : 'EC403 Accessory' },
-          { value: 'EC404', label: currentLanguage === 'zh' ? String(t('models.EC404', { ns: 'spareParts' }) || 'EC404 Accessory') : 'EC404 Accessory' }
-        );
-        
-        // 设置配件型号列表（基于真实数据）
-        setAccessoryModels(['EC402', 'EC401', 'EC403', 'EC404']);
-      }
+      // 使用备用配件型号数据
+      const fallbackAccessoryModels = [
+        { value: 'all', label: String(t('filters.allModels', { ns: 'spareParts' }) || '全部型号') },
+        { value: 'EC402', label: currentLanguage === 'zh' ? 'EC402 大支架' : 'EC402 Big Bracket' },
+        { value: 'EC401', label: currentLanguage === 'zh' ? 'EC401 小支架' : 'EC401 Small Bracket' },
+        { value: 'EC403', label: currentLanguage === 'zh' ? 'EC403 配件' : 'EC403 Accessory' },
+        { value: 'EC404', label: currentLanguage === 'zh' ? 'EC404 配件' : 'EC404 Accessory' }
+      ];
       
-      console.log('✅ [fetchModels] Using fallback models:', fallbackModels);
-      setModels(fallbackModels);
-      
-      // 只在真正的网络错误或严重错误时显示错误提示
-      if (error instanceof Error && !error.message.includes('No array data found')) {
-        showErrorToast(String(t('error.fetchModelsFailed', { ns: 'spareParts' }) || 'Failed to fetch models'), error.message);
-      }
-    } finally {
-      setLoading(false);
+      setAccessoryModels(fallbackAccessoryModels);
+      console.log('⚠️ [fetchAccessoryModels] Using fallback accessory models:', fallbackAccessoryModels.length);
     }
   };
   
@@ -2536,6 +2590,19 @@ const SparePartsPage = () => {
   const [category, setCategory] = useState<string>(currentProductType || 'all');
   const [selectedVoltage, setSelectedVoltage] = useState<string>('220V');
   
+  // 在筛选条件变化时重新加载数据
+  useEffect(() => {
+    console.log('🔍 [useEffect] Filter change detected:', {
+      selectedIsConsumable,
+      currentProductType,
+      selectedModel
+    });
+    
+    // 重置到第一页并重新加载数据
+    setCurrentPage(1);
+    loadSparePartsData();
+  }, [selectedIsConsumable, currentProductType, selectedModel]);
+  
   // 渲染主页面
   return (
     <div className="spare-parts-page bg-background min-h-screen p-6">
@@ -2549,91 +2616,8 @@ const SparePartsPage = () => {
             <h1 className="text-xl font-bold text-title">{t('title', {ns: 'spareParts'})}</h1>
             <p className="text-sm text-content-light">{t('subtitle', {ns: 'spareParts'})}</p>
           </div>
-          <div className="flex mt-3 sm:mt-0">
-            <button 
-              className="bg-primary text-white px-4 py-2 rounded-md flex items-center hover:bg-primary-dark transition-colors"
-              onClick={() => setShowCartModal(true)}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
-              </svg>
-              {t('cart.viewCart', {ns: 'spareParts'})} {items.length > 0 && `(${items.length})`}
-            </button>
-          </div>
+          {/* 移除了查看购物车按钮 */}
         </div>
-
-        {/* 开发调试面板 - 仅在开发环境显示 */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="bg-gray-100 p-3 rounded-md mb-4 text-xs font-mono overflow-x-auto">
-            <details>
-              <summary className="font-semibold cursor-pointer">调试信息</summary>
-              <div className="mt-2 grid grid-cols-1 gap-2">
-                <div className="text-gray-700">
-                  <strong>加载状态:</strong> {loading ? '加载中...' : '空闲'}
-                </div>
-                <div className="text-gray-700">
-                  <strong>错误状态:</strong> {error || '无错误'}
-                </div>
-                <div className="text-gray-700">
-                  <strong>数据项数:</strong> {Array.isArray(spareParts) ? spareParts.length : 0}
-                </div>
-                <div className="text-gray-700">
-                  <strong>分页状态:</strong> 第{currentPage}页 / 共{totalPages}页 (总计{totalItems}项)
-                </div>
-                <div className="text-gray-700">
-                  <strong>已选型号:</strong> {selectedModel || '无'}
-                </div>
-                <div className="text-gray-700">
-                  <strong>当前产品类型:</strong> {currentProductType || '无'}
-                </div>
-                <div className="text-gray-700">
-                  <strong>耗材类型筛选:</strong> {selectedIsConsumable === null ? '全部' : selectedIsConsumable ? '耗材' : '非耗材'}
-                </div>
-                <div className="text-gray-700">
-                  <strong>可用筛选配置:</strong> {filterOptions ? '已加载' : '未加载'}
-                </div>
-                <div className="text-gray-700">
-                  <strong>机器型号:</strong> {hostModels?.length || 0} 项
-                </div>
-                <div className="text-gray-700">
-                  <strong>配件型号:</strong> {accessoryModels?.length || 0} 项
-                </div>
-                <div className="text-gray-700">
-                  <strong>{String(t('debug.userInfo', { ns: 'spareParts' }) || '用户信息')}:</strong> {userRole}, {String(t('debug.region', { ns: 'spareParts' }) || '区域')}: {userRegion}
-                </div>
-                <div className="mt-2">
-                  <button 
-                    onClick={handleReloadData} 
-                    className="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
-                  >
-                    {String(t('debug.reloadData', { ns: 'spareParts' }) || '重新加载数据')}
-                  </button>
-                  <button 
-                    onClick={handleReloadFilterOptions} 
-                    className="ml-2 px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
-                  >
-                    {String(t('debug.reloadFilters', { ns: 'spareParts' }) || '重新加载筛选项')}
-                  </button>
-                  <button 
-                    onClick={() => console.log('筛选选项:', filterOptions, '备件数据:', spareParts)} 
-                    className="ml-2 px-2 py-1 bg-purple-500 text-white text-xs rounded hover:bg-purple-600"
-                  >
-                    {String(t('debug.consoleOutput', { ns: 'spareParts' }) || '控制台输出数据')}
-                  </button>
-                  <button 
-                    onClick={() => {
-                      console.log('🧪 [Debug] Testing pagination - going to page 2');
-                      setCurrentPage(2);
-                    }} 
-                    className="ml-2 px-2 py-1 bg-orange-500 text-white text-xs rounded hover:bg-orange-600"
-                  >
-                    {String(t('debug.testPagination', { ns: 'spareParts' }) || '测试分页(跳转第2页)')}
-                  </button>
-                </div>
-              </div>
-            </details>
-          </div>
-        )}
 
         {/* Filter Container */}
         <div className="bg-card p-6 rounded-lg shadow-md mb-6">
@@ -2671,43 +2655,35 @@ const SparePartsPage = () => {
                 onChange={(e) => setSelectedModel(e.target.value)}
               >
                 <option value="">{t('filters.model.allModels', {ns: 'spareParts'})}</option>
-                {currentProductType === 'machine' ? (
-                  hostModels.map((model, index) => (
-                    <option key={index} value={model}>
-                      {model}
-                    </option>
-                  ))
-                ) : (
-                  accessoryModels.map((model, index) => (
-                    <option key={index} value={model}>
-                      {model}
-                    </option>
-                  ))
-                )}
+                {currentModels.map((model) => (
+                  <option key={model.value} value={model.value}>{model.label}</option>
+                ))}
               </select>
             </div>
             
             <div>
               <label className="block text-sm font-medium text-label mb-2">{t('filters.label.partType', {ns: 'spareParts'})}:</label>
               <div className="flex flex-wrap gap-2">
+                <div className="inline-flex rounded-md shadow-sm" role="group">
                 <button
                   onClick={() => setSelectedIsConsumable(null)}
-                  className={`px-4 py-2 rounded text-sm ${selectedIsConsumable === null ? 'bg-primary text-white' : 'bg-background text-content border border-border hover:bg-brand-light'}`}
+                    className={`px-4 py-2 rounded text-sm ${selectedIsConsumable === null ? 'bg-primary text-white' : 'bg-background text-content border border-gray-300'}`}
                 >
-                  {t('filters.partType.allTypes', {ns: 'spareParts'})}
+                    {String(t('filters.allTypes', { ns: 'spareParts' }) || '全部类型')}
                 </button>
                 <button
-                  onClick={() => setSelectedIsConsumable(true)}
-                  className={`px-4 py-2 rounded text-sm ${selectedIsConsumable === true ? 'bg-primary text-white' : 'bg-background text-content border border-border hover:bg-brand-light'}`}
+                    onClick={() => setSelectedIsConsumable(1)}
+                    className={`px-4 py-2 rounded text-sm ${selectedIsConsumable === 1 ? 'bg-primary text-white' : 'bg-background text-content border border-gray-300'}`}
                 >
-                  {t('filters.partType.consumables', {ns: 'spareParts'})}
+                    {String(t('filters.consumable', { ns: 'spareParts' }) || '耗材')}
                 </button>
                 <button
-                  onClick={() => setSelectedIsConsumable(false)}
-                  className={`px-4 py-2 rounded text-sm ${selectedIsConsumable === false ? 'bg-primary text-white' : 'bg-background text-content border border-border hover:bg-brand-light'}`}
+                    onClick={() => setSelectedIsConsumable(2)}
+                    className={`px-4 py-2 rounded text-sm ${selectedIsConsumable === 2 ? 'bg-primary text-white' : 'bg-background text-content border border-gray-300'}`}
                 >
-                  {t('filters.partType.nonConsumables', {ns: 'spareParts'})}
+                    {String(t('filters.nonConsumable', { ns: 'spareParts' }) || '非耗材')}
                 </button>
+                </div>
               </div>
             </div>
           </div>

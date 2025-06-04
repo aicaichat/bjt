@@ -40,9 +40,24 @@ class ProductInfoService {
       return 'accessory';
     }
     
-    // 耗材：通常有特定的模式，比如包含字母和数字的组合
-    // 这里需要根据实际的料号规则来判断
-    if (partNumber.match(/^[A-Z]{2,3}\d+/) || partNumber.includes('-') || partNumber.length > 10) {
+    // 耗材：增强识别逻辑
+    // 1. MEX/MFC/MFB等开头的料号
+    if (partNumber.match(/^(MEX|MFC|MFB|MEY|MFF|MEZ)-/i)) {
+      return 'consumable';
+    }
+    
+    // 2. 包含连字符的料号 (通常是耗材)
+    if (partNumber.includes('-') && partNumber.match(/^[A-Z]{2,4}-[A-Z0-9-]+$/i)) {
+      return 'consumable';
+    }
+    
+    // 3. 以数字+字母组合开头且长度较长的料号
+    if (partNumber.match(/^\d{1,3}[A-Z]\d{5,}$/i)) {
+      return 'consumable';
+    }
+    
+    // 4. 特定的耗材料号模式 (根据实际数据调整)
+    if (partNumber.match(/^[0-9]{2}[A-Z]\d{5}$/)) {
       return 'consumable';
     }
     
@@ -93,6 +108,12 @@ class ProductInfoService {
       // 自动识别产品类型
       const productType = this.identifyProductType(partNumber);
       
+      console.log('[ProductInfoService] 查询产品信息:', {
+        partNumber,
+        identifiedType: productType,
+        lang
+      });
+      
       // 构建API路径
       const apiPaths = {
         host: '/wp-json/bjt/v1/host-parts',
@@ -102,20 +123,27 @@ class ProductInfoService {
       };
 
       // 查询对应的API
-      const response = await fetch(`${apiPaths[productType]}?part_number=${partNumber}&lang=${lang}`);
+      const apiUrl = `${apiPaths[productType]}?part_number=${partNumber}&lang=${lang}`;
+      console.log('[ProductInfoService] API查询:', apiUrl);
+      
+      const response = await fetch(apiUrl);
       
       if (!response.ok) {
-        console.warn(`Product not found in ${productType} table: ${partNumber}`);
+        console.warn(`[ProductInfoService] Product not found in ${productType} table: ${partNumber}, status: ${response.status}`);
         
         // 如果在预期类型中没找到，尝试其他类型
         for (const [type, path] of Object.entries(apiPaths)) {
           if (type === productType) continue;
           
           try {
-            const fallbackResponse = await fetch(`${path}?part_number=${partNumber}&lang=${lang}`);
+            const fallbackUrl = `${path}?part_number=${partNumber}&lang=${lang}`;
+            console.log(`[ProductInfoService] 尝试备用查询 ${type}:`, fallbackUrl);
+            
+            const fallbackResponse = await fetch(fallbackUrl);
             if (fallbackResponse.ok) {
               const data = await fallbackResponse.json();
               if (data.success && data.data && data.data.items && data.data.items.length > 0) {
+                console.log(`[ProductInfoService] ✅ 在 ${type} 表中找到产品:`, data.data.items[0]);
                 const item = data.data.items[0];
                 const productInfo = this.normalizeProductInfo(item, type as any);
                 this.setCache(partNumber, productInfo);
@@ -123,16 +151,19 @@ class ProductInfoService {
               }
             }
           } catch (error) {
-            console.warn(`Error checking ${type} for ${partNumber}:`, error);
+            console.warn(`[ProductInfoService] Error checking ${type} for ${partNumber}:`, error);
           }
         }
         
+        console.error(`[ProductInfoService] ❌ 所有表都未找到产品: ${partNumber}`);
         return null;
       }
 
       const data = await response.json();
+      console.log('[ProductInfoService] API响应:', data);
       
       if (!data.success || !data.data) {
+        console.warn('[ProductInfoService] API返回失败或无数据:', data);
         return null;
       }
 
@@ -143,15 +174,17 @@ class ProductInfoService {
       } else if (data.data.id) {
         item = data.data;
       } else {
+        console.warn('[ProductInfoService] 响应数据格式不正确:', data.data);
         return null;
       }
 
+      console.log('[ProductInfoService] ✅ 产品信息获取成功:', item);
       const productInfo = this.normalizeProductInfo(item, productType);
       this.setCache(partNumber, productInfo);
       
       return productInfo;
     } catch (error) {
-      console.error(`Error fetching product info for ${partNumber}:`, error);
+      console.error(`[ProductInfoService] ❌ 查询产品信息异常 ${partNumber}:`, error);
       return null;
     }
   }

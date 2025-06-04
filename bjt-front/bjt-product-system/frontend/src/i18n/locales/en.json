@@ -86,7 +86,31 @@
       "region": "Region",
       "voltage": "Voltage"
     },
-    "voltage": "Voltage"
+    "voltage": "Voltage",
+    "models": {
+      "E4S": {
+        "nameZh": "LA-E4S Host-Standard",
+        "nameEn": "LA-E4S Host-Standard",
+        "spec": "Business Class Air Cushion Pillow & Bubble System,AC220V",
+        "specImperial": "Business Class Air Cushion Pillow & Bubble System,AC220V",
+        "titleZh": "LA-E4S Business Air Cushion Machine",
+        "titleEn": "LA-E4S Business Air Cushion Machine",
+        "descriptionZh": "Business class air cushion pillow and bubble system, AC220V",
+        "descriptionEn": "Business class air cushion pillow and bubble system, AC220V",
+        "type": "Business"
+      },
+      "E5P": {
+        "nameZh": "LA-E5P Host-Precision",
+        "nameEn": "LA-E5P Host-Precision",
+        "spec": "Precision Air Cushion System,AC220V",
+        "specImperial": "Precision Air Cushion System,AC220V",
+        "titleZh": "LA-E5P Precision Air Cushion Machine",
+        "titleEn": "LA-E5P Precision Air Cushion Machine",
+        "descriptionZh": "Precision air cushion system, AC220V",
+        "descriptionEn": "Precision air cushion system, AC220V",
+        "type": "Precision"
+      }
+    }
   },
   "menu": {
     "Air Cushioning System": "Air Cushioning System",
@@ -242,7 +266,8 @@
       "machine": "Machine",
       "accessory": "Accessory",
       "consumable": "Consumable",
-      "spare": "Spare Part"
+      "spare_part": "Spare Part",
+      "product": "Product"
     },
     "specs": {
       "model": "Model",
@@ -252,81 +277,78 @@
       "palletSize": "Pallet Size",
       "palletQty": "Pallet Quantity",
       "size": "Size"
-    }
+    },
+    "properties": {
+      "partNumber": "Part Number",
+      "part_number": "Part Number",
+      "model": "Model",
+      "voltage": "Voltage",
+      "frequency": "Frequency",
+      "spec": "Specification",
+      "specImperial": "Imperial Specification",
+      "spec_imperial": "Imperial Specification",
+      "pcsPerBox": "Pieces per Box",
+      "pcs_per_box": "Pieces per Box",
+      "pcsPerPallet": "Pieces per Pallet",
+      "pcs_per_pallet": "Pieces per Pallet",
+      "packageSize": "Package Size",
+      "package_size_cm": "Package Size (cm)",
+      "palletSize": "Pallet Size",
+      "pallet_size_cm": "Pallet Size (cm)",
+      "netWeight": "Net Weight",
+      "net_weight_kg": "Net Weight (kg)",
+      "grossWeight": "Gross Weight",
+      "gross_weight_kg": "Gross Weight (kg)",
+      "brand": "Brand",
+      "unit": "Unit"
+    },
+    "defaultValues": {
+      "notAvailable": "Not Available"
+    },
+    "quantity": "Quantity"
   },
   "spareParts": {
     "title": "Spare Parts",
+    "loading": "Loading spare parts...",
+    "error": "Failed to load spare parts",
+    "noResults": "No matching spare parts found",
     "filters": {
-      "label": {
-        "productType": "Product Type",
-        "model": "Applicable Model",
-        "partType": "Part Type"
-      },
-      "productType": {
-        "machine": "Machine",
-        "accessory": "Accessory"
-      },
-      "partType": {
-        "consumable": "Consumable",
-        "electronic": "Non-Consumable",
-        "accessory": "Accessory Part",
-        "all": "All"
-      },
-      "model": {
-        "allModels": "All Models"
-      }
+      "allTypes": "All Types",
+      "consumable": "Consumable",
+      "nonConsumable": "Non-Consumable",
+      "model": "Model",
+      "partNumber": "Part Number",
+      "searchPlaceholder": "Search spare parts name or part number..."
     },
-    "table": {
+    "consumableTypes": {
+      "1": "Consumable",
+      "2": "Non-Consumable"
+    },
+    "columns": {
       "image": "Image",
-      "code": "Product Code",
-      "specs": "Specifications",
+      "partNumber": "Part Number",
+      "name": "Name",
+      "model": "Compatible Model",
+      "spec": "Specification",
       "price": "Price",
-      "inventory": "Inventory",
-      "actions": "Actions",
-      "addToCart": "Add to Cart",
-      "viewMore": "View More Specs"
+      "actions": "Actions"
     },
-    "specs": {
-      "packageSize": "Package Size cm",
-      "packageSizeImperial": "Package Size inch",
-      "weight": "Net Weight kg",
-      "weightImperial": "Net Weight lbs",
-      "serialNumber": "Serial Number",
-      "compatibleModels": "Compatible Models",
-      "specifications": "Specifications",
-      "spec": "Spec.",
-      "pcsPerBox": "Pcs per Box"
+    "properties": {
+      "partNumber": "Part Number",
+      "name": "Product Name",
+      "model": "Compatible Model",
+      "spec": "Specification",
+      "specImperial": "Imperial Specification",
+      "packageSize": "Package Size",
+      "pcsPerBox": "Pieces per Box",
+      "unit": "Unit"
     },
-    "inventory": {
-      "noInfo": "No inventory information",
-      "outOfStock": "Out of Stock",
-      "lowStock": "Low Stock",
-      "inStock": "In Stock",
-      "highStock": "Well Stocked"
-    },
-    "cart": {
-      "title": "Shopping Cart",
-      "empty": "Your cart is empty",
-      "total": "Total",
-      "clear": "Clear Cart",
-      "checkout": "Checkout",
-      "confirmClear": "Clear Cart?",
-      "confirmClearMessage": "Are you sure you want to remove all items from your cart?",
-      "cancel": "Cancel",
-      "confirm": "Clear",
-      "itemAdded": "has been added to your cart",
-      "cartCleared": "Cart has been cleared",
-      "sku": "SKU"
-    },
-    "loading": "Loading...",
-    "error": {
-      "loadFailed": "Failed to load spare parts data. Please try again later.",
-      "noResults": "No matching spare parts found",
-      "retry": "Retry"
-    },
-    "defaultValues": {
-      "unknown": "Unknown",
-      "notAvailable": "N/A"
+    "addToCart": "Add to Cart",
+    "viewDetails": "View Details",
+    "noImage": "No Image",
+    "defaultSpecs": {
+      "notAvailable": "N/A",
+      "notApplicable": "N/A"
     }
   },
   "english": "English",

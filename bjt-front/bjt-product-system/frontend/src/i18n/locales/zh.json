@@ -65,7 +65,18 @@
       "actions": "操作",
       "selection": "选择",
       "image": "图片",
-      "specs": "规格"
+      "specs": "规格",
+      "voltage": "电压",
+      "pcsPerBox": "每箱数量",
+      "pcsPerPallet": "每托数量",
+      "palletSize": "托盘尺寸",
+      "packSize": "包装尺寸",
+      "netWeight": "净重",
+      "palletHeight": "托盘高度",
+      "palletGrossWeight": "托盘毛重",
+      "stock": "库存",
+      "frequency": "频率",
+      "priceRange": "价格范围"
     },
     "stock": {
       "outOfStock": "缺货",
@@ -85,9 +96,74 @@
       "all": "全部",
       "priceRange": "价格范围",
       "region": "区域",
-      "voltage": "电压"
+      "voltage": "电压",
+      "model": "型号",
+      "allModels": "所有型号"
     },
-    "voltage": "电压"
+    "voltage": "电压",
+    "models": {
+      "E4S": {
+        "nameZh": "LA-E4S主机-标准版",
+        "nameEn": "LA-E4S Host-Standard",
+        "spec": "商用级气垫枕和气泡系统，220V交流电源",
+        "specImperial": "商用级气垫枕和气泡系统，220V交流电源",
+        "titleZh": "LA-E4S商用气垫制造机",
+        "titleEn": "LA-E4S Business Air Cushion Machine",
+        "descriptionZh": "商用级气垫枕和气泡系统，220V交流电源",
+        "descriptionEn": "Business class air cushion pillow and bubble system, AC220V",
+        "type": "商用"
+      },
+      "E5P": {
+        "nameZh": "LA-E5P主机-精密版",
+        "nameEn": "LA-E5P Host-Precision",
+        "spec": "精密级气垫系统，220V交流电源",
+        "specImperial": "精密级气垫系统，220V交流电源",
+        "titleZh": "LA-E5P精密气垫制造机",
+        "titleEn": "LA-E5P Precision Air Cushion Machine",
+        "descriptionZh": "精密级气垫系统，220V交流电源",
+        "descriptionEn": "Precision air cushion system, AC220V",
+        "type": "精密"
+      }
+    },
+    "actions": {
+      "selectMachine": "选择设备",
+      "selectAccessory": "选择配件",
+      "close": "关闭"
+    },
+    "specDetails": "规格详情",
+    "moreInfo": "更多信息",
+    "hoverDetails": "悬停查看详情",
+    "pricing": {
+      "from": "起",
+      "pieces": "件"
+    },
+    "stockStatus": {
+      "sufficient": "库存充足",
+      "low": "库存紧张",
+      "outOfStock": "缺货"
+    },
+    "addToCart": "加入购物车",
+    "noPermissionAdd": "无权限添加",
+    "loading": "加载中...",
+    "error": "加载失败",
+    "retry": "重试",
+    "noSpecPdf": "暂无规格PDF",
+    "pending": "待定",
+    "unknownMachine": "未知设备",
+    "accessories": {
+      "title": "配件选择",
+      "level1": "一级配件",
+      "level2": "二级配件",
+      "level3": "三级配件",
+      "level4": "四级配件",
+      "level5": "五级配件"
+    },
+    "path": {
+      "machine": "设备",
+      "accessory": "配件"
+    },
+    "noAccessories": "暂无可用配件",
+    "chooseOther": "请选择其他设备"
   },
   "menu": {
     "Air Cushioning System": "气垫系统",
@@ -265,7 +341,7 @@
       "machine": "主机",
       "accessory": "配件",
       "consumable": "耗材",
-      "spare": "备件",
+      "spare_part": "备件",
       "product": "产品"
     },
     "specs": {
@@ -277,13 +353,29 @@
       "palletQty": "托盘数量",
       "size": "尺寸"
     },
-    "quantity": "数量",
-    "detailInfo": "{{name}} 详细信息",
-    "sections": {
-      "公制规格": "公制规格",
-      "英制规格": "英制规格"
-    },
     "properties": {
+      "partNumber": "料号",
+      "part_number": "料号",
+      "model": "型号",
+      "voltage": "电压",
+      "frequency": "频率",
+      "spec": "规格",
+      "specImperial": "英制规格",
+      "spec_imperial": "英制规格",
+      "pcsPerBox": "单箱数量",
+      "pcs_per_box": "单箱数量",
+      "pcsPerPallet": "单托数量",
+      "pcs_per_pallet": "单托数量",
+      "packageSize": "包装尺寸",
+      "package_size_cm": "包装尺寸(cm)",
+      "palletSize": "托盘尺寸",
+      "pallet_size_cm": "托盘尺寸(cm)",
+      "netWeight": "净重",
+      "net_weight_kg": "净重(kg)",
+      "grossWeight": "毛重",
+      "gross_weight_kg": "毛重(kg)",
+      "brand": "品牌",
+      "unit": "单位",
       "料号": "料号",
       "产品名称": "产品名称",
       "托盘尺寸": "托盘尺寸",
@@ -302,6 +394,15 @@
       "克重": "克重",
       "膜宽": "膜宽",
       "袋长": "袋长"
+    },
+    "defaultValues": {
+      "notAvailable": "暂无"
+    },
+    "quantity": "数量",
+    "detailInfo": "{{name}} 详细信息",
+    "sections": {
+      "公制规格": "公制规格",
+      "英制规格": "英制规格"
     }
   },
   "countries": {
@@ -318,78 +419,53 @@
   "myOrders": "我的订单",
   "logout": "退出登录",
   "spareParts": {
-    "title": "备件列表",
+    "title": "备件",
+    "loading": "正在加载备件列表...",
+    "error": "加载备件失败",
+    "noResults": "没有找到匹配的备件",
     "filters": {
-      "label": {
-        "productType": "商品类型",
-        "model": "适用型号",
-        "partType": "备件类型"
-      },
-      "productType": {
-        "machine": "主机",
-        "accessory": "配件"
-      },
-      "partType": {
-        "consumable": "耗材",
-        "electronic": "非耗材",
-        "accessory": "配件备件",
-        "all": "全部"
-      },
-      "model": {
-        "allModels": "所有型号"
-      }
+      "allTypes": "所有类型",
+      "consumable": "易耗品",
+      "nonConsumable": "非易耗品",
+      "model": "型号",
+      "partNumber": "料号",
+      "searchPlaceholder": "搜索备件名称或料号..."
     },
-    "table": {
+    "consumableTypes": {
+      "1": "易耗品",
+      "2": "非易耗品"
+    },
+    "columns": {
       "image": "图片",
-      "code": "产品编码",
-      "specs": "规格",
-      "price": "价格",
-      "inventory": "库存",
-      "actions": "操作",
-      "addToCart": "加入购物车",
-      "viewMore": "查看更多规格"
-    },
-    "specs": {
-      "packageSize": "包装尺寸 cm",
-      "packageSizeImperial": "包装尺寸 inch",
-      "weight": "单件净重 kg",
-      "weightImperial": "单件净重 lbs",
-      "serialNumber": "序列号",
-      "compatibleModels": "适用型号",
-      "specifications": "规格描述",
+      "partNumber": "料号",
+      "name": "名称",
+      "model": "适用型号",
       "spec": "规格",
-      "pcsPerBox": "单箱数量"
+      "price": "价格",
+      "actions": "操作"
     },
-    "inventory": {
-      "noInfo": "无库存信息",
-      "outOfStock": "无库存",
-      "lowStock": "库存紧张",
-      "inStock": "库存充足",
-      "highStock": "库存丰富"
+    "properties": {
+      "partNumber": "料号",
+      "name": "产品名称",
+      "model": "适用型号",
+      "spec": "规格参数",
+      "specImperial": "英制规格",
+      "packageSize": "包装尺寸",
+      "pcsPerBox": "单箱数量",
+      "unit": "单位"
     },
-    "cart": {
-      "title": "购物车",
-      "empty": "购物车为空",
-      "total": "合计",
-      "clear": "清空购物车",
-      "checkout": "去结算",
-      "confirmClear": "清空购物车?",
-      "confirmClearMessage": "确定要移除购物车中的所有商品吗?",
-      "cancel": "取消",
-      "confirm": "清空",
-      "itemAdded": "已添加到购物车",
-      "cartCleared": "购物车已清空",
-      "sku": "料号"
-    },
-    "loading": "加载中...",
-    "error": {
-      "loadFailed": "加载备件数据失败，请稍后重试",
-      "noResults": "没有符合条件的备件",
-      "retry": "重试"
-    },
-    "defaultValues": {
-      "unknown": "未知",
-      "notAvailable": "无"
+    "addToCart": "加入购物车",
+    "viewDetails": "查看详情",
+    "noImage": "暂无图片",
+    "defaultSpecs": {
+      "notAvailable": "暂无",
+      "notApplicable": "不适用"
     }
+  },
+  "regions": {
+    "china": "中国",
+    "usa": "美国",
+    "europe": "欧洲",
+    "asia": "亚洲"
   }
 } 

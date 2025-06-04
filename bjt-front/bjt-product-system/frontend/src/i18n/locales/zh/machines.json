@@ -11,7 +11,7 @@
   "close": "关闭",
   "noAccessories": "暂无配件",
   "allPartNumbers": "所有型号",
-  "pageTitle": "机器选择",
+  "pageTitle": "设备选型",
   "addToCart": "加入购物车",
   "noPermissionAdd": "无权限添加",
   "filters": {
@@ -22,7 +22,9 @@
     "type": "类型",
     "brand": "品牌",
     "all": "全部",
-    "clear": "清除筛选"
+    "clear": "清除筛选",
+    "model": "型号",
+    "allModels": "所有型号"
   },
   "tableHeaders": {
     "index": "序号",
@@ -37,7 +39,16 @@
     "specs": "规格",
     "palletQty": "卡板数量",
     "palletSize": "卡板尺寸",
-    "packSize": "包装尺寸"
+    "packSize": "包装尺寸",
+    "netWeight": "净重",
+    "palletHeight": "卡板高度",
+    "palletGrossWeight": "卡板总毛重",
+    "stock": "库存",
+    "pcsPerBox": "每箱数量",
+    "pcsPerPallet": "每卡板数量",
+    "frequency": "频率",
+    "priceRange": "价格区间",
+    "voltage": "电压"
   },
   "table": {
     "model": "型号",
@@ -65,10 +76,12 @@
     "addToCart": "加入购物车",
     "viewDetails": "查看详情",
     "selectAccessory": "选择配件",
-    "configure": "配置"
+    "configure": "配置",
+    "selectMachine": "选择设备",
+    "close": "关闭"
   },
   "messages": {
-    "addedToCart": "已加入购物车",
+    "addedToCart": "已添加到购物车",
     "addToCartFailed": "加入购物车失败"
   },
   "stock": {
@@ -147,7 +160,8 @@
     "standard": "标准",
     "premium": "高级",
     "professional": "专业",
-    "industrial": "工业"
+    "industrial": "工业",
+    "machine": "设备"
   },
   "price": {
     "all": "全部价格",
@@ -155,5 +169,20 @@
     "50k-100k": "5-10万",
     "100k-200k": "10-20万",
     "above200k": "20万以上"
+  },
+  "voltages": {
+    "220V": "220伏"
+  },
+  "regions": {
+    "china": "中国",
+    "usa": "美国",
+    "europe": "欧洲",
+    "asia": "亚洲"
+  },
+  "stockStatus": {
+    "outOfStock": "无库存"
+  },
+  "path": {
+    "machine": "主机"
   }
 } 

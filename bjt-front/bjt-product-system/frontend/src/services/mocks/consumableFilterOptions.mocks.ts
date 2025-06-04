@@ -33,3 +33,11 @@ export interface ConsumableFilterOptions_Local {
 // Assign the imported data to the typed constant
 // Use type assertion to ensure compatibility
 export const dynamicConsumableOptions: ConsumableFilterOptions_Local = dynamicConsumableOptionsData as ConsumableFilterOptions_Local;
+
+console.log('🔍 [FilterOptions 全部]', dynamicConsumableOptions);
+if (dynamicConsumableOptions) {
+  console.log('🔍 [FilterOptions] keys:', Object.keys(dynamicConsumableOptions));
+  console.log('🔍 [FilterOptions] thicknesses:', dynamicConsumableOptions.thicknesses);
+  console.log('🔍 [FilterOptions] widths:', dynamicConsumableOptions.widths);
+  console.log('🔍 [FilterOptions] lengths:', dynamicConsumableOptions.lengths);
+}

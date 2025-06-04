@@ -369,7 +369,26 @@ const POPage: React.FC = () => {
 
   // 打印PO单
   const printPO = () => {
-    window.print();
+    try {
+      console.log('🖨️ 开始打印PO单:', poNumber);
+      
+      // 保存当前页面标题
+      const originalTitle = document.title;
+      document.title = `PO单-${poNumber}`;
+      
+      // 直接调用浏览器打印，依赖CSS中的@media print样式
+      window.print();
+      
+      // 恢复标题
+      setTimeout(() => {
+        document.title = originalTitle;
+        console.log('🖨️ 打印完成');
+      }, 500);
+      
+    } catch (error) {
+      console.error('❌ 打印失败:', error);
+      alert('打印失败，请重试');
+    }
   };
 
   // 返回上一页
@@ -521,6 +540,12 @@ const POPage: React.FC = () => {
       <style>{poExcelTableStyle}</style>
       {/* 第一页：PO元信息 - 按模板布局 */}
       <table className="po-excel-table" style={{marginBottom: '32px', tableLayout: 'fixed'}}>
+        <colgroup>
+          <col style={{width: '25%'}} />
+          <col style={{width: '25%'}} />
+          <col style={{width: '25%'}} />
+          <col style={{width: '25%'}} />
+        </colgroup>
         <tbody>
           {/* 第一行：Logo和标题 */}
           <tr>
@@ -531,23 +556,26 @@ const POPage: React.FC = () => {
             <td rowSpan={3} style={{border: "1px solid #000", width: '25%', textAlign: "center", verticalAlign: "middle", fontSize: '24px', fontWeight: 'bold'}}>
               {t('header.purchaseOrder')}
             </td>
-            <td style={{border: "1px solid #000", width: '25%'}}>
-              <span style={{fontWeight: "bold"}}>{t('header.purchaseOrderNumber')}</span>
-              <span style={{color: '#ff0000', fontSize: '14px'}}>{poNumber}</span>
+            <td style={{border: "1px solid #000", width: '25%', fontSize: '12px', padding: '4px'}}>
+              <div style={{fontWeight: "bold", display: 'inline'}}>{t('header.purchaseOrderNumber')}</div>
+              <br />
+              <div style={{fontWeight: 'bold', color: '#000', fontSize: '13px'}}>{poNumber}</div>
             </td>
           </tr>
           <tr>
             <td style={{border: "1px solid #000"}}></td>
-            <td style={{border: "1px solid #000"}}>
-              <span style={{fontWeight: "bold"}}>{t('header.date')}</span>
-              <span style={{color: '#ff0000', fontSize: '14px'}}>{poDate}</span>
+            <td style={{border: "1px solid #000", fontSize: '12px', padding: '4px'}}>
+              <div style={{fontWeight: "bold", display: 'inline'}}>{t('header.date')}</div>
+              <br />
+              <div style={{fontWeight: 'bold', color: '#000', fontSize: '13px'}}>{poDate}</div>
             </td>
           </tr>
           <tr>
             <td style={{border: "1px solid #000"}}></td>
-            <td style={{border: "1px solid #000"}}>
-              <span style={{fontWeight: "bold"}}>{t('header.paymentMethod')}</span>
-              <span style={{color: '#ff0000', fontSize: '14px'}}>{paymentMethod}</span>
+            <td style={{border: "1px solid #000", fontSize: '12px', padding: '4px'}}>
+              <div style={{fontWeight: "bold", display: 'inline'}}>{t('header.paymentMethod')}</div>
+              <br />
+              <div style={{fontWeight: 'bold', color: '#000', fontSize: '13px'}}>{paymentMethod}</div>
             </td>
           </tr>
           
@@ -615,6 +643,16 @@ const POPage: React.FC = () => {
 
       {/* 第二页：产品表格 */}
       <table className="po-excel-table">
+        <colgroup>
+          <col style={{width: '12%'}} />
+          <col style={{width: '18%'}} />
+          <col style={{width: '10%'}} />
+          <col style={{width: '25%'}} />
+          <col style={{width: '10%'}} />
+          <col style={{width: '8%'}} />
+          <col style={{width: '8%'}} />
+          <col style={{width: '9%'}} />
+        </colgroup>
         <thead>
           <tr style={{backgroundColor: '#f8f9fa'}}>
             <th style={{width: '12%', minWidth: '100px'}}>{t('table.columns.partNumber')}</th>
@@ -718,8 +756,8 @@ const POPage: React.FC = () => {
 
   return (
     <div className="po-container">
-      {/* 操作按钮 */}
-      <div className="action-buttons" style={{background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '16px 0', margin: '48px 0 24px 0', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 16}}>
+      {/* 操作按钮 - 只在屏幕显示，打印时隐藏 */}
+      <div className="action-buttons no-print" style={{background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '16px 0', margin: '48px 0 24px 0', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 16}}>
         <button className="btn btn-primary" style={{fontSize: 18, padding: '10px 28px', display: 'flex', alignItems: 'center', gap: 8}} onClick={exportToExcel}>
           <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20"><path d="M17 3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14zm0 2H3v10h14V5zm-7 2a1 1 0 0 1 1 1v2h2a1 1 0 1 1 0 2h-2v2a1 1 0 1 1-2 0v-2H7a1 1 0 1 1 0-2h2V8a1 1 0 0 1 1-1z"/></svg>
           {t('exportExcel', '导出Excel')}
@@ -731,11 +769,13 @@ const POPage: React.FC = () => {
         </button>
       </div>
 
-      {/* 两页Excel样式表格 */}
-      <POExcelTable products={products} language={language} shippingInfo={shippingInfo} summary={summary} />
+      {/* PO单内容 - 专门用于打印的容器 */}
+      <div id="po-print-content" className="po-print-content">
+        <POExcelTable products={products} language={language} shippingInfo={shippingInfo} summary={summary} />
+      </div>
 
-      {/* 底部按钮 */}
-      <div className="footer">
+      {/* 底部按钮 - 只在屏幕显示，打印时隐藏 */}
+      <div className="footer no-print">
         <button className="btn btn-secondary" onClick={handleGoBack}>{t('back')}</button>
         <button className="btn btn-primary" onClick={completePO}>{t('complete')}</button>
       </div>

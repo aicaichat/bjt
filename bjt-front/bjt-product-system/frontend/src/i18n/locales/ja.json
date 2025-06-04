@@ -49,5 +49,86 @@
     "confirmCancel": "変更を破棄しますか？",
     "noData": "データがありません",
     "loading": "読み込み中..."
+  },
+  "spareParts": {
+    "title": "スペアパーツ",
+    "loading": "スペアパーツを読み込み中...",
+    "error": "スペアパーツの読み込みに失敗しました",
+    "noResults": "一致するスペアパーツが見つかりませんでした",
+    "filters": {
+      "allTypes": "すべてのタイプ",
+      "consumable": "消耗品",
+      "nonConsumable": "非消耗品",
+      "model": "モデル",
+      "partNumber": "部品番号",
+      "searchPlaceholder": "スペアパーツ名または部品番号を検索..."
+    },
+    "consumableTypes": {
+      "1": "消耗品",
+      "2": "非消耗品"
+    },
+    "columns": {
+      "image": "画像",
+      "partNumber": "部品番号",
+      "name": "名前",
+      "model": "対応モデル",
+      "spec": "仕様",
+      "price": "価格",
+      "actions": "操作"
+    },
+    "properties": {
+      "partNumber": "部品番号",
+      "name": "製品名",
+      "model": "対応モデル",
+      "spec": "仕様パラメータ",
+      "specImperial": "インペリアル仕様",
+      "packageSize": "パッケージサイズ",
+      "pcsPerBox": "箱当たり数量",
+      "unit": "単位"
+    },
+    "addToCart": "カートに追加",
+    "viewDetails": "詳細を見る",
+    "noImage": "画像なし",
+    "defaultSpecs": {
+      "notAvailable": "利用不可",
+      "notApplicable": "該当なし"
+    }
+  },
+  "products": {
+    "types": {
+      "machine": "マシン",
+      "accessory": "アクセサリー",
+      "consumable": "消耗品",
+      "spare_part": "スペアパーツ",
+      "product": "製品"
+    },
+    "properties": {
+      "partNumber": "部品番号",
+      "part_number": "部品番号",
+      "model": "モデル",
+      "voltage": "電圧",
+      "frequency": "周波数",
+      "spec": "仕様",
+      "specImperial": "インペリアル仕様",
+      "spec_imperial": "インペリアル仕様",
+      "pcsPerBox": "箱当たり数量",
+      "pcs_per_box": "箱当たり数量",
+      "pcsPerPallet": "パレット当たり数量",
+      "pcs_per_pallet": "パレット当たり数量",
+      "packageSize": "パッケージサイズ",
+      "package_size_cm": "パッケージサイズ (cm)",
+      "palletSize": "パレットサイズ",
+      "pallet_size_cm": "パレットサイズ (cm)",
+      "netWeight": "正味重量",
+      "net_weight_kg": "正味重量 (kg)",
+      "grossWeight": "総重量",
+      "gross_weight_kg": "総重量 (kg)",
+      "brand": "ブランド",
+      "unit": "単位"
+    },
+    "defaultValues": {
+      "notAvailable": "利用不可"
+    },
+    "quantity": "数量"
   }
 } 

@@ -168,9 +168,9 @@ const UsersPage: React.FC = () => {
       render: (role: string) => {
         const roleColors = {
           admin: 'red',
-          manager: 'orange',
-          user: 'blue',
-          viewer: 'green',
+          sales: 'orange',
+          partner: 'blue',
+          customer: 'green',
         };
         return (
           <Tag color={roleColors[role as keyof typeof roleColors] || 'default'}>
@@ -283,12 +283,12 @@ const UsersPage: React.FC = () => {
     updateParams(newParams);
   }, [selectedRole, selectedStatus, selectedCountry, selectedUnit, updateParams]);
 
-  const users = userData?.items || [];
+  const users = (userData as any)?.items || [];
   const pagination = {
-    page: userData?.page || 1,
-    per_page: userData?.page_size || 10,
-    total: userData?.total || 0,
-    total_pages: userData?.total_pages || 1
+    page: (userData as any)?.page || 1,
+    per_page: (userData as any)?.page_size || 10,
+    total: (userData as any)?.total || 0,
+    total_pages: (userData as any)?.total_pages || 1
   };
 
   // 导入处理函数
@@ -372,9 +372,9 @@ const UsersPage: React.FC = () => {
               onChange={setSelectedRole}
             >
               <Option value="admin">管理员</Option>
-              <Option value="manager">管理者</Option>
-              <Option value="user">用户</Option>
-              <Option value="viewer">查看者</Option>
+              <Option value="sales">销售</Option>
+              <Option value="partner">合作伙伴</Option>
+              <Option value="customer">客户</Option>
             </Select>
           </div>
           

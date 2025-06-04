@@ -259,61 +259,296 @@
 
 /* 打印样式 */
 @media print {
+  /* 页面设置 - 优化PDF生成 */
+  @page {
+    margin: 0.5in;
+    size: A4 portrait;
+  }
+
   /* 隐藏不需要打印的元素 */
   .action-buttons,
   .po-pagination,
   .footer,
-  .language-toggle {
+  .po-header-wrapper,
+  .po-page-title,
+  .po-header-status,
+  button,
+  .btn,
+  .language-toggle,
+  .po-status-item,
+  .no-print,
+  footer,
+  .footer-content,
+  .company-info,
+  .contact-info,
+  .site-footer,
+  .site-info,
+  .footer-container,
+  .footer-left,
+  .footer-right,
+  .footer-company-info,
+  .dashboard-footer,
+  .page-footer,
+  .bottom-info,
+  [class*="footer"],
+  [class*="Footer"] {
     display: none !important;
   }
   
-  /* 调整打印尺寸 */
+  /* 基本页面重置 */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    font-family: Arial, sans-serif !important;
+    font-size: 11pt !important;
+    line-height: 1.2 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* PO容器 */
   .po-container {
-    padding: 0;
-    margin: 0;
-    width: 100%;
-    max-width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
   }
-  
-  /* 确保表格完整打印 */
-  .po-document,
-  .product-table {
-    width: 100%;
-    max-width: 100%;
-    page-break-inside: avoid;
+
+  /* 打印内容容器 */
+  .po-print-content {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
   }
-  
-  .po-document:first-of-type {
-    margin-bottom: 0;
+
+  /* 表格基本样式 - 强制布局稳定 */
+  .po-excel-table {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    margin: 0 0 15px 0 !important;
+    font-size: 10pt !important;
+    table-layout: fixed !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    display: table !important;
   }
-  
-  .product-table {
-    margin-top: 0;
+
+  .po-excel-table th,
+  .po-excel-table td {
+    border: 1px solid #000 !important;
+    padding: 5px !important;
+    vertical-align: top !important;
+    font-size: 10pt !important;
+    line-height: 1.2 !important;
+    word-wrap: break-word !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    display: table-cell !important;
   }
-  
-  /* 保持水印可见性 */
-  .po-watermark {
-    opacity: 0.03;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+
+  .po-excel-table th {
+    background-color: #f2f2f2 !important;
+    font-weight: bold !important;
+    text-align: center !important;
+    -webkit-print-color-adjust: exact !important;
   }
-  
-  /* 调整页面标题 */
-  .po-page-title {
-    margin-top: 0;
+
+  .po-excel-table tbody {
+    display: table-row-group !important;
   }
-  
-  /* 确保表头正确打印 */
-  .po-document th {
-    background-color: var(--po-table-header-bg) !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+
+  .po-excel-table tr {
+    display: table-row !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
-  
-  /* 确保边框可见 */
-  .po-document th,
-  .po-document td {
-    border: 1px solid var(--po-border-color) !important;
+
+  /* 第一个表格（基本信息）- 固定布局 */
+  .po-excel-table:first-of-type {
+    margin-bottom: 25px !important;
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+
+  /* 为第一个表格设置固定列宽 */
+  .po-excel-table:first-of-type colgroup col:nth-child(1) { width: 25% !important; }
+  .po-excel-table:first-of-type colgroup col:nth-child(2) { width: 25% !important; }
+  .po-excel-table:first-of-type colgroup col:nth-child(3) { width: 25% !important; }
+  .po-excel-table:first-of-type colgroup col:nth-child(4) { width: 25% !important; }
+
+  .po-excel-table:first-of-type td {
+    padding: 6px !important;
+    font-size: 9pt !important;
+    line-height: 1.3 !important;
+  }
+
+  /* Logo单元格 */
+  .po-excel-table:first-of-type td[rowspan="3"] {
+    text-align: center !important;
+    vertical-align: middle !important;
+  }
+
+  /* Purchase Order标题 */
+  .po-excel-table:first-of-type td[rowspan="3"]:nth-child(3) {
+    font-size: 18pt !important;
+    font-weight: bold !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+  }
+
+  /* 右侧信息单元格 */
+  .po-excel-table:first-of-type td:last-child {
+    font-size: 9pt !important;
+    padding: 4px !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Logo图片 */
+  .po-excel-table img {
+    max-width: 100px !important;
+    max-height: 50px !important;
+    object-fit: contain !important;
+    display: block !important;
+    margin: 0 auto !important;
+  }
+
+  /* 区域标题背景 */
+  .po-excel-table td[style*="background: #f0f0f0"] {
+    background-color: #e8e8e8 !important;
+    font-weight: bold !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+
+  /* 第二个表格（产品列表）- 优化布局 */
+  .po-excel-table:last-of-type {
+    page-break-before: auto !important;
+    break-before: auto !important;
+    margin-top: 0 !important;
+  }
+
+  /* 为产品表格设置固定列宽 */
+  .po-excel-table:last-of-type colgroup col:nth-child(1) { width: 12% !important; }
+  .po-excel-table:last-of-type colgroup col:nth-child(2) { width: 18% !important; }
+  .po-excel-table:last-of-type colgroup col:nth-child(3) { width: 10% !important; }
+  .po-excel-table:last-of-type colgroup col:nth-child(4) { width: 25% !important; }
+  .po-excel-table:last-of-type colgroup col:nth-child(5) { width: 10% !important; }
+  .po-excel-table:last-of-type colgroup col:nth-child(6) { width: 8% !important; }
+  .po-excel-table:last-of-type colgroup col:nth-child(7) { width: 8% !important; }
+  .po-excel-table:last-of-type colgroup col:nth-child(8) { width: 9% !important; }
+
+  /* 产品表格表头 */
+  .po-excel-table:last-of-type thead {
+    display: table-header-group !important;
+  }
+
+  .po-excel-table:last-of-type thead th {
+    font-size: 9pt !important;
+    padding: 4px !important;
+    background-color: #f8f9fa !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+
+  /* 产品表格数据行 */
+  .po-excel-table:last-of-type tbody td {
+    font-size: 9pt !important;
+    padding: 4px !important;
+  }
+
+  /* 表格行背景色 */
+  .po-excel-table:last-of-type tr:nth-child(even) {
+    background-color: #f8f9fa !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+
+  /* 摘要行样式 */
+  .po-excel-table tr[style*="background: #e9ecef"] {
+    background-color: #f0f0f0 !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+
+  .po-excel-table tr[style*="background: #d4edda"] {
+    background-color: #e8f5e8 !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+
+  /* 金额和数字列格式 */
+  .amount-cell,
+  .po-excel-table:last-of-type td:nth-child(6),
+  .po-excel-table:last-of-type td:nth-child(7),
+  .po-excel-table:last-of-type td:nth-child(8) {
+    text-align: right !important;
+    font-family: "Courier New", monospace !important;
+  }
+
+  .summary-label {
+    font-weight: bold !important;
+    background-color: #f2f2f2 !important;
+    text-align: right !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+
+  .remarks-cell {
+    font-style: italic !important;
+    background-color: #fafafa !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+
+  /* 强制表格完整显示 */
+  .po-excel-table,
+  .po-excel-table *,
+  .po-print-content,
+  .po-container {
+    visibility: visible !important;
+    display: table !important;
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: auto !important;
+  }
+
+  /* 重要文本加粗 */
+  .po-excel-table div[style*="fontWeight: 'bold'"],
+  .po-excel-table div[style*="font-weight: bold"],
+  .po-excel-table span[style*="fontWeight: 'bold'"],
+  .po-excel-table span[style*="font-weight: bold"] {
+    font-weight: bold !important;
+  }
+
+  /* 防止内容被截断 */
+  body,
+  html,
+  .po-container,
+  .po-print-content {
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+
+  /* 确保分页合理 */
+  .po-excel-table:first-of-type {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+
+  .po-excel-table:last-of-type {
+    page-break-before: avoid !important;
+    break-before: avoid !important;
   }
 }
 
@@ -369,5 +604,17 @@
     width: 100%;
     max-width: 100%;
   }
+}
+
+/* PO打印内容容器 */
+.po-print-content {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* 非打印元素 */
+.no-print {
+  display: block;
 }
 

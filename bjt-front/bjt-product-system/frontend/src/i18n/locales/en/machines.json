@@ -22,7 +22,9 @@
     "type": "Type",
     "brand": "Brand",
     "all": "All",
-    "clear": "Clear Filters"
+    "clear": "Clear Filters",
+    "model": "Model",
+    "allModels": "All Models"
   },
   "tableHeaders": {
     "index": "No.",
@@ -37,7 +39,16 @@
     "specs": "Specifications",
     "palletQty": "Pallet Quantity",
     "palletSize": "Pallet Size",
-    "packSize": "Package Size"
+    "packSize": "Package Size",
+    "netWeight": "Net Weight",
+    "palletHeight": "Pallet Height",
+    "palletGrossWeight": "Pallet Gross Weight",
+    "stock": "Stock",
+    "pcsPerBox": "PCS/Box",
+    "pcsPerPallet": "PCS/Pallet",
+    "frequency": "Frequency",
+    "voltage": "Voltage",
+    "priceRange": "Price Range"
   },
   "table": {
     "model": "Model",
@@ -65,7 +76,9 @@
     "addToCart": "Add to Cart",
     "viewDetails": "View Details",
     "selectAccessory": "Select Accessory",
-    "configure": "Configure"
+    "configure": "Configure",
+    "selectMachine": "Select Machine",
+    "close": "Close"
   },
   "messages": {
     "addedToCart": "Added to cart",
@@ -147,7 +160,8 @@
     "standard": "Standard",
     "premium": "Premium",
     "professional": "Professional",
-    "industrial": "Industrial"
+    "industrial": "Industrial",
+    "machine": "Machine"
   },
   "price": {
     "all": "All Prices",
@@ -155,5 +169,27 @@
     "50k-100k": "50k-100k",
     "100k-200k": "100k-200k",
     "above200k": "Above 200k"
+  },
+  "hoverDetails": "Hover for Details",
+  "accessories": {
+    "title": "Accessories",
+    "level1": "Level 1"
+  },
+  "chooseOther": "Please choose another machine",
+  "regions": {
+    "china": "China",
+    "usa": "USA",
+    "europe": "Europe",
+    "asia": "Asia"
+  },
+  "voltages": {
+    "220V": "220V",
+    "110V": "110V"
+  },
+  "stockStatus": {
+    "outOfStock": "Out of Stock"
+  },
+  "path": {
+    "machine": "Host"
   }
 } 

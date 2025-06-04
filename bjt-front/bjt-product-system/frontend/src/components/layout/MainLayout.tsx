@@ -23,7 +23,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     <div className={`flex flex-col min-h-screen ${className}`}>
       <Header {...headerProps} className="site-header" />
       
-      <main className="flex-grow">
+      <main className="flex-grow" style={{ paddingTop: '72px' }}>
         {children}
       </main>
       

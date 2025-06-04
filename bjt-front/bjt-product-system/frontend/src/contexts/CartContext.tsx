@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { CartItem as OriginalCartItem } from '../api/services/cart.service';
 import cartService from '../api/services/cart.service'; // 导入默认导出的cartService实例
 import { useMockData } from '../config/env';
+import { mergeNoEmpty } from '../utils/mergeUtils';
 
 // 定义价格层级接口
 export interface PriceTier {
@@ -88,12 +89,123 @@ const mapServiceCartItemToUICartItem = (item: OriginalCartItem): ExtendedCartIte
       type = 'machine'; // 默认值
   }
 
+  // 增强的名称获取逻辑，根据产品类型使用不同的策略
+  const getDisplayName = (): string => {
+    const props = item.properties || {};
+    
+    // 调试日志
+    console.log('[CartContext.mapServiceCartItemToUICartItem] 商品名称映射调试:', {
+      product_type: item.product_type,
+      'item.name': item.name,
+      'props.name': props.name,
+      'props.name_zh': props.name_zh,
+      'props.name_en': props.name_en,
+      'props.productName': props.productName
+    });
+    
+    // 根据产品类型使用不同的名称获取策略
+    switch (item.product_type) {
+      case 'consumable':
+        // 耗材名称获取优先级
+        return props.name_zh || 
+               props.name_en || 
+               props.name || 
+               props.productName ||
+               item.name || 
+               item.part_number || 
+               '耗材';
+               
+      case 'spare_part':
+        // 备件名称获取优先级
+        return props.name_zh || 
+               props.name_en || 
+               props.productName ||
+               item.name || 
+               props.name || 
+               props.part_number || 
+               item.part_number || 
+               '备件';
+               
+      case 'accessory':
+        // 配件名称获取优先级
+        return props.name_zh || 
+               props.name_en || 
+               item.name || 
+               props.name || 
+               props.productName ||
+               item.part_number || 
+               '配件';
+               
+      case 'machine':
+        // 主机名称获取优先级
+        return props.name_zh || 
+               props.name_en || 
+               item.name || 
+               props.name || 
+               props.productName ||
+               item.part_number || 
+               '主机';
+               
+      default:
+        // 默认名称获取逻辑
+        return item.name || 
+               props.name || 
+               props.name_zh || 
+               props.name_en || 
+               props.productName ||
+               item.part_number || 
+               '商品';
+    }
+  };
+
+  // 增强的图片获取逻辑
+  const getDisplayImage = (): string => {
+    const props = item.properties || {};
+    
+    // 图片获取优先级
+    const imageUrl = props.image_url || 
+                    item.image_url || 
+                    props.image || 
+                    (item as any).image || 
+                    '';
+                    
+    // 如果有图片URL则返回，否则根据产品类型返回默认图片
+    if (imageUrl && imageUrl.trim() !== '') {
+      return imageUrl;
+    }
+    
+    // 根据产品类型返回默认图片
+    switch (item.product_type) {
+      case 'consumable':
+        return '/images/consumables/default.jpg';
+      case 'spare_part':
+        return '/images/spare-parts/default.jpg';
+      case 'accessory':
+        return '/images/accessories/default.jpg';
+      case 'machine':
+        return '/images/machines/default.jpg';
+      default:
+        return '/images/placeholder.png';
+    }
+  };
+
+  const displayName = getDisplayName();
+  const displayImage = getDisplayImage();
+
+  console.log('[CartContext.mapServiceCartItemToUICartItem] 最终映射结果:', {
+    product_type: item.product_type,
+    part_number: item.part_number,
+    displayName,
+    displayImage,
+    originalName: item.name
+  });
+
   return {
     ...item, // 保留原始CartItem的所有属性
     id: item.item_id.toString(),
     code: item.part_number,
     partNumber: item.part_number,
-    image: item.image_url || '',
+    image: displayImage,
     category: item.product_type,
     productId: item.product_id,
     priceTiers: [], // 默认为空数组
@@ -101,43 +213,46 @@ const mapServiceCartItemToUICartItem = (item: OriginalCartItem): ExtendedCartIte
     type: type,
     specs: {
       partNumber: item.part_number,
-      productName: item.name
+      productName: displayName
     },
     price: item.unit_price, // 将unit_price映射为price
+    
+    // 使用计算得到的显示名称，确保name字段正确
+    name: displayName,
     
     // 必选备件相关字段 (从properties中提取)
     is_required: item.properties?.is_required || false,
     parent_part_number: item.properties?.parent_part_number,
     
-    // 备件完整字段信息 (从properties中提取或使用默认值)
-    name_zh: item.properties?.name_zh || item.name,
-    name_en: item.properties?.name_en || item.name,
-    spec: item.properties?.spec || '',
-    spec_imperial: item.properties?.spec_imperial || '',
-    app_model: item.properties?.app_model || '',
-    app_sn: item.properties?.app_sn || '',
-    is_consumable: item.properties?.is_consumable || false,
-    unit: item.properties?.unit || 'pcs',
-    status: item.properties?.status || 'publish',
+    // 备件完整字段信息 (优先主层字段，其次properties)
+    name_zh: (item as any).name_zh || item.properties?.name_zh || displayName,
+    name_en: (item as any).name_en || item.properties?.name_en || displayName,
+    spec: (item as any).spec || item.properties?.spec || '',
+    spec_imperial: (item as any).spec_imperial || item.properties?.spec_imperial || '',
+    app_model: (item as any).app_model || item.properties?.app_model || '',
+    app_sn: (item as any).app_sn || item.properties?.app_sn || '',
+    is_consumable: (item as any).is_consumable ?? item.properties?.is_consumable ?? false,
+    unit: (item as any).unit || item.properties?.unit || 'pcs',
+    status: (item as any).status || item.properties?.status || 'publish',
     
     // 包装信息
-    package_size_cm: item.properties?.package_size_cm || null,
-    package_size_inch: item.properties?.package_size_inch || null,
-    net_weight_kg: item.properties?.net_weight_kg || null,
-    net_weight_lbs: item.properties?.net_weight_lbs || null,
-    gross_weight_kg: item.properties?.gross_weight_kg || null,
-    gross_weight_lbs: item.properties?.gross_weight_lbs || null,
-    pcs_per_box: item.properties?.pcs_per_box || null,
-    pcs_per_pallet: item.properties?.pcs_per_pallet || null,
+    package_size_cm: (item as any).package_size_cm || item.properties?.package_size_cm || null,
+    package_size_inch: (item as any).package_size_inch || item.properties?.package_size_inch || null,
+    net_weight_kg: (item as any).net_weight_kg || item.properties?.net_weight_kg || null,
+    net_weight_lbs: (item as any).net_weight_lbs || item.properties?.net_weight_lbs || null,
+    gross_weight_kg: (item as any).gross_weight_kg || item.properties?.gross_weight_kg || null,
+    gross_weight_lbs: (item as any).gross_weight_lbs || item.properties?.gross_weight_lbs || null,
+    pcs_per_box: (item as any).pcs_per_box || item.properties?.pcs_per_box || null,
+    pcs_per_pallet: (item as any).pcs_per_pallet || item.properties?.pcs_per_pallet || null,
     
-    // 新增主层字段，便于购物车直接访问
-    voltage: item.properties?.voltage || '',
-    frequency: item.properties?.frequency || '',
-    model: item.properties?.model || '',
+    // 新增主层字段，优先主层，其次properties
+    voltage: (item as any).voltage || item.properties?.voltage || '',
+    frequency: (item as any).frequency || item.properties?.frequency || '',
+    model: (item as any).model || item.properties?.model || '',
     
     // 定价和库存信息
-    pricing: item.properties?.pricing || [],
-    inventory: item.properties?.inventory || []
+    pricing: (item as any).pricing || item.properties?.pricing || [],
+    inventory: (item as any).inventory || item.properties?.inventory || []
   };
 };
 
@@ -148,6 +263,7 @@ export interface CartContextType {
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
+  clearInvalidItems: () => Promise<void>;
   totalPrice: number;
   itemCount: number;
   selectedItems: ExtendedCartItem[];
@@ -167,6 +283,7 @@ export const CartContext = createContext<CartContextType>({
   removeItem: () => {},
   updateQuantity: () => {},
   clearCart: () => {},
+  clearInvalidItems: async () => {},
   totalPrice: 0,
   itemCount: 0,
   selectedItems: [],
@@ -198,21 +315,31 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       const response = await cartService.getCart();
-      let cartItems = response.items.map(mapServiceCartItemToUICartItem);
-      // 合并本地 properties 字段，key 用 part_number
-      cartItems = cartItems.map(item => {
-        const key = item.part_number || item.code;
-        const localProps = key ? cartPropertiesMap.current[key] : undefined;
-        if (localProps) {
-          item.properties = { ...localProps, ...(item.properties || {}) };
+      console.log('🛒 [CartContext.fetchCart] Raw response:', response);
+      
+      // 使用现有的映射函数转换CartItem
+      let extendedItems: ExtendedCartItem[] = (response.items || []).map(mapServiceCartItemToUICartItem);
+      
+      // 合并本地 properties 字段，使用产品类型+料号作为复合key
+      const enhancedItems = extendedItems.map(item => {
+        if (item.part_number) {
+          const cacheKey = `${item.product_type}_${item.part_number}`;
+          const localProps = cartPropertiesMap.current[cacheKey];
+          if (localProps) {
+            // 只用非空值合并 properties
+            item.properties = mergeNoEmpty(item.properties || {}, localProps || {});
+            item.name = localProps.name || item.name;
+            item.image_url = localProps.image_url || item.image_url;
+          }
         }
         return item;
       });
-      setItems(cartItems);
-      setSyncError(null);
+      
+      setItems(enhancedItems);
+      console.log('🛒 [CartContext.fetchCart] Cart loaded with', enhancedItems.length, 'items:', enhancedItems);
     } catch (error) {
-      console.error('Failed to fetch cart:', error);
-      setSyncError('Failed to load cart data');
+      console.error('❌ [CartContext.fetchCart] Error fetching cart:', error);
+      setSyncError('Failed to load cart');
     } finally {
       setLoading(false);
     }
@@ -228,41 +355,100 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       console.log('🛒 [CartContext.addItem] Starting with newItem:', newItem);
-      // 准备添加购物车请求数据，确保包含所有必需字段和产品信息
-      const addToCartRequest = {
-        product_type: newItem.product_type, // 使用原始的 product_type
-        product_id: newItem.product_id,     // 使用原始的 product_id
-        part_number: newItem.part_number,   // 使用原始的 part_number
-        quantity: newItem.quantity,
-        properties: {
-          // 基本产品信息
-          productName: newItem.name,
-          name: newItem.name,
-          part_number: newItem.part_number,
-          image_url: newItem.image_url,
-          image: newItem.image_url,
-          price: newItem.unit_price,
-          unit_price: newItem.unit_price,
-          currency: newItem.currency,
-          // 从原始properties中复制所有其他信息
-          ...(newItem.properties || {}),
-          // 确保关键字段不被覆盖
-          id: newItem.product_id,
-          productId: newItem.product_id
-        }
+      
+      // 增强的 properties 处理，确保不同产品类型的属性正确保存
+      const enhancedProperties = {
+        // 基本产品信息 - 确保所有产品类型都有这些基础字段
+        productName: newItem.name,
+        name: newItem.name,
+        part_number: newItem.part_number,
+        image_url: newItem.image_url,
+        image: newItem.image_url,
+        price: newItem.unit_price,
+        unit_price: newItem.unit_price,
+        currency: newItem.currency,
+        product_type: newItem.product_type,
+        
+        // 根据产品类型添加特定属性
+        ...(newItem.product_type === 'consumable' && {
+          // 耗材特有属性
+          name_zh: newItem.name_zh || newItem.name,
+          name_en: newItem.name_en || newItem.name,
+          material: (newItem.properties as any)?.material || (newItem as any).material,
+          width: (newItem.properties as any)?.width || (newItem as any).width,
+          length: (newItem.properties as any)?.length || (newItem as any).length,
+          thickness: (newItem.properties as any)?.thickness || (newItem as any).thickness,
+          rollLength: (newItem.properties as any)?.rollLength || (newItem as any).rollLength,
+          shape: (newItem.properties as any)?.shape || (newItem as any).shape,
+          code: (newItem.properties as any)?.code || newItem.part_number,
+          specs: (newItem.properties as any)?.specs
+        }),
+        ...(newItem.product_type === 'spare_part' && {
+          // 备件特有属性
+          name_zh: newItem.name_zh || newItem.name,
+          name_en: newItem.name_en || newItem.name,
+          spec: newItem.spec,
+          spec_imperial: newItem.spec_imperial,
+          app_model: newItem.app_model,
+          app_sn: newItem.app_sn,
+          is_consumable: newItem.is_consumable,
+          unit: newItem.unit,
+          pcs_per_box: newItem.pcs_per_box,
+          required_parts: (newItem.properties as any)?.required_parts,
+          required_quantity: (newItem.properties as any)?.required_quantity,
+          package_size_cm: newItem.package_size_cm,
+          package_size_inch: newItem.package_size_inch,
+          net_weight_kg: newItem.net_weight_kg,
+          net_weight_lbs: newItem.net_weight_lbs
+        }),
+        // 从原始properties中复制其他信息，但不覆盖上面的关键字段
+        ...(newItem.properties || {}),
+        // 确保关键字段不被覆盖
+        id: newItem.product_id,
+        productId: newItem.product_id
       };
-      // 本地缓存 properties，key 用 part_number
-      if (newItem.part_number) {
-        cartPropertiesMap.current[newItem.part_number] = addToCartRequest.properties;
-      }
+
+      // 准备添加购物车请求数据
+      const addToCartRequest = {
+        product_type: newItem.product_type,
+        product_id: newItem.product_id,
+        part_number: newItem.part_number,
+        quantity: newItem.quantity,
+        properties: enhancedProperties
+      };
+
+      console.log('🛒 [CartContext.addItem] Enhanced properties for', newItem.product_type, ':', enhancedProperties);
       console.log('🛒 [CartContext.addItem] Calling cartService.addToCart with:', addToCartRequest);
-      await cartService.addToCart(addToCartRequest);
-      console.log('🛒 [CartContext.addItem] cartService.addToCart completed, fetching updated cart...');
+      
+      // 调用购物车服务
+      const result = await cartService.addToCart(addToCartRequest);
+      console.log('🛒 [CartContext.addItem] cartService.addToCart result:', result);
+      
+      // 缓存 properties，使用产品类型+料号作为复合key，避免不同类型商品互相覆盖
+      if (newItem.part_number) {
+        const cacheKey = `${newItem.product_type}_${newItem.part_number}`;
+        cartPropertiesMap.current[cacheKey] = enhancedProperties;
+        console.log('🛒 [CartContext.addItem] Cached properties with key:', cacheKey);
+      } else {
+        console.warn('[CartContext.addItem] part_number is empty, skip caching properties:', newItem);
+      }
+      
       // 重新获取购物车数据
+      console.log('🛒 [CartContext.addItem] Fetching updated cart...');
       await fetchCart();
       console.log('🛒 [CartContext.addItem] Cart updated successfully');
+      
     } catch (error) {
       console.error('❌ [CartContext.addItem] Failed to add item to cart:', error);
+      console.error('❌ [CartContext.addItem] Error details:', {
+        error,
+        newItem: {
+          product_type: newItem.product_type,
+          part_number: newItem.part_number,
+          name: newItem.name,
+          product_id: newItem.product_id
+        }
+      });
       setSyncError('Failed to add item to cart');
       setLoading(false);
       throw error; // 重新抛出错误，让调用方处理
@@ -392,19 +578,69 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       const cartData = await cartService.getCart();
       // 使用现有的映射函数转换CartItem
       let extendedItems: ExtendedCartItem[] = (cartData.items || []).map(mapServiceCartItemToUICartItem);
-      // 合并本地 properties 字段，key 用 part_number
+      
+      // 合并本地 properties 字段，使用产品类型+料号作为复合key
       extendedItems = extendedItems.map(item => {
-        const key = item.part_number || item.code;
-        const localProps = key ? cartPropertiesMap.current[key] : undefined;
-        if (localProps) {
-          item.properties = { ...localProps, ...(item.properties || {}) };
+        if (item.part_number) {
+          const cacheKey = `${item.product_type}_${item.part_number}`;
+          const localProps = cartPropertiesMap.current[cacheKey];
+          if (localProps) {
+            // 只用非空值合并 properties
+            item.properties = mergeNoEmpty(item.properties || {}, localProps || {});
+            item.name = localProps.name || item.name;
+            item.image_url = localProps.image_url || item.image_url;
+          }
         }
         return item;
       });
+      
       setItems(extendedItems);
       console.log('🛒 [CartContext.refreshCart] Cart refreshed with', extendedItems.length, 'items');
     } catch (error) {
       console.error('🛒 [CartContext.refreshCart] Error refreshing cart:', error);
+    }
+  };
+  
+  // 修复购物车显示问题
+  const clearInvalidItems = async () => {
+    console.log('🔧 [CartContext.clearInvalidItems] Starting cart display fixes');
+    try {
+      setLoading(true);
+      
+      // 找出显示有问题的商品
+      const problemItems = items.filter(item => {
+        // 检查是否缺少必要的显示信息
+        const hasDisplayIssues = !item.name || item.name === 'Invalid Type' || 
+                                !item.image_url || item.image_url.includes('placeholder');
+        return hasDisplayIssues;
+      });
+      
+      if (problemItems.length === 0) {
+        console.log('✅ [CartContext.clearInvalidItems] No display issues found');
+        setSyncError('购物车显示正常，无需修复');
+        setTimeout(() => setSyncError(null), 2000);
+        return;
+      }
+      
+      console.log(`🔧 [CartContext.clearInvalidItems] Found ${problemItems.length} items with display issues:`, 
+        problemItems.map(item => ({ 
+          part_number: item.part_number, 
+          name: item.name, 
+          product_type: item.product_type 
+        }))
+      );
+      
+      // 重新获取购物车数据以修复显示
+      await fetchCart();
+      
+      setSyncError(`已修复 ${problemItems.length} 个商品的显示问题`);
+      setTimeout(() => setSyncError(null), 3000);
+      
+    } catch (error) {
+      console.error('❌ [CartContext.clearInvalidItems] Error fixing cart display:', error);
+      setSyncError('修复购物车显示时出错');
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -414,6 +650,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     removeItem,
     updateQuantity,
     clearCart,
+    clearInvalidItems,
     totalPrice,
     itemCount,
     selectedItems,

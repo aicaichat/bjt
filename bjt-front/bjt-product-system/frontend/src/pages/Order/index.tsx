@@ -441,6 +441,8 @@ const OrderPage: React.FC = () => {
 
   // 获取商品类型显示文本
   const getTypeText = (type?: string) => {
+    console.log('🔍 [getTypeText] Processing type:', type);
+    
     switch (type?.toLowerCase()) {
       case 'machine':
         return t('products.types.machine', 'Machine');
@@ -449,9 +451,12 @@ const OrderPage: React.FC = () => {
       case 'consumable':
         return t('products.types.consumable', 'Consumable');
       case 'spare':
-        return t('products.types.spare', 'Spare Part');
+      case 'spare_part':
+        return t('products.types.spare_part', 'Spare Part');
       default:
-        return t('products.types.product', 'Product');
+        console.warn('⚠️ [getTypeText] Unknown product type:', type);
+        // 不返回"Invalid Type"，而是返回产品类型或默认值
+        return type || t('products.types.product', 'Product');
     }
   };
 

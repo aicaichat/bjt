@@ -18,7 +18,36 @@ export const RequiredPartCartItem: React.FC<RequiredPartCartItemProps> = ({
   userRegion = 'cn'
 }) => {
   const { t } = useTranslation(['spareParts', 'cart', 'products']);
-  const displayName = language === 'zh' ? (item.name_zh || item.name) : (item.name_en || item.name);
+  
+  // 修复商品名称获取逻辑，添加更完善的兜底处理
+  const getDisplayName = (): string => {
+    const props = item.properties || {};
+    if (language === 'zh') {
+      return props.name_zh || 
+             item.name_zh || 
+             props.name || 
+             item.name ||
+             props.code ||
+             item.code ||
+             props.part_number ||
+             item.part_number ||
+             item.id ||
+             '商品';
+    } else {
+      return props.name_en || 
+             item.name_en || 
+             props.name || 
+             item.name ||
+             props.code ||
+             item.code ||
+             props.part_number ||
+             item.part_number ||
+             item.id ||
+             'Product';
+    }
+  };
+  
+  const displayName = getDisplayName();
   
   // 根据用户区域选择公制或英制
   const isImperial = userRegion === 'na' || userRegion === 'au';

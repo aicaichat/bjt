@@ -225,7 +225,44 @@ const mockGetConsumables_local = async (filters: ConsumableFilters): Promise<Con
       (product.specs?.compatibility || '').toLowerCase().split(',').map((m: string) => m.trim()).includes(filters.model!.toLowerCase())
     );
   }
-  // Add other local filters (thickness, weight, width, length) if not handled by base mock
+  // Add numeric filters with tolerance
+  if (filters.thickness && filters.thickness !== 'all') {
+    const targetThickness = parseFloat(filters.thickness);
+    if (!isNaN(targetThickness)) {
+      sourceConsumables = sourceConsumables.filter(product => {
+        const productThickness = parseFloat(product.specs?.thickness || '0');
+        return !isNaN(productThickness) && Math.abs(productThickness - targetThickness) < 0.001;
+      });
+    }
+  }
+  if (filters.weight && filters.weight !== 'all') {
+    const targetWeight = parseFloat(filters.weight);
+    if (!isNaN(targetWeight)) {
+      sourceConsumables = sourceConsumables.filter(product => {
+        // 从 specs 中获取 weight，如果不存在则从其他字段获取
+        const productWeight = parseFloat(product.specs?.weight || product.net_weight_kg?.toString() || '0');
+        return !isNaN(productWeight) && Math.abs(productWeight - targetWeight) < 0.001;
+      });
+    }
+  }
+  if (filters.width && filters.width !== 'all') {
+    const targetWidth = parseFloat(filters.width);
+    if (!isNaN(targetWidth)) {
+      sourceConsumables = sourceConsumables.filter(product => {
+        const productWidth = parseFloat(product.specs?.width || '0');
+        return !isNaN(productWidth) && Math.abs(productWidth - targetWidth) < 0.001;
+      });
+    }
+  }
+  if (filters.length && filters.length !== 'all') {
+    const targetLength = parseFloat(filters.length);
+    if (!isNaN(targetLength)) {
+      sourceConsumables = sourceConsumables.filter(product => {
+        const productLength = parseFloat(product.specs?.length || '0');
+        return !isNaN(productLength) && Math.abs(productLength - targetLength) < 0.001;
+      });
+    }
+  }
 
   // Data Transformation to ConsumableProduct interface
   const transformedProducts: ConsumableProduct[] = sourceConsumables.map((product: CentralConsumable) => {
@@ -250,17 +287,25 @@ const mockGetConsumables_local = async (filters: ConsumableFilters): Promise<Con
         material: product.specs?.material || '',
         shape: product.specs?.shape || '',
         thickness: product.specs?.thickness || '',
-        weight: undefined, // Placeholder, CentralConsumable doesn't have direct weight field for specs
+        weight: product.specs?.weight || '',
         width: product.specs?.width || '',
         length: product.specs?.length || '',
         rollLength: product.specs?.rollLength || '',
         compatibility: product.specs?.compatibility || '',
       },
       pricing: product.pricing || [],
-      inventory: product.inventory.reduce((acc: {[key: string]: number}, inv: any) => {
-        acc[inv.region] = +inv.quantity;
-        return acc;
-      }, {})
+      inventory: Array.isArray(product.inventory)
+        ? (product.inventory as any[]).reduce((acc: {[key: string]: number}, inv: any) => {
+            acc[inv.region] = typeof inv.quantity === 'number' ? inv.quantity : parseFloat(inv.quantity) || 0;
+            return acc;
+          }, {})
+        : (typeof product.inventory === 'object' && product.inventory !== null
+          ? Object.keys(product.inventory).reduce((acc: {[key: string]: number}, region: string) => {
+              const qty = (product.inventory as any)[region];
+              acc[region] = typeof qty === 'number' ? qty : parseFloat(qty) || 0;
+              return acc;
+            }, {})
+          : {})
     };
   });
 
@@ -297,10 +342,10 @@ const apiGetConsumables_local = async (filters: ConsumableFilters): Promise<Cons
     model: filters.model === 'all' ? undefined : filters.model,
     shape: filters.shape === 'all' ? undefined : filters.shape,
     material: filters.material === 'all' ? undefined : filters.material,
-    thickness: filters.thickness === 'all' ? undefined : filters.thickness,
-    weight: filters.weight === 'all' ? undefined : filters.weight,
-    width: filters.width === 'all' ? undefined : filters.width,
-    length: filters.length === 'all' ? undefined : filters.length,
+    thickness: filters.thickness === 'all' ? undefined : (filters.thickness ? +filters.thickness : undefined),
+    weight: filters.weight === 'all' ? undefined : (filters.weight ? +filters.weight : undefined),
+    width: filters.width === 'all' ? undefined : (filters.width ? +filters.width : undefined),
+    length: filters.length === 'all' ? undefined : (filters.length ? +filters.length : undefined),
     ...(filters.filters || {})
   };
   
@@ -310,7 +355,15 @@ const apiGetConsumables_local = async (filters: ConsumableFilters): Promise<Cons
   console.log('🔍 [apiGetConsumables_local] Sending API request with params:', apiParams);
   console.log('🔍 [apiGetConsumables_local] Original filters object:', filters);
   
-  const response = await HttpServiceInstance.get<ConsumableListData>('/consumables', { params: apiParams });
+  // API返回的是CentralConsumable格式，需要转换
+  const response = await HttpServiceInstance.get<{
+    items: CentralConsumable[];
+    total: number;
+    page: number;
+    page_size: number;
+    total_pages: number;
+    filterOptions?: any;
+  }>('/consumables', { params: apiParams });
   
   console.log('🔍 [apiGetConsumables_local] Received API response:', {
     dataItemsLength: response.data?.items?.length || 0,
@@ -319,10 +372,123 @@ const apiGetConsumables_local = async (filters: ConsumableFilters): Promise<Cons
     firstItem: response.data?.items?.[0] || null
   });
   
-  // Here, ConsumableListData is the local one. API must return data matching ConsumableProduct.
-  // If API returns CentralConsumable[], transformation will be needed here too.
-  // For now, assume API returns data matching local ConsumableProduct for simplicity.
-  return response.data;
+  // 打印第一个原始API项目，用于调试
+  if (response.data.items && response.data.items.length > 0) {
+    console.log('🔍 [API原始数据] 第一个项目:', response.data.items[0]);
+  }
+  
+  // 转换API数据到本地ConsumableProduct格式
+  const transformedItems: ConsumableProduct[] = response.data.items.map(centralItem => {
+    const transformed = {
+      id: String(centralItem.id),
+      name: centralItem.name || centralItem.model,
+      code: centralItem.code || centralItem.part_number,
+      model: centralItem.model,
+      model_imperial: centralItem.model_imperial || null,
+      spec: centralItem.spec || null,
+      spec_imperial: centralItem.spec_imperial || null,
+      
+      // 基础信息字段 - 从specs对象或顶级字段获取
+      part_number: centralItem.part_number || centralItem.code,
+      brand: centralItem.brand || null,
+      app_model: centralItem.specs?.compatibility || (centralItem as any).app_model || null, // 尝试多个位置
+      bag_type: centralItem.specs?.shape || (centralItem as any).bag_type || null, // 尝试多个位置
+      material: centralItem.specs?.material || (centralItem as any).material || null, // 尝试多个位置
+      
+      // 尺寸规格字段 - 从数字字段获取
+      thickness_met: (centralItem as any).thickness_met || null,
+      thickness_imp: (centralItem as any).thickness_imp || null,
+      width_met: (centralItem as any).width_met || null,
+      width_imp: (centralItem as any).width_imp || null,
+      length_met: (centralItem as any).length_met || null,
+      length_imp: (centralItem as any).length_imp || null,
+      bubble_diameter_met: (centralItem as any).bubble_diameter_met || null,
+      bubble_diameter_imp: (centralItem as any).bubble_diameter_imp || null,
+      total_length_met: (centralItem as any).total_length_met || null,
+      total_length_imp: (centralItem as any).total_length_imp || null,
+      
+      // 包装属性字段
+      package_type: centralItem.package_type || centralItem.sales_unit || null,
+      package_size_cm: centralItem.package_size_cm || null,
+      package_size_inch: centralItem.package_size_inch || null,
+      net_weight_kg: centralItem.net_weight_kg || null,
+      net_weight_lbs: centralItem.net_weight_lbs || null,
+      gross_weight_kg: centralItem.gross_weight_kg || null,
+      gross_weight_lbs: centralItem.gross_weight_lbs || null,
+      pcs_per_box: centralItem.pcs_per_box || null,
+      package_image_url: centralItem.package_image_url || null,
+      
+      // 打托属性字段
+      pallet_size_cm: centralItem.pallet_size_cm || null,
+      pallet_size_inch: centralItem.pallet_size_inch || null,
+      pcs_per_pallet_a: centralItem.pcs_per_pallet_a || null,
+      pallet_gross_weight_a_kg: centralItem.pallet_gross_weight_a_kg || null,
+      pallet_gross_weight_a_lbs: centralItem.pallet_gross_weight_a_lbs || null,
+      pallet_height_a_cm: centralItem.pallet_height_a_cm || null,
+      pallet_height_a_inch: centralItem.pallet_height_a_inch || null,
+      pcs_per_pallet_b: centralItem.pcs_per_pallet_b || null,
+      pallet_gross_weight_b_kg: centralItem.pallet_gross_weight_b_kg || null,
+      pallet_gross_weight_b_lbs: centralItem.pallet_gross_weight_b_lbs || null,
+      pallet_height_b_cm: centralItem.pallet_height_b_cm || null,
+      pallet_height_b_inch: centralItem.pallet_height_b_inch || null,
+      pcs_per_pallet_c: centralItem.pcs_per_pallet_c || null,
+      pallet_gross_weight_c_kg: centralItem.pallet_gross_weight_c_kg || null,
+      pallet_gross_weight_c_lbs: centralItem.pallet_gross_weight_c_lbs || null,
+      pallet_height_c_cm: centralItem.pallet_height_c_cm || null,
+      pallet_height_c_inch: centralItem.pallet_height_c_inch || null,
+      tube_inner_diameter_cm: centralItem.tube_inner_diameter_cm || null,
+      tube_inner_diameter_inch: centralItem.tube_inner_diameter_inch || null,
+      
+      image_url: ASSETS.getUrl(centralItem.image_url || '/images/placeholder.jpg'),
+      specs: {
+        material: centralItem.specs?.material || '',
+        shape: centralItem.specs?.shape || '',
+        thickness: centralItem.specs?.thickness || '',
+        weight: centralItem.specs?.weight || '',
+        width: centralItem.specs?.width || '',
+        length: centralItem.specs?.length || '',
+        rollLength: centralItem.specs?.rollLength || '',
+        compatibility: centralItem.specs?.compatibility || '',
+      },
+      pricing: centralItem.pricing || [],
+      inventory: centralItem.inventory || {}
+    };
+    
+    // 打印转换后的第一个项目用于调试
+    if (centralItem.id === response.data.items[0]?.id) {
+      console.log('🔄 [转换后数据] 第一个项目:', {
+        id: transformed.id,
+        model: transformed.model,
+        app_model: transformed.app_model,
+        bag_type: transformed.bag_type,
+        material: transformed.material,
+        thickness_met: transformed.thickness_met,
+        width_met: transformed.width_met,
+        length_met: transformed.length_met,
+        net_weight_kg: transformed.net_weight_kg,
+        specs: transformed.specs
+      });
+    }
+    
+    return transformed;
+  });
+  
+  return {
+    items: transformedItems,
+    total: response.data.total,
+    page: response.data.page,
+    page_size: response.data.page_size,
+    total_pages: response.data.total_pages,
+    filterOptions: response.data.filterOptions || {
+      shapes: [],
+      materials: [],
+      models: [],
+      thicknesses: [],
+      weights: [],
+      widths: [],
+      lengths: []
+    }
+  };
 };
 
 // Helper function to transform CentralConsumable to local ConsumableProduct
@@ -348,17 +514,25 @@ const transformCentralConsumableToLocal = (product?: CentralConsumable): Consuma
         material: product.specs?.material || '',
         shape: product.specs?.shape || '',
         thickness: product.specs?.thickness || '',
-        weight: undefined,
+        weight: product.specs?.weight || '',
         width: product.specs?.width || '',
         length: product.specs?.length || '',
         rollLength: product.specs?.rollLength || '',
         compatibility: product.specs?.compatibility || '',
       },
       pricing: product.pricing || [],
-      inventory: product.inventory.reduce((acc: {[key: string]: number}, inv: any) => {
-        acc[inv.region] = +inv.quantity;
-        return acc;
-      }, {})
+      inventory: Array.isArray(product.inventory)
+        ? (product.inventory as any[]).reduce((acc: {[key: string]: number}, inv: any) => {
+            acc[inv.region] = typeof inv.quantity === 'number' ? inv.quantity : parseFloat(inv.quantity) || 0;
+            return acc;
+          }, {})
+        : (typeof product.inventory === 'object' && product.inventory !== null
+          ? Object.keys(product.inventory).reduce((acc: {[key: string]: number}, region: string) => {
+              const qty = (product.inventory as any)[region];
+              acc[region] = typeof qty === 'number' ? qty : parseFloat(qty) || 0;
+              return acc;
+            }, {})
+          : {})
     };
 }
 
