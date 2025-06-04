@@ -75,10 +75,6 @@ check_env_vars() {
         "JWT_AUTH_SECRET_KEY"
         "WP_HOME"
         "WP_SITEURL"
-        "WORDPRESS_AUTH_KEY"
-        "WORDPRESS_SECURE_AUTH_KEY"
-        "WORDPRESS_LOGGED_IN_KEY"
-        "WORDPRESS_NONCE_KEY"
     )
     
     for var in "${required_vars[@]}"; do
