@@ -120,7 +120,7 @@ export interface ConsumableListData {
 // 新增: FilterOptionItem and FilterOptionsType
 export interface FilterOptionItem {
   id: string;
-  name: string;
+  name_zh: string;
   name_en?: string;
   image_url?: string;
   image_url2?: string;
@@ -140,45 +140,45 @@ export interface FilterOptionsType {
 // 选项数据 (LOCAL TO THIS SERVICE)
 export const consumableOptions = {
   shapes: [
-    { id: 'pillow', name: 'Pillow', image_url: ASSETS.getUrl('/images/icons/shape-pillow.svg') },
-    { id: 'bubble', name: 'Bubble', image_url: ASSETS.getUrl('/images/icons/shape-bubble.svg') },
-    { id: 'tube', name: 'Tube', image_url: ASSETS.getUrl('/images/icons/shape-tube.svg') }
+    { id: 'pillow', name_zh: '气泡枕', name_en: 'Pillow', image_url: ASSETS.getUrl('/images/icons/shape-pillow.svg') },
+    { id: 'bubble', name_zh: '葫芦膜', name_en: 'Bubble', image_url: ASSETS.getUrl('/images/icons/shape-bubble.svg') },
+    { id: 'tube', name_zh: '管状膜', name_en: 'Tube', image_url: ASSETS.getUrl('/images/icons/shape-tube.svg') }
   ],
   materials: [
-    { id: 'hdpe', name: 'HDPE' },
-    { id: 'ldpe', name: 'LDPE' },
-    { id: 'nylon', name: 'Nylon' },
-    { id: 'paper_pe', name: 'PAPER+PE' }
+    { id: 'hdpe', name_zh: 'HDPE', name_en: 'HDPE' },
+    { id: 'ldpe', name_zh: 'LDPE', name_en: 'LDPE' },
+    { id: 'nylon', name_zh: '尼龙', name_en: 'Nylon' },
+    { id: 'paper_pe', name_zh: '纸塑复合', name_en: 'PAPER+PE' }
   ],
   models: [
-    { id: 'all', name: 'ALL' },
-    { id: 'la-e4s', name: 'LA-E4S' },
-    { id: 'mex-10-20', name: 'MEX-10-20' },
-    { id: 'lp-v1', name: 'LP-V1' }
+    { id: 'all', name_zh: '全部', name_en: 'ALL' },
+    { id: 'la-e4s', name_zh: 'LA-E4S', name_en: 'LA-E4S' },
+    { id: 'mex-10-20', name_zh: 'MEX-10-20', name_en: 'MEX-10-20' },
+    { id: 'lp-v1', name_zh: 'LP-V1', name_en: 'LP-V1' }
   ],
   thicknesses: [
-    { id: 'all', name: 'ALL' },
-    { id: '0.05mm', name: '0.05mm' },
-    { id: '0.08mm', name: '0.08mm' },
-    { id: '0.10mm', name: '0.10mm' }
+    { id: 'all', name_zh: '全部', name_en: 'ALL' },
+    { id: '0.05mm', name_zh: '0.05mm', name_en: '0.05mm' },
+    { id: '0.08mm', name_zh: '0.08mm', name_en: '0.08mm' },
+    { id: '0.10mm', name_zh: '0.10mm', name_en: '0.10mm' }
   ],
   weights: [
-    { id: 'all', name: 'ALL' },
-    { id: '50g', name: '50g/m²' },
-    { id: '75g', name: '75g/m²' },
-    { id: '100g', name: '100g/m²' }
+    { id: 'all', name_zh: '全部', name_en: 'ALL' },
+    { id: '50g', name_zh: '50g/m²', name_en: '50g/m²' },
+    { id: '75g', name_zh: '75g/m²', name_en: '75g/m²' },
+    { id: '100g', name_zh: '100g/m²', name_en: '100g/m²' }
   ],
   widths: [
-    { id: 'all', name: 'ALL' },
-    { id: '200mm', name: '200mm' },
-    { id: '250mm', name: '250mm' },
-    { id: '300mm', name: '300mm' }
+    { id: 'all', name_zh: '全部', name_en: 'ALL' },
+    { id: '200mm', name_zh: '200mm', name_en: '200mm' },
+    { id: '250mm', name_zh: '250mm', name_en: '250mm' },
+    { id: '300mm', name_zh: '300mm', name_en: '300mm' }
   ],
   lengths: [
-    { id: 'all', name: 'ALL' },
-    { id: '300mm', name: '300mm' },
-    { id: '350mm', name: '350mm' },
-    { id: '400mm', name: '400mm' }
+    { id: 'all', name_zh: '全部', name_en: 'ALL' },
+    { id: '300mm', name_zh: '300mm', name_en: '300mm' },
+    { id: '350mm', name_zh: '350mm', name_en: '350mm' },
+    { id: '400mm', name_zh: '400mm', name_en: '400mm' }
   ],
   modelExplodedViews: {
     'all': ASSETS.getUrl('/images/models/exploded-view-default.svg'),
@@ -325,7 +325,35 @@ const mockGetConsumables_local = async (filters: ConsumableFilters): Promise<Con
     page: baseMockData.page, // Use page info from base mock
     page_size: baseMockData.page_size, // Use page_size info from base mock
     total_pages: baseMockData.total_pages, // Use total_pages info from base mock
-    filterOptions: baseMockData.filterOptions as FilterOptionsType // Pass through filterOptions
+    filterOptions: baseMockData.filterOptions ? {
+      // 确保模拟数据的筛选选项也使用正确的字段映射
+      shapes: ((baseMockData.filterOptions as any).shapes || []).map((item: any) => ({
+        id: item.id || item.code,
+        name_zh: item.name_zh || item.name || item.id,
+        name_en: item.name_en || item.name || item.id,
+        image_url: item.image_url,
+        image_url2: item.image_url2
+      })),
+      materials: ((baseMockData.filterOptions as any).materials || []).map((item: any) => ({
+        id: item.id || item.code,
+        name_zh: item.name_zh || item.name || item.id,
+        name_en: item.name_en || item.name || item.id,
+        image_url: item.image_url,
+        image_url2: item.image_url2
+      })),
+      models: ((baseMockData.filterOptions as any).models || []).map((item: any) => ({
+        id: item.id || item.model,
+        name_zh: item.title_zh || item.name_zh || item.name || item.id,
+        name_en: item.title_en || item.name_en || item.name || item.id,
+        image_url: item.image_url,
+        image_url2: item.image_url2
+      })),
+      thicknesses: (baseMockData.filterOptions as any).thicknesses || [],
+      weights: (baseMockData.filterOptions as any).weights || [],
+      widths: (baseMockData.filterOptions as any).widths || [],
+      lengths: (baseMockData.filterOptions as any).lengths || [],
+      modelExplodedViews: (baseMockData.filterOptions as any).modelExplodedViews
+    } : consumableOptions as FilterOptionsType // 使用静态配置作为后备
   };
 };
 
@@ -479,7 +507,35 @@ const apiGetConsumables_local = async (filters: ConsumableFilters): Promise<Cons
     page: response.data.page,
     page_size: response.data.page_size,
     total_pages: response.data.total_pages,
-    filterOptions: response.data.filterOptions || {
+    filterOptions: response.data.filterOptions ? {
+      // 确保API返回的筛选选项数据包含正确的字段映射
+      shapes: (response.data.filterOptions.shapes || []).map((item: any) => ({
+        id: item.id || item.code,
+        name_zh: item.name_zh || item.name,
+        name_en: item.name_en,
+        image_url: item.image_url,
+        image_url2: item.image_url2
+      })),
+      materials: (response.data.filterOptions.materials || []).map((item: any) => ({
+        id: item.id || item.code,
+        name_zh: item.name_zh || item.name,
+        name_en: item.name_en,
+        image_url: item.image_url,
+        image_url2: item.image_url2
+      })),
+      models: (response.data.filterOptions.models || []).map((item: any) => ({
+        id: item.id || item.model,
+        name_zh: item.title_zh || item.name_zh || item.name,
+        name_en: item.title_en || item.name_en,
+        image_url: item.image_url,
+        image_url2: item.image_url2
+      })),
+      thicknesses: response.data.filterOptions.thicknesses || [],
+      weights: response.data.filterOptions.weights || [],
+      widths: response.data.filterOptions.widths || [],
+      lengths: response.data.filterOptions.lengths || [],
+      modelExplodedViews: response.data.filterOptions.modelExplodedViews
+    } : {
       shapes: [],
       materials: [],
       models: [],

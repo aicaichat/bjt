@@ -1,178 +1,30 @@
 {
-  "title": "耗材列表",
-  "subtitle": "BJT气垫膜、缓冲包装袋及其他产品",
-  "filters": {
-    "machineModel": "设备型号",
-    "units": "单位",
-    "metric": "公制",
-    "imperial": "英制",
-    "shape": "形状",
-    "material": "材质",
-    "dimensions": {
-      "thickness": "厚度",
-      "weight": "重量",
-      "width": "宽度",
-      "length": "长度"
-    },
-    "reset": "重置",
-    "apply": "应用筛选",
-    "modelUsageGuide": "设备使用指南",
-    "modelUsagePrompt": "请选择一个具体的设备型号查看对应的使用指南。",
-    "modelUsageNote": "此分解图展示了所选{{model}}型号设备如何使用耗材。",
-    "title": "筛选",
-    "type": "类型",
-    "category": "分类",
-    "price": "价格",
-    "all": "全部"
-  },
-  "compatibility": {
-    "title": "设备兼容性信息",
-    "models": {
-      "la-e4s": "仅支持标准气垫膜材料",
-      "mex-10-20": "支持所有系列材料，对不同规格有特定要求",
-      "lp-v1": "支持所有材料和规格"
-    }
-  },
-  "table": {
-    "image": "图片",
-    "code": "产品编码",
-    "specs": "规格",
-    "price": "价格",
-    "inventory": "库存",
-    "actions": "操作",
-    "columns": {
-      "image": "图片",
-      "code": "产品编码",
-      "specs": "规格",
-      "price": "价格",
-      "inventory": "库存",
-      "actions": "操作"
-    }
-  },
-  "product": {
-    "code": "产品编码",
-    "name": "产品名称",
-    "model": "型号"
-  },
-  "types": {
-    "all": "全部类型",
-    "film": "薄膜",
-    "paper": "纸张",
-    "tape": "胶带",
-    "other": "其他"
-  },
-  "categories": {
-    "all": "全部分类",
-    "airCushion": "气垫",
-    "paperCushion": "纸垫",
-    "waterActivated": "湿水胶带"
-  },
-  "priceRange": {
-    "all": "全部价格",
-    "under1k": "1000元以下",
-    "1k-5k": "1000-5000元",
-    "5k-10k": "5000-10000元",
-    "above10k": "10000元以上"
-  },
-  "actions": {
-    "addToCart": "加入购物车",
-    "viewDetails": "查看详情",
-    "close": "关闭",
-    "select": "选择",
-    "moreInfo": "更多信息"
-  },
-  "pricing": {
-    "per": "每件",
-    "rangePricing": "区间定价"
-  },
-  "inventoryStatus": {
-    "inStock": "有货",
-    "lowStock": "库存不足",
-    "outOfStock": "无货",
-    "count": "库存：{{count}}"
-  },
-  "cartStatus": {
-    "title": "购物车",
-    "added": "已加入购物车",
-    "total": "总计",
-    "checkout": "结算",
-    "items": "件商品",
-    "empty": "购物车为空",
-    "continue": "继续购物"
-  },
-  "loading": "正在加载耗材数据...",
-  "errorStatus": {
-    "title": "错误",
-    "retry": "重试",
-    "failedToLoad": "加载耗材数据失败",
-    "systemError": "系统错误，请稍后再试"
-  },
-  "quantity": "数量",
-  "messages": {
-    "noProducts": "未找到耗材",
-    "loading": "正在加载耗材...",
-    "error": "加载耗材失败",
-    "addedToCart": "已添加到购物车",
-    "updateQuantity": "数量已更新"
+  "title": "耗材产品",
+  "subtitle": "选择适合您设备的高品质耗材",
+  "description": "为您的气垫机选择合适的耗材产品，确保最佳的包装效果",
+  "search": {
+    "placeholder": "搜索耗材产品...",
+    "noResults": "未找到匹配的产品",
+    "searching": "搜索中...",
+    "results": "找到 {{count}} 个结果"
   },
   "filter": {
-    "title": "产品筛选",
-    "machine": "适用机型",
-    "shape": "形状",
-    "material": "材质",
-    "thickness": "厚度/克重",
-    "weight": "重量",
-    "width": "膜宽",
-    "length": "袋长",
-    "dimensions": "产品尺寸",
     "all": "全部",
+    "byModel": "按型号筛选",
+    "byMaterial": "按材质筛选",
+    "byShape": "按形状筛选",
+    "byThickness": "按厚度筛选",
+    "byWeight": "按重量筛选",
+    "byWidth": "按宽度筛选",
+    "byLength": "按长度筛选",
     "reset": "重置筛选",
-    "apply": "应用筛选"
-  },
-  "button": {
-    "apply": "应用筛选",
-    "reset": "重置",
-    "cart": "查看购物车",
-    "resetFilters": "重置筛选条件"
-  },
-  "help": {
-    "machineModel": "选择机型以筛选兼容耗材"
-  },
-  "loading.description": "正在获取产品信息，请稍候。",
-  "noProducts": {
-    "title": "没有找到符合条件的产品",
-    "message": "请尝试调整筛选条件"
-  },
-  "error": {
-    "title": "出错了",
-    "retry": "重试",
-    "systemError": "系统错误，请稍后再试",
-    "productNotFound": "未找到产品",
-    "loadFailed": "加载失败"
-  },
-  "cart": {
-    "added": "商品已成功添加到购物车"
-  },
-  "rollLength": "卷长",
-  "price": "价格",
-  "inventory": "库存",
-  "specs": "规格",
-  "width": "宽度",
-  "length": "长度",
-  "materials": {
-    "PAPER": "纸塑膜",
-    "HDPE": "高密度聚乙烯",
-    "LDPE": "低密度聚乙烯",
-    "PP": "聚丙烯",
-    "PET": "聚对苯二甲酸乙二醇酯",
-    "PVC": "聚氯乙烯",
-    "PE": "聚乙烯",
-    "BOPP": "双向拉伸聚丙烯",
-    "OPP": "取向聚丙烯",
-    "CPP": "流延聚丙烯",
-    "NYLON": "尼龙",
-    "ALUMINUM": "铝箔",
-    "COMPOSITE": "复合材料"
+    "model": "型号",
+    "material": "材质",
+    "shape": "形状",
+    "thickness": "厚度",
+    "weight": "重量",
+    "width": "宽度",
+    "length": "长度"
   },
   "shapes": {
     "FLAT": "平口袋",
@@ -184,28 +36,206 @@
     "ZIPPER": "拉链袋",
     "VALVE": "阀口袋"
   },
-  "warning": {
-    "selectQuantity": "请选择数量"
+  "filterOptions": {
+    "shapes": {
+      "MEX": "气泡枕",
+      "MEY": "开口气泡枕",
+      "MFB": "葫芦膜",
+      "MFC": "气枕膜",
+      "MFF": "葫芦膜",
+      "pillow": "气泡枕",
+      "bubble": "气泡袋",
+      "tube": "管状膜"
+    },
+    "materials": {
+      "30%HDPE": "30%回料HDPE",
+      "50%HDPE": "50%回料HDPE",
+      "HDPE": "HDPE",
+      "50%LDPE": "50%回料LDPE",
+      "LDPE": "LDPE",
+      "PAPER": "纸塑",
+      "PAPER+PE": "纸塑复合",
+      "hdpe": "高密度聚乙烯",
+      "ldpe": "低密度聚乙烯",
+      "nylon": "尼龙",
+      "paper_pe": "纸塑复合"
+    },
+    "models": {
+      "LA-E4S V2.0 商用型缓冲气垫机": "LA-E4S V2.0 商用型缓冲气垫机",
+      "LA-E4S(paper)商用型缓冲气垫机": "LA-E4S(纸塑)商用型缓冲气垫机",
+      "la-e4s": "LA-E4S 缓冲气垫机",
+      "mex-10-20": "MEX-10-20 气泡枕机",
+      "lp-v1": "LP-V1 充气机"
+    }
   },
-  "tableHeaders": {
-    "image": "图片",
+  "product": {
+    "id": "产品ID",
     "name": "产品名称",
-    "model": "型号",
-    "material": "材质",
-    "thickness": "厚度/克重",
-    "width": "膜宽",
-    "length": "袋长",
-    "rollLength": "总长",
-    "price": "价格",
+    "model": "适用型号",
+    "brand": "品牌",
+    "partNumber": "料号",
+    "specifications": "产品规格",
+    "compatibility": "兼容性",
     "inventory": "库存",
-    "quantity": "数量",
-    "actions": "操作"
+    "price": "价格",
+    "pricePerUnit": "单价",
+    "minimumOrder": "最小订购量",
+    "available": "有库存",
+    "outOfStock": "缺货",
+    "limitedStock": "库存有限"
   },
-  "inStock": "有库存",
-  "lowStock": "库存不足",
-  "outOfStock": "缺货",
-  "tooltip": {
-    "detailInfo": "详细信息",
+  "specs": {
+    "material": "材质",
+    "shape": "形状",
+    "thickness": "厚度",
+    "weight": "重量",
+    "width": "宽度",
+    "length": "长度",
+    "rollLength": "总长度",
+    "compatibility": "兼容机型"
+  },
+  "pricing": {
+    "range": "数量范围",
+    "price": "单价",
+    "total": "总价",
+    "currency": "¥",
+    "priceBreaks": "价格阶梯"
+  },
+  "inventory": {
+    "available": "可用库存",
+    "reserved": "预留",
+    "total": "总库存",
+    "region": "区域"
+  },
+  "actions": {
+    "addToCart": "加入购物车",
+    "buyNow": "立即购买",
+    "quickOrder": "快速下单",
+    "viewDetails": "查看详情",
+    "compare": "对比",
+    "favorite": "收藏"
+  },
+  "cart": {
+    "added": "已添加到购物车",
+    "quantity": "数量",
+    "total": "总计",
+    "checkout": "去结算",
+    "continue": "继续购物",
+    "remove": "移除",
+    "update": "更新",
+    "empty": "购物车为空",
+    "items": "{{count}} 件商品"
+  },
+  "messages": {
+    "loading": "加载中...",
+    "loadingProducts": "正在加载产品...",
+    "noProducts": "暂无产品",
+    "error": "加载失败",
+    "retry": "重试",
+    "networkError": "网络错误，请稍后重试",
+    "addToCartSuccess": "成功添加到购物车",
+    "addToCartError": "添加失败，请重试"
+  },
+  "pagination": {
+    "previous": "上一页",
+    "next": "下一页",
+    "page": "第 {{current}} 页，共 {{total}} 页",
+    "itemsPerPage": "每页显示",
+    "total": "共 {{count}} 项"
+  },
+  "sort": {
+    "byName": "按名称排序",
+    "byPrice": "按价格排序",
+    "byStock": "按库存排序",
+    "ascending": "升序",
+    "descending": "降序"
+  },
+  "units": {
+    "metric": {
+      "length": "mm",
+      "width": "mm", 
+      "thickness": "μm",
+      "weight": "g/m²",
+      "roll": "m"
+    },
+    "imperial": {
+      "length": "inch",
+      "width": "inch",
+      "thickness": "mil",
+      "weight": "#",
+      "roll": "ft"
+    }
+  },
+  "rollLength": "总长",
+  "width": "宽度",
+  "length": "长度",
+  "thickness": "厚度",
+  "weight": "重量",
+  "price": "价格",
+  "specs": "规格",
+  "inventory": "库存",
+  "loading": "加载中",
+  "error": {
+    "title": "错误",
+    "retry": "重试"
+  },
+  "ui": {
+    "loadConsumablesFailed": "加载耗材数据失败",
+    "loadingProductData": "正在加载产品数据...",
+    "dataLoadFailed": "数据加载失败",
+    "reload": "重新加载",
+    "noMatchingProducts": "暂无匹配产品",
+    "noProductsFound": "未找到符合当前筛选条件的耗材产品",
+    "resetFilterConditions": "重置筛选条件",
+    "stockStatus": {
+      "sufficient": "库存充足",
+      "low": "库存紧张",
+      "out": "暂时缺货"
+    },
+    "sufficient": "✓ 充足",
+    "lowWarning": "⚠ 紧张",
+    "outIcon": "✗ 缺货",
+    "totalStock": "总库存",
+    "lowStockWarning": "⚠️ 库存紧张，建议尽快下单",
+    "addToCart": "加入购物车",
+    "addedToCart": "商品已添加，点击购物车进行结算",
+    "buyNow": "立即购买",
+    "startingPrice": "起始价格",
+    "priceInquiry": "询价",
+    "minimumOrder": "最低订购量",
+    "priceSteps": "价格阶梯",
+    "moreSteps": "更多价格",
+    "compatibleModel": "适用型号",
+    "productId": "产品ID",
+    "productSpecs": "产品规格",
+    "viewDetailedSpecs": "查看详细规格",
+    "totalProducts": "总计 {{count}} 款产品",
+    "pageInfo": "第 {{current}} / {{total}} 页",
+    "smartFilter": "智能筛选",
+    "smartFilterDescription": "精确找到您需要的耗材产品",
+    "resetFilters": "重置筛选",
+    "selectDeviceModel": "选择设备型号",
+    "deviceModelTooltip": "选择您的设备型号以显示兼容的耗材",
+    "selectDeviceModelPlaceholder": "请选择设备型号",
+    "allModels": "所有型号",
+    "selectProductShape": "选择产品形状",
+    "productShapeTooltip": "不同形状的耗材适用于不同的包装需求",
+    "allShapes": "全部形状",
+    "materialAndSpecs": "材质与规格筛选",
+    "materialType": "材质类型",
+    "allMaterials": "全部材质",
+    "thickness": "厚度",
+    "weight": "重量",
+    "selectThickness": "选择厚度",
+    "selectWeight": "选择重量",
+    "selectWidth": "选择宽度",
+    "selectLength": "选择长度",
+    "dimensionGuide": "尺寸指导图",
+    "dimensionGuideAlt": "产品尺寸指导",
+    "previousPage": "上一页",
+    "nextPage": "下一页",
+    "noProductId": "无产品ID信息",
+    "loadingDetails": "加载详细信息中...",
     "apiError": "API调用失败，显示基础信息",
     "debugInfo": "调试信息",
     "clickToExpand": "点击展开",
@@ -214,60 +244,79 @@
     "safeGetResult": "SafeGet结果",
     "cleanedUrl": "清理后URL",
     "showImage": "是否显示图片",
+    "imageUrl": "图片URL",
+    "noPackageImage": "暂无包装图片",
+    "detailInfo": "详细信息",
+    "productDetail": "产品详细信息",
+    "close": "关闭",
+    "model": "型号",
+    "addToCartFailed": "添加到购物车失败",
+    "partNumberMissing": "产品料号信息缺失，请刷新页面重试",
+    "authExpired": "认证失效，请刷新页面重新登录",
+    "invalidRequest": "请求参数错误，请检查产品信息"
+  },
+  "button": {
+    "cart": "查看购物车"
+  },
+  "warning": {
+    "selectQuantity": "请选择数量"
+  },
+  "error": {
+    "productNotFound": "产品未找到"
+  },
+  "common": {
+    "toBeFilled": "待补充",
+    "yes": "是",
+    "no": "否"
+  },
+  "tooltip": {
     "basicSpecs": "基本规格",
-    "thickness": {
-      "imperial": "厚度/克重 mil/#",
-      "metric": "厚度/克重 um/gsm"
-    },
-    "width": {
-      "imperial": "膜宽 inch",
-      "metric": "膜宽 cm"
-    },
-    "length": {
-      "imperial": "袋长 inch",
-      "metric": "袋长 cm"
-    },
-    "rollLength": {
-      "imperial": "总长 ft",
-      "metric": "总长 m"
-    },
     "packageInfo": "包装属性 Package Info",
     "packagingMethod": "包装方式",
     "cartonPack": "纸箱装",
     "packageSize": {
-      "imperial": "包装尺寸 inch",
-      "metric": "包装尺寸 cm"
+      "metric": "包装尺寸 cm",
+      "imperial": "包装尺寸 inch"
     },
     "unitWeight": {
-      "imperial": "单件净重 lbs",
-      "metric": "单件净重 kg"
+      "metric": "单件净重 kg",
+      "imperial": "单件净重 lbs"
     },
     "palletSize": "托盘尺寸 cm",
     "packageImage": "包装实物图片",
-    "noPackageImage": "暂无包装图片",
-    "imageUrl": "图片URL",
     "palletInfo": "打托属性 Pallet Info",
     "configA": "配置A",
     "configB": "配置B",
     "configC": "配置C",
     "palletRolls": "一托卷数",
     "grossWeight": {
-      "imperial": "毛重 lbs",
-      "metric": "毛重 kg"
+      "metric": "毛重 kg",
+      "imperial": "毛重 lbs"
     },
     "height": {
-      "imperial": "高度 inch",
-      "metric": "高度 cm"
+      "metric": "高度 cm",
+      "imperial": "高度 inch"
     },
     "coreDiameter": {
-      "imperial": "纸筒内径 inch",
-      "metric": "纸筒内径 cm"
+      "metric": "纸筒内径 cm",
+      "imperial": "纸筒内径 inch"
     },
-    "hoverInfo": "悬停查看更多规格信息"
-  },
-  "common": {
-    "yes": "是",
-    "no": "否",
-    "toBeFilled": "待补充"
+    "hoverInfo": "悬停查看更多规格信息",
+    "thickness": {
+      "metric": "厚度/克重 um/gsm",
+      "imperial": "厚度/克重 mil/#"
+    },
+    "width": {
+      "metric": "膜宽 cm",
+      "imperial": "膜宽 inch"
+    },
+    "length": {
+      "metric": "袋长 cm",
+      "imperial": "袋长 inch"
+    },
+    "rollLength": {
+      "metric": "总长 m",
+      "imperial": "总长 ft"
+    }
   }
 } 

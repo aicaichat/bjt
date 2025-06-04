@@ -1,177 +1,30 @@
 {
-  "title": "Consumables",
-  "subtitle": "BJT Air Cushion Films, Packaging Bags and Other Products",
-  "filters": {
-    "machineModel": "Machine Model",
-    "units": "Units",
-    "metric": "Metric",
-    "imperial": "Imperial",
-    "shape": "Shape",
-    "material": "Material",
-    "dimensions": {
-      "thickness": "Thickness",
-      "weight": "Weight",
-      "width": "Width",
-      "length": "Length"
-    },
-    "reset": "Reset",
-    "apply": "Apply Filters",
-    "modelUsageGuide": "Model Usage Guide",
-    "modelUsagePrompt": "Please select a specific machine model to view the usage guide.",
-    "modelUsageNote": "This exploded view shows how the selected {{model}} model uses consumables.",
-    "title": "Filters",
-    "type": "Type",
-    "category": "Category",
-    "price": "Price",
-    "all": "All"
-  },
-  "compatibility": {
-    "title": "Machine Compatibility Info",
-    "models": {
-      "la-e4s": "Supports only standard air cushion film materials",
-      "mex-10-20": "Supports all series materials, with specific requirements for different specifications",
-      "lp-v1": "Supports all materials and specifications"
-    }
-  },
-  "table": {
-    "image": "Image",
-    "code": "Product Code",
-    "specs": "Specs",
-    "price": "Price",
-    "inventory": "Inventory",
-    "actions": "Actions",
-    "columns": {
-      "image": "Image",
-      "code": "Product Code",
-      "specs": "Specs",
-      "price": "Price",
-      "inventory": "Inventory",
-      "actions": "Actions"
-    }
-  },
-  "product": {
-    "code": "Product Code",
-    "name": "Product Name",
-    "model": "Model"
-  },
-  "types": {
-    "all": "All Types",
-    "film": "Film",
-    "paper": "Paper",
-    "tape": "Tape",
-    "other": "Other"
-  },
-  "categories": {
-    "all": "All Categories",
-    "airCushion": "Air Cushion",
-    "paperCushion": "Paper Cushion",
-    "waterActivated": "Water-Activated Tape"
-  },
-  "priceRange": {
-    "all": "All Prices",
-    "under1k": "Under ¥1,000",
-    "1k-5k": "¥1,000-5,000",
-    "5k-10k": "¥5,000-10,000",
-    "above10k": "Above ¥10,000"
-  },
-  "actions": {
-    "addToCart": "Add to Cart",
-    "viewDetails": "View Details",
-    "close": "Close",
-    "select": "Select",
-    "moreInfo": "More Info"
-  },
-  "pricing": {
-    "per": "per piece",
-    "rangePricing": "Range Pricing"
-  },
-  "inventoryStatus": {
-    "inStock": "In Stock",
-    "lowStock": "Low Stock",
-    "outOfStock": "Out of Stock",
-    "count": "Inventory: {{count}}"
-  },
-  "cartStatus": {
-    "title": "Cart",
-    "added": "Added to cart",
-    "total": "Total",
-    "checkout": "Checkout",
-    "items": "items",
-    "empty": "Cart is empty",
-    "continue": "Continue Shopping"
-  },
-  "loading": "Loading consumables data...",
-  "errorStatus": {
-    "title": "Error",
-    "retry": "Retry",
-    "failedToLoad": "Failed to load consumables data",
-    "systemError": "System error, please try again later"
-  },
-  "quantity": "Quantity",
-  "messages": {
-    "noProducts": "No consumables found",
-    "loading": "Loading consumables...",
-    "error": "Failed to load consumables",
-    "addedToCart": "Added to cart",
-    "updateQuantity": "Quantity updated"
+  "title": "Consumable Products",
+  "subtitle": "Choose high-quality consumables for your devices",
+  "description": "Select the right consumable products for your air cushion machines to ensure optimal packaging results",
+  "search": {
+    "placeholder": "Search consumable products...",
+    "noResults": "No matching products found",
+    "searching": "Searching...",
+    "results": "Found {{count}} results"
   },
   "filter": {
-    "title": "Product Filters",
-    "machine": "Machine Model",
-    "shape": "Shape",
-    "material": "Material",
-    "thickness": "Thickness/Weight",
-    "weight": "Weight",
-    "width": "Film Width",
-    "length": "Bag Length",
-    "dimensions": "Product Dimensions",
     "all": "All",
+    "byModel": "Filter by Model",
+    "byMaterial": "Filter by Material",
+    "byShape": "Filter by Shape",
+    "byThickness": "Filter by Thickness",
+    "byWeight": "Filter by Weight",
+    "byWidth": "Filter by Width",
+    "byLength": "Filter by Length",
     "reset": "Reset Filters",
-    "apply": "Apply Filters"
-  },
-  "button": {
-    "apply": "Apply Filters",
-    "reset": "Reset",
-    "cart": "View Cart",
-    "resetFilters": "Reset Filters"
-  },
-  "help": {
-    "machineModel": "Select the machine model to filter compatible consumables"
-  },
-  "loading.description": "Fetching product information, please wait.",
-  "noProducts": {
-    "title": "No products found matching your criteria",
-    "message": "Please try adjusting the filter conditions"
-  },
-  "error": {
-    "title": "Error",
-    "retry": "Retry",
-    "systemError": "System Error",
-    "productNotFound": "Product not found"
-  },
-  "cart": {
-    "added": "Product successfully added to cart"
-  },
-  "rollLength": "Roll Length",
-  "price": "Price",
-  "inventory": "Inventory",
-  "specs": "Specifications",
-  "width": "Width",
-  "length": "Length",
-  "materials": {
-    "PAPER": "Paper",
-    "HDPE": "High Density Polyethylene",
-    "LDPE": "Low Density Polyethylene",
-    "PP": "Polypropylene",
-    "PET": "Polyethylene Terephthalate",
-    "PVC": "Polyvinyl Chloride",
-    "PE": "Polyethylene",
-    "BOPP": "Biaxially Oriented Polypropylene",
-    "OPP": "Oriented Polypropylene",
-    "CPP": "Cast Polypropylene",
-    "NYLON": "Nylon",
-    "ALUMINUM": "Aluminum Foil",
-    "COMPOSITE": "Composite Material"
+    "model": "Model",
+    "material": "Material",
+    "shape": "Shape",
+    "thickness": "Thickness",
+    "weight": "Weight",
+    "width": "Width",
+    "length": "Length"
   },
   "shapes": {
     "FLAT": "Flat Bag",
@@ -183,87 +36,287 @@
     "ZIPPER": "Zipper Bag",
     "VALVE": "Valve Bag"
   },
-  "warning": {
-    "selectQuantity": "Please select quantity"
+  "filterOptions": {
+    "shapes": {
+      "MEX": "Air Pillow",
+      "MEY": "Precut Air Pillow",
+      "MFB": "Bubble Film",
+      "MFC": "Tube Film",
+      "MFF": "Bubble Film",
+      "pillow": "Air Pillow",
+      "bubble": "Bubble Bag",
+      "tube": "Tube Film"
+    },
+    "materials": {
+      "30%HDPE": "30% Recycled HDPE",
+      "50%HDPE": "50% Recycled HDPE",
+      "HDPE": "HDPE",
+      "50%LDPE": "50% Recycled LDPE",
+      "LDPE": "LDPE",
+      "PAPER": "Paper",
+      "PAPER+PE": "Paper+PE Composite",
+      "hdpe": "High-Density Polyethylene",
+      "ldpe": "Low-Density Polyethylene",
+      "nylon": "Nylon",
+      "paper_pe": "Paper+PE Composite"
+    },
+    "models": {
+      "LA-E4S V2.0 商用型缓冲气垫机": "LA-E4S V2.0 Commercial Air Cushion Machine",
+      "LA-E4S(paper)商用型缓冲气垫机": "LA-E4S(Paper) Commercial Air Cushion Machine",
+      "la-e4s": "LA-E4S Air Cushion Machine",
+      "mex-10-20": "MEX-10-20 Air Pillow Machine",
+      "lp-v1": "LP-V1 Inflating Machine"
+    }
   },
-  "tableHeaders": {
-    "image": "Image",
+  "product": {
+    "id": "Product ID",
     "name": "Product Name",
-    "model": "Model",
-    "material": "Material",
-    "thickness": "Thickness/Weight",
-    "width": "Film Width",
-    "length": "Bag Length",
-    "rollLength": "Total Length",
-    "price": "Price",
+    "model": "Compatible Model",
+    "brand": "Brand",
+    "partNumber": "Part Number",
+    "specifications": "Product Specifications",
+    "compatibility": "Compatibility",
     "inventory": "Inventory",
-    "quantity": "Quantity",
-    "actions": "Actions"
+    "price": "Price",
+    "pricePerUnit": "Unit Price",
+    "minimumOrder": "Minimum Order",
+    "available": "In Stock",
+    "outOfStock": "Out of Stock",
+    "limitedStock": "Limited Stock"
   },
-  "tooltip": {
-    "detailInfo": "Detail Information",
+  "specs": {
+    "material": "Material",
+    "shape": "Shape",
+    "thickness": "Thickness",
+    "weight": "Weight",
+    "width": "Width",
+    "length": "Length",
+    "rollLength": "Roll Length",
+    "compatibility": "Compatible Models"
+  },
+  "pricing": {
+    "range": "Quantity Range",
+    "price": "Unit Price",
+    "total": "Total",
+    "currency": "$",
+    "priceBreaks": "Price Breaks"
+  },
+  "inventory": {
+    "available": "Available",
+    "reserved": "Reserved",
+    "total": "Total Stock",
+    "region": "Region"
+  },
+  "actions": {
+    "addToCart": "Add to Cart",
+    "buyNow": "Buy Now",
+    "quickOrder": "Quick Order",
+    "viewDetails": "View Details",
+    "compare": "Compare",
+    "favorite": "Favorite"
+  },
+  "cart": {
+    "added": "Added to Cart",
+    "quantity": "Quantity",
+    "total": "Total",
+    "checkout": "Checkout",
+    "continue": "Continue Shopping",
+    "remove": "Remove",
+    "update": "Update",
+    "empty": "Cart is Empty",
+    "items": "{{count}} items"
+  },
+  "messages": {
+    "loading": "Loading...",
+    "loadingProducts": "Loading products...",
+    "noProducts": "No products",
+    "error": "Load failed",
+    "retry": "Retry",
+    "networkError": "Network error, please try again later",
+    "addToCartSuccess": "Successfully added to cart",
+    "addToCartError": "Failed to add, please retry"
+  },
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {{current}} of {{total}}",
+    "itemsPerPage": "Items per page",
+    "total": "Total {{count}} items"
+  },
+  "sort": {
+    "byName": "Sort by Name",
+    "byPrice": "Sort by Price",
+    "byStock": "Sort by Stock",
+    "ascending": "Ascending",
+    "descending": "Descending"
+  },
+  "units": {
+    "metric": {
+      "length": "mm",
+      "width": "mm",
+      "thickness": "μm",
+      "weight": "g/m²",
+      "roll": "m"
+    },
+    "imperial": {
+      "length": "inch",
+      "width": "inch",
+      "thickness": "mil",
+      "weight": "#",
+      "roll": "ft"
+    }
+  },
+  "rollLength": "Roll Length",
+  "width": "Width",
+  "length": "Length",
+  "thickness": "Thickness",
+  "weight": "Weight",
+  "price": "Price",
+  "specs": "Specifications",
+  "inventory": "Inventory",
+  "loading": "Loading",
+  "error": {
+    "title": "Error",
+    "retry": "Retry"
+  },
+  "ui": {
+    "loadConsumablesFailed": "Failed to load consumable data",
+    "loadingProductData": "Loading product data...",
+    "dataLoadFailed": "Data load failed",
+    "reload": "Reload",
+    "noMatchingProducts": "No matching products",
+    "noProductsFound": "No consumable products found matching current filter criteria",
+    "resetFilterConditions": "Reset filter conditions",
+    "stockStatus": {
+      "sufficient": "Sufficient Stock",
+      "low": "Low Stock",
+      "out": "Out of Stock"
+    },
+    "sufficient": "✓ Sufficient",
+    "lowWarning": "⚠ Low",
+    "outIcon": "✗ Out",
+    "totalStock": "Total Stock",
+    "lowStockWarning": "⚠️ Low stock, recommend ordering soon",
+    "addToCart": "Add to Cart",
+    "addedToCart": "Item added, click cart to checkout",
+    "buyNow": "Buy Now",
+    "startingPrice": "Starting Price",
+    "priceInquiry": "Inquiry",
+    "minimumOrder": "Minimum Order",
+    "priceSteps": "Price Steps",
+    "moreSteps": "More Prices",
+    "compatibleModel": "Compatible Model",
+    "productId": "Product ID",
+    "productSpecs": "Product Specifications",
+    "viewDetailedSpecs": "View Detailed Specifications",
+    "totalProducts": "Total {{count}} products",
+    "pageInfo": "Page {{current}} / {{total}}",
+    "smartFilter": "Smart Filter",
+    "smartFilterDescription": "Find exactly what you need",
+    "resetFilters": "Reset Filters",
+    "selectDeviceModel": "Select Device Model",
+    "deviceModelTooltip": "Select your device model to show compatible consumables",
+    "selectDeviceModelPlaceholder": "Please select device model",
+    "allModels": "All Models",
+    "selectProductShape": "Select Product Shape",
+    "productShapeTooltip": "Different shapes of consumables are suitable for different packaging needs",
+    "allShapes": "All Shapes",
+    "materialAndSpecs": "Material & Specification Filter",
+    "materialType": "Material Type",
+    "allMaterials": "All Materials",
+    "thickness": "Thickness",
+    "weight": "Weight",
+    "selectThickness": "Select Thickness",
+    "selectWeight": "Select Weight",
+    "selectWidth": "Select Width",
+    "selectLength": "Select Length",
+    "dimensionGuide": "Dimension Guide",
+    "dimensionGuideAlt": "Product dimension guide",
+    "previousPage": "Previous Page",
+    "nextPage": "Next Page",
+    "noProductId": "No product ID information",
+    "loadingDetails": "Loading details...",
     "apiError": "API call failed, showing basic information",
     "debugInfo": "Debug Information",
     "clickToExpand": "Click to expand",
-    "packageImageDebug": "Package Image Debug Information",
+    "packageImageDebug": "Package image debug info",
     "originalUrl": "Original URL",
     "safeGetResult": "SafeGet Result",
     "cleanedUrl": "Cleaned URL",
     "showImage": "Show Image",
+    "imageUrl": "Image URL",
+    "noPackageImage": "No package image available",
+    "detailInfo": "Detail Information",
+    "productDetail": "Product Details",
+    "close": "Close",
+    "model": "Model",
+    "addToCartFailed": "Failed to add to cart",
+    "partNumberMissing": "Product part number missing, please refresh page and retry",
+    "authExpired": "Authentication expired, please refresh page and login again",
+    "invalidRequest": "Invalid request parameters, please check product information"
+  },
+  "button": {
+    "cart": "View Cart"
+  },
+  "warning": {
+    "selectQuantity": "Please select quantity"
+  },
+  "error": {
+    "productNotFound": "Product not found"
+  },
+  "common": {
+    "toBeFilled": "To be filled",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "tooltip": {
     "basicSpecs": "Basic Specifications",
-    "thickness": {
-      "imperial": "Thickness/Weight mil/#",
-      "metric": "Thickness/Weight um/gsm"
-    },
-    "width": {
-      "imperial": "Film Width inch",
-      "metric": "Film Width cm"
-    },
-    "length": {
-      "imperial": "Bag Length inch",
-      "metric": "Bag Length cm"
-    },
-    "rollLength": {
-      "imperial": "Total Length ft",
-      "metric": "Total Length m"
-    },
-    "packageInfo": "Package Info",
+    "packageInfo": "Package Information",
     "packagingMethod": "Packaging Method",
     "cartonPack": "Carton Pack",
     "packageSize": {
-      "imperial": "Package Size inch",
-      "metric": "Package Size cm"
+      "metric": "Package Size cm",
+      "imperial": "Package Size inch"
     },
     "unitWeight": {
-      "imperial": "Unit Net Weight lbs",
-      "metric": "Unit Net Weight kg"
+      "metric": "Unit Weight kg",
+      "imperial": "Unit Weight lbs"
     },
     "palletSize": "Pallet Size cm",
     "packageImage": "Package Image",
-    "noPackageImage": "No package image available",
-    "imageUrl": "Image URL",
-    "palletInfo": "Pallet Info",
-    "configA": "Config A",
-    "configB": "Config B",
-    "configC": "Config C",
+    "palletInfo": "Pallet Information",
+    "configA": "Configuration A",
+    "configB": "Configuration B",
+    "configC": "Configuration C",
     "palletRolls": "Rolls per Pallet",
     "grossWeight": {
-      "imperial": "Gross Weight lbs",
-      "metric": "Gross Weight kg"
+      "metric": "Gross Weight kg",
+      "imperial": "Gross Weight lbs"
     },
     "height": {
-      "imperial": "Height inch",
-      "metric": "Height cm"
+      "metric": "Height cm",
+      "imperial": "Height inch"
     },
     "coreDiameter": {
-      "imperial": "Core Diameter inch",
-      "metric": "Core Diameter cm"
+      "metric": "Core Diameter cm",
+      "imperial": "Core Diameter inch"
     },
-    "hoverInfo": "Hover to view more specifications"
-  },
-  "common": {
-    "yes": "Yes",
-    "no": "No",
-    "toBeFilled": "To be filled"
+    "hoverInfo": "Hover to view more specifications",
+    "thickness": {
+      "metric": "Thickness/Weight um/gsm",
+      "imperial": "Thickness/Weight mil/#"
+    },
+    "width": {
+      "metric": "Film Width cm",
+      "imperial": "Film Width inch"
+    },
+    "length": {
+      "metric": "Bag Length cm",
+      "imperial": "Bag Length inch"
+    },
+    "rollLength": {
+      "metric": "Total Length m",
+      "imperial": "Total Length ft"
+    }
   }
 } 

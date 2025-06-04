@@ -80,7 +80,7 @@ services:
       db-init:
         condition: service_completed_successfully
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/wp-admin/admin-ajax.php"]
+      test: ["CMD", "curl", "-f", "http://localhost:80/wp-admin/admin-ajax.php"]
       interval: 30s
       timeout: 10s
       retries: 3

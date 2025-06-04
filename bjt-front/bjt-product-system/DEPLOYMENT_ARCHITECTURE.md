@@ -321,25 +321,135 @@ add_filter('rest_authentication_errors', function($result) {
 - 查询缓存
 - 索引优化
 
-## 🚀 部署命令
+## 🚀 部署流程
 
+### 1. 环境准备
 ```bash
-# 1. 配置环境变量
-cp env.production.example .env.production
+# 检查系统要求
+docker --version  # 需要 Docker 20.0+
+docker-compose --version  # 需要 Docker Compose 2.0+
+
+# 克隆项目（如果还没有）
+git clone <repository-url>
+cd bjt-product-system
+```
+
+### 2. 配置环境变量
+```bash
+# 复制环境变量模板
+cp .env.production.example .env.production
+
+# 编辑配置文件
 nano .env.production
 
-# 2. 一键部署
-chmod +x deploy.sh
-./deploy.sh
+# 必需配置项：
+# - DOMAIN_NAME: 你的域名
+# - MYSQL_ROOT_PASSWORD: MySQL root密码
+# - MYSQL_DATABASE: 数据库名称
+# - JWT_AUTH_SECRET_KEY: JWT密钥
+# - WordPress 安全密钥等
+```
+
+### 3. SSL证书配置
+```bash
+# 创建SSL证书目录
+mkdir -p nginx/ssl
+
+# 方式一：使用Let's Encrypt（推荐生产环境）
+certbot certonly --standalone -d your-domain.com
+cp /etc/letsencrypt/live/your-domain.com/fullchain.pem nginx/ssl/cert.pem
+cp /etc/letsencrypt/live/your-domain.com/privkey.pem nginx/ssl/private.key
+
+# 方式二：使用自签名证书（测试环境）
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout nginx/ssl/private.key \
+  -out nginx/ssl/cert.pem \
+  -subj "/CN=your-domain.com"
+```
+
+### 4. 执行部署
+```bash
+# 给部署脚本执行权限
+chmod +x deploy-production.sh
+
+# 执行一键部署
+./deploy-production.sh
+```
+
+### 5. 部署后验证
+```bash
+# 检查服务状态
+docker-compose -f docker/prod/docker-compose.prod.yml ps
+
+# 查看日志
+docker-compose -f docker/prod/docker-compose.prod.yml logs nginx
+docker-compose -f docker/prod/docker-compose.prod.yml logs wordpress
+
+# 测试访问（忽略自签名证书警告）
+curl -k https://your-domain.com
+curl -k https://your-domain.com/wp-json/bjt/v1
+```
+
+### 6. WordPress初始化
+```bash
+# 首次部署后需要访问 WordPress 管理后台
+# https://your-domain.com/wp-admin
+
+# 安装必需的插件：
+# - bjt-core-entities（产品管理核心）
+# - bjt-product-admin（管理界面）
+# - JWT Authentication for WP-API
+```
+
+## 🔧 故障排除
+
+### 常见问题解决方案
+
+#### SSL证书问题
+```bash
+# 检查证书文件
+docker exec prod_nginx_1 ls -la /etc/nginx/ssl/
+
+# 如果使用自签名证书，浏览器会显示警告
+# 可以选择"继续访问"或添加到信任证书
+```
+
+#### WordPress健康检查失败
+```bash
+# 查看详细日志
+docker-compose -f docker/prod/docker-compose.prod.yml logs wordpress --tail=50
+
+# 重启WordPress服务
+docker-compose -f docker/prod/docker-compose.prod.yml restart wordpress
+```
+
+#### 前端无法连接API
+```bash
+# 检查API端点
+curl -k https://your-domain.com/wp-json/bjt/v1
+
+# 检查nginx配置
+docker exec prod_nginx_1 nginx -t
 ```
 
 部署脚本会自动：
-1. 检查系统要求
-2. 验证配置文件
-3. 生成SSL证书（如需要）
-4. 构建所有Docker镜像
-5. 启动服务容器
-6. 等待服务就绪
-7. 显示访问信息
+1. ✅ 检查环境变量配置
+2. ✅ 备份现有数据（如果存在）
+3. ✅ 构建前端应用（React + TypeScript）
+4. ✅ 构建所有Docker镜像
+5. ✅ 启动服务容器
+6. ✅ 执行健康检查（支持自签名证书）
+7. ✅ 显示部署结果和访问信息
 
-这样的架构确保了前后端的完全分离，同时通过Nginx实现了统一的入口点和高效的请求路由。 
+## 📝 部署检查清单
+
+- [ ] 系统要求满足（Docker, Docker Compose）
+- [ ] 环境变量配置完成（.env.production）
+- [ ] SSL证书准备就绪（nginx/ssl/目录）
+- [ ] 域名DNS解析正确指向服务器
+- [ ] 防火墙开放80和443端口
+- [ ] 部署脚本执行成功
+- [ ] 服务健康检查通过
+- [ ] WordPress管理后台可访问
+- [ ] 前端应用正常加载
+- [ ] API接口响应正常 
