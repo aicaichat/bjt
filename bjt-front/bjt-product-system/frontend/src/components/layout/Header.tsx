@@ -392,13 +392,15 @@ const Header = ({
             </Button>
           </Dropdown>
 
-          <Link to="/cart" className="cart-link">
-            <Badge count={itemCount} size="small">
-              <Button type="text" icon={<ShoppingCartOutlined />} className="action-button">
-                {safeRender(t('header.cart'))}
-              </Button>
-            </Badge>
-          </Link>
+          {(user || location.pathname !== '/') && (
+            <Link to="/cart" className="cart-link">
+              <Badge count={itemCount} size="small">
+                <Button type="text" icon={<ShoppingCartOutlined />} className="action-button">
+                  {safeRender(t('header.cart'))}
+                </Button>
+              </Badge>
+            </Link>
+          )}
 
           {user ? (
             <Dropdown

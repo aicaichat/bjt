@@ -1,3 +1,15 @@
+/* 背景遮罩 */
+.cart-sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1040;
+  transition: opacity 0.3s ease;
+}
+
 /* 购物车侧边栏主容器 */
 .cart-sidebar {
   position: fixed;
@@ -8,7 +20,7 @@
   background: white;
   box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
   transition: right 0.3s ease;
-  z-index: 1000;
+  z-index: 1050;
   display: flex;
   flex-direction: column;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -569,10 +581,20 @@
 /* 响应式设计 */
 @media (max-width: 768px) {
   .cart-sidebar {
-    width: 100%;
-    right: -100%;
+    width: 85vw;
+    right: -85vw;
+    max-width: 380px;
   }
   
+  .cart-sidebar.open {
+    right: 0;
+  }
+
+  .cart-sidebar-overlay {
+    z-index: 1040;
+    background: rgba(0, 0, 0, 0.3); /* 移动端减少背景遮罩透明度 */
+  }
+
   .cart-sidebar-item {
     padding: 12px 16px;
   }
@@ -595,6 +617,55 @@
   
   .detail-row {
     font-size: 11px;
+  }
+}
+
+/* 更小屏幕的优化 */
+@media (max-width: 480px) {
+  .cart-sidebar {
+    width: 90vw;
+    right: -90vw;
+    max-width: 340px;
+  }
+  
+  .cart-sidebar-header {
+    padding: 12px 16px;
+  }
+  
+  .cart-sidebar-title {
+    font-size: 16px;
+  }
+  
+  .cart-item-image {
+    width: 45px;
+    height: 45px;
+  }
+  
+  .cart-item-title {
+    font-size: 12px;
+  }
+  
+  .detail-row {
+    font-size: 10px;
+  }
+  
+  .cart-item-actions {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+  
+  .cart-item-quantity {
+    justify-content: center;
+  }
+}
+
+/* 极小屏幕 */
+@media (max-width: 360px) {
+  .cart-sidebar {
+    width: 92vw;
+    right: -92vw;
+    max-width: 320px;
   }
 }
 

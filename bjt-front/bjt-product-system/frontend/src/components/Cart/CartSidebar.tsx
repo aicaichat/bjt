@@ -445,208 +445,218 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className={`cart-sidebar ${isOpen ? 'open' : ''}`}>
-      <div className="cart-sidebar-header">
-        <h3 className="cart-sidebar-title">{t('cartTitle', {ns: 'cart'})}</h3>
-        <button className="cart-sidebar-close" onClick={onClose}>×</button>
-      </div>
+    <>
+      {/* 背景遮罩 */}
+      {isOpen && (
+        <div className="cart-sidebar-overlay" onClick={onClose}></div>
+      )}
       
-      <div className="cart-sidebar-body">
-        {hasItems ? (
-          <>
-            <div className="cart-sidebar-select-all">
-              <div 
-                className={`cart-checkbox ${allSelected ? 'checked' : ''}`}
-                onClick={handleSelectAll}
-              >
-                {allSelected && <span className="checkbox-tick">✓</span>}
-              </div>
-              <span>{t('selectAll', {ns: 'cart'})}</span>
-            </div>
-            
-            <div className="cart-sidebar-items">
-              {items.map(item => (
-                <div key={item.id} className="cart-sidebar-item">
-                  <div className="cart-item-checkbox">
-                    <input
-                      type="checkbox"
-                      checked={isItemSelected(item.id)}
-                      onChange={(e) => toggleItemSelection(item.id, e.target.checked)}
-                    />
-                  </div>
-                  
-                  <div className="cart-item-image">
-                    <img src={(() => {
-                      // 优先从 properties 取图片，再从 item 本身取
-                      const props = item.properties || {};
-                      return props.image_url || 
-                             item.image_url || 
-                             props.image || 
-                             item.image || 
-                             '/images/placeholder.jpg';
-                    })()} alt={(() => {
-                      // 获取商品名称用于 alt 属性
-                      const props = item.properties || {};
-                      if (i18n.language === 'zh') {
-                        return props.name_zh || 
-                               item.name_zh || 
-                               props.name || 
-                               item.name ||
-                               props.code ||
-                               item.code ||
-                               props.part_number ||
-                               item.part_number ||
-                               item.id ||
-                               '商品';
-                      } else {
-                        return props.name_en || 
-                               item.name_en || 
-                               props.name || 
-                               item.name ||
-                               props.code ||
-                               item.code ||
-                               props.part_number ||
-                               item.part_number ||
-                               item.id ||
-                               'Product';
-                      }
-                    })()} />
-                  </div>
-                  
-                  <div className="cart-item-details">
-                    <div className="cart-item-title">{
-                      (() => {
-                        // 更强的商品名称获取逻辑，确保耗材名称能正确显示
-                        const getDisplayName = (): string => {
-                          const props = item.properties || {};
-                          
-                          if (i18n.language === 'zh') {
-                            // 中文优先级：name_zh -> name -> code -> part_number -> id
-                            return props.name_zh || 
-                                   item.name_zh || 
-                                   props.name || 
-                                   item.name ||
-                                   props.code ||
-                                   item.code ||
-                                   props.part_number ||
-                                   item.part_number ||
-                                   String(item.id) ||
-                                   '商品';
-                          } else {
-                            // 英文优先级：name_en -> name -> code -> part_number -> id
-                            return props.name_en || 
-                                   item.name_en || 
-                                   props.name || 
-                                   item.name ||
-                                   props.code ||
-                                   item.code ||
-                                   props.part_number ||
-                                   item.part_number ||
-                                   String(item.id) ||
-                                   'Product';
-                          }
-                        };
-                        
-                        const displayName = getDisplayName();
-                        
-                        return displayName;
-                      })()
-                    }</div>
-                    {/* 根据产品类型显示详细信息 */}
-                    {item.product_type === 'consumable' && renderConsumableDetails(item)}
-                    {item.product_type === 'spare_part' && renderSparePartDetails(item)}
-                    {item.product_type === 'accessory' && renderAccessoryDetails(item)}
-                    {["machine", "host", "设备"].includes(item.product_type) && renderMachineDetails(item)}
-                    
-                    <div className="cart-item-price">
-                      <div className="unit-price">{t('unitPrice', {ns: 'cart'})}: ¥{getTieredPrice(item).toFixed(2)}</div>
-                      <div className="subtotal">{t('subtotal', {ns: 'cart'})}: ¥{(getTieredPrice(item) * item.quantity).toFixed(2)}</div>
-                    </div>
-                    
-                    <div className="cart-item-actions">
-                      <div className="cart-item-quantity">
-                        <button 
-                          className="quantity-btn"
-                          onClick={() => handleDecreaseQuantity(item.id, item.quantity)}
-                        >
-                          -
-                        </button>
-                        <span className="quantity-value">{item.quantity}</span>
-                        <button 
-                          className="quantity-btn"
-                          onClick={() => handleIncreaseQuantity(item.id, item.quantity)}
-                        >
-                          +
-                        </button>
-                      </div>
-                      
-                      <button
-                        className="cart-item-remove"
-                        style={{ color: '#ff4d4f', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}
-                        onClick={() => removeItem(item.id)}
-                        title={t('remove', {ns: 'cart'})}
-                      >
-                        <span role="img" aria-label="delete">🗑️</span> {t('remove', {ns: 'cart'})}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-        ) : (
-          <div className="cart-empty">
-            <p>{t('cart.emptyCartMessage', {ns: 'cart'})}</p>
-          </div>
-        )}
-      </div>
-      
-      <div className="cart-sidebar-footer">
-        <div className="cart-sidebar-total">
-          <span>{t('total', {ns: 'cart'})}:</span>
-          <span className="cart-sidebar-price">¥{(selectedTotal || 0).toFixed(2)}</span>
+      {/* 购物车侧边栏 */}
+      <div className={`cart-sidebar ${isOpen ? 'open' : ''}`}>
+        <div className="cart-sidebar-header">
+          <h3 className="cart-sidebar-title">{t('shoppingCart', {ns: 'cart'})}</h3>
+          <button className="cart-sidebar-close" onClick={onClose}>
+            ×
+          </button>
         </div>
         
-        <div className="cart-sidebar-actions">
-          <button
-            className={`cart-sidebar-clear-btn${!hasItems ? ' disabled' : ''}`}
-            onClick={handleClearCart}
-            disabled={!hasItems}
-            style={{
-              border: '1px solid #ff4d4f',
-              color: !hasItems ? '#ccc' : '#ff4d4f',
-              background: 'transparent',
-              cursor: !hasItems ? 'not-allowed' : 'pointer',
-              borderRadius: 4,
-              padding: '6px 16px',
-              marginRight: 8
-            }}
-          >
-            {t('clearCart', {ns: 'cart'})}
-          </button>
-          
-          <Link 
-            to="/cart" 
-            className={`cart-sidebar-checkout-btn ${!hasItems ? 'disabled' : ''}`}
-            onClick={onClose}
-          >
-            {t('checkout', {ns: 'cart'})}
-          </Link>
+        <div className="cart-sidebar-body">
+          {hasItems ? (
+            <>
+              <div className="cart-sidebar-select-all">
+                <div 
+                  className={`cart-checkbox ${allSelected ? 'checked' : ''}`}
+                  onClick={handleSelectAll}
+                >
+                  {allSelected && <span className="checkbox-tick">✓</span>}
+                </div>
+                <span>{t('selectAll', {ns: 'cart'})}</span>
+              </div>
+              
+              <div className="cart-sidebar-items">
+                {items.map(item => (
+                  <div key={item.id} className="cart-sidebar-item">
+                    <div className="cart-item-checkbox">
+                      <input
+                        type="checkbox"
+                        checked={isItemSelected(item.id)}
+                        onChange={(e) => toggleItemSelection(item.id, e.target.checked)}
+                      />
+                    </div>
+                    
+                    <div className="cart-item-image">
+                      <img src={(() => {
+                        // 优先从 properties 取图片，再从 item 本身取
+                        const props = item.properties || {};
+                        return props.image_url || 
+                               item.image_url || 
+                               props.image || 
+                               item.image || 
+                               '/images/placeholder.jpg';
+                      })()} alt={(() => {
+                        // 获取商品名称用于 alt 属性
+                        const props = item.properties || {};
+                        if (i18n.language === 'zh') {
+                          return props.name_zh || 
+                                 item.name_zh || 
+                                 props.name || 
+                                 item.name ||
+                                 props.code ||
+                                 item.code ||
+                                 props.part_number ||
+                                 item.part_number ||
+                                 item.id ||
+                                 '商品';
+                        } else {
+                          return props.name_en || 
+                                 item.name_en || 
+                                 props.name || 
+                                 item.name ||
+                                 props.code ||
+                                 item.code ||
+                                 props.part_number ||
+                                 item.part_number ||
+                                 item.id ||
+                                 'Product';
+                        }
+                      })()} />
+                    </div>
+                    
+                    <div className="cart-item-details">
+                      <div className="cart-item-title">{
+                        (() => {
+                          // 更强的商品名称获取逻辑，确保耗材名称能正确显示
+                          const getDisplayName = (): string => {
+                            const props = item.properties || {};
+                            
+                            if (i18n.language === 'zh') {
+                              // 中文优先级：name_zh -> name -> code -> part_number -> id
+                              return props.name_zh || 
+                                     item.name_zh || 
+                                     props.name || 
+                                     item.name ||
+                                     props.code ||
+                                     item.code ||
+                                     props.part_number ||
+                                     item.part_number ||
+                                     String(item.id) ||
+                                     '商品';
+                            } else {
+                              // 英文优先级：name_en -> name -> code -> part_number -> id
+                              return props.name_en || 
+                                     item.name_en || 
+                                     props.name || 
+                                     item.name ||
+                                     props.code ||
+                                     item.code ||
+                                     props.part_number ||
+                                     item.part_number ||
+                                     String(item.id) ||
+                                     'Product';
+                            }
+                          };
+                          
+                          const displayName = getDisplayName();
+                          
+                          return displayName;
+                        })()
+                      }</div>
+                      {/* 根据产品类型显示详细信息 */}
+                      {item.product_type === 'consumable' && renderConsumableDetails(item)}
+                      {item.product_type === 'spare_part' && renderSparePartDetails(item)}
+                      {item.product_type === 'accessory' && renderAccessoryDetails(item)}
+                      {["machine", "host", "设备"].includes(item.product_type) && renderMachineDetails(item)}
+                      
+                      <div className="cart-item-price">
+                        <div className="unit-price">{t('unitPrice', {ns: 'cart'})}: ¥{getTieredPrice(item).toFixed(2)}</div>
+                        <div className="subtotal">{t('subtotal', {ns: 'cart'})}: ¥{(getTieredPrice(item) * item.quantity).toFixed(2)}</div>
+                      </div>
+                      
+                      <div className="cart-item-actions">
+                        <div className="cart-item-quantity">
+                          <button 
+                            className="quantity-btn"
+                            onClick={() => handleDecreaseQuantity(item.id, item.quantity)}
+                          >
+                            -
+                          </button>
+                          <span className="quantity-value">{item.quantity}</span>
+                          <button 
+                            className="quantity-btn"
+                            onClick={() => handleIncreaseQuantity(item.id, item.quantity)}
+                          >
+                            +
+                          </button>
+                        </div>
+                        
+                        <button
+                          className="cart-item-remove"
+                          style={{ color: '#ff4d4f', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}
+                          onClick={() => removeItem(item.id)}
+                          title={t('remove', {ns: 'cart'})}
+                        >
+                          <span role="img" aria-label="delete">🗑️</span> {t('remove', {ns: 'cart'})}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="cart-empty">
+              <p>{t('cart.emptyCartMessage', {ns: 'cart'})}</p>
+            </div>
+          )}
         </div>
-        {/* 清空购物车确认弹窗 */}
-        {showClearConfirm && (
-          <div className="cart-clear-confirm-modal">
-            <div className="cart-clear-confirm-content">
-              <div className="cart-clear-confirm-title">{t('cart.clearConfirmTitle', {ns: 'cart'})}</div>
-              <div className="cart-clear-confirm-actions">
-                <button className="cart-clear-cancel-btn" onClick={handleCancelClear}>{t('cart.cancel', {ns: 'cart'})}</button>
-                <button className="cart-clear-confirm-btn" onClick={handleConfirmClear}>{t('cart.confirm', {ns: 'cart'})}</button>
+        
+        <div className="cart-sidebar-footer">
+          <div className="cart-sidebar-total">
+            <span>{t('total', {ns: 'cart'})}:</span>
+            <span className="cart-sidebar-price">¥{(selectedTotal || 0).toFixed(2)}</span>
+          </div>
+          
+          <div className="cart-sidebar-actions">
+            <button
+              className={`cart-sidebar-clear-btn${!hasItems ? ' disabled' : ''}`}
+              onClick={handleClearCart}
+              disabled={!hasItems}
+              style={{
+                border: '1px solid #ff4d4f',
+                color: !hasItems ? '#ccc' : '#ff4d4f',
+                background: 'transparent',
+                cursor: !hasItems ? 'not-allowed' : 'pointer',
+                borderRadius: 4,
+                padding: '6px 16px',
+                marginRight: 8
+              }}
+            >
+              {t('clearCart', {ns: 'cart'})}
+            </button>
+            
+            <Link 
+              to="/cart" 
+              className={`cart-sidebar-checkout-btn ${!hasItems ? 'disabled' : ''}`}
+              onClick={onClose}
+            >
+              {t('checkout', {ns: 'cart'})}
+            </Link>
+          </div>
+          {/* 清空购物车确认弹窗 */}
+          {showClearConfirm && (
+            <div className="cart-clear-confirm-modal">
+              <div className="cart-clear-confirm-content">
+                <div className="cart-clear-confirm-title">{t('cart.clearConfirmTitle', {ns: 'cart'})}</div>
+                <div className="cart-clear-confirm-actions">
+                  <button className="cart-clear-cancel-btn" onClick={handleCancelClear}>{t('cart.cancel', {ns: 'cart'})}</button>
+                  <button className="cart-clear-confirm-btn" onClick={handleConfirmClear}>{t('cart.confirm', {ns: 'cart'})}</button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

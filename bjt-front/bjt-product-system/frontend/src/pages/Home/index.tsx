@@ -12,16 +12,6 @@ import { ROUTES } from '../../config/routes';
 // 占位图片路径
 const placeholderImage = '/images/placeholders/placeholder-300x200.svg';
 
-// 产品链接图标映射 - 专业to B版本
-const getProductLinkIcon = (index: number) => {
-  const icons = [
-    'machine', // 机器设备 - 使用专业机械图标
-    'supply',  // 耗材 - 使用供应链图标
-    'service'  // 备件 - 使用服务图标
-  ];
-  return icons[index] || 'machine';
-};
-
 const Home: React.FC = () => {
   const { t, i18n } = useTranslation('home');
   const { user } = useAuth();
@@ -110,23 +100,20 @@ const Home: React.FC = () => {
     return line.subitem3_en || line.subitem3_zh || '';
   };
 
-  // 创建产品链接数据
+  // 创建产品链接数据（移除图标）
   const createProductLinks = (line: any) => {
     const links = [
       {
         text: getSubitem1(line),
-        path: `${ROUTES.MACHINES}?category=${line.id}`,
-        icon: getProductLinkIcon(0)
+        path: `${ROUTES.MACHINES}?category=${line.id}`
       },
       {
         text: getSubitem2(line),
-        path: `${ROUTES.CONSUMABLES}?category=${line.id}`,
-        icon: getProductLinkIcon(1)
+        path: `${ROUTES.CONSUMABLES}?category=${line.id}`
       },
       {
         text: getSubitem3(line),
-        path: `${ROUTES.SPARE_PARTS}?category=${line.id}`,
-        icon: getProductLinkIcon(2)
+        path: `${ROUTES.SPARE_PARTS}?category=${line.id}`
       }
     ];
     return links.filter(link => link.text); // 过滤掉空文本的链接
@@ -166,14 +153,8 @@ const Home: React.FC = () => {
                       className="product-link" 
                       onClick={(e) => handleProductLinkClick(e, linkData.path)}
                     >
-                      <div className="product-link-content">
-                        <div 
-                          className="product-link-icon"
-                          data-icon={linkData.icon}
-                        ></div>
-                        <div className="product-link-text">
-                          {linkData.text}
-                        </div>
+                      <div className="product-link-text">
+                        {linkData.text}
                       </div>
                     </Link>
                   ))}

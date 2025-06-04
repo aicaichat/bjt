@@ -60,46 +60,33 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  let authContextValue;
-  try {
-    authContextValue = useAuth();
-    console.log('[ProtectedRoute] Rendering. Context Value:', authContextValue);
-  } catch (error) {
-    console.error('[ProtectedRoute] Error calling useAuth():', error);
-    // If useAuth throws, context is definitely not available
-    // Render the Navigate component directly to avoid further errors
-    return <Navigate to="/login" state={{ from: window.location.pathname }} replace />;
-  }
-
-  const { user, loading } = authContextValue;
+  const { user, loading } = useAuth();
   const location = useLocation();
 
-  console.log('[ProtectedRoute] State - Loading:', loading, 'User:', !!user);
-
-  // 加载中状态
   if (loading) {
-    console.log('[ProtectedRoute] Showing loading state');
-    return <div className="loading-container">验证登录状态...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+      </div>
+    );
   }
 
-  // 已登录，显示受保护的路由
-  if (user) {
-    console.log('[ProtectedRoute] User found, rendering children');
-    return <>{children}</>;
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // 未登录，重定向到登录页
-  console.log('[ProtectedRoute] No user, redirecting to login from:', location.pathname);
-  return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+  return <>{children}</>;
 };
 
 // Near the beginning of the file, before the App component, add this lazy-loaded component
 const UnicodeTest = React.lazy(() => import('./pages/DevTests/UnicodeTest'));
 
-const App: React.FC = () => {
-  // 购物车侧边栏状态
+// 内部组件用于获取location和user状态
+const AppContent: React.FC = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isMockManagerOpen, setIsMockManagerOpen] = useState<boolean>(false);
+  const [isMockManagerOpen, setIsMockManagerOpen] = useState(false);
+  const { user } = useAuth();
+  const location = useLocation();
 
   // 打开购物车
   const openCart = () => {
@@ -111,6 +98,279 @@ const App: React.FC = () => {
     setIsCartOpen(false);
   };
 
+  // 判断是否应该显示购物车（不在首页或已登录）
+  const shouldShowCart = user || location.pathname !== '/';
+
+  return (
+    <div className="App">
+      {/* Mock数据管理组件 */}
+      <MockDataManager 
+        isOpen={isMockManagerOpen} 
+        onClose={() => setIsMockManagerOpen(false)} 
+      />
+      
+      <Routes>
+        {/* 管理后台路由 - MOVED TO TOP FOR TESTING */}
+        <Route path="/admin/*" element={<AdminRoutes />} />
+
+        {/* 首页 - 公开访问 */}
+        <Route
+          path="/"
+          element={
+            <MainLayout>
+              <Home />
+            </MainLayout>
+          }
+        />
+        
+        {/* Dashboard页面 */}
+        <Route
+          path="/dashboard"
+          element={
+            <MainLayout>
+              <DashboardPage />
+            </MainLayout>
+          }
+        />
+        
+        {/* Home 路径重定向到首页 */}
+        <Route
+          path="/home"
+          element={<Navigate to="/" replace />}
+        />
+
+        {/* 受保护的页面 - 需要登录 */}
+        {/* 旧路径重定向 */}
+        <Route
+          path="/products"
+          element={<Navigate to="/machines" replace />}
+        />
+        
+        <Route
+          path="/products/consumables"
+          element={<Navigate to="/consumables" replace />}
+        />
+        
+        <Route
+          path="/products/spare-parts"
+          element={<Navigate to="/spare-parts" replace />}
+        />
+        
+        {/* 设备选型页面 */}
+        <Route
+          path="/machines"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Machines />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        {/* 耗材选择页面 */}
+        <Route
+          path="/consumables"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Consumables />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 备件选择页面 */}
+        <Route
+          path="/spare-parts"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <SpareParts />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* SQL-Excel转换器页面 */}
+        <Route
+          path="/sql-excel-converter"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <SqlExcelConverterPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        {/* 购物车页面 */}
+        <Route
+          path="/cart"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Cart />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        {/* 订单确认页面 */}
+        <Route
+          path="/order"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Order />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        {/* 添加 /order/confirm 路径重定向到 /order */}
+        <Route
+          path="/order/confirm"
+          element={<Navigate to="/order" replace />}
+        />
+        
+        {/* PO页面 */}
+        <Route
+          path="/po"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <PO />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        {/* 订单相关页面 */}
+        <Route
+          path="/checkout"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Checkout />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/orders"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <OrderList />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/orders/:id"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <OrderDetail />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* UI 组件指南 */}
+        <Route
+          path="/guide"
+          element={
+            <MainLayout>
+              <GuideIndex />
+            </MainLayout>
+          }
+        />
+        
+        {/* Unicode测试页面 - 仅在开发环境下可用 */}
+        {process.env.NODE_ENV === 'development' && (
+          <Route
+            path="/dev/unicode-test"
+            element={
+              <MainLayout>
+                <Suspense fallback={<div>Loading...</div>}>
+                  <UnicodeTest />
+                </Suspense>
+              </MainLayout>
+            }
+          />
+        )}
+        
+        {/* 订单列表示例 */}
+        <Route
+          path="/example/order-list"
+          element={
+            <MainLayout>
+              <OrderListExample />
+            </MainLayout>
+          }
+        />
+        
+        {/* 用户资料页面 */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Profile />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        {/* 登录页面 */}
+        <Route path="/login" element={<Login />} />
+        
+        {/* 产品详情页面 */}
+        <Route
+          path="/product/:id"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <ProductDetail />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        {/* 404页面 */}
+        <Route
+          path="*"
+          element={
+            <MainLayout>
+              <div className="container mx-auto p-4 text-center">
+                <h1 className="text-2xl font-bold mb-4">页面不存在</h1>
+                <p className="mb-4">您访问的页面不存在，请检查网址是否正确。</p>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => window.history.back()}
+                >
+                  返回上一页
+                </button>
+              </div>
+            </MainLayout>
+          }
+        />
+      </Routes>
+      
+      {/* 只在非首页或已登录时显示购物车侧边栏和按钮 */}
+      {shouldShowCart && (
+        <>
+          <CartSidebar isOpen={isCartOpen} onClose={closeCart} />
+          <CartButton onClick={openCart} />
+        </>
+      )}
+    </div>
+  );
+};
+
+const App: React.FC = () => {
   return (
     <ThemeProvider defaultTheme="bjt-tech" defaultMode="light">
       <LanguageProvider>
@@ -121,269 +381,7 @@ const App: React.FC = () => {
                 <SafeRenderWrapper>
                   <Router>
                     <CartProvider>
-                      <div className="App">
-                        {/* Mock数据管理组件 */}
-                        <MockDataManager 
-                          isOpen={isMockManagerOpen} 
-                          onClose={() => setIsMockManagerOpen(false)} 
-                        />
-                        
-                        <Routes>
-                          {/* 管理后台路由 - MOVED TO TOP FOR TESTING */}
-                          <Route path="/admin/*" element={<AdminRoutes />} />
-
-                          {/* 首页 - 公开访问 */}
-                          <Route
-                            path="/"
-                            element={
-                              <MainLayout>
-                                <Home />
-                              </MainLayout>
-                            }
-                          />
-                          
-                          {/* Dashboard页面 */}
-                          <Route
-                            path="/dashboard"
-                            element={
-                              <MainLayout>
-                                <DashboardPage />
-                              </MainLayout>
-                            }
-                          />
-                          
-                          {/* Home 路径重定向到首页 */}
-                          <Route
-                            path="/home"
-                            element={<Navigate to="/" replace />}
-                          />
-
-                          {/* 受保护的页面 - 需要登录 */}
-                          {/* 旧路径重定向 */}
-                          <Route
-                            path="/products"
-                            element={<Navigate to="/machines" replace />}
-                          />
-                          
-                          <Route
-                            path="/products/consumables"
-                            element={<Navigate to="/consumables" replace />}
-                          />
-                          
-                          <Route
-                            path="/products/spare-parts"
-                            element={<Navigate to="/spare-parts" replace />}
-                          />
-                          
-                          {/* 设备选型页面 */}
-                          <Route
-                            path="/machines"
-                            element={
-                              <ProtectedRoute>
-                                <MainLayout>
-                                  <Machines />
-                                </MainLayout>
-                              </ProtectedRoute>
-                            }
-                          />
-                          
-                          {/* 耗材选择页面 */}
-                          <Route
-                            path="/consumables"
-                            element={
-                              <ProtectedRoute>
-                                <MainLayout>
-                                  <Consumables />
-                                </MainLayout>
-                              </ProtectedRoute>
-                            }
-                          />
-
-                          {/* 备件选择页面 */}
-                          <Route
-                            path="/spare-parts"
-                            element={
-                              <ProtectedRoute>
-                                <MainLayout>
-                                  <SpareParts />
-                                </MainLayout>
-                              </ProtectedRoute>
-                            }
-                          />
-
-                          {/* SQL-Excel转换器页面 */}
-                          <Route
-                            path="/sql-excel-converter"
-                            element={
-                              <ProtectedRoute>
-                                <MainLayout>
-                                  <SqlExcelConverterPage />
-                                </MainLayout>
-                              </ProtectedRoute>
-                            }
-                          />
-                          
-                          {/* 购物车页面 */}
-                          <Route
-                            path="/cart"
-                            element={
-                              <ProtectedRoute>
-                                <MainLayout>
-                                  <Cart />
-                                </MainLayout>
-                              </ProtectedRoute>
-                            }
-                          />
-                          
-                          {/* 订单确认页面 */}
-                          <Route
-                            path="/order"
-                            element={
-                              <ProtectedRoute>
-                                <MainLayout>
-                                  <Order />
-                                </MainLayout>
-                              </ProtectedRoute>
-                            }
-                          />
-                          
-                          {/* 添加 /order/confirm 路径重定向到 /order */}
-                          <Route
-                            path="/order/confirm"
-                            element={<Navigate to="/order" replace />}
-                          />
-                          
-                          {/* PO页面 */}
-                          <Route
-                            path="/po"
-                            element={
-                              <ProtectedRoute>
-                                <MainLayout>
-                                  <PO />
-                                </MainLayout>
-                              </ProtectedRoute>
-                            }
-                          />
-                          
-                          {/* 订单相关页面 */}
-                          <Route
-                            path="/checkout"
-                            element={
-                              <ProtectedRoute>
-                                <MainLayout>
-                                  <Checkout />
-                                </MainLayout>
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/orders"
-                            element={
-                              <ProtectedRoute>
-                                <MainLayout>
-                                  <OrderList />
-                                </MainLayout>
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/orders/:id"
-                            element={
-                              <ProtectedRoute>
-                                <MainLayout>
-                                  <OrderDetail />
-                                </MainLayout>
-                              </ProtectedRoute>
-                            }
-                          />
-
-                          {/* UI 组件指南 */}
-                          <Route
-                            path="/guide"
-                            element={
-                              <MainLayout>
-                                <GuideIndex />
-                              </MainLayout>
-                            }
-                          />
-                          
-                          {/* Unicode测试页面 - 仅在开发环境下可用 */}
-                          {process.env.NODE_ENV === 'development' && (
-                            <Route
-                              path="/dev/unicode-test"
-                              element={
-                                <MainLayout>
-                                  <Suspense fallback={<div>Loading...</div>}>
-                                    <UnicodeTest />
-                                  </Suspense>
-                                </MainLayout>
-                              }
-                            />
-                          )}
-                          
-                          {/* 订单列表示例 */}
-                          <Route
-                            path="/example/order-list"
-                            element={
-                              <MainLayout>
-                                <OrderListExample />
-                              </MainLayout>
-                            }
-                          />
-                          
-                          {/* 用户资料页面 */}
-                          <Route
-                            path="/profile"
-                            element={
-                              <ProtectedRoute>
-                                <MainLayout>
-                                  <Profile />
-                                </MainLayout>
-                              </ProtectedRoute>
-                            }
-                          />
-                          
-                          {/* 登录页面 */}
-                          <Route path="/login" element={<Login />} />
-                          
-                          {/* 产品详情页面 */}
-                          <Route
-                            path="/product/:id"
-                            element={
-                              <ProtectedRoute>
-                                <MainLayout>
-                                  <ProductDetail />
-                                </MainLayout>
-                              </ProtectedRoute>
-                            }
-                          />
-                          
-                          {/* 404页面 */}
-                          <Route
-                            path="*"
-                            element={
-                              <MainLayout>
-                                <div className="container mx-auto p-4 text-center">
-                                  <h1 className="text-2xl font-bold mb-4">页面不存在</h1>
-                                  <p className="mb-4">您访问的页面不存在，请检查网址是否正确。</p>
-                                  <button
-                                    className="btn btn-primary"
-                                    onClick={() => window.history.back()}
-                                  >
-                                    返回上一页
-                                  </button>
-                                </div>
-                              </MainLayout>
-                            }
-                          />
-                        </Routes>
-                        
-                        {/* 显示购物车侧边栏（如果开启） */}
-                        <CartSidebar isOpen={isCartOpen} onClose={closeCart} />
-                        
-                        {/* 全局购物车按钮 */}
-                        <CartButton onClick={openCart} />
-                      </div>
+                      <AppContent />
                     </CartProvider>
                   </Router>
                 </SafeRenderWrapper>
