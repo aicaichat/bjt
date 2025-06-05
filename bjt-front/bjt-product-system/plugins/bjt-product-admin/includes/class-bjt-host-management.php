@@ -26,6 +26,25 @@ class BJT_Host_Part_Number_Management {
         add_action('wp_ajax_bjt_delete_host', array($this, 'ajax_delete_host'));
         add_action('wp_ajax_bjt_update_host_status', array($this, 'ajax_update_host_status'));
         add_action('wp_ajax_bjt_upload_specification', array($this, 'ajax_upload_specification'));
+        add_action('wp_ajax_bjt_get_nonce', array($this, 'ajax_get_nonce'));
+        add_action('rest_api_init', array($this, 'register_rest_routes'));
+    }
+
+    public function register_rest_routes() {
+        register_rest_route('bjt/v1', '/nonce', array(
+            'methods' => 'GET',
+            'callback' => array($this, 'get_nonce'),
+            'permission_callback' => '__return_true'
+        ));
+    }
+
+    public function get_nonce() {
+        $nonce = wp_create_nonce('bjt_upload_specification');
+        return rest_ensure_response(array(
+            'success' => true,
+            'nonce' => $nonce,
+            'action' => 'bjt_upload_specification'
+        ));
     }
 
     public function get_all_hosts() {
@@ -185,65 +204,186 @@ class BJT_Host_Part_Number_Management {
     }
 
     public function ajax_upload_specification() {
-        check_ajax_referer('bjt_upload_specification', 'nonce');
-
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => '权限不足'));
+        error_log('[BJT Upload] Starting PDF upload process');
+        
+        // 认证检查 - 支持两种方式：nonce和JWT
+        $authenticated = false;
+        $auth_method = '';
+        
+        // 方式1：检查nonce（保持向后兼容）
+        if (isset($_POST['nonce']) && wp_verify_nonce($_POST['nonce'], 'bjt_upload_specification')) {
+            $authenticated = true;
+            $auth_method = 'nonce';
+            error_log('[BJT Upload] Authentication successful via nonce');
         }
+        
+        // 方式2：检查JWT token（新的认证方式）
+        if (!$authenticated) {
+            $authorization_header = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : '';
+            
+            if (empty($authorization_header) && function_exists('getallheaders')) {
+                $headers = getallheaders();
+                $authorization_header = isset($headers['Authorization']) ? $headers['Authorization'] : '';
+            }
+            
+            if ($authorization_header && preg_match('/Bearer\s+(.*)$/i', $authorization_header, $matches)) {
+                $token = $matches[1];
+                error_log('[BJT Upload] Found Bearer token, attempting JWT validation');
+                
+                // 确保加载BJT Core Entities的JWT处理类
+                $jwt_handler = null;
+                
+                // 方法1：尝试使用BJT_JWT_Handler（新版本）
+                if (class_exists('BJT_JWT_Handler')) {
+                    $jwt_handler = new BJT_JWT_Handler();
+                    $payload = $jwt_handler->validate_token($token);
+                    error_log('[BJT Upload] Using BJT_JWT_Handler');
+                } 
+                // 方法2：尝试使用BJT_Auth（旧版本）
+                elseif (class_exists('BJT_Auth')) {
+                    $auth = new BJT_Auth();
+                    $payload = $auth->validate_token($token);
+                    error_log('[BJT Upload] Using BJT_Auth');
+                }
+                // 方法3：尝试从Core Entities插件加载
+                else {
+                    $core_entities_path = WP_PLUGIN_DIR . '/bjt-core-entities/includes/class-bjt-jwt-handler.php';
+                    if (file_exists($core_entities_path)) {
+                        require_once $core_entities_path;
+                        if (class_exists('BJT_JWT_Handler')) {
+                            $jwt_handler = new BJT_JWT_Handler();
+                            $payload = $jwt_handler->validate_token($token);
+                            error_log('[BJT Upload] Loaded BJT_JWT_Handler from core entities');
+                        }
+                    }
+                    
+                    if (!$jwt_handler) {
+                        $auth_path = WP_PLUGIN_DIR . '/bjt-core-entities/includes/class-auth.php';
+                        if (file_exists($auth_path)) {
+                            require_once $auth_path;
+                            if (class_exists('BJT_Auth')) {
+                                $auth = new BJT_Auth();
+                                $payload = $auth->validate_token($token);
+                                error_log('[BJT Upload] Loaded BJT_Auth from core entities');
+                            }
+                        }
+                    }
+                }
+                
+                if (isset($payload) && $payload && !is_wp_error($payload)) {
+                    $authenticated = true;
+                    $auth_method = 'jwt';
+                    error_log('[BJT Upload] Authentication successful via JWT');
+                    
+                    // 设置当前用户上下文（如果需要）
+                    if (is_array($payload) && isset($payload['data']['user_id'])) {
+                        global $current_user;
+                        $current_user = get_user_by('id', $payload['data']['user_id']);
+                    } elseif (is_object($payload) && isset($payload->data->user_id)) {
+                        global $current_user;
+                        $current_user = get_user_by('id', $payload->data->user_id);
+                    }
+                } else {
+                    error_log('[BJT Upload] JWT token validation failed');
+                }
+            }
+        }
+        
+        // 如果两种认证方式都失败
+        if (!$authenticated) {
+            error_log('[BJT Upload] Authentication failed - no valid nonce or JWT token');
+            wp_send_json_error(array(
+                'message' => '认证失败，请重新登录',
+                'code' => 'authentication_failed'
+            ));
+        }
+        
+        error_log("[BJT Upload] Authentication successful via: {$auth_method}");
 
+        // 获取host_id
         $host_id = intval($_POST['host_id']);
         if (!$host_id) {
+            error_log('[BJT Upload] Invalid or missing host_id');
             wp_send_json_error(array('message' => '无效的主机ID'));
         }
 
+        // 检查文件
         if (empty($_FILES['pdf_file'])) {
+            error_log('[BJT Upload] No PDF file uploaded');
             wp_send_json_error(array('message' => '请选择要上传的PDF文件'));
         }
 
         $file = $_FILES['pdf_file'];
         if ($file['error'] !== UPLOAD_ERR_OK) {
-            wp_send_json_error(array('message' => '文件上传失败：' . $this->get_upload_error_message($file['error'])));
+            error_log('[BJT Upload] File upload error: ' . $file['error']);
+            wp_send_json_error(array('message' => '文件上传失败: ' . $this->get_upload_error_message($file['error'])));
         }
 
-        if ($file['type'] !== 'application/pdf') {
-            wp_send_json_error(array('message' => '只允许上传PDF文件'));
+        // 验证文件类型
+        $file_info = wp_check_filetype($file['name']);
+        if ($file_info['ext'] !== 'pdf' || $file_info['type'] !== 'application/pdf') {
+            error_log('[BJT Upload] Invalid file type: ' . $file_info['type']);
+            wp_send_json_error(array('message' => '只能上传PDF文件'));
         }
 
-        // 创建上传目录
-        $upload_dir = wp_upload_dir();
-        $host_dir = $upload_dir['basedir'] . '/bjt-hosts/' . $host_id . '/specifications';
-        if (!file_exists($host_dir)) {
-            wp_mkdir_p($host_dir);
+        // 验证文件大小 (10MB)
+        if ($file['size'] > 10 * 1024 * 1024) {
+            error_log('[BJT Upload] File too large: ' . $file['size']);
+            wp_send_json_error(array('message' => '文件大小不能超过10MB'));
         }
 
-        // 生成唯一的文件名
-        $file_name = wp_unique_filename($host_dir, $file['name']);
-        $file_path = $host_dir . '/' . $file_name;
+        // 确定上传目录
+        $upload_dir = isset($_POST['upload_dir']) ? sanitize_text_field($_POST['upload_dir']) : '';
+        
+        if (empty($upload_dir)) {
+            // 默认使用前端public目录下的uploads目录
+            $frontend_dir = ABSPATH . 'frontend/public/uploads';
+            $upload_path = $frontend_dir . '/specifications';
+            $upload_url_path = home_url('/frontend/public/uploads/specifications');
+        } else {
+            // 使用指定目录（相对于WordPress根目录的frontend/public/uploads）
+            $frontend_dir = ABSPATH . 'frontend/public/uploads';
+            $upload_path = $frontend_dir . '/' . $upload_dir;
+            $upload_url_path = home_url('/frontend/public/uploads/' . $upload_dir);
+        }
+
+        // 创建具体的主机目录
+        $host_upload_path = $upload_path . '/' . $host_id;
+        $host_upload_url = $upload_url_path . '/' . $host_id;
+
+        // 确保目录存在
+        if (!file_exists($host_upload_path)) {
+            if (!wp_mkdir_p($host_upload_path)) {
+                error_log('[BJT Upload] Failed to create directory: ' . $host_upload_path);
+                wp_send_json_error(array('message' => '无法创建上传目录'));
+            }
+        }
+
+        // 生成唯一文件名
+        $file_extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $filename = sanitize_file_name(pathinfo($file['name'], PATHINFO_FILENAME));
+        $unique_filename = $filename . '_' . time() . '.' . $file_extension;
+        $full_path = $host_upload_path . '/' . $unique_filename;
+        $file_url = $host_upload_url . '/' . $unique_filename;
 
         // 移动文件
-        if (!move_uploaded_file($file['tmp_name'], $file_path)) {
-            wp_send_json_error(array('message' => '文件保存失败'));
+        if (move_uploaded_file($file['tmp_name'], $full_path)) {
+            error_log('[BJT Upload] File uploaded successfully to: ' . $full_path);
+            
+            // TODO: 这里可以将文件信息保存到数据库
+            // 例如：更新主机表中的specification_pdf字段
+            
+            wp_send_json_success(array(
+                'url' => $file_url,
+                'filename' => $unique_filename,
+                'host_id' => $host_id,
+                'message' => 'PDF文件上传成功',
+                'auth_method' => $auth_method
+            ));
+        } else {
+            error_log('[BJT Upload] Failed to move uploaded file');
+            wp_send_json_error(array('message' => '保存文件失败'));
         }
-
-        // 更新数据库
-        global $wpdb;
-        $file_url = $upload_dir['baseurl'] . '/bjt-hosts/' . $host_id . '/specifications/' . $file_name;
-        $result = $wpdb->update(
-            $this->table_name,
-            array(
-                'specification_pdf' => $file_url,
-                'updated_at' => current_time('mysql')
-            ),
-            array('id' => $host_id)
-        );
-
-        if ($result === false) {
-            // 如果数据库更新失败，删除已上传的文件
-            unlink($file_path);
-            wp_send_json_error(array('message' => '文件信息保存失败：' . $wpdb->last_error));
-        }
-
-        wp_send_json_success();
     }
 
     private function get_upload_error_message($error_code) {
@@ -298,5 +438,27 @@ class BJT_Host_Part_Number_Management {
 
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
         dbDelta($sql);
+    }
+
+    /**
+     * AJAX获取nonce
+     */
+    public function ajax_get_nonce() {
+        // 检查用户是否已登录
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array(
+                'message' => '用户未登录',
+                'code' => 'not_logged_in'
+            ));
+        }
+
+        // 生成nonce
+        $nonce = wp_create_nonce('bjt_upload_specification');
+        
+        wp_send_json_success(array(
+            'nonce' => $nonce,
+            'user_id' => get_current_user_id(),
+            'message' => 'Nonce生成成功'
+        ));
     }
 } 

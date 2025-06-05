@@ -84,13 +84,45 @@ export class AdminHostModelService extends BaseAdminService<AdminHostModel> {
   }
 
   async createHostModel(data: Partial<AdminHostModel>): Promise<AdminHostModel> {
-    const response = await this.httpService.post<any>(ADMIN_API_ENDPOINTS.HOST_MODELS, data);
+    // 确保所有字段都被正确处理
+    const submitData = {
+      product_line_id: data.product_line_id,
+      model: data.model || data.code,
+      title_zh: data.title_zh,
+      title_en: data.title_en,
+      description_zh: data.description_zh,
+      description_en: data.description_en,
+      type: data.type,
+      image1_url: data.image1_url,
+      image2_url: data.image2_url,
+      explosion_diagram_pdf: data.explosion_diagram_pdf,
+      spec_pdf: data.spec_pdf,
+      status: data.status || 'publish',
+      sort_order: data.sort_order || 0,
+    };
+    const response = await this.httpService.post<any>(ADMIN_API_ENDPOINTS.HOST_MODELS, submitData);
     return response.data;
   }
 
   async updateHostModel(id: string, data: Partial<AdminHostModel>): Promise<AdminHostModel> {
+    // 确保所有字段都被正确处理
+    const submitData = {
+      product_line_id: data.product_line_id,
+      model: data.model || data.code,
+      title_zh: data.title_zh,
+      title_en: data.title_en,
+      description_zh: data.description_zh,
+      description_en: data.description_en,
+      type: data.type,
+      image1_url: data.image1_url,
+      image2_url: data.image2_url,
+      explosion_diagram_pdf: data.explosion_diagram_pdf,
+      spec_pdf: data.spec_pdf,
+      status: data.status || 'publish',
+      sort_order: data.sort_order || 0,
+    };
     const url = `${ADMIN_API_ENDPOINTS.HOST_MODELS}/${id}`;
-    const response = await this.httpService.put<any>(url, data);
+    const response = await this.httpService.put<any>(url, submitData);
     return response.data;
   }
 

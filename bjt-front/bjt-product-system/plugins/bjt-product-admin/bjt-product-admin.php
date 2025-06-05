@@ -25,6 +25,7 @@ define('BJT_PRODUCT_ADMIN_PLUGIN_URL', plugin_dir_url(__FILE__));
 require_once BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'includes/admin/class-bjt-product-line-management.php';
 require_once BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'includes/api/class-bjt-product-lines-controller.php';
 require_once BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'includes/class-bjt-api-response.php';
+require_once BJT_PRODUCT_ADMIN_PLUGIN_DIR . 'includes/class-bjt-host-management.php';
 
 /**
  * Plugin activation
@@ -36,13 +37,23 @@ function bjt_product_admin_activate() {
         try {
             $product_line_management->create_tables();
             update_option('bjt_product_admin_db_version', BJT_PRODUCT_ADMIN_VERSION);
-    } catch (Exception $e) {
+        } catch (Exception $e) {
             error_log('BJT Product Admin activation error: ' . $e->getMessage());
         }
     }
     
+    // 创建主机管理表
+    $host_management = BJT_Host_Part_Number_Management::get_instance();
+    if ($host_management) {
+        try {
+            $host_management->create_table();
+        } catch (Exception $e) {
+            error_log('BJT Host Management activation error: ' . $e->getMessage());
+        }
+    }
+    
     // 刷新重写规则
-        flush_rewrite_rules();
+    flush_rewrite_rules();
 }
 register_activation_hook(__FILE__, 'bjt_product_admin_activate');
 
@@ -61,6 +72,9 @@ register_deactivation_hook(__FILE__, 'bjt_product_admin_deactivate');
 function bjt_product_admin_init() {
     // 加载文本域
     load_plugin_textdomain('bjt-product-admin', false, dirname(plugin_basename(__FILE__)) . '/languages');
+    
+    // 初始化核心类
+    BJT_Host_Part_Number_Management::get_instance();
     
     // 注册 REST API 路由
     add_action('rest_api_init', 'bjt_product_admin_register_rest_routes');

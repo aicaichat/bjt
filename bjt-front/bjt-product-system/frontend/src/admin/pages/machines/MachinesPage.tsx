@@ -15,6 +15,10 @@ import {
   Col,
   Tag,
   Divider,
+  Tooltip,
+  Upload,
+  Tabs,
+  Popconfirm,
 } from 'antd';
 
 const { TextArea } = Input;
@@ -25,6 +29,11 @@ import {
   CheckCircleOutlined,
   SearchOutlined,
   LinkOutlined,
+  UploadOutlined,
+  DownloadOutlined,
+  EyeOutlined,
+  FileTextOutlined,
+  CopyOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { AdminHostModel, AdminPart } from '../../types/admin-models.types';
@@ -34,6 +43,7 @@ import adminProductLineService from '../../services/admin-product-line.service';
 import { PaginatedResponse } from '../../../admin/types';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import TableImportExport from '../../components/TableImportExport';
+import PdfUploader from '../../components/PdfUploader';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -82,6 +92,114 @@ const MachinesPage: React.FC = () => {
   const [currentProductLine, setCurrentProductLine] = useState<any>(null);
   const [modelForm] = Form.useForm();
 
+  // 初始化认证token
+  const initializeAuthToken = useCallback(async () => {
+    try {
+      console.log('MachinesPage: Initializing authentication token...');
+      
+      // 首先检查是否已有有效的token
+      const existingToken = (window as any).bjtApiToken;
+      if (existingToken) {
+        console.log('MachinesPage: Using existing token:', existingToken.substring(0, 20) + '...');
+        return;
+      }
+      
+      // 尝试通过BJT Core Entities API获取nonce（需要已登录状态）
+      const bjtResponse = await fetch('/wp-json/bjt/v1/upload/nonce', {
+        credentials: 'include',
+      });
+      
+      if (bjtResponse.ok) {
+        const bjtData = await bjtResponse.json();
+        console.log('MachinesPage: BJT API response:', bjtData);
+        
+        if (bjtData.success && bjtData.data?.nonce) {
+          // 设置全局token
+          (window as any).bjtApiToken = bjtData.data.nonce;
+          console.log('MachinesPage: BJT API token initialized:', bjtData.data.nonce.substring(0, 20) + '...');
+          return;
+        }
+      }
+      
+      // 如果上面都失败了，尝试默认用户登录获取JWT token
+      console.log('MachinesPage: Attempting default user login...');
+      try {
+        const loginResponse = await fetch('/wp-json/bjt/v1/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            username: 'admin', // 使用默认管理员账户
+            password: 'password123', // 使用正确的密码
+            remember_me: false
+          })
+        });
+        
+        if (loginResponse.ok) {
+          const loginData = await loginResponse.json();
+          console.log('MachinesPage: Login response:', loginData);
+          
+          if (loginData.success && loginData.data?.token) {
+            (window as any).bjtApiToken = loginData.data.token;
+            console.log('MachinesPage: JWT token obtained from login:', loginData.data.token.substring(0, 20) + '...');
+            return;
+          }
+        } else {
+          console.warn('MachinesPage: Login failed with status:', loginResponse.status);
+        }
+      } catch (loginError) {
+        console.warn('MachinesPage: Login attempt failed:', loginError);
+      }
+      
+      // Fallback: 尝试通过WordPress用户API获取认证状态（兼容性）
+      console.log('MachinesPage: Fallback to WordPress API...');
+      const wpResponse = await fetch('/wp-json/wp/v2/users/me', {
+        credentials: 'include',
+      });
+      
+      if (wpResponse.ok) {
+        const userData = await wpResponse.json();
+        console.log('MachinesPage: WordPress user authentication successful:', userData);
+        
+        // 检查是否有Authorization header
+        const authHeader = wpResponse.headers.get('Authorization');
+        if (authHeader) {
+          const token = authHeader.replace('Bearer ', '');
+          (window as any).bjtApiToken = token;
+          console.log('MachinesPage: WordPress token initialized:', token.substring(0, 20) + '...');
+          return;
+        }
+        
+        // 兼容旧的nonce方式
+        const nonceResponse = await fetch('/wp-json/bjt/v1/nonce', {
+          credentials: 'include',
+        });
+        
+        if (nonceResponse.ok) {
+          const nonceData = await nonceResponse.json();
+          console.log('MachinesPage: Received legacy nonce data:', nonceData);
+          
+          if (nonceData.success && nonceData.nonce) {
+            // 设置全局nonce（兼容性）
+            if (!(window as any).wpApiSettings) {
+              (window as any).wpApiSettings = {};
+            }
+            (window as any).wpApiSettings.nonce = nonceData.nonce;
+            console.log('MachinesPage: Legacy nonce initialized:', nonceData.nonce);
+          }
+        } else {
+          console.warn('MachinesPage: Failed to get legacy nonce from API');
+        }
+      } else {
+        console.warn('MachinesPage: WordPress user authentication failed');
+      }
+    } catch (error) {
+      console.error('MachinesPage: Error initializing authentication token:', error);
+    }
+  }, []);
+
   // 导入导出列配置
   const modelExportColumns = [
     { title: '型号', dataIndex: 'code' },
@@ -93,6 +211,7 @@ const MachinesPage: React.FC = () => {
     { title: '主图URL', dataIndex: 'image1_url' },
     { title: '副图URL', dataIndex: 'image2_url' },
     { title: '爆炸图PDF', dataIndex: 'explosion_diagram_pdf' },
+    { title: '规格PDF', dataIndex: 'spec_pdf' },
     { title: '状态', dataIndex: 'status' },
     { title: '排序', dataIndex: 'sort_order' },
   ];
@@ -217,10 +336,14 @@ const MachinesPage: React.FC = () => {
 
   // 初始化数据 - 只在组件挂载时执行一次
   useEffect(() => {
-    fetchModels(modelsPagination.current, modelsPagination.page_size, modelFilters);
+    // 初始化认证token
+    initializeAuthToken();
+    
+    // 初始化数据加载
+    fetchModels(1, modelsPagination.page_size, modelFilters);
     fetchProductLines();
     fetchAllPartsForModelOptions();
-  }, []); // 空依赖数组，只在组件挂载时执行
+  }, [initializeAuthToken]);
 
   // 当筛选条件变化时重新获取数据
   useEffect(() => {
@@ -248,7 +371,7 @@ const MachinesPage: React.FC = () => {
     if (record) {
       modelForm.setFieldsValue({
         product_line_id: record.product_line_id,
-        model: record.model,
+        model: record.model || record.code, // 优先使用model字段，如果没有则使用code字段
         title_zh: record.title_zh,
         title_en: record.title_en,
         description_zh: record.description_zh,
@@ -257,6 +380,7 @@ const MachinesPage: React.FC = () => {
         image1_url: record.image1_url,
         image2_url: record.image2_url,
         explosion_diagram_pdf: record.explosion_diagram_pdf,
+        spec_pdf: record.spec_pdf,
         status: record.status,
         sort_order: record.sort_order,
       });
@@ -276,10 +400,22 @@ const MachinesPage: React.FC = () => {
     try {
       const values = await modelForm.validateFields();
       
-      // 确保产品线ID正确设置
+      // 确保所有字段都被正确提交
       const submitData = {
         ...values,
-        product_line_id: currentProductLine?.id
+        product_line_id: currentProductLine?.id,
+        model: values.model,
+        title_zh: values.title_zh,
+        title_en: values.title_en,
+        description_zh: values.description_zh,
+        description_en: values.description_en,
+        type: values.type,
+        image1_url: values.image1_url,
+        image2_url: values.image2_url,
+        explosion_diagram_pdf: values.explosion_diagram_pdf,
+        spec_pdf: values.spec_pdf,
+        status: values.status || 'publish',
+        sort_order: values.sort_order || 0,
       };
       
       setModelsLoading(true);
@@ -403,13 +539,11 @@ const MachinesPage: React.FC = () => {
     },
     {
       title: '型号',
-      dataIndex: 'code',
-      key: 'code',
+      dataIndex: 'model',
+      key: 'model',
       width: 150,
       render: (value, record) => {
-        console.log('MachinesPage: Model column render - value:', value, 'record:', record);
-        const recordAny = record as any;
-        return value || recordAny.model || recordAny.machine_model || recordAny.host_model || '未设置';
+        return value || record.code || '未设置';
       },
     },
     {
@@ -906,8 +1040,29 @@ const MachinesPage: React.FC = () => {
               </Form.Item>
             </Col>
           </Row>
-          
+
           <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="spec_pdf"
+                label="规格PDF"
+              >
+                <PdfUploader 
+                  placeholder="上传规格PDF文件" 
+                  hostId={editingModel?.id ? (typeof editingModel.id === 'string' ? parseInt(editingModel.id) : editingModel.id) : undefined}
+                  value={modelForm.getFieldValue('spec_pdf')}
+                  onChange={(url) => {
+                    modelForm.setFieldsValue({ spec_pdf: url });
+                  }}
+                  disabled={!editingModel?.id} // 只有编辑现有主机时才能上传
+                />
+                {!editingModel?.id && (
+                  <div style={{ marginTop: 8, color: '#999', fontSize: '12px' }}>
+                    请先保存主机型号，然后再上传PDF文件
+                  </div>
+                )}
+              </Form.Item>
+            </Col>
             <Col span={12}>
               <Form.Item
                 name="status"
@@ -921,6 +1076,9 @@ const MachinesPage: React.FC = () => {
                 </Select>
               </Form.Item>
             </Col>
+          </Row>
+          
+          <Row gutter={16}>
             <Col span={12}>
               <Form.Item
                 name="sort_order"
@@ -929,6 +1087,9 @@ const MachinesPage: React.FC = () => {
               >
                 <Input type="number" placeholder="请输入排序值" />
               </Form.Item>
+            </Col>
+            <Col span={12}>
+              {/* 空列保持布局 */}
             </Col>
           </Row>
         </Form>

@@ -350,7 +350,7 @@ class BJT_Machine_Controller extends BJT_API_Controller {
      */
     public function update_item($request) {
         global $wpdb;
-        $machine_id = absint($request['id']);
+        $machine_id = absint($request->get_param('id'));
 
         // 1. Check if the machine exists
         $existing_item_query = $wpdb->prepare("SELECT * FROM {$this->table_name} WHERE id = %d", $machine_id);
@@ -373,15 +373,15 @@ class BJT_Machine_Controller extends BJT_API_Controller {
             ], 200);
         }
 
-        // 3. Handle potential unique constraint violation for 'model' and 'product_line_id'
-        $check_model = isset($data_to_update['model']) ? $data_to_update['model'] : $existing_item->model;
+        // 3. Handle potential unique constraint violation for 'code' and 'product_line_id'
+        $check_code = isset($data_to_update['code']) ? $data_to_update['code'] : $existing_item->model;
         $check_product_line_id = isset($data_to_update['product_line_id']) ? $data_to_update['product_line_id'] : $existing_item->product_line_id;
 
-        if ( (isset($data_to_update['model']) || isset($data_to_update['product_line_id'])) ) {
+        if ( (isset($data_to_update['code']) || isset($data_to_update['product_line_id'])) ) {
             $duplicate_query = $wpdb->prepare(
                 "SELECT id FROM {$this->table_name} WHERE product_line_id = %d AND model = %s AND id != %d",
                 $check_product_line_id,
-                $check_model,
+                $check_code,
                 $machine_id
             );
             $duplicate_exists = $wpdb->get_var($duplicate_query);
@@ -433,7 +433,7 @@ class BJT_Machine_Controller extends BJT_API_Controller {
      */
     public function delete_item($request) {
         global $wpdb;
-        $machine_id = absint($request['id']);
+        $machine_id = absint($request->get_param('id'));
 
         // 1. Check if the machine exists to provide a more specific error if not found
         $existing_item = $wpdb->get_row($wpdb->prepare("SELECT id FROM {$this->table_name} WHERE id = %d", $machine_id));
@@ -682,6 +682,7 @@ class BJT_Machine_Controller extends BJT_API_Controller {
                 'image1_url' => ['type' => 'string', 'format' => 'uri', 'description' => 'Optional. Primary image URL.'],
             'image2_url' => ['type' => 'string', 'format' => 'uri', 'description' => 'Optional. Secondary image URL.'],
                 'explosion_diagram_pdf' => ['type' => 'string', 'format' => 'uri', 'description' => 'Optional. Explosion diagram PDF URL.'],
+                'spec_pdf' => ['type' => 'string', 'format' => 'uri', 'description' => 'Optional. Specification PDF URL.'],
                 'status' => ['type' => 'string', 'default' => 'publish', 'enum' => ['publish', 'draft', 'trash']],
                 'sort_order' => ['type' => 'integer', 'default' => 0, 'description' => 'Optional. Sort order.'],
             ],
@@ -698,17 +699,18 @@ class BJT_Machine_Controller extends BJT_API_Controller {
         }
         return [
             'id' => (int) $item_db_object->id,
-            'code' => trim($item_db_object->model, '"\''),
-            'title_zh' => trim($item_db_object->title_zh, '"\''),
-            'title_en' => trim($item_db_object->title_en, '"\''),
-            'description_zh' => trim($item_db_object->description_zh, '"\''),
-            'description_en' => trim($item_db_object->description_en, '"\''),
+            'code' => trim($item_db_object->model, "'\""),
+            'title_zh' => trim($item_db_object->title_zh, "'\""),
+            'title_en' => trim($item_db_object->title_en, "'\""),
+            'description_zh' => trim($item_db_object->description_zh, "'\""),
+            'description_en' => trim($item_db_object->description_en, "'\""),
             'product_line_id' => (int) $item_db_object->product_line_id,
-            'type' => trim($item_db_object->type, '"\''),
-            'image_url' => trim($item_db_object->image1_url, '"\''), // Corresponds to image1_url in DB
-            'image2_url' => $item_db_object->image2_url ? trim($item_db_object->image2_url, '"\'') : null,
-            'explosion_diagram_pdf' => $item_db_object->explosion_diagram_pdf ? trim($item_db_object->explosion_diagram_pdf, '"\'') : null,
-            'status' => trim($item_db_object->status, '"\''),
+            'type' => trim($item_db_object->type, "'\""),
+            'image1_url' => $item_db_object->image1_url ? trim($item_db_object->image1_url, "'\"") : null,
+            'image2_url' => $item_db_object->image2_url ? trim($item_db_object->image2_url, "'\"") : null,
+            'explosion_diagram_pdf' => $item_db_object->explosion_diagram_pdf ? trim($item_db_object->explosion_diagram_pdf, "'\"") : null,
+            'spec_pdf' => $item_db_object->spec_pdf ? trim($item_db_object->spec_pdf, "'\"") : null,
+            'status' => trim($item_db_object->status, "'\""),
             'sort_order' => isset($item_db_object->sort_order) ? (int) $item_db_object->sort_order : 0,
             'created_at' => $item_db_object->created_at,
             'updated_at' => $item_db_object->updated_at,
@@ -716,32 +718,45 @@ class BJT_Machine_Controller extends BJT_API_Controller {
     }
 
     protected function map_request_to_db(WP_REST_Request $request) {
-        $params = $request->get_params();
+        // 优先合并 JSON body 和 URL params，保证所有字段都能获取到
+        $params = array_merge(
+            is_array($request->get_json_params()) ? $request->get_json_params() : [],
+            $request->get_params()
+        );
         $data = [];
         
         // Map API 'code' to DB 'model'
         if (isset($params['code'])) {
             $data['model'] = sanitize_text_field($params['code']);
         }
+        
         // Map API 'name_cn' to DB 'title_zh'
         if (isset($params['name_cn'])) {
             $data['title_zh'] = sanitize_text_field($params['name_cn']);
         }
+        
         // Map API 'name_en' to DB 'title_en'
         if (isset($params['name_en'])) {
             $data['title_en'] = sanitize_text_field($params['name_en']);
         }
-
+        
         // Handle other fillable fields directly
         $direct_map_fields = [
             'product_line_id', 'description_zh', 'description_en', 'type',
-            'image1_url', 'image2_url', 'explosion_diagram_pdf', 
+            'image1_url', 'image2_url', 'explosion_diagram_pdf', 'spec_pdf',
             'status', 'sort_order'
         ];
-
+        
         foreach ($direct_map_fields as $db_column) {
-            if (isset($params[$db_column])) {
+            if (array_key_exists($db_column, $params)) {
                 $value = $params[$db_column];
+                
+                // Handle empty values
+                if ($value === '' || $value === null) {
+                    $data[$db_column] = null;
+                    continue;
+                }
+                
                 switch ($db_column) {
                     case 'product_line_id':
                     case 'sort_order':
@@ -750,20 +765,30 @@ class BJT_Machine_Controller extends BJT_API_Controller {
                     case 'image1_url':
                     case 'image2_url':
                     case 'explosion_diagram_pdf':
-                        $data[$db_column] = esc_url_raw($value);
+                    case 'spec_pdf':
+                        // 处理 URL 字段
+                        if (empty($value)) {
+                            $data[$db_column] = null;
+                        } else {
+                            // 确保 URL 是相对路径
+                            $site_url = get_site_url();
+                            if (strpos($value, $site_url) === 0) {
+                                $value = substr($value, strlen($site_url));
+                            }
+                            $data[$db_column] = esc_url_raw($value);
+                        }
                         break;
                     case 'description_zh':
                     case 'description_en':
-                         $data[$db_column] = sanitize_textarea_field($value);
-                         break;
+                        $data[$db_column] = sanitize_textarea_field($value);
+                        break;
                     default: // For type, status, etc.
                         $data[$db_column] = sanitize_text_field($value);
                         break;
                 }
             }
-            // We might want to allow explicit null setting on update later
         }
-
+        
         return $data;
     }
 } 

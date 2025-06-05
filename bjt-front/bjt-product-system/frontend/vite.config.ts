@@ -38,6 +38,11 @@ export default defineConfig({
         target: 'http://wordpress:80',
         changeOrigin: true,
         secure: false
+      },
+      '/wp-admin': {
+        target: 'http://wordpress:80',
+        changeOrigin: true,
+        secure: false
       }
     }
   },

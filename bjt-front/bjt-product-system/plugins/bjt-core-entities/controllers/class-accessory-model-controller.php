@@ -21,6 +21,7 @@ class BJT_Accessory_Model_Controller extends BJT_API_Controller {
         'image1_url',
         'image2_url',
         'explosion_diagram_pdf',
+        'spec_pdf',
         'status',
         'sort_order'
     ];
@@ -113,6 +114,7 @@ class BJT_Accessory_Model_Controller extends BJT_API_Controller {
             'image1_url'              => $item_db_object->image1_url,
             'image2_url'              => $item_db_object->image2_url,
             'explosion_diagram_pdf'   => $item_db_object->explosion_diagram_pdf,
+            'spec_pdf'                => $item_db_object->spec_pdf,
             'status'                  => $item_db_object->status,
             'sort_order'              => intval($item_db_object->sort_order),
             'created_at'              => $item_db_object->created_at,

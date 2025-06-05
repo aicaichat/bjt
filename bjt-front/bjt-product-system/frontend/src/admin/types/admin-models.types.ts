@@ -48,7 +48,6 @@ export interface AdminHostModel {
   id: string;
   product_line_id: string;
   model: string; // 主机型号编码
-  code: string; // 主机型号编码 (API返回字段)
   title_zh: string; // 中文名称
   title_en: string; // 英文名称
   description_zh?: string; // 中文描述
@@ -57,6 +56,49 @@ export interface AdminHostModel {
   image1_url?: string; // 主图URL
   image2_url?: string; // 副图URL
   explosion_diagram_pdf?: string; // 爆炸图PDF文件URL
+  spec_pdf?: string; // 规格PDF文件URL
+  status: string; // 'publish' | 'draft' | 'trash'
+  sort_order?: number; // 排序值
+  created_at?: string;
+  updated_at?: string;
+  // 向后兼容字段
+  code?: string; // 主机型号编码 (API返回字段，与model字段相同)
+}
+
+// 配件型号接口
+export interface AdminAccessoryModel {
+  id: string;
+  product_line_id: string;
+  model: string; // 配件型号编码
+  title_zh: string; // 中文名称
+  title_en: string; // 英文名称
+  description_zh?: string; // 中文描述
+  description_en?: string; // 英文描述
+  type?: string; // 配件类型
+  image1_url?: string; // 主图URL
+  image2_url?: string; // 副图URL
+  explosion_diagram_pdf?: string; // 爆炸图PDF文件URL
+  spec_pdf?: string; // 规格PDF文件URL
+  status: string; // 'publish' | 'draft' | 'trash'
+  sort_order?: number; // 排序值
+  created_at?: string;
+  updated_at?: string;
+}
+
+// 备件型号接口
+export interface AdminSparePartModel {
+  id: string;
+  product_line_id: string;
+  model: string; // 备件型号编码
+  title_zh: string; // 中文名称
+  title_en: string; // 英文名称
+  description_zh?: string; // 中文描述
+  description_en?: string; // 英文描述
+  type?: string; // 备件类型
+  image1_url?: string; // 主图URL
+  image2_url?: string; // 副图URL
+  explosion_diagram_pdf?: string; // 爆炸图PDF文件URL
+  spec_pdf?: string; // 规格PDF文件URL
   status: string; // 'publish' | 'draft' | 'trash'
   sort_order?: number; // 排序值
   created_at?: string;

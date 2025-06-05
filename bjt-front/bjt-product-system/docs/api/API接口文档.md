@@ -538,9 +538,10 @@ Authorization: Bearer {token}
         "description_en": "Air Cushion Machine description (English)",
         "product_line_id": 1,
         "type": "气垫机",
-        "image_url": "http://example.com/images/MEY-001.jpg",
+        "image1_url": "http://example.com/images/MEY-001.jpg",
         "image2_url": "http://example.com/images/MEY-001-2.jpg",
         "explosion_diagram_pdf": "http://example.com/docs/MEY-001-diagram.pdf",
+        "spec_pdf": "http://example.com/docs/MEY-001-spec.pdf",
         "status": "publish",
         "sort_order": 10,
         "created_at": "YYYY-MM-DD HH:MM:SS",
@@ -581,9 +582,10 @@ Authorization: Bearer {token}
     "description_en": "Air Cushion Machine description (English)",
     "product_line_id": 1,
     "type": "气垫机",
-    "image_url": "http://example.com/images/MEY-001.jpg",
+    "image1_url": "http://example.com/images/MEY-001.jpg",
     "image2_url": "http://example.com/images/MEY-001-2.jpg",
     "explosion_diagram_pdf": "http://example.com/docs/MEY-001-diagram.pdf",
+    "spec_pdf": "http://example.com/docs/MEY-001-spec.pdf",
     "status": "publish",
     "sort_order": 10,
     "created_at": "YYYY-MM-DD HH:MM:SS",
@@ -618,6 +620,7 @@ Authorization: Bearer {token}
   "image1_url": "http://example.com/images/MEY-002.jpg",
   "image2_url": "http://example.com/images/MEY-002-2.jpg",
   "explosion_diagram_pdf": "http://example.com/docs/MEY-002-diagram.pdf",
+  "spec_pdf": "http://example.com/docs/MEY-002-spec.pdf",
   "status": "publish",
   "sort_order": 20
 }
@@ -637,9 +640,10 @@ Authorization: Bearer {token}
     "description_en": "Air Cushion Machine 2 description (English)",
     "product_line_id": 1,
     "type": "气垫机",
-    "image_url": "http://example.com/images/MEY-002.jpg",
+    "image1_url": "http://example.com/images/MEY-002.jpg",
     "image2_url": "http://example.com/images/MEY-002-2.jpg",
     "explosion_diagram_pdf": "http://example.com/docs/MEY-002-diagram.pdf",
+    "spec_pdf": "http://example.com/docs/MEY-002-spec.pdf",
     "status": "publish",
     "sort_order": 20,
     "created_at": "YYYY-MM-DD HH:MM:SS",
@@ -669,7 +673,9 @@ Authorization: Bearer {token}
 {
   "name_cn": "气垫机 Pro - MEY系列（更新）",
   "description_zh": "更新后的产品描述",
-  "sort_order": 15
+  "sort_order": 15,
+  "image1_url": "http://example.com/images/MEY-001.jpg",
+  "spec_pdf": "http://example.com/docs/MEY-001-spec.pdf"
   // ... 其他要更新的字段
 }
 ```
@@ -688,9 +694,10 @@ Authorization: Bearer {token}
     "description_en": "Air Cushion Machine description (English)",
     "product_line_id": 1,
     "type": "气垫机",
-    "image_url": "http://example.com/images/MEY-001.jpg",
+    "image1_url": "http://example.com/images/MEY-001.jpg",
     "image2_url": "http://example.com/images/MEY-001-2.jpg",
     "explosion_diagram_pdf": "http://example.com/docs/MEY-001-diagram.pdf",
+    "spec_pdf": "http://example.com/docs/MEY-001-spec.pdf",
     "status": "publish",
     "sort_order": 15,
     "created_at": "YYYY-MM-DD HH:MM:SS",
