@@ -67,10 +67,15 @@
     "unitPrice": "Unit Price"
   },
   "inventory": {
+    "title": "Inventory",
     "inStock": "In Stock",
     "lowStock": "Low Stock",
     "outOfStock": "Out of Stock",
-    "available": "Available"
+    "available": "Available",
+    "status": "Stock Status",
+    "total": "Total Stock",
+    "abundant": "Abundant Stock",
+    "adequate": "Adequate Stock"
   },
   "actions": {
     "addToCart": "Add to Cart",
@@ -173,7 +178,19 @@
   "hoverDetails": "Hover for Details",
   "accessories": {
     "title": "Accessories",
-    "level1": "Level 1"
+    "level1": "Level 1 Accessory",
+    "level2": "Level 2 Accessory",
+    "level3": "Level 3 Accessory",
+    "level4": "Level 4 Accessory",
+    "level5": "Level 5 Accessory",
+    "compatible": "Compatible Accessories",
+    "subCompatible": "Sub-level Compatible Accessories",
+    "nextLevelLoaded": "Next Level Accessories Loaded",
+    "nextLevelLoadedDesc": "{{count}} level {{level}} accessory options have been loaded for you",
+    "noNextLevel": "Accessory Selection Complete",
+    "noNextLevelDesc": "{{name}} has no more sub-level accessories. You have completed all necessary accessory selections.",
+    "allLevelsComplete": "All Accessory Selections Complete",
+    "allLevelsCompleteDesc": "You have completed all 5 levels of accessory selection and can now add to cart."
   },
   "chooseOther": "Please choose another machine",
   "regions": {
@@ -191,5 +208,47 @@
   },
   "path": {
     "machine": "Host"
+  },
+  "specs": {
+    "packageSize": "Package Size",
+    "pcsPerBox": "PCS per Box",
+    "palletSize": "Pallet Size",
+    "pcsPerPallet": "PCS per Pallet",
+    "netWeight": "Net Weight",
+    "grossWeight": "Gross Weight",
+    "palletHeight": "Pallet Height",
+    "palletGrossWeight": "Total Pallet Gross Weight",
+    "specifications": "Specifications",
+    "dimensions": "Dimensions",
+    "weight": "Weight",
+    "capacity": "Capacity",
+    "material": "Material",
+    "power": "Power",
+    "voltage": "Voltage",
+    "frequency": "Frequency",
+    "brand": "Brand",
+    "model": "Model",
+    "partNumber": "Part Number",
+    "compatibility": "Compatible Models"
+  },
+  "buttons": {
+    "moreInfo": "More Info",
+    "viewDetails": "View Details",
+    "addToCart": "Add to Cart",
+    "configure": "Configure",
+    "select": "Select",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close",
+    "reset": "Reset",
+    "apply": "Apply"
+  },
+  "tooltip": {
+    "accessoryDetailInfo": "Accessory Detail Information",
+    "hoverInfo": "Hover to view detailed specifications",
+    "specifications": "View Specifications",
+    "inventory": "Inventory Information",
+    "pricing": "Pricing Information",
+    "compatibility": "Compatibility Information"
   }
 } 

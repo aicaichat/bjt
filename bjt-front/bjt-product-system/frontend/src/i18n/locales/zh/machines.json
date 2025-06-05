@@ -67,10 +67,15 @@
     "unitPrice": "单价"
   },
   "inventory": {
+    "title": "库存",
     "inStock": "有库存",
     "lowStock": "库存偏低",
     "outOfStock": "缺货",
-    "available": "可用"
+    "available": "可用",
+    "status": "库存状态",
+    "total": "总库存",
+    "abundant": "库存充足",
+    "adequate": "库存充裕"
   },
   "actions": {
     "addToCart": "加入购物车",
@@ -105,6 +110,22 @@
     "loading": "加载配件中...",
     "noItems": "暂无配件",
     "selectMachine": "请先选择机器"
+  },
+  "accessories": {
+    "title": "配件选择",
+    "level1": "一级配件",
+    "level2": "二级配件",
+    "level3": "三级配件",
+    "level4": "四级配件",
+    "level5": "五级配件",
+    "compatible": "兼容配件",
+    "subCompatible": "子级兼容配件",
+    "nextLevelLoaded": "下一级配件已加载",
+    "nextLevelLoadedDesc": "已为您加载了 {{count}} 个{{level}}级配件选项",
+    "noNextLevel": "配件选择完成",
+    "noNextLevelDesc": "{{name}} 没有更多子级配件，您已完成所有必要的配件选择。",
+    "allLevelsComplete": "所有配件选择完成",
+    "allLevelsCompleteDesc": "您已完成全部5级配件的选择，可以添加到购物车了。"
   },
   "packaging": {
     "title": "包装信息",
@@ -184,5 +205,47 @@
   },
   "path": {
     "machine": "主机"
+  },
+  "specs": {
+    "packageSize": "包装尺寸",
+    "pcsPerBox": "单箱数量",
+    "palletSize": "托盘尺寸",
+    "pcsPerPallet": "一托数量",
+    "netWeight": "净重",
+    "grossWeight": "毛重",
+    "palletHeight": "托盘高度",
+    "palletGrossWeight": "托盘总毛重",
+    "specifications": "规格参数",
+    "dimensions": "尺寸",
+    "weight": "重量",
+    "capacity": "容量",
+    "material": "材质",
+    "power": "功率",
+    "voltage": "电压",
+    "frequency": "频率",
+    "brand": "品牌",
+    "model": "型号",
+    "partNumber": "料号",
+    "compatibility": "兼容型号"
+  },
+  "buttons": {
+    "moreInfo": "更多信息",
+    "viewDetails": "查看详情",
+    "addToCart": "加入购物车",
+    "configure": "配置",
+    "select": "选择",
+    "cancel": "取消",
+    "confirm": "确认",
+    "close": "关闭",
+    "reset": "重置",
+    "apply": "应用"
+  },
+  "tooltip": {
+    "accessoryDetailInfo": "配件详细信息",
+    "hoverInfo": "悬停查看详细规格信息",
+    "specifications": "查看规格说明",
+    "inventory": "库存信息",
+    "pricing": "价格信息",
+    "compatibility": "兼容性信息"
   }
 } 
