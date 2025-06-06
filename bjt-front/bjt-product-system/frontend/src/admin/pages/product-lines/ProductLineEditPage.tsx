@@ -18,6 +18,7 @@ import AdminPageHeader from '../../components/common/AdminPageHeader';
 import MultilingualInput, { MultilingualValue } from '../../components/common/MultilingualInput';
 import FileUploader from '../../components/common/FileUploader';
 import adminProductLineService, { ProductLineFormData } from '../../services/admin-product-line.service';
+import { useAdminI18n } from '../../i18n/hooks/useAdminI18n';
 
 // 严格对应wp_bjt_product_lines表的14个字段
 interface ExtendedProductLineFormData {
@@ -43,6 +44,7 @@ interface ExtendedProductLineFormData {
 const { Option } = Select;
 
 const ProductLineEditPage: React.FC = () => {
+  const { t } = useAdminI18n();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [form] = Form.useForm();
@@ -111,7 +113,7 @@ const ProductLineEditPage: React.FC = () => {
       form.setFieldsValue(formValues);
     } catch (error) {
       console.error('加载产品线数据失败:', error);
-      message.error('加载产品线数据失败');
+      message.error(t('messages.error', { ns: 'productLines' }));
     } finally {
       setLoading(false);
     }
@@ -119,11 +121,11 @@ const ProductLineEditPage: React.FC = () => {
 
   const validateCode = async (rule: any, value: string) => {
     if (!value) {
-      throw new Error('请输入产品线代码');
+      throw new Error(t('form.validation.codeRequired', { ns: 'productLines' }));
     }
 
     if (!/^[A-Z0-9_-]+$/.test(value)) {
-      throw new Error('产品线代码只能包含大写字母、数字、下划线和短横线');
+      throw new Error(t('form.validation.codeFormat', { ns: 'productLines' }));
     }
 
     // TODO: 检查代码唯一性 - 需要后端API支持
@@ -157,16 +159,16 @@ const ProductLineEditPage: React.FC = () => {
 
       if (isEditMode && id) {
         await adminProductLineService.updateProductLine(parseInt(id), formData);
-        message.success('产品线更新成功');
+        message.success(t('messages.success.updated', { ns: 'productLines' }));
       } else {
         await adminProductLineService.createProductLine(formData);
-        message.success('产品线创建成功');
+        message.success(t('messages.success.created', { ns: 'productLines' }));
       }
 
       navigate('/admin/product-lines');
     } catch (error) {
       console.error('保存产品线失败:', error);
-      message.error('保存产品线失败');
+      message.error(isEditMode ? t('messages.error.update', { ns: 'productLines' }) : t('messages.error.create', { ns: 'productLines' }));
     } finally {
       setSubmitting(false);
     }
@@ -195,11 +197,11 @@ const ProductLineEditPage: React.FC = () => {
   return (
     <div className="product-line-edit-page">
       <AdminPageHeader
-        title={isEditMode ? '编辑产品线' : '新增产品线'}
-        description={isEditMode ? `编辑产品线 ID: ${id}` : '创建新的产品线'}
+        title={isEditMode ? t('form.title.edit', { ns: 'productLines' }) : t('form.title.add', { ns: 'productLines' })}
+        description={isEditMode ? t('form.description.edit', { ns: 'productLines', id }) : t('form.description.add', { ns: 'productLines' })}
         extra={
           <ButtonComponent key="back" icon={<ArrowLeftIcon />} onClick={handleBack}>
-            返回列表
+            {t('actions.backToList', { ns: 'productLines' })}
           </ButtonComponent>
         }
       />
@@ -215,42 +217,42 @@ const ProductLineEditPage: React.FC = () => {
           <RowComponent gutter={24}>
             {/* 基本信息 */}
             <ColComponent span={24}>
-              <DividerComponent orientation="left">基本信息</DividerComponent>
+              <DividerComponent orientation="left">{t('form.sections.basicInfo', { ns: 'productLines' })}</DividerComponent>
             </ColComponent>
 
             <ColComponent span={12}>
               <FormItemComponent
-                label="产品线代码"
+                label={t('form.fields.code', { ns: 'productLines' })}
                 name="code"
                 rules={[
-                  { required: true, message: '请输入产品线代码' },
+                  { required: true, message: t('form.validation.codeRequired', { ns: 'productLines' }) },
                   { validator: validateCode },
                 ]}
-                extra="只能包含大写字母、数字、下划线和短横线，在系统中必须唯一"
+                extra={t('form.help.codeFormat', { ns: 'productLines' })}
               >
-                <InputComponent placeholder="例如: BJT_MACHINE_A" />
+                <InputComponent placeholder={t('form.placeholders.code', { ns: 'productLines' })} />
               </FormItemComponent>
             </ColComponent>
 
             <ColComponent span={6}>
               <FormItemComponent
-                label="状态"
+                label={t('form.fields.status', { ns: 'productLines' })}
                 name="status"
-                rules={[{ required: true, message: '请选择状态' }]}
+                rules={[{ required: true, message: t('form.validation.statusRequired', { ns: 'productLines' }) }]}
               >
                 <SelectComponent>
-                  <OptionComponent value="draft">草稿</OptionComponent>
-                  <OptionComponent value="publish">已发布</OptionComponent>
-                  <OptionComponent value="trash">回收站</OptionComponent>
+                  <OptionComponent value="draft">{t('filters.status.draft', { ns: 'productLines' })}</OptionComponent>
+                  <OptionComponent value="publish">{t('filters.status.publish', { ns: 'productLines' })}</OptionComponent>
+                  <OptionComponent value="trash">{t('filters.status.trash', { ns: 'productLines' })}</OptionComponent>
                 </SelectComponent>
               </FormItemComponent>
             </ColComponent>
 
             <ColComponent span={6}>
               <FormItemComponent
-                label="排序"
+                label={t('form.fields.sortOrder', { ns: 'productLines' })}
                 name="sort_order"
-                rules={[{ required: true, message: '请输入排序号' }]}
+                rules={[{ required: true, message: t('form.validation.sortOrderRequired', { ns: 'productLines' }) }]}
               >
                 <InputNumberComponent min={1} style={{ width: '100%' }} />
               </FormItemComponent>
@@ -258,18 +260,18 @@ const ProductLineEditPage: React.FC = () => {
 
             {/* 多语言标题 */}
             <ColComponent span={24}>
-              <DividerComponent orientation="left">产品线标题</DividerComponent>
+              <DividerComponent orientation="left">{t('form.sections.title', { ns: 'productLines' })}</DividerComponent>
             </ColComponent>
 
             <ColComponent span={24}>
               <FormItemComponent
-                label="产品线标题"
+                label={t('form.fields.name', { ns: 'productLines' })}
                 name="title"
                 rules={[
                   {
                     validator: (_: any, value: any) => {
                       if (!value?.zh || !value?.en) {
-                        return Promise.reject('请输入中英文标题');
+                        return Promise.reject(t('form.validation.nameRequired', { ns: 'productLines' }));
                       }
                       return Promise.resolve();
                     }
@@ -279,43 +281,43 @@ const ProductLineEditPage: React.FC = () => {
                 <MultilingualInput
                   type="input"
                   required
-                  placeholder={{ zh: '请输入中文标题', en: 'Please enter English title' }}
+                  placeholder={{ zh: t('form.placeholders.nameZh', { ns: 'productLines' }), en: t('form.placeholders.nameEn', { ns: 'productLines' }) }}
                 />
               </FormItemComponent>
             </ColComponent>
 
             {/* 多语言描述 */}
             <ColComponent span={24}>
-              <DividerComponent orientation="left">产品线描述</DividerComponent>
+              <DividerComponent orientation="left">{t('form.sections.description', { ns: 'productLines' })}</DividerComponent>
             </ColComponent>
 
             <ColComponent span={24}>
               <FormItemComponent
-                label="产品线描述"
+                label={t('form.fields.description', { ns: 'productLines' })}
                 name="description"
               >
                 <MultilingualInput
                   type="textarea"
                   rows={4}
-                  placeholder={{ zh: '请输入中文描述', en: 'Please enter English description' }}
+                  placeholder={{ zh: t('form.placeholders.descriptionZh', { ns: 'productLines' }), en: t('form.placeholders.descriptionEn', { ns: 'productLines' }) }}
                 />
               </FormItemComponent>
             </ColComponent>
 
             {/* 子项目设置 */}
             <ColComponent span={24}>
-              <DividerComponent orientation="left">子项目设置</DividerComponent>
+              <DividerComponent orientation="left">{t('form.sections.subitems', { ns: 'productLines' })}</DividerComponent>
             </ColComponent>
 
             <ColComponent span={12}>
               <FormItemComponent
-                label="子项目1 (耗材)"
+                label={t('form.fields.subitem1', { ns: 'productLines' })}
                 name="subitem1"
                 rules={[
                   {
                     validator: (_: any, value: any) => {
                       if (!value?.zh || !value?.en) {
-                        return Promise.reject('请输入子项目1的中英文名称');
+                        return Promise.reject(t('form.validation.subitem1Required', { ns: 'productLines' }));
                       }
                       return Promise.resolve();
                     }
@@ -325,20 +327,20 @@ const ProductLineEditPage: React.FC = () => {
                 <MultilingualInput
                   type="input"
                   required
-                  placeholder={{ zh: '耗材', en: 'Consumables' }}
+                  placeholder={{ zh: t('form.placeholders.subitem1Zh', { ns: 'productLines' }), en: t('form.placeholders.subitem1En', { ns: 'productLines' }) }}
                 />
               </FormItemComponent>
             </ColComponent>
 
             <ColComponent span={12}>
               <FormItemComponent
-                label="子项目2 (备件)"
+                label={t('form.fields.subitem2', { ns: 'productLines' })}
                 name="subitem2"
                 rules={[
                   {
                     validator: (_: any, value: any) => {
                       if (!value?.zh || !value?.en) {
-                        return Promise.reject('请输入子项目2的中英文名称');
+                        return Promise.reject(t('form.validation.subitem2Required', { ns: 'productLines' }));
                       }
                       return Promise.resolve();
                     }
@@ -348,38 +350,38 @@ const ProductLineEditPage: React.FC = () => {
                 <MultilingualInput
                   type="input"
                   required
-                  placeholder={{ zh: '备件', en: 'Spare Parts' }}
+                  placeholder={{ zh: t('form.placeholders.subitem2Zh', { ns: 'productLines' }), en: t('form.placeholders.subitem2En', { ns: 'productLines' }) }}
                 />
               </FormItemComponent>
             </ColComponent>
 
             <ColComponent span={12}>
               <FormItemComponent
-                label="子项目3 (可选)"
+                label={t('form.fields.subitem3', { ns: 'productLines' })}
                 name="subitem3"
               >
                 <MultilingualInput
                   type="input"
-                  placeholder={{ zh: '可选子项目', en: 'Optional subitem' }}
+                  placeholder={{ zh: t('form.placeholders.subitem3Zh', { ns: 'productLines' }), en: t('form.placeholders.subitem3En', { ns: 'productLines' }) }}
                 />
               </FormItemComponent>
             </ColComponent>
 
             {/* 产品线图片 */}
             <ColComponent span={24}>
-              <DividerComponent orientation="left">产品线图片</DividerComponent>
+              <DividerComponent orientation="left">{t('form.sections.image', { ns: 'productLines' })}</DividerComponent>
             </ColComponent>
 
             <ColComponent span={24}>
               <FormItemComponent
-                label="产品线图片"
+                label={t('form.fields.image', { ns: 'productLines' })}
                 name="image_url"
-                extra="支持 JPG, PNG, GIF, WEBP 格式，文件大小不超过 10MB"
+                extra={t('form.help.imageFormat', { ns: 'productLines' })}
               >
                 <FileUploader
                   type="image"
                   maxSize={10}
-                  placeholder="上传产品线图片"
+                  placeholder={t('form.placeholders.image', { ns: 'productLines' })}
                   preview
                 />
               </FormItemComponent>
@@ -396,10 +398,10 @@ const ProductLineEditPage: React.FC = () => {
                 loading={submitting}
                 size="large"
               >
-                {isEditMode ? '保存更改' : '创建产品线'}
+                {isEditMode ? t('actions.saveChanges', { ns: 'productLines' }) : t('actions.create', { ns: 'productLines' })}
               </ButtonComponent>
               <ButtonComponent onClick={handleBack} size="large">
-                取消
+                {t('actions.cancel', { ns: 'productLines' })}
               </ButtonComponent>
             </SpaceComponent>
           </FormItemComponent>

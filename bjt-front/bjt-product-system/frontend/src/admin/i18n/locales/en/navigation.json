@@ -1,0 +1,22 @@
+{
+  "productLineManagement": "Product Line Management",
+  "productLine1": "Product Line 1",
+  "productLine2": "Product Line 2", 
+  "productLine3": "Product Line 3",
+  "airCushionMachine": "Air Cushion Machine",
+  "paperMachine": "Paper Machine",
+  "tapeMachine": "Tape Machine",
+  "hostMachine": "Host Machine",
+  "relations": "Relations",
+  "accessories": "Accessories",
+  "consumables": "Consumables",
+  "consumablesDictionary": "Consumables Dictionary",
+  "spareParts": "Spare Parts",
+  "userManagement": "User Management",
+  "systemSettings": "System Settings",
+  "types": {
+    "airCushion": "Air Cushion",
+    "paper": "Paper",
+    "tape": "Tape"
+  }
+} 

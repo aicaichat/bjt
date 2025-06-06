@@ -1,0 +1,22 @@
+{
+  "productLineManagement": "产品线管理",
+  "productLine1": "产品线1",
+  "productLine2": "产品线2", 
+  "productLine3": "产品线3",
+  "airCushionMachine": "气垫机",
+  "paperMachine": "纸机",
+  "tapeMachine": "胶带机",
+  "hostMachine": "主机",
+  "relations": "关联关系",
+  "accessories": "配件",
+  "consumables": "耗材管理",
+  "consumablesDictionary": "耗材字典",
+  "spareParts": "备件",
+  "userManagement": "用户管理",
+  "systemSettings": "系统设置",
+  "types": {
+    "airCushion": "气垫机",
+    "paper": "纸机",
+    "tape": "胶带机"
+  }
+} 

@@ -11,12 +11,14 @@ import ImportExportButtons from '../../components/common/ImportExportButtons';
 import { useAdminApi } from '../../hooks/useAdminApi';
 import { accessoryModelService, accessoryService, AccessoryModel, Accessory } from '../../services/admin-accessory.service';
 import adminProductLineService from '../../services/admin-product-line.service';
+import { useAdminI18n } from '../../i18n/hooks/useAdminI18n';
 
 const { Option } = Select;
 const { Search } = Input;
 
 const AccessoriesPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useAdminI18n();
   
   // 状态变量
   const [activeTab, setActiveTab] = useState<string>('models');
@@ -53,7 +55,7 @@ const AccessoriesPage: React.FC = () => {
   
   // 获取配件型号列表
   const {
-    data: modelData,
+    data: modelDataRaw,
     loading: modelLoading,
     updateParams: updateModelParams,
     refetch: refetchModels
@@ -61,10 +63,11 @@ const AccessoriesPage: React.FC = () => {
     accessoryModelService.getAccessoryModels.bind(accessoryModelService),
     modelParams
   );
+  const modelData = modelDataRaw as { items: AccessoryModel[]; total: number; page: number; page_size: number } | undefined;
   
   // 获取配件料号列表
   const {
-    data: accessoryData,
+    data: accessoryDataRaw,
     loading: accessoryLoading,
     updateParams: updateAccessoryParams,
     refetch: refetchAccessories
@@ -72,6 +75,7 @@ const AccessoriesPage: React.FC = () => {
     accessoryService.getAccessories.bind(accessoryService),
     accessoryParams
   );
+  const accessoryData = accessoryDataRaw as { items: Accessory[]; total: number; page: number; page_size: number } | undefined;
   
   // 处理语言切换
   const handleLanguageChange = (value: 'zh' | 'en') => {
@@ -103,10 +107,10 @@ const AccessoriesPage: React.FC = () => {
   const handleDeleteModel = async (id: number) => {
     try {
       await accessoryModelService.deleteAccessoryModel(id);
-      message.success('配件型号删除成功');
+      message.success(t('message.deleteSuccess', { ns: 'accessories' }));
       refetchModels();
     } catch (error) {
-      message.error('配件型号删除失败');
+      message.error(t('message.deleteFailed', { ns: 'accessories' }));
     }
   };
   
@@ -114,102 +118,102 @@ const AccessoriesPage: React.FC = () => {
   const handleDeleteAccessory = async (id: number) => {
     try {
       await accessoryService.deleteAccessory(id);
-      message.success('配件料号删除成功');
+      message.success(t('message.deleteSuccess', { ns: 'accessories' }));
       refetchAccessories();
     } catch (error) {
-      message.error('配件料号删除失败');
+      message.error(t('message.deleteFailed', { ns: 'accessories' }));
     }
   };
   
   // 配件型号表格列配置 - 显示完整数据库字段
   const modelColumns = [
     {
-      title: '编号',
+      title: t('fields.id', { ns: 'accessories' }),
       dataIndex: 'id',
       key: 'id',
       width: 80,
       sorter: true,
     },
     {
-      title: '型号编码',
+      title: t('fields.model', { ns: 'accessories' }),
       dataIndex: 'model',
       key: 'model',
       width: 150,
     },
     {
-      title: '中文名称',
+      title: t('fields.title_zh', { ns: 'accessories' }),
       dataIndex: 'title_zh',
       key: 'title_zh',
       width: 200,
     },
     {
-      title: '英文名称',
+      title: t('fields.title_en', { ns: 'accessories' }),
       dataIndex: 'title_en',
       key: 'title_en',
       width: 200,
     },
     {
-      title: '配件类型',
+      title: t('fields.type', { ns: 'accessories' }),
       dataIndex: 'type',
       key: 'type',
       width: 120,
     },
     {
-      title: '中文描述',
+      title: t('fields.description_zh', { ns: 'accessories' }),
       dataIndex: 'description_zh',
       key: 'description_zh',
       width: 200,
       ellipsis: true,
     },
     {
-      title: '英文描述',
+      title: t('fields.description_en', { ns: 'accessories' }),
       dataIndex: 'description_en',
       key: 'description_en',
       width: 200,
       ellipsis: true,
     },
     {
-      title: '主图',
+      title: t('fields.image1_url', { ns: 'accessories' }),
       dataIndex: 'image1_url',
       key: 'image1_url',
       width: 100,
       render: (url: string) => url ? (
-        <img src={url} alt="主图" style={{ width: 50, height: 50, objectFit: 'cover' }} />
+        <img src={url} alt={t('fields.image1_url', { ns: 'accessories' })} style={{ width: 50, height: 50, objectFit: 'cover' }} />
       ) : '-',
     },
     {
-      title: '副图',
+      title: t('fields.image2_url', { ns: 'accessories' }),
       dataIndex: 'image2_url',
       key: 'image2_url',
       width: 100,
       render: (url: string) => url ? (
-        <img src={url} alt="副图" style={{ width: 50, height: 50, objectFit: 'cover' }} />
+        <img src={url} alt={t('fields.image2_url', { ns: 'accessories' })} style={{ width: 50, height: 50, objectFit: 'cover' }} />
       ) : '-',
     },
     {
-      title: '状态',
+      title: t('fields.status', { ns: 'accessories' }),
       dataIndex: 'status',
       key: 'status',
       width: 100,
       render: (status: string) => {
         const statusMap: Record<string, { text: string; color: string }> = {
-          publish: { text: '已发布', color: 'green' },
-          draft: { text: '草稿', color: 'orange' },
-          trash: { text: '已删除', color: 'red' },
+          publish: { text: t('status.publish', { ns: 'accessories' }), color: 'green' },
+          draft: { text: t('status.draft', { ns: 'accessories' }), color: 'orange' },
+          trash: { text: t('status.trash', { ns: 'accessories' }), color: 'red' },
         };
-        const { text, color } = statusMap[status] || { text: '未知', color: 'gray' };
+        const { text, color } = statusMap[status] || { text: t('status.unknown', { ns: 'accessories' }), color: 'gray' };
         return <span style={{ color }}>{text}</span>;
       },
     },
     {
-      title: '排序',
+      title: t('fields.sort_order', { ns: 'accessories' }),
       dataIndex: 'sort_order',
       key: 'sort_order',
       width: 80,
       sorter: true,
     },
     {
-      title: '操作',
+      title: t('fields.action', { ns: 'accessories' }),
       key: 'action',
       width: 200,
       fixed: 'right' as const,
@@ -220,7 +224,7 @@ const AccessoriesPage: React.FC = () => {
             icon={<EditOutlined />}
             onClick={() => navigate(`/admin/accessories/models/edit/${record.id}`)}
           >
-            编辑
+            {t('actions.edit', { ns: 'accessories' })}
           </Button>
           <Button
             type="link"
@@ -228,7 +232,7 @@ const AccessoriesPage: React.FC = () => {
             icon={<DeleteOutlined />}
             onClick={() => handleDeleteModel(record.id)}
           >
-            删除
+            {t('actions.delete', { ns: 'accessories' })}
           </Button>
         </Space>
       ),
@@ -238,136 +242,136 @@ const AccessoriesPage: React.FC = () => {
   // 配件料号表格列配置 - 显示完整数据库字段
   const accessoryColumns = [
     {
-      title: '编号',
+      title: t('fields.id', { ns: 'accessories' }),
       dataIndex: 'id',
       key: 'id',
       width: 80,
       sorter: true,
     },
     {
-      title: '型号',
+      title: t('fields.model', { ns: 'accessories' }),
       dataIndex: 'model',
       key: 'model',
       width: 120,
     },
     {
-      title: '料号',
+      title: t('fields.part_number', { ns: 'accessories' }),
       dataIndex: 'part_number',
       key: 'part_number',
       width: 150,
     },
     {
-      title: '中文名称',
+      title: t('fields.name_zh', { ns: 'accessories' }),
       dataIndex: 'name_zh',
       key: 'name_zh',
       width: 200,
     },
     {
-      title: '英文名称',
+      title: t('fields.name_en', { ns: 'accessories' }),
       dataIndex: 'name_en',
       key: 'name_en',
       width: 200,
     },
     {
-      title: '品牌',
+      title: t('fields.brand', { ns: 'accessories' }),
       dataIndex: 'brand',
       key: 'brand',
       width: 100,
     },
     {
-      title: '公制规格',
+      title: t('fields.spec', { ns: 'accessories' }),
       dataIndex: 'spec',
       key: 'spec',
       width: 150,
       ellipsis: true,
     },
     {
-      title: '英制规格',
+      title: t('fields.spec_imperial', { ns: 'accessories' }),
       dataIndex: 'spec_imperial',
       key: 'spec_imperial',
       width: 150,
       ellipsis: true,
     },
     {
-      title: '电压',
+      title: t('fields.voltage', { ns: 'accessories' }),
       dataIndex: 'voltage',
       key: 'voltage',
       width: 80,
     },
     {
-      title: '频率',
+      title: t('fields.frequency', { ns: 'accessories' }),
       dataIndex: 'frequency',
       key: 'frequency',
       width: 80,
     },
     {
-      title: '单位',
+      title: t('fields.unit', { ns: 'accessories' }),
       dataIndex: 'unit',
       key: 'unit',
       width: 80,
     },
     {
-      title: '单箱数量',
+      title: t('fields.pcs_per_box', { ns: 'accessories' }),
       dataIndex: 'pcs_per_box',
       key: 'pcs_per_box',
       width: 100,
     },
     {
-      title: '净重(kg)',
+      title: t('fields.net_weight_kg', { ns: 'accessories' }),
       dataIndex: 'net_weight_kg',
       key: 'net_weight_kg',
       width: 100,
     },
     {
-      title: '净重(lbs)',
+      title: t('fields.net_weight_lbs', { ns: 'accessories' }),
       dataIndex: 'net_weight_lbs',
       key: 'net_weight_lbs',
       width: 100,
     },
     {
-      title: '包装毛重(kg)',
+      title: t('fields.gross_weight_kg', { ns: 'accessories' }),
       dataIndex: 'gross_weight_kg',
       key: 'gross_weight_kg',
       width: 120,
     },
     {
-      title: '包装毛重(lbs)',
+      title: t('fields.gross_weight_lbs', { ns: 'accessories' }),
       dataIndex: 'gross_weight_lbs',
       key: 'gross_weight_lbs',
       width: 120,
     },
     {
-      title: '一托数量',
+      title: t('fields.pcs_per_pallet', { ns: 'accessories' }),
       dataIndex: 'pcs_per_pallet',
       key: 'pcs_per_pallet',
       width: 100,
     },
     {
-      title: '图片',
+      title: t('fields.image_url', { ns: 'accessories' }),
       dataIndex: 'image_url',
       key: 'image_url',
       width: 100,
       render: (url: string) => url ? (
-        <img src={url} alt="产品图片" style={{ width: 50, height: 50, objectFit: 'cover' }} />
+        <img src={url} alt={t('fields.image_url', { ns: 'accessories' })} style={{ width: 50, height: 50, objectFit: 'cover' }} />
       ) : '-',
     },
     {
-      title: '状态',
+      title: t('fields.status', { ns: 'accessories' }),
       dataIndex: 'status',
       key: 'status',
       width: 100,
       render: (status: string) => {
         const statusMap: Record<string, { text: string; color: string }> = {
-          publish: { text: '已发布', color: 'green' },
-          draft: { text: '草稿', color: 'orange' },
-          trash: { text: '已删除', color: 'red' },
+          publish: { text: t('status.publish', { ns: 'accessories' }), color: 'green' },
+          draft: { text: t('status.draft', { ns: 'accessories' }), color: 'orange' },
+          trash: { text: t('status.trash', { ns: 'accessories' }), color: 'red' },
         };
-        const { text, color } = statusMap[status] || { text: '未知', color: 'gray' };
+        const { text, color } = statusMap[status] || { text: t('status.unknown', { ns: 'accessories' }), color: 'gray' };
         return <span style={{ color }}>{text}</span>;
       },
     },
     {
-      title: '操作',
+      title: t('fields.action', { ns: 'accessories' }),
       key: 'action',
       width: 200,
       fixed: 'right' as const,
@@ -378,7 +382,7 @@ const AccessoriesPage: React.FC = () => {
             icon={<EditOutlined />}
             onClick={() => navigate(`/admin/accessories/edit/${record.id}`)}
           >
-            编辑
+            {t('actions.edit', { ns: 'accessories' })}
           </Button>
           <Button
             type="link"
@@ -386,7 +390,7 @@ const AccessoriesPage: React.FC = () => {
             icon={<DeleteOutlined />}
             onClick={() => handleDeleteAccessory(record.id)}
           >
-            删除
+            {t('actions.delete', { ns: 'accessories' })}
           </Button>
         </Space>
       ),
@@ -400,7 +404,7 @@ const AccessoriesPage: React.FC = () => {
         <div className="mb-4 flex justify-between items-center">
           <Space>
             <Select
-              placeholder="选择语言"
+              placeholder={t('list.selectLanguage', { ns: 'accessories' })}
               value={selectedLanguage}
               style={{ width: 120 }}
               onChange={handleLanguageChange}
@@ -409,7 +413,7 @@ const AccessoriesPage: React.FC = () => {
               <Option value="en">English</Option>
             </Select>
             <Select
-              placeholder="选择区域"
+              placeholder={t('list.selectRegion', { ns: 'accessories' })}
               allowClear
               value={selectedRegion}
               style={{ width: 150 }}
@@ -424,12 +428,12 @@ const AccessoriesPage: React.FC = () => {
           <Space>
             <ImportExportButtons
               onImport={async (file) => {
-                message.info(`导入文件: ${file.name}`);
+                message.info(t('actions.import', { ns: 'accessories' }) + `: ${file.name}`);
                 // TODO: 实现导入功能
                 return Promise.resolve();
               }}
               onExport={async () => {
-                message.info('导出配件型号数据');
+                message.info(t('actions.export', { ns: 'accessories' }));
                 // TODO: 实现导出功能
                 return Promise.resolve();
               }}
@@ -439,7 +443,7 @@ const AccessoriesPage: React.FC = () => {
               icon={<PlusOutlined />}
               onClick={() => navigate('/admin/accessories/models/create')}
             >
-              新增型号
+              {t('actions.addModel', { ns: 'accessories' })}
             </Button>
           </Space>
         </div>
@@ -456,7 +460,7 @@ const AccessoriesPage: React.FC = () => {
             total: modelData?.total || 0,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total: number) => `共 ${total} 条记录`,
+            showTotal: (total: number) => t('pagination.total', { ns: 'accessories', total }),
           }}
           onChange={handleModelTableChange}
         />
@@ -471,7 +475,7 @@ const AccessoriesPage: React.FC = () => {
         <div className="mb-4 flex justify-between items-center">
           <Space>
             <Select
-              placeholder="选择语言"
+              placeholder={t('list.selectLanguage', { ns: 'accessories' })}
               value={selectedLanguage}
               style={{ width: 120 }}
               onChange={handleLanguageChange}
@@ -480,7 +484,7 @@ const AccessoriesPage: React.FC = () => {
               <Option value="en">English</Option>
             </Select>
             <Select
-              placeholder="选择区域"
+              placeholder={t('list.selectRegion', { ns: 'accessories' })}
               allowClear
               value={selectedRegion}
               style={{ width: 150 }}
@@ -495,12 +499,12 @@ const AccessoriesPage: React.FC = () => {
           <Space>
             <ImportExportButtons
               onImport={async (file) => {
-                message.info(`导入文件: ${file.name}`);
+                message.info(t('actions.import', { ns: 'accessories' }) + `: ${file.name}`);
                 // TODO: 实现导入功能
                 return Promise.resolve();
               }}
               onExport={async () => {
-                message.info('导出配件料号数据');
+                message.info(t('actions.export', { ns: 'accessories' }));
                 // TODO: 实现导出功能
                 return Promise.resolve();
               }}
@@ -510,7 +514,7 @@ const AccessoriesPage: React.FC = () => {
               icon={<PlusOutlined />}
               onClick={() => navigate('/admin/accessories/create')}
             >
-              新增料号
+              {t('actions.addAccessory', { ns: 'accessories' })}
             </Button>
           </Space>
         </div>
@@ -527,7 +531,7 @@ const AccessoriesPage: React.FC = () => {
             total: accessoryData?.total || 0,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total: number) => `共 ${total} 条记录`,
+            showTotal: (total: number) => t('pagination.total', { ns: 'accessories', total }),
           }}
           onChange={handleAccessoryTableChange}
         />
@@ -538,7 +542,7 @@ const AccessoriesPage: React.FC = () => {
   return (
     <div className="p-6">
       <AdminPageHeader
-        title="配件管理"
+        title={t('list.title', { ns: 'accessories' })}
       />
       
       <Card>
@@ -548,12 +552,12 @@ const AccessoriesPage: React.FC = () => {
           items={[
             {
               key: 'models',
-              label: '配件型号',
+              label: t('list.models', { ns: 'accessories' }),
               children: renderAccessoryModelsTable()
             },
             {
               key: 'accessories',
-              label: '配件料号',
+              label: t('list.accessories', { ns: 'accessories' }),
               children: renderAccessoriesTable()
             }
           ]}

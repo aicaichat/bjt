@@ -1,0 +1,148 @@
+{
+  "consumables": {
+    "title": "Consumables Dictionary Management",
+    "description": "Manage shape, material and specification dictionaries",
+    "currentProductLine": "Current Product Line",
+    "source": "Source"
+  },
+  "shape": {
+    "title": "Shape Management",
+    "management": "Shape Management",
+    "create": "Add Shape",
+    "edit": "Edit Shape",
+    "delete": "Delete Shape",
+    "name": "Shape",
+    "count": "Shape Count"
+  },
+  "material": {
+    "title": "Material Management", 
+    "management": "Material Management",
+    "create": "Add Material",
+    "edit": "Edit Material",
+    "delete": "Delete Material",
+    "name": "Material",
+    "count": "Material Count"
+  },
+  "specification": {
+    "title": "Specification Management",
+    "management": "Specification Management", 
+    "create": "Add Specification",
+    "edit": "Edit Specification",
+    "delete": "Delete Specification",
+    "name": "Specification",
+    "count": "Specification Count"
+  },
+  "fields": {
+    "id": "ID",
+    "code": "Code",
+    "name": "Name",
+    "nameZh": "Chinese Name",
+    "nameEn": "English Name",
+    "baseMaterial": "Base Material",
+    "metricValue": "Metric Value",
+    "metricUnit": "Metric Unit",
+    "imperialValue": "Imperial Value",
+    "imperialUnit": "Imperial Unit",
+    "imageUrl": "Main Image",
+    "imageUrl2": "Secondary Image",
+    "status": "Status",
+    "sortOrder": "Sort Order",
+    "type": "Type",
+    "action": "Action"
+  },
+  "placeholders": {
+    "enterCode": "Enter code",
+    "enterNameZh": "Enter Chinese name",
+    "enterNameEn": "Enter English name",
+    "enterBaseMaterial": "Enter base material",
+    "enterMetricValue": "Enter metric value",
+    "enterMetricUnit": "Enter metric unit",
+    "enterImperialValue": "Enter imperial value",
+    "enterImperialUnit": "Enter imperial unit",
+    "enterImageUrl": "Enter image URL",
+    "selectStatus": "Select status",
+    "enterSortOrder": "Enter sort order",
+    "selectType": "Select type",
+    "shapeCodeExample": "e.g.: MEX, BUB etc.",
+    "materialCodeExample": "e.g.: PE, PA etc.",
+    "specCodeExample": "e.g.: thickness, width etc."
+  },
+  "validation": {
+    "codeRequired": "Please enter code",
+    "nameZhRequired": "Please enter Chinese name",
+    "nameEnRequired": "Please enter English name",
+    "metricValueRequired": "Please enter metric value",
+    "imperialValueRequired": "Please enter imperial value",
+    "statusRequired": "Please select status"
+  },
+  "status": {
+    "publish": "Published",
+    "draft": "Draft",
+    "notSet": "Not Set"
+  },
+  "specTypes": {
+    "thickness": "Thickness",
+    "width": "Width", 
+    "length": "Length",
+    "weight": "Weight"
+  },
+  "specTypeColors": {
+    "thickness": "blue",
+    "width": "green",
+    "length": "orange", 
+    "weight": "purple"
+  },
+  "actions": {
+    "refreshAll": "Refresh All",
+    "batchImport": "Batch Import",
+    "batchExport": "Batch Export",
+    "add": "Add",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "back": "Back",
+    "confirm": "Confirm",
+    "upload": "Upload"
+  },
+  "buttons": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "create": "Create",
+    "update": "Update",
+    "back": "Back"
+  },
+  "message": {
+    "refreshSuccess": "Data refreshed",
+    "deleteConfirm": "Confirm Delete",
+    "deleteWarning": "This operation cannot be undone",
+    "shapeDeleteSuccess": "Shape deleted successfully",
+    "shapeDeleteFailed": "Failed to delete shape",
+    "shapeCreateSuccess": "Shape created successfully",
+    "shapeCreateFailed": "Failed to create shape",
+    "shapeUpdateSuccess": "Shape updated successfully",
+    "shapeUpdateFailed": "Failed to update shape",
+    "materialDeleteSuccess": "Material deleted successfully",
+    "materialDeleteFailed": "Failed to delete material",
+    "materialCreateSuccess": "Material created successfully",
+    "materialCreateFailed": "Failed to create material", 
+    "materialUpdateSuccess": "Material updated successfully",
+    "materialUpdateFailed": "Failed to update material",
+    "specDeleteSuccess": "Specification deleted successfully",
+    "specDeleteFailed": "Failed to delete specification",
+    "specCreateSuccess": "Specification created successfully",
+    "specCreateFailed": "Failed to create specification",
+    "specUpdateSuccess": "Specification updated successfully",
+    "specUpdateFailed": "Failed to update specification",
+    "fetchDataFailed": "Failed to fetch data",
+    "dataNotExist": "Data does not exist",
+    "submitFailed": "Submit failed"
+  },
+  "imageStatus": {
+    "hasImage": "Has Image",
+    "noImage": "No Image"
+  },
+  "pagination": {
+    "total": "Total {{total}} records"
+  }
+} 

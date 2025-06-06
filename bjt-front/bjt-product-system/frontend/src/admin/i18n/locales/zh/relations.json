@@ -1,0 +1,134 @@
+{
+  "list": {
+    "title": "关联关系管理",
+    "description": "管理产品的多级配件关系和备件关系",
+    "selectHost": "选择主机料号",
+    "hostPartNumber": "主机料号",
+    "currentHost": "当前主机",
+    "noData": "暂无关联关系数据",
+    "addChild": "添加子级",
+    "addAccessory": "添加配件",
+    "addSparePart": "添加备件",
+    "relationshipTree": "关系结构树",
+    "relationshipCount": "关系数量",
+    "productLine": "产品线",
+    "legend": "图例",
+    "refresh": "刷新",
+    "reset": "重置"
+  },
+  "create": {
+    "title": "新增关联关系"
+  },
+  "edit": {
+    "title": "编辑关联关系",
+    "description": "编辑关联关系"
+  },
+  "sections": {
+    "basicInfo": "基本信息",
+    "relationshipInfo": "关系设置",
+    "dependencyInfo": "依赖关联料号管理"
+  },
+  "fields": {
+    "id": "编号",
+    "productLine": "所属产品线",
+    "hostPartNumber": "主机料号-0级",
+    "partNumber": "自身料号",
+    "parentPartNumber": "父项料号",
+    "childPartNumber": "子项料号",
+    "childType": "子项类型",
+    "level": "层级",
+    "quantity": "数量",
+    "requiredParts": "依赖关联料号",
+    "requiredQuantity": "依赖关联数量",
+    "sortOrder": "同级排序",
+    "status": "状态",
+    "createTime": "创建时间",
+    "updateTime": "更新时间",
+    "action": "操作"
+  },
+  "placeholders": {
+    "selectProductLine": "请选择产品线",
+    "selectHost": "选择主机料号",
+    "enterPartNumber": "请输入料号",
+    "enterParentPartNumber": "请输入父项料号",
+    "enterChildPartNumber": "请输入子项料号",
+    "selectChildType": "请选择子项类型",
+    "enterQuantity": "请输入数量",
+    "enterRequiredParts": "输入依赖的关联料号，多个用逗号分隔",
+    "enterRequiredQuantity": "输入对应的数量，多个用逗号分隔",
+    "enterSortOrder": "请输入排序号",
+    "selectStatus": "请选择状态"
+  },
+  "validation": {
+    "productLineRequired": "请选择所属产品线",
+    "hostPartNumberRequired": "请选择主机料号",
+    "partNumberRequired": "请输入自身料号",
+    "childTypeRequired": "请选择子项类型",
+    "levelRequired": "请输入层级",
+    "quantityRequired": "请输入数量",
+    "sortOrderRequired": "请输入排序号",
+    "statusRequired": "请选择状态"
+  },
+  "childTypes": {
+    "accessory": "配件",
+    "spare_part": "备件"
+  },
+  "status": {
+    "publish": "已发布",
+    "draft": "草稿",
+    "trash": "已删除"
+  },
+  "tags": {
+    "host": "主机",
+    "component": "配件",
+    "sparePart": "备件"
+  },
+  "actions": {
+    "create": "新增关联关系",
+    "edit": "编辑",
+    "delete": "删除",
+    "addChild": "添加子级",
+    "addAccessory": "添加配件",
+    "addSparePart": "添加备件",
+    "showNext": "显示下一级配件",
+    "showChildren": "查看下一级",
+    "refresh": "刷新",
+    "reset": "重置",
+    "cancel": "取消",
+    "save": "保存",
+    "confirm": "确认",
+    "back": "返回列表"
+  },
+  "buttons": {
+    "save": "保存",
+    "cancel": "取消",
+    "create": "创建",
+    "update": "更新",
+    "back": "返回"
+  },
+  "message": {
+    "deleteSuccess": "删除成功",
+    "deleteFailed": "删除失败",
+    "createSuccess": "创建成功",
+    "createFailed": "创建失败",
+    "updateSuccess": "更新成功",
+    "updateFailed": "更新失败",
+    "dataRefreshed": "数据已刷新",
+    "confirmDelete": "确定要删除关系",
+    "deleteWarning": "此操作无法撤销",
+    "noHostSelected": "请先选择主机料号",
+    "loadingData": "加载中..."
+  },
+  "tips": {
+    "productLineFixed": "产品线固定为1。请选择主机料号以查看关联关系树。数据来源于关联关系表，树形结构支持最多5级配件嵌套，备件固定为1级。",
+    "requiredPartsFormat": "多个料号用逗号分隔，如：13A00001,13A00002",
+    "requiredQuantityFormat": "与依赖关联料号一一对应，如：2,1",
+    "levelInfo": "层级(1-5)，备件固定为1",
+    "sortOrderInfo": "同级排序，数字越小越靠前"
+  },
+  "empty": {
+    "noData": "暂无关联关系数据，请点击主机节点的\"+\"按钮添加配件或备件",
+    "noHost": "请选择主机料号以查看关联关系",
+    "noChildren": "没有下一级关联"
+  }
+} 

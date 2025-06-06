@@ -1,0 +1,154 @@
+{
+  "list": {
+    "title": "Accessory List",
+    "models": "Accessory Models",
+    "accessories": "Accessory Parts",
+    "searchPlaceholder": "Search accessory name, model or code",
+    "filterByStatus": "Filter by status",
+    "filterByType": "Filter by type",
+    "filterByProductLine": "Filter by product line",
+    "selectLanguage": "Select Language",
+    "selectRegion": "Select Region"
+  },
+  "create": {
+    "title": "Add Accessory"
+  },
+  "edit": {
+    "title": "Edit Accessory"
+  },
+  "createModel": {
+    "title": "Add Accessory Model"
+  },
+  "editModel": {
+    "title": "Edit Accessory Model"
+  },
+  "sections": {
+    "basicInfo": "Basic Information",
+    "specInfo": "Specification",
+    "packageInfo": "Package Information",
+    "palletInfo": "Pallet Information",
+    "otherInfo": "Other Information"
+  },
+  "fields": {
+    "id": "ID",
+    "model": "Model Code",
+    "title_zh": "Chinese Name",
+    "title_en": "English Name",
+    "type": "Accessory Type",
+    "description_zh": "Chinese Description",
+    "description_en": "English Description",
+    "image1_url": "Main Image",
+    "image2_url": "Secondary Image",
+    "status": "Status",
+    "productLine": "Product Line",
+    "createTime": "Created At",
+    "updateTime": "Updated At",
+    "part_number": "Part Number",
+    "name_zh": "Chinese Name",
+    "name_en": "English Name",
+    "brand": "Brand",
+    "spec": "Metric Spec",
+    "spec_imperial": "Imperial Spec",
+    "voltage": "Voltage",
+    "frequency": "Frequency",
+    "unit": "Unit",
+    "pcs_per_box": "Pcs per Box",
+    "net_weight_kg": "Net Weight (kg)",
+    "net_weight_lbs": "Net Weight (lbs)",
+    "gross_weight_kg": "Gross Weight (kg)",
+    "gross_weight_lbs": "Gross Weight (lbs)",
+    "pcs_per_pallet": "Pcs per Pallet",
+    "image_url": "Image",
+    "sort_order": "Sort Order",
+    "action": "Action",
+    "package_size_cm": "Package Size (cm)",
+    "package_size_inch": "Package Size (inch)",
+    "pallet_size_cm": "Pallet Size (cm)",
+    "pallet_size_inch": "Pallet Size (inch)",
+    "pallet_height_cm": "Pallet Height (cm)",
+    "pallet_height_inch": "Pallet Height (inch)",
+    "pallet_gross_weight_kg": "Pallet Gross Weight (kg)",
+    "pallet_gross_weight_lbs": "Pallet Gross Weight (lbs)",
+    "explosion_diagram_pdf": "Explosion Diagram PDF"
+  },
+  "placeholders": {
+    "selectProductLine": "Select Product Line",
+    "enterModel": "Enter model",
+    "enterBrand": "Enter brand",
+    "enterPartNumber": "Enter part number",
+    "enterChineseName": "Enter Chinese name",
+    "enterEnglishName": "Enter English name",
+    "enterSpec": "Enter metric spec",
+    "enterImperialSpec": "Enter imperial spec",
+    "enterVoltage": "Enter voltage",
+    "enterFrequency": "Enter frequency",
+    "selectUnit": "Select unit",
+    "enterPackageSizeCm": "Enter package size (cm)",
+    "enterPackageSizeInch": "Enter package size (inch)",
+    "enterNetWeightKg": "Enter net weight (kg)",
+    "enterNetWeightLbs": "Enter net weight (lbs)",
+    "enterGrossWeightKg": "Enter gross weight (kg)",
+    "enterGrossWeightLbs": "Enter gross weight (lbs)",
+    "enterPcsPerBox": "Enter pcs per box",
+    "enterPalletSizeCm": "Enter pallet size (cm)",
+    "enterPalletSizeInch": "Enter pallet size (inch)",
+    "enterPcsPerPallet": "Enter pcs per pallet",
+    "enterPalletHeightCm": "Enter pallet height (cm)",
+    "enterPalletHeightInch": "Enter pallet height (inch)",
+    "enterPalletGrossWeightKg": "Enter pallet gross weight (kg)",
+    "enterPalletGrossWeightLbs": "Enter pallet gross weight (lbs)",
+    "enterImageUrl": "Enter image URL",
+    "selectStatus": "Select status",
+    "enterType": "Enter accessory type",
+    "enterImage1Url": "Enter main image URL",
+    "enterImage2Url": "Enter secondary image URL",
+    "enterExplosionDiagramPdf": "Enter explosion diagram PDF URL",
+    "enterChineseDescription": "Enter Chinese description",
+    "enterEnglishDescription": "Enter English description",
+    "enterSortOrder": "Enter sort order"
+  },
+  "validation": {
+    "productLineRequired": "Please select product line",
+    "partNumberRequired": "Please enter part number",
+    "chineseNameRequired": "Please enter Chinese name",
+    "englishNameRequired": "Please enter English name",
+    "unitRequired": "Please select unit",
+    "statusRequired": "Please select status",
+    "modelRequired": "Please enter model code"
+  },
+  "status": {
+    "publish": "Published",
+    "draft": "Draft",
+    "trash": "Deleted",
+    "unknown": "Unknown"
+  },
+  "actions": {
+    "create": "Add Accessory",
+    "edit": "Edit",
+    "delete": "Delete",
+    "export": "Export",
+    "import": "Import",
+    "addModel": "Add Model",
+    "addAccessory": "Add Accessory",
+    "cancel": "Cancel",
+    "update": "Update"
+  },
+  "pagination": {
+    "total": "Total {{total}} records"
+  },
+  "empty": {
+    "noData": "No accessory data"
+  },
+  "message": {
+    "deleteSuccess": "Accessory deleted successfully",
+    "deleteFailed": "Failed to delete accessory",
+    "createSuccess": "Accessory created successfully",
+    "createFailed": "Failed to create accessory",
+    "updateSuccess": "Accessory updated successfully",
+    "updateFailed": "Failed to update accessory",
+    "modelCreateSuccess": "Accessory model created successfully",
+    "modelCreateFailed": "Failed to create accessory model",
+    "modelUpdateSuccess": "Accessory model updated successfully",
+    "modelUpdateFailed": "Failed to update accessory model"
+  }
+} 

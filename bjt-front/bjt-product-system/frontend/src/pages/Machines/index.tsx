@@ -103,7 +103,7 @@ const MachinesPage: React.FC = () => {
   const [selectedMachine, setSelectedMachine] = useState<string>('');
   const [filterType, setFilterType] = useState<string>('all');
   const [filterRegion, setFilterRegion] = useState<string>(DEFAULT_REGION);
-  const [selectedVoltage, setSelectedVoltage] = useState<string>('220V');
+  const [selectedVoltage, setSelectedVoltage] = useState<string>('ALL');
   
   // 主机型号相关状态
   const [hostModels, setHostModels] = useState<Array<{ id: number; model: string; title_zh: string; title_en: string; type?: string }>>([]);
@@ -201,7 +201,44 @@ const MachinesPage: React.FC = () => {
         
         if (hostModelsData && hostModelsData.length > 0) {
           console.log('✅ [fetchHostModels] Using API data:', hostModelsData);
-          setHostModels(hostModelsData);
+          
+          // 转换主机型号数据的PDF URL
+          const transformedHostModels = hostModelsData.map((hostModel: any) => {
+            const serverBaseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1').replace('/wp-json/bjt/v1', '');
+            
+            const getAbsolutePdfUrl = (pdfUrl: string | null) => {
+              if (!pdfUrl) return null;
+              if (pdfUrl.startsWith('http://') || pdfUrl.startsWith('https://')) {
+                return pdfUrl; // Already absolute
+              }
+              if (pdfUrl.startsWith('/')) {
+                // 清理路径：移除多余的前缀
+                let cleanPath = pdfUrl;
+                if (cleanPath.startsWith('/frontend/public')) {
+                  cleanPath = cleanPath.replace('/frontend/public', '');
+                }
+                return serverBaseUrl + cleanPath;
+              }
+              return pdfUrl;
+            };
+            
+            return {
+              ...hostModel,
+              spec_pdf: getAbsolutePdfUrl(hostModel.spec_pdf),
+              explosion_diagram_pdf: getAbsolutePdfUrl(hostModel.explosion_diagram_pdf)
+            };
+          });
+          
+          console.log('🔍 [fetchHostModels] Host models with PDF info:', transformedHostModels.map(h => ({
+            id: h.id,
+            model: h.model,
+            code: h.code,
+            title_zh: h.title_zh,
+            spec_pdf: h.spec_pdf,
+            explosion_diagram_pdf: h.explosion_diagram_pdf,
+            hasPdf: !!(h.spec_pdf || h.explosion_diagram_pdf)
+          })));
+          setHostModels(transformedHostModels);
           return;
         } else {
           console.log('⚠️ [fetchHostModels] API returned empty data, trying mock data');
@@ -233,6 +270,15 @@ const MachinesPage: React.FC = () => {
 
   // 获取机器数据 - 使用真实API
   const fetchMachines = async () => {
+    console.log('🚀 [fetchMachines] Starting API call with params:', {
+      category,
+      currentLanguage,
+      filterRegion,
+      selectedVoltage,
+      currentPage,
+      pageSize
+    });
+    
     setLoading(true);
     setError(null);
     
@@ -264,11 +310,26 @@ const MachinesPage: React.FC = () => {
       const fetchWithRetry = async (retryCount = 0) => {
         try {
           const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1';
-          const response = await fetch(`${baseUrl}/machineparts?page=${currentPage}&per_page=${pageSize}&product_line_id=${category}&lang=${currentLanguage}`, {
+          const apiUrl = `${baseUrl}/machineparts?page=${currentPage}&per_page=${pageSize}&product_line_id=${category}&lang=${currentLanguage}`;
+          
+          console.log('🌐 [fetchWithRetry] Making API request:', {
+            apiUrl,
+            retryCount,
+            token: localStorage.getItem('auth_token') ? 'exists' : 'missing'
+          });
+          
+          const response = await fetch(apiUrl, {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
               'Content-Type': 'application/json',
             },
+          });
+
+          console.log('📥 [fetchWithRetry] API response received:', {
+            status: response.status,
+            statusText: response.statusText,
+            ok: response.ok,
+            headers: Object.fromEntries(response.headers.entries())
           });
 
           if (response.status === 401 && retryCount < 3) {
@@ -322,11 +383,90 @@ const MachinesPage: React.FC = () => {
             
             if (machinesData && machinesData.length > 0) {
               console.log('✅ Using alternative API response format:', machinesData);
-              setMachines(machinesData);
-              setTotal(machinesData.length);
+              
+              // Transform API fields to frontend interface
+              const transformedMachines = machinesData.map((machine: any) => {
+                // Convert relative image URLs to absolute URLs
+                const serverBaseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1').replace('/wp-json/bjt/v1', '');
+                
+                const getAbsoluteImageUrl = (imageUrl: string | null) => {
+                  if (!imageUrl) return null;
+                  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+                    return imageUrl; // Already absolute
+                  }
+                  if (imageUrl.startsWith('/')) {
+                    // 修复：正确处理不同的上传路径
+                    // 开发环境下使用开发服务器，生产环境使用API服务器
+                    return serverBaseUrl + imageUrl; // Convert relative to absolute
+                  }
+                  return imageUrl; // Assume it's a valid URL
+                };
+
+                return {
+                  ...machine,
+                  image_url: getAbsoluteImageUrl(machine.image1_url) || getAbsoluteImageUrl(machine.image_url),
+                  model_image1_url: getAbsoluteImageUrl(machine.image1_url) || getAbsoluteImageUrl(machine.model_image1_url),
+                  model_image2_url: getAbsoluteImageUrl(machine.image2_url) || getAbsoluteImageUrl(machine.model_image2_url),
+                  // 修复PDF字段映射 - 确保spec_pdf字段被正确保存
+                  spec_pdf: getAbsoluteImageUrl(machine.spec_pdf),
+                  explosion_diagram_pdf: getAbsoluteImageUrl(machine.explosion_diagram_pdf),
+                  model_explosion_diagram_pdf: getAbsoluteImageUrl(machine.spec_pdf) || getAbsoluteImageUrl(machine.explosion_diagram_pdf) || getAbsoluteImageUrl(machine.model_explosion_diagram_pdf)
+                };
+              });
+              
+              console.log('🔄 [fetchMachines] Image URL transformation sample:', {
+                originalImageFields: machinesData.slice(0, 2).map((m: any) => ({
+                  id: m.id,
+                  image1_url: m.image1_url,
+                  image2_url: m.image2_url,
+                  image_url: m.image_url,
+                  explosion_diagram_pdf: m.explosion_diagram_pdf,
+                  spec_pdf: m.spec_pdf
+                })),
+                transformedImageFields: transformedMachines.slice(0, 2).map((m: any) => ({
+                  id: m.id,
+                  image_url: m.image_url,
+                  model_image1_url: m.model_image1_url,
+                  model_image2_url: m.model_image2_url,
+                  spec_pdf: m.spec_pdf,
+                  explosion_diagram_pdf: m.explosion_diagram_pdf,
+                  model_explosion_diagram_pdf: m.model_explosion_diagram_pdf
+                })),
+                serverBaseUrl: (import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1').replace('/wp-json/bjt/v1', ''),
+                isDev: import.meta.env.DEV,
+                actualBaseUrl: import.meta.env.DEV ? 'http://localhost:5173' : (import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1').replace('/wp-json/bjt/v1', '')
+              });
+
+              // 增强调试：显示完整的原始机器数据
+              console.log('🔍 [fetchMachines] Raw API machines data (first 2):', machinesData.slice(0, 2));
+              console.log('🔍 [fetchMachines] All machine IDs and PDF fields:', machinesData.map(m => ({
+                id: m.id,
+                code: m.code,
+                title_zh: m.title_zh,
+                spec_pdf: m.spec_pdf,
+                explosion_diagram_pdf: m.explosion_diagram_pdf,
+                image1_url: m.image1_url
+              })));
+
+              setMachines(transformedMachines);
+              
+              // 调试：显示所有机器的图片URL情况
+              console.log('🔍 [DEBUG] All machines image URLs:', transformedMachines.map(m => ({
+                id: m.id,
+                part_number: m.part_number,
+                image_url: m.image_url,
+                model_image1_url: m.model_image1_url,
+                spec_pdf: (m as any).spec_pdf,
+                explosion_diagram_pdf: (m as any).explosion_diagram_pdf,
+                model_explosion_diagram_pdf: m.model_explosion_diagram_pdf,
+                hasValidImageUrl: !!(m.image_url && m.image_url !== DEFAULT_IMAGE),
+                hasValidPdf: !!((m as any).spec_pdf || (m as any).explosion_diagram_pdf || m.model_explosion_diagram_pdf)
+              })));
+              
+              setTotal(transformedMachines.length);
               setCurrentPage(1);
               setPageSize(10);
-              setTotalPages(Math.ceil(machinesData.length / 10));
+              setTotalPages(Math.ceil(transformedMachines.length / 10));
               return;
             }
             
@@ -452,7 +592,74 @@ const MachinesPage: React.FC = () => {
             return;
           }
 
-          setMachines(data.data.items);
+          // Transform API fields to frontend interface for main response
+          const transformedItems = data.data.items.map((machine: any) => {
+            // Convert relative image URLs to absolute URLs
+            const serverBaseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1').replace('/wp-json/bjt/v1', '');
+            
+            const getAbsoluteImageUrl = (imageUrl: string | null) => {
+              if (!imageUrl) return null;
+              if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+                return imageUrl; // Already absolute
+              }
+              if (imageUrl.startsWith('/')) {
+                // 修复：正确处理不同的上传路径
+                // 开发环境下使用开发服务器，生产环境使用API服务器
+                return serverBaseUrl + imageUrl; // Convert relative to absolute
+              }
+              return imageUrl; // Assume it's a valid URL
+            };
+
+            return {
+              ...machine,
+              image_url: getAbsoluteImageUrl(machine.image1_url) || getAbsoluteImageUrl(machine.image_url),
+              model_image1_url: getAbsoluteImageUrl(machine.image1_url) || getAbsoluteImageUrl(machine.model_image1_url),
+              model_image2_url: getAbsoluteImageUrl(machine.image2_url) || getAbsoluteImageUrl(machine.model_image2_url),
+              // 修复PDF字段映射 - 确保spec_pdf字段被正确保存
+              spec_pdf: getAbsoluteImageUrl(machine.spec_pdf),
+              explosion_diagram_pdf: getAbsoluteImageUrl(machine.explosion_diagram_pdf),
+              model_explosion_diagram_pdf: getAbsoluteImageUrl(machine.spec_pdf) || getAbsoluteImageUrl(machine.explosion_diagram_pdf) || getAbsoluteImageUrl(machine.model_explosion_diagram_pdf)
+            };
+          });
+
+          console.log('🔄 [fetchMachines] Image URL transformation sample:', {
+            originalImageFields: data.data.items.slice(0, 2).map((m: any) => ({
+              id: m.id,
+              image1_url: m.image1_url,
+              image2_url: m.image2_url,
+              image_url: m.image_url,
+              explosion_diagram_pdf: m.explosion_diagram_pdf,
+              spec_pdf: m.spec_pdf
+            })),
+            transformedImageFields: transformedItems.slice(0, 2).map((m: any) => ({
+              id: m.id,
+              image_url: m.image_url,
+              model_image1_url: m.model_image1_url,
+              model_image2_url: m.model_image2_url,
+              spec_pdf: m.spec_pdf,
+              explosion_diagram_pdf: m.explosion_diagram_pdf,
+              model_explosion_diagram_pdf: m.model_explosion_diagram_pdf
+            })),
+            serverBaseUrl: (import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1').replace('/wp-json/bjt/v1', ''),
+            isDev: import.meta.env.DEV,
+            actualBaseUrl: import.meta.env.DEV ? 'http://localhost:5173' : (import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1').replace('/wp-json/bjt/v1', '')
+          });
+
+          setMachines(transformedItems);
+          
+          // 调试：显示所有机器的图片URL情况
+          console.log('🔍 [DEBUG] All machines image URLs:', transformedItems.map(m => ({
+            id: m.id,
+            part_number: m.part_number,
+            image_url: m.image_url,
+            model_image1_url: m.model_image1_url,
+            spec_pdf: (m as any).spec_pdf,
+            explosion_diagram_pdf: (m as any).explosion_diagram_pdf,
+            model_explosion_diagram_pdf: m.model_explosion_diagram_pdf,
+            hasValidImageUrl: !!(m.image_url && m.image_url !== DEFAULT_IMAGE),
+            hasValidPdf: !!((m as any).spec_pdf || (m as any).explosion_diagram_pdf || m.model_explosion_diagram_pdf)
+          })));
+          
           setTotal(data.data.total);
           setCurrentPage(data.data.page);
           setPageSize(data.data.per_page);
@@ -531,70 +738,164 @@ const MachinesPage: React.FC = () => {
           if (jsonData.success && jsonData.data && jsonData.data.accessories) {
             const accessoriesData = jsonData.data.accessories;
             
-            // 转换为前端需要的格式
-            const convertedAccessories: MachineAccessory[] = accessoriesData.map((item: any) => ({
-              id: item.id || '',
-              model: item.model || '',
-              title: item.name || '',
-              level: 1, // 一级配件
-              image_url: item.image_url || '',
-              part_number: item.part_number || '',
-              voltage: item.voltage || '',
-              frequency: item.frequency || '',
-              package_size_cm: item.package_size_cm || '',
-              package_size_inch: item.package_size_inch || '',
-              pcs_per_box: item.pcs_per_box || '',
-              pallet_size_cm: item.pallet_size_cm || '',
-              pallet_size_inch: item.pallet_size_inch || '',
-              pcs_per_pallet: item.pcs_per_pallet || '',
-              net_weight_kg: item.net_weight_kg || 0,
-              net_weight_lbs: item.net_weight_lbs || 0,
-              gross_weight_kg: item.gross_weight_kg || 0,
-              gross_weight_lbs: item.gross_weight_lbs || 0,
-              spec: item.spec || '',
-              spec_imperial: item.spec_imperial || '',
-              description_zh: item.description_zh || '',
-              description_en: item.description_en || '',
-              is_required: item.is_required || false,
-              parent_id: item.parent_id || '',
-              children: item.children || [],
-              parts: (item.parts || []).map((part: any) => ({
-                id: part.id || '',
-                part_number: part.part_number || '',
-                title: part.name || '',
-                specs: {
-                  spec: part.spec || '',
-                  voltage: part.voltage || '',
-                  frequency: part.frequency || '',
-                  package_size_cm: part.package_size_cm || '',
-                  package_size_inch: part.package_size_inch || '',
-                  pcs_per_box: part.pcs_per_box || '',
-                  pallet_size_cm: part.pallet_size_cm || '',
-                  pallet_size_inch: part.pallet_size_inch || '',
-                  pcs_per_pallet: part.pcs_per_pallet || '',
-                  net_weight_kg: part.net_weight_kg || 0,
-                  net_weight_lbs: part.net_weight_lbs || 0,
-                  gross_weight_kg: part.gross_weight_kg || 0,
-                  gross_weight_lbs: part.gross_weight_lbs || 0
-                },
-                spec: part.spec || '',
-                spec_imperial: part.spec_imperial || '',
-                prices: {
-                  base: part.pricing?.base_price || 0,
-                  tier1: part.pricing?.tier1_price || 0,
-                  tier2: part.pricing?.tier2_price || 0,
-                  vip: part.pricing?.vip_price || 0
-                },
-                inventory: (part.inventory || []).map((inv: any) => ({
-                  region: inv.region || '',
-                  amount: inv.amount || 0,
-                  reserved: inv.reserved || 0
-                }))
-              }))
-            }));
+            // 新的数据转换逻辑：正确处理嵌套层级结构
+            const flattenAccessoriesByLevel = (items: any[], targetLevel: number = 1) => {
+              const result: MachineAccessory[] = [];
+              
+              console.log('🔍 [flattenAccessoriesByLevel] Input items:', items);
+              console.log('🔍 [flattenAccessoriesByLevel] Target level:', targetLevel);
+              
+              const processItems = (itemsList: any[], parentId?: string) => {
+                itemsList.forEach((item: any, index: number) => {
+                  console.log(`🔍 [processItems] Processing item ${index}:`, {
+                    id: item.id,
+                    part_number: item.part_number,
+                    level: item.level,
+                    name: item.name,
+                    hasChildren: item.children?.length > 0
+                  });
+                  
+                  // 检查是否为目标层级的配件
+                  if (item.level === targetLevel) {
+                    console.log(`✅ [processItems] Found target level ${targetLevel} item:`, item.part_number);
+                    
+                    // ✅ 修复：递归转换子级数据
+                    const convertChildren = (childrenData: any[]): MachineAccessory[] => {
+                      if (!childrenData || !Array.isArray(childrenData) || childrenData.length === 0) {
+                        return [];
+                      }
+                      
+                      return childrenData.map((child: any) => ({
+                        id: String(child.id || child.part_number || ''),
+                        product_line_id: child.product_line_id,
+                        model: child.model || '',
+                        brand: child.brand || '',
+                        part_number: child.part_number || '',
+                        name_zh: child.name || child.name_zh || '',
+                        name_en: child.name || child.name_en || '',
+                        title: child.name || child.title || '',
+                        title_zh: child.name || child.title_zh || '',
+                        title_en: child.name || child.title_en || '',
+                        spec: child.spec || '',
+                        spec_imperial: child.spec_imperial || '',
+                        voltage: child.voltage || '',
+                        frequency: child.frequency || '',
+                        package_size_cm: child.package_size_cm || '',
+                        package_size_inch: child.package_size_inch || '',
+                        net_weight_kg: child.net_weight_kg ? parseFloat(child.net_weight_kg) : undefined,
+                        net_weight_lbs: child.net_weight_lbs ? parseFloat(child.net_weight_lbs) : undefined,
+                        gross_weight_kg: child.gross_weight_kg ? parseFloat(child.gross_weight_kg) : undefined,
+                        gross_weight_lbs: child.gross_weight_lbs ? parseFloat(child.gross_weight_lbs) : undefined,
+                        pcs_per_box: child.pcs_per_box ? parseInt(child.pcs_per_box) : undefined,
+                        pallet_size_cm: child.pallet_size_cm || '',
+                        pallet_size_inch: child.pallet_size_inch || '',
+                        pcs_per_pallet: child.pcs_per_pallet ? parseInt(child.pcs_per_pallet) : undefined,
+                        pallet_height_cm: child.pallet_height_cm ? parseFloat(child.pallet_height_cm) : undefined,
+                        pallet_height_inch: child.pallet_height_inch ? parseFloat(child.pallet_height_inch) : undefined,
+                        pallet_gross_weight_kg: child.pallet_gross_weight_kg ? parseFloat(child.pallet_gross_weight_kg) : undefined,
+                        pallet_gross_weight_lbs: child.pallet_gross_weight_lbs ? parseFloat(child.pallet_gross_weight_lbs) : undefined,
+                        image_url: child.image_url || '/images/placeholder.jpg',
+                        level: child.level || (targetLevel + 1),
+                        parts: [],
+                        parent_id: item.id || item.part_number,
+                        compatible_machines: [],
+                        child_accessories: [],
+                        children: convertChildren(child.children), // 递归转换子级
+                        status: child.status || 'publish',
+                        unit: child.unit || 'pcs',
+                        created_at: child.created_at,
+                        updated_at: child.updated_at,
+                        is_required: false
+                      }));
+                    };
+                    
+                    // 正确映射API字段到MachineAccessory类型
+                    const convertedAccessory: MachineAccessory = {
+                      id: String(item.id || item.part_number || ''),
+                      product_line_id: item.product_line_id,
+                      model: item.model || '',
+                      brand: item.brand || '',
+                      part_number: item.part_number || '',
+                      name_zh: item.name || item.name_zh || '', // API返回name字段
+                      name_en: item.name || item.name_en || '', // API返回name字段
+                      title: item.name || item.title || '', // 修复字段映射：使用name字段
+                      title_zh: item.name || item.title_zh || '',
+                      title_en: item.name || item.title_en || '',
+                      spec: item.spec || '',
+                      spec_imperial: item.spec_imperial || '',
+                      voltage: item.voltage || '',
+                      frequency: item.frequency || '',
+                      package_size_cm: item.package_size_cm || '',
+                      package_size_inch: item.package_size_inch || '',
+                      net_weight_kg: item.net_weight_kg ? parseFloat(item.net_weight_kg) : undefined,
+                      net_weight_lbs: item.net_weight_lbs ? parseFloat(item.net_weight_lbs) : undefined,
+                      gross_weight_kg: item.gross_weight_kg ? parseFloat(item.gross_weight_kg) : undefined,
+                      gross_weight_lbs: item.gross_weight_lbs ? parseFloat(item.gross_weight_lbs) : undefined,
+                      pcs_per_box: item.pcs_per_box ? parseInt(item.pcs_per_box) : undefined,
+                      pallet_size_cm: item.pallet_size_cm || '',
+                      pallet_size_inch: item.pallet_size_inch || '',
+                      pcs_per_pallet: item.pcs_per_pallet ? parseInt(item.pcs_per_pallet) : undefined,
+                      pallet_height_cm: item.pallet_height_cm ? parseFloat(item.pallet_height_cm) : undefined,
+                      pallet_height_inch: item.pallet_height_inch ? parseFloat(item.pallet_height_inch) : undefined,
+                      pallet_gross_weight_kg: item.pallet_gross_weight_kg ? parseFloat(item.pallet_gross_weight_kg) : undefined,
+                      pallet_gross_weight_lbs: item.pallet_gross_weight_lbs ? parseFloat(item.pallet_gross_weight_lbs) : undefined,
+                      image_url: item.image_url || '/images/placeholder.jpg',
+                      level: item.level || targetLevel,
+                      parts: [], // 初始化为空数组
+                      parent_id: parentId,
+                      compatible_machines: [],
+                      child_accessories: [],
+                      children: convertChildren(item.children), // ✅ 修复：保存转换后的子级数据
+                      status: item.status || 'publish',
+                      unit: item.unit || 'pcs',
+                      created_at: item.created_at,
+                      updated_at: item.updated_at,
+                      is_required: false
+                    };
+                    
+                    result.push(convertedAccessory);
+                    console.log(`✅ [processItems] Successfully converted and added accessory:`, {
+                      id: convertedAccessory.id,
+                      part_number: convertedAccessory.part_number,
+                      title: convertedAccessory.title,
+                      level: convertedAccessory.level,
+                      childrenCount: convertedAccessory.children.length // ✅ 显示子级数量
+                    });
+                  } else {
+                    console.log(`⏭️ [processItems] Skipping item (level ${item.level} != ${targetLevel}):`, item.part_number);
+                  }
+                  
+                  // 递归处理子级
+                  if (item.children && Array.isArray(item.children) && item.children.length > 0) {
+                    console.log(`🔍 [processItems] Processing ${item.children.length} children for item ${item.part_number}`);
+                    processItems(item.children, item.id || item.part_number);
+                  }
+                });
+              };
+              
+              processItems(items);
+              console.log(`🔍 [flattenAccessoriesByLevel] Final result count for level ${targetLevel}:`, result.length);
+              console.log(`🔍 [flattenAccessoriesByLevel] Final result items:`, result.map(r => ({ 
+                part_number: r.part_number, 
+                title: r.title, 
+                level: r.level,
+                childrenCount: r.children.length // ✅ 显示每个配件的子级数量
+              })));
+              return result;
+            };
+            
+            // 提取Level 1配件
+            const level1Accessories = flattenAccessoriesByLevel(accessoriesData, 1);
+            console.log('🔍 [loadAccessories] Level 1 accessories extracted:', level1Accessories);
+            console.log('🔍 [loadAccessories] Level 1 accessories count:', level1Accessories.length);
+            console.log('🔍 [loadAccessories] Level 1 accessories part numbers:', level1Accessories.map(a => a.part_number));
             
             if (!isCancelled) {
-              setAccessories(convertedAccessories);
+              console.log('🔄 [loadAccessories] Setting accessories state with', level1Accessories.length, 'items');
+              setAccessories(level1Accessories);
+              
+              // 立即验证设置是否成功
+              console.log('✅ [loadAccessories] State should be updated with accessories');
               
               // 显示配件区域
               const accessoryDiv = document.getElementById('accessory-level-1');
@@ -605,6 +906,8 @@ const MachinesPage: React.FC = () => {
               // 更新上一次选择的机器引用
               previousMachineRef.current = selectedMachine;
               setAutoLoadedAccessories(true);
+              
+              console.log('✅ [loadAccessories] Level 1 accessories set successfully, count:', level1Accessories.length);
             }
           } else {
             console.warn('⚠️ [loadAccessories] No accessories data in response:', jsonData);
@@ -656,6 +959,11 @@ const MachinesPage: React.FC = () => {
   const getRegionInventory = (product: MachinePart, region: string): number => {
     const regionInventory = product.inventory?.find(inv => inv.region === region);
     return regionInventory ? regionInventory.quantity : 0;
+  };
+
+  // 处理电压选择
+  const handleVoltageChange = (value: string) => {
+    setSelectedVoltage(value);
   };
 
   // 过滤产品
@@ -1050,9 +1358,30 @@ const MachinesPage: React.FC = () => {
                     className="w-32 h-32 object-contain border-2 border-gray-200 rounded-lg bg-gray-50 p-2 shadow-sm hover:shadow-md transition-shadow duration-200"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
+                      console.log('❌ [Image Error] Failed to load image:', {
+                        originalSrc: target.src,
+                        machineId: machine.id,
+                        machinePartNumber: machine.part_number,
+                        originalImageFields: {
+                          image1_url: (machine as any).image1_url,
+                          image_url: machine.image_url,
+                          model_image1_url: machine.model_image1_url
+                        },
+                        willFallback: target.src !== DEFAULT_IMAGE,
+                        defaultImage: DEFAULT_IMAGE
+                      });
                       if (target.src !== DEFAULT_IMAGE) {
                         target.src = DEFAULT_IMAGE;
                       }
+                    }}
+                    onLoad={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      console.log('✅ [Image Loaded] Successfully loaded image:', {
+                        src: target.src,
+                        machineId: machine.id,
+                        machinePartNumber: machine.part_number,
+                        isDefault: target.src === DEFAULT_IMAGE
+                      });
                     }}
                   />
                 </div>
@@ -1073,6 +1402,45 @@ const MachinesPage: React.FC = () => {
               <div className="w-full md:w-3/5 md:px-6">
                 <div className="mb-4">
                   <span className="inline-block bg-blue-500 text-white px-3 py-1 text-sm font-bold rounded-lg shadow-sm">{machine.part_number}</span>
+                  {/* 临时调试按钮 */}
+                  <button 
+                    onClick={async () => {
+                      console.log('🔍 [DEBUG] Machine data:', machine);
+                      
+                      // 检查图片文件是否存在
+                      if (machine.image_url) {
+                        try {
+                          const imgResponse = await fetch(machine.image_url, { method: 'HEAD' });
+                          console.log(`🔍 [DEBUG] Image file check for ${machine.image_url}:`, {
+                            exists: imgResponse.ok,
+                            status: imgResponse.status,
+                            statusText: imgResponse.statusText
+                          });
+                        } catch (error) {
+                          console.log(`❌ [DEBUG] Image file check failed for ${machine.image_url}:`, error);
+                        }
+                      }
+                      
+                      // 检查PDF文件是否存在
+                      if (machine.model_explosion_diagram_pdf) {
+                        try {
+                          const pdfResponse = await fetch(machine.model_explosion_diagram_pdf, { method: 'HEAD' });
+                          console.log(`🔍 [DEBUG] PDF file check for ${machine.model_explosion_diagram_pdf}:`, {
+                            exists: pdfResponse.ok,
+                            status: pdfResponse.status,
+                            statusText: pdfResponse.statusText
+                          });
+                        } catch (error) {
+                          console.log(`❌ [DEBUG] PDF file check failed for ${machine.model_explosion_diagram_pdf}:`, error);
+                        }
+                      }
+                      
+                      alert(`机器数据已输出到控制台\n图片URL: ${machine.image_url}\nPDF: ${machine.model_explosion_diagram_pdf}\n\n文件存在性检查结果请查看控制台`);
+                    }}
+                    className="ml-2 text-xs bg-yellow-400 text-black px-2 py-1 rounded"
+                  >
+                    调试
+                  </button>
                   <h3 className="text-xl font-bold text-gray-900 mt-2 leading-tight">{getMachineName(machine)}</h3>
                 </div>
                 
@@ -1121,10 +1489,174 @@ const MachinesPage: React.FC = () => {
                     size="small"
                     icon={<InfoCircleOutlined />}
                     onClick={() => {
-                      if (machine.model_explosion_diagram_pdf) {
-                        window.open(machine.model_explosion_diagram_pdf, '_blank');
+                      // 从主机型号表中查找对应的PDF - 改进匹配逻辑
+                      const hostModel = hostModels.find(model => {
+                        // 优先策略1: ID匹配（如果主机型号表中有对应的机器ID）
+                        if ((model as any).machine_id === machine.id) return true;
+                        if ((model as any).part_number === machine.part_number) return true;
+                        
+                        // 优先策略2: 精确完整匹配
+                        if (model.model === machine.model) return true;
+                        if ((model as any).code === machine.model) return true;
+                        if (model.title_zh === machine.name_zh) return true;
+                        if (model.title_en === machine.name_en) return true;
+                        
+                        // 策略3: 去除版本号和测试后缀的匹配 - 更严格的匹配
+                        const cleanMachineModel = machine.model?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
+                        const cleanHostModel = model.model?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
+                        const cleanHostCode = (model as any).code?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
+                        
+                        // 更严格的匹配：只有当清理后的字符串完全相同且长度大于3时才匹配
+                        if (cleanMachineModel && cleanHostModel && cleanMachineModel.length > 3 && cleanMachineModel === cleanHostModel) return true;
+                        if (cleanMachineModel && cleanHostCode && cleanMachineModel.length > 3 && cleanMachineModel === cleanHostCode) return true;
+                        
+                        // 策略4: 基础型号匹配 (例如 LA-E4S) - 但要求更精确
+                        const baseMachineModel = machine.model?.split(/[\s\(]/)[0]; // 取第一部分
+                        const baseHostModel = model.model?.split(/[\s\(]/)[0];
+                        const baseHostCode = (model as any).code?.split(/[\s\(]/)[0];
+                        
+                        // 只有当基础型号长度大于4且完全匹配时才认为匹配
+                        if (baseMachineModel && baseHostModel && baseMachineModel.length > 4 && baseMachineModel === baseHostModel) return true;
+                        if (baseMachineModel && baseHostCode && baseMachineModel.length > 4 && baseMachineModel === baseHostCode) return true;
+                        
+                        return false;
+                      });
+                      
+                      console.log('🔍 [Machine PDF Debug] Looking for host model PDF:', {
+                        machine_id: machine.id,
+                        machine_model: machine.model,
+                        machine_name_zh: machine.name_zh,
+                        machine_part_number: machine.part_number,
+                        available_host_models: hostModels.map(h => ({
+                          id: h.id,
+                          model: h.model,
+                          code: (h as any).code, // 添加code字段显示
+                          title_zh: h.title_zh,
+                          title_en: h.title_en,
+                          spec_pdf: (h as any).spec_pdf,
+                          explosion_diagram_pdf: (h as any).explosion_diagram_pdf
+                        })),
+                        found_host_model: hostModel,
+                        host_model_pdf: hostModel ? (hostModel as any).spec_pdf || (hostModel as any).explosion_diagram_pdf : null,
+                        matching_details: {
+                          exact_model_match: hostModels.some(h => h.model === machine.model),
+                          exact_code_match: hostModels.some(h => (h as any).code === machine.model), // 添加code匹配检查
+                          exact_title_zh_match: hostModels.some(h => h.title_zh === machine.name_zh),
+                          clean_model_match: hostModels.some(h => {
+                            const cleanMachineModel = machine.model?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
+                            const cleanHostModel = h.model?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
+                            return cleanMachineModel === cleanHostModel;
+                          }),
+                          clean_code_match: hostModels.some(h => {
+                            const cleanMachineModel = machine.model?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
+                            const cleanHostCode = (h as any).code?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
+                            return cleanMachineModel === cleanHostCode;
+                          }),
+                          base_model_match: hostModels.some(h => {
+                            const baseMachineModel = machine.model?.split(/[\s\(]/)[0];
+                            const baseHostModel = h.model?.split(/[\s\(]/)[0];
+                            return baseMachineModel === baseHostModel;
+                          })
+                        }
+                      });
+                      
+                      // 详细匹配过程调试
+                      console.log('🔍 [Machine PDF Debug] Detailed matching process:', {
+                        machine_model: machine.model,
+                        step_by_step_checks: hostModels.map(h => ({
+                          host_id: h.id,
+                          host_model: h.model,
+                          host_code: (h as any).code,
+                          host_title_zh: h.title_zh,
+                          host_title_en: h.title_en,
+                          host_spec_pdf: (h as any).spec_pdf,
+                          host_explosion_pdf: (h as any).explosion_diagram_pdf,
+                          checks: {
+                            exact_model: h.model === machine.model,
+                            exact_code: (h as any).code === machine.model,
+                            exact_title_zh: h.title_zh === machine.name_zh,
+                            exact_title_en: h.title_en === machine.name_en,
+                            clean_model: (() => {
+                              const cleanMachineModel = machine.model?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
+                              const cleanHostModel = h.model?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
+                              return cleanMachineModel === cleanHostModel;
+                            })(),
+                            clean_code: (() => {
+                              const cleanMachineModel = machine.model?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
+                              const cleanHostCode = (h as any).code?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
+                              return cleanMachineModel === cleanHostCode;
+                            })(),
+                            base_model: (() => {
+                              const baseMachineModel = machine.model?.split(/[\s\(]/)[0];
+                              const baseHostModel = h.model?.split(/[\s\(]/)[0];
+                              return baseMachineModel === baseHostModel;
+                            })()
+                          },
+                          is_match: h === hostModel
+                        }))
+                      });
+                      
+                      const pdfUrl = hostModel ? 
+                        (hostModel as any).spec_pdf || 
+                        (hostModel as any).explosion_diagram_pdf ||
+                        (hostModel as any).model_explosion_diagram_pdf : null;
+                      
+                      if (pdfUrl && !pdfUrl.includes('placeholder')) {
+                        // 修复PDF URL转换逻辑
+                        let absolutePdfUrl = pdfUrl;
+                        
+                        // 修复基础URL计算
+                        const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1';
+                        let serverBaseUrl = '';
+                        
+                        if (!pdfUrl.startsWith('http')) {
+                          
+                          if (apiBaseUrl.includes('/wp-json/bjt/v1')) {
+                            serverBaseUrl = apiBaseUrl.replace('/wp-json/bjt/v1', '');
+                          } else {
+                            // 如果API URL格式不对，使用默认值
+                            serverBaseUrl = 'http://localhost:8080';
+                          }
+                          
+                          // 修复：当VITE_API_URL是相对路径时的处理
+                          if (!serverBaseUrl || serverBaseUrl === '') {
+                            // 使用当前窗口的origin作为基础URL
+                            serverBaseUrl = window.location.origin;
+                          }
+                          
+                          // 清理路径：移除多余的前缀
+                          let cleanPath = pdfUrl;
+                          if (cleanPath.startsWith('/frontend/public')) {
+                            cleanPath = cleanPath.replace('/frontend/public', '');
+                          }
+                          if (!cleanPath.startsWith('/')) {
+                            cleanPath = '/' + cleanPath;
+                          }
+                          
+                          absolutePdfUrl = serverBaseUrl + cleanPath;
+                        }
+                        
+                        console.log('✅ [Machine PDF Debug] Opening PDF:', {
+                          original_pdf_url: pdfUrl,
+                          cleaned_pdf_url: absolutePdfUrl,
+                          api_base_url: import.meta.env.VITE_API_URL,
+                          calculated_server_base: serverBaseUrl,
+                          env_check: {
+                            VITE_API_URL: import.meta.env.VITE_API_URL,
+                            DEV: import.meta.env.DEV,
+                            MODE: import.meta.env.MODE
+                          }
+                        });
+                        
+                        window.open(absolutePdfUrl, '_blank');
                       } else {
-                        info(t('noSpecPdf'));
+                        info(t('noSpecPdf') || '暂无规格说明文档');
+                        console.warn('🔍 [Machine PDF Debug] No valid PDF found for machine:', {
+                          machine_part_number: machine.part_number,
+                          machine_model: machine.model,
+                          host_model_found: !!hostModel,
+                          pdf_url: pdfUrl
+                        });
                       }
                     }}
                     className="bg-gray-100 text-gray-600 hover:bg-gray-600 hover:text-white border-gray-300 transition-colors duration-200"
@@ -1521,7 +2053,12 @@ const MachinesPage: React.FC = () => {
                 checked={selectedAccessories[`level${level}`] === accessory.id.toString()}
                 onChange={() => handleAccessorySelection(level, accessory.id.toString(), accessory.title)}
               />
-              <span className="text-sm font-medium">{t('actions.selectAccessory') || '选择配件'}</span>
+              <span className="text-sm font-medium">
+                {accessory.children && accessory.children.length > 0 
+                  ? `选择并展开 (${accessory.children.length})` 
+                  : (t('actions.selectAccessory') || '选择配件')
+                }
+              </span>
             </label>
           </div>
 
@@ -1529,8 +2066,14 @@ const MachinesPage: React.FC = () => {
           <div className="w-full md:w-3/5 md:px-6">
             <div className="mb-4">
               <span className={`inline-block bg-${levelColor}-500 text-white px-3 py-1 text-sm font-bold rounded-lg shadow-sm`}>
-                {accessoryPart?.part_number || accessory.model}
+                {accessory.part_number || accessoryPart?.part_number || accessory.model || accessory.id}
               </span>
+              {/* ✅ 添加子级指示器 */}
+              {accessory.children && accessory.children.length > 0 && (
+                <span className="ml-2 inline-block bg-orange-100 text-orange-700 px-2 py-1 text-xs font-medium rounded-lg border border-orange-200">
+                  🔗 {accessory.children.length} 个子配件
+                </span>
+              )}
               <h3 className="text-xl font-bold text-gray-900 mt-2 leading-tight">{accessory.title}</h3>
             </div>
 
@@ -1589,17 +2132,32 @@ const MachinesPage: React.FC = () => {
                 size="small"
                 icon={<InfoCircleOutlined />}
                 onClick={() => {
-                  // 尝试从多个字段获取PDF链接
-                  const pdfUrl = getFieldValue('model_explosion_diagram_pdf') || 
-                               getFieldValue('spec_pdf') || 
+                  // 尝试从多个字段获取PDF链接，扩展查找范围
+                  const pdfUrl = getFieldValue('spec_pdf') || 
+                               // 尝试直接从accessory对象获取（如果API返回了这些字段）
+                               (accessory as any).spec_pdf ||
                                getFieldValue('explosion_diagram_pdf') ||
+                               (accessory as any).explosion_diagram_pdf ||
+                               getFieldValue('model_explosion_diagram_pdf') || 
                                getFieldValue('pdf_url') ||
                                getFieldValue('spec_document');
                   
-                  if (pdfUrl && pdfUrl !== 'N/A') {
+                  console.log('🔍 [PDF Debug] Trying to open PDF:', {
+                    accessory_id: accessory.id,
+                    part_number: accessory.part_number,
+                    found_pdf_url: pdfUrl,
+                    getFieldValue_spec_pdf: getFieldValue('spec_pdf'),
+                    accessory_any_spec_pdf: (accessory as any).spec_pdf,
+                    getFieldValue_explosion_pdf: getFieldValue('explosion_diagram_pdf'),
+                    accessory_any_explosion_pdf: (accessory as any).explosion_diagram_pdf,
+                    accessory_image_url: accessory.image_url
+                  });
+                  
+                  if (pdfUrl && !pdfUrl.includes('placeholder')) {
                     window.open(pdfUrl, '_blank');
                   } else {
                     info(t('noSpecPdf') || '暂无规格说明文档');
+                    console.warn('🔍 [PDF Debug] No valid PDF found for accessory:', accessory.part_number);
                   }
                 }}
                 className="bg-gray-100 text-gray-600 hover:bg-gray-600 hover:text-white border-gray-300 transition-colors duration-200"
@@ -1828,18 +2386,18 @@ const MachinesPage: React.FC = () => {
         <div className="flex flex-wrap gap-4">
           {/* Voltage Filter */}
           <div className="flex flex-col">
-            <label className="mb-1 text-sm font-medium text-gray-600">
-              {t('filters.voltage')}
+            <label className="mb-1 text-sm font-medium text-label">
+              {t('machines.filters.voltage')}
             </label>
             <Select
               value={selectedVoltage}
-              onChange={(value: string) => setSelectedVoltage(value)}
+              onChange={handleVoltageChange}
               style={{ width: 120 }}
-              className="bg-white text-gray-900 border-gray-300 hover:border-blue-500"
+              className="bg-input text-content border-border hover:border-primary"
               options={[
-                { value: 'ALL', label: t('filters.all') },
-                { value: '220V', label: '220V' },
-                { value: '110V', label: '110V' }
+                { value: 'ALL', label: t('filters.allVoltages') || '全部电压' },
+                { value: '110V', label: '110V' },
+                { value: '220V', label: '220V' }
               ]}
             />
           </div>
@@ -1918,7 +2476,16 @@ const MachinesPage: React.FC = () => {
               {accessories
                 .filter(accessory => {
                   const accVoltage = accessory.voltage || (accessory.parts && accessory.parts[0] && accessory.parts[0].specs && accessory.parts[0].specs.voltage);
-                  return selectedVoltage === 'ALL' || !selectedVoltage || !accVoltage || accVoltage === selectedVoltage;
+                  const shouldShow = selectedVoltage === 'ALL' || !selectedVoltage || !accVoltage || accVoltage === selectedVoltage;
+                  
+                  console.log(`🔍 [Filter Debug] Accessory ${accessory.part_number}:`, {
+                    accessoryVoltage: accVoltage,
+                    selectedVoltage: selectedVoltage,
+                    shouldShow: shouldShow,
+                    title: accessory.title
+                  });
+                  
+                  return shouldShow;
                 })
                 .map((accessory, index) => renderAccessory(accessory, 1, index))}
               {accessories.length === 0 && (
@@ -2143,4 +2710,4 @@ const MachinesPage: React.FC = () => {
   );
 };
 
-export default MachinesPage; 
+export default MachinesPage;

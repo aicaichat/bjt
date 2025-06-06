@@ -1,0 +1,61 @@
+// 在dataSource的useMemo中添加备用逻辑
+const dataSource = useMemo(() => {
+  debugLog('Processing dataSource');
+  
+  if (!response?.items) return [];
+  
+  let mappedData = response.items.map((item: any) => ({
+    ...item,
+    key: item.id?.toString() || Math.random().toString(),
+  }));
+
+  // 检测是否需要前端处理
+  const needsFrontendFiltering = response.total === response.items.length && 
+    Object.values(filters).some(v => v && v.toString().trim());
+  
+  const needsFrontendSorting = sorter.field && sorter.order && 
+    !response.sorted; // 假设API会返回sorted标志
+
+  // 前端筛选（备用）
+  if (needsFrontendFiltering) {
+    debugLog('Applying frontend filtering');
+    mappedData = mappedData.filter(item => {
+      return Object.entries(filters).every(([key, value]) => {
+        if (!value || !value.toString().trim()) return true;
+        
+        const itemValue = item[key];
+        if (key === 'search') {
+          // 搜索多个字段
+          const searchFields = ['name', 'model', 'code', 'part_number'].map(f => item[f]).filter(Boolean);
+          return searchFields.some(field => 
+            field && field.toString().toLowerCase().includes(value.toString().toLowerCase())
+          );
+        }
+        
+        return itemValue === value;
+      });
+    });
+  }
+
+  // 前端排序（备用）
+  if (needsFrontendSorting) {
+    debugLog('Applying frontend sorting', sorter);
+    mappedData = [...mappedData].sort((a, b) => {
+      const aValue = a[sorter.field!];
+      const bValue = b[sorter.field!];
+      
+      let comparison = 0;
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        comparison = aValue - bValue;
+      } else {
+        const aStr = aValue?.toString() || '';
+        const bStr = bValue?.toString() || '';
+        comparison = aStr.localeCompare(bStr);
+      }
+      
+      return sorter.order === 'ascend' ? comparison : -comparison;
+    });
+  }
+
+  return mappedData;
+}, [response, filters, sorter]);

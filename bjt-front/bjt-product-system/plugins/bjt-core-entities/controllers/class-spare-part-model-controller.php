@@ -557,34 +557,109 @@ class BJT_Spare_Part_Model_Controller extends BJT_API_Controller {
      * 检查是否有权限获取备件型号列表
      */
     public function get_items_permissions_check($request) {
-        return true; // 任何已登录用户都可以获取列表
+        return true; // 允许所有用户读取备件型号列表
     }
     
     /**
      * 检查是否有权限获取单个备件型号
      */
     public function get_item_permissions_check($request) {
-        return true; // 任何已登录用户都可以获取单个项目
+        return true; // 允许所有用户读取单个备件型号
     }
     
     /**
      * 检查是否有权限创建备件型号
      */
     public function create_item_permissions_check($request) {
-        return true; // 临时允许所有用户创建
+        return $this->check_write_permission($request);
     }
     
     /**
      * 检查是否有权限更新备件型号
      */
     public function update_item_permissions_check($request) {
-        return true; // 临时允许所有用户更新
+        return $this->check_write_permission($request);
     }
     
     /**
      * 检查是否有权限删除备件型号
      */
     public function delete_item_permissions_check($request) {
-        return true; // 临时允许所有用户删除
+        return $this->check_write_permission($request);
+    }
+
+    /**
+     * 检查写权限（创建/更新/删除）
+     */
+    public function check_write_permission($request) {
+        error_log('[BJT_Spare_Part_Model_Controller] Checking write permission');
+        
+        // Using BJT Auth Controller instead of WordPress capabilities
+        if (!class_exists('BJT_Auth_Controller')) {
+            $auth_controller_path = dirname(__FILE__) . '/class-auth-controller.php';
+            if (file_exists($auth_controller_path)) {
+                require_once $auth_controller_path;
+            } else {
+                error_log('[BJT_Spare_Part_Model_Controller] BJT_Auth_Controller class file not found at: ' . $auth_controller_path);
+                return new WP_Error('rest_controller_not_found', 'Authentication controller not found.', ['status' => 500]);
+            }
+        }
+        
+        if (!class_exists('BJT_Auth_Controller')) {
+            error_log('[BJT_Spare_Part_Model_Controller] BJT_Auth_Controller class still not found after include attempt');
+            return new WP_Error('rest_controller_not_loadable', 'Authentication controller class not loadable.', ['status' => 500]);
+        }
+
+        $auth_controller = new BJT_Auth_Controller();
+        $is_authenticated = $auth_controller->check_auth($request);
+
+        if (true !== $is_authenticated && is_wp_error($is_authenticated)) {
+            error_log('[BJT_Spare_Part_Model_Controller] Authentication failed: ' . $is_authenticated->get_error_message());
+            return $is_authenticated;
+        }
+        
+        if (!$is_authenticated) {
+            error_log('[BJT_Spare_Part_Model_Controller] User not authenticated');
+            return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
+        }
+
+        // 使用BJT用户角色系统检查权限
+        $user = $GLOBALS['bjt_current_user'];
+        if (!$user) {
+            error_log('[BJT_Spare_Part_Model_Controller] No current user found in globals');
+            return new WP_Error('rest_forbidden', __('User information not available.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户状态
+        if ($user->status !== 'active') {
+            error_log('[BJT_Spare_Part_Model_Controller] User is not active: ' . $user->username);
+            return new WP_Error('rest_forbidden', __('Your account is not active.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户角色 - admin和manager可以管理备件型号
+        $has_write_permission = false;
+        if (isset($user->role)) {
+            $allowed_write_roles = ['admin', 'manager'];
+            $has_write_permission = in_array($user->role, $allowed_write_roles);
+        }
+
+        // 检查用户权限
+        if (isset($user->permissions) && is_array($user->permissions)) {
+            $has_write_permission = $has_write_permission || 
+                                    in_array('edit_products', $user->permissions) || 
+                                    in_array('manage_products', $user->permissions);
+        }
+
+        if (!$has_write_permission) {
+            error_log('[BJT_Spare_Part_Model_Controller] User does not have write permission: ' . $user->username . ', role: ' . $user->role);
+            return new WP_Error(
+                'rest_forbidden',
+                __('You do not have permission to manage spare part models.', 'bjt'),
+                ['status' => 403, 'success' => false]
+            );
+        }
+
+        error_log('[BJT_Spare_Part_Model_Controller] Write permission granted for user: ' . $user->username);
+        return true;
     }
 } 

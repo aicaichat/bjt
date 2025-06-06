@@ -1,0 +1,140 @@
+{
+  "list": {
+    "title": "Spare Parts List",
+    "models": "Spare Part Models", 
+    "spareParts": "Spare Parts",
+    "searchPlaceholder": "Search spare part name, model or code",
+    "filterByStatus": "Filter by status",
+    "filterByProductLine": "Filter by product line",
+    "filterByModel": "Filter by model",
+    "criticalOnly": "Critical parts only",
+    "selectLanguage": "Select Language",
+    "selectRegion": "Select Region"
+  },
+  "create": {
+    "title": "Add Spare Part"
+  },
+  "edit": {
+    "title": "Edit Spare Part"
+  },
+  "createModel": {
+    "title": "Add Spare Part Model"
+  },
+  "editModel": {
+    "title": "Edit Spare Part Model"
+  },
+  "sections": {
+    "basicInfo": "Basic Information",
+    "specInfo": "Specification",
+    "inventoryInfo": "Inventory Information",
+    "replacementInfo": "Replacement Information",
+    "otherInfo": "Other Information"
+  },
+  "fields": {
+    "id": "ID",
+    "model": "Model Code",
+    "part_number": "Part Number",
+    "part_name_zh": "Chinese Name",
+    "part_name_en": "English Name",
+    "model_name": "Model Name",
+    "product_line_name": "Product Line",
+    "brand": "Brand",
+    "spec": "Specification",
+    "unit": "Unit",
+    "price": "Price",
+    "weight": "Weight",
+    "lifespan_days": "Expected Lifespan (Days)",
+    "replacement_interval_days": "Replacement Interval (Days)",
+    "is_critical": "Critical Part",
+    "stock_level": "Stock Level",
+    "min_stock": "Minimum Stock",
+    "max_stock": "Maximum Stock",
+    "current_stock": "Current Stock",
+    "status": "Status",
+    "image_url": "Image",
+    "description": "Description",
+    "notes": "Notes",
+    "sort_order": "Sort Order",
+    "action": "Action",
+    "createTime": "Created At",
+    "updateTime": "Updated At"
+  },
+  "placeholders": {
+    "selectProductLine": "Select Product Line",
+    "selectModel": "Select Spare Part Model",
+    "enterModel": "Enter model code",
+    "enterPartNumber": "Enter part number",
+    "enterPartNameZh": "Enter Chinese name",
+    "enterPartNameEn": "Enter English name",
+    "enterModelName": "Enter model name",
+    "enterBrand": "Enter brand",
+    "enterSpec": "Enter specification",
+    "selectUnit": "Select unit",
+    "enterPrice": "Enter price",
+    "enterWeight": "Enter weight",
+    "enterLifespanDays": "Enter expected lifespan (days)",
+    "enterReplacementIntervalDays": "Enter replacement interval (days)",
+    "enterMinStock": "Enter minimum stock",
+    "enterMaxStock": "Enter maximum stock",
+    "enterCurrentStock": "Enter current stock",
+    "enterImageUrl": "Enter image URL",
+    "enterDescription": "Enter description",
+    "enterNotes": "Enter notes",
+    "enterSortOrder": "Enter sort order",
+    "selectStatus": "Select status",
+    "selectStockLevel": "Select stock level"
+  },
+  "validation": {
+    "productLineRequired": "Please select product line",
+    "modelRequired": "Please enter model code",
+    "partNumberRequired": "Please enter part number",
+    "partNameZhRequired": "Please enter Chinese name",
+    "partNameEnRequired": "Please enter English name",
+    "modelNameRequired": "Please enter model name",
+    "unitRequired": "Please select unit",
+    "statusRequired": "Please select status"
+  },
+  "status": {
+    "publish": "Published",
+    "draft": "Draft",
+    "trash": "Deleted",
+    "unknown": "Unknown"
+  },
+  "stockLevel": {
+    "high": "High Stock",
+    "normal": "Normal Stock",
+    "low": "Low Stock",
+    "out": "Out of Stock"
+  },
+  "actions": {
+    "create": "Add Spare Part",
+    "edit": "Edit",
+    "delete": "Delete",
+    "export": "Export",
+    "import": "Import",
+    "addModel": "Add Model",
+    "addSparePart": "Add Spare Part",
+    "cancel": "Cancel",
+    "update": "Update"
+  },
+  "pagination": {
+    "total": "Total {{total}} records"
+  },
+  "empty": {
+    "noData": "No spare parts data"
+  },
+  "message": {
+    "deleteSuccess": "Spare part deleted successfully",
+    "deleteFailed": "Failed to delete spare part",
+    "createSuccess": "Spare part created successfully",
+    "createFailed": "Failed to create spare part",
+    "updateSuccess": "Spare part updated successfully",
+    "updateFailed": "Failed to update spare part",
+    "modelDeleteSuccess": "Spare part model deleted successfully",
+    "modelDeleteFailed": "Failed to delete spare part model",
+    "modelCreateSuccess": "Spare part model created successfully",
+    "modelCreateFailed": "Failed to create spare part model",
+    "modelUpdateSuccess": "Spare part model updated successfully",
+    "modelUpdateFailed": "Failed to update spare part model"
+  }
+} 

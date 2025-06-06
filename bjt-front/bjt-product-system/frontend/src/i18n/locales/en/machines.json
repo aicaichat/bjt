@@ -24,7 +24,8 @@
     "all": "All",
     "clear": "Clear Filters",
     "model": "Model",
-    "allModels": "All Models"
+    "allModels": "All Models",
+    "allVoltages": "All Voltages"
   },
   "tableHeaders": {
     "index": "No.",
@@ -204,6 +205,8 @@
     "110V": "110V"
   },
   "stockStatus": {
+    "sufficient": "Sufficient Stock",
+    "low": "Low Stock",
     "outOfStock": "Out of Stock"
   },
   "path": {

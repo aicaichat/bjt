@@ -1,0 +1,154 @@
+{
+  "list": {
+    "title": "配件列表",
+    "models": "配件型号",
+    "accessories": "配件料号",
+    "searchPlaceholder": "搜索配件名称、型号或编码",
+    "filterByStatus": "按状态筛选",
+    "filterByType": "按类型筛选",
+    "filterByProductLine": "按产品线筛选",
+    "selectLanguage": "选择语言",
+    "selectRegion": "选择区域"
+  },
+  "create": {
+    "title": "新增配件"
+  },
+  "edit": {
+    "title": "编辑配件"
+  },
+  "createModel": {
+    "title": "新增配件型号"
+  },
+  "editModel": {
+    "title": "编辑配件型号"
+  },
+  "sections": {
+    "basicInfo": "基本信息",
+    "specInfo": "规格信息",
+    "packageInfo": "包装信息",
+    "palletInfo": "托盘信息",
+    "otherInfo": "其他信息"
+  },
+  "fields": {
+    "id": "编号",
+    "model": "型号编码",
+    "title_zh": "中文名称",
+    "title_en": "英文名称",
+    "type": "配件类型",
+    "description_zh": "中文描述",
+    "description_en": "英文描述",
+    "image1_url": "主图",
+    "image2_url": "副图",
+    "status": "状态",
+    "productLine": "产品线",
+    "createTime": "创建时间",
+    "updateTime": "更新时间",
+    "part_number": "料号",
+    "name_zh": "中文名称",
+    "name_en": "英文名称",
+    "brand": "品牌",
+    "spec": "公制规格",
+    "spec_imperial": "英制规格",
+    "voltage": "电压",
+    "frequency": "频率",
+    "unit": "单位",
+    "pcs_per_box": "单箱数量",
+    "net_weight_kg": "净重(kg)",
+    "net_weight_lbs": "净重(lbs)",
+    "gross_weight_kg": "包装毛重(kg)",
+    "gross_weight_lbs": "包装毛重(lbs)",
+    "pcs_per_pallet": "一托数量",
+    "image_url": "图片",
+    "sort_order": "排序",
+    "action": "操作",
+    "package_size_cm": "包装尺寸(cm)",
+    "package_size_inch": "包装尺寸(inch)",
+    "pallet_size_cm": "托盘尺寸(cm)",
+    "pallet_size_inch": "托盘尺寸(inch)",
+    "pallet_height_cm": "托盘高度(cm)",
+    "pallet_height_inch": "托盘高度(inch)",
+    "pallet_gross_weight_kg": "托盘毛重(kg)",
+    "pallet_gross_weight_lbs": "托盘毛重(lbs)",
+    "explosion_diagram_pdf": "爆炸图PDF"
+  },
+  "placeholders": {
+    "selectProductLine": "选择产品线",
+    "enterModel": "请输入型号",
+    "enterBrand": "请输入品牌",
+    "enterPartNumber": "请输入料号",
+    "enterChineseName": "请输入中文名称",
+    "enterEnglishName": "请输入英文名称",
+    "enterSpec": "请输入公制规格",
+    "enterImperialSpec": "请输入英制规格",
+    "enterVoltage": "请输入电压",
+    "enterFrequency": "请输入频率",
+    "selectUnit": "请选择单位",
+    "enterPackageSizeCm": "请输入包装尺寸(cm)",
+    "enterPackageSizeInch": "请输入包装尺寸(inch)",
+    "enterNetWeightKg": "请输入净重(kg)",
+    "enterNetWeightLbs": "请输入净重(lbs)",
+    "enterGrossWeightKg": "请输入包装毛重(kg)",
+    "enterGrossWeightLbs": "请输入包装毛重(lbs)",
+    "enterPcsPerBox": "请输入单箱数量",
+    "enterPalletSizeCm": "请输入托盘尺寸(cm)",
+    "enterPalletSizeInch": "请输入托盘尺寸(inch)",
+    "enterPcsPerPallet": "请输入一托数量",
+    "enterPalletHeightCm": "请输入托盘高度(cm)",
+    "enterPalletHeightInch": "请输入托盘高度(inch)",
+    "enterPalletGrossWeightKg": "请输入托盘毛重(kg)",
+    "enterPalletGrossWeightLbs": "请输入托盘毛重(lbs)",
+    "enterImageUrl": "请输入图片URL",
+    "selectStatus": "请选择状态",
+    "enterType": "请输入配件类型",
+    "enterImage1Url": "请输入主图URL",
+    "enterImage2Url": "请输入副图URL",
+    "enterExplosionDiagramPdf": "请输入爆炸图PDF URL",
+    "enterChineseDescription": "请输入中文描述",
+    "enterEnglishDescription": "请输入英文描述",
+    "enterSortOrder": "请输入排序号"
+  },
+  "validation": {
+    "productLineRequired": "请选择产品线",
+    "partNumberRequired": "请输入料号",
+    "chineseNameRequired": "请输入中文名称",
+    "englishNameRequired": "请输入英文名称",
+    "unitRequired": "请选择单位",
+    "statusRequired": "请选择状态",
+    "modelRequired": "请输入型号编码"
+  },
+  "status": {
+    "publish": "已发布",
+    "draft": "草稿",
+    "trash": "已删除",
+    "unknown": "未知"
+  },
+  "actions": {
+    "create": "新增配件",
+    "edit": "编辑",
+    "delete": "删除",
+    "export": "导出",
+    "import": "导入",
+    "addModel": "新增型号",
+    "addAccessory": "新增料号",
+    "cancel": "取消",
+    "update": "更新"
+  },
+  "pagination": {
+    "total": "共 {{total}} 条记录"
+  },
+  "empty": {
+    "noData": "暂无配件数据"
+  },
+  "message": {
+    "deleteSuccess": "配件删除成功",
+    "deleteFailed": "配件删除失败",
+    "createSuccess": "配件创建成功",
+    "createFailed": "配件创建失败",
+    "updateSuccess": "配件更新成功",
+    "updateFailed": "配件更新失败",
+    "modelCreateSuccess": "配件型号创建成功",
+    "modelCreateFailed": "配件型号创建失败",
+    "modelUpdateSuccess": "配件型号更新成功",
+    "modelUpdateFailed": "配件型号更新失败"
+  }
+} 

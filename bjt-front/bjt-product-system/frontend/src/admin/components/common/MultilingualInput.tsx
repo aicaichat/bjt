@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Input, Tabs } from 'antd';
+import { Input, Tabs, Button, Space, Typography, Tooltip } from 'antd';
+import { CopyOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { useAdminI18n } from '../../i18n/hooks/useAdminI18n';
 
 const { TextArea } = Input;
+const { Text } = Typography;
 
 export interface MultilingualValue {
   zh: string;
@@ -11,97 +14,193 @@ export interface MultilingualValue {
 export interface MultilingualInputProps {
   value?: MultilingualValue;
   onChange?: (value: MultilingualValue) => void;
-  placeholder?: MultilingualValue;
-  required?: boolean;
+  placeholder?: {
+    zh?: string;
+    en?: string;
+  };
   type?: 'input' | 'textarea';
-  maxLength?: number;
   rows?: number;
   disabled?: boolean;
-  className?: string;
+  required?: boolean;
+  maxLength?: number;
+  // 🆕 新增功能
+  enableI18nUI?: boolean; // 是否启用国际化界面文本
+  showCopyButton?: boolean; // 是否显示复制按钮
+  showTranslateHint?: boolean; // 是否显示翻译提示
+  isTextArea?: boolean; // 兼容旧版本API
 }
 
 const MultilingualInput: React.FC<MultilingualInputProps> = ({
   value = { zh: '', en: '' },
   onChange,
-  placeholder = { zh: '请输入中文', en: 'Please enter English' },
-  required = false,
+  placeholder = {},
   type = 'input',
-  maxLength,
   rows = 4,
   disabled = false,
-  className = '',
+  required = false,
+  maxLength,
+  // 🆕 新功能参数
+  enableI18nUI = false,
+  showCopyButton = false,
+  showTranslateHint = false,
+  isTextArea = false, // 兼容旧版本
 }) => {
-  const [activeTab, setActiveTab] = useState<'zh' | 'en'>('zh');
-  const [internalValue, setInternalValue] = useState<MultilingualValue>(value);
+  const [activeKey, setActiveKey] = useState<string>('zh');
+  
+  // 🆕 使用管理后台i18n
+  let tc: any, tf: any, isReady: boolean;
+  try {
+    const adminI18n = useAdminI18n();
+    tc = adminI18n.tc;
+    tf = adminI18n.tf;
+    isReady = adminI18n.isReady;
+  } catch (error) {
+    // 降级处理
+    tc = (key: string) => key;
+    tf = (key: string) => key;
+    isReady = false;
+  }
 
-  useEffect(() => {
-    setInternalValue(value);
-  }, [value]);
+  // 兼容旧版本API
+  const inputType = isTextArea ? 'textarea' : type;
 
-  const handleValueChange = (lang: 'zh' | 'en', newValue: string) => {
-    const updatedValue = {
-      ...internalValue,
-      [lang]: newValue,
-    };
-    setInternalValue(updatedValue);
-    onChange?.(updatedValue);
+  const handleChange = (lang: 'zh' | 'en', text: string) => {
+    const newValue = { ...value, [lang]: text };
+    onChange?.(newValue);
   };
 
-  const renderInput = (lang: 'zh' | 'en') => {
-    const commonProps = {
-      value: internalValue[lang],
-      onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-        handleValueChange(lang, e.target.value),
-      placeholder: placeholder[lang],
-      maxLength,
-      disabled,
-      showCount: !!maxLength,
-    };
-
-    if (type === 'textarea') {
-      const TextAreaComponent = TextArea as any;
-      return <TextAreaComponent rows={rows} {...commonProps} />;
+  // 🆕 复制功能
+  const handleCopy = (from: 'zh' | 'en', to: 'zh' | 'en') => {
+    if (value[from] && value[from].trim()) {
+      handleChange(to, value[from]);
     }
+  };
 
-    const InputComponent = Input as any;
-    return <InputComponent {...commonProps} />;
+  // 🆕 获取翻译提示文本
+  const getTranslateHint = (lang: 'zh' | 'en') => {
+    if (!showTranslateHint || !enableI18nUI) return null;
+    
+    const otherLang = lang === 'zh' ? 'en' : 'zh';
+    const hasOtherContent = value[otherLang] && value[otherLang].trim();
+    
+    if (hasOtherContent && (!value[lang] || !value[lang].trim())) {
+      const hintKey = lang === 'zh' ? 'content.hints.translateFromEnglish' : 'content.hints.translateFromChinese';
+      return (
+        <Text type="secondary" style={{ fontSize: '12px', fontStyle: 'italic' }}>
+          <InfoCircleOutlined /> {enableI18nUI ? tf(hintKey) : (lang === 'zh' ? '建议翻译英文内容' : 'Suggest translating Chinese content')}
+        </Text>
+      );
+    }
+    return null;
+  };
+
+  // 🆕 获取界面文本
+  const getUIText = (key: string, fallback: string) => {
+    return enableI18nUI && isReady ? tf(key) : fallback;
   };
 
   const tabItems = [
     {
       key: 'zh',
       label: (
-        <span>
-          中文 {required && <span style={{ color: '#ff4d4f' }}>*</span>}
-          {internalValue.zh && <span style={{ color: '#52c41a' }}> ✓</span>}
-        </span>
+        <Space>
+          {enableI18nUI ? getUIText('content.languages.chinese', '中文') : '中文'}
+          {showCopyButton && value.en && (
+            <Tooltip title={enableI18nUI ? getUIText('content.actions.copyFrom', '从{{from}}复制').replace('{{from}}', 'English') : '从English复制'}>
+              <Button
+                type="text"
+                size="small"
+                icon={<CopyOutlined />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCopy('en', 'zh');
+                }}
+              />
+            </Tooltip>
+          )}
+        </Space>
       ),
-      children: renderInput('zh'),
+      children: (
+        <div>
+          {inputType === 'textarea' ? (
+            <TextArea
+              value={value.zh}
+              onChange={(e) => handleChange('zh', e.target.value)}
+              placeholder={placeholder.zh || (enableI18nUI ? getUIText('content.placeholders.enterChinese', '请输入中文内容') : '请输入中文内容')}
+              rows={rows}
+              disabled={disabled}
+              maxLength={maxLength}
+              showCount={!!maxLength}
+            />
+          ) : (
+            <Input
+              value={value.zh}
+              onChange={(e) => handleChange('zh', e.target.value)}
+              placeholder={placeholder.zh || (enableI18nUI ? getUIText('content.placeholders.enterChinese', '请输入中文内容') : '请输入中文内容')}
+              disabled={disabled}
+              maxLength={maxLength}
+            />
+          )}
+          {getTranslateHint('zh')}
+        </div>
+      ),
     },
     {
       key: 'en',
       label: (
-        <span>
-          English {required && <span style={{ color: '#ff4d4f' }}>*</span>}
-          {internalValue.en && <span style={{ color: '#52c41a' }}> ✓</span>}
-        </span>
+        <Space>
+          {enableI18nUI ? getUIText('content.languages.english', 'English') : 'English'}
+          {showCopyButton && value.zh && (
+            <Tooltip title={enableI18nUI ? getUIText('content.actions.copyFrom', '从{{from}}复制').replace('{{from}}', '中文') : '从中文复制'}>
+              <Button
+                type="text"
+                size="small"
+                icon={<CopyOutlined />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCopy('zh', 'en');
+                }}
+              />
+            </Tooltip>
+          )}
+        </Space>
       ),
-      children: renderInput('en'),
+      children: (
+        <div>
+          {inputType === 'textarea' ? (
+            <TextArea
+              value={value.en}
+              onChange={(e) => handleChange('en', e.target.value)}
+              placeholder={placeholder.en || (enableI18nUI ? getUIText('content.placeholders.enterEnglish', 'Please enter English content') : 'Please enter English content')}
+              rows={rows}
+              disabled={disabled}
+              maxLength={maxLength}
+              showCount={!!maxLength}
+            />
+          ) : (
+            <Input
+              value={value.en}
+              onChange={(e) => handleChange('en', e.target.value)}
+              placeholder={placeholder.en || (enableI18nUI ? getUIText('content.placeholders.enterEnglish', 'Please enter English content') : 'Please enter English content')}
+              disabled={disabled}
+              maxLength={maxLength}
+            />
+          )}
+          {getTranslateHint('en')}
+        </div>
+      ),
     },
   ];
 
-  const TabsComponent = Tabs as any;
-
   return (
-    <div className={`multilingual-input ${className}`}>
-      <TabsComponent
-        activeKey={activeTab}
-        onChange={(key: string) => setActiveTab(key as 'zh' | 'en')}
-        size="small"
-        items={tabItems}
-      />
-    </div>
+    <Tabs
+      activeKey={activeKey}
+      onChange={setActiveKey}
+      items={tabItems}
+      size="small"
+      tabBarStyle={{ marginBottom: 8 }}
+    />
   );
 };
 
-export default MultilingualInput; 
+export default MultilingualInput;

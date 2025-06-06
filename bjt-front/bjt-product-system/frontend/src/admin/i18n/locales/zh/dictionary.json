@@ -1,0 +1,148 @@
+{
+  "consumables": {
+    "title": "耗材字典管理",
+    "description": "管理形状、材料和规格字典",
+    "currentProductLine": "当前产品线",
+    "source": "来源"
+  },
+  "shape": {
+    "title": "形状管理",
+    "management": "形状管理",
+    "create": "新增形状",
+    "edit": "编辑形状",
+    "delete": "删除形状",
+    "name": "形状",
+    "count": "形状数量"
+  },
+  "material": {
+    "title": "材料管理", 
+    "management": "材料管理",
+    "create": "新增材料",
+    "edit": "编辑材料",
+    "delete": "删除材料",
+    "name": "材料",
+    "count": "材料数量"
+  },
+  "specification": {
+    "title": "规格管理",
+    "management": "规格管理", 
+    "create": "新增规格",
+    "edit": "编辑规格",
+    "delete": "删除规格",
+    "name": "规格",
+    "count": "规格数量"
+  },
+  "fields": {
+    "id": "编号",
+    "code": "代码",
+    "name": "名称",
+    "nameZh": "中文名称",
+    "nameEn": "英文名称",
+    "baseMaterial": "基材",
+    "metricValue": "公制值",
+    "metricUnit": "公制单位",
+    "imperialValue": "英制值",
+    "imperialUnit": "英制单位",
+    "imageUrl": "主图",
+    "imageUrl2": "副图",
+    "status": "状态",
+    "sortOrder": "排序",
+    "type": "类型",
+    "action": "操作"
+  },
+  "placeholders": {
+    "enterCode": "请输入代码",
+    "enterNameZh": "请输入中文名称",
+    "enterNameEn": "请输入英文名称",
+    "enterBaseMaterial": "请输入基材",
+    "enterMetricValue": "请输入公制值",
+    "enterMetricUnit": "请输入公制单位",
+    "enterImperialValue": "请输入英制值",
+    "enterImperialUnit": "请输入英制单位",
+    "enterImageUrl": "请输入图片URL",
+    "selectStatus": "请选择状态",
+    "enterSortOrder": "请输入排序",
+    "selectType": "请选择类型",
+    "shapeCodeExample": "如：MEX, BUB等",
+    "materialCodeExample": "如：PE, PA等",
+    "specCodeExample": "如：thickness, width等"
+  },
+  "validation": {
+    "codeRequired": "请输入代码",
+    "nameZhRequired": "请输入中文名称",
+    "nameEnRequired": "请输入英文名称",
+    "metricValueRequired": "请输入公制值",
+    "imperialValueRequired": "请输入英制值",
+    "statusRequired": "请选择状态"
+  },
+  "status": {
+    "publish": "已发布",
+    "draft": "草稿",
+    "notSet": "未设置"
+  },
+  "specTypes": {
+    "thickness": "厚度",
+    "width": "宽度", 
+    "length": "长度",
+    "weight": "重量"
+  },
+  "specTypeColors": {
+    "thickness": "blue",
+    "width": "green",
+    "length": "orange", 
+    "weight": "purple"
+  },
+  "actions": {
+    "refreshAll": "刷新全部",
+    "batchImport": "批量导入",
+    "batchExport": "批量导出",
+    "add": "新增",
+    "edit": "编辑",
+    "delete": "删除",
+    "save": "保存",
+    "cancel": "取消",
+    "back": "返回",
+    "confirm": "确认",
+    "upload": "上传"
+  },
+  "buttons": {
+    "save": "保存",
+    "cancel": "取消",
+    "create": "创建",
+    "update": "更新",
+    "back": "返回"
+  },
+  "message": {
+    "refreshSuccess": "数据已刷新",
+    "deleteConfirm": "确认删除",
+    "deleteWarning": "此操作无法撤销",
+    "shapeDeleteSuccess": "形状删除成功",
+    "shapeDeleteFailed": "形状删除失败",
+    "shapeCreateSuccess": "形状创建成功",
+    "shapeCreateFailed": "形状创建失败",
+    "shapeUpdateSuccess": "形状更新成功",
+    "shapeUpdateFailed": "形状更新失败",
+    "materialDeleteSuccess": "材料删除成功",
+    "materialDeleteFailed": "材料删除失败",
+    "materialCreateSuccess": "材料创建成功",
+    "materialCreateFailed": "材料创建失败", 
+    "materialUpdateSuccess": "材料更新成功",
+    "materialUpdateFailed": "材料更新失败",
+    "specDeleteSuccess": "规格删除成功",
+    "specDeleteFailed": "规格删除失败",
+    "specCreateSuccess": "规格创建成功",
+    "specCreateFailed": "规格创建失败",
+    "specUpdateSuccess": "规格更新成功",
+    "specUpdateFailed": "规格更新失败",
+    "fetchDataFailed": "获取数据失败",
+    "dataNotExist": "数据不存在",
+    "submitFailed": "提交失败"
+  },
+  "imageStatus": {
+    "hasImage": "有图",
+    "noImage": "无图"
+  },
+  "pagination": {
+    "total": "共 {{total}} 条"
+  }
+} 

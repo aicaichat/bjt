@@ -171,8 +171,22 @@ export class AdminRelationService extends BaseAdminService<Relation> {
   }
 
   // 删除关联关系
-  async deleteRelation(id: number) {
-    return this.deleteItem(id);
+  async deleteRelation(id: number, options?: { cascade?: boolean }) {
+    const params = new URLSearchParams();
+    if (options?.cascade !== undefined) {
+      params.append('cascade', options.cascade.toString());
+    }
+    
+    const url = `${this.baseUrl}/${id}${params.toString() ? '?' + params.toString() : ''}`;
+    const response = await HttpAdminService.delete<{
+      deleted: boolean;
+      cascade: boolean;
+      deleted_count: number;
+      previous: Relation;
+      deleted_relations: Relation[];
+    }>(url);
+    
+    return response.data;
   }
 
   // 删除某个料号的所有子配件关联

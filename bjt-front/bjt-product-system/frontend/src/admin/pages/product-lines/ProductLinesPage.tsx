@@ -4,8 +4,10 @@ import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import adminProductLineService, { ProductLine } from '../../services/admin-product-line.service';
 import PageHeader from '../../components/common/PageHeader';
+import { useAdminI18n } from '../../i18n/hooks/useAdminI18n';
 
 const ProductLinesPage: React.FC = () => {
+  const { t } = useAdminI18n();
   const [loading, setLoading] = useState<boolean>(false);
   const [productLines, setProductLines] = useState<ProductLine[]>([]);
   const [total, setTotal] = useState<number>(0);
@@ -28,7 +30,7 @@ const ProductLinesPage: React.FC = () => {
       setTotal(response.total);
     } catch (error) {
       console.error('Failed to fetch product lines:', error);
-      message.error('获取产品线列表失败');
+      message.error(t('messages.error', { ns: 'productLines' }));
     } finally {
       setLoading(false);
     }
@@ -49,11 +51,11 @@ const ProductLinesPage: React.FC = () => {
     try {
       setLoading(true);
       await adminProductLineService.deleteProductLine(id);
-      message.success('产品线删除成功');
+      message.success(t('messages.success.deleted', { ns: 'productLines' }));
       fetchProductLines();
     } catch (error) {
       console.error('Failed to delete product line:', error);
-      message.error('产品线删除失败');
+      message.error(t('messages.error.delete', { ns: 'productLines' }));
     } finally {
       setLoading(false);
     }
@@ -67,36 +69,38 @@ const ProductLinesPage: React.FC = () => {
       width: 100,
     },
     {
-      title: '标题',
+      title: t('table.columns.name', { ns: 'productLines' }),
       dataIndex: 'title',
       key: 'title',
       render: (title: {zh: string, en: string}) => title.zh,
     },
     {
-      title: '图片',
+      title: t('table.columns.image', { ns: 'productLines' }),
       dataIndex: 'image_url',
       key: 'image_url',
       render: (image_url: string) => (
-        image_url ? <img src={image_url} alt="产品线图片" style={{ width: 80, height: 80, objectFit: 'cover' }} /> : '无图片'
+        image_url ? <img src={image_url} alt={t('table.columns.image', { ns: 'productLines' })} style={{ width: 80, height: 80, objectFit: 'cover' }} /> : t('messages.noData', { ns: 'productLines' })
       ),
     },
     {
-      title: '状态',
+      title: t('table.columns.status', { ns: 'productLines' }),
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => (
         <Tag color={status === 'publish' ? 'green' : status === 'draft' ? 'blue' : 'red'}>
-          {status === 'publish' ? '已发布' : status === 'draft' ? '草稿' : '回收站'}
+          {status === 'publish' ? t('filters.status.publish', { ns: 'productLines' }) : 
+           status === 'draft' ? t('filters.status.draft', { ns: 'productLines' }) : 
+           t('filters.status.trash', { ns: 'productLines' })}
         </Tag>
       ),
     },
     {
-      title: '创建时间',
+      title: t('table.columns.createTime', { ns: 'productLines' }),
       dataIndex: 'created_at',
       key: 'created_at',
     },
     {
-      title: '操作',
+      title: t('actions.title', { ns: 'productLines' }),
       key: 'action',
       render: (_: any, record: ProductLine) => (
         <Space size="middle">
@@ -105,15 +109,15 @@ const ProductLinesPage: React.FC = () => {
             icon={<EditOutlined />} 
             onClick={() => navigate(`/admin/product-lines/edit/${record.id}`)}
           >
-            编辑
+            {t('actions.edit', { ns: 'productLines' })}
           </Button>
           <Popconfirm
-            title="确定要删除这个产品线吗？"
+            title={t('messages.deleteConfirm', { ns: 'productLines' })}
             onConfirm={() => handleDelete(record.id)}
-            okText="确定"
-            cancelText="取消"
+            okText={t('actions.confirm', { ns: 'productLines' })}
+            cancelText={t('actions.cancel', { ns: 'productLines' })}
           >
-            <Button danger icon={<DeleteOutlined />}>删除</Button>
+            <Button danger icon={<DeleteOutlined />}>{t('actions.delete', { ns: 'productLines' })}</Button>
           </Popconfirm>
         </Space>
       ),
@@ -123,7 +127,7 @@ const ProductLinesPage: React.FC = () => {
   return (
     <div className="product-lines-page">
       <PageHeader 
-        title="产品线管理" 
+        title={t('title', { ns: 'productLines' })} 
         extra={[
           <Button 
             key="add" 
@@ -131,7 +135,7 @@ const ProductLinesPage: React.FC = () => {
             icon={<PlusOutlined />} 
             onClick={() => navigate('/admin/product-lines/create')}
           >
-            添加产品线
+            {t('actions.add', { ns: 'productLines' })}
           </Button>
         ]} 
       />
@@ -145,6 +149,7 @@ const ProductLinesPage: React.FC = () => {
           pageSize: pagination.pageSize,
           total: total,
           showSizeChanger: true,
+          showTotal: (total: number) => t('messages.total', { ns: 'productLines', total }),
         }}
         onChange={handleTableChange}
         loading={loading}

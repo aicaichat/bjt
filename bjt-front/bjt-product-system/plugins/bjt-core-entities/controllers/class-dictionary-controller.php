@@ -62,6 +62,17 @@ class BJT_Dictionary_Controller extends BJT_API_Controller {
             'materials' => __('Materials'),
             'specifications' => __('Specifications'),
             'host_models' => __('Host Models'),
+            
+            // 新增的字典类型
+            'units' => __('Units'),
+            'voltages' => __('Voltages'),
+            'frequencies' => __('Frequencies'),
+            'bag_types' => __('Bag Types'),
+            'brands' => __('Brands'),
+            'statuses' => __('Statuses'),
+            'countries' => __('Countries'),
+            'user_roles' => __('User Roles'),
+            'product_types' => __('Product Types'),
         ];
         
         return $this->format_response([
@@ -290,6 +301,104 @@ class BJT_Dictionary_Controller extends BJT_API_Controller {
                         ];
                     }
                 }
+                break;
+                
+            case 'units':
+                // 基于CSV文件中的单位数据
+                $items = [
+                    ['code' => 'pcs', 'name_zh' => '件', 'name_en' => 'Pieces'],
+                    ['code' => 'roll', 'name_zh' => '卷', 'name_en' => 'Roll'],
+                    ['code' => 'box', 'name_zh' => '箱', 'name_en' => 'Box'],
+                    ['code' => 'set', 'name_zh' => '套', 'name_en' => 'Set'],
+                    ['code' => 'meter', 'name_zh' => '米', 'name_en' => 'Meter'],
+                    ['code' => 'kg', 'name_zh' => '千克', 'name_en' => 'Kilogram'],
+                    ['code' => 'gram', 'name_zh' => '克', 'name_en' => 'Gram'],
+                    ['code' => 'mm', 'name_zh' => '毫米', 'name_en' => 'Millimeter'],
+                    ['code' => 'cm', 'name_zh' => '厘米', 'name_en' => 'Centimeter'],
+                    ['code' => 'inch', 'name_zh' => '英寸', 'name_en' => 'Inch'],
+                    ['code' => 'ft', 'name_zh' => '英尺', 'name_en' => 'Foot'],
+                    ['code' => 'lb', 'name_zh' => '磅', 'name_en' => 'Pound'],
+                ];
+                break;
+
+            case 'voltages':
+                $items = [
+                    ['code' => '110V', 'name_zh' => '110V', 'name_en' => '110V'],
+                    ['code' => '220V', 'name_zh' => '220V', 'name_en' => '220V']
+                ];
+                break;
+
+            case 'frequencies':
+                $items = [
+                    ['code' => '50Hz', 'name_zh' => '50Hz', 'name_en' => '50Hz'],
+                    ['code' => '60Hz', 'name_zh' => '60Hz', 'name_en' => '60Hz'],
+                ];
+                break;
+
+            case 'bag_types':
+                // 基于CSV文件中的袋型数据
+                $items = [
+                    ['code' => 'MEX', 'name_zh' => 'MEX型', 'name_en' => 'MEX Type'],
+                    ['code' => 'B4', 'name_zh' => 'B4型', 'name_en' => 'B4 Type'],
+                    ['code' => 'MEE', 'name_zh' => 'MEE型', 'name_en' => 'MEE Type'],
+                    ['code' => 'MEB', 'name_zh' => 'MEB型', 'name_en' => 'MEB Type'],
+                    ['code' => 'QMF', 'name_zh' => 'QMF型', 'name_en' => 'QMF Type'],
+                    ['code' => 'GVFX', 'name_zh' => 'GVFX型', 'name_en' => 'GVFX Type'],
+                    ['code' => 'EXPRESS', 'name_zh' => 'EXPRESS型', 'name_en' => 'EXPRESS Type'],
+                    ['code' => 'EXPRESS-A4', 'name_zh' => 'EXPRESS-A4型', 'name_en' => 'EXPRESS-A4 Type'],
+                ];
+                break;
+
+            case 'brands':
+                // 基于CSV文件中的品牌数据
+                $items = [
+                    ['code' => 'BJT', 'name_zh' => 'BJT', 'name_en' => 'BJT'],
+                    ['code' => 'Lockedair', 'name_zh' => 'Lockedair', 'name_en' => 'Lockedair'],
+                    ['code' => 'PakTech', 'name_zh' => 'PakTech', 'name_en' => 'PakTech'],
+                    ['code' => 'Generic', 'name_zh' => '通用', 'name_en' => 'Generic'],
+                ];
+                break;
+
+            case 'statuses':
+                $items = [
+                    ['code' => 'draft', 'name_zh' => '草稿', 'name_en' => 'Draft'],
+                    ['code' => 'publish', 'name_zh' => '已发布', 'name_en' => 'Published'],
+                    ['code' => 'trash', 'name_zh' => '回收站', 'name_en' => 'Trash'],
+                    ['code' => 'private', 'name_zh' => '私有', 'name_en' => 'Private'],
+                ];
+                break;
+
+            case 'countries':
+                $items = [
+                    ['code' => 'CN', 'name_zh' => '中国', 'name_en' => 'China'],
+                    ['code' => 'US', 'name_zh' => '美国', 'name_en' => 'United States'],
+                    ['code' => 'UK', 'name_zh' => '英国', 'name_en' => 'United Kingdom'],
+                    ['code' => 'DE', 'name_zh' => '德国', 'name_en' => 'Germany'],
+                    ['code' => 'JP', 'name_zh' => '日本', 'name_en' => 'Japan'],
+                    ['code' => 'KR', 'name_zh' => '韩国', 'name_en' => 'South Korea'],
+                    ['code' => 'FR', 'name_zh' => '法国', 'name_en' => 'France'],
+                    ['code' => 'CA', 'name_zh' => '加拿大', 'name_en' => 'Canada'],
+                    ['code' => 'AU', 'name_zh' => '澳大利亚', 'name_en' => 'Australia'],
+                ];
+                break;
+
+            case 'user_roles':
+                $items = [
+                    ['code' => 'admin', 'name_zh' => '管理员', 'name_en' => 'Administrator'],
+                    ['code' => 'manager', 'name_zh' => '经理', 'name_en' => 'Manager'],
+                    ['code' => 'editor', 'name_zh' => '编辑员', 'name_en' => 'Editor'],
+                    ['code' => 'user', 'name_zh' => '用户', 'name_en' => 'User'],
+                ];
+                break;
+
+            case 'product_types':
+                // 基于CSV文件中的产品类型
+                $items = [
+                    ['code' => 'machine', 'name_zh' => '主机', 'name_en' => 'Machine'],
+                    ['code' => 'accessory', 'name_zh' => '配件', 'name_en' => 'Accessory'],
+                    ['code' => 'consumable', 'name_zh' => '耗材', 'name_en' => 'Consumable'],
+                    ['code' => 'spare_part', 'name_zh' => '备件', 'name_en' => 'Spare Part'],
+                ];
                 break;
                 
             default:

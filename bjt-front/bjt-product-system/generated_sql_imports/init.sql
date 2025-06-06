@@ -1,10 +1,11 @@
 -- Create WordPress database and user
-CREATE DATABASE IF NOT EXISTS bjt_product;
+-- Database name will be created by Docker/init script
+-- CREATE DATABASE IF NOT EXISTS bjt_product;
 -- CREATE USER IF NOT EXISTS 'wordpress'@'%' IDENTIFIED BY 'wordpress';
 -- GRANT ALL PRIVILEGES ON bjt_product.* TO 'wordpress'@'%';
 -- FLUSH PRIVILEGES;
 
-USE bjt_product;
+-- USE bjt_product;
 
 -- Set default character set
 SET NAMES utf8mb4;
@@ -46,6 +47,7 @@ CREATE TABLE IF NOT EXISTS `wp_bjt_host_models` (
   `image1_url` varchar(255) COMMENT '主图URL',
   `image2_url` varchar(255) COMMENT '副图URL',
   `explosion_diagram_pdf` varchar(255) COMMENT '爆炸图PDF文件URL',
+  `spec_pdf` varchar(255) COMMENT '规格PDF文件URL',
   `status` varchar(20) NOT NULL DEFAULT 'publish',
   `sort_order` int(11) DEFAULT 0,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -54,6 +56,20 @@ CREATE TABLE IF NOT EXISTS `wp_bjt_host_models` (
   UNIQUE KEY `uk_model` (`product_line_id`, `model`),
   KEY `idx_product_line_id` (`product_line_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='主机型号表';
+
+-- Host Part Numbers Table
+CREATE TABLE IF NOT EXISTS `wp_bjt_host_part_numbers` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `host_id` bigint(20) NOT NULL COMMENT '主机ID',
+  `part_number` varchar(100) NOT NULL COMMENT '料号',
+  `spec_pdf` varchar(255) COMMENT '规格书PDF文件URL',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_host_part_number` (`host_id`, `part_number`),
+  KEY `idx_host_id` (`host_id`),
+  CONSTRAINT `fk_host_part_numbers_host_id` FOREIGN KEY (`host_id`) REFERENCES `wp_bjt_host_models` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='主机料号表';
 
 -- Accessory Models Table
 CREATE TABLE IF NOT EXISTS `wp_bjt_accessory_models` (
@@ -68,6 +84,7 @@ CREATE TABLE IF NOT EXISTS `wp_bjt_accessory_models` (
   `image1_url` varchar(255) COMMENT '主图URL',
   `image2_url` varchar(255) COMMENT '副图URL',
   `explosion_diagram_pdf` varchar(255) COMMENT '爆炸图PDF文件URL',
+  `spec_pdf` varchar(255) COMMENT '规格PDF文件URL',
   `status` varchar(20) NOT NULL DEFAULT 'publish',
   `sort_order` int(11) DEFAULT 0,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -90,6 +107,7 @@ CREATE TABLE IF NOT EXISTS `wp_bjt_spare_part_models` (
   `image1_url` varchar(255) COMMENT '主图URL',
   `image2_url` varchar(255) COMMENT '副图URL',
   `explosion_diagram_pdf` varchar(255) COMMENT '爆炸图PDF文件URL',
+  `spec_pdf` varchar(255) COMMENT '规格PDF文件URL',
   `status` varchar(20) NOT NULL DEFAULT 'publish',
   `sort_order` int(11) DEFAULT 0,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,

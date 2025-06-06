@@ -44,6 +44,8 @@ import { PaginatedResponse } from '../../../admin/types';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import TableImportExport from '../../components/TableImportExport';
 import PdfUploader from '../../components/PdfUploader';
+import { useAdminI18n } from '../../i18n/hooks/useAdminI18n';
+import FileUrlInput from '../../components/common/FileUrlInput';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -51,6 +53,7 @@ const { Option } = Select;
 const MachinesPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { t } = useAdminI18n();
   
   // Models state
   const [modelsLoading, setModelsLoading] = useState(false);
@@ -202,30 +205,30 @@ const MachinesPage: React.FC = () => {
 
   // 导入导出列配置
   const modelExportColumns = [
-    { title: '型号', dataIndex: 'code' },
-    { title: '中文名称', dataIndex: 'title_zh' },
-    { title: '英文名称', dataIndex: 'title_en' },
-    { title: '中文描述', dataIndex: 'description_zh' },
-    { title: '英文描述', dataIndex: 'description_en' },
-    { title: '类型', dataIndex: 'type' },
-    { title: '主图URL', dataIndex: 'image1_url' },
-    { title: '副图URL', dataIndex: 'image2_url' },
-    { title: '爆炸图PDF', dataIndex: 'explosion_diagram_pdf' },
-    { title: '规格PDF', dataIndex: 'spec_pdf' },
-    { title: '状态', dataIndex: 'status' },
-    { title: '排序', dataIndex: 'sort_order' },
+    { title: t('fields.model', { ns: 'machines' }), dataIndex: 'code' },
+    { title: t('fields.title_zh', { ns: 'machines' }), dataIndex: 'title_zh' },
+    { title: t('fields.title_en', { ns: 'machines' }), dataIndex: 'title_en' },
+    { title: t('fields.description_zh', { ns: 'machines' }), dataIndex: 'description_zh' },
+    { title: t('fields.description_en', { ns: 'machines' }), dataIndex: 'description_en' },
+    { title: t('fields.type', { ns: 'machines' }), dataIndex: 'type' },
+    { title: t('fields.image1Url', { ns: 'machines' }), dataIndex: 'image1_url' },
+    { title: t('fields.image2Url', { ns: 'machines' }), dataIndex: 'image2_url' },
+    { title: t('fields.explosionDiagramPdf', { ns: 'machines' }), dataIndex: 'explosion_diagram_pdf' },
+    { title: t('fields.specPdf', { ns: 'machines' }), dataIndex: 'spec_pdf' },
+    { title: t('fields.status', { ns: 'machines' }), dataIndex: 'status' },
+    { title: t('fields.sort_order', { ns: 'machines' }), dataIndex: 'sort_order' },
   ];
 
   const partExportColumns = [
-    { title: '型号', dataIndex: 'model' },
-    { title: '料号', dataIndex: 'part_number' },
-    { title: '中文名称', dataIndex: 'name_zh' },
-    { title: '英文名称', dataIndex: 'name_en' },
-    { title: '品牌', dataIndex: 'brand' },
-    { title: '规格(公制)', dataIndex: 'spec' },
-    { title: '规格(英制)', dataIndex: 'spec_imperial' },
-    { title: '电压', dataIndex: 'voltage' },
-    { title: '状态', dataIndex: 'status' },
+    { title: t('fields.model', { ns: 'machines' }), dataIndex: 'model' },
+    { title: t('fields.part_number', { ns: 'machines' }), dataIndex: 'part_number' },
+    { title: t('fields.name_zh', { ns: 'machines' }), dataIndex: 'name_zh' },
+    { title: t('fields.name_en', { ns: 'machines' }), dataIndex: 'name_en' },
+    { title: t('fields.brand', { ns: 'machines' }), dataIndex: 'brand' },
+    { title: t('fields.spec', { ns: 'machines' }), dataIndex: 'spec' },
+    { title: t('fields.spec_imperial', { ns: 'machines' }), dataIndex: 'spec_imperial' },
+    { title: t('fields.voltage', { ns: 'machines' }), dataIndex: 'voltage' },
+    { title: t('fields.status', { ns: 'machines' }), dataIndex: 'status' },
   ];
 
   // Data fetching - 修复无限循环问题
@@ -369,9 +372,10 @@ const MachinesPage: React.FC = () => {
     setEditingModel(record || null);
     
     if (record) {
+      // 编辑模式
       modelForm.setFieldsValue({
         product_line_id: record.product_line_id,
-        model: record.model || record.code, // 优先使用model字段，如果没有则使用code字段
+        model: record.model,
         title_zh: record.title_zh,
         title_en: record.title_en,
         description_zh: record.description_zh,
@@ -385,11 +389,27 @@ const MachinesPage: React.FC = () => {
         sort_order: record.sort_order,
       });
     } else {
-      // 新增时自动设置当前产品线
-      modelForm.setFieldsValue({
-        product_line_id: currentProductLine?.id,
+      // 新建模式 - 设置默认值
+      console.log('MachinesPage - Setting default values for new model:', {
+        product_line_id: currentProductLine?.id || 1,
         status: 'publish',
-        sort_order: 0,
+        sort_order: 0
+      });
+      
+      modelForm.setFieldsValue({
+        product_line_id: currentProductLine?.id || 1, // 使用当前产品线或默认为1
+        model: '',
+        title_zh: '',
+        title_en: '',
+        description_zh: '',
+        description_en: '',
+        type: '',
+        image1_url: '',
+        image2_url: '',
+        explosion_diagram_pdf: '',
+        spec_pdf: '',
+        status: 'publish', // 默认发布状态
+        sort_order: 0, // 默认排序
       });
     }
     
@@ -400,39 +420,63 @@ const MachinesPage: React.FC = () => {
     try {
       const values = await modelForm.validateFields();
       
-      // 确保所有字段都被正确提交
-      const submitData = {
-        ...values,
-        product_line_id: currentProductLine?.id,
-        model: values.model,
-        title_zh: values.title_zh,
-        title_en: values.title_en,
-        description_zh: values.description_zh,
-        description_en: values.description_en,
-        type: values.type,
-        image1_url: values.image1_url,
-        image2_url: values.image2_url,
-        explosion_diagram_pdf: values.explosion_diagram_pdf,
-        spec_pdf: values.spec_pdf,
-        status: values.status || 'publish',
-        sort_order: values.sort_order || 0,
+      // 数据清理和验证 - 与MachineEditPage保持一致
+      const cleanedValues = Object.fromEntries(
+        Object.entries(values).filter(([_, value]) => {
+          // 过滤掉空字符串、null、undefined
+          return value !== '' && value !== null && value !== undefined;
+        })
+      );
+      
+      // 转换表单数据为API格式 - 与MachineEditPage保持一致
+      const formData = {
+        product_line_id: currentProductLine?.id ? String(currentProductLine.id) : undefined,
+        model: String(cleanedValues.model || ''),
+        title_zh: String(cleanedValues.title_zh || ''),
+        title_en: String(cleanedValues.title_en || ''),
+        description_zh: cleanedValues.description_zh ? String(cleanedValues.description_zh) : undefined,
+        description_en: cleanedValues.description_en ? String(cleanedValues.description_en) : undefined,
+        type: cleanedValues.type ? String(cleanedValues.type) : undefined,
+        image1_url: cleanedValues.image1_url ? String(cleanedValues.image1_url) : undefined,
+        image2_url: cleanedValues.image2_url ? String(cleanedValues.image2_url) : undefined,
+        explosion_diagram_pdf: cleanedValues.explosion_diagram_pdf ? String(cleanedValues.explosion_diagram_pdf) : undefined,
+        spec_pdf: cleanedValues.spec_pdf ? String(cleanedValues.spec_pdf) : undefined,
+        status: cleanedValues.status ? String(cleanedValues.status) : 'publish',
+        sort_order: cleanedValues.sort_order ? parseInt(String(cleanedValues.sort_order)) : 0,
       };
+
+      // 移除undefined值
+      const submitData = Object.fromEntries(
+        Object.entries(formData).filter(([_, value]) => value !== undefined)
+      );
+
+      console.log('MachinesPage.handleModelSubmit - Form values:', values);
+      console.log('MachinesPage.handleModelSubmit - Cleaned values:', cleanedValues);
+      console.log('MachinesPage.handleModelSubmit - Submit data:', submitData);
+      console.log('MachinesPage.handleModelSubmit - Current product line:', currentProductLine);
       
       setModelsLoading(true);
       
       if (editingModel) {
         await adminHostModelService.updateHostModel(editingModel.id, submitData);
-        message.success('主机型号更新成功');
+        message.success(t('message.modelUpdateSuccess', { ns: 'machines' }));
       } else {
         await adminHostModelService.createHostModel(submitData);
-        message.success('主机型号创建成功');
+        message.success(t('message.modelCreateSuccess', { ns: 'machines' }));
       }
       
       setIsModelModalVisible(false);
       fetchModels();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Submit error:', error);
-      message.error('操作失败');
+      // 显示更详细的错误信息
+      let errorMessage = t('message.operationFailed', { ns: 'machines' });
+      if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      message.error(errorMessage);
     } finally {
       setModelsLoading(false);
     }
@@ -449,7 +493,7 @@ const MachinesPage: React.FC = () => {
     setModelsLoading(true);
     try {
       await adminHostModelService.deleteHostModel(recordToDelete.id);
-      message.success('主机型号删除成功');
+      message.success(t('message.modelDeleteSuccess', { ns: 'machines' }));
       fetchModels();
       
       // If the deleted model was selected for parts, clear the selection
@@ -462,7 +506,7 @@ const MachinesPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Delete error:', error);
-      message.error('删除失败');
+      message.error(t('message.modelDeleteFailed', { ns: 'machines' }));
     } finally {
       setModelsLoading(false);
       setShowDeleteConfirm(false);
@@ -488,11 +532,11 @@ const MachinesPage: React.FC = () => {
     try {
       setPartsLoading(true);
       await AdminPartService.deletePart(id, host_model_id);
-      message.success('料号删除成功');
+      message.success(t('message.partDeleteSuccess', { ns: 'machines' }));
       fetchParts();
     } catch (error) {
-      console.error('Delete error:', error);
-      message.error('删除失败');
+      console.error('Error deleting part:', error);
+      message.error(t('message.partDeleteFailed', { ns: 'machines' }));
     } finally {
       setPartsLoading(false);
     }
@@ -532,38 +576,40 @@ const MachinesPage: React.FC = () => {
   // Table columns definitions
   const modelColumns: ColumnsType<AdminHostModel> = [
     {
-      title: '编号',
+      title: t('fields.id', { ns: 'machines' }),
       dataIndex: 'id',
       key: 'id',
       width: 80,
     },
     {
-      title: '型号',
+      title: t('fields.model', { ns: 'machines' }),
       dataIndex: 'model',
       key: 'model',
       width: 150,
       render: (value, record) => {
-        return value || record.code || '未设置';
+        return value || record.code || t('empty.noData', { ns: 'machines' });
       },
     },
     {
-      title: '中文名称',
+      title: t('fields.title_zh', { ns: 'machines' }),
       dataIndex: 'title_zh',
       key: 'title_zh',
     },
     {
-      title: '状态',
+      title: t('fields.status', { ns: 'machines' }),
       dataIndex: 'status',
       key: 'status',
       width: 120,
       render: (status) => (
         <Tag color={status === 'publish' ? 'success' : status === 'draft' ? 'warning' : 'error'}>
-          {status === 'publish' ? '已发布' : status === 'draft' ? '草稿' : '回收站'}
+          {status === 'publish' ? t('status.publish', { ns: 'machines' }) : 
+           status === 'draft' ? t('status.draft', { ns: 'machines' }) : 
+           t('status.trash', { ns: 'machines' })}
         </Tag>
       ),
     },
     {
-      title: '操作',
+      title: t('fields.action', { ns: 'machines' }),
       key: 'action',
       width: 150,
       render: (_, record) => (
@@ -592,35 +638,35 @@ const MachinesPage: React.FC = () => {
   
   const partColumns: ColumnsType<AdminPart> = [
     {
-      title: '编号',
+      title: t('fields.id', { ns: 'machines' }),
       dataIndex: 'id',
       key: 'id',
       width: 80,
     },
     {
-      title: '型号',
+      title: t('fields.model', { ns: 'machines' }),
       dataIndex: 'model',
       key: 'model',
       width: 150,
     },
     {
-      title: '料号',
+      title: t('fields.part_number', { ns: 'machines' }),
       dataIndex: 'part_number',
       key: 'part_number',
     },
     {
-      title: '状态',
+      title: t('fields.status', { ns: 'machines' }),
       dataIndex: 'status',
       key: 'status',
       width: 120,
       render: (status) => (
         <Tag color={status === 'publish' ? 'success' : 'error'}>
-          {status === 'publish' ? '已发布' : '草稿'}
+          {status === 'publish' ? t('status.publish', { ns: 'machines' }) : t('status.draft', { ns: 'machines' })}
         </Tag>
       ),
     },
     {
-      title: '操作',
+      title: t('fields.action', { ns: 'machines' }),
       key: 'action',
       width: 200,
       render: (_, record) => (
@@ -667,21 +713,18 @@ const MachinesPage: React.FC = () => {
   const handleImportModels = async (data: AdminHostModel[]) => {
     try {
       setModelsLoading(true);
+      console.log('Batch create models with data:', data);
+      
       // 批量创建主机型号
-      for (const record of data) {
-        const submitData = {
-          ...record,
-          product_line_id: currentProductLine?.id,
-          status: record.status || 'publish',
-          sort_order: parseInt(String(record.sort_order)) || 0,
-        };
-        await adminHostModelService.createHostModel(submitData);
-      }
-      message.success(`成功导入 ${data.length} 条主机型号记录`);
-      fetchModels(); // 刷新数据
+      const responses = await Promise.all(
+        data.map(item => adminHostModelService.createHostModel(item))
+      );
+      
+      message.success(t('message.batchImportSuccess', { ns: 'machines', count: data.length }));
+      fetchModels();
     } catch (error) {
-      console.error('导入失败:', error);
-      message.error('导入失败，请检查数据格式');
+      console.error(t('message.updateFailed', { ns: 'machines' }), error);
+      message.error(t('message.updateFailed', { ns: 'machines' }));
       throw error; // 重新抛出错误以便Hook处理
     } finally {
       setModelsLoading(false);
@@ -700,11 +743,11 @@ const MachinesPage: React.FC = () => {
         };
         await AdminPartService.createPart(submitData);
       }
-      message.success(`成功导入 ${data.length} 条料号记录`);
+      message.success(t('message.createSuccess', { ns: 'machines' }));
       fetchParts(); // 刷新数据
     } catch (error) {
-      console.error('导入失败:', error);
-      message.error('导入失败，请检查数据格式');
+      console.error(t('message.createFailed', { ns: 'machines' }), error);
+      message.error(t('message.createFailed', { ns: 'machines' }));
       throw error; // 重新抛出错误以便Hook处理
     } finally {
       setPartsLoading(false);
@@ -716,7 +759,7 @@ const MachinesPage: React.FC = () => {
       {/* 当前产品线提示 */}
       {currentProductLine && (
         <Card size="small" className="mb-4" style={{ backgroundColor: '#f0f8ff' }}>
-          <Text strong>当前产品线：</Text>
+          <Text strong>{t('list.filterByProductLine', { ns: 'machines' })}：</Text>
           <Text style={{ color: '#1890ff', fontSize: '16px', marginLeft: '8px' }}>
             {currentProductLine.title_zh || currentProductLine.title_en}
           </Text>
@@ -728,20 +771,20 @@ const MachinesPage: React.FC = () => {
       
       {/* 主机型号管理卡片 */}
       <Card 
-        title={<Title level={4}>主机型号管理</Title>}
+        title={<Title level={4}>{t('list.models', { ns: 'machines' })}</Title>}
         className="mb-4"
       >
         {/* 工具栏 */}
         <div className="mb-4 flex justify-between">
           <div>
             <Button type="primary" icon={<PlusOutlined />} onClick={handleCreateMachine}>
-              新增型号
+              {t('actions.addModel', { ns: 'machines' })}
             </Button>
             <TableImportExport
               data={modelsList}
               columns={modelExportColumns}
-              exportFileName={`主机型号_${new Date().toISOString().split('T')[0]}.csv`}
-              templateFileName="主机型号导入模板.csv"
+              exportFileName={`${t('list.models', { ns: 'machines' })}_${new Date().toISOString().split('T')[0]}.csv`}
+              templateFileName={`${t('list.models', { ns: 'machines' })}${t('actions.import', { ns: 'machines' })}.csv`}
               onImportSuccess={handleImportModels}
               requiredFields={['code', 'title_zh', 'title_en']}
               fieldMapping={{
@@ -750,10 +793,10 @@ const MachinesPage: React.FC = () => {
               validateRow={(row, rowIndex) => {
                 const errors: string[] = [];
                 if (!row.code && !row.model) {
-                  errors.push('缺少型号');
+                  errors.push(t('validation.modelRequired', { ns: 'machines' }));
                 }
                 if (!row.title_zh) {
-                  errors.push('缺少中文名称');
+                  errors.push(t('validation.chineseNameRequired', { ns: 'machines' }));
                 }
                 return { valid: errors.length === 0, errors };
               }}
@@ -763,7 +806,7 @@ const MachinesPage: React.FC = () => {
           <div>
             <Space>
               <Select 
-                placeholder="产品线" 
+                placeholder={t('placeholders.selectProductLine', { ns: 'machines' })} 
                 style={{ width: 200 }}
                 allowClear
                 onChange={(value: number | undefined) => setModelFilters(prev => ({ ...prev, product_line_id: value }))}
@@ -775,17 +818,17 @@ const MachinesPage: React.FC = () => {
                 ))}
               </Select>
               <Select 
-                placeholder="状态" 
+                placeholder={t('placeholders.selectStatus', { ns: 'machines' })} 
                 style={{ width: 100 }}
                 allowClear
                 onChange={(value: string | undefined) => setModelFilters(prev => ({ ...prev, status: value }))}
               >
-                <Option value="publish">已发布</Option>
-                <Option value="draft">草稿</Option>
-                <Option value="trash">回收站</Option>
+                <Option value="publish">{t('status.publish', { ns: 'machines' })}</Option>
+                <Option value="draft">{t('status.draft', { ns: 'machines' })}</Option>
+                <Option value="trash">{t('status.trash', { ns: 'machines' })}</Option>
               </Select>
               <Input.Search 
-                placeholder="搜索型号" 
+                placeholder={t('list.searchPlaceholder', { ns: 'machines' })} 
                 allowClear 
                 style={{ width: 200 }}
                 value={modelFilters.search}
@@ -807,7 +850,7 @@ const MachinesPage: React.FC = () => {
             pageSize: modelsPagination.page_size,
             total: modelsPagination.total,
             showSizeChanger: true,
-            showTotal: (total: number) => `共 ${total} 项`,
+            showTotal: (total: number) => t('pagination.total', { ns: 'machines', total }),
             pageSizeOptions: ['5', '10', '20', '50'],
           }}
           onChange={handleModelTableChange}
@@ -823,11 +866,11 @@ const MachinesPage: React.FC = () => {
       <Card 
         title={
           <div className="flex justify-between">
-            <Title level={4}>料号管理</Title>
+            <Title level={4}>{t('list.parts', { ns: 'machines' })}</Title>
             {selectedModelForParts && (
               <div>
-                <Text>当前型号: {selectedModelForParts.model}</Text>
-                <Button type="link" onClick={handleClearPartFilter}>清除筛选</Button>
+                <Text>{t('fields.model', { ns: 'machines' })}: {selectedModelForParts.model}</Text>
+                <Button type="link" onClick={handleClearPartFilter}>{t('actions.cancel', { ns: 'machines' })}</Button>
               </div>
             )}
           </div>
@@ -840,24 +883,24 @@ const MachinesPage: React.FC = () => {
               type="primary" 
               icon={<PlusOutlined />} 
               onClick={handleCreatePartModal}
-              title={selectedModelForParts ? `为型号 ${selectedModelForParts.model} 新增料号` : '新增料号（未选择主机型号）'}
+              title={selectedModelForParts ? `${t('actions.addMachine', { ns: 'machines' })} ${selectedModelForParts.model}` : t('actions.addMachine', { ns: 'machines' })}
             >
-              新增料号
+              {t('actions.addMachine', { ns: 'machines' })}
             </Button>
             <TableImportExport
               data={partsList}
               columns={partExportColumns}
-              exportFileName={`料号_${new Date().toISOString().split('T')[0]}.csv`}
-              templateFileName="料号导入模板.csv"
+              exportFileName={`${t('list.parts', { ns: 'machines' })}_${new Date().toISOString().split('T')[0]}.csv`}
+              templateFileName={`${t('list.parts', { ns: 'machines' })}${t('actions.import', { ns: 'machines' })}.csv`}
               onImportSuccess={handleImportParts}
               requiredFields={['model', 'part_number', 'name_zh', 'name_en']}
               validateRow={(row, rowIndex) => {
                 const errors: string[] = [];
                 if (!row.model) {
-                  errors.push('缺少型号');
+                  errors.push(t('validation.modelRequired', { ns: 'machines' }));
                 }
                 if (!row.part_number) {
-                  errors.push('缺少料号');
+                  errors.push(t('validation.partNumberRequired', { ns: 'machines' }));
                 }
                 return { valid: errors.length === 0, errors };
               }}
@@ -867,7 +910,7 @@ const MachinesPage: React.FC = () => {
           <div>
             <Space>
               <Select 
-                placeholder="料号型号" 
+                placeholder={t('fields.part_number', { ns: 'machines' })} 
                 style={{ width: 200 }}
                 allowClear
                 value={partFilters.host_model_id}
@@ -884,17 +927,17 @@ const MachinesPage: React.FC = () => {
                 ))}
               </Select>
               <Select 
-                placeholder="状态" 
+                placeholder={t('placeholders.selectStatus', { ns: 'machines' })} 
                 style={{ width: 100 }}
                 allowClear
                 onChange={(value: string | undefined) => setPartFilters(prev => ({ ...prev, status: value }))}
               >
-                <Option value="publish">已发布</Option>
-                <Option value="draft">草稿</Option>
-                <Option value="trash">回收站</Option>
+                <Option value="publish">{t('status.publish', { ns: 'machines' })}</Option>
+                <Option value="draft">{t('status.draft', { ns: 'machines' })}</Option>
+                <Option value="trash">{t('status.trash', { ns: 'machines' })}</Option>
               </Select>
               <Input.Search 
-                placeholder="搜索料号" 
+                placeholder={t('list.searchPlaceholder', { ns: 'machines' })} 
                 allowClear 
                 style={{ width: 200 }}
                 value={partFilters.search}
@@ -916,7 +959,7 @@ const MachinesPage: React.FC = () => {
             pageSize: partsPagination.page_size,
             total: partsPagination.total,
             showSizeChanger: true,
-            showTotal: (total: number) => `共 ${total} 项`,
+            showTotal: (total: number) => t('pagination.total', { ns: 'machines', total }),
             pageSizeOptions: ['5', '10', '20', '50'],
           }}
           onChange={handlePartTableChange}
@@ -926,7 +969,7 @@ const MachinesPage: React.FC = () => {
 
       {/* 主机型号模态框 */}
       <Modal
-        title={editingModel ? '编辑主机型号' : '新增主机型号'}
+        title={editingModel ? t('editModel.title', { ns: 'machines' }) : t('createModel.title', { ns: 'machines' })}
         open={isModelModalVisible}
         onCancel={() => setIsModelModalVisible(false)}
         onOk={handleModelSubmit}
@@ -941,24 +984,24 @@ const MachinesPage: React.FC = () => {
             <Col span={12}>
               <Form.Item
                 name="product_line_id"
-                label="产品线"
-                rules={[{ required: true, message: '请选择产品线' }]}
-                help={currentProductLine ? `当前产品线：${currentProductLine.title_zh || currentProductLine.title_en}` : '未指定产品线'}
+                label="产品线 (Product Line)"
+                initialValue={1}
+                help={currentProductLine ? `当前产品线：${currentProductLine.title_zh || currentProductLine.title_en}` : '将使用默认产品线'}
               >
                 <Input 
-                  value={currentProductLine ? `${currentProductLine.title_zh || currentProductLine.title_en} (ID: ${currentProductLine.id})` : ''}
+                  value={currentProductLine ? `${currentProductLine.title_zh || currentProductLine.title_en} (ID: ${currentProductLine.id})` : '气垫机产品线 (ID: 1)'}
                   disabled={true}
-                  placeholder="当前产品线（自动设定）"
+                  placeholder="产品线将自动设置"
                 />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
                 name="model"
-                label="型号编码"
-                rules={[{ required: true, message: '请输入型号编码' }]}
+                label="型号 (Model)"
+                rules={[{ required: true, message: '请输入型号' }]}
               >
-                <Input placeholder="请输入型号编码" />
+                <Input placeholder="例如: LA-E4S V2.0" />
               </Form.Item>
             </Col>
           </Row>
@@ -967,8 +1010,7 @@ const MachinesPage: React.FC = () => {
             <Col span={12}>
               <Form.Item
                 name="title_zh"
-                label="中文名称"
-                rules={[{ required: true, message: '请输入中文名称' }]}
+                label="中文名称 (Chinese Name)"
               >
                 <Input placeholder="请输入中文名称" />
               </Form.Item>
@@ -976,10 +1018,9 @@ const MachinesPage: React.FC = () => {
             <Col span={12}>
               <Form.Item
                 name="title_en"
-                label="英文名称"
-                rules={[{ required: true, message: '请输入英文名称' }]}
+                label="英文名称 (English Name)"
               >
-                <Input placeholder="请输入英文名称" />
+                <Input placeholder="Please enter English name" />
               </Form.Item>
             </Col>
           </Row>
@@ -988,7 +1029,7 @@ const MachinesPage: React.FC = () => {
             <Col span={12}>
               <Form.Item
                 name="description_zh"
-                label="中文描述"
+                label="中文描述 (Chinese Description)"
               >
                 <TextArea rows={3} placeholder="请输入中文描述" />
               </Form.Item>
@@ -996,9 +1037,9 @@ const MachinesPage: React.FC = () => {
             <Col span={12}>
               <Form.Item
                 name="description_en"
-                label="英文描述"
+                label="英文描述 (English Description)"
               >
-                <TextArea rows={3} placeholder="请输入英文描述" />
+                <TextArea rows={3} placeholder="Please enter English description" />
               </Form.Item>
             </Col>
           </Row>
@@ -1007,73 +1048,86 @@ const MachinesPage: React.FC = () => {
             <Col span={12}>
               <Form.Item
                 name="type"
-                label="主机类型"
+                label="机器类型 (Machine Type)"
               >
-                <Input placeholder="请输入主机类型" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="image1_url"
-                label="主图URL"
-              >
-                <Input placeholder="请输入主图URL" />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="image2_url"
-                label="副图URL"
-              >
-                <Input placeholder="请输入副图URL" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="explosion_diagram_pdf"
-                label="爆炸图PDF URL"
-              >
-                <Input placeholder="请输入爆炸图PDF文件URL" />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="spec_pdf"
-                label="规格PDF"
-              >
-                <PdfUploader 
-                  placeholder="上传规格PDF文件" 
-                  hostId={editingModel?.id ? (typeof editingModel.id === 'string' ? parseInt(editingModel.id) : editingModel.id) : undefined}
-                  value={modelForm.getFieldValue('spec_pdf')}
-                  onChange={(url) => {
-                    modelForm.setFieldsValue({ spec_pdf: url });
-                  }}
-                  disabled={!editingModel?.id} // 只有编辑现有主机时才能上传
-                />
-                {!editingModel?.id && (
-                  <div style={{ marginTop: 8, color: '#999', fontSize: '12px' }}>
-                    请先保存主机型号，然后再上传PDF文件
-                  </div>
-                )}
+                <Input placeholder="例如: 小型气垫机" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
                 name="status"
-                label="状态"
+                label="状态 (Status)"
                 initialValue="publish"
               >
                 <Select>
-                  <Option value="publish">已发布</Option>
-                  <Option value="draft">草稿</Option>
-                  <Option value="trash">回收站</Option>
+                  <Option value="publish">发布 (Published)</Option>
+                  <Option value="draft">草稿 (Draft)</Option>
+                  <Option value="trash">回收站 (Trash)</Option>
                 </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="image1_url"
+                label="主图 (Main Image)"
+                extra="支持上传图片文件或输入图片URL地址"
+              >
+                <FileUrlInput
+                  placeholder="请输入图片URL地址或点击上传"
+                  fileType="image"
+                  maxSize={10}
+                  uploadPath="/uploads/machines/images/"
+                  preview
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="image2_url"
+                label="副图 (Secondary Image)"
+                extra="支持上传图片文件或输入图片URL地址"
+              >
+                <FileUrlInput
+                  placeholder="请输入图片URL地址或点击上传"
+                  fileType="image"
+                  maxSize={10}
+                  uploadPath="/uploads/machines/images/"
+                  preview
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="explosion_diagram_pdf"
+                label="爆炸图PDF (Explosion Diagram PDF)"
+                extra="支持上传PDF文件或输入PDF URL地址"
+              >
+                <FileUrlInput
+                  placeholder="请输入PDF URL地址或点击上传"
+                  fileType="pdf"
+                  maxSize={20}
+                  uploadPath="/uploads/machines/pdfs/"
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="spec_pdf"
+                label="规格PDF (Specification PDF)"
+                extra="支持上传PDF文件或输入PDF URL地址"
+              >
+                <FileUrlInput
+                  placeholder="请输入PDF URL地址或点击上传"
+                  fileType="pdf"
+                  maxSize={20}
+                  uploadPath="/uploads/machines/pdfs/"
+                />
               </Form.Item>
             </Col>
           </Row>
@@ -1082,10 +1136,10 @@ const MachinesPage: React.FC = () => {
             <Col span={12}>
               <Form.Item
                 name="sort_order"
-                label="排序"
+                label="排序 (Sort Order)"
                 initialValue={0}
               >
-                <Input type="number" placeholder="请输入排序值" />
+                <Input type="number" placeholder="数字越小排序越靠前" />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -1097,21 +1151,21 @@ const MachinesPage: React.FC = () => {
 
       {/* 删除确认对话框 */}
       <Modal
-        title="确认删除"
+        title={t('actions.delete', { ns: 'machines' })}
         open={showDeleteConfirm}
         onOk={confirmModelDelete}
         onCancel={() => {
           setShowDeleteConfirm(false);
           setRecordToDelete(null);
         }}
-        okText="确认"
-        cancelText="取消"
+        okText={t('actions.delete', { ns: 'machines' })}
+        cancelText={t('actions.cancel', { ns: 'machines' })}
       >
-        <p>确定要删除此主机型号吗？此操作无法撤销。</p>
+        <p>{t('message.deleteSuccess', { ns: 'machines' })}</p>
         {recordToDelete && (
           <p>
-            型号：{recordToDelete.model}<br />
-            名称：{recordToDelete.title_zh}
+            {t('fields.model', { ns: 'machines' })}：{recordToDelete.model}<br />
+            {t('fields.name', { ns: 'machines' })}：{recordToDelete.title_zh}
           </p>
         )}
       </Modal>

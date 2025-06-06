@@ -667,4 +667,161 @@ class BJT_Price_Controller extends BJT_API_Controller {
             ]
         );
     }
+
+    /**
+     * Checks if the current user has permission to write (create/update) prices.
+     * Requires authentication and proper BJT permissions.
+     *
+     * @param WP_REST_Request $request Full data about the request.
+     * @return true|WP_Error True if the request has write access, WP_Error object otherwise.
+     */
+    public function check_write_permission($request) {
+        error_log('[BJT_Price_Controller] Checking write permission');
+        
+        // Using BJT Auth Controller instead of WordPress capabilities
+        if (!class_exists('BJT_Auth_Controller')) {
+            $auth_controller_path = dirname(__FILE__) . '/class-auth-controller.php';
+            if (file_exists($auth_controller_path)) {
+                require_once $auth_controller_path;
+            } else {
+                error_log('[BJT_Price_Controller] BJT_Auth_Controller class file not found at: ' . $auth_controller_path);
+                return new WP_Error('rest_controller_not_found', 'Authentication controller not found.', ['status' => 500]);
+            }
+        }
+        
+        if (!class_exists('BJT_Auth_Controller')) {
+            error_log('[BJT_Price_Controller] BJT_Auth_Controller class still not found after include attempt');
+            return new WP_Error('rest_controller_not_loadable', 'Authentication controller class not loadable.', ['status' => 500]);
+        }
+
+        $auth_controller = new BJT_Auth_Controller();
+        $is_authenticated = $auth_controller->check_auth($request);
+
+        if (true !== $is_authenticated && is_wp_error($is_authenticated)) {
+            error_log('[BJT_Price_Controller] Authentication failed: ' . $is_authenticated->get_error_message());
+            return $is_authenticated;
+        }
+        
+        if (!$is_authenticated) {
+            error_log('[BJT_Price_Controller] User not authenticated');
+            return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
+        }
+
+        // 使用BJT用户角色系统检查权限
+        $user = $GLOBALS['bjt_current_user'];
+        if (!$user) {
+            error_log('[BJT_Price_Controller] No current user found in globals');
+            return new WP_Error('rest_forbidden', __('User information not available.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户状态
+        if ($user->status !== 'active') {
+            error_log('[BJT_Price_Controller] User is not active: ' . $user->username);
+            return new WP_Error('rest_forbidden', __('Your account is not active.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户角色 - 只有admin和manager可以修改价格
+        $has_write_permission = false;
+        if (isset($user->role)) {
+            $allowed_write_roles = ['admin', 'manager'];
+            $has_write_permission = in_array($user->role, $allowed_write_roles);
+        }
+
+        // 检查用户权限
+        if (isset($user->permissions) && is_array($user->permissions)) {
+            $has_write_permission = $has_write_permission || 
+                                    in_array('edit_prices', $user->permissions) || 
+                                    in_array('manage_prices', $user->permissions);
+        }
+
+        if (!$has_write_permission) {
+            error_log('[BJT_Price_Controller] User does not have write permission: ' . $user->username . ', role: ' . $user->role);
+            return new WP_Error(
+                'rest_forbidden',
+                __('You do not have permission to create or update prices.', 'bjt'),
+                ['status' => 403, 'success' => false]
+            );
+        }
+
+        error_log('[BJT_Price_Controller] Write permission granted for user: ' . $user->username);
+        return true;
+    }
+
+    /**
+     * Checks if the current user has permission to delete prices.
+     *
+     * @param WP_REST_Request $request Full data about the request.
+     * @return true|WP_Error True if the request has delete access, WP_Error object otherwise.
+     */
+    public function check_delete_permission($request) {
+        error_log('[BJT_Price_Controller] Checking delete permission');
+        
+        // Using BJT Auth Controller instead of WordPress capabilities
+        if (!class_exists('BJT_Auth_Controller')) {
+            $auth_controller_path = dirname(__FILE__) . '/class-auth-controller.php';
+            if (file_exists($auth_controller_path)) {
+                require_once $auth_controller_path;
+            } else {
+                error_log('[BJT_Price_Controller] BJT_Auth_Controller class file not found at: ' . $auth_controller_path);
+                return new WP_Error('rest_controller_not_found', 'Authentication controller not found.', ['status' => 500]);
+            }
+        }
+        
+        if (!class_exists('BJT_Auth_Controller')) {
+            error_log('[BJT_Price_Controller] BJT_Auth_Controller class still not found after include attempt');
+            return new WP_Error('rest_controller_not_loadable', 'Authentication controller class not loadable.', ['status' => 500]);
+        }
+
+        $auth_controller = new BJT_Auth_Controller();
+        $is_authenticated = $auth_controller->check_auth($request);
+
+        if (true !== $is_authenticated && is_wp_error($is_authenticated)) {
+            error_log('[BJT_Price_Controller] Authentication failed: ' . $is_authenticated->get_error_message());
+            return $is_authenticated;
+        }
+        
+        if (!$is_authenticated) {
+            error_log('[BJT_Price_Controller] User not authenticated');
+            return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
+        }
+
+        // 使用BJT用户角色系统检查权限
+        $user = $GLOBALS['bjt_current_user'];
+        if (!$user) {
+            error_log('[BJT_Price_Controller] No current user found in globals');
+            return new WP_Error('rest_forbidden', __('User information not available.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户状态
+        if ($user->status !== 'active') {
+            error_log('[BJT_Price_Controller] User is not active: ' . $user->username);
+            return new WP_Error('rest_forbidden', __('Your account is not active.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户角色 - 只有admin可以删除prices
+        $has_delete_permission = false;
+        if (isset($user->role)) {
+            $allowed_delete_roles = ['admin'];
+            $has_delete_permission = in_array($user->role, $allowed_delete_roles);
+        }
+
+        // 检查用户权限
+        if (isset($user->permissions) && is_array($user->permissions)) {
+            $has_delete_permission = $has_delete_permission || 
+                                     in_array('delete_prices', $user->permissions) || 
+                                     in_array('manage_prices', $user->permissions);
+        }
+
+        if (!$has_delete_permission) {
+            error_log('[BJT_Price_Controller] User does not have delete permission: ' . $user->username . ', role: ' . $user->role);
+            return new WP_Error(
+                'rest_forbidden',
+                __('You do not have permission to delete prices.', 'bjt'),
+                ['status' => 403, 'success' => false]
+            );
+        }
+
+        error_log('[BJT_Price_Controller] Delete permission granted for user: ' . $user->username);
+        return true;
+    }
 } 

@@ -17,7 +17,7 @@ class BJT_Upload_Controller extends BJT_API_Controller {
             [
                 'methods' => WP_REST_Server::CREATABLE,
                 'callback' => [$this, 'upload_specification'],
-                'permission_callback' => [$this, 'check_upload_permission'],
+                'permission_callback' => [$this, 'check_write_permission'],
                 'args' => [
                     'host_id' => [
                         'required' => true,
@@ -38,12 +38,48 @@ class BJT_Upload_Controller extends BJT_API_Controller {
             ],
         ]);
 
-        // 获取nonce（为了兼容传统AJAX调用）
+        // 图片上传端点
+        register_rest_route($this->namespace, '/' . $this->resource_name . '/image', [
+            [
+                'methods' => WP_REST_Server::CREATABLE,
+                'callback' => [$this, 'upload_image'],
+                'permission_callback' => [$this, 'check_write_permission'],
+                'args' => [
+                    'upload_dir' => [
+                        'required' => false,
+                        'type' => 'string',
+                        'default' => 'uploads/machines/images',
+                        'description' => '上传目录',
+                        'sanitize_callback' => 'sanitize_text_field',
+                    ],
+                ],
+            ],
+        ]);
+
+        // 通用文件上传端点
+        register_rest_route($this->namespace, '/' . $this->resource_name . '/file', [
+            [
+                'methods' => WP_REST_Server::CREATABLE,
+                'callback' => [$this, 'upload_file'],
+                'permission_callback' => [$this, 'check_write_permission'],
+                'args' => [
+                    'upload_dir' => [
+                        'required' => false,
+                        'type' => 'string',
+                        'default' => 'uploads',
+                        'description' => '上传目录',
+                        'sanitize_callback' => 'sanitize_text_field',
+                    ],
+                ],
+            ],
+        ]);
+
+        // 获取nonce（为了兼容传统AJAX调用）- 无需认证
         register_rest_route($this->namespace, '/' . $this->resource_name . '/nonce', [
             [
                 'methods' => WP_REST_Server::READABLE,
                 'callback' => [$this, 'get_upload_nonce'],
-                'permission_callback' => [$this, 'check_auth'],
+                'permission_callback' => '__return_true', // 无需认证
             ],
         ]);
     }
@@ -153,123 +189,82 @@ class BJT_Upload_Controller extends BJT_API_Controller {
         return $this->format_response([
             'nonce' => $nonce,
             'action' => 'bjt_upload_specification',
-            'user_id' => $this->get_current_user_id(),
         ], 'Nonce生成成功');
     }
     
     /**
      * 检查上传权限
-     *
-     * @param WP_REST_Request $request 请求对象
-     * @return bool|WP_Error 是否有权限
      */
-    public function check_upload_permission($request) {
-        // 首先检查基础认证
-        $auth_result = $this->check_auth($request);
-        if (is_wp_error($auth_result)) {
-            return $auth_result;
+    public function check_write_permission($request) {
+        error_log('[BJT_Upload_Controller] Checking upload permission');
+        
+        // Using BJT Auth Controller instead of custom auth logic
+        if (!class_exists('BJT_Auth_Controller')) {
+            $auth_controller_path = dirname(__FILE__) . '/class-auth-controller.php';
+            if (file_exists($auth_controller_path)) {
+                require_once $auth_controller_path;
+            } else {
+                error_log('[BJT_Upload_Controller] BJT_Auth_Controller class file not found at: ' . $auth_controller_path);
+                return new WP_Error('rest_controller_not_found', 'Authentication controller not found.', ['status' => 500]);
+            }
         }
         
-        // 检查用户是否有上传文件的权限
-        $current_user = $this->get_current_bjt_user();
-        if (!$current_user) {
-            error_log('[BJT Upload Controller] No authenticated user found');
-            return $this->error_response('用户未认证', 'user_not_authenticated', 401);
+        if (!class_exists('BJT_Auth_Controller')) {
+            error_log('[BJT_Upload_Controller] BJT_Auth_Controller class still not found after include attempt');
+            return new WP_Error('rest_controller_not_loadable', 'Authentication controller class not loadable.', ['status' => 500]);
+        }
+
+        $auth_controller = new BJT_Auth_Controller();
+        $is_authenticated = $auth_controller->check_auth($request);
+
+        if (true !== $is_authenticated && is_wp_error($is_authenticated)) {
+            error_log('[BJT_Upload_Controller] Authentication failed: ' . $is_authenticated->get_error_message());
+            return $is_authenticated;
         }
         
-        // 检查用户角色权限
-        $allowed_roles = ['admin', 'editor', 'manager'];
-        if (!in_array($current_user->role, $allowed_roles)) {
-            error_log('[BJT Upload Controller] User role not allowed for upload: ' . $current_user->role);
-            return $this->error_response('权限不足，无法上传文件', 'insufficient_permissions', 403);
+        if (!$is_authenticated) {
+            error_log('[BJT_Upload_Controller] User not authenticated');
+            return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
         }
-        
-        error_log('[BJT Upload Controller] Upload permission granted for user: ' . $current_user->username);
+
+        // 使用BJT用户角色系统检查权限
+        $user = $GLOBALS['bjt_current_user'];
+        if (!$user) {
+            error_log('[BJT_Upload_Controller] No current user found in globals');
+            return new WP_Error('rest_forbidden', __('User information not available.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户状态
+        if ($user->status !== 'active') {
+            error_log('[BJT_Upload_Controller] User is not active: ' . $user->username);
+            return new WP_Error('rest_forbidden', __('Your account is not active.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户角色 - admin, manager, editor可以上传文件
+        $has_upload_permission = false;
+        if (isset($user->role)) {
+            $allowed_upload_roles = ['admin', 'manager', 'editor'];
+            $has_upload_permission = in_array($user->role, $allowed_upload_roles);
+        }
+
+        // 检查用户权限
+        if (isset($user->permissions) && is_array($user->permissions)) {
+            $has_upload_permission = $has_upload_permission || 
+                                     in_array('upload_files', $user->permissions) || 
+                                     in_array('manage_files', $user->permissions);
+        }
+
+        if (!$has_upload_permission) {
+            error_log('[BJT_Upload_Controller] User does not have upload permission: ' . $user->username . ', role: ' . $user->role);
+            return new WP_Error(
+                'rest_forbidden',
+                __('You do not have permission to upload files.', 'bjt'),
+                ['status' => 403, 'success' => false]
+            );
+        }
+
+        error_log('[BJT_Upload_Controller] Upload permission granted for user: ' . $user->username);
         return true;
-    }
-    
-    /**
-     * 认证检查（从auth controller复制）
-     */
-    public function check_auth($request = null) {
-        // 从请求头获取Bearer Token
-        $authorization_header = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : '';
-        if (empty($authorization_header) || !preg_match('/Bearer\s+(.*)$/i', $authorization_header, $matches)) {
-            error_log('[BJT Upload Controller] No valid Authorization header found');
-            return $this->error_response('未提供授权令牌', 'rest_not_logged_in', 401);
-        }
-        
-        $token = $matches[1];
-        error_log('[BJT Upload Controller] Validating token: ' . substr($token, 0, 20) . '...');
-        
-        try {
-            // 使用JWT Handler验证令牌
-            $jwt_handler = new BJT_JWT_Handler();
-            $payload = $jwt_handler->validate_token($token);
-            
-            if (!$payload) {
-                error_log('[BJT Upload Controller] Token validation failed - no payload returned');
-                return $this->error_response('无效的令牌', 'invalid_token', 401);
-            }
-            
-            error_log('[BJT Upload Controller] Token payload: ' . print_r($payload, true));
-            
-            // 尝试从不同的payload格式中获取用户ID
-            $user_id = null;
-            if (isset($payload->data->user_id)) {
-                $user_id = $payload->data->user_id;
-            } else if (isset($payload->user) && isset($payload->user->id)) {
-                $user_id = $payload->user->id;
-            } else if (isset($payload->user_id)) {
-                $user_id = $payload->user_id;
-            }
-            
-            if (!$user_id) {
-                error_log('[BJT Upload Controller] No user ID found in token payload');
-                return $this->error_response('令牌不包含有效的用户信息', 'invalid_token', 401);
-            }
-            
-            error_log('[BJT Upload Controller] Found user ID in token: ' . $user_id);
-            
-            // 验证用户是否存在且活跃
-            global $wpdb;
-            $table_name = $wpdb->prefix . 'bjt_users';
-            $user = $wpdb->get_row($wpdb->prepare(
-                "SELECT * FROM {$table_name} WHERE id = %d AND status = 'active'",
-                $user_id
-            ));
-            
-            if (!$user) {
-                error_log('[BJT Upload Controller] User not found or inactive: ' . $user_id);
-                return $this->error_response('用户不存在或已被禁用', 'user_not_found', 401);
-            }
-            
-            error_log('[BJT Upload Controller] User authenticated successfully: ' . $user->username . ' (Role: ' . $user->role . ')');
-            
-            // 将用户信息存储到全局变量中以便后续使用
-            $GLOBALS['bjt_current_user'] = $user;
-            
-            return true;
-            
-        } catch (Exception $e) {
-            error_log('[BJT Upload Controller] Authentication error: ' . $e->getMessage());
-            return $this->error_response('认证过程中发生错误', 'authentication_error', 401);
-        }
-    }
-    
-    /**
-     * 获取当前认证的BJT用户
-     */
-    private function get_current_bjt_user() {
-        return isset($GLOBALS['bjt_current_user']) ? $GLOBALS['bjt_current_user'] : null;
-    }
-    
-    /**
-     * 获取当前用户ID
-     */
-    private function get_current_user_id() {
-        $user = $this->get_current_bjt_user();
-        return $user ? $user->id : 0;
     }
     
     /**
@@ -283,15 +278,18 @@ class BJT_Upload_Controller extends BJT_API_Controller {
         if (strpos($upload_dir, '/') === 0) {
             // 绝对路径
             $base_dir = $upload_dir;
-            $base_url = str_replace(ABSPATH, home_url('/'), $upload_dir);
+            $base_url = str_replace(ABSPATH, '/', $upload_dir);
         } else {
             // 相对路径（相对于WordPress根目录）
             $base_dir = ABSPATH . $upload_dir;
-            $base_url = home_url($upload_dir);
+            $base_url = '/' . $upload_dir;
         }
         
         $upload_path = $base_dir . '/specifications/' . $host_id;
         $upload_url = $base_url . '/specifications/' . $host_id;
+        
+        error_log('[BJT Upload Controller] PDF upload directory: ' . $upload_path);
+        error_log('[BJT Upload Controller] PDF URL path: ' . $upload_url);
         
         // 确保目录存在
         if (!file_exists($upload_path)) {
@@ -366,5 +364,225 @@ class BJT_Upload_Controller extends BJT_API_Controller {
             default:
                 return '未知上传错误';
         }
+    }
+    
+    /**
+     * 上传图片文件
+     *
+     * @param WP_REST_Request $request 请求对象
+     * @return WP_REST_Response|WP_Error 响应对象
+     */
+    public function upload_image($request) {
+        error_log('[BJT Upload Controller] Starting image upload');
+        
+        // 获取参数
+        $upload_dir = $request->get_param('upload_dir') ?: 'uploads/machines/images';
+        
+        error_log('[BJT Upload Controller] Image upload parameters: upload_dir=' . $upload_dir);
+        
+        // 检查是否有文件上传
+        $files = $request->get_file_params();
+        $file = null;
+        
+        // 尝试不同的文件字段名
+        if (!empty($files['image_file'])) {
+            $file = $files['image_file'];
+        } elseif (!empty($files['file'])) {
+            $file = $files['file'];
+        } else {
+            error_log('[BJT Upload Controller] No image file in request. Available files: ' . implode(', ', array_keys($files)));
+            return $this->error_response('请选择要上传的图片文件', 'no_file', 400);
+        }
+        
+        error_log('[BJT Upload Controller] Image file info: name=' . $file['name'] . ', size=' . $file['size'] . ', type=' . $file['type']);
+        
+        // 检查文件上传错误
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            error_log('[BJT Upload Controller] File upload error: ' . $file['error']);
+            return $this->error_response(
+                '文件上传失败: ' . $this->get_upload_error_message($file['error']),
+                'upload_error',
+                400
+            );
+        }
+        
+        // 验证文件类型
+        $file_info = wp_check_filetype($file['name']);
+        $allowed_types = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        if (!in_array($file_info['ext'], $allowed_types)) {
+            error_log('[BJT Upload Controller] Invalid image type: ' . $file_info['type']);
+            return $this->error_response('只能上传 JPG, PNG, GIF, WebP 格式的图片', 'invalid_file_type', 400);
+        }
+        
+        // 验证文件大小 (5MB)
+        $max_size = 5 * 1024 * 1024;
+        if ($file['size'] > $max_size) {
+            error_log('[BJT Upload Controller] Image too large: ' . $file['size']);
+            return $this->error_response('图片大小不能超过5MB', 'file_too_large', 400);
+        }
+        
+        // 确定上传目录路径
+        $upload_result = $this->prepare_generic_upload_directory($upload_dir);
+        if (is_wp_error($upload_result)) {
+            return $upload_result;
+        }
+        
+        extract($upload_result); // $upload_path, $upload_url
+        
+        // 生成唯一文件名
+        $file_extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $filename = sanitize_file_name(pathinfo($file['name'], PATHINFO_FILENAME));
+        $timestamp = time();
+        $random = substr(md5(mt_rand()), 0, 6);
+        $unique_filename = $timestamp . '_' . $random . '.' . $file_extension;
+        $full_path = $upload_path . '/' . $unique_filename;
+        $file_url = $upload_url . '/' . $unique_filename;
+        
+        error_log('[BJT Upload Controller] Image target path: ' . $full_path);
+        
+        // 移动上传的文件
+        if (move_uploaded_file($file['tmp_name'], $full_path)) {
+            error_log('[BJT Upload Controller] Image uploaded successfully: ' . $full_path);
+            
+            return $this->format_response([
+                'url' => $file_url,
+                'filename' => $unique_filename,
+                'file_size' => $file['size'],
+                'upload_path' => $full_path,
+                'file_type' => 'image',
+            ], '图片上传成功');
+            
+        } else {
+            error_log('[BJT Upload Controller] Failed to move uploaded image');
+            return $this->error_response('保存图片失败', 'save_failed', 500);
+        }
+    }
+    
+    /**
+     * 通用文件上传
+     *
+     * @param WP_REST_Request $request 请求对象
+     * @return WP_REST_Response|WP_Error 响应对象
+     */
+    public function upload_file($request) {
+        error_log('[BJT Upload Controller] Starting generic file upload');
+        
+        // 获取参数
+        $upload_dir = $request->get_param('upload_dir') ?: 'uploads';
+        
+        error_log('[BJT Upload Controller] Generic upload parameters: upload_dir=' . $upload_dir);
+        
+        // 检查是否有文件上传
+        $files = $request->get_file_params();
+        if (empty($files['file'])) {
+            error_log('[BJT Upload Controller] No file in request. Available files: ' . implode(', ', array_keys($files)));
+            return $this->error_response('请选择要上传的文件', 'no_file', 400);
+        }
+        
+        $file = $files['file'];
+        error_log('[BJT Upload Controller] File info: name=' . $file['name'] . ', size=' . $file['size'] . ', type=' . $file['type']);
+        
+        // 检查文件上传错误
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            error_log('[BJT Upload Controller] File upload error: ' . $file['error']);
+            return $this->error_response(
+                '文件上传失败: ' . $this->get_upload_error_message($file['error']),
+                'upload_error',
+                400
+            );
+        }
+        
+        // 验证文件类型（允许常见的文件类型）
+        $file_info = wp_check_filetype($file['name']);
+        $allowed_types = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx', 'txt'];
+        if (!in_array($file_info['ext'], $allowed_types)) {
+            error_log('[BJT Upload Controller] Invalid file type: ' . $file_info['type']);
+            return $this->error_response('不支持的文件类型: ' . $file_info['ext'], 'invalid_file_type', 400);
+        }
+        
+        // 验证文件大小 (10MB)
+        $max_size = 10 * 1024 * 1024;
+        if ($file['size'] > $max_size) {
+            error_log('[BJT Upload Controller] File too large: ' . $file['size']);
+            return $this->error_response('文件大小不能超过10MB', 'file_too_large', 400);
+        }
+        
+        // 确定上传目录路径
+        $upload_result = $this->prepare_generic_upload_directory($upload_dir);
+        if (is_wp_error($upload_result)) {
+            return $upload_result;
+        }
+        
+        extract($upload_result); // $upload_path, $upload_url
+        
+        // 生成唯一文件名
+        $file_extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $filename = sanitize_file_name(pathinfo($file['name'], PATHINFO_FILENAME));
+        $timestamp = time();
+        $random = substr(md5(mt_rand()), 0, 6);
+        $unique_filename = $timestamp . '_' . $random . '.' . $file_extension;
+        $full_path = $upload_path . '/' . $unique_filename;
+        $file_url = $upload_url . '/' . $unique_filename;
+        
+        error_log('[BJT Upload Controller] File target path: ' . $full_path);
+        
+        // 移动上传的文件
+        if (move_uploaded_file($file['tmp_name'], $full_path)) {
+            error_log('[BJT Upload Controller] File uploaded successfully: ' . $full_path);
+            
+            return $this->format_response([
+                'url' => $file_url,
+                'filename' => $unique_filename,
+                'file_size' => $file['size'],
+                'upload_path' => $full_path,
+                'file_type' => 'file',
+            ], '文件上传成功');
+            
+        } else {
+            error_log('[BJT Upload Controller] Failed to move uploaded file');
+            return $this->error_response('保存文件失败', 'save_failed', 500);
+        }
+    }
+    
+    /**
+     * 准备通用上传目录
+     *
+     * @param string $upload_dir 上传目录
+     * @return array|WP_Error 目录信息或错误
+     */
+    private function prepare_generic_upload_directory($upload_dir) {
+        // 确保目录路径以 frontend/public/ 开头
+        if (strpos($upload_dir, 'frontend/public/') !== 0) {
+            $upload_dir = 'frontend/public/' . ltrim($upload_dir, '/');
+        }
+        
+        $base_dir = ABSPATH . $upload_dir;
+        
+        // 生成前端可访问的相对URL路径
+        // 从frontend/public/uploads/xxx 转换为 /uploads/xxx
+        $relative_path = str_replace('frontend/public/', '', $upload_dir);
+        $base_url = '/' . ltrim($relative_path, '/');
+        
+        error_log('[BJT Upload Controller] Preparing directory: ' . $base_dir);
+        error_log('[BJT Upload Controller] Generated URL path: ' . $base_url);
+        
+        // 确保目录存在
+        if (!file_exists($base_dir)) {
+            if (!wp_mkdir_p($base_dir)) {
+                error_log('[BJT Upload Controller] Failed to create directory: ' . $base_dir);
+                return $this->error_response('无法创建上传目录', 'directory_creation_failed', 500);
+            }
+        }
+        
+        // 检查目录是否可写
+        if (!is_writable($base_dir)) {
+            error_log('[BJT Upload Controller] Directory not writable: ' . $base_dir);
+            return $this->error_response('上传目录不可写', 'directory_not_writable', 500);
+        }
+        
+        return [
+            'upload_path' => $base_dir,
+            'upload_url' => $base_url,
+        ];
     }
 } 

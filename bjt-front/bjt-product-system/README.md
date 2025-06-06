@@ -19,6 +19,16 @@
 - **IP地址部署** - 无需域名的快速部署
 - **本地开发部署** - 开发测试环境
 - **一键部署脚本** - 自动化部署流程
+- **零停机部署** - 生产环境无中断更新
+- **热部署功能** - 前端快速更新，无需重启服务
+
+### 🛡️ 生产环境保障
+- **部署前检查** - 自动验证系统要求和配置
+- **健康监控** - 24/7自动监控和告警
+- **故障自愈** - 自动重启失败的容器
+- **完整备份** - 数据库和配置文件自动备份
+- **紧急恢复** - 多级应急响应流程
+- **详细日志** - 完整的操作和错误日志
 
 ## 📋 功能特性
 
@@ -36,6 +46,7 @@
 - 🔍 **高级搜索**：多维度产品搜索和筛选
 - 📱 **响应式设计**：支持桌面和移动设备
 - 🔄 **Excel数据导入**：支持Excel文件批量导入产品数据
+- 📁 **文件上传系统**：支持图片、PDF等文件上传与管理，包含权限控制和自动路径处理
 
 ## 🏗️ 技术架构
 
@@ -92,8 +103,13 @@ cp env.production.example .env.production
 chmod +x scripts/setup-ssl.sh
 ./scripts/setup-ssl.sh your-domain.com
 
-# 4. 部署
-./deploy.sh
+# 4. 部署前检查（推荐）
+chmod +x scripts/pre-deploy-check.sh
+./scripts/pre-deploy-check.sh
+
+# 5. 执行部署
+chmod +x deploy-production.sh
+./deploy-production.sh
 ```
 
 ### 🖥️ 方法三：IP地址部署（无域名）
@@ -118,6 +134,65 @@ docker-compose -f docker/prod/docker-compose.local.yml up -d
 chmod +x test-db-init.sh
 ./test-db-init.sh
 ```
+
+## 🛠️ 生产环境管理脚本
+
+### 核心部署脚本
+- **`deploy-production.sh`** - 完整生产环境部署（248行）
+- **`rebuilddb_production_v2.sh`** - 数据库重建脚本（137行）
+- **`deploy-frontend-zero-downtime.sh`** - 零停机前端部署（290行）
+
+### 运维管理脚本
+- **`scripts/pre-deploy-check.sh`** - 部署前环境检查（233行）
+- **`scripts/health-monitor.sh`** - 生产环境健康监控（392行）
+- **`scripts/backup.sh`** - 数据库备份脚本
+- **`scripts/setup-ssl.sh`** - SSL证书配置脚本
+
+### 开发环境脚本
+- **`scripts/deploy-spec-pdf-feature-dev.sh`** - 开发环境功能部署（494行）
+
+### 推荐使用流程
+
+**首次部署：**
+```bash
+./scripts/pre-deploy-check.sh  # 部署前检查
+./deploy-production.sh         # 执行部署
+./scripts/health-monitor.sh    # 设置监控
+```
+
+**日常维护：**
+```bash
+./deploy-frontend-zero-downtime.sh  # 前端零停机更新
+./scripts/health-monitor.sh --report  # 生成健康报告
+```
+
+**故障处理：**
+```bash
+./rebuilddb_production_v2.sh    # 数据库重建（如需要）
+# 参考：生产环境故障排除指南
+```
+
+### 📊 脚本使用场景总结
+
+| 脚本名称 | 用途 | 使用场景 | 关键特性 |
+|---------|------|----------|----------|
+| `deploy-production.sh` | 完整生产部署 | 首次部署、大版本更新 | 248行，含环境检查、备份、健康检查 |
+| `deploy-frontend-zero-downtime.sh` | 零停机前端更新 | 前端代码更新 | 290行，volume挂载，秒级切换 |
+| `rebuilddb_production_v2.sh` | 数据库重建 | 数据损坏、结构更新 | 137行，保留WordPress核心 |
+| `scripts/pre-deploy-check.sh` | 部署前检查 | 任何部署前 | 233行，全面环境验证 |
+| `scripts/health-monitor.sh` | 健康监控 | 7x24小时监控 | 392行，自动修复、多渠道告警 |
+| `scripts/deploy-spec-pdf-feature-dev.sh` | 开发环境部署 | 本地开发测试 | 494行，开发环境专用 |
+
+### 🎯 快速决策指南
+
+**我应该用哪个脚本？**
+
+- 🆕 **第一次部署** → `pre-deploy-check.sh` + `deploy-production.sh`
+- 🔄 **前端更新** → `deploy-frontend-zero-downtime.sh`
+- 🗄️ **数据库问题** → `rebuilddb_production_v2.sh`
+- 🏥 **日常监控** → `health-monitor.sh` (定时任务)
+- 🐛 **故障排查** → `health-monitor.sh --report` + 故障排除指南
+- 🧪 **本地开发** → `deploy-spec-pdf-feature-dev.sh`
 
 ## 📁 项目结构
 
@@ -250,7 +325,55 @@ generated_sql_imports/
 
 ## 🔍 监控和维护
 
-### 查看服务状态
+### 🏥 健康监控（推荐）
+```bash
+# 一键健康检查
+./scripts/health-monitor.sh
+
+# 生成详细报告
+./scripts/health-monitor.sh --report
+
+# 静默模式（适合cron定时任务）
+./scripts/health-monitor.sh --quiet
+
+# 邮件告警模式
+./scripts/health-monitor.sh --email alerts@company.com
+
+# Telegram告警模式  
+./scripts/health-monitor.sh --telegram "your-bot-token:chat-id"
+```
+
+**监控功能：**
+- ✅ 网站可访问性检查
+- ✅ API接口状态检查
+- ✅ 容器运行状态监控
+- ✅ 系统资源使用监控
+- ✅ SSL证书到期检查
+- ✅ 自动故障恢复
+- ✅ 多渠道告警通知
+
+### 🔧 部署前检查
+```bash
+# 部署前系统检查
+./scripts/pre-deploy-check.sh
+
+# 仅检查不修复
+./scripts/pre-deploy-check.sh --check-only
+
+# 详细输出模式
+./scripts/pre-deploy-check.sh --verbose
+```
+
+**检查项目：**
+- ✅ 系统要求验证（Docker、内存、磁盘）
+- ✅ 环境变量配置验证
+- ✅ SSL证书检查
+- ✅ 端口可用性检查
+- ✅ Docker Compose配置验证
+- ✅ 前端依赖检查
+- ✅ 后端插件验证
+
+### 📊 服务状态查看
 ```bash
 # 查看所有容器状态
 docker-compose -f docker/prod/docker-compose.prod.yml ps
@@ -265,7 +388,7 @@ docker-compose -f docker/prod/docker-compose.prod.yml logs wordpress
 docker-compose -f docker/prod/docker-compose.prod.yml logs db-init
 ```
 
-### 性能监控
+### 📈 性能监控
 ```bash
 # 查看资源使用
 docker stats
@@ -278,7 +401,7 @@ docker-compose -f docker/prod/docker-compose.prod.yml exec mysql \
 docker-compose -f docker/prod/docker-compose.prod.yml logs nginx | grep "GET\|POST"
 ```
 
-### 服务管理
+### 🔄 服务管理
 ```bash
 # 重启服务
 docker-compose -f docker/prod/docker-compose.prod.yml restart
@@ -289,6 +412,9 @@ docker-compose -f docker/prod/docker-compose.prod.yml down
 # 更新服务
 docker-compose -f docker/prod/docker-compose.prod.yml pull
 docker-compose -f docker/prod/docker-compose.prod.yml up -d
+
+# 零停机前端更新
+./deploy-frontend-zero-downtime.sh
 ```
 
 ## 🔐 安全配置
@@ -307,22 +433,31 @@ docker-compose -f docker/prod/docker-compose.prod.yml up -d
 
 ## 📚 完整文档
 
+### 🚨 生产环境运维（重要）
+- [🚨 **生产环境故障排除指南**](PRODUCTION_TROUBLESHOOTING_GUIDE.md) - **1018行完整故障排除文档**
+- [📋 部署检查清单](DEPLOYMENT_CHECKLIST.md) - 生产环境部署验证
+- [🏥 健康监控脚本](scripts/health-monitor.sh) - 392行自动监控
+- [🔧 部署前检查脚本](scripts/pre-deploy-check.sh) - 233行环境验证
+
 ### 部署相关
 - [🗄️ 数据库自动初始化](DATABASE_AUTO_INIT.md)
 - [🌐 域名部署指南](DOMAIN_DEPLOYMENT_GUIDE.md)
 - [⚡ 快速部署指南](DOMAIN_QUICK_DEPLOY.md)
 - [🖥️ IP地址部署](NO_DOMAIN_DEPLOYMENT.md)
 - [📋 完整部署文档](README_DOMAIN_DEPLOYMENT.md)
+- [🏗️ 部署架构详解](DEPLOYMENT_ARCHITECTURE.md) - 455行架构文档
 
 ### 技术文档
 - [🔌 API接口文档](API_INTERFACE_DOCUMENTATION_UPDATE.md)
-- [🏗️ 部署架构](DEPLOYMENT_ARCHITECTURE.md)
 - [🔄 API通信流程](API_COMMUNICATION_FLOW.md)
 - [📊 SQL Excel转换器](SQL_EXCEL_CONVERTER_README.md)
+- [📁 文件上传系统](docs/FILE_UPLOAD_SYSTEM.md)
+- [📄 PDF上传功能](PDF_UPLOAD_IMPLEMENTATION.md) - 152行功能实现文档
 
-### 故障排除
+### 开发调试
 - [🔧 Docker构建修复](DOCKER_BUILD_FIXES.md)
-- [🛠️ 故障排除指南](TROUBLESHOOTING.md)
+- [🛠️ 基础故障排除指南](TROUBLESHOOTING.md)
+- [🧪 开发环境部署](scripts/deploy-spec-pdf-feature-dev.sh) - 494行开发脚本
 
 ## 🎯 访问地址
 
@@ -376,11 +511,35 @@ npm run dev
 
 如果遇到问题，请按以下顺序排查：
 
-1. **查看相关文档** - 检查对应的文档说明
-2. **检查服务日志** - 使用Docker Compose查看日志
-3. **验证配置文件** - 确认环境变量和配置正确
-4. **查看故障排除指南** - 参考常见问题解决方案
-5. **提交Issue** - 在GitHub上提交详细的问题报告
+1. **查看健康监控** - 首先运行 `./scripts/health-monitor.sh --report` 获取系统状态
+2. **查看故障排除指南** - 参考 [生产环境故障排除指南](PRODUCTION_TROUBLESHOOTING_GUIDE.md)（**1018行完整解决方案**）
+3. **检查服务日志** - 使用Docker Compose查看具体错误日志
+4. **验证环境配置** - 运行 `./scripts/pre-deploy-check.sh` 检查配置
+5. **查看部署检查清单** - 参考 [部署检查清单](DEPLOYMENT_CHECKLIST.md) 验证部署步骤
+6. **提交Issue** - 在GitHub上提交详细的问题报告（附上健康监控报告）
+
+### 🆘 紧急故障处理
+
+**系统完全无法访问：**
+```bash
+# 1. 快速诊断
+./scripts/health-monitor.sh --emergency
+
+# 2. 查看所有服务状态
+docker-compose -f docker/prod/docker-compose.prod.yml ps
+
+# 3. 重启所有服务
+docker-compose -f docker/prod/docker-compose.prod.yml restart
+
+# 4. 如仍无法恢复，查看详细日志
+docker-compose -f docker/prod/docker-compose.prod.yml logs --tail=100
+```
+
+**数据库相关问题：**
+```bash
+# 重建数据库（保留WordPress核心）
+./rebuilddb_production_v2.sh
+```
 
 ### 常用调试命令
 ```bash
@@ -393,7 +552,24 @@ docker-compose -f docker/prod/docker-compose.prod.yml logs --tail=50
 # 进入容器调试
 docker-compose -f docker/prod/docker-compose.prod.yml exec wordpress bash
 docker-compose -f docker/prod/docker-compose.prod.yml exec mysql mysql -u root -p
+
+# 系统健康检查
+./scripts/health-monitor.sh
+
+# 部署前环境检查  
+./scripts/pre-deploy-check.sh
 ```
+
+### 📋 故障报告模板
+
+当提交问题时，请包含以下信息：
+
+1. **系统环境**：操作系统、Docker版本
+2. **健康监控报告**：`./scripts/health-monitor.sh --report` 的输出
+3. **错误日志**：相关的Docker容器日志
+4. **复现步骤**：详细的操作步骤
+5. **期望结果**：预期应该发生什么
+6. **实际结果**：实际发生了什么
 
 ## 📈 性能优化
 
@@ -421,4 +597,38 @@ docker-compose -f docker/prod/docker-compose.prod.yml exec mysql mysql -u root -
 
 **BJT产品管理系统** - 让产品管理更简单、更高效！ 🚀
 
-> 💡 **提示**: 如果你是第一次部署，推荐使用 `./deploy-with-db-init.sh` 脚本，它会自动处理所有初始化工作。
+## 🎯 重要提示与快速指引
+
+### 🆕 首次部署
+```bash
+# 推荐的首次部署流程
+./scripts/pre-deploy-check.sh           # 部署前检查
+./deploy-production.sh                  # 执行部署
+./scripts/health-monitor.sh --report    # 验证部署结果
+```
+
+### 🚨 遇到问题时
+1. **立即诊断** → `./scripts/health-monitor.sh --report`
+2. **查看指南** → [生产环境故障排除指南](PRODUCTION_TROUBLESHOOTING_GUIDE.md) (1018行完整解决方案)
+3. **紧急恢复** → `./scripts/health-monitor.sh --emergency`
+
+### 📚 关键文档
+- 🚨 [生产环境故障排除指南](PRODUCTION_TROUBLESHOOTING_GUIDE.md) - **最重要的参考文档**
+- 📋 [部署检查清单](DEPLOYMENT_CHECKLIST.md) - 部署验证
+- 🏗️ [部署架构详解](DEPLOYMENT_ARCHITECTURE.md) - 技术架构
+
+### 🛠️ 常用命令
+```bash
+# 健康检查
+./scripts/health-monitor.sh
+
+# 零停机更新前端
+./deploy-frontend-zero-downtime.sh
+
+# 数据库重建
+./rebuilddb_production_v2.sh
+```
+
+> 💡 **新用户提示**: 如果你是第一次部署，推荐使用 `./scripts/pre-deploy-check.sh` + `./deploy-production.sh` 的组合，它们会自动处理所有初始化工作。
+
+> 🚨 **运维提示**: 建议设置 `./scripts/health-monitor.sh` 为定时任务，实现24/7自动监控。

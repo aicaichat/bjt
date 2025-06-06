@@ -6,7 +6,13 @@
     "delete": "Delete",
     "publish": "Publish",
     "draft": "Draft",
-    "trash": "Trash"
+    "trash": "Trash",
+    "title": "Actions",
+    "confirm": "OK",
+    "cancel": "Cancel",
+    "backToList": "Back to List",
+    "saveChanges": "Save Changes",
+    "create": "Create Product Line"
   },
   "table": {
     "columns": {
@@ -15,7 +21,8 @@
       "name": "Name",
       "description": "Description",
       "status": "Status",
-      "products": "Products Count"
+      "products": "Products Count",
+      "createTime": "Created Time"
     }
   },
   "filters": {
@@ -63,18 +70,56 @@
       "add": "Add New Product Line",
       "edit": "Edit Product Line"
     },
+    "description": {
+      "add": "Create a new product line",
+      "edit": "Edit product line ID: {{id}}"
+    },
+    "sections": {
+      "basicInfo": "Basic Information",
+      "title": "Product Line Title",
+      "description": "Product Line Description",
+      "subitems": "Subitem Settings",
+      "image": "Product Line Image"
+    },
     "fields": {
       "code": "Product Line Code",
-      "name": "Product Line Name",
-      "description": "Description",
+      "name": "Product Line Title",
+      "description": "Product Line Description",
       "image": "Product Line Image",
-      "status": "Status"
+      "status": "Status",
+      "sortOrder": "Sort Order",
+      "subitem1": "Subitem 1 (Consumables)",
+      "subitem2": "Subitem 2 (Spare Parts)",
+      "subitem3": "Subitem 3 (Optional)"
+    },
+    "placeholders": {
+      "code": "e.g.: BJT_MACHINE_A",
+      "nameZh": "请输入中文标题",
+      "nameEn": "Please enter English title",
+      "descriptionZh": "请输入中文描述",
+      "descriptionEn": "Please enter English description",
+      "subitem1Zh": "耗材",
+      "subitem1En": "Consumables",
+      "subitem2Zh": "备件",
+      "subitem2En": "Spare Parts",
+      "subitem3Zh": "可选子项目",
+      "subitem3En": "Optional subitem",
+      "image": "Upload product line image"
     },
     "validation": {
       "codeRequired": "Product line code is required",
-      "nameRequired": "Product line name is required",
+      "codeFormat": "Product line code can only contain uppercase letters, numbers, underscores and hyphens",
+      "nameRequired": "Chinese and English titles are required",
       "descriptionRequired": "Description is required",
-      "imageRequired": "Product line image is required"
+      "imageRequired": "Product line image is required",
+      "statusRequired": "Status is required",
+      "sortOrderRequired": "Sort order is required",
+      "subitem1Required": "Chinese and English names for subitem 1 are required",
+      "subitem2Required": "Chinese and English names for subitem 2 are required"
+    },
+    "help": {
+      "codeFormat": "Can only contain uppercase letters, numbers, underscores and hyphens, must be unique in the system",
+      "imageFormat": "Supports JPG, PNG, GIF, WEBP formats, file size should not exceed 10MB"
     }
   }
 } 

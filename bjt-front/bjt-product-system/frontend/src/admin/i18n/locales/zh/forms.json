@@ -1,0 +1,96 @@
+{
+  "fields": {
+    "name": "名称",
+    "code": "编码",
+    "description": "描述",
+    "status": "状态",
+    "createTime": "创建时间",
+    "updateTime": "更新时间",
+    "voltage": "电压",
+    "frequency": "频率",
+    "brand": "品牌",
+    "unit": "单位",
+    "price": "价格",
+    "weight": "重量",
+    "dimension": "尺寸",
+    "productLine": "所属产品线",
+    "machineModel": "主机型号编码",
+    "machineType": "主机类型",
+    "sort": "排序",
+    "image1Url": "主图URL",
+    "image2Url": "副图URL",
+    "explosionDiagramPdf": "爆炸图PDF URL",
+    "specPdf": "规格PDF URL"
+  },
+  "placeholders": {
+    "enterName": "请输入名称",
+    "enterCode": "请输入编码",
+    "enterDescription": "请输入描述",
+    "selectStatus": "请选择状态",
+    "selectVoltage": "请选择电压",
+    "selectBrand": "请选择品牌",
+    "selectProductLine": "请选择产品线",
+    "enterMachineModel": "例如: BJT-A100",
+    "enterMachineType": "例如: 包装机",
+    "enterChineseName": "请输入中文名称",
+    "enterEnglishName": "Please enter English name",
+    "enterChineseDescription": "请输入中文描述",
+    "enterEnglishDescription": "Please enter English description",
+    "enterImage1Url": "例如: https://example.com/image1.jpg",
+    "enterImage2Url": "例如: https://example.com/image2.jpg",
+    "enterExplosionDiagramPdf": "例如: https://example.com/diagram.pdf",
+    "enterSpecPdf": "例如: https://example.com/spec.pdf"
+  },
+  "validation": {
+    "nameRequired": "请输入名称",
+    "codeRequired": "请输入编码",
+    "statusRequired": "请选择状态",
+    "productLineRequired": "请选择所属产品线",
+    "machineModelRequired": "请输入主机型号编码",
+    "machineTypeRequired": "请输入主机类型",
+    "sortRequired": "请输入排序号"
+  },
+  "content": {
+    "languages": {
+      "chinese": "中文",
+      "english": "English"
+    },
+    "placeholders": {
+      "enterChinese": "请输入中文内容",
+      "enterEnglish": "Please enter English content"
+    },
+    "actions": {
+      "copyFrom": "从{{from}}复制"
+    },
+    "hints": {
+      "translateFromChinese": "建议翻译中文内容",
+      "translateFromEnglish": "建议翻译英文内容",
+      "bothLanguagesRequired": "中英文内容都是必需的"
+    }
+  },
+  "sections": {
+    "basicInfo": "基本信息",
+    "machineInfo": "主机信息",
+    "machineTitle": "主机名称",
+    "machineDescription": "主机描述",
+    "imagesAndDocs": "图片和文档"
+  },
+  "machines": {
+    "title": "主机型号",
+    "create": {
+      "title": "新增主机型号",
+      "description": "创建新的主机型号"
+    },
+    "edit": {
+      "title": "编辑主机型号",
+      "description": "编辑主机型号"
+    }
+  },
+  "extra": {
+    "machineModel": "在同一产品线下必须唯一",
+    "image1Url": "请输入图片URL地址",
+    "image2Url": "请输入图片URL地址",
+    "explosionDiagramPdf": "请输入PDF文件URL地址",
+    "specPdf": "请输入规格PDF文件URL地址"
+  }
+}

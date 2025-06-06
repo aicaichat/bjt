@@ -18,9 +18,11 @@ import {
 import { SaveOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import AdminPageHeader from '../../components/common/AdminPageHeader';
 import MultilingualInput from '../../components/common/MultilingualInput';
+import DictionarySelect from '../../components/common/DictionarySelect';
 import adminRelationService from '../../services/admin-relation.service';
 import adminProductLineService from '../../services/admin-product-line.service';
 import adminPartService from '../../services/admin-part.service';
+import { useAdminI18n } from '../../i18n/hooks/useAdminI18n';
 
 // 严格对应wp_bjt_relations表的13个字段
 interface RelationFormData {
@@ -54,6 +56,7 @@ const RelationEditPage: React.FC = () => {
   const [hostParts, setHostParts] = useState<any[]>([]);
   const [allParts, setAllParts] = useState<any[]>([]);
   const [partOptions, setPartOptions] = useState<any[]>([]);
+  const { t } = useAdminI18n();
 
   const isEditMode = !!id;
   const parentId = searchParams.get('parent_id');
@@ -89,7 +92,7 @@ const RelationEditPage: React.FC = () => {
   const loadProductLines = async () => {
     try {
       const response = await adminProductLineService.getProductLines();
-      setProductLines(response.items);
+      setProductLines((response as any)?.items || []);
     } catch (error) {
       console.error('加载产品线失败:', error);
       message.error('加载产品线失败');
@@ -99,7 +102,7 @@ const RelationEditPage: React.FC = () => {
   const loadHostParts = async () => {
     try {
       const response = await adminPartService.getParts({ page: 1, page_size: 100 });
-      setHostParts(response.items);
+      setHostParts((response as any)?.items || []);
     } catch (error) {
       console.error('加载主机料号失败:', error);
       message.error('加载主机料号失败');
@@ -109,8 +112,9 @@ const RelationEditPage: React.FC = () => {
   const loadAllParts = async () => {
     try {
       const response = await adminPartService.getParts({ page: 1, page_size: 500 });
-      setAllParts(response.items);
-      setPartOptions(response.items.map((part: any) => ({
+      const items = (response as any)?.items || [];
+      setAllParts(items);
+      setPartOptions(items.map((part: any) => ({
         value: part.part_number,
         label: `${part.part_number} - ${part.name_zh}`,
         part: part
@@ -174,34 +178,78 @@ const RelationEditPage: React.FC = () => {
     try {
       setSubmitting(true);
 
-      // 转换表单数据为API格式
-      const formData: Partial<RelationFormData> = {
-        product_line_id: values.product_line_id,
-        host_part_number: values.host_part_number,
-        part_number: values.part_number,
-        parent_part_number: values.parent_part_number || null,
-        child_part_number: values.child_part_number || null,
-        child_type: values.child_type,
-        level: values.level,
-        quantity: values.quantity,
-        required_parts: values.required_parts || null,
-        required_quantity: values.required_quantity || null,
-        sort_order: values.sort_order,
-        status: values.status,
+      // 1. 数据清理和验证 - 按照标准指南
+      const cleanedValues = Object.fromEntries(
+        Object.entries(values).filter(([_, value]) => {
+          // 过滤掉空字符串、null、undefined
+          return value !== '' && value !== null && value !== undefined;
+        })
+      );
+
+      // 2. 查找主机料号字符串（从选择的ID转换为料号字符串）
+      let hostPartNumberString = cleanedValues.host_part_number;
+      if (typeof cleanedValues.host_part_number === 'number') {
+        const selectedHostPart = hostParts.find(part => part.id === cleanedValues.host_part_number);
+        hostPartNumberString = selectedHostPart?.part_number;
+      }
+
+      // 3. 转换表单数据为API格式 - 确保类型正确
+      const formData = {
+        product_line_id: cleanedValues.product_line_id ? Number(cleanedValues.product_line_id) : undefined,
+        host_part_number: hostPartNumberString ? String(hostPartNumberString) : undefined,
+        part_number: String(cleanedValues.part_number || ''),
+        parent_part_number: cleanedValues.parent_part_number ? String(cleanedValues.parent_part_number) : undefined,
+        child_part_number: cleanedValues.child_part_number ? String(cleanedValues.child_part_number) : undefined,
+        child_type: cleanedValues.child_type,
+        level: cleanedValues.level ? Number(cleanedValues.level) : undefined,
+        quantity: cleanedValues.quantity ? Number(cleanedValues.quantity) : undefined,
+        required_parts: cleanedValues.required_parts ? String(cleanedValues.required_parts) : undefined,
+        required_quantity: cleanedValues.required_quantity ? String(cleanedValues.required_quantity) : undefined,
+        sort_order: cleanedValues.sort_order ? Number(cleanedValues.sort_order) : 0,
+        status: cleanedValues.status || 'publish',
       };
 
+      // 4. 过滤掉undefined值
+      const finalData = Object.fromEntries(
+        Object.entries(formData).filter(([_, value]) => value !== undefined)
+      );
+
+      // 5. 添加调试日志
+      console.log('RelationEditPage.onFinish - Original values:', values);
+      console.log('RelationEditPage.onFinish - Cleaned values:', cleanedValues);
+      console.log('RelationEditPage.onFinish - Final data:', finalData);
+
+      // 6. 验证必填字段
+      if (!finalData.product_line_id || !finalData.host_part_number || !finalData.part_number || !finalData.child_type || !finalData.level || !finalData.quantity) {
+        throw new Error('缺少必填字段');
+      }
+
+      // 7. API调用
       if (isEditMode && id) {
-        await adminRelationService.updateRelation(parseInt(id), formData);
+        await adminRelationService.updateRelation(parseInt(id), finalData as any);
         message.success('关联关系更新成功');
       } else {
-        await adminRelationService.createRelation(formData as RelationFormData);
+        await adminRelationService.createRelation(finalData as any);
         message.success('关联关系创建成功');
       }
 
       navigate('/admin/relations');
     } catch (error) {
       console.error('保存关联关系失败:', error);
-      message.error('保存关联关系失败');
+      
+      // 8. 详细错误处理
+      let errorMessage = '保存关联关系失败';
+      if (error instanceof Error) {
+        errorMessage = `保存失败: ${error.message}`;
+      } else if (typeof error === 'object' && error !== null) {
+        const errorObj = error as any;
+        if (errorObj.response?.data?.message) {
+          errorMessage = errorObj.response.data.message;
+        } else if (errorObj.message) {
+          errorMessage = errorObj.message;
+        }
+      }
+      message.error(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -232,11 +280,11 @@ const RelationEditPage: React.FC = () => {
   return (
     <div className="relation-edit-page">
       <AdminPageHeader
-        title={isEditMode ? '编辑关联关系' : '新增关联关系'}
-        description={isEditMode ? `编辑关联关系 ID: ${id}` : '创建新的关联关系'}
+        title={isEditMode ? t('edit.title', { ns: 'relations' }) : t('create.title', { ns: 'relations' })}
+        description={isEditMode ? t('edit.description', { ns: 'relations' }) + ` ID: ${id}` : t('create.title', { ns: 'relations' })}
         extra={
           <ButtonComponent key="back" icon={<ArrowLeftIcon />} onClick={handleBack}>
-            返回列表
+            {t('actions.back', { ns: 'relations' })}
           </ButtonComponent>
         }
       />
@@ -252,19 +300,19 @@ const RelationEditPage: React.FC = () => {
           <RowComponent gutter={24}>
             {/* 基本信息 */}
             <ColComponent span={24}>
-              <DividerComponent orientation="left">基本信息</DividerComponent>
+              <DividerComponent orientation="left">{t('sections.basicInfo', { ns: 'relations' })}</DividerComponent>
             </ColComponent>
 
             <ColComponent span={8}>
               <FormItemComponent
-                label="所属产品线"
+                label={t('fields.productLine', { ns: 'relations' })}
                 name="product_line_id"
-                rules={[{ required: true, message: '请选择所属产品线' }]}
+                rules={[{ required: true, message: t('validation.productLineRequired', { ns: 'relations' }) }]}
               >
-                <SelectComponent placeholder="请选择产品线">
+                <SelectComponent placeholder={t('placeholders.selectProductLine', { ns: 'relations' })}>
                   {productLines.map((line) => (
                     <OptionComponent key={line.id} value={line.id}>
-                      {line.title?.zh || line.name || `产品线${line.id}`}
+                      {line.title?.zh || line.name || `${t('fields.productLine', { ns: 'relations' })}${line.id}`}
                     </OptionComponent>
                   ))}
                 </SelectComponent>
@@ -273,13 +321,12 @@ const RelationEditPage: React.FC = () => {
 
             <ColComponent span={8}>
               <FormItemComponent
-                label="主机料号-0级"
+                label={t('fields.hostPartNumber', { ns: 'relations' })}
                 name="host_part_number"
-                rules={[{ required: true, message: '请选择主机料号' }]}
-                extra="选择主机料号作为关联关系的根节点"
+                rules={[{ required: true, message: t('validation.hostPartNumberRequired', { ns: 'relations' }) }]}
               >
                 <SelectComponent 
-                  placeholder="请选择主机料号"
+                  placeholder={t('placeholders.enterPartNumber', { ns: 'relations' })}
                   showSearch
                   filterOption={(input: string, option: any) =>
                     option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
@@ -296,35 +343,35 @@ const RelationEditPage: React.FC = () => {
 
             <ColComponent span={8}>
               <FormItemComponent
-                label="子项类型"
+                label={t('fields.childType', { ns: 'relations' })}
                 name="child_type"
-                rules={[{ required: true, message: '请选择子项类型' }]}
+                rules={[{ required: true, message: t('validation.childTypeRequired', { ns: 'relations' }) }]}
               >
                 <RadioComponent.Group onChange={(e: any) => handleChildTypeChange(e.target.value)}>
-                  <RadioComponent value="accessory">配件</RadioComponent>
-                  <RadioComponent value="spare_part">备件</RadioComponent>
+                  <RadioComponent value="accessory">{t('childTypes.accessory', { ns: 'relations' })}</RadioComponent>
+                  <RadioComponent value="spare_part">{t('childTypes.spare_part', { ns: 'relations' })}</RadioComponent>
                 </RadioComponent.Group>
               </FormItemComponent>
             </ColComponent>
 
             {/* 料号信息 */}
             <ColComponent span={24}>
-              <DividerComponent orientation="left">料号信息</DividerComponent>
+              <DividerComponent orientation="left">{t('sections.partInfo', { ns: 'relations' })}</DividerComponent>
             </ColComponent>
 
             <ColComponent span={8}>
               <FormItemComponent
-                label="自身料号"
+                label={t('fields.partNumber', { ns: 'relations' })}
                 name="part_number"
                 rules={[
-                  { required: true, message: '请输入自身料号' },
+                  { required: true, message: t('validation.partNumberRequired', { ns: 'relations' }) },
                   { validator: validatePartNumber },
                 ]}
-                extra="在同一产品线下必须唯一"
+                extra={t('tips.partNumberInfo', { ns: 'relations' })}
               >
                 <AutoCompleteComponent
                   options={partOptions}
-                  placeholder="输入或选择料号"
+                  placeholder={t('placeholders.enterPartNumber', { ns: 'relations' })}
                   filterOption={(inputValue: string, option: any) =>
                     option.value.toLowerCase().indexOf(inputValue.toLowerCase()) !== -1 ||
                     option.label.toLowerCase().indexOf(inputValue.toLowerCase()) !== -1
@@ -335,13 +382,13 @@ const RelationEditPage: React.FC = () => {
 
             <ColComponent span={8}>
               <FormItemComponent
-                label="父项料号"
+                label={t('fields.parentPartNumber', { ns: 'relations' })}
                 name="parent_part_number"
-                extra="上级料号，为空表示顶级"
+                extra={t('tips.parentPartNumberInfo', { ns: 'relations' })}
               >
                 <AutoCompleteComponent
                   options={partOptions}
-                  placeholder="输入或选择父项料号"
+                  placeholder={t('placeholders.enterParentPartNumber', { ns: 'relations' })}
                   filterOption={(inputValue: string, option: any) =>
                     option.value.toLowerCase().indexOf(inputValue.toLowerCase()) !== -1 ||
                     option.label.toLowerCase().indexOf(inputValue.toLowerCase()) !== -1
@@ -352,13 +399,13 @@ const RelationEditPage: React.FC = () => {
 
             <ColComponent span={8}>
               <FormItemComponent
-                label="子项料号"
+                label={t('fields.childPartNumber', { ns: 'relations' })}
                 name="child_part_number"
-                extra="下级料号，可为空"
+                extra={t('tips.childPartNumberInfo', { ns: 'relations' })}
               >
                 <AutoCompleteComponent
                   options={partOptions}
-                  placeholder="输入或选择子项料号"
+                  placeholder={t('placeholders.enterChildPartNumber', { ns: 'relations' })}
                   filterOption={(inputValue: string, option: any) =>
                     option.value.toLowerCase().indexOf(inputValue.toLowerCase()) !== -1 ||
                     option.label.toLowerCase().indexOf(inputValue.toLowerCase()) !== -1
@@ -369,15 +416,15 @@ const RelationEditPage: React.FC = () => {
 
             {/* 层级和数量信息 */}
             <ColComponent span={24}>
-              <DividerComponent orientation="left">层级和数量信息</DividerComponent>
+              <DividerComponent orientation="left">{t('sections.levelAndQuantityInfo', { ns: 'relations' })}</DividerComponent>
             </ColComponent>
 
             <ColComponent span={6}>
               <FormItemComponent
-                label="层级"
+                label={t('fields.level', { ns: 'relations' })}
                 name="level"
-                rules={[{ required: true, message: '请输入层级' }]}
-                extra="配件层级1-5，备件固定为1"
+                rules={[{ required: true, message: t('validation.levelRequired', { ns: 'relations' }) }]}
+                extra={t('tips.levelInfo', { ns: 'relations' })}
               >
                 <InputNumberComponent 
                   min={1} 
@@ -390,10 +437,9 @@ const RelationEditPage: React.FC = () => {
 
             <ColComponent span={6}>
               <FormItemComponent
-                label="数量"
+                label={t('fields.quantity', { ns: 'relations' })}
                 name="quantity"
-                rules={[{ required: true, message: '请输入数量' }]}
-                extra="子项在父项中的数量"
+                rules={[{ required: true, message: t('validation.quantityRequired', { ns: 'relations' }) }]}
               >
                 <InputNumberComponent min={1} style={{ width: '100%' }} />
               </FormItemComponent>
@@ -401,9 +447,10 @@ const RelationEditPage: React.FC = () => {
 
             <ColComponent span={6}>
               <FormItemComponent
-                label="同级排序"
+                label={t('fields.sortOrder', { ns: 'relations' })}
                 name="sort_order"
-                rules={[{ required: true, message: '请输入排序号' }]}
+                rules={[{ required: true, message: t('validation.sortOrderRequired', { ns: 'relations' }) }]}
+                extra={t('tips.sortOrderInfo', { ns: 'relations' })}
               >
                 <InputNumberComponent min={1} style={{ width: '100%' }} />
               </FormItemComponent>
@@ -411,67 +458,64 @@ const RelationEditPage: React.FC = () => {
 
             <ColComponent span={6}>
               <FormItemComponent
-                label="状态"
+                label={t('fields.status', { ns: 'relations' })}
                 name="status"
-                rules={[{ required: true, message: '请选择状态' }]}
+                rules={[{ required: true, message: t('validation.statusRequired', { ns: 'relations' }) }]}
               >
-                <SelectComponent>
-                  <OptionComponent value="draft">草稿</OptionComponent>
-                  <OptionComponent value="publish">已发布</OptionComponent>
-                  <OptionComponent value="trash">回收站</OptionComponent>
-                </SelectComponent>
+                <DictionarySelect
+                  dictionaryType="statuses"
+                  placeholder={t('placeholders.selectStatus', { ns: 'relations' })}
+                />
               </FormItemComponent>
             </ColComponent>
 
             {/* 依赖关联料号管理 */}
             <ColComponent span={24}>
-              <DividerComponent orientation="left">依赖关联料号管理</DividerComponent>
+              <DividerComponent orientation="left">{t('sections.dependencyInfo', { ns: 'relations' })}</DividerComponent>
             </ColComponent>
 
             <ColComponent span={12}>
               <FormItemComponent
-                label="依赖关联料号"
+                label={t('fields.requiredParts', { ns: 'relations' })}
                 name="required_parts"
-                extra="多个料号用逗号分隔，如：13A00001,13A00002"
+                extra={t('tips.requiredPartsFormat', { ns: 'relations' })}
               >
                 <InputComponent.TextArea 
                   rows={3}
-                  placeholder="输入依赖的关联料号，多个用逗号分隔"
+                  placeholder={t('placeholders.enterRequiredParts', { ns: 'relations' })}
                 />
               </FormItemComponent>
             </ColComponent>
 
             <ColComponent span={12}>
               <FormItemComponent
-                label="依赖关联数量"
+                label={t('fields.requiredQuantity', { ns: 'relations' })}
                 name="required_quantity"
-                extra="与依赖关联料号一一对应，如：2,1"
+                extra={t('tips.requiredQuantityFormat', { ns: 'relations' })}
               >
                 <InputComponent.TextArea 
                   rows={3}
-                  placeholder="输入对应的数量，多个用逗号分隔"
+                  placeholder={t('placeholders.enterRequiredQuantity', { ns: 'relations' })}
                 />
               </FormItemComponent>
             </ColComponent>
           </RowComponent>
 
-          {/* 操作按钮 */}
-          <FormItemComponent style={{ marginTop: 32, textAlign: 'center' }}>
-            <SpaceComponent size="large">
-              <ButtonComponent
-                type="primary"
-                htmlType="submit"
-                icon={<SaveIcon />}
+          <div style={{ marginTop: 24, textAlign: 'right' }}>
+            <Space>
+              <Button onClick={handleBack}>
+                {t('buttons.cancel', { ns: 'relations' })}
+              </Button>
+              <Button 
+                type="primary" 
+                htmlType="submit" 
                 loading={submitting}
-                size="large"
+                icon={<SaveIcon />}
               >
-                {isEditMode ? '保存更改' : '创建关联关系'}
-              </ButtonComponent>
-              <ButtonComponent onClick={handleBack} size="large">
-                取消
-              </ButtonComponent>
-            </SpaceComponent>
-          </FormItemComponent>
+                {isEditMode ? t('buttons.update', { ns: 'relations' }) : t('buttons.create', { ns: 'relations' })}
+              </Button>
+            </Space>
+          </div>
         </FormComponent>
       </CardComponent>
     </div>

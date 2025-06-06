@@ -1,0 +1,140 @@
+{
+  "list": {
+    "title": "备件列表",
+    "models": "备件型号",
+    "spareParts": "备件料号",
+    "searchPlaceholder": "搜索备件名称、型号或编码",
+    "filterByStatus": "按状态筛选",
+    "filterByProductLine": "按产品线筛选",
+    "filterByModel": "按型号筛选",
+    "criticalOnly": "仅显示关键备件",
+    "selectLanguage": "选择语言",
+    "selectRegion": "选择区域"
+  },
+  "create": {
+    "title": "新增备件"
+  },
+  "edit": {
+    "title": "编辑备件"
+  },
+  "createModel": {
+    "title": "新增备件型号"
+  },
+  "editModel": {
+    "title": "编辑备件型号"
+  },
+  "sections": {
+    "basicInfo": "基本信息",
+    "specInfo": "规格信息",
+    "inventoryInfo": "库存信息",
+    "replacementInfo": "更换信息",
+    "otherInfo": "其他信息"
+  },
+  "fields": {
+    "id": "编号",
+    "model": "型号编码",
+    "part_number": "料号",
+    "part_name_zh": "中文名称",
+    "part_name_en": "英文名称",
+    "model_name": "型号名称",
+    "product_line_name": "产品线",
+    "brand": "品牌",
+    "spec": "规格参数",
+    "unit": "单位",
+    "price": "价格",
+    "weight": "重量",
+    "lifespan_days": "预期寿命(天)",
+    "replacement_interval_days": "更换周期(天)",
+    "is_critical": "关键备件",
+    "stock_level": "库存等级",
+    "min_stock": "最小库存",
+    "max_stock": "最大库存",
+    "current_stock": "当前库存",
+    "status": "状态",
+    "image_url": "图片",
+    "description": "描述",
+    "notes": "备注",
+    "sort_order": "排序",
+    "action": "操作",
+    "createTime": "创建时间",
+    "updateTime": "更新时间"
+  },
+  "placeholders": {
+    "selectProductLine": "选择产品线",
+    "selectModel": "选择备件型号",
+    "enterModel": "请输入型号编码",
+    "enterPartNumber": "请输入料号",
+    "enterPartNameZh": "请输入中文名称",
+    "enterPartNameEn": "请输入英文名称",
+    "enterModelName": "请输入型号名称",
+    "enterBrand": "请输入品牌",
+    "enterSpec": "请输入规格参数",
+    "selectUnit": "请选择单位",
+    "enterPrice": "请输入价格",
+    "enterWeight": "请输入重量",
+    "enterLifespanDays": "请输入预期寿命(天)",
+    "enterReplacementIntervalDays": "请输入更换周期(天)",
+    "enterMinStock": "请输入最小库存",
+    "enterMaxStock": "请输入最大库存",
+    "enterCurrentStock": "请输入当前库存",
+    "enterImageUrl": "请输入图片URL",
+    "enterDescription": "请输入描述",
+    "enterNotes": "请输入备注",
+    "enterSortOrder": "请输入排序号",
+    "selectStatus": "请选择状态",
+    "selectStockLevel": "请选择库存等级"
+  },
+  "validation": {
+    "productLineRequired": "请选择产品线",
+    "modelRequired": "请输入型号编码",
+    "partNumberRequired": "请输入料号",
+    "partNameZhRequired": "请输入中文名称",
+    "partNameEnRequired": "请输入英文名称",
+    "modelNameRequired": "请输入型号名称",
+    "unitRequired": "请选择单位",
+    "statusRequired": "请选择状态"
+  },
+  "status": {
+    "publish": "已发布",
+    "draft": "草稿",
+    "trash": "已删除",
+    "unknown": "未知"
+  },
+  "stockLevel": {
+    "high": "高库存",
+    "normal": "正常库存",
+    "low": "低库存",
+    "out": "缺货"
+  },
+  "actions": {
+    "create": "新增备件",
+    "edit": "编辑",
+    "delete": "删除",
+    "export": "导出",
+    "import": "导入",
+    "addModel": "新增型号",
+    "addSparePart": "新增备件料号",
+    "cancel": "取消",
+    "update": "更新"
+  },
+  "pagination": {
+    "total": "共 {{total}} 条记录"
+  },
+  "empty": {
+    "noData": "暂无备件数据"
+  },
+  "message": {
+    "deleteSuccess": "备件删除成功",
+    "deleteFailed": "备件删除失败",
+    "createSuccess": "备件创建成功",
+    "createFailed": "备件创建失败",
+    "updateSuccess": "备件更新成功",
+    "updateFailed": "备件更新失败",
+    "modelDeleteSuccess": "备件型号删除成功",
+    "modelDeleteFailed": "备件型号删除失败",
+    "modelCreateSuccess": "备件型号创建成功",
+    "modelCreateFailed": "备件型号创建失败",
+    "modelUpdateSuccess": "备件型号更新成功",
+    "modelUpdateFailed": "备件型号更新失败"
+  }
+} 

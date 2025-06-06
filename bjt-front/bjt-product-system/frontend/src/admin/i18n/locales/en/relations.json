@@ -1,0 +1,134 @@
+{
+  "list": {
+    "title": "Relationship Management",
+    "description": "Manage multi-level accessory and spare part relationships",
+    "selectHost": "Select Host Part Number",
+    "hostPartNumber": "Host Part Number",
+    "currentHost": "Current Host",
+    "noData": "No relationship data",
+    "addChild": "Add Child",
+    "addAccessory": "Add Accessory",
+    "addSparePart": "Add Spare Part",
+    "relationshipTree": "Relationship Tree",
+    "relationshipCount": "Relationship Count",
+    "productLine": "Product Line",
+    "legend": "Legend",
+    "refresh": "Refresh",
+    "reset": "Reset"
+  },
+  "create": {
+    "title": "Add Relationship"
+  },
+  "edit": {
+    "title": "Edit Relationship",
+    "description": "Edit Relationship"
+  },
+  "sections": {
+    "basicInfo": "Basic Information",
+    "relationshipInfo": "Relationship Settings",
+    "dependencyInfo": "Dependency Part Number Management"
+  },
+  "fields": {
+    "id": "ID",
+    "productLine": "Product Line",
+    "hostPartNumber": "Host Part Number-Level 0",
+    "partNumber": "Part Number",
+    "parentPartNumber": "Parent Part Number",
+    "childPartNumber": "Child Part Number",
+    "childType": "Child Type",
+    "level": "Level",
+    "quantity": "Quantity",
+    "requiredParts": "Required Parts",
+    "requiredQuantity": "Required Quantity",
+    "sortOrder": "Sort Order",
+    "status": "Status",
+    "createTime": "Created At",
+    "updateTime": "Updated At",
+    "action": "Action"
+  },
+  "placeholders": {
+    "selectProductLine": "Select product line",
+    "selectHost": "Select host part number",
+    "enterPartNumber": "Enter part number",
+    "enterParentPartNumber": "Enter parent part number",
+    "enterChildPartNumber": "Enter child part number",
+    "selectChildType": "Select child type",
+    "enterQuantity": "Enter quantity",
+    "enterRequiredParts": "Enter required part numbers, separated by commas",
+    "enterRequiredQuantity": "Enter corresponding quantities, separated by commas",
+    "enterSortOrder": "Enter sort order",
+    "selectStatus": "Select status"
+  },
+  "validation": {
+    "productLineRequired": "Please select product line",
+    "hostPartNumberRequired": "Please select host part number",
+    "partNumberRequired": "Please enter part number",
+    "childTypeRequired": "Please select child type",
+    "levelRequired": "Please enter level",
+    "quantityRequired": "Please enter quantity",
+    "sortOrderRequired": "Please enter sort order",
+    "statusRequired": "Please select status"
+  },
+  "childTypes": {
+    "accessory": "Accessory",
+    "spare_part": "Spare Part"
+  },
+  "status": {
+    "publish": "Published",
+    "draft": "Draft",
+    "trash": "Deleted"
+  },
+  "tags": {
+    "host": "Host",
+    "component": "Accessory",
+    "sparePart": "Spare Part"
+  },
+  "actions": {
+    "create": "Add Relationship",
+    "edit": "Edit",
+    "delete": "Delete",
+    "addChild": "Add Child",
+    "addAccessory": "Add Accessory",
+    "addSparePart": "Add Spare Part",
+    "showNext": "Show Next Level",
+    "showChildren": "View Next Level",
+    "refresh": "Refresh",
+    "reset": "Reset",
+    "cancel": "Cancel",
+    "save": "Save",
+    "confirm": "Confirm",
+    "back": "Back to List"
+  },
+  "buttons": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "create": "Create",
+    "update": "Update",
+    "back": "Back"
+  },
+  "message": {
+    "deleteSuccess": "Deleted successfully",
+    "deleteFailed": "Delete failed",
+    "createSuccess": "Created successfully",
+    "createFailed": "Create failed",
+    "updateSuccess": "Updated successfully",
+    "updateFailed": "Update failed",
+    "dataRefreshed": "Data refreshed",
+    "confirmDelete": "Are you sure to delete relationship",
+    "deleteWarning": "This operation cannot be undone",
+    "noHostSelected": "Please select a host part number first",
+    "loadingData": "Loading..."
+  },
+  "tips": {
+    "productLineFixed": "Product line is fixed to 1. Please select a host part number to view the relationship tree. Data comes from the relationship table, tree structure supports up to 5-level accessory nesting, spare parts are fixed to level 1.",
+    "requiredPartsFormat": "Multiple part numbers separated by commas, e.g.: 13A00001,13A00002",
+    "requiredQuantityFormat": "Corresponding to required part numbers one by one, e.g.: 2,1",
+    "levelInfo": "Level (1-5), spare parts fixed to 1",
+    "sortOrderInfo": "Sort order within the same level, smaller numbers come first"
+  },
+  "empty": {
+    "noData": "No relationship data, please click the '+' button on host node to add accessories or spare parts",
+    "noHost": "Please select a host part number to view relationships",
+    "noChildren": "No next level relationships"
+  }
+} 

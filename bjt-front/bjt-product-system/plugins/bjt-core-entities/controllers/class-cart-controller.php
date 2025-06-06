@@ -296,13 +296,10 @@ class BJT_Cart_Controller extends BJT_API_Controller {
 
     public function get_cart_contents(WP_REST_Request $request) {
         global $wpdb;
-        $user_id = get_current_user_id();
+        $user_id = $this->get_current_bjt_user_id();
         
-        // For testing purposes, use a hardcoded user ID if not logged in
         if (!$user_id) {
-            $user_id = 1; // Use admin user ID for testing
-            // Original code commented out:
-            // return new WP_Error('rest_not_logged_in', __('User not logged in.'), ['status' => 401]);
+            return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
         }
         
         // Get region and language for fetching details
@@ -472,13 +469,10 @@ class BJT_Cart_Controller extends BJT_API_Controller {
 
     public function add_item_to_cart(WP_REST_Request $request) {
         global $wpdb;
-        $user_id = get_current_user_id();
+        $user_id = $this->get_current_bjt_user_id();
         
-        // For testing purposes, use a hardcoded user ID if not logged in
         if (!$user_id) {
-            $user_id = 1; // Use admin user ID for testing
-            // Original code commented out:
-            // return new WP_Error('rest_not_logged_in', __('User not logged in.'), ['status' => 401]);
+            return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
         }
 
         $params = $request->get_json_params();
@@ -632,13 +626,10 @@ class BJT_Cart_Controller extends BJT_API_Controller {
 
     public function update_cart_item(WP_REST_Request $request) {
         global $wpdb;
-        $user_id = get_current_user_id();
+        $user_id = $this->get_current_bjt_user_id();
         
-        // For testing purposes, use a hardcoded user ID if not logged in
         if (!$user_id) {
-            $user_id = 1; // Use admin user ID for testing
-            // Original code commented out:
-            // return new WP_Error('rest_not_logged_in', __('User not logged in.'), ['status' => 401]);
+            return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
         }
 
         $item_id = absint($request['item_id']);
@@ -699,13 +690,10 @@ class BJT_Cart_Controller extends BJT_API_Controller {
 
     public function delete_cart_item(WP_REST_Request $request) {
         global $wpdb;
-        $user_id = get_current_user_id();
+        $user_id = $this->get_current_bjt_user_id();
         
-        // For testing purposes, use a hardcoded user ID if not logged in
         if (!$user_id) {
-            $user_id = 1; // Use admin user ID for testing
-            // Original code commented out:
-            // return new WP_Error('rest_not_logged_in', __('User not logged in.'), ['status' => 401]);
+            return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
         }
 
         $item_id = absint($request['item_id']);
@@ -756,13 +744,10 @@ class BJT_Cart_Controller extends BJT_API_Controller {
 
     public function clear_cart(WP_REST_Request $request) {
         global $wpdb;
-        $user_id = get_current_user_id();
+        $user_id = $this->get_current_bjt_user_id();
         
-        // For testing purposes, use a hardcoded user ID if not logged in
         if (!$user_id) {
-            $user_id = 1; // Use admin user ID for testing
-            // Original code commented out:
-            // return new WP_Error('rest_not_logged_in', __('User not logged in.'), ['status' => 401]);
+            return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
         }
 
         // Get items being deleted to potentially return in 'previous'
@@ -813,11 +798,53 @@ class BJT_Cart_Controller extends BJT_API_Controller {
      * Permission check: Ensure the user is logged in.
      */
     public function check_user_logged_in_permission(WP_REST_Request $request) {
-        // For testing purposes, always return true
-        return true;
+        error_log('[BJT_Cart_Controller] Checking user logged in permission');
         
-        // Original code commented out:
-        // return is_user_logged_in();
+        // Using BJT Auth Controller instead of returning true
+        if (!class_exists('BJT_Auth_Controller')) {
+            $auth_controller_path = dirname(__FILE__) . '/class-auth-controller.php';
+            if (file_exists($auth_controller_path)) {
+                require_once $auth_controller_path;
+            } else {
+                error_log('[BJT_Cart_Controller] BJT_Auth_Controller class file not found at: ' . $auth_controller_path);
+                return new WP_Error('rest_controller_not_found', 'Authentication controller not found.', ['status' => 500]);
+            }
+        }
+        
+        if (!class_exists('BJT_Auth_Controller')) {
+            error_log('[BJT_Cart_Controller] BJT_Auth_Controller class still not found after include attempt');
+            return new WP_Error('rest_controller_not_loadable', 'Authentication controller class not loadable.', ['status' => 500]);
+        }
+
+        $auth_controller = new BJT_Auth_Controller();
+        $is_authenticated = $auth_controller->check_auth($request);
+
+        if (true !== $is_authenticated && is_wp_error($is_authenticated)) {
+            error_log('[BJT_Cart_Controller] Authentication failed: ' . $is_authenticated->get_error_message());
+            return $is_authenticated;
+        }
+        
+        if (!$is_authenticated) {
+            error_log('[BJT_Cart_Controller] User not authenticated');
+            return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
+        }
+
+        // 使用BJT用户角色系统检查权限
+        $user = $GLOBALS['bjt_current_user'];
+        if (!$user) {
+            error_log('[BJT_Cart_Controller] No current user found in globals');
+            return new WP_Error('rest_forbidden', __('User information not available.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户状态
+        if ($user->status !== 'active') {
+            error_log('[BJT_Cart_Controller] User is not active: ' . $user->username);
+            return new WP_Error('rest_forbidden', __('Your account is not active.', 'bjt'), ['status' => 403]);
+        }
+
+        // 购物车功能对所有已认证用户开放
+        error_log('[BJT_Cart_Controller] Cart access granted for user: ' . $user->username);
+        return true;
     }
 
     /**
@@ -953,5 +980,15 @@ class BJT_Cart_Controller extends BJT_API_Controller {
             $result[$f] = isset($product[$f]) && $product[$f] !== '' ? $product[$f] : 'N/A';
         }
         return $result;
+    }
+
+    /**
+     * Get current BJT user ID
+     * 
+     * @return int Current user ID
+     */
+    private function get_current_bjt_user_id() {
+        $user = $GLOBALS['bjt_current_user'] ?? null;
+        return $user ? $user->id : 0;
     }
 } 

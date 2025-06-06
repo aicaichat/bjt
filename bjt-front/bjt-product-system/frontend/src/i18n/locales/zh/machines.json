@@ -24,7 +24,8 @@
     "all": "全部",
     "clear": "清除筛选",
     "model": "型号",
-    "allModels": "所有型号"
+    "allModels": "所有型号",
+    "allVoltages": "全部电压"
   },
   "tableHeaders": {
     "index": "序号",
@@ -201,6 +202,8 @@
     "asia": "亚洲"
   },
   "stockStatus": {
+    "sufficient": "库存充足",
+    "low": "库存偏低",
     "outOfStock": "无库存"
   },
   "path": {

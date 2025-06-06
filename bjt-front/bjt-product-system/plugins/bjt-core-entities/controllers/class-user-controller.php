@@ -18,12 +18,12 @@ class BJT_User_Controller extends BJT_API_Controller {
             array(
                 'methods' => WP_REST_Server::READABLE,
                 'callback' => array($this, 'get_items'),
-                'permission_callback' => '__return_true', // Temporarily allow all access
+                'permission_callback' => array($this, 'check_read_permission'),
             ),
             array(
                 'methods' => WP_REST_Server::CREATABLE,
                 'callback' => array($this, 'create_item'),
-                'permission_callback' => '__return_true', // Temporarily allow all access
+                'permission_callback' => array($this, 'check_write_permission'),
                 'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::CREATABLE),
             ),
         ));
@@ -33,7 +33,7 @@ class BJT_User_Controller extends BJT_API_Controller {
             [
                 'methods' => WP_REST_Server::READABLE,
                 'callback' => [$this, 'get_item'],
-                'permission_callback' => '__return_true', // Temporarily allow all access
+                'permission_callback' => [$this, 'check_read_permission'],
                 'args' => [
                     'id' => [
                         'required' => true,
@@ -44,13 +44,13 @@ class BJT_User_Controller extends BJT_API_Controller {
             [
                 'methods' => WP_REST_Server::EDITABLE,
                 'callback' => [$this, 'update_item'],
-                'permission_callback' => '__return_true', // Temporarily allow all access
+                'permission_callback' => [$this, 'check_write_permission'],
                 'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::EDITABLE),
             ],
             [
                 'methods' => WP_REST_Server::DELETABLE,
                 'callback' => [$this, 'delete_item'],
-                'permission_callback' => '__return_true', // Temporarily allow all access
+                'permission_callback' => [$this, 'check_delete_permission'],
                 'args' => [
                     'id' => [
                         'required' => true,
@@ -65,7 +65,7 @@ class BJT_User_Controller extends BJT_API_Controller {
             [
                 'methods' => WP_REST_Server::CREATABLE,
                 'callback' => [$this, 'batch_operation'],
-                'permission_callback' => '__return_true', // Temporarily allow all access
+                'permission_callback' => [$this, 'check_admin_permission'],
                 'args' => [
                     'operation' => [
                         'required' => true,
@@ -88,7 +88,7 @@ class BJT_User_Controller extends BJT_API_Controller {
             [
                 'methods' => WP_REST_Server::CREATABLE,
                 'callback' => [$this, 'reset_password'],
-                'permission_callback' => '__return_true', // Temporarily allow all access
+                'permission_callback' => [$this, 'check_admin_permission'],
                 'args' => [
                     'id' => [
                         'required' => true,
@@ -103,7 +103,7 @@ class BJT_User_Controller extends BJT_API_Controller {
             [
                 'methods' => WP_REST_Server::CREATABLE,
                 'callback' => [$this, 'import_users'],
-                'permission_callback' => '__return_true', // Temporarily allow all access
+                'permission_callback' => [$this, 'check_admin_permission'],
             ],
         ]);
         
@@ -112,7 +112,7 @@ class BJT_User_Controller extends BJT_API_Controller {
             [
                 'methods' => WP_REST_Server::READABLE,
                 'callback' => [$this, 'export_users'],
-                'permission_callback' => '__return_true', // Temporarily allow all access
+                'permission_callback' => [$this, 'check_admin_permission'],
             ],
         ]);
     }
@@ -504,13 +504,300 @@ class BJT_User_Controller extends BJT_API_Controller {
      * Check read permission
      */
     public function check_read_permission($request) {
-        return current_user_can('list_users') || current_user_can('manage_options');
+        error_log('[BJT_User_Controller] Checking read permission');
+        
+        // Using BJT Auth Controller instead of WordPress capabilities
+        if (!class_exists('BJT_Auth_Controller')) {
+            $auth_controller_path = dirname(__FILE__) . '/class-auth-controller.php';
+            if (file_exists($auth_controller_path)) {
+                require_once $auth_controller_path;
+            } else {
+                error_log('[BJT_User_Controller] BJT_Auth_Controller class file not found at: ' . $auth_controller_path);
+                return new WP_Error('rest_controller_not_found', 'Authentication controller not found.', ['status' => 500]);
+            }
+        }
+        
+        if (!class_exists('BJT_Auth_Controller')) {
+            error_log('[BJT_User_Controller] BJT_Auth_Controller class still not found after include attempt');
+            return new WP_Error('rest_controller_not_loadable', 'Authentication controller class not loadable.', ['status' => 500]);
+        }
+
+        $auth_controller = new BJT_Auth_Controller();
+        $is_authenticated = $auth_controller->check_auth($request);
+
+        if (true !== $is_authenticated && is_wp_error($is_authenticated)) {
+            error_log('[BJT_User_Controller] Authentication failed: ' . $is_authenticated->get_error_message());
+            return $is_authenticated;
+        }
+        
+        if (!$is_authenticated) {
+            error_log('[BJT_User_Controller] User not authenticated');
+            return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
+        }
+
+        // 使用BJT用户角色系统检查权限
+        $user = $GLOBALS['bjt_current_user'];
+        if (!$user) {
+            error_log('[BJT_User_Controller] No current user found in globals');
+            return new WP_Error('rest_forbidden', __('User information not available.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户状态
+        if ($user->status !== 'active') {
+            error_log('[BJT_User_Controller] User is not active: ' . $user->username);
+            return new WP_Error('rest_forbidden', __('Your account is not active.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户角色 - admin和manager可以查看用户
+        $has_read_permission = false;
+        if (isset($user->role)) {
+            $allowed_read_roles = ['admin', 'manager'];
+            $has_read_permission = in_array($user->role, $allowed_read_roles);
+        }
+
+        // 检查用户权限
+        if (isset($user->permissions) && is_array($user->permissions)) {
+            $has_read_permission = $has_read_permission || 
+                                   in_array('list_users', $user->permissions) || 
+                                   in_array('manage_users', $user->permissions);
+        }
+
+        if (!$has_read_permission) {
+            error_log('[BJT_User_Controller] User does not have read permission: ' . $user->username . ', role: ' . $user->role);
+            return new WP_Error(
+                'rest_forbidden',
+                __('You do not have permission to view users.', 'bjt'),
+                ['status' => 403, 'success' => false]
+            );
+        }
+
+        error_log('[BJT_User_Controller] Read permission granted for user: ' . $user->username);
+        return true;
     }
     
     /**
      * Check write permission
      */
     public function check_write_permission($request) {
-        return current_user_can('create_users') || current_user_can('manage_options');
+        error_log('[BJT_User_Controller] Checking write permission');
+        
+        // Using BJT Auth Controller instead of WordPress capabilities
+        if (!class_exists('BJT_Auth_Controller')) {
+            $auth_controller_path = dirname(__FILE__) . '/class-auth-controller.php';
+            if (file_exists($auth_controller_path)) {
+                require_once $auth_controller_path;
+            } else {
+                error_log('[BJT_User_Controller] BJT_Auth_Controller class file not found at: ' . $auth_controller_path);
+                return new WP_Error('rest_controller_not_found', 'Authentication controller not found.', ['status' => 500]);
+            }
+        }
+        
+        if (!class_exists('BJT_Auth_Controller')) {
+            error_log('[BJT_User_Controller] BJT_Auth_Controller class still not found after include attempt');
+            return new WP_Error('rest_controller_not_loadable', 'Authentication controller class not loadable.', ['status' => 500]);
+        }
+
+        $auth_controller = new BJT_Auth_Controller();
+        $is_authenticated = $auth_controller->check_auth($request);
+
+        if (true !== $is_authenticated && is_wp_error($is_authenticated)) {
+            error_log('[BJT_User_Controller] Authentication failed: ' . $is_authenticated->get_error_message());
+            return $is_authenticated;
+        }
+        
+        if (!$is_authenticated) {
+            error_log('[BJT_User_Controller] User not authenticated');
+            return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
+        }
+
+        // 使用BJT用户角色系统检查权限
+        $user = $GLOBALS['bjt_current_user'];
+        if (!$user) {
+            error_log('[BJT_User_Controller] No current user found in globals');
+            return new WP_Error('rest_forbidden', __('User information not available.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户状态
+        if ($user->status !== 'active') {
+            error_log('[BJT_User_Controller] User is not active: ' . $user->username);
+            return new WP_Error('rest_forbidden', __('Your account is not active.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户角色 - admin和manager可以创建/更新用户
+        $has_write_permission = false;
+        if (isset($user->role)) {
+            $allowed_write_roles = ['admin', 'manager'];
+            $has_write_permission = in_array($user->role, $allowed_write_roles);
+        }
+
+        // 检查用户权限
+        if (isset($user->permissions) && is_array($user->permissions)) {
+            $has_write_permission = $has_write_permission || 
+                                    in_array('create_users', $user->permissions) || 
+                                    in_array('edit_users', $user->permissions) || 
+                                    in_array('manage_users', $user->permissions);
+        }
+
+        if (!$has_write_permission) {
+            error_log('[BJT_User_Controller] User does not have write permission: ' . $user->username . ', role: ' . $user->role);
+            return new WP_Error(
+                'rest_forbidden',
+                __('You do not have permission to create or update users.', 'bjt'),
+                ['status' => 403, 'success' => false]
+            );
+        }
+
+        error_log('[BJT_User_Controller] Write permission granted for user: ' . $user->username);
+        return true;
+    }
+    
+    /**
+     * Check delete permission
+     */
+    public function check_delete_permission($request) {
+        error_log('[BJT_User_Controller] Checking delete permission');
+        
+        // Using BJT Auth Controller instead of WordPress capabilities
+        if (!class_exists('BJT_Auth_Controller')) {
+            $auth_controller_path = dirname(__FILE__) . '/class-auth-controller.php';
+            if (file_exists($auth_controller_path)) {
+                require_once $auth_controller_path;
+            } else {
+                error_log('[BJT_User_Controller] BJT_Auth_Controller class file not found at: ' . $auth_controller_path);
+                return new WP_Error('rest_controller_not_found', 'Authentication controller not found.', ['status' => 500]);
+            }
+        }
+        
+        if (!class_exists('BJT_Auth_Controller')) {
+            error_log('[BJT_User_Controller] BJT_Auth_Controller class still not found after include attempt');
+            return new WP_Error('rest_controller_not_loadable', 'Authentication controller class not loadable.', ['status' => 500]);
+        }
+
+        $auth_controller = new BJT_Auth_Controller();
+        $is_authenticated = $auth_controller->check_auth($request);
+
+        if (true !== $is_authenticated && is_wp_error($is_authenticated)) {
+            error_log('[BJT_User_Controller] Authentication failed: ' . $is_authenticated->get_error_message());
+            return $is_authenticated;
+        }
+        
+        if (!$is_authenticated) {
+            error_log('[BJT_User_Controller] User not authenticated');
+            return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
+        }
+
+        // 使用BJT用户角色系统检查权限
+        $user = $GLOBALS['bjt_current_user'];
+        if (!$user) {
+            error_log('[BJT_User_Controller] No current user found in globals');
+            return new WP_Error('rest_forbidden', __('User information not available.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户状态
+        if ($user->status !== 'active') {
+            error_log('[BJT_User_Controller] User is not active: ' . $user->username);
+            return new WP_Error('rest_forbidden', __('Your account is not active.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户角色 - 只有admin可以删除用户
+        $has_delete_permission = false;
+        if (isset($user->role)) {
+            $allowed_delete_roles = ['admin'];
+            $has_delete_permission = in_array($user->role, $allowed_delete_roles);
+        }
+
+        // 检查用户权限
+        if (isset($user->permissions) && is_array($user->permissions)) {
+            $has_delete_permission = $has_delete_permission || 
+                                     in_array('delete_users', $user->permissions) || 
+                                     in_array('manage_users', $user->permissions);
+        }
+
+        if (!$has_delete_permission) {
+            error_log('[BJT_User_Controller] User does not have delete permission: ' . $user->username . ', role: ' . $user->role);
+            return new WP_Error(
+                'rest_forbidden',
+                __('You do not have permission to delete users.', 'bjt'),
+                ['status' => 403, 'success' => false]
+            );
+        }
+
+        error_log('[BJT_User_Controller] Delete permission granted for user: ' . $user->username);
+        return true;
+    }
+    
+    /**
+     * Check admin permission
+     */
+    public function check_admin_permission($request) {
+        error_log('[BJT_User_Controller] Checking admin permission');
+        
+        // Using BJT Auth Controller instead of WordPress capabilities
+        if (!class_exists('BJT_Auth_Controller')) {
+            $auth_controller_path = dirname(__FILE__) . '/class-auth-controller.php';
+            if (file_exists($auth_controller_path)) {
+                require_once $auth_controller_path;
+            } else {
+                error_log('[BJT_User_Controller] BJT_Auth_Controller class file not found at: ' . $auth_controller_path);
+                return new WP_Error('rest_controller_not_found', 'Authentication controller not found.', ['status' => 500]);
+            }
+        }
+        
+        if (!class_exists('BJT_Auth_Controller')) {
+            error_log('[BJT_User_Controller] BJT_Auth_Controller class still not found after include attempt');
+            return new WP_Error('rest_controller_not_loadable', 'Authentication controller class not loadable.', ['status' => 500]);
+        }
+
+        $auth_controller = new BJT_Auth_Controller();
+        $is_authenticated = $auth_controller->check_auth($request);
+
+        if (true !== $is_authenticated && is_wp_error($is_authenticated)) {
+            error_log('[BJT_User_Controller] Authentication failed: ' . $is_authenticated->get_error_message());
+            return $is_authenticated;
+        }
+        
+        if (!$is_authenticated) {
+            error_log('[BJT_User_Controller] User not authenticated');
+            return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
+        }
+
+        // 使用BJT用户角色系统检查权限
+        $user = $GLOBALS['bjt_current_user'];
+        if (!$user) {
+            error_log('[BJT_User_Controller] No current user found in globals');
+            return new WP_Error('rest_forbidden', __('User information not available.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户状态
+        if ($user->status !== 'active') {
+            error_log('[BJT_User_Controller] User is not active: ' . $user->username);
+            return new WP_Error('rest_forbidden', __('Your account is not active.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户角色 - 只有admin可以执行管理员操作
+        $has_admin_permission = false;
+        if (isset($user->role)) {
+            $allowed_admin_roles = ['admin'];
+            $has_admin_permission = in_array($user->role, $allowed_admin_roles);
+        }
+
+        // 检查用户权限
+        if (isset($user->permissions) && is_array($user->permissions)) {
+            $has_admin_permission = $has_admin_permission || 
+                                    in_array('manage_users', $user->permissions) || 
+                                    in_array('manage_system', $user->permissions);
+        }
+
+        if (!$has_admin_permission) {
+            error_log('[BJT_User_Controller] User does not have admin permission: ' . $user->username . ', role: ' . $user->role);
+            return new WP_Error(
+                'rest_forbidden',
+                __('You do not have permission to perform this administrative action.', 'bjt'),
+                ['status' => 403, 'success' => false]
+            );
+        }
+
+        error_log('[BJT_User_Controller] Admin permission granted for user: ' . $user->username);
+        return true;
     }
 } 

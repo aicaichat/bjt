@@ -17,8 +17,10 @@ import {
 import { SaveOutlined, ArrowLeftOutlined, SyncOutlined } from '@ant-design/icons';
 import AdminPageHeader from '../../components/common/AdminPageHeader';
 import MultilingualInput from '../../components/common/MultilingualInput';
-import FileUploader from '../../components/common/FileUploader';
+import FileUrlInput from '../../components/common/FileUrlInput';
 import CRMDataFetcher, { CRMPartData } from '../../components/common/CRMDataFetcher';
+import DictionarySelect from '../../components/common/DictionarySelect';
+import { useAdminI18n } from '../../i18n/hooks/useAdminI18n';
 import adminPartService from '../../services/admin-part.service';
 import adminProductLineService from '../../services/admin-product-line.service';
 
@@ -73,6 +75,7 @@ const PartEditPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [productLines, setProductLines] = useState<any[]>([]);
   const [autoConvert, setAutoConvert] = useState(true); // 自动公英制转换
+  const { t } = useAdminI18n();
 
   const isEditMode = !!id;
   const hostModelId = searchParams.get('hostModel'); // 从主机管理页面传递的主机型号ID
@@ -85,52 +88,83 @@ const PartEditPage: React.FC = () => {
     CM_TO_INCH: 0.393701,
   };
 
-  // 初始化数据
-  useEffect(() => {
-    loadProductLines();
-    if (isEditMode && id) {
-      loadPart(parseInt(id));
-    } else {
-      // 新建时设置默认值
-      form.setFieldsValue({
-        product_line_id: undefined,
-        model: '',
-        voltage: '',
-        image_url: '',
-        part_number: '',
-        name: { zh: '', en: '' },
-        brand: '',
-        spec: '',
-        spec_imperial: '',
-        package_size_cm: '',
-        package_size_inch: '',
-        net_weight_kg: 0,
-        net_weight_lbs: 0,
-        gross_weight_kg: 0,
-        gross_weight_lbs: 0,
-        pcs_per_box: 1,
-        pallet_size_cm: '',
-        pallet_size_inch: '',
-        pcs_per_pallet: 1,
-        pallet_height_cm: 0,
-        pallet_height_inch: 0,
-        pallet_gross_weight_kg: 0,
-        pallet_gross_weight_lbs: 0,
-        status: 'draft',
-        unit: 'pcs',
-      });
-    }
-  }, [id, isEditMode, form]);
-
   const loadProductLines = async () => {
     try {
       const response = await adminProductLineService.getProductLines();
+      console.log('PartEditPage - Product lines loaded:', response.items);
       setProductLines(response.items);
+      
+      // 确保默认产品线存在
+      const defaultProductLine = response.items.find((line: any) => line.id === 1);
+      if (defaultProductLine) {
+        console.log('PartEditPage - Default product line found:', defaultProductLine);
+        
+        // 如果是新建模式且product_line_id未设置，设置默认值
+        if (!isEditMode && !form.getFieldValue('product_line_id')) {
+          console.log('PartEditPage - Setting default product_line_id after load');
+          form.setFieldValue('product_line_id', 1);
+        }
+      } else {
+        console.warn('PartEditPage - Default product line (ID=1) not found in response');
+      }
     } catch (error) {
-      console.error('加载产品线失败:', error);
-      message.error('加载产品线失败');
+      console.error(t('message.loadProductLinesFailed', { ns: 'machines' }), error);
+      message.error(t('message.loadProductLinesFailed', { ns: 'machines' }));
     }
   };
+
+  // 初始化数据
+  useEffect(() => {
+    const initializeForm = async () => {
+      await loadProductLines();
+      
+      if (isEditMode && id) {
+        loadPart(parseInt(id));
+      } else {
+        // 新建时设置默认值 - 修复默认值问题
+        const defaultValues = {
+          product_line_id: 1, // 默认气垫机产品线
+          model: '',
+          voltage: '',
+          image_url: '',
+          part_number: '', // 唯一必填字段
+          name: { zh: '', en: '' },
+          brand: '',
+          spec: '',
+          spec_imperial: '',
+          package_size_cm: '',
+          package_size_inch: '',
+          net_weight_kg: 0,
+          net_weight_lbs: 0,
+          gross_weight_kg: 0,
+          gross_weight_lbs: 0,
+          pcs_per_box: 1,
+          pallet_size_cm: '',
+          pallet_size_inch: '',
+          pcs_per_pallet: 1,
+          pallet_height_cm: 0,
+          pallet_height_inch: 0,
+          pallet_gross_weight_kg: 0,
+          pallet_gross_weight_lbs: 0,
+          status: 'publish', // 默认发布状态
+          unit: 'pcs', // 默认单位
+        };
+        
+        console.log('PartEditPage - Setting default values:', defaultValues);
+        form.setFieldsValue(defaultValues);
+        
+        // 确保产品线默认值设置成功
+        setTimeout(() => {
+          if (form.getFieldValue('product_line_id') !== 1) {
+            console.log('PartEditPage - Retry setting product_line_id default value');
+            form.setFieldValue('product_line_id', 1);
+          }
+        }, 100);
+      }
+    };
+    
+    initializeForm();
+  }, [id, isEditMode, form]);
 
   const loadPart = async (partId: number) => {
     try {
@@ -171,8 +205,8 @@ const PartEditPage: React.FC = () => {
         unit: partData.unit || 'pcs',
       });
     } catch (error) {
-      console.error('加载料号数据失败:', error);
-      message.error('加载料号数据失败');
+      console.error(t('message.loadPartDataFailed', { ns: 'machines' }), error);
+      message.error(t('message.loadPartDataFailed', { ns: 'machines' }));
     } finally {
       setLoading(false);
     }
@@ -252,42 +286,58 @@ const PartEditPage: React.FC = () => {
     try {
       setSubmitting(true);
 
-      // 转换表单数据为API格式
-      const formData: Partial<PartFormData> = {
-        product_line_id: values.product_line_id,
-        model: values.model,
-        voltage: values.voltage,
-        image_url: values.image_url,
-        part_number: values.part_number,
-        name_zh: values.name.zh,
-        name_en: values.name.en,
-        brand: values.brand,
-        spec: values.spec,
-        spec_imperial: values.spec_imperial,
-        package_size_cm: values.package_size_cm,
-        package_size_inch: values.package_size_inch,
-        net_weight_kg: values.net_weight_kg,
-        net_weight_lbs: values.net_weight_lbs,
-        gross_weight_kg: values.gross_weight_kg,
-        gross_weight_lbs: values.gross_weight_lbs,
-        pcs_per_box: values.pcs_per_box,
-        pallet_size_cm: values.pallet_size_cm,
-        pallet_size_inch: values.pallet_size_inch,
-        pcs_per_pallet: values.pcs_per_pallet,
-        pallet_height_cm: values.pallet_height_cm,
-        pallet_height_inch: values.pallet_height_inch,
-        pallet_gross_weight_kg: values.pallet_gross_weight_kg,
-        pallet_gross_weight_lbs: values.pallet_gross_weight_lbs,
-        status: values.status,
-        unit: values.unit,
+      console.log('PartEditPage.onFinish - Original form values:', values);
+
+      // 转换表单数据为API格式 - 根据Machine Part Controller的API要求
+      // 必填字段：product_line_id, model, part_number, name_zh, name_en, unit
+      const formData = {
+        product_line_id: Number(values.product_line_id) || 1, // 必填，确保数字类型
+        model: values.model ? String(values.model) : '', // 必填
+        part_number: String(values.part_number || ''), // 必填
+        // 处理多语言名称字段
+        name_zh: values.name?.zh ? String(values.name.zh) : '',  // 必填
+        name_en: values.name?.en ? String(values.name.en) : '',  // 必填
+        unit: values.unit || 'pcs', // 必填，默认值
+        // 可选字段
+        voltage: values.voltage ? String(values.voltage) : undefined,
+        image_url: values.image_url ? String(values.image_url) : undefined,
+        brand: values.brand ? String(values.brand) : undefined,
+        spec: values.spec ? String(values.spec) : undefined,
+        spec_imperial: values.spec_imperial ? String(values.spec_imperial) : undefined,
+        package_size_cm: values.package_size_cm ? String(values.package_size_cm) : undefined,
+        package_size_inch: values.package_size_inch ? String(values.package_size_inch) : undefined,
+        net_weight_kg: values.net_weight_kg ? Number(values.net_weight_kg) : undefined,
+        net_weight_lbs: values.net_weight_lbs ? Number(values.net_weight_lbs) : undefined,
+        gross_weight_kg: values.gross_weight_kg ? Number(values.gross_weight_kg) : undefined,
+        gross_weight_lbs: values.gross_weight_lbs ? Number(values.gross_weight_lbs) : undefined,
+        pcs_per_box: values.pcs_per_box ? Number(values.pcs_per_box) : undefined,
+        pallet_size_cm: values.pallet_size_cm ? String(values.pallet_size_cm) : undefined,
+        pallet_size_inch: values.pallet_size_inch ? String(values.pallet_size_inch) : undefined,
+        pcs_per_pallet: values.pcs_per_pallet ? Number(values.pcs_per_pallet) : undefined,
+        pallet_height_cm: values.pallet_height_cm ? Number(values.pallet_height_cm) : undefined,
+        pallet_height_inch: values.pallet_height_inch ? Number(values.pallet_height_inch) : undefined,
+        pallet_gross_weight_kg: values.pallet_gross_weight_kg ? Number(values.pallet_gross_weight_kg) : undefined,
+        pallet_gross_weight_lbs: values.pallet_gross_weight_lbs ? Number(values.pallet_gross_weight_lbs) : undefined,
+        status: values.status || 'publish',
       };
 
+      // 过滤掉undefined值，但保留必填字段
+      const requiredFields = ['product_line_id', 'model', 'part_number', 'name_zh', 'name_en', 'unit', 'status'];
+      const finalData = Object.fromEntries(
+        Object.entries(formData).filter(([key, value]) => {
+          return requiredFields.includes(key) || (value !== undefined && value !== '' && value !== null);
+        })
+      );
+
+      console.log('PartEditPage.onFinish - Processed form data:', formData);
+      console.log('PartEditPage.onFinish - Final data to submit:', finalData);
+
       if (isEditMode && id) {
-        await adminPartService.updatePart(id, formData as any);
-        message.success('料号更新成功');
+        await adminPartService.updatePart(id, finalData as any);
+        message.success(t('message.partUpdateSuccess', { ns: 'machines' }));
       } else {
-        await adminPartService.createPart(formData as any);
-        message.success('料号创建成功');
+        await adminPartService.createPart(finalData as any);
+        message.success(t('message.partCreateSuccess', { ns: 'machines' }));
       }
 
       // 根据来源返回不同页面
@@ -296,9 +346,31 @@ const PartEditPage: React.FC = () => {
       } else {
         navigate('/admin/machines?tab=parts');
       }
-    } catch (error) {
-      console.error('保存料号失败:', error);
-      message.error('保存料号失败');
+    } catch (error: any) {
+      console.error(t('message.savePartFailed', { ns: 'machines' }), error);
+      
+      // 详细错误信息调试
+      console.error('PartEditPage.onFinish - Detailed error:', {
+        error,
+        response: error?.response,
+        data: error?.response?.data,
+        status: error?.response?.status,
+        statusText: error?.response?.statusText,
+        headers: error?.response?.headers
+      });
+      
+      // 显示更详细的错误信息
+      let errorMessage = t('message.savePartFailed', { ns: 'machines' });
+      if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error?.response?.data) {
+        errorMessage = JSON.stringify(error.response.data);
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      message.error(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -330,17 +402,17 @@ const PartEditPage: React.FC = () => {
   const SaveIcon = SaveOutlined as any;
   const SyncIcon = SyncOutlined as any;
 
-  const partNumber = Form.useWatch('part_number', form);
+  const partNumber = form.getFieldValue('part_number');
 
   return (
     <div className="part-edit-page">
       <AdminPageHeader
-        title={isEditMode ? '编辑主机料号' : '新增主机料号'}
-        description={isEditMode ? `编辑料号 ID: ${id}` : '创建新的主机料号'}
+        title={isEditMode ? t('edit.title', { ns: 'machines' }) : t('create.title', { ns: 'machines' })}
+        description={isEditMode ? `${t('edit.description', { ns: 'machines' })} ID: ${id}` : t('create.description', { ns: 'machines' })}
         extra={
-          <ButtonComponent key="back" icon={<ArrowLeftIcon />} onClick={handleBack}>
-            返回列表
-          </ButtonComponent>
+          <Button key="back" icon={<ArrowLeftOutlined />} onClick={handleBack}>
+            {t('buttons.back', { ns: 'machines' })}
+          </Button>
         }
       />
 
@@ -360,11 +432,18 @@ const PartEditPage: React.FC = () => {
 
             <ColComponent span={8}>
               <FormItemComponent
-                label="所属产品线"
+                label="产品线 (Product Line)"
                 name="product_line_id"
-                rules={[{ required: true, message: '请选择所属产品线' }]}
+                initialValue={1}
               >
-                <SelectComponent placeholder="请选择产品线">
+                <SelectComponent 
+                  placeholder="请选择产品线"
+                  value={form.getFieldValue('product_line_id')}
+                  onChange={(value) => {
+                    console.log('PartEditPage - Product line changed to:', value);
+                    form.setFieldValue('product_line_id', value);
+                  }}
+                >
                   {productLines.map((line) => (
                     <OptionComponent key={line.id} value={line.id}>
                       {line.title?.zh || line.name || `产品线${line.id}`}
@@ -376,9 +455,8 @@ const PartEditPage: React.FC = () => {
 
             <ColComponent span={8}>
               <FormItemComponent
-                label="型号"
+                label="型号 (Model)"
                 name="model"
-                rules={[{ required: true, message: '请输入型号' }]}
               >
                 <InputComponent placeholder="例如: BJT-A100" />
               </FormItemComponent>
@@ -386,21 +464,25 @@ const PartEditPage: React.FC = () => {
 
             <ColComponent span={8}>
               <FormItemComponent
-                label="电压"
+                label="电压 (Voltage)"
                 name="voltage"
               >
-                <InputComponent placeholder="例如: 220V" />
+                <DictionarySelect
+                  dictionaryType="voltages"
+                  placeholder="请选择电压"
+                  allowClear={true}
+                />
               </FormItemComponent>
             </ColComponent>
 
             {/* 料号和CRM集成 */}
             <ColComponent span={24}>
-              <DividerComponent orientation="left">料号信息</DividerComponent>
+              <DividerComponent orientation="left">料号信息 (Part No. Info)</DividerComponent>
             </ColComponent>
 
             <ColComponent span={12}>
               <FormItemComponent
-                label="料号"
+                label="料号 (Part No.)"
                 name="part_number"
                 rules={[{ required: true, message: '请输入料号' }]}
                 extra="在同一产品线下必须唯一"
@@ -410,7 +492,7 @@ const PartEditPage: React.FC = () => {
             </ColComponent>
 
             <ColComponent span={12}>
-              <FormItemComponent label="CRM数据获取">
+              <FormItemComponent label="CRM数据获取 (CRM Data Fetch)">
                 <CRMDataFetcher
                   partNumber={partNumber || ''}
                   onDataFetched={handleCRMDataFetched}
@@ -430,64 +512,54 @@ const PartEditPage: React.FC = () => {
 
             <ColComponent span={12}>
               <FormItemComponent
-                label="品牌"
+                label="品牌 (Brand)"
                 name="brand"
               >
-                <InputComponent placeholder="例如: BJT" />
+                <DictionarySelect
+                  dictionaryType="brands"
+                  placeholder="请选择品牌"
+                  allowClear={true}
+                />
               </FormItemComponent>
             </ColComponent>
 
             <ColComponent span={6}>
               <FormItemComponent
-                label="状态"
+                label="状态 (Status)"
                 name="status"
-                rules={[{ required: true, message: '请选择状态' }]}
               >
-                <SelectComponent>
-                  <OptionComponent value="draft">草稿</OptionComponent>
-                  <OptionComponent value="publish">已发布</OptionComponent>
-                  <OptionComponent value="trash">回收站</OptionComponent>
-                </SelectComponent>
+                <DictionarySelect
+                  dictionaryType="statuses"
+                  placeholder="请选择状态"
+                />
               </FormItemComponent>
             </ColComponent>
 
             <ColComponent span={6}>
               <FormItemComponent
-                label="单位"
+                label="单位 (Unit)"
                 name="unit"
-                rules={[{ required: true, message: '请选择单位' }]}
               >
-                <SelectComponent>
-                  <OptionComponent value="pcs">件</OptionComponent>
-                  <OptionComponent value="roll">卷</OptionComponent>
-                  <OptionComponent value="box">箱</OptionComponent>
-                </SelectComponent>
+                <DictionarySelect
+                  dictionaryType="units"
+                  placeholder="请选择单位"
+                />
               </FormItemComponent>
             </ColComponent>
 
             {/* 多语言名称 */}
             <ColComponent span={24}>
-              <DividerComponent orientation="left">产品名称</DividerComponent>
+              <DividerComponent orientation="left">名称信息 (Item Info)</DividerComponent>
             </ColComponent>
 
             <ColComponent span={24}>
               <FormItemComponent
-                label="产品名称"
+                label="名称 (Item)"
                 name="name"
-                rules={[
-                  {
-                    validator: (_: any, value: any) => {
-                      if (!value?.zh || !value?.en) {
-                        return Promise.reject('请输入中英文名称');
-                      }
-                      return Promise.resolve();
-                    }
-                  }
-                ]}
               >
                 <MultilingualInput
                   type="input"
-                  required
+                  required={false}
                   placeholder={{ zh: '请输入中文名称', en: 'Please enter English name' }}
                 />
               </FormItemComponent>
@@ -495,12 +567,12 @@ const PartEditPage: React.FC = () => {
 
             {/* 规格参数 */}
             <ColComponent span={24}>
-              <DividerComponent orientation="left">规格参数</DividerComponent>
+              <DividerComponent orientation="left">规格信息 (Specification Info)</DividerComponent>
             </ColComponent>
 
             <ColComponent span={12}>
               <FormItemComponent
-                label="规格参数(公制)"
+                label="规格描述 (Spec.)"
                 name="spec"
               >
                 <InputComponent placeholder="例如: 长×宽×高(cm)" />
@@ -509,7 +581,7 @@ const PartEditPage: React.FC = () => {
 
             <ColComponent span={12}>
               <FormItemComponent
-                label="规格参数(英制)"
+                label="规格描述 (Spec.) - 英制"
                 name="spec_imperial"
               >
                 <InputComponent placeholder="例如: L×W×H(inch)" />
@@ -519,7 +591,7 @@ const PartEditPage: React.FC = () => {
             {/* 公英制转换设置 */}
             <ColComponent span={24}>
               <DividerComponent orientation="left">
-                物流参数
+                包装信息 (Package Info)
                 <CheckboxComponent 
                   checked={autoConvert} 
                   onChange={(e: any) => setAutoConvert(e.target.checked)}
@@ -531,14 +603,9 @@ const PartEditPage: React.FC = () => {
               </DividerComponent>
             </ColComponent>
 
-            {/* 包装信息 */}
-            <ColComponent span={24}>
-              <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 16 }}>包装信息</div>
-            </ColComponent>
-
             <ColComponent span={8}>
               <FormItemComponent
-                label="包装尺寸(cm)"
+                label="包装尺寸 (Packaging Dim.) - 公制"
                 name="package_size_cm"
               >
                 <InputComponent 
@@ -550,7 +617,7 @@ const PartEditPage: React.FC = () => {
 
             <ColComponent span={8}>
               <FormItemComponent
-                label="包装尺寸(inch)"
+                label="包装尺寸 (Packaging Dim.) - 英制"
                 name="package_size_inch"
               >
                 <InputComponent 
@@ -562,9 +629,8 @@ const PartEditPage: React.FC = () => {
 
             <ColComponent span={8}>
               <FormItemComponent
-                label="单箱数量"
+                label="单箱数量 (Qty per Carton)"
                 name="pcs_per_box"
-                rules={[{ required: true, message: '请输入单箱数量' }]}
               >
                 <InputNumberComponent min={1} style={{ width: '100%' }} />
               </FormItemComponent>
@@ -572,7 +638,7 @@ const PartEditPage: React.FC = () => {
 
             <ColComponent span={6}>
               <FormItemComponent
-                label="单件净重(kg)"
+                label="单件净重 (Net Weight) - kg"
                 name="net_weight_kg"
               >
                 <InputNumberComponent 
@@ -586,7 +652,7 @@ const PartEditPage: React.FC = () => {
 
             <ColComponent span={6}>
               <FormItemComponent
-                label="单件净重(lbs)"
+                label="单件净重 (Net Weight) - lbs"
                 name="net_weight_lbs"
               >
                 <InputNumberComponent 
@@ -600,7 +666,7 @@ const PartEditPage: React.FC = () => {
 
             <ColComponent span={6}>
               <FormItemComponent
-                label="包装毛重(kg)"
+                label="包装毛重 (Gross Weight) - kg"
                 name="gross_weight_kg"
               >
                 <InputNumberComponent 
@@ -614,7 +680,7 @@ const PartEditPage: React.FC = () => {
 
             <ColComponent span={6}>
               <FormItemComponent
-                label="包装毛重(lbs)"
+                label="包装毛重 (Gross Weight) - lbs"
                 name="gross_weight_lbs"
               >
                 <InputNumberComponent 
@@ -628,12 +694,12 @@ const PartEditPage: React.FC = () => {
 
             {/* 托盘信息 */}
             <ColComponent span={24}>
-              <div style={{ fontSize: 14, fontWeight: 500, marginTop: 16, marginBottom: 16 }}>托盘信息</div>
+              <div style={{ fontSize: 14, fontWeight: 500, marginTop: 16, marginBottom: 16 }}>托盘信息 (Pallet Info)</div>
             </ColComponent>
 
             <ColComponent span={8}>
               <FormItemComponent
-                label="托盘尺寸(cm)"
+                label="托盘尺寸 (Pallet Size) - 公制"
                 name="pallet_size_cm"
               >
                 <InputComponent 
@@ -645,7 +711,7 @@ const PartEditPage: React.FC = () => {
 
             <ColComponent span={8}>
               <FormItemComponent
-                label="托盘尺寸(inch)"
+                label="托盘尺寸 (Pallet Size) - 英制"
                 name="pallet_size_inch"
               >
                 <InputComponent 
@@ -657,9 +723,8 @@ const PartEditPage: React.FC = () => {
 
             <ColComponent span={8}>
               <FormItemComponent
-                label="一托数量"
+                label="一托数量 (Packs per Pallet)"
                 name="pcs_per_pallet"
-                rules={[{ required: true, message: '请输入一托数量' }]}
               >
                 <InputNumberComponent min={1} style={{ width: '100%' }} />
               </FormItemComponent>
@@ -667,7 +732,7 @@ const PartEditPage: React.FC = () => {
 
             <ColComponent span={6}>
               <FormItemComponent
-                label="打托高度(cm)"
+                label="打托高度 (Pallet Height) - cm"
                 name="pallet_height_cm"
               >
                 <InputNumberComponent 
@@ -681,7 +746,7 @@ const PartEditPage: React.FC = () => {
 
             <ColComponent span={6}>
               <FormItemComponent
-                label="打托高度(inch)"
+                label="打托高度 (Pallet Height) - inch"
                 name="pallet_height_inch"
               >
                 <InputNumberComponent 
@@ -695,7 +760,7 @@ const PartEditPage: React.FC = () => {
 
             <ColComponent span={6}>
               <FormItemComponent
-                label="整托毛重(kg)"
+                label="整托毛重 (GW per Pallet) - kg"
                 name="pallet_gross_weight_kg"
               >
                 <InputNumberComponent 
@@ -709,7 +774,7 @@ const PartEditPage: React.FC = () => {
 
             <ColComponent span={6}>
               <FormItemComponent
-                label="整托毛重(lbs)"
+                label="整托毛重 (GW per Pallet) - lbs"
                 name="pallet_gross_weight_lbs"
               >
                 <InputNumberComponent 
@@ -723,19 +788,20 @@ const PartEditPage: React.FC = () => {
 
             {/* 产品图片 */}
             <ColComponent span={24}>
-              <DividerComponent orientation="left">产品图片</DividerComponent>
+              <DividerComponent orientation="left">产品图片 (Product Image)</DividerComponent>
             </ColComponent>
 
             <ColComponent span={24}>
               <FormItemComponent
-                label="产品图片"
+                label="产品图片 (Product Image)"
                 name="image_url"
-                extra="支持 JPG, PNG, GIF, WEBP 格式，文件大小不超过 10MB"
+                extra="支持上传图片文件或输入图片URL地址，文件大小不超过 10MB"
               >
-                <FileUploader
-                  type="image"
+                <FileUrlInput
+                  placeholder="请输入图片URL地址或点击上传"
+                  fileType="image"
                   maxSize={10}
-                  placeholder="上传产品图片"
+                  uploadPath="/uploads/parts/images/"
                   preview
                 />
               </FormItemComponent>

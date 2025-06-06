@@ -98,7 +98,7 @@ class BJT_Relation_Controller extends BJT_API_Controller {
             [
                 'methods' => WP_REST_Server::DELETABLE,
                 'callback' => [$this, 'delete_item'],
-                'permission_callback' => [$this, 'check_write_permission'],
+                'permission_callback' => [$this, 'check_delete_permission'],
                 'args' => [
                     'id' => [
                         'description' => __('Unique identifier for the relation.'),
@@ -106,10 +106,10 @@ class BJT_Relation_Controller extends BJT_API_Controller {
                         'required' => true,
                         'validate_callback' => 'rest_validate_request_arg',
                     ],
-                    'force' => [
+                    'cascade' => [
                         'type'        => 'boolean',
-                        'default'     => false,
-                        'description' => __('Whether to bypass trash and force deletion.'),
+                        'default'     => true,
+                        'description' => __('Whether to cascade delete all related relations.'),
                     ],
                 ],
             ],
@@ -454,16 +454,20 @@ class BJT_Relation_Controller extends BJT_API_Controller {
         // Additional DB-level validation if needed (e.g. if part numbers must exist in other tables)
         // For now, we'll assume part numbers are validated elsewhere or are just strings.
 
-        // Check for duplicate relation (parent_part_number AND child_part_number)
+        // Check for duplicate relation (完整的关系上下文检查)
+        // 修正：检查完整的关系上下文，而不仅仅是parent和child的组合
+        // 因为同一个child可能被不同的part引用，这在层级关系中是合理的
         $existing_relation = $wpdb->get_row($wpdb->prepare(
-            "SELECT id FROM {$this->table_name} WHERE parent_part_number = %s AND child_part_number = %s",
+            "SELECT id FROM {$this->table_name} WHERE host_part_number = %s AND parent_part_number = %s AND part_number = %s AND child_part_number = %s",
+            $data_to_insert['host_part_number'],
             $data_to_insert['parent_part_number'],
+            $data_to_insert['part_number'],
             $data_to_insert['child_part_number']
         ));
 
         if ($existing_relation) {
             return $this->error_response(
-                'This relation (parent_part_number and child_part_number combination) already exists.',
+                'This exact relation (host_part_number, parent_part_number, part_number, and child_part_number combination) already exists.',
                 'duplicate_relation',
                 409 // Conflict
             );
@@ -556,7 +560,7 @@ class BJT_Relation_Controller extends BJT_API_Controller {
     }
 
     /**
-     * 删除关系 (To be implemented)
+     * 删除关系 - 支持级联删除
      *
      * @param WP_REST_Request $request
      * @return WP_REST_Response|WP_Error
@@ -564,6 +568,7 @@ class BJT_Relation_Controller extends BJT_API_Controller {
     public function delete_item($request) {
         global $wpdb;
         $id = absint($request['id']);
+        $cascade = $request->get_param('cascade') !== false; // 默认启用级联删除
 
         if ($id <= 0) {
             return $this->error_response('Invalid relation ID.', 'invalid_id', 400);
@@ -575,29 +580,142 @@ class BJT_Relation_Controller extends BJT_API_Controller {
             return $this->error_response("Relation with ID {$id} not found to delete.", 'not_found', 404);
         }
 
-        // Format the item for response *before* deleting it, as per WP REST API practice for DELETE
+        // Format the item for response *before* deleting it
         $previous = $this->format_item_for_response($item_to_delete);
 
-        $result = $wpdb->delete($this->table_name, array('id' => $id), array('%d'));
+        // 开始事务
+        $wpdb->query('START TRANSACTION');
 
-        if ($result === false) {
-            error_log('BJT_Relation_Controller DB Delete Error: ' . $wpdb->last_error);
-            return $this->error_response('Failed to delete relation. DB Error: ' . $wpdb->last_error, 'db_error', 500);
-        }
-        
-        // $wpdb->delete returns the number of rows affected.
-        if ($result === 0) {
-            // This case should be rare given the existence check above, but good to handle.
-            return $this->error_response("Relation with ID {$id} could not be deleted (it may have been deleted by another process).", 'delete_failed_not_found', 404);
-        }
-        
-        // Prepare response data with the deleted item
-        $response_data = [
-            'deleted'  => true,
-            'previous' => $previous,
-        ];
+        try {
+            $deleted_count = 0;
+            $deleted_relations = [];
 
-        return new WP_REST_Response($response_data, 200);
+            if ($cascade) {
+                // 级联删除：找到所有需要删除的子级关系
+                $relations_to_delete = $this->find_cascade_delete_relations($item_to_delete);
+                
+                error_log("BJT Relations: Cascade delete found " . count($relations_to_delete) . " relations to delete");
+                
+                // 按照层级从深到浅排序，确保先删除子级
+                usort($relations_to_delete, function($a, $b) {
+                    return ($b->level ?? 0) - ($a->level ?? 0);
+                });
+
+                // 删除所有关系
+                foreach ($relations_to_delete as $relation) {
+                    $delete_result = $wpdb->delete($this->table_name, array('id' => $relation->id), array('%d'));
+                    
+                    if ($delete_result === false) {
+                        throw new Exception("Failed to delete relation ID {$relation->id}: " . $wpdb->last_error);
+                    }
+                    
+                    if ($delete_result > 0) {
+                        $deleted_count++;
+                        $deleted_relations[] = $this->format_item_for_response($relation);
+                        error_log("BJT Relations: Deleted cascade relation ID {$relation->id} (part: {$relation->part_number} -> child: {$relation->child_part_number})");
+                    }
+                }
+            } else {
+                // 非级联删除：只删除指定的关系
+                $result = $wpdb->delete($this->table_name, array('id' => $id), array('%d'));
+
+                if ($result === false) {
+                    throw new Exception('Failed to delete relation. DB Error: ' . $wpdb->last_error);
+                }
+                
+                if ($result === 0) {
+                    throw new Exception("Relation with ID {$id} could not be deleted (it may have been deleted by another process).");
+                }
+                
+                $deleted_count = $result;
+                $deleted_relations = [$previous];
+            }
+
+            // 提交事务
+            $wpdb->query('COMMIT');
+
+            // Prepare response data
+            $response_data = [
+                'deleted' => true,
+                'cascade' => $cascade,
+                'deleted_count' => $deleted_count,
+                'previous' => $previous,
+                'deleted_relations' => $deleted_relations,
+            ];
+
+            error_log("BJT Relations: Successfully deleted {$deleted_count} relations (cascade: " . ($cascade ? 'true' : 'false') . ")");
+
+            return new WP_REST_Response($response_data, 200);
+
+        } catch (Exception $e) {
+            // 回滚事务
+            $wpdb->query('ROLLBACK');
+            error_log('BJT_Relation_Controller Cascade Delete Error: ' . $e->getMessage());
+            return $this->error_response('Failed to delete relation(s): ' . $e->getMessage(), 'delete_error', 500);
+        }
+    }
+
+    /**
+     * 查找需要级联删除的所有关系
+     * 
+     * @param object $root_relation 根关系记录
+     * @return array 需要删除的关系记录数组
+     */
+    private function find_cascade_delete_relations($root_relation) {
+        global $wpdb;
+        
+        $relations_to_delete = [$root_relation]; // 包含根关系本身
+        $processed_parts = []; // 防止重复处理
+        
+        // 递归查找所有子级关系
+        $this->find_child_relations_recursive($root_relation->child_part_number, $root_relation->product_line_id, $relations_to_delete, $processed_parts);
+        
+        return $relations_to_delete;
+    }
+
+    /**
+     * 递归查找子级关系
+     * 
+     * @param string $part_number 当前料号
+     * @param int $product_line_id 产品线ID
+     * @param array &$relations_to_delete 需要删除的关系数组（引用传递）
+     * @param array &$processed_parts 已处理的料号数组（引用传递，防止循环）
+     */
+    private function find_child_relations_recursive($part_number, $product_line_id, &$relations_to_delete, &$processed_parts) {
+        global $wpdb;
+        
+        // 防止循环引用
+        if (in_array($part_number, $processed_parts)) {
+            error_log("BJT Relations: Circular reference detected during cascade delete for part_number: {$part_number}");
+            return;
+        }
+        $processed_parts[] = $part_number;
+        
+        // 查找以当前料号为part_number的所有子级关系
+        $child_relations = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM {$this->table_name} 
+             WHERE part_number = %s AND product_line_id = %d 
+             ORDER BY level DESC, id ASC",
+            $part_number,
+            $product_line_id
+        ));
+        
+        if (!empty($child_relations)) {
+            foreach ($child_relations as $child_relation) {
+                // 添加到删除列表
+                $relations_to_delete[] = $child_relation;
+                
+                // 递归查找更深层的子级
+                if (!empty($child_relation->child_part_number)) {
+                    $this->find_child_relations_recursive(
+                        $child_relation->child_part_number, 
+                        $product_line_id, 
+                        $relations_to_delete, 
+                        $processed_parts
+                    );
+                }
+            }
+        }
     }
 
     /**
@@ -785,29 +903,82 @@ class BJT_Relation_Controller extends BJT_API_Controller {
             }
         }
 
-        // 自动计算 host_part_number
+        // 自动计算 host_part_number - 优化逻辑
         if (isset($data['part_number'])) {
-            if (empty($data['parent_part_number'])) {
-                // 如果没有父料号，这是主机，host_part_number = part_number
-                $data['host_part_number'] = $data['part_number'];
+            // 优先使用前端传递的 host_part_number
+            if (isset($params['host_part_number']) && !empty($params['host_part_number'])) {
+                $data['host_part_number'] = sanitize_text_field(strtoupper(trim($params['host_part_number'])));
             } else {
-                // 如果有父料号，查询父记录的 host_part_number
-                $parent_host_part_number = $wpdb->get_var($wpdb->prepare(
-                    "SELECT host_part_number FROM {$this->table_name} WHERE part_number = %s AND product_line_id = %d LIMIT 1",
-                    $data['parent_part_number'],
-                    $data['product_line_id']
-                ));
-                
-                if ($parent_host_part_number) {
-                    $data['host_part_number'] = $parent_host_part_number;
-                } else {
-                    // 如果找不到父记录，默认使用 part_number
+                // 如果前端没有传递，则根据层级结构自动计算
+                if (empty($data['parent_part_number'])) {
+                    // 如果没有父料号，这是主机，host_part_number = part_number
                     $data['host_part_number'] = $data['part_number'];
+                } else {
+                    // 如果有父料号，尝试查找主机料号
+                    $found_host = $this->find_root_host_part_number($data['parent_part_number'], $data['product_line_id']);
+                    $data['host_part_number'] = $found_host ?: $data['part_number']; // 如果找不到，使用当前料号作为fallback
                 }
             }
         }
 
         return $data;
+    }
+
+    /**
+     * 递归查找根级主机料号
+     * 
+     * @param string $part_number 当前料号
+     * @param int $product_line_id 产品线ID
+     * @param array $visited 已访问的料号，防止循环引用
+     * @return string 根级主机料号
+     */
+    private function find_root_host_part_number($part_number, $product_line_id, $visited = []) {
+        global $wpdb;
+        
+        // 防止循环引用
+        if (in_array($part_number, $visited)) {
+            error_log("BJT Relations: Circular reference detected for part_number: {$part_number}");
+            return $part_number;
+        }
+        $visited[] = $part_number;
+        
+        // 查找以当前料号为child_part_number的关系，找到它的父级
+        $parent_relation = $wpdb->get_row($wpdb->prepare(
+            "SELECT part_number, parent_part_number FROM {$this->table_name} 
+             WHERE child_part_number = %s AND product_line_id = %d 
+             ORDER BY id DESC LIMIT 1",
+            $part_number,
+            $product_line_id
+        ));
+        
+        if (!$parent_relation) {
+            // 如果找不到父级关系，当前料号可能就是主机料号
+            // 但我们需要验证它是否真的是主机（即作为part_number且parent_part_number为null的记录）
+            $is_host = $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$this->table_name} 
+                 WHERE part_number = %s AND parent_part_number IS NULL AND product_line_id = %d",
+                $part_number,
+                $product_line_id
+            ));
+            
+            if ($is_host > 0) {
+                return $part_number;
+            } else {
+                // 如果不是主机，可能是数据不完整，记录错误并返回当前料号
+                error_log("BJT Relations: Could not find root host for part_number: {$part_number}, product_line_id: {$product_line_id}");
+                return $part_number;
+            }
+        }
+        
+        if (empty($parent_relation->parent_part_number)) {
+            // 如果parent_part_number为null，说明父级是主机
+            // 返回父级的part_number作为主机料号
+            return $parent_relation->part_number;
+        } else {
+            // 如果父级还有父级，继续向上递归查找
+            // 注意：这里应该查找parent_relation->parent_part_number，而不是part_number
+            return $this->find_root_host_part_number($parent_relation->parent_part_number, $product_line_id, $visited);
+        }
     }
 
     protected function format_item_for_response($item_db_object) {
@@ -1028,6 +1199,163 @@ class BJT_Relation_Controller extends BJT_API_Controller {
         }
         
         return $accessories;
+    }
+
+    /**
+     * Checks if the current user has permission to write (create/update) relations.
+     * Requires authentication and proper BJT permissions.
+     *
+     * @param WP_REST_Request $request Full data about the request.
+     * @return true|WP_Error True if the request has write access, WP_Error object otherwise.
+     */
+    public function check_write_permission($request) {
+        error_log('[BJT_Relation_Controller] Checking write permission');
+        
+        // Using BJT Auth Controller instead of WordPress capabilities
+        if (!class_exists('BJT_Auth_Controller')) {
+            $auth_controller_path = dirname(__FILE__) . '/class-auth-controller.php';
+            if (file_exists($auth_controller_path)) {
+                require_once $auth_controller_path;
+            } else {
+                error_log('[BJT_Relation_Controller] BJT_Auth_Controller class file not found at: ' . $auth_controller_path);
+                return new WP_Error('rest_controller_not_found', 'Authentication controller not found.', ['status' => 500]);
+            }
+        }
+        
+        if (!class_exists('BJT_Auth_Controller')) {
+            error_log('[BJT_Relation_Controller] BJT_Auth_Controller class still not found after include attempt');
+            return new WP_Error('rest_controller_not_loadable', 'Authentication controller class not loadable.', ['status' => 500]);
+        }
+
+        $auth_controller = new BJT_Auth_Controller();
+        $is_authenticated = $auth_controller->check_auth($request);
+
+        if (true !== $is_authenticated && is_wp_error($is_authenticated)) {
+            error_log('[BJT_Relation_Controller] Authentication failed: ' . $is_authenticated->get_error_message());
+            return $is_authenticated;
+        }
+        
+        if (!$is_authenticated) {
+            error_log('[BJT_Relation_Controller] User not authenticated');
+            return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
+        }
+
+        // 使用BJT用户角色系统检查权限
+        $user = $GLOBALS['bjt_current_user'];
+        if (!$user) {
+            error_log('[BJT_Relation_Controller] No current user found in globals');
+            return new WP_Error('rest_forbidden', __('User information not available.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户状态
+        if ($user->status !== 'active') {
+            error_log('[BJT_Relation_Controller] User is not active: ' . $user->username);
+            return new WP_Error('rest_forbidden', __('Your account is not active.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户角色 - admin和manager可以创建/更新relations
+        $has_write_permission = false;
+        if (isset($user->role)) {
+            $allowed_write_roles = ['admin', 'manager'];
+            $has_write_permission = in_array($user->role, $allowed_write_roles);
+        }
+
+        // 检查用户权限
+        if (isset($user->permissions) && is_array($user->permissions)) {
+            $has_write_permission = $has_write_permission || 
+                                    in_array('edit_products', $user->permissions) || 
+                                    in_array('manage_products', $user->permissions);
+        }
+
+        if (!$has_write_permission) {
+            error_log('[BJT_Relation_Controller] User does not have write permission: ' . $user->username . ', role: ' . $user->role);
+            return new WP_Error(
+                'rest_forbidden',
+                __('You do not have permission to create or update relations.', 'bjt'),
+                ['status' => 403, 'success' => false]
+            );
+        }
+
+        error_log('[BJT_Relation_Controller] Write permission granted for user: ' . $user->username);
+        return true;
+    }
+
+    /**
+     * Checks if the current user has permission to delete relations.
+     *
+     * @param WP_REST_Request $request Full data about the request.
+     * @return true|WP_Error True if the request has delete access, WP_Error object otherwise.
+     */
+    public function check_delete_permission($request) {
+        error_log('[BJT_Relation_Controller] Checking delete permission');
+        
+        // Using BJT Auth Controller instead of WordPress capabilities
+        if (!class_exists('BJT_Auth_Controller')) {
+            $auth_controller_path = dirname(__FILE__) . '/class-auth-controller.php';
+            if (file_exists($auth_controller_path)) {
+                require_once $auth_controller_path;
+            } else {
+                error_log('[BJT_Relation_Controller] BJT_Auth_Controller class file not found at: ' . $auth_controller_path);
+                return new WP_Error('rest_controller_not_found', 'Authentication controller not found.', ['status' => 500]);
+            }
+        }
+        
+        if (!class_exists('BJT_Auth_Controller')) {
+            error_log('[BJT_Relation_Controller] BJT_Auth_Controller class still not found after include attempt');
+            return new WP_Error('rest_controller_not_loadable', 'Authentication controller class not loadable.', ['status' => 500]);
+        }
+
+        $auth_controller = new BJT_Auth_Controller();
+        $is_authenticated = $auth_controller->check_auth($request);
+
+        if (true !== $is_authenticated && is_wp_error($is_authenticated)) {
+            error_log('[BJT_Relation_Controller] Authentication failed: ' . $is_authenticated->get_error_message());
+            return $is_authenticated;
+        }
+        
+        if (!$is_authenticated) {
+            error_log('[BJT_Relation_Controller] User not authenticated');
+            return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
+        }
+
+        // 使用BJT用户角色系统检查权限
+        $user = $GLOBALS['bjt_current_user'];
+        if (!$user) {
+            error_log('[BJT_Relation_Controller] No current user found in globals');
+            return new WP_Error('rest_forbidden', __('User information not available.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户状态
+        if ($user->status !== 'active') {
+            error_log('[BJT_Relation_Controller] User is not active: ' . $user->username);
+            return new WP_Error('rest_forbidden', __('Your account is not active.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户角色 - 只有admin可以删除relations
+        $has_delete_permission = false;
+        if (isset($user->role)) {
+            $allowed_delete_roles = ['admin'];
+            $has_delete_permission = in_array($user->role, $allowed_delete_roles);
+        }
+
+        // 检查用户权限
+        if (isset($user->permissions) && is_array($user->permissions)) {
+            $has_delete_permission = $has_delete_permission || 
+                                     in_array('delete_products', $user->permissions) || 
+                                     in_array('manage_products', $user->permissions);
+        }
+
+        if (!$has_delete_permission) {
+            error_log('[BJT_Relation_Controller] User does not have delete permission: ' . $user->username . ', role: ' . $user->role);
+            return new WP_Error(
+                'rest_forbidden',
+                __('You do not have permission to delete relations.', 'bjt'),
+                ['status' => 403, 'success' => false]
+            );
+        }
+
+        error_log('[BJT_Relation_Controller] Delete permission granted for user: ' . $user->username);
+        return true;
     }
 
 } 

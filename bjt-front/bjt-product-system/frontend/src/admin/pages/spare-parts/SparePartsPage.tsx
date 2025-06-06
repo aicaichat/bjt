@@ -11,12 +11,14 @@ import ImportExportButtons from '../../components/common/ImportExportButtons';
 import { useAdminApi } from '../../hooks/useAdminApi';
 import { sparePartModelService, sparePartService, SparePartModel, SparePart } from '../../services/admin-spare-part.service';
 import adminProductLineService from '../../services/admin-product-line.service';
+import { useAdminI18n } from '../../i18n/hooks/useAdminI18n';
 
 const { Option } = Select;
 const { Search } = Input;
 
 const SparePartsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useAdminI18n();
   
   // 状态变量
   const [activeTab, setActiveTab] = useState<string>('models');
@@ -28,7 +30,7 @@ const SparePartsPage: React.FC = () => {
   
   // 获取产品线列表
   const {
-    data: productLineData,
+    data: productLineDataRaw,
     loading: productLineLoading
   } = useAdminApi(
     adminProductLineService.getProductLines.bind(adminProductLineService),
@@ -38,10 +40,11 @@ const SparePartsPage: React.FC = () => {
       status: 'publish'
     }
   );
+  const productLineData = productLineDataRaw as { items: any[]; total: number; page: number; page_size: number } | undefined;
   
   // 获取备件型号列表
   const {
-    data: sparePartModelData,
+    data: sparePartModelDataRaw,
     loading: sparePartModelLoading,
     updateParams: updateModelParams,
     refetch: refetchModels
@@ -55,10 +58,11 @@ const SparePartsPage: React.FC = () => {
     },
     [modelSearchText, selectedProductLineId]
   );
+  const sparePartModelData = sparePartModelDataRaw as { items: SparePartModel[]; total: number; page: number; page_size: number } | undefined;
   
   // 获取备件料号列表
   const {
-    data: sparePartData,
+    data: sparePartDataRaw,
     loading: sparePartLoading,
     updateParams: updateSparePartParams,
     refetch: refetchSpareParts
@@ -74,6 +78,7 @@ const SparePartsPage: React.FC = () => {
     },
     [sparePartSearchText, selectedModelId, selectedProductLineId, showCriticalOnly]
   );
+  const sparePartData = sparePartDataRaw as { items: SparePart[]; total: number; page: number; page_size: number } | undefined;
   
   // 处理备件型号搜索
   const handleModelSearch = (value: string) => {
@@ -120,10 +125,10 @@ const SparePartsPage: React.FC = () => {
   const handleDeleteModel = async (id: number) => {
     try {
       await sparePartModelService.deleteSparePartModel(id);
-      message.success('备件型号删除成功');
+      message.success(t('message.modelDeleteSuccess', { ns: 'spare-parts' }));
       refetchModels();
     } catch (error) {
-      message.error('备件型号删除失败');
+      message.error(t('message.modelDeleteFailed', { ns: 'spare-parts' }));
     }
   };
   
@@ -131,50 +136,50 @@ const SparePartsPage: React.FC = () => {
   const handleDeleteSparePart = async (id: number) => {
     try {
       await sparePartService.deleteSparePart(id);
-      message.success('备件料号删除成功');
+      message.success(t('message.deleteSuccess', { ns: 'spare-parts' }));
       refetchSpareParts();
     } catch (error) {
-      message.error('备件料号删除失败');
+      message.error(t('message.deleteFailed', { ns: 'spare-parts' }));
     }
   };
   
   // 备件型号表格列配置
   const modelColumns = [
     {
-      title: '编号',
+      title: t('fields.id', { ns: 'spare-parts' }),
       dataIndex: 'id',
       key: 'id',
       width: 80,
     },
     {
-      title: '型号名称',
+      title: t('fields.model_name', { ns: 'spare-parts' }),
       dataIndex: 'model',
       key: 'model',
       width: 180,
     },
     {
-      title: '产品线',
+      title: t('fields.product_line_name', { ns: 'spare-parts' }),
       dataIndex: 'product_line_name',
       key: 'product_line_name',
       width: 150,
     },
     {
-      title: '状态',
+      title: t('fields.status', { ns: 'spare-parts' }),
       dataIndex: 'status',
       key: 'status',
       width: 100,
       render: (status: string) => {
         const statusMap: Record<string, { text: string; color: string }> = {
-          publish: { text: '已发布', color: 'green' },
-          draft: { text: '草稿', color: 'orange' },
-          trash: { text: '已删除', color: 'red' },
+          publish: { text: t('status.publish', { ns: 'spare-parts' }), color: 'green' },
+          draft: { text: t('status.draft', { ns: 'spare-parts' }), color: 'orange' },
+          trash: { text: t('status.trash', { ns: 'spare-parts' }), color: 'red' },
         };
-        const { text, color } = statusMap[status] || { text: '未知', color: 'gray' };
+        const { text, color } = statusMap[status] || { text: t('status.unknown', { ns: 'spare-parts' }), color: 'gray' };
         return <span style={{ color }}>{text}</span>;
       },
     },
     {
-      title: '操作',
+      title: t('fields.action', { ns: 'spare-parts' }),
       key: 'action',
       width: 200,
       render: (_: any, record: SparePartModel) => (
@@ -184,7 +189,7 @@ const SparePartsPage: React.FC = () => {
             icon={<EditOutlined />}
             onClick={() => navigate(`/admin/spare-parts/models/edit/${record.id}`)}
           >
-            编辑
+            {t('actions.edit', { ns: 'spare-parts' })}
           </Button>
           <Button
             type="link"
@@ -192,7 +197,7 @@ const SparePartsPage: React.FC = () => {
             icon={<DeleteOutlined />}
             onClick={() => handleDeleteModel(record.id)}
           >
-            删除
+            {t('actions.delete', { ns: 'spare-parts' })}
           </Button>
         </Space>
       ),
@@ -202,38 +207,38 @@ const SparePartsPage: React.FC = () => {
   // 备件料号表格列配置
   const sparePartColumns = [
     {
-      title: '编号',
+      title: t('fields.id', { ns: 'spare-parts' }),
       dataIndex: 'id',
       key: 'id',
       width: 80,
     },
     {
-      title: '料号',
+      title: t('fields.part_number', { ns: 'spare-parts' }),
       dataIndex: 'part_number',
       key: 'part_number',
       width: 120,
       render: (text: string) => <span className="font-mono">{text}</span>,
     },
     {
-      title: '中文名称',
+      title: t('fields.part_name_zh', { ns: 'spare-parts' }),
       dataIndex: 'name_zh',
       key: 'name_zh',
       width: 150,
     },
     {
-      title: '英文名称',
+      title: t('fields.part_name_en', { ns: 'spare-parts' }),
       dataIndex: 'name_en',
       key: 'name_en',
       width: 150,
     },
     {
-      title: '配件型号',
+      title: t('fields.model_name', { ns: 'spare-parts' }),
       dataIndex: 'model',
       key: 'model',
       width: 120,
     },
     {
-      title: '是否易损',
+      title: t('fields.is_consumable', { ns: 'spare-parts' }),
       dataIndex: 'is_consumable',
       key: 'is_consumable',
       width: 100,
@@ -244,7 +249,7 @@ const SparePartsPage: React.FC = () => {
       ),
     },
     {
-      title: '适配机型',
+      title: t('fields.app_model', { ns: 'spare-parts' }),
       dataIndex: 'app_model',
       key: 'app_model',
       width: 150,
@@ -263,31 +268,32 @@ const SparePartsPage: React.FC = () => {
       },
     },
     {
-      title: '净重(kg)',
+      title: t('fields.net_weight_kg', { ns: 'spare-parts' }),
       dataIndex: 'net_weight_kg',
       key: 'net_weight_kg',
       width: 100,
       render: (weight: number) => weight ? `${weight.toFixed(3)}` : '-',
     },
     {
-      title: '状态',
+      title: t('fields.status', { ns: 'spare-parts' }),
       dataIndex: 'status',
       key: 'status',
       width: 100,
       render: (status: string) => {
         const statusMap: Record<string, { text: string; color: string }> = {
-          publish: { text: '已发布', color: 'green' },
-          draft: { text: '草稿', color: 'orange' },
-          trash: { text: '已删除', color: 'red' },
+          publish: { text: t('status.publish', { ns: 'spare-parts' }), color: 'green' },
+          draft: { text: t('status.draft', { ns: 'spare-parts' }), color: 'orange' },
+          trash: { text: t('status.trash', { ns: 'spare-parts' }), color: 'red' },
         };
-        const { text, color } = statusMap[status] || { text: '未知', color: 'gray' };
+        const { text, color } = statusMap[status] || { text: t('status.unknown', { ns: 'spare-parts' }), color: 'gray' };
         return <span style={{ color }}>{text}</span>;
       },
     },
     {
-      title: '操作',
+      title: t('fields.action', { ns: 'spare-parts' }),
       key: 'action',
       width: 200,
+      fixed: 'right' as const,
       render: (_: any, record: SparePart) => (
         <Space size="middle">
           <Button
@@ -295,7 +301,7 @@ const SparePartsPage: React.FC = () => {
             icon={<EditOutlined />}
             onClick={() => navigate(`/admin/spare-parts/edit/${record.id}`)}
           >
-            编辑
+            {t('actions.edit', { ns: 'spare-parts' })}
           </Button>
           <Button
             type="link"
@@ -303,7 +309,7 @@ const SparePartsPage: React.FC = () => {
             icon={<DeleteOutlined />}
             onClick={() => handleDeleteSparePart(record.id)}
           >
-            删除
+            {t('actions.delete', { ns: 'spare-parts' })}
           </Button>
         </Space>
       ),
@@ -317,13 +323,13 @@ const SparePartsPage: React.FC = () => {
         <div className="mb-4 flex justify-between items-center">
           <Space>
             <Search
-              placeholder="搜索型号名称"
+              placeholder={t('list.searchPlaceholder', { ns: 'spare-parts' })}
               allowClear
               onSearch={handleModelSearch}
               style={{ width: 200 }}
             />
             <Select
-              placeholder="选择产品线"
+              placeholder={t('placeholders.selectProductLine', { ns: 'spare-parts' })}
               allowClear
               style={{ width: 200 }}
               onChange={handleProductLineChange}
@@ -337,13 +343,11 @@ const SparePartsPage: React.FC = () => {
           <Space>
             <ImportExportButtons
               onImport={async (file) => {
-                message.info(`导入文件: ${file.name}`);
-                // TODO: 实现导入功能
+                message.info(t('actions.import', { ns: 'spare-parts' }) + `: ${file.name}`);
                 return Promise.resolve();
               }}
               onExport={async () => {
-                message.info('导出备件型号数据');
-                // TODO: 实现导出功能
+                message.info(t('actions.export', { ns: 'spare-parts' }));
                 return Promise.resolve();
               }}
             />
@@ -352,7 +356,7 @@ const SparePartsPage: React.FC = () => {
               icon={<PlusOutlined />}
               onClick={() => navigate('/admin/spare-parts/models/create')}
             >
-              新增型号
+              {t('actions.addModel', { ns: 'spare-parts' })}
             </Button>
           </Space>
         </div>
@@ -368,7 +372,7 @@ const SparePartsPage: React.FC = () => {
             total: sparePartModelData?.total || 0,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total: number) => `共 ${total} 条记录`,
+            showTotal: (total: number) => t('pagination.total', { ns: 'spare-parts', total }),
           }}
           onChange={handleModelTableChange}
         />
@@ -383,13 +387,13 @@ const SparePartsPage: React.FC = () => {
         <div className="mb-4 flex justify-between items-center">
           <Space>
             <Search
-              placeholder="搜索料号/名称"
+              placeholder={t('list.searchPlaceholder', { ns: 'spare-parts' })}
               allowClear
               onSearch={handleSparePartSearch}
               style={{ width: 200 }}
             />
             <Select
-              placeholder="选择产品线"
+              placeholder={t('placeholders.selectProductLine', { ns: 'spare-parts' })}
               allowClear
               style={{ width: 180 }}
               onChange={handleProductLineChange}
@@ -401,7 +405,7 @@ const SparePartsPage: React.FC = () => {
               ))}
             </Select>
             <Select
-              placeholder="选择型号"
+              placeholder={t('placeholders.selectModel', { ns: 'spare-parts' })}
               allowClear
               style={{ width: 180 }}
               onChange={handleModelChange}
@@ -417,19 +421,17 @@ const SparePartsPage: React.FC = () => {
                 checked={showCriticalOnly} 
                 onChange={handleCriticalOnlyChange}
               />
-              <span>仅显示关键备件</span>
+              <span>{t('list.criticalOnly', { ns: 'spare-parts' })}</span>
             </Space>
           </Space>
           <Space>
             <ImportExportButtons
               onImport={async (file) => {
-                message.info(`导入文件: ${file.name}`);
-                // TODO: 实现导入功能
+                message.info(t('actions.import', { ns: 'spare-parts' }) + `: ${file.name}`);
                 return Promise.resolve();
               }}
               onExport={async () => {
-                message.info('导出备件料号数据');
-                // TODO: 实现导出功能
+                message.info(t('actions.export', { ns: 'spare-parts' }));
                 return Promise.resolve();
               }}
             />
@@ -438,7 +440,7 @@ const SparePartsPage: React.FC = () => {
               icon={<PlusOutlined />}
               onClick={() => navigate('/admin/spare-parts/create')}
             >
-              新增料号
+              {t('actions.addSparePart', { ns: 'spare-parts' })}
             </Button>
           </Space>
         </div>
@@ -454,7 +456,7 @@ const SparePartsPage: React.FC = () => {
             total: sparePartData?.total || 0,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total: number) => `共 ${total} 条记录`,
+            showTotal: (total: number) => t('pagination.total', { ns: 'spare-parts', total }),
           }}
           onChange={handleSparePartTableChange}
         />
@@ -462,10 +464,12 @@ const SparePartsPage: React.FC = () => {
     );
   };
   
+  const productLines = productLineData?.items || [];
+
   return (
     <div className="p-6">
       <AdminPageHeader
-        title="备件管理"
+        title={t('list.title', { ns: 'spare-parts' })}
       />
       
       <Card>
@@ -475,12 +479,12 @@ const SparePartsPage: React.FC = () => {
           items={[
             {
               key: 'models',
-              label: '备件型号',
+              label: t('list.models', { ns: 'spare-parts' }),
               children: renderSparePartModelsTable()
             },
             {
               key: 'spare-parts',
-              label: '备件料号',
+              label: t('list.spareParts', { ns: 'spare-parts' }),
               children: renderSparePartsTable()
             }
           ]}

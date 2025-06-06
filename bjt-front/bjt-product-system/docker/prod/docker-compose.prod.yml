@@ -15,6 +15,10 @@ services:
       - ../../nginx/ssl:/etc/nginx/ssl
       - ../../backend:/var/www/html:ro
       - ../../plugins:/var/www/html/wp-content/plugins:ro
+      - ../../frontend:/var/www/html/frontend:ro
+      # 上传文件目录挂载 - 解决文件权限和访问问题
+      - ../../frontend/public/uploads:/usr/share/nginx/html/uploads:rw
+      - ../../frontend/public/uploads:/var/www/html/frontend/public/uploads:rw
     depends_on:
       - wordpress
     environment:
@@ -70,6 +74,7 @@ services:
     volumes:
       - ../../backend:/var/www/html
       - ../../plugins:/var/www/html/wp-content/plugins
+      - ../../frontend:/var/www/html/frontend
       - wordpress_uploads:/var/www/html/wp-content/uploads
       - wordpress_cache:/var/www/html/wp-content/cache
     env_file:

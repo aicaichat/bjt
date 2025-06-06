@@ -815,39 +815,74 @@ class BJT_Machine_Part_Controller extends BJT_API_Controller {
      * For machine parts, this might be restricted to users who can 'edit_products' or a custom capability.
      */
     public function check_write_permission($request) {
-        // Using 'edit_posts' as a general capability for creating/editing content.
-        // Replace with a more specific capability if defined, e.g., 'edit_bjt_machine_parts'.
+        error_log('[BJT_Machine_Part_Controller] Checking write permission');
+        
+        // Using BJT Auth Controller instead of WordPress capabilities
         if (!class_exists('BJT_Auth_Controller')) {
             $auth_controller_path = dirname(__FILE__) . '/class-auth-controller.php';
             if (file_exists($auth_controller_path)) {
                 require_once $auth_controller_path;
             } else {
+                error_log('[BJT_Machine_Part_Controller] BJT_Auth_Controller class file not found at: ' . $auth_controller_path);
                 return new WP_Error('rest_controller_not_found', 'Authentication controller not found.', ['status' => 500]);
             }
         }
         
         if (!class_exists('BJT_Auth_Controller')) {
-             return new WP_Error('rest_controller_not_loadable', 'Authentication controller class not loadable.', ['status' => 500]);
+            error_log('[BJT_Machine_Part_Controller] BJT_Auth_Controller class still not found after include attempt');
+            return new WP_Error('rest_controller_not_loadable', 'Authentication controller class not loadable.', ['status' => 500]);
         }
 
         $auth_controller = new BJT_Auth_Controller();
         $is_authenticated = $auth_controller->check_auth($request);
 
         if (true !== $is_authenticated && is_wp_error($is_authenticated)) {
+            error_log('[BJT_Machine_Part_Controller] Authentication failed: ' . $is_authenticated->get_error_message());
             return $is_authenticated;
         }
         
         if (!$is_authenticated) {
+            error_log('[BJT_Machine_Part_Controller] User not authenticated');
             return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
         }
 
-        if (!current_user_can('edit_posts')) {
+        // 使用BJT用户角色系统检查权限
+        $user = $GLOBALS['bjt_current_user'];
+        if (!$user) {
+            error_log('[BJT_Machine_Part_Controller] No current user found in globals');
+            return new WP_Error('rest_forbidden', __('User information not available.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户状态
+        if ($user->status !== 'active') {
+            error_log('[BJT_Machine_Part_Controller] User is not active: ' . $user->username);
+            return new WP_Error('rest_forbidden', __('Your account is not active.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户角色 - 只有admin可以创建/更新machine parts
+        $has_write_permission = false;
+        if (isset($user->role)) {
+            $allowed_write_roles = ['admin']; // 只有admin可以写入
+            $has_write_permission = in_array($user->role, $allowed_write_roles);
+        }
+
+        // 检查用户权限
+        if (isset($user->permissions) && is_array($user->permissions)) {
+            $has_write_permission = $has_write_permission || 
+                                    in_array('edit_products', $user->permissions) || 
+                                    in_array('manage_products', $user->permissions);
+        }
+
+        if (!$has_write_permission) {
+            error_log('[BJT_Machine_Part_Controller] User does not have write permission: ' . $user->username . ', role: ' . $user->role);
             return new WP_Error(
                 'rest_forbidden',
                 __('You do not have permission to create or update machine parts.', 'bjt'),
-                ['status' => rest_authorization_required_code(), 'success' => false]
+                ['status' => 403, 'success' => false]
             );
         }
+
+        error_log('[BJT_Machine_Part_Controller] Write permission granted for user: ' . $user->username);
         return true;
     }
     
@@ -856,18 +891,21 @@ class BJT_Machine_Part_Controller extends BJT_API_Controller {
      * For machine parts, this might be restricted to users who can 'delete_products' or a custom capability.
      */
     public function check_delete_permission($request) {
-        // Using 'delete_posts' as a general capability.
-        // Replace with a more specific capability if defined, e.g., 'delete_bjt_machine_parts'.
+        error_log('[BJT_Machine_Part_Controller] Checking delete permission');
+        
+        // Using BJT Auth Controller instead of WordPress capabilities
         if (!class_exists('BJT_Auth_Controller')) {
             $auth_controller_path = dirname(__FILE__) . '/class-auth-controller.php';
             if (file_exists($auth_controller_path)) {
                 require_once $auth_controller_path;
             } else {
+                error_log('[BJT_Machine_Part_Controller] BJT_Auth_Controller class file not found at: ' . $auth_controller_path);
                 return new WP_Error('rest_controller_not_found', 'Authentication controller not found.', ['status' => 500]);
             }
         }
         
         if (!class_exists('BJT_Auth_Controller')) {
+            error_log('[BJT_Machine_Part_Controller] BJT_Auth_Controller class still not found after include attempt');
             return new WP_Error('rest_controller_not_loadable', 'Authentication controller class not loadable.', ['status' => 500]);
         }
 
@@ -875,20 +913,52 @@ class BJT_Machine_Part_Controller extends BJT_API_Controller {
         $is_authenticated = $auth_controller->check_auth($request);
 
         if (true !== $is_authenticated && is_wp_error($is_authenticated)) {
+            error_log('[BJT_Machine_Part_Controller] Authentication failed: ' . $is_authenticated->get_error_message());
             return $is_authenticated;
         }
         
         if (!$is_authenticated) {
+            error_log('[BJT_Machine_Part_Controller] User not authenticated');
             return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
         }
 
-        if (!current_user_can('delete_posts')) {
-             return new WP_Error(
+        // 使用BJT用户角色系统检查权限
+        $user = $GLOBALS['bjt_current_user'];
+        if (!$user) {
+            error_log('[BJT_Machine_Part_Controller] No current user found in globals');
+            return new WP_Error('rest_forbidden', __('User information not available.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户状态
+        if ($user->status !== 'active') {
+            error_log('[BJT_Machine_Part_Controller] User is not active: ' . $user->username);
+            return new WP_Error('rest_forbidden', __('Your account is not active.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户角色 - 只有admin可以删除machine parts
+        $has_delete_permission = false;
+        if (isset($user->role)) {
+            $allowed_delete_roles = ['admin']; // 只有admin可以删除
+            $has_delete_permission = in_array($user->role, $allowed_delete_roles);
+        }
+
+        // 检查用户权限
+        if (isset($user->permissions) && is_array($user->permissions)) {
+            $has_delete_permission = $has_delete_permission || 
+                                     in_array('delete_products', $user->permissions) || 
+                                     in_array('manage_products', $user->permissions);
+        }
+
+        if (!$has_delete_permission) {
+            error_log('[BJT_Machine_Part_Controller] User does not have delete permission: ' . $user->username . ', role: ' . $user->role);
+            return new WP_Error(
                 'rest_forbidden',
                 __('You do not have permission to delete machine parts.', 'bjt'),
-                ['status' => rest_authorization_required_code(), 'success' => false]
+                ['status' => 403, 'success' => false]
             );
         }
+
+        error_log('[BJT_Machine_Part_Controller] Delete permission granted for user: ' . $user->username);
         return true;
     }
 } 

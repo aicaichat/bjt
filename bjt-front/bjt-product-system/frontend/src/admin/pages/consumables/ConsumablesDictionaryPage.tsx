@@ -35,6 +35,7 @@ import {
   adminMaterialService,
   adminSpecificationService
 } from '../../services/admin-dictionary.service';
+import { useAdminI18n } from '../../i18n/hooks/useAdminI18n';
 
 const { Title, Text } = Typography;
 const { confirm } = Modal;
@@ -42,6 +43,7 @@ const { confirm } = Modal;
 const ConsumablesDictionaryPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { t } = useAdminI18n();
   
   // 从URL参数获取产品线ID，默认为1（气垫机）
   const productLineId = parseInt(searchParams.get('product_line_id') || '1');
@@ -60,11 +62,11 @@ const ConsumablesDictionaryPage: React.FC = () => {
   // 获取产品线名称
   const getProductLineName = () => {
     const productLineNames: Record<number, string> = {
-      1: '气垫机',
-      2: '纸机', 
-      3: '胶带机'
+      1: t('types.airCushion', { ns: 'navigation' }),
+      2: t('types.paper', { ns: 'navigation' }), 
+      3: t('types.tape', { ns: 'navigation' })
     };
-    return productLineNames[productLineId] || `产品线${productLineId}`;
+    return productLineNames[productLineId] || `${t('fields.productLine', { ns: 'dictionary' })}${productLineId}`;
   };
 
   // 获取形状数据
@@ -141,34 +143,34 @@ const ConsumablesDictionaryPage: React.FC = () => {
   // 处理删除操作
   const handleDelete = async (type: string, record: any) => {
     const typeNames = {
-      shape: '形状',
-      material: '材料',
-      specification: '规格'
+      shape: t('shape.name', { ns: 'dictionary' }),
+      material: t('material.name', { ns: 'dictionary' }),
+      specification: t('specification.name', { ns: 'dictionary' })
     };
 
     confirm({
-      title: `确认删除${typeNames[type as keyof typeof typeNames]}？`,
+      title: `${t('message.deleteConfirm', { ns: 'dictionary' })}${typeNames[type as keyof typeof typeNames]}？`,
       icon: <ExclamationCircleOutlined />,
-      content: `确定要删除"${record.name_zh || record.spec_type}"吗？此操作无法撤销。`,
-      okText: '确认删除',
+      content: `${t('message.deleteWarning', { ns: 'dictionary' })}"${record.name_zh || record.spec_type}"？${t('message.deleteWarning', { ns: 'dictionary' })}`,
+      okText: t('actions.confirm', { ns: 'dictionary' }),
       okType: 'danger',
-      cancelText: '取消',
+      cancelText: t('actions.cancel', { ns: 'dictionary' }),
       async onOk() {
         try {
           switch (type) {
             case 'shape':
               await adminShapeService.deleteShape(record.id);
-              message.success('形状删除成功');
+              message.success(t('message.shapeDeleteSuccess', { ns: 'dictionary' }));
               fetchShapes();
               break;
             case 'material':
               await adminMaterialService.deleteMaterial(record.id);
-              message.success('材料删除成功');
+              message.success(t('message.materialDeleteSuccess', { ns: 'dictionary' }));
               fetchMaterials();
               break;
             case 'specification':
               await adminSpecificationService.deleteSpecification(record.id);
-              message.success('规格删除成功');
+              message.success(t('message.specDeleteSuccess', { ns: 'dictionary' }));
               fetchSpecifications();
               break;
           }
@@ -185,25 +187,25 @@ const ConsumablesDictionaryPage: React.FC = () => {
     fetchShapes();
     fetchMaterials();
     fetchSpecifications();
-    message.success('数据已刷新');
+    message.success(t('message.refreshSuccess', { ns: 'dictionary' }));
   };
 
   // 形状表格列定义
   const shapeColumns: ColumnsType<ShapeData> = [
     {
-      title: '编号',
+      title: t('fields.id', { ns: 'dictionary' }),
       dataIndex: 'id',
       key: 'id',
       width: 80,
     },
     {
-      title: '代码',
+      title: t('fields.code', { ns: 'dictionary' }),
       dataIndex: 'code',
       key: 'code',
       width: 100,
     },
     {
-      title: '名称',
+      title: t('fields.name', { ns: 'dictionary' }),
       dataIndex: 'name',
       key: 'name',
       width: 120,
@@ -213,46 +215,46 @@ const ConsumablesDictionaryPage: React.FC = () => {
       },
     },
     {
-      title: '中文名称',
+      title: t('fields.nameZh', { ns: 'dictionary' }),
       dataIndex: 'name_zh',
       key: 'name_zh',
       width: 150,
     },
     {
-      title: '英文名称',
+      title: t('fields.nameEn', { ns: 'dictionary' }),
       dataIndex: 'name_en',
       key: 'name_en',
       width: 150,
     },
     {
-      title: '主图',
+      title: t('fields.imageUrl', { ns: 'dictionary' }),
       dataIndex: 'image_url',
       key: 'image_url',
       width: 100,
-      render: (url: string) => url ? <Tag color="green">有图</Tag> : <Tag color="gray">无图</Tag>,
+      render: (url: string) => url ? <Tag color="green">{t('imageStatus.hasImage', { ns: 'dictionary' })}</Tag> : <Tag color="gray">{t('imageStatus.noImage', { ns: 'dictionary' })}</Tag>,
     },
     {
-      title: '状态',
+      title: t('fields.status', { ns: 'dictionary' }),
       dataIndex: 'status',
       key: 'status',
       width: 100,
       render: (status: string) => {
-        if (!status) return <Tag color="default">未设置</Tag>;
+        if (!status) return <Tag color="default">{t('status.notSet', { ns: 'dictionary' })}</Tag>;
         return (
           <Tag color={status === 'publish' ? 'green' : 'orange'}>
-            {status === 'publish' ? '已发布' : '草稿'}
+            {status === 'publish' ? t('status.publish', { ns: 'dictionary' }) : t('status.draft', { ns: 'dictionary' })}
           </Tag>
         );
       },
     },
     {
-      title: '排序',
+      title: t('fields.sortOrder', { ns: 'dictionary' }),
       dataIndex: 'sort_order',
       key: 'sort_order',
       width: 80,
     },
     {
-      title: '操作',
+      title: t('fields.action', { ns: 'dictionary' }),
       key: 'action',
       width: 150,
       render: (_, record) => (
@@ -263,7 +265,7 @@ const ConsumablesDictionaryPage: React.FC = () => {
             icon={<EditOutlined />}
             onClick={() => handleEdit('shape', record)}
           >
-            编辑
+            {t('actions.edit', { ns: 'dictionary' })}
           </Button>
           <Button
             type="link"
@@ -272,7 +274,7 @@ const ConsumablesDictionaryPage: React.FC = () => {
             icon={<DeleteOutlined />}
             onClick={() => handleDelete('shape', record)}
           >
-            删除
+            {t('actions.delete', { ns: 'dictionary' })}
           </Button>
         </Space>
       ),
@@ -282,19 +284,19 @@ const ConsumablesDictionaryPage: React.FC = () => {
   // 材料表格列定义
   const materialColumns: ColumnsType<MaterialData> = [
     {
-      title: '编号',
+      title: t('fields.id', { ns: 'dictionary' }),
       dataIndex: 'id',
       key: 'id',
       width: 80,
     },
     {
-      title: '代码',
+      title: t('fields.code', { ns: 'dictionary' }),
       dataIndex: 'code',
       key: 'code',
       width: 100,
     },
     {
-      title: '名称',
+      title: t('fields.name', { ns: 'dictionary' }),
       dataIndex: 'name',
       key: 'name',
       width: 120,
@@ -304,45 +306,45 @@ const ConsumablesDictionaryPage: React.FC = () => {
       },
     },
     {
-      title: '中文名称',
+      title: t('fields.nameZh', { ns: 'dictionary' }),
       dataIndex: 'name_zh',
       key: 'name_zh',
       width: 150,
     },
     {
-      title: '英文名称',
+      title: t('fields.nameEn', { ns: 'dictionary' }),
       dataIndex: 'name_en',
       key: 'name_en',
       width: 150,
     },
     {
-      title: '基材',
+      title: t('fields.baseMaterial', { ns: 'dictionary' }),
       dataIndex: 'base_material',
       key: 'base_material',
       width: 120,
     },
     {
-      title: '状态',
+      title: t('fields.status', { ns: 'dictionary' }),
       dataIndex: 'status',
       key: 'status',
       width: 100,
       render: (status: string) => {
-        if (!status) return <Tag color="default">未设置</Tag>;
+        if (!status) return <Tag color="default">{t('status.notSet', { ns: 'dictionary' })}</Tag>;
         return (
           <Tag color={status === 'publish' ? 'green' : 'orange'}>
-            {status === 'publish' ? '已发布' : '草稿'}
+            {status === 'publish' ? t('status.publish', { ns: 'dictionary' }) : t('status.draft', { ns: 'dictionary' })}
           </Tag>
         );
       },
     },
     {
-      title: '排序',
+      title: t('fields.sortOrder', { ns: 'dictionary' }),
       dataIndex: 'sort_order',
       key: 'sort_order',
       width: 80,
     },
     {
-      title: '操作',
+      title: t('fields.action', { ns: 'dictionary' }),
       key: 'action',
       width: 150,
       render: (_, record) => (
@@ -353,7 +355,7 @@ const ConsumablesDictionaryPage: React.FC = () => {
             icon={<EditOutlined />}
             onClick={() => handleEdit('material', record)}
           >
-            编辑
+            {t('actions.edit', { ns: 'dictionary' })}
           </Button>
           <Button
             type="link"
@@ -362,7 +364,7 @@ const ConsumablesDictionaryPage: React.FC = () => {
             icon={<DeleteOutlined />}
             onClick={() => handleDelete('material', record)}
           >
-            删除
+            {t('actions.delete', { ns: 'dictionary' })}
           </Button>
         </Space>
       ),
@@ -372,13 +374,13 @@ const ConsumablesDictionaryPage: React.FC = () => {
   // 规格表格列定义
   const specificationColumns: ColumnsType<SpecificationData> = [
     {
-      title: '编号',
+      title: t('fields.id', { ns: 'dictionary' }),
       dataIndex: 'id',
       key: 'id',
       width: 80,
     },
     {
-      title: '类型',
+      title: t('fields.type', { ns: 'dictionary' }),
       dataIndex: 'code',
       key: 'code',
       width: 120,
@@ -394,47 +396,47 @@ const ConsumablesDictionaryPage: React.FC = () => {
       },
     },
     {
-      title: '名称',
+      title: t('fields.name', { ns: 'dictionary' }),
       dataIndex: 'name',
       key: 'name',
       width: 120,
     },
     {
-      title: '公制值',
+      title: t('fields.metricValue', { ns: 'dictionary' }),
       dataIndex: 'metric_value',
       key: 'metric_value',
       width: 120,
       render: (value: number, record: SpecificationData) => `${value} ${record.metric_unit}`,
     },
     {
-      title: '英制值',
+      title: t('fields.imperialValue', { ns: 'dictionary' }),
       dataIndex: 'imperial_value',
       key: 'imperial_value',
       width: 120,
       render: (value: number, record: SpecificationData) => `${value} ${record.imperial_unit}`,
     },
     {
-      title: '状态',
+      title: t('fields.status', { ns: 'dictionary' }),
       dataIndex: 'status',
       key: 'status',
       width: 100,
       render: (status: string) => {
-        if (!status) return <Tag color="default">未设置</Tag>;
+        if (!status) return <Tag color="default">{t('status.notSet', { ns: 'dictionary' })}</Tag>;
         return (
           <Tag color={status === 'publish' ? 'green' : 'orange'}>
-            {status === 'publish' ? '已发布' : '草稿'}
+            {status === 'publish' ? t('status.publish', { ns: 'dictionary' }) : t('status.draft', { ns: 'dictionary' })}
           </Tag>
         );
       },
     },
     {
-      title: '排序',
+      title: t('fields.sortOrder', { ns: 'dictionary' }),
       dataIndex: 'sort_order',
       key: 'sort_order',
       width: 80,
     },
     {
-      title: '操作',
+      title: t('fields.action', { ns: 'dictionary' }),
       key: 'action',
       width: 150,
       render: (_, record) => (
@@ -445,7 +447,7 @@ const ConsumablesDictionaryPage: React.FC = () => {
             icon={<EditOutlined />}
             onClick={() => handleEdit('specification', record)}
           >
-            编辑
+            {t('actions.edit', { ns: 'dictionary' })}
           </Button>
           <Button
             type="link"
@@ -454,7 +456,7 @@ const ConsumablesDictionaryPage: React.FC = () => {
             icon={<DeleteOutlined />}
             onClick={() => handleDelete('specification', record)}
           >
-            删除
+            {t('actions.delete', { ns: 'dictionary' })}
           </Button>
         </Space>
       ),
@@ -464,18 +466,18 @@ const ConsumablesDictionaryPage: React.FC = () => {
   return (
     <div className="consumables-dictionary-page">
       <AdminPageHeader
-        title="耗材字典管理"
-        description={`管理${getProductLineName()}的形状、材料和规格字典`}
+        title={t('consumables.title', { ns: 'dictionary' })}
+        description={`${t('consumables.description', { ns: 'dictionary' })}${getProductLineName()}`}
         extra={
           <Space>
             <Button icon={<ReloadOutlined />} onClick={handleRefreshAll}>
-              刷新全部
+              {t('actions.refreshAll', { ns: 'dictionary' })}
             </Button>
             <Button icon={<UploadOutlined />}>
-              批量导入
+              {t('actions.batchImport', { ns: 'dictionary' })}
             </Button>
             <Button icon={<DownloadOutlined />}>
-              批量导出
+              {t('actions.batchExport', { ns: 'dictionary' })}
             </Button>
           </Space>
         }
@@ -483,7 +485,7 @@ const ConsumablesDictionaryPage: React.FC = () => {
 
       {/* 当前产品线提示 */}
       <Card size="small" className="mb-4" style={{ backgroundColor: '#f0f8ff' }}>
-        <Text strong>当前产品线：</Text>
+        <Text strong>{t('consumables.currentProductLine', { ns: 'dictionary' })}：</Text>
         <Text style={{ color: '#1890ff', fontSize: '16px', marginLeft: '8px' }}>
           {getProductLineName()}
         </Text>
@@ -492,7 +494,7 @@ const ConsumablesDictionaryPage: React.FC = () => {
         </Text>
         {typeFromUrl && (
           <Text style={{ marginLeft: '16px', color: '#52c41a' }}>
-            来源: {typeFromUrl === 'air-cushion' ? '气垫机' : typeFromUrl === 'paper' ? '纸机' : '胶带机'}
+            {t('consumables.source', { ns: 'dictionary' })}: {typeFromUrl === 'air-cushion' ? t('types.airCushion', { ns: 'navigation' }) : typeFromUrl === 'paper' ? t('types.paper', { ns: 'navigation' }) : t('types.tape', { ns: 'navigation' })}
           </Text>
         )}
       </Card>
@@ -505,7 +507,7 @@ const ConsumablesDictionaryPage: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <AppstoreOutlined style={{ marginRight: 8, color: '#1890ff' }} />
-                <span>形状管理</span>
+                <span>{t('shape.management', { ns: 'dictionary' })}</span>
                 <Badge count={shapes.length} showZero style={{ marginLeft: 12 }} />
               </div>
               <Button
@@ -514,7 +516,7 @@ const ConsumablesDictionaryPage: React.FC = () => {
                 icon={<PlusOutlined />}
                 onClick={() => handleCreate('shape')}
               >
-                新增形状
+                {t('shape.create', { ns: 'dictionary' })}
               </Button>
             </div>
           }
@@ -529,7 +531,7 @@ const ConsumablesDictionaryPage: React.FC = () => {
               size: 'small',
               showSizeChanger: true,
               showQuickJumper: true,
-              showTotal: (total: number) => `共 ${total} 条`,
+              showTotal: (total: number) => t('pagination.total', { total, ns: 'dictionary' }),
               pageSizeOptions: ['10', '20', '50'],
               defaultPageSize: 10,
             }}
@@ -544,7 +546,7 @@ const ConsumablesDictionaryPage: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <ExperimentOutlined style={{ marginRight: 8, color: '#52c41a' }} />
-                <span>材料管理</span>
+                <span>{t('material.management', { ns: 'dictionary' })}</span>
                 <Badge count={materials.length} showZero style={{ marginLeft: 12 }} />
               </div>
               <Button
@@ -553,7 +555,7 @@ const ConsumablesDictionaryPage: React.FC = () => {
                 icon={<PlusOutlined />}
                 onClick={() => handleCreate('material')}
               >
-                新增材料
+                {t('material.create', { ns: 'dictionary' })}
               </Button>
             </div>
           }
@@ -568,7 +570,7 @@ const ConsumablesDictionaryPage: React.FC = () => {
               size: 'small',
               showSizeChanger: true,
               showQuickJumper: true,
-              showTotal: (total: number) => `共 ${total} 条`,
+              showTotal: (total: number) => t('pagination.total', { total, ns: 'dictionary' }),
               pageSizeOptions: ['10', '20', '50'],
               defaultPageSize: 10,
             }}
@@ -583,7 +585,7 @@ const ConsumablesDictionaryPage: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <SettingOutlined style={{ marginRight: 8, color: '#fa8c16' }} />
-                <span>规格管理</span>
+                <span>{t('specification.management', { ns: 'dictionary' })}</span>
                 <Badge count={specifications.length} showZero style={{ marginLeft: 12 }} />
               </div>
               <Button
@@ -592,7 +594,7 @@ const ConsumablesDictionaryPage: React.FC = () => {
                 icon={<PlusOutlined />}
                 onClick={() => handleCreate('specification')}
               >
-                新增规格
+                {t('specification.create', { ns: 'dictionary' })}
               </Button>
             </div>
           }
@@ -607,7 +609,7 @@ const ConsumablesDictionaryPage: React.FC = () => {
               size: 'small',
               showSizeChanger: true,
               showQuickJumper: true,
-              showTotal: (total: number) => `共 ${total} 条`,
+              showTotal: (total: number) => t('pagination.total', { total, ns: 'dictionary' }),
               pageSizeOptions: ['10', '20', '50'],
               defaultPageSize: 10,
             }}

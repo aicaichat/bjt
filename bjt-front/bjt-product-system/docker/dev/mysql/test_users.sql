@@ -94,6 +94,81 @@ INSERT INTO wp_bjt_users (
     'imperial', 
     NOW(), 
     NOW()
+),
+-- 新增测试用户1 - 销售经理
+(
+    'sales_manager', 
+    'sales.manager@bjt.com', 
+    '$2y$10$d.RiXZLYpzo2P.J9t5OzlOj13Xk/r54CH5GRA1zs4YdfmGXLpxTdC', -- password123
+    'SAL002', 
+    'sales', 
+    'Japan', 
+    'APAC', 
+    '/images/logos/sales_manager.png', 
+    'active', 
+    'metric', 
+    NOW(), 
+    NOW()
+),
+-- 新增测试用户2 - 技术支持
+(
+    'tech_support', 
+    'tech.support@bjt.com', 
+    '$2y$10$d.RiXZLYpzo2P.J9t5OzlOj13Xk/r54CH5GRA1zs4YdfmGXLpxTdC', -- password123
+    'TEC001', 
+    'customer', 
+    'South Korea', 
+    'APAC', 
+    '/images/logos/tech_support.png', 
+    'active', 
+    'metric', 
+    NOW(), 
+    NOW()
+),
+-- 新增测试用户3 - 代理商
+(
+    'agent_user', 
+    'agent@bjt.com', 
+    '$2y$10$d.RiXZLYpzo2P.J9t5OzlOj13Xk/r54CH5GRA1zs4YdfmGXLpxTdC', -- password123
+    'AGT001', 
+    'partner', 
+    'Australia', 
+    'APAC', 
+    '/images/logos/agent.png', 
+    'active', 
+    'metric', 
+    NOW(), 
+    NOW()
+),
+-- 新增测试用户4 - 区域客户
+(
+    'regional_customer', 
+    'regional.customer@bjt.com', 
+    '$2y$10$d.RiXZLYpzo2P.J9t5OzlOj13Xk/r54CH5GRA1zs4YdfmGXLpxTdC', -- password123
+    'CUS002', 
+    'customer', 
+    'France', 
+    'EU', 
+    '/images/logos/regional.png', 
+    'active', 
+    'metric', 
+    NOW(), 
+    NOW()
+),
+-- 新增测试用户5 - 企业客户
+(
+    'enterprise_client', 
+    'enterprise@bjt.com', 
+    '$2y$10$d.RiXZLYpzo2P.J9t5OzlOj13Xk/r54CH5GRA1zs4YdfmGXLpxTdC', -- password123
+    'ENT001', 
+    'customer', 
+    'Canada', 
+    'NA', 
+    '/images/logos/enterprise.png', 
+    'active', 
+    'imperial', 
+    NOW(), 
+    NOW()
 );
 
 -- 显示插入的用户

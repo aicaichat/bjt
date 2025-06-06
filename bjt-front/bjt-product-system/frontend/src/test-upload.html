@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT 文件上传测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .upload-test {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            word-break: break-all;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <h1>BJT 文件上传测试</h1>
+    
+    <div class="upload-test">
+        <h2>1. 图片上传测试 (Image Upload)</h2>
+        <input type="file" id="imageFile" accept=".jpg,.jpeg,.png,.gif,.webp">
+        <button onclick="testImageUpload()" id="imageBtn">上传图片</button>
+        <div id="imageResult" class="result"></div>
+    </div>
+    
+    <div class="upload-test">
+        <h2>2. PDF上传测试 (PDF Upload)</h2>
+        <input type="file" id="pdfFile" accept=".pdf">
+        <button onclick="testPdfUpload()" id="pdfBtn">上传PDF</button>
+        <div id="pdfResult" class="result"></div>
+    </div>
+    
+    <div class="upload-test">
+        <h2>3. 通用文件上传测试 (Generic File Upload)</h2>
+        <input type="file" id="genericFile">
+        <button onclick="testGenericUpload()" id="genericBtn">上传文件</button>
+        <div id="genericResult" class="result"></div>
+    </div>
+
+    <script>
+        // 获取认证token
+        async function getAuthToken() {
+            try {
+                // 首先尝试从全局变量获取
+                const globalToken = window.bjtApiToken || window.wpApiSettings?.nonce;
+                if (globalToken) {
+                    console.log('使用全局token:', globalToken.substring(0, 20) + '...');
+                    return globalToken;
+                }
+                
+                // 从BJT API获取nonce
+                const response = await fetch('/wp-json/bjt/v1/upload/nonce', {
+                    credentials: 'include',
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.data?.nonce) {
+                        console.log('从BJT API获取nonce:', data.data.nonce);
+                        return data.data.nonce;
+                    }
+                }
+                
+                console.warn('无法获取认证token');
+                return '';
+            } catch (error) {
+                console.error('获取认证token失败:', error);
+                return '';
+            }
+        }
+
+        // 测试图片上传
+        async function testImageUpload() {
+            const fileInput = document.getElementById('imageFile');
+            const resultDiv = document.getElementById('imageResult');
+            const btn = document.getElementById('imageBtn');
+            
+            if (!fileInput.files[0]) {
+                resultDiv.innerHTML = '<div class="error">请选择一个图片文件</div>';
+                return;
+            }
+            
+            try {
+                btn.disabled = true;
+                btn.textContent = '上传中...';
+                resultDiv.innerHTML = '正在上传图片...';
+                
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                formData.append('upload_dir', 'uploads/machines/images');
+                
+                const token = await getAuthToken();
+                
+                const response = await fetch('/wp-json/bjt/v1/upload/image', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include',
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+                });
+                
+                const result = await response.json();
+                console.log('图片上传结果:', result);
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `<div class="success">
+                        <strong>上传成功！</strong><br>
+                        URL: ${result.data.url}<br>
+                        文件名: ${result.data.filename}<br>
+                        大小: ${result.data.file_size} bytes
+                    </div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">上传失败: ${result.message || '未知错误'}</div>`;
+                }
+            } catch (error) {
+                console.error('图片上传错误:', error);
+                resultDiv.innerHTML = `<div class="error">上传错误: ${error.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '上传图片';
+            }
+        }
+
+        // 测试PDF上传  
+        async function testPdfUpload() {
+            const fileInput = document.getElementById('pdfFile');
+            const resultDiv = document.getElementById('pdfResult');
+            const btn = document.getElementById('pdfBtn');
+            
+            if (!fileInput.files[0]) {
+                resultDiv.innerHTML = '<div class="error">请选择一个PDF文件</div>';
+                return;
+            }
+            
+            try {
+                btn.disabled = true;
+                btn.textContent = '上传中...';
+                resultDiv.innerHTML = '正在上传PDF...';
+                
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                formData.append('upload_dir', 'uploads/machines/pdfs');
+                
+                const token = await getAuthToken();
+                
+                const response = await fetch('/wp-json/bjt/v1/upload/file', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include',
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+                });
+                
+                const result = await response.json();
+                console.log('PDF上传结果:', result);
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `<div class="success">
+                        <strong>上传成功！</strong><br>
+                        URL: ${result.data.url}<br>
+                        文件名: ${result.data.filename}<br>
+                        大小: ${result.data.file_size} bytes
+                    </div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">上传失败: ${result.message || '未知错误'}</div>`;
+                }
+            } catch (error) {
+                console.error('PDF上传错误:', error);
+                resultDiv.innerHTML = `<div class="error">上传错误: ${error.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '上传PDF';
+            }
+        }
+
+        // 测试通用文件上传
+        async function testGenericUpload() {
+            const fileInput = document.getElementById('genericFile');
+            const resultDiv = document.getElementById('genericResult');
+            const btn = document.getElementById('genericBtn');
+            
+            if (!fileInput.files[0]) {
+                resultDiv.innerHTML = '<div class="error">请选择一个文件</div>';
+                return;
+            }
+            
+            try {
+                btn.disabled = true;
+                btn.textContent = '上传中...';
+                resultDiv.innerHTML = '正在上传文件...';
+                
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                formData.append('upload_dir', 'uploads');
+                
+                const token = await getAuthToken();
+                
+                const response = await fetch('/wp-json/bjt/v1/upload/file', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include',
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+                });
+                
+                const result = await response.json();
+                console.log('通用文件上传结果:', result);
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `<div class="success">
+                        <strong>上传成功！</strong><br>
+                        URL: ${result.data.url}<br>
+                        文件名: ${result.data.filename}<br>
+                        大小: ${result.data.file_size} bytes
+                    </div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">上传失败: ${result.message || '未知错误'}</div>`;
+                }
+            } catch (error) {
+                console.error('通用文件上传错误:', error);
+                resultDiv.innerHTML = `<div class="error">上传错误: ${error.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '上传文件';
+            }
+        }
+    </script>
+</body>
+</html> 

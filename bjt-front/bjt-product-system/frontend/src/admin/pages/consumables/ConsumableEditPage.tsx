@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Form,
@@ -14,12 +14,17 @@ import {
   InputNumber,
   Tabs,
   Spin,
+  AutoComplete,
 } from 'antd';
 import { SaveOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import AdminPageHeader from '../../components/common/AdminPageHeader';
+import DictionarySelect from '../../components/common/DictionarySelect';
+import FileUrlInput from '../../components/common/FileUrlInput';
 import { useAdminApi } from '../../hooks/useAdminApi';
 import { consumableService, ConsumableFormData } from '../../services/admin-consumable.service';
 import adminProductLineService from '../../services/admin-product-line.service';
+import { useAdminI18n } from '../../i18n/hooks/useAdminI18n';
+import adminDictionaryService from '../../services/admin-dictionary.service';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -29,6 +34,21 @@ const ConsumableEditPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [form] = Form.useForm();
+  const { t } = useAdminI18n();
+  const [submitting, setSubmitting] = useState(false);
+
+  // 智能提示功能状态
+  const [selectedProductLineId, setSelectedProductLineId] = useState<number>(1);
+  const [consumablePartOptions, setConsumablePartOptions] = useState<Array<{value: string}>>([]);
+  const [consumableSpecOptions, setConsumableSpecOptions] = useState<Array<{value: string}>>([]);
+  const [consumableSpecImperialOptions, setConsumableSpecImperialOptions] = useState<Array<{value: string}>>([]);
+  const [consumableBrandOptions, setConsumableBrandOptions] = useState<Array<{value: string}>>([]);
+  const [consumableMaterialOptions, setConsumableMaterialOptions] = useState<Array<{value: string}>>([]);
+  
+  // 袋型选项状态
+  const [bagTypeOptions, setBagTypeOptions] = useState<Array<{code: string, name: string}>>([]);
+  const [bagTypeLoading, setBagTypeLoading] = useState(false);
+
   const isEdit = !!id;
   const productLineFromUrl = searchParams.get('product_line_id');
 
@@ -54,6 +74,150 @@ const ConsumableEditPage: React.FC = () => {
     {},
     [id, isEdit]
   );
+
+  // 使用useCallback定义fetchConsumableContextData函数
+  const fetchConsumableContextData = useCallback(async (productLineId: number, model?: string) => {
+    try {
+      console.log('[ConsumableEditPage] 获取耗材上下文数据', { productLineId, model });
+      
+      const queryParams: any = {
+        page: 1,
+        per_page: 100,
+        product_line_id: productLineId,
+        status: 'publish'
+      };
+      
+      if (model) {
+        queryParams.model = model;
+      }
+      
+      const response = await consumableService.getConsumables(queryParams);
+      
+      console.log('[ConsumableEditPage] 耗材上下文数据API响应', response);
+      
+      const consumables = response.items || [];
+      
+      // 提取料号选项（去重）
+      const partOptions = [...new Set(
+        consumables
+          .filter(item => item.part_number)
+          .map(item => item.part_number)
+      )].map(partNumber => ({ value: partNumber }));
+      
+      // 提取规格选项（去重）
+      const specOptions = [...new Set(
+        consumables
+          .filter(item => item.spec)
+          .map(item => item.spec)
+      )].map(spec => ({ value: spec }));
+      
+      // 提取英制规格选项（去重）
+      const specImperialOptions = [...new Set(
+        consumables
+          .filter(item => item.spec_imperial)
+          .map(item => item.spec_imperial)
+      )].map(spec => ({ value: spec }));
+      
+      // 提取品牌选项（去重）
+      const brandOptions = [...new Set(
+        consumables
+          .filter(item => item.brand)
+          .map(item => item.brand)
+      )].map(brand => ({ value: brand }));
+      
+      // 提取材质选项（去重）
+      const materialOptions = [...new Set(
+        consumables
+          .filter(item => item.material)
+          .map(item => item.material)
+      )].map(material => ({ value: material }));
+      
+      console.log('[ConsumableEditPage] 处理后的选项', {
+        partOptions: partOptions.length,
+        specOptions: specOptions.length,
+        specImperialOptions: specImperialOptions.length,
+        brandOptions: brandOptions.length,
+        materialOptions: materialOptions.length
+      });
+      
+      // 更新状态
+      setConsumablePartOptions(partOptions);
+      setConsumableSpecOptions(specOptions);
+      setConsumableSpecImperialOptions(specImperialOptions);
+      setConsumableBrandOptions(brandOptions);
+      setConsumableMaterialOptions(materialOptions);
+      
+    } catch (error) {
+      console.error('[ConsumableEditPage] 获取耗材上下文数据失败:', error);
+      // 清空所有选项
+      setConsumablePartOptions([]);
+      setConsumableSpecOptions([]);
+      setConsumableSpecImperialOptions([]);
+      setConsumableBrandOptions([]);
+      setConsumableMaterialOptions([]);
+    }
+  }, []);
+
+  // 使用useCallback定义handleProductLineChange函数
+  const handleProductLineChange = useCallback((productLineId: number) => {
+    console.log('[ConsumableEditPage] 产品线变化', { productLineId });
+    setSelectedProductLineId(productLineId);
+    
+    // 清空相关字段
+    form.setFieldValue('model', '');
+    form.setFieldValue('part_number', '');
+    
+    // 清空所有智能提示选项
+    setConsumablePartOptions([]);
+    setConsumableSpecOptions([]);
+    setConsumableSpecImperialOptions([]);
+    setConsumableBrandOptions([]);
+    setConsumableMaterialOptions([]);
+    
+    // 加载产品线级别的数据
+    fetchConsumableContextData(productLineId);
+  }, [fetchConsumableContextData, form]);
+
+  // 使用useCallback定义handleSpecChange函数
+  const handleSpecChange = useCallback((spec: string) => {
+    console.log('[ConsumableEditPage] 规格描述变化', { spec });
+    
+    // 清空料号字段
+    form.setFieldValue('part_number', '');
+    
+    // 清空料号相关的智能提示选项
+    setConsumablePartOptions([]);
+    
+    // 重新加载该规格下的数据
+    if (selectedProductLineId && spec) {
+      fetchConsumableContextData(selectedProductLineId, spec);
+    }
+  }, [selectedProductLineId, fetchConsumableContextData, form]);
+
+  // 获取袋型数据
+  const fetchBagTypes = useCallback(async () => {
+    try {
+      setBagTypeLoading(true);
+      console.log('[ConsumableEditPage] 获取袋型数据');
+      
+      const response = await adminDictionaryService.general.getBagTypes('zh');
+      console.log('[ConsumableEditPage] 袋型数据响应:', response);
+      
+      setBagTypeOptions(response);
+    } catch (error) {
+      console.error('[ConsumableEditPage] 获取袋型数据失败:', error);
+      // 降级到硬编码选项
+      setBagTypeOptions([
+        { code: 'FB', name: '平口袋 (Flat Bag)' },
+        { code: 'GB', name: '风琴袋 (Gusseted Bag)' },
+        { code: 'SB', name: '自立袋 (Stand-up Bag)' },
+        { code: 'BB', name: '气泡袋 (Bubble Bag)' },
+        { code: 'VB', name: '真空袋 (Vacuum Bag)' }
+      ]);
+    } finally {
+      setBagTypeLoading(false);
+    }
+  }, []);
 
   // 当获取到数据时，填充表单
   useEffect(() => {
@@ -111,29 +275,254 @@ const ConsumableEditPage: React.FC = () => {
         status: consumableData.status,
         unit: consumableData.unit || 'roll',
       });
+      
+      // 设置产品线ID用于智能提示
+      if (consumableData.product_line_id) {
+        setSelectedProductLineId(consumableData.product_line_id);
+      }
     } else if (!isEdit) {
       // 新建时设置默认值
+      const defaultProductLineId = productLineFromUrl ? parseInt(productLineFromUrl) : 1;
       form.setFieldsValue({
-        product_line_id: productLineFromUrl ? parseInt(productLineFromUrl) : undefined,
+        product_line_id: defaultProductLineId,
         status: 'publish',
         unit: 'roll',
       });
+      setSelectedProductLineId(defaultProductLineId);
     }
   }, [consumableData, form, isEdit, productLineFromUrl]);
 
-  const handleSubmit = async (values: ConsumableFormData) => {
+  // 加载上下文数据
+  useEffect(() => {
+    if (selectedProductLineId) {
+      fetchConsumableContextData(selectedProductLineId);
+    }
+  }, [selectedProductLineId, fetchConsumableContextData]);
+
+  // 初始化时获取袋型数据
+  useEffect(() => {
+    fetchBagTypes();
+  }, [fetchBagTypes]);
+
+  const handleSubmit = async (values: any) => {
     try {
+      setSubmitting(true);
+      console.log('[ConsumableEditPage] 提交表单数据', values);
+
+      // 客户端验证
+      if (!values.product_line_id) {
+        message.error('请选择产品线');
+        return;
+      }
+      if (!values.part_number) {
+        message.error('请输入料号');
+        return;
+      }
+      if (!values.model) {
+        message.error('请输入型号');
+        return;
+      }
+      if (!values.status) {
+        message.error('请选择状态');
+        return;
+      }
+      if (!values.unit) {
+        message.error('请选择单位');
+        return;
+      }
+
+      // 验证数字字段
+      console.log('[ConsumableEditPage] 表单原始数据验证:', {
+        product_line_id: values.product_line_id,
+        part_number: values.part_number,
+        status: values.status,
+        unit: values.unit,
+        thickness_met: values.thickness_met,
+        thickness_met_type: typeof values.thickness_met
+      });
+
+      // 创建最小化的测试数据
+      const minimalFormData = {
+        product_line_id: values.product_line_id,
+        part_number: values.part_number,
+        model: values.model || 'test-model',
+        status: values.status,
+        unit: values.unit,
+      };
+
+      console.log('[ConsumableEditPage] 最小化测试数据:', minimalFormData);
+
+      const formData: ConsumableFormData = {
+        product_line_id: values.product_line_id,
+        model: values.model || '',
+        model_imperial: values.model_imperial || '',
+        part_number: values.part_number,
+        spec: values.spec || '',
+        spec_imperial: values.spec_imperial || '',
+        brand: values.brand || '',
+        app_model: values.app_model || '',
+        bag_type: values.bag_type || '',
+        material: values.material || '',
+        thickness_met: Number(values.thickness_met) || 0,
+        thickness_imp: Number(values.thickness_imp) || 0,
+        width_met: Number(values.width_met) || 0,
+        width_imp: Number(values.width_imp) || 0,
+        length_met: Number(values.length_met) || 0,
+        length_imp: Number(values.length_imp) || 0,
+        bubble_diameter_met: Number(values.bubble_diameter_met) || 0,
+        bubble_diameter_imp: Number(values.bubble_diameter_imp) || 0,
+        total_length_met: Number(values.total_length_met) || 0,
+        total_length_imp: Number(values.total_length_imp) || 0,
+        package_type: values.package_type || '',
+        package_size_cm: values.package_size_cm || '',
+        package_size_inch: values.package_size_inch || '',
+        net_weight_kg: Number(values.net_weight_kg) || 0,
+        net_weight_lbs: Number(values.net_weight_lbs) || 0,
+        gross_weight_kg: Number(values.gross_weight_kg) || 0,
+        gross_weight_lbs: Number(values.gross_weight_lbs) || 0,
+        pcs_per_box: Number(values.pcs_per_box) || 0,
+        image_url: values.image_url || '',
+        package_image_url: values.package_image_url || '',
+        pallet_size_cm: values.pallet_size_cm || '',
+        pallet_size_inch: values.pallet_size_inch || '',
+        pcs_per_pallet_a: Number(values.pcs_per_pallet_a) || 0,
+        pallet_gross_weight_a_kg: Number(values.pallet_gross_weight_a_kg) || 0,
+        pallet_gross_weight_a_lbs: Number(values.pallet_gross_weight_a_lbs) || 0,
+        pallet_height_a_cm: Number(values.pallet_height_a_cm) || 0,
+        pallet_height_a_inch: Number(values.pallet_height_a_inch) || 0,
+        pcs_per_pallet_b: Number(values.pcs_per_pallet_b) || 0,
+        pallet_gross_weight_b_kg: Number(values.pallet_gross_weight_b_kg) || 0,
+        pallet_gross_weight_b_lbs: Number(values.pallet_gross_weight_b_lbs) || 0,
+        pallet_height_b_cm: Number(values.pallet_height_b_cm) || 0,
+        pallet_height_b_inch: Number(values.pallet_height_b_inch) || 0,
+        pcs_per_pallet_c: Number(values.pcs_per_pallet_c) || 0,
+        pallet_gross_weight_c_kg: Number(values.pallet_gross_weight_c_kg) || 0,
+        pallet_gross_weight_c_lbs: Number(values.pallet_gross_weight_c_lbs) || 0,
+        pallet_height_c_cm: Number(values.pallet_height_c_cm) || 0,
+        pallet_height_c_inch: Number(values.pallet_height_c_inch) || 0,
+        tube_inner_diameter_cm: Number(values.tube_inner_diameter_cm) || 0,
+        tube_inner_diameter_inch: Number(values.tube_inner_diameter_inch) || 0,
+        status: values.status,
+        unit: values.unit,
+      };
+
+      console.log('[ConsumableEditPage] 准备发送的formData:', formData);
+
+      // 转换为API期望的格式 - 将part_number映射为code，model映射为name
+      const apiData = {
+        ...formData,
+        code: formData.part_number, // API期望code字段
+        name: formData.model, // API期望name字段
+        // 保留原字段以防后端需要两个字段
+      };
+      
+      console.log('[ConsumableEditPage] 转换为API格式的数据:', apiData);
+      console.log('[ConsumableEditPage] API数据关键字段检查:', {
+        code: apiData.code,
+        name: apiData.name,
+        part_number: apiData.part_number,
+        model: apiData.model,
+        product_line_id: apiData.product_line_id,
+        status: apiData.status,
+        unit: apiData.unit
+      });
+
       if (isEdit) {
-        await consumableService.updateConsumable(parseInt(id!), values);
+        await consumableService.updateConsumable(parseInt(id!), apiData);
         message.success('耗材更新成功');
       } else {
-        await consumableService.createConsumable(values);
+        await consumableService.createConsumable(apiData);
         message.success('耗材创建成功');
       }
       navigate('/admin/consumables');
-    } catch (error) {
-      console.error('提交失败:', error);
-      message.error(isEdit ? '更新失败' : '创建失败');
+    } catch (error: any) {
+      console.error('[ConsumableEditPage] 提交失败:', error);
+      
+      // 检查错误对象的结构
+      console.error('[ConsumableEditPage] 错误对象详情:', {
+        hasResponse: !!error.response,
+        hasSuccess: 'success' in error,
+        hasMessage: 'message' in error,
+        hasCode: 'code' in error,
+        hasData: 'data' in error,
+        errorKeys: Object.keys(error)
+      });
+      
+      // 打印JSON格式的详细错误信息
+      try {
+        console.error('[ConsumableEditPage] 完整错误对象:', JSON.stringify({
+          success: error?.success,
+          message: error?.message,
+          code: error?.code,
+          data: error?.data,
+          // 备用：传统axios错误格式
+          axiosResponse: error?.response ? {
+            status: error.response.status,
+            statusText: error.response.statusText,
+            data: error.response.data
+          } : null
+        }, null, 2));
+      } catch (jsonError) {
+        console.error('[ConsumableEditPage] 无法序列化错误对象:', jsonError);
+        console.error('[ConsumableEditPage] 原始错误对象:', error);
+      }
+      
+      // 详细错误处理 - 优先处理HttpAdminService格式
+      if (error?.success === false) {
+        // HttpAdminService格式的错误
+        console.error('[ConsumableEditPage] HttpAdminService错误详情:', {
+          success: error.success,
+          message: error.message,
+          code: error.code,
+          data: error.data
+        });
+        
+        if (error.code === 400 || error.code === '400') {
+          // 400错误的详细处理
+          if (error.data && typeof error.data === 'object') {
+            console.error('[ConsumableEditPage] 400错误data详情:', JSON.stringify(error.data, null, 2));
+            
+            if (error.data.errors) {
+              // 字段级别的错误
+              const errorMessages = Object.entries(error.data.errors).map(([field, msgs]: [string, any]) => 
+                `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`
+              ).join('; ');
+              message.error(`字段验证错误: ${errorMessages}`);
+            } else if (error.data.message) {
+              message.error(`请求数据错误: ${error.data.message}`);
+            } else {
+              message.error(`请求数据错误: ${error.message || '请检查必填字段'}`);
+            }
+          } else {
+            message.error(`请求数据错误: ${error.message || '请检查必填字段'}`);
+          }
+        } else {
+          message.error(`提交失败: ${error.message || '未知错误'}`);
+        }
+      } else if (error?.response?.status === 400) {
+        // 传统axios格式的400错误
+        const errorData = error.response.data;
+        console.error('[ConsumableEditPage] 传统400错误详情:', JSON.stringify(errorData, null, 2));
+        
+        if (errorData?.message) {
+          message.error(`请求数据错误: ${errorData.message}`);
+        } else if (errorData?.errors) {
+          const errorMessages = Object.entries(errorData.errors).map(([field, msgs]: [string, any]) => 
+            `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`
+          ).join('; ');
+          message.error(`字段验证错误: ${errorMessages}`);
+        } else {
+          message.error('请求数据格式错误，请检查必填字段');
+        }
+      } else if (error?.response?.data?.message) {
+        message.error(`提交失败: ${error.response.data.message}`);
+      } else if (error?.message) {
+        message.error(`提交失败: ${error.message}`);
+      } else {
+        message.error(isEdit ? '更新耗材失败' : '创建耗材失败');
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -141,7 +530,7 @@ const ConsumableEditPage: React.FC = () => {
     navigate('/admin/consumables');
   };
 
-  const productLines = productLineData?.items || [];
+  const productLines = (productLineData as any)?.items || [];
 
   if (productLineLoading || (isEdit && consumableLoading)) {
     return (
@@ -153,28 +542,10 @@ const ConsumableEditPage: React.FC = () => {
     );
   }
 
-  // 袋型选项
-  const bagTypeOptions = [
-    { value: 'FB', label: '平口袋 (Flat Bag)' },
-    { value: 'GB', label: '风琴袋 (Gusseted Bag)' },
-    { value: 'SB', label: '自立袋 (Stand-up Bag)' },
-    { value: 'BB', label: '气泡袋 (Bubble Bag)' },
-    { value: 'VB', label: '真空袋 (Vacuum Bag)' },
-  ];
-
-  // 材质选项
-  const materialOptions = [
-    { value: 'PE', label: '聚乙烯 (Polyethylene)' },
-    { value: 'PA', label: '聚酰胺 (Polyamide)' },
-    { value: 'PP', label: '聚丙烯 (Polypropylene)' },
-    { value: 'PET', label: '聚酯 (Polyester)' },
-    { value: 'PVC', label: '聚氯乙烯 (Polyvinyl Chloride)' },
-  ];
-
   return (
     <div className="p-6">
       <AdminPageHeader
-        title={isEdit ? '编辑耗材' : '新增耗材'}
+        title={isEdit ? t('edit.title', { ns: 'consumables' }) : t('create.title', { ns: 'consumables' })}
         onBack={handleCancel}
       />
 
@@ -184,6 +555,7 @@ const ConsumableEditPage: React.FC = () => {
           layout="vertical"
           onFinish={handleSubmit}
           initialValues={{
+            product_line_id: 1,
             status: 'publish',
             unit: 'roll',
           }}
@@ -193,17 +565,17 @@ const ConsumableEditPage: React.FC = () => {
             items={[
               {
                 key: 'basic',
-                label: '基本信息',
+                label: "基本信息 (Basic Info)",
                 children: (
                   <>
                     <Row gutter={16}>
                       <Col span={12}>
                         <Form.Item
                           name="product_line_id"
-                          label="产品线"
+                          label="产品线 (Product Line)"
                           rules={[{ required: true, message: '请选择产品线' }]}
                         >
-                          <Select placeholder="选择产品线">
+                          <Select placeholder="请选择产品线" onChange={handleProductLineChange}>
                             {productLines.map((line: any) => (
                               <Option key={line.id} value={line.id}>
                                 {line.title_zh || line.title_en}
@@ -215,10 +587,17 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={12}>
                         <Form.Item
                           name="part_number"
-                          label="料号"
-                          rules={[{ required: true, message: '请输入料号' }]}
+                          label="料号 (Part Number)"
+                          rules={[{ required: true, message: "请输入料号" }]}
+                          extra={`参考该产品线下的耗材料号，当前共 ${consumablePartOptions.length} 个料号`}
                         >
-                          <Input placeholder="请输入料号" />
+                          <AutoComplete
+                            options={consumablePartOptions}
+                            placeholder="请输入料号，可参考下拉提示"
+                            filterOption={(inputValue, option) =>
+                              option?.value.toLowerCase().includes(inputValue.toLowerCase()) || false
+                            }
+                          />
                         </Form.Item>
                       </Col>
                     </Row>
@@ -227,17 +606,33 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={12}>
                         <Form.Item
                           name="model"
-                          label="型号(公制)"
+                          label="型号 (Model)"
+                          rules={[{ required: true, message: '请输入型号' }]}
+                          extra={`参考该产品线下已有的耗材规格，当前共 ${consumableSpecOptions.length} 个规格`}
                         >
-                          <Input placeholder="请输入型号" />
+                          <AutoComplete
+                            options={consumableSpecOptions}
+                            placeholder="请输入规格描述，可参考下拉提示"
+                            onSelect={handleSpecChange}
+                            filterOption={(inputValue, option) =>
+                              option?.value.toLowerCase().includes(inputValue.toLowerCase()) || false
+                            }
+                          />
                         </Form.Item>
                       </Col>
                       <Col span={12}>
                         <Form.Item
                           name="model_imperial"
-                          label="型号(英制)"
+                          label="规格描述(英制) (Specification Imperial)"
+                          extra={`参考该产品线下已有的耗材英制规格，当前共 ${consumableSpecImperialOptions.length} 个规格`}
                         >
-                          <Input placeholder="请输入英制型号" />
+                          <AutoComplete
+                            options={consumableSpecImperialOptions}
+                            placeholder="请输入英制规格描述，可参考下拉提示"
+                            filterOption={(inputValue, option) =>
+                              option?.value.toLowerCase().includes(inputValue.toLowerCase()) || false
+                            }
+                          />
                         </Form.Item>
                       </Col>
                     </Row>
@@ -246,12 +641,16 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={8}>
                         <Form.Item
                           name="bag_type"
-                          label="袋型"
+                          label="袋型 (Bag Type)"
                         >
-                          <Select placeholder="选择袋型">
-                            {bagTypeOptions.map(option => (
-                              <Option key={option.value} value={option.value}>
-                                {option.label}
+                          <Select 
+                            placeholder="请选择袋型" 
+                            allowClear
+                            loading={bagTypeLoading}
+                          >
+                            {bagTypeOptions.map((option) => (
+                              <Option key={option.code} value={option.code}>
+                                {option.name}
                               </Option>
                             ))}
                           </Select>
@@ -260,23 +659,31 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={8}>
                         <Form.Item
                           name="material"
-                          label="材质"
+                          label="材质 (Material)"
+                          extra={`参考该产品线下已有的耗材材质，当前共 ${consumableMaterialOptions.length} 个材质`}
                         >
-                          <Select placeholder="选择材质">
-                            {materialOptions.map(option => (
-                              <Option key={option.value} value={option.value}>
-                                {option.label}
-                              </Option>
-                            ))}
-                          </Select>
+                          <AutoComplete
+                            options={consumableMaterialOptions}
+                            placeholder="请输入材质，可参考下拉提示"
+                            filterOption={(inputValue, option) =>
+                              option?.value.toLowerCase().includes(inputValue.toLowerCase()) || false
+                            }
+                          />
                         </Form.Item>
                       </Col>
                       <Col span={8}>
                         <Form.Item
                           name="brand"
-                          label="品牌"
+                          label="品牌 (Brand)"
+                          extra={`参考该产品线下已有的耗材品牌，当前共 ${consumableBrandOptions.length} 个品牌`}
                         >
-                          <Input placeholder="请输入品牌" />
+                          <AutoComplete
+                            options={consumableBrandOptions}
+                            placeholder="请输入品牌，可参考下拉提示"
+                            filterOption={(inputValue, option) =>
+                              option?.value.toLowerCase().includes(inputValue.toLowerCase()) || false
+                            }
+                          />
                         </Form.Item>
                       </Col>
                     </Row>
@@ -285,17 +692,17 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={12}>
                         <Form.Item
                           name="spec"
-                          label="规格(公制)"
+                          label="规格参数 (Specification)"
                         >
-                          <Input placeholder="请输入规格参数(公制)" />
+                          <Input placeholder="请输入规格参数" />
                         </Form.Item>
                       </Col>
                       <Col span={12}>
                         <Form.Item
                           name="spec_imperial"
-                          label="规格(英制)"
+                          label="规格参数(英制) (Specification Imperial)"
                         >
-                          <Input placeholder="请输入规格参数(英制)" />
+                          <Input placeholder="请输入英制规格参数" />
                         </Form.Item>
                       </Col>
                     </Row>
@@ -304,35 +711,60 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={12}>
                         <Form.Item
                           name="app_model"
-                          label="适用机型"
+                          label="适配机型 (Compatible Models)"
                         >
-                          <Input placeholder="请输入适用机型" />
+                          <Input placeholder="请输入适配机型" />
                         </Form.Item>
                       </Col>
                       <Col span={6}>
                         <Form.Item
                           name="unit"
-                          label="单位"
+                          label="单位 (Unit)"
                           rules={[{ required: true, message: '请选择单位' }]}
                         >
-                          <Select placeholder="选择单位">
-                            <Option value="pcs">pcs</Option>
-                            <Option value="roll">roll</Option>
-                            <Option value="box">box</Option>
+                          <Select placeholder="请选择单位">
+                            <Option value="roll">卷 (Roll)</Option>
+                            <Option value="pcs">件 (Pieces)</Option>
+                            <Option value="box">箱 (Box)</Option>
                           </Select>
                         </Form.Item>
                       </Col>
                       <Col span={6}>
                         <Form.Item
                           name="status"
-                          label="状态"
+                          label="状态 (Status)"
                           rules={[{ required: true, message: '请选择状态' }]}
                         >
-                          <Select placeholder="选择状态">
-                            <Option value="publish">已发布</Option>
-                            <Option value="draft">草稿</Option>
-                            <Option value="trash">回收站</Option>
+                          <Select placeholder="请选择状态">
+                            <Option value="publish">已发布 (Published)</Option>
+                            <Option value="draft">草稿 (Draft)</Option>
+                            <Option value="trash">回收站 (Trash)</Option>
                           </Select>
+                        </Form.Item>
+                      </Col>
+                    </Row>
+
+                    <Row gutter={16}>
+                      <Col span={12}>
+                        <Form.Item
+                          name="image_url"
+                          label="产品图片 (Product Image)"
+                        >
+                          <FileUrlInput
+                            placeholder="请输入图片URL或点击上传"
+                            uploadPath="/uploads/consumables/images/"
+                          />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item
+                          name="package_image_url"
+                          label="包装图片 (Package Image)"
+                        >
+                          <FileUrlInput
+                            placeholder="请输入图片URL或点击上传"
+                            uploadPath="/uploads/consumables/images/"
+                          />
                         </Form.Item>
                       </Col>
                     </Row>
@@ -341,188 +773,188 @@ const ConsumableEditPage: React.FC = () => {
               },
               {
                 key: 'dimensions',
-                label: '尺寸参数',
+                label: t('sections.specInfo', { ns: 'consumables' }),
                 children: (
                   <>
-                    <Divider orientation="left">厚度/克重</Divider>
+                    <Divider orientation="left">{t('fields.thickness', { ns: 'consumables' })}</Divider>
                     <Row gutter={16}>
                       <Col span={12}>
                         <Form.Item
                           name="thickness_met"
-                          label="厚度/克重(μm/gsm)"
+                          label={t('fields.thickness', { ns: 'consumables' }) + '(μm/gsm)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.1}
                             precision={1}
                             style={{ width: '100%' }}
-                            placeholder="厚度或克重"
+                            placeholder={t('placeholders.enterThickness', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
                       <Col span={12}>
                         <Form.Item
                           name="thickness_imp"
-                          label="厚度/克重(mil/#)"
+                          label={t('fields.thickness', { ns: 'consumables' }) + '(mil/#)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.1}
                             precision={1}
                             style={{ width: '100%' }}
-                            placeholder="厚度或克重"
+                            placeholder={t('placeholders.enterThickness', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
                     </Row>
 
-                    <Divider orientation="left">宽度和长度</Divider>
+                    <Divider orientation="left">{t('fields.size', { ns: 'consumables' })}</Divider>
                     <Row gutter={16}>
                       <Col span={6}>
                         <Form.Item
                           name="width_met"
-                          label="膜宽(cm)"
+                          label={t('fields.size', { ns: 'consumables' }) + '(cm)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.1}
                             precision={1}
                             style={{ width: '100%' }}
-                            placeholder="膜宽"
+                            placeholder={t('placeholders.enterSize', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
                       <Col span={6}>
                         <Form.Item
                           name="width_imp"
-                          label="膜宽(inch)"
+                          label={t('fields.size', { ns: 'consumables' }) + '(inch)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.1}
                             precision={1}
                             style={{ width: '100%' }}
-                            placeholder="膜宽"
+                            placeholder={t('placeholders.enterSize', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
                       <Col span={6}>
                         <Form.Item
                           name="length_met"
-                          label="袋长(cm)"
+                          label={t('fields.size', { ns: 'consumables' }) + '(cm)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.1}
                             precision={1}
                             style={{ width: '100%' }}
-                            placeholder="袋长"
+                            placeholder={t('placeholders.enterSize', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
                       <Col span={6}>
                         <Form.Item
                           name="length_imp"
-                          label="袋长(inch)"
+                          label={t('fields.size', { ns: 'consumables' }) + '(inch)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.1}
                             precision={1}
                             style={{ width: '100%' }}
-                            placeholder="袋长"
+                            placeholder={t('placeholders.enterSize', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
                     </Row>
 
-                    <Divider orientation="left">其他尺寸</Divider>
+                    <Divider orientation="left">{t('sections.otherInfo', { ns: 'consumables' })}</Divider>
                     <Row gutter={16}>
                       <Col span={6}>
                         <Form.Item
                           name="bubble_diameter_met"
-                          label="泡径(cm)"
+                          label={t('fields.size', { ns: 'consumables' }) + '(cm)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.1}
                             precision={1}
                             style={{ width: '100%' }}
-                            placeholder="泡径"
+                            placeholder={t('placeholders.enterSize', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
                       <Col span={6}>
                         <Form.Item
                           name="bubble_diameter_imp"
-                          label="泡径(inch)"
+                          label={t('fields.size', { ns: 'consumables' }) + '(inch)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.1}
                             precision={1}
                             style={{ width: '100%' }}
-                            placeholder="泡径"
+                            placeholder={t('placeholders.enterSize', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
                       <Col span={6}>
                         <Form.Item
                           name="total_length_met"
-                          label="总长(m)"
+                          label={t('fields.size', { ns: 'consumables' }) + '(m)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.1}
                             precision={1}
                             style={{ width: '100%' }}
-                            placeholder="总长"
+                            placeholder={t('placeholders.enterSize', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
                       <Col span={6}>
                         <Form.Item
                           name="total_length_imp"
-                          label="总长(ft)"
+                          label={t('fields.size', { ns: 'consumables' }) + '(ft)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.1}
                             precision={1}
                             style={{ width: '100%' }}
-                            placeholder="总长"
+                            placeholder={t('placeholders.enterSize', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
                     </Row>
 
-                    <Divider orientation="left">纸筒信息</Divider>
+                    <Divider orientation="left">{t('fields.tube', { ns: 'consumables' })}</Divider>
                     <Row gutter={16}>
                       <Col span={12}>
                         <Form.Item
                           name="tube_inner_diameter_cm"
-                          label="纸筒内径(cm)"
+                          label={t('fields.size', { ns: 'consumables' }) + '(cm)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.1}
                             precision={1}
                             style={{ width: '100%' }}
-                            placeholder="纸筒内径"
+                            placeholder={t('placeholders.enterSize', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
                       <Col span={12}>
                         <Form.Item
                           name="tube_inner_diameter_inch"
-                          label="纸筒内径(inch)"
+                          label={t('fields.size', { ns: 'consumables' }) + '(inch)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.1}
                             precision={1}
                             style={{ width: '100%' }}
-                            placeholder="纸筒内径"
+                            placeholder={t('placeholders.enterSize', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
@@ -532,32 +964,32 @@ const ConsumableEditPage: React.FC = () => {
               },
               {
                 key: 'packaging',
-                label: '包装信息',
+                label: t('sections.packagingInfo', { ns: 'consumables' }),
                 children: (
                   <>
                     <Row gutter={16}>
                       <Col span={8}>
                         <Form.Item
                           name="package_type"
-                          label="包装方式"
+                          label={t('fields.packagingType', { ns: 'consumables' })}
                         >
-                          <Input placeholder="如：卷装、盒装、袋装" />
+                          <Input placeholder={t('placeholders.enterPackagingType', { ns: 'consumables' })} />
                         </Form.Item>
                       </Col>
                       <Col span={8}>
                         <Form.Item
                           name="package_size_cm"
-                          label="包装尺寸(cm)"
+                          label={t('fields.size', { ns: 'consumables' }) + '(cm)'}
                         >
-                          <Input placeholder="长×宽×高(cm)" />
+                          <Input placeholder={t('placeholders.enterSize', { ns: 'consumables' })} />
                         </Form.Item>
                       </Col>
                       <Col span={8}>
                         <Form.Item
                           name="package_size_inch"
-                          label="包装尺寸(inch)"
+                          label={t('fields.size', { ns: 'consumables' }) + '(inch)'}
                         >
-                          <Input placeholder="长×宽×高(inch)" />
+                          <Input placeholder={t('placeholders.enterSize', { ns: 'consumables' })} />
                         </Form.Item>
                       </Col>
                     </Row>
@@ -566,56 +998,56 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={6}>
                         <Form.Item
                           name="net_weight_kg"
-                          label="单件净重(kg)"
+                          label={t('fields.netWeight', { ns: 'consumables' }) + '(kg)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.01}
                             precision={2}
                             style={{ width: '100%' }}
-                            placeholder="单件净重"
+                            placeholder={t('placeholders.enterNetWeight', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
                       <Col span={6}>
                         <Form.Item
                           name="net_weight_lbs"
-                          label="单件净重(lbs)"
+                          label={t('fields.netWeight', { ns: 'consumables' }) + '(lbs)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.01}
                             precision={2}
                             style={{ width: '100%' }}
-                            placeholder="单件净重"
+                            placeholder={t('placeholders.enterNetWeight', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
                       <Col span={6}>
                         <Form.Item
                           name="gross_weight_kg"
-                          label="包装毛重(kg)"
+                          label={t('fields.grossWeight', { ns: 'consumables' }) + '(kg)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.01}
                             precision={2}
                             style={{ width: '100%' }}
-                            placeholder="包装毛重"
+                            placeholder={t('placeholders.enterGrossWeight', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
                       <Col span={6}>
                         <Form.Item
                           name="gross_weight_lbs"
-                          label="包装毛重(lbs)"
+                          label={t('fields.grossWeight', { ns: 'consumables' }) + '(lbs)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.01}
                             precision={2}
                             style={{ width: '100%' }}
-                            placeholder="包装毛重"
+                            placeholder={t('placeholders.enterGrossWeight', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
@@ -625,12 +1057,12 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={12}>
                         <Form.Item
                           name="pcs_per_box"
-                          label="单箱数量"
+                          label={t('fields.pcsPerBox', { ns: 'consumables' })}
                         >
                           <InputNumber
                             min={0}
                             style={{ width: '100%' }}
-                            placeholder="单箱数量"
+                            placeholder={t('placeholders.enterPcsPerBox', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
@@ -640,17 +1072,17 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={12}>
                         <Form.Item
                           name="image_url"
-                          label="产品图片URL"
+                          label={t('fields.productImageUrl', { ns: 'consumables' })}
                         >
-                          <Input placeholder="产品图片URL" />
+                          <Input placeholder={t('placeholders.enterProductImageUrl', { ns: 'consumables' })} />
                         </Form.Item>
                       </Col>
                       <Col span={12}>
                         <Form.Item
                           name="package_image_url"
-                          label="包装图片URL"
+                          label={t('fields.packageImageUrl', { ns: 'consumables' })}
                         >
-                          <Input placeholder="包装图片URL" />
+                          <Input placeholder={t('placeholders.enterPackageImageUrl', { ns: 'consumables' })} />
                         </Form.Item>
                       </Col>
                     </Row>
@@ -659,68 +1091,68 @@ const ConsumableEditPage: React.FC = () => {
               },
               {
                 key: 'pallet',
-                label: '托盘信息',
+                label: t('sections.palletInfo', { ns: 'consumables' }),
                 children: (
                   <>
-                    <Divider orientation="left">托盘基本信息</Divider>
+                    <Divider orientation="left">{t('fields.palletSize', { ns: 'consumables' })}</Divider>
                     <Row gutter={16}>
                       <Col span={12}>
                         <Form.Item
                           name="pallet_size_cm"
-                          label="托盘尺寸(cm)"
+                          label={t('fields.size', { ns: 'consumables' }) + '(cm)'}
                         >
-                          <Input placeholder="长×宽(cm)" />
+                          <Input placeholder={t('placeholders.enterSize', { ns: 'consumables' })} />
                         </Form.Item>
                       </Col>
                       <Col span={12}>
                         <Form.Item
                           name="pallet_size_inch"
-                          label="托盘尺寸(inch)"
+                          label={t('fields.size', { ns: 'consumables' }) + '(inch)'}
                         >
-                          <Input placeholder="长×宽(inch)" />
+                          <Input placeholder={t('placeholders.enterSize', { ns: 'consumables' })} />
                         </Form.Item>
                       </Col>
                     </Row>
 
-                    <Divider orientation="left">托盘方案A</Divider>
+                    <Divider orientation="left">{t('sections.palletA', { ns: 'consumables' })}</Divider>
                     <Row gutter={16}>
                       <Col span={6}>
                         <Form.Item
                           name="pcs_per_pallet_a"
-                          label="一托数量A"
+                          label={t('fields.pcsPerPallet', { ns: 'consumables' })}
                         >
                           <InputNumber
                             min={0}
                             style={{ width: '100%' }}
-                            placeholder="一托数量"
+                            placeholder={t('placeholders.enterPcsPerPallet', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
                       <Col span={6}>
                         <Form.Item
                           name="pallet_height_a_cm"
-                          label="打托高度A(cm)"
+                          label={t('fields.height', { ns: 'consumables' }) + '(cm)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.1}
                             precision={1}
                             style={{ width: '100%' }}
-                            placeholder="打托高度"
+                            placeholder={t('placeholders.enterHeight', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
                       <Col span={6}>
                         <Form.Item
                           name="pallet_height_a_inch"
-                          label="打托高度A(inch)"
+                          label={t('fields.height', { ns: 'consumables' }) + '(inch)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.1}
                             precision={1}
                             style={{ width: '100%' }}
-                            placeholder="打托高度"
+                            placeholder={t('placeholders.enterHeight', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
@@ -730,72 +1162,72 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={12}>
                         <Form.Item
                           name="pallet_gross_weight_a_kg"
-                          label="整托毛重A(kg)"
+                          label={t('fields.grossWeight', { ns: 'consumables' }) + '(kg)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.01}
                             precision={2}
                             style={{ width: '100%' }}
-                            placeholder="整托毛重"
+                            placeholder={t('placeholders.enterGrossWeight', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
                       <Col span={12}>
                         <Form.Item
                           name="pallet_gross_weight_a_lbs"
-                          label="整托毛重A(lbs)"
+                          label={t('fields.grossWeight', { ns: 'consumables' }) + '(lbs)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.01}
                             precision={2}
                             style={{ width: '100%' }}
-                            placeholder="整托毛重"
+                            placeholder={t('placeholders.enterGrossWeight', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
                     </Row>
 
-                    <Divider orientation="left">托盘方案B</Divider>
+                    <Divider orientation="left">{t('sections.palletB', { ns: 'consumables' })}</Divider>
                     <Row gutter={16}>
                       <Col span={6}>
                         <Form.Item
                           name="pcs_per_pallet_b"
-                          label="一托数量B"
+                          label={t('fields.pcsPerPallet', { ns: 'consumables' })}
                         >
                           <InputNumber
                             min={0}
                             style={{ width: '100%' }}
-                            placeholder="一托数量"
+                            placeholder={t('placeholders.enterPcsPerPallet', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
                       <Col span={6}>
                         <Form.Item
                           name="pallet_height_b_cm"
-                          label="打托高度B(cm)"
+                          label={t('fields.height', { ns: 'consumables' }) + '(cm)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.1}
                             precision={1}
                             style={{ width: '100%' }}
-                            placeholder="打托高度"
+                            placeholder={t('placeholders.enterHeight', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
                       <Col span={6}>
                         <Form.Item
                           name="pallet_height_b_inch"
-                          label="打托高度B(inch)"
+                          label={t('fields.height', { ns: 'consumables' }) + '(inch)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.1}
                             precision={1}
                             style={{ width: '100%' }}
-                            placeholder="打托高度"
+                            placeholder={t('placeholders.enterHeight', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
@@ -805,72 +1237,72 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={12}>
                         <Form.Item
                           name="pallet_gross_weight_b_kg"
-                          label="整托毛重B(kg)"
+                          label={t('fields.grossWeight', { ns: 'consumables' }) + '(kg)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.01}
                             precision={2}
                             style={{ width: '100%' }}
-                            placeholder="整托毛重"
+                            placeholder={t('placeholders.enterGrossWeight', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
                       <Col span={12}>
                         <Form.Item
                           name="pallet_gross_weight_b_lbs"
-                          label="整托毛重B(lbs)"
+                          label={t('fields.grossWeight', { ns: 'consumables' }) + '(lbs)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.01}
                             precision={2}
                             style={{ width: '100%' }}
-                            placeholder="整托毛重"
+                            placeholder={t('placeholders.enterGrossWeight', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
                     </Row>
 
-                    <Divider orientation="left">托盘方案C</Divider>
+                    <Divider orientation="left">{t('sections.palletC', { ns: 'consumables' })}</Divider>
                     <Row gutter={16}>
                       <Col span={6}>
                         <Form.Item
                           name="pcs_per_pallet_c"
-                          label="一托数量C"
+                          label={t('fields.pcsPerPallet', { ns: 'consumables' })}
                         >
                           <InputNumber
                             min={0}
                             style={{ width: '100%' }}
-                            placeholder="一托数量"
+                            placeholder={t('placeholders.enterPcsPerPallet', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
                       <Col span={6}>
                         <Form.Item
                           name="pallet_height_c_cm"
-                          label="打托高度C(cm)"
+                          label={t('fields.height', { ns: 'consumables' }) + '(cm)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.1}
                             precision={1}
                             style={{ width: '100%' }}
-                            placeholder="打托高度"
+                            placeholder={t('placeholders.enterHeight', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
                       <Col span={6}>
                         <Form.Item
                           name="pallet_height_c_inch"
-                          label="打托高度C(inch)"
+                          label={t('fields.height', { ns: 'consumables' }) + '(inch)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.1}
                             precision={1}
                             style={{ width: '100%' }}
-                            placeholder="打托高度"
+                            placeholder={t('placeholders.enterHeight', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
@@ -880,28 +1312,28 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={12}>
                         <Form.Item
                           name="pallet_gross_weight_c_kg"
-                          label="整托毛重C(kg)"
+                          label={t('fields.grossWeight', { ns: 'consumables' }) + '(kg)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.01}
                             precision={2}
                             style={{ width: '100%' }}
-                            placeholder="整托毛重"
+                            placeholder={t('placeholders.enterGrossWeight', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
                       <Col span={12}>
                         <Form.Item
                           name="pallet_gross_weight_c_lbs"
-                          label="整托毛重C(lbs)"
+                          label={t('fields.grossWeight', { ns: 'consumables' }) + '(lbs)'}
                         >
                           <InputNumber
                             min={0}
                             step={0.01}
                             precision={2}
                             style={{ width: '100%' }}
-                            placeholder="整托毛重"
+                            placeholder={t('placeholders.enterGrossWeight', { ns: 'consumables' })}
                           />
                         </Form.Item>
                       </Col>
@@ -912,16 +1344,16 @@ const ConsumableEditPage: React.FC = () => {
             ]}
           />
 
-          <Form.Item>
+          <div className="flex justify-end mt-6">
             <Space>
               <Button type="primary" htmlType="submit" icon={<SaveOutlined />}>
-                {isEdit ? '保存更改' : '创建耗材'}
+                {isEdit ? t('buttons.update', { ns: 'consumables' }) : t('buttons.create', { ns: 'consumables' })}
               </Button>
               <Button onClick={handleCancel} icon={<ArrowLeftOutlined />}>
-                取消
+                {t('buttons.cancel', { ns: 'consumables' })}
               </Button>
             </Space>
-          </Form.Item>
+          </div>
         </Form>
       </Card>
     </div>

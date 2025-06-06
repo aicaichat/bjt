@@ -6,7 +6,13 @@
     "delete": "删除",
     "publish": "发布",
     "draft": "草稿",
-    "trash": "回收站"
+    "trash": "回收站",
+    "title": "操作",
+    "confirm": "确定",
+    "cancel": "取消",
+    "backToList": "返回列表",
+    "saveChanges": "保存更改",
+    "create": "创建产品线"
   },
   "table": {
     "columns": {
@@ -15,7 +21,8 @@
       "name": "名称",
       "description": "描述",
       "status": "状态",
-      "products": "产品数量"
+      "products": "产品数量",
+      "createTime": "创建时间"
     }
   },
   "filters": {
@@ -63,18 +70,56 @@
       "add": "添加新产品线",
       "edit": "编辑产品线"
     },
+    "description": {
+      "add": "创建新的产品线",
+      "edit": "编辑产品线 ID: {{id}}"
+    },
+    "sections": {
+      "basicInfo": "基本信息",
+      "title": "产品线标题",
+      "description": "产品线描述",
+      "subitems": "子项目设置",
+      "image": "产品线图片"
+    },
     "fields": {
-      "code": "产品线编码",
-      "name": "产品线名称",
-      "description": "描述",
+      "code": "产品线代码",
+      "name": "产品线标题",
+      "description": "产品线描述",
       "image": "产品线图片",
-      "status": "状态"
+      "status": "状态",
+      "sortOrder": "排序",
+      "subitem1": "子项目1 (耗材)",
+      "subitem2": "子项目2 (备件)",
+      "subitem3": "子项目3 (可选)"
+    },
+    "placeholders": {
+      "code": "例如: BJT_MACHINE_A",
+      "nameZh": "请输入中文标题",
+      "nameEn": "Please enter English title",
+      "descriptionZh": "请输入中文描述",
+      "descriptionEn": "Please enter English description",
+      "subitem1Zh": "耗材",
+      "subitem1En": "Consumables",
+      "subitem2Zh": "备件",
+      "subitem2En": "Spare Parts",
+      "subitem3Zh": "可选子项目",
+      "subitem3En": "Optional subitem",
+      "image": "上传产品线图片"
     },
     "validation": {
-      "codeRequired": "请输入产品线编码",
-      "nameRequired": "请输入产品线名称",
+      "codeRequired": "请输入产品线代码",
+      "codeFormat": "产品线代码只能包含大写字母、数字、下划线和短横线",
+      "nameRequired": "请输入中英文标题",
       "descriptionRequired": "请输入描述",
-      "imageRequired": "请上传产品线图片"
+      "imageRequired": "请上传产品线图片",
+      "statusRequired": "请选择状态",
+      "sortOrderRequired": "请输入排序号",
+      "subitem1Required": "请输入子项目1的中英文名称",
+      "subitem2Required": "请输入子项目2的中英文名称"
+    },
+    "help": {
+      "codeFormat": "只能包含大写字母、数字、下划线和短横线，在系统中必须唯一",
+      "imageFormat": "支持 JPG, PNG, GIF, WEBP 格式，文件大小不超过 10MB"
     }
   }
 } 

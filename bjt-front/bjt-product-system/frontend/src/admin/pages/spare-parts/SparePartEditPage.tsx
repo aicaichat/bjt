@@ -17,48 +17,21 @@ import {
   Tag,
   Table,
   Modal,
+  AutoComplete,
+  Spin,
 } from 'antd';
 import { SaveOutlined, ArrowLeftOutlined, SyncOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import AdminPageHeader from '../../components/common/AdminPageHeader';
 import MultilingualInput from '../../components/common/MultilingualInput';
 import FileUploader from '../../components/common/FileUploader';
+import FileUrlInput from '../../components/common/FileUrlInput';
 import CRMDataFetcher from '../../components/common/CRMDataFetcher';
+import DictionarySelect from '../../components/common/DictionarySelect';
+import { sparePartService, sparePartModelService, SparePartFormData } from '../../services/admin-spare-part.service';
 import adminProductLineService from '../../services/admin-product-line.service';
 
 const { TextArea } = Input;
 const { Option } = Select;
-
-// 严格对应wp_bjt_spare_parts表的19个字段
-interface SparePartFormData {
-  id?: number;
-  product_line_id: number;        // 产品线ID - 必填
-  app_model: string;             // 适配机型
-  model: string;                 // 配件型号
-  is_consumable: boolean;        // 是否易损 - radio选项
-  image_url: string;             // 产品图片
-  part_number: string;           // 料号 - 必填，同产品线下唯一
-  name_zh: string;               // 中文名称 - 必填
-  name_en: string;               // 英文名称 - 必填
-  spec: string;                  // 规格参数(公制)
-  spec_imperial: string;         // 规格参数(英制)
-  app_sn: string;                // 适配序列号
-  
-  // 包装信息
-  package_size_cm: string;       // 包装尺寸(cm)
-  package_size_inch: string;     // 包装尺寸(inch)
-  net_weight_kg: number;         // 单件净重(kg)
-  net_weight_lbs: number;        // 单件净重(lbs)
-  gross_weight_kg: number;       // 包装毛重(kg)
-  gross_weight_lbs: number;      // 包装毛重(lbs)
-  pcs_per_box: number;          // 单箱数量
-  
-  required_parts: string;        // 必选备件料号，多个用逗号分隔
-  required_quantity: string;     // 必选备件数量，多个用逗号分隔，与必选备件料号一一对应
-  status: 'publish' | 'draft' | 'trash'; // 状态
-  unit: 'pcs' | 'roll' | 'box'; // 单位
-  created_at?: string;           // 只读
-  updated_at?: string;           // 只读
-}
 
 // 必选备件项接口
 interface RequiredPartItem {
@@ -78,6 +51,16 @@ const SparePartEditPage: React.FC = () => {
   const [autoConvert, setAutoConvert] = useState(true); // 自动公英制转换
   const [requiredParts, setRequiredParts] = useState<RequiredPartItem[]>([]); // 必选备件列表
 
+  // 智能提示功能状态
+  const [selectedProductLineId, setSelectedProductLineId] = useState<number>(1);
+  const [selectedModel, setSelectedModel] = useState<string>('');
+  const [sparePartModelOptions, setSparePartModelOptions] = useState<Array<{value: string}>>([]);
+  const [sparePartOptions, setSparePartOptions] = useState<Array<{value: string}>>([]);
+  const [sparePartNameZhOptions, setSparePartNameZhOptions] = useState<Array<{value: string}>>([]);
+  const [sparePartNameEnOptions, setSparePartNameEnOptions] = useState<Array<{value: string}>>([]);
+  const [sparePartSpecOptions, setSparePartSpecOptions] = useState<Array<{value: string}>>([]);
+  const [sparePartSpecImperialOptions, setSparePartSpecImperialOptions] = useState<Array<{value: string}>>([]);
+
   const isEditMode = !!id;
   const productLineFromUrl = searchParams.get('product_line_id');
 
@@ -87,6 +70,158 @@ const SparePartEditPage: React.FC = () => {
     KG_TO_LBS: 2.20462,
     // 尺寸：cm to inch
     CM_TO_INCH: 0.393701,
+  };
+
+  // 获取备件型号选项
+  const fetchSparePartModels = async (productLineId: number) => {
+    try {
+      console.log('[SparePartEditPage] 获取备件型号', { productLineId });
+      
+      const response = await sparePartModelService.getSparePartModels({
+        page: 1,
+        page_size: 100,
+        product_line_id: productLineId,
+        status: 'publish'
+      });
+      
+      console.log('[SparePartEditPage] 备件型号API响应', response);
+      
+      const models = response.items || [];
+      const modelOptions = models.map(model => ({
+        value: model.model
+      }));
+      
+      console.log('[SparePartEditPage] 处理后的型号选项', { modelOptions: modelOptions.length });
+      
+      setSparePartModelOptions(modelOptions);
+      
+    } catch (error) {
+      console.error('[SparePartEditPage] 获取备件型号失败:', error);
+      setSparePartModelOptions([]);
+    }
+  };
+
+  // 获取备件上下文数据用于智能提示
+  const fetchSparePartContextData = async (productLineId: number, model?: string) => {
+    try {
+      console.log('[SparePartEditPage] 获取备件上下文数据', { productLineId, model });
+      
+      const queryParams: any = {
+        page: 1,
+        page_size: 100,
+        product_line_id: productLineId,
+        status: 'publish'
+      };
+      
+      if (model) {
+        queryParams.model = model;
+      }
+      
+      const response = await sparePartService.getSpareParts(queryParams);
+      
+      console.log('[SparePartEditPage] 备件上下文数据API响应', response);
+      
+      const spareParts = response.items || [];
+      
+      // 提取料号选项（去重）
+      const partOptions = [...new Set(
+        spareParts
+          .filter(part => part.part_number)
+          .map(part => part.part_number)
+      )].map(partNumber => ({ value: partNumber }));
+      
+      // 提取中文名称选项（去重）
+      const nameZhOptions = [...new Set(
+        spareParts
+          .filter(part => part.name_zh)
+          .map(part => part.name_zh)
+      )].map(name => ({ value: name }));
+      
+      // 提取英文名称选项（去重）
+      const nameEnOptions = [...new Set(
+        spareParts
+          .filter(part => part.name_en)
+          .map(part => part.name_en)
+      )].map(name => ({ value: name }));
+      
+      // 提取规格选项（去重）
+      const specOptions = [...new Set(
+        spareParts
+          .filter(part => part.spec)
+          .map(part => part.spec)
+      )].map(spec => ({ value: spec }));
+      
+      // 提取英制规格选项（去重）
+      const specImperialOptions = [...new Set(
+        spareParts
+          .filter(part => part.spec_imperial)
+          .map(part => part.spec_imperial)
+      )].map(spec => ({ value: spec }));
+      
+      console.log('[SparePartEditPage] 处理后的选项', {
+        partOptions: partOptions.length,
+        nameZhOptions: nameZhOptions.length,
+        nameEnOptions: nameEnOptions.length,
+        specOptions: specOptions.length,
+        specImperialOptions: specImperialOptions.length
+      });
+      
+      // 更新状态
+      setSparePartOptions(partOptions);
+      setSparePartNameZhOptions(nameZhOptions);
+      setSparePartNameEnOptions(nameEnOptions);
+      setSparePartSpecOptions(specOptions);
+      setSparePartSpecImperialOptions(specImperialOptions);
+      
+    } catch (error) {
+      console.error('[SparePartEditPage] 获取备件上下文数据失败:', error);
+      // 清空所有选项
+      setSparePartOptions([]);
+      setSparePartNameZhOptions([]);
+      setSparePartNameEnOptions([]);
+      setSparePartSpecOptions([]);
+      setSparePartSpecImperialOptions([]);
+    }
+  };
+
+  // 产品线变化处理
+  const handleProductLineChange = (productLineId: number) => {
+    console.log('[SparePartEditPage] 产品线变化', { productLineId });
+    setSelectedProductLineId(productLineId);
+    
+    // 清空相关字段
+    form.setFieldValue('model', '');
+    form.setFieldValue('part_number', '');
+    setSelectedModel('');
+    
+    // 清空所有智能提示选项
+    setSparePartModelOptions([]);
+    setSparePartOptions([]);
+    setSparePartNameZhOptions([]);
+    setSparePartNameEnOptions([]);
+    setSparePartSpecOptions([]);
+    setSparePartSpecImperialOptions([]);
+    
+    // 加载产品线级别的数据
+    fetchSparePartModels(productLineId);
+    fetchSparePartContextData(productLineId);
+  };
+
+  // 型号变化处理
+  const handleModelChange = (model: string) => {
+    console.log('[SparePartEditPage] 型号变化', { model });
+    setSelectedModel(model);
+    
+    // 清空料号字段
+    form.setFieldValue('part_number', '');
+    
+    // 清空料号相关的智能提示选项
+    setSparePartOptions([]);
+    
+    // 重新加载该型号下的数据
+    if (selectedProductLineId && model) {
+      fetchSparePartContextData(selectedProductLineId, model);
+    }
   };
 
   // 适用机型选项 (支持多选)
@@ -113,8 +248,9 @@ const SparePartEditPage: React.FC = () => {
       loadSparePart(parseInt(id));
     } else {
       // 新建时设置默认值
+      const defaultProductLineId = productLineFromUrl ? parseInt(productLineFromUrl) : 1;
       const defaultValues = {
-        product_line_id: productLineFromUrl ? parseInt(productLineFromUrl) : undefined,
+        product_line_id: defaultProductLineId,
         app_model: '',
         model: '',
         is_consumable: false,
@@ -134,19 +270,32 @@ const SparePartEditPage: React.FC = () => {
         pcs_per_box: 1,
         required_parts: '',
         required_quantity: '',
-        status: 'draft' as const,
+        status: 'publish' as const,
         unit: 'pcs' as const,
       };
       form.setFieldsValue(defaultValues);
+      setSelectedProductLineId(defaultProductLineId);
     }
   }, [id, isEditMode, form, productLineFromUrl]);
 
+  // 加载上下文数据
+  useEffect(() => {
+    if (selectedProductLineId) {
+      fetchSparePartModels(selectedProductLineId);
+      fetchSparePartContextData(selectedProductLineId);
+    }
+  }, [selectedProductLineId]);
+
   const loadProductLines = async () => {
     try {
-      const response = await adminProductLineService.getProductLines();
+      const response = await adminProductLineService.getProductLines({
+        page: 1,
+        per_page: 100,
+        status: 'publish'
+      });
       setProductLines(response.items);
     } catch (error) {
-      console.error('加载产品线失败:', error);
+      console.error('[SparePartEditPage] 加载产品线失败:', error);
       message.error('加载产品线失败');
     }
   };
@@ -154,46 +303,29 @@ const SparePartEditPage: React.FC = () => {
   const loadSparePart = async (sparePartId: number) => {
     try {
       setLoading(true);
-      // Mock API调用 - 实际应该调用备件服务
-      const mockData = {
-        id: sparePartId,
-        product_line_id: 1,
-        app_model: 'HM-100,HM-200',
-        model: 'SP-001',
-        is_consumable: true,
-        image_url: '',
-        part_number: '15S00001',
-        name_zh: '传感器',
-        name_en: 'Sensor',
-        spec: '12V 100mA',
-        spec_imperial: '12V 100mA',
-        app_sn: 'SN001,SN002',
-        package_size_cm: '10x5x3',
-        package_size_inch: '4x2x1.2',
-        net_weight_kg: 0.15,
-        net_weight_lbs: 0.33,
-        gross_weight_kg: 0.2,
-        gross_weight_lbs: 0.44,
-        pcs_per_box: 10,
-        required_parts: '15A00001,15A00002',
-        required_quantity: '2,1',
-        status: 'publish',
-        unit: 'pcs',
-      };
+      console.log('[SparePartEditPage] 加载备件数据', { sparePartId });
+      
+      const response = await sparePartService.getSparePart(sparePartId);
+      console.log('[SparePartEditPage] 备件数据响应', response);
 
       // 处理多选字段，将字符串转换为数组
       const processedData = {
-        ...mockData,
-        app_model: mockData.app_model ? mockData.app_model.replace(/"/g, '').split(',').map(item => item.trim()) : [],
+        ...response,
+        app_model: response.app_model ? response.app_model.replace(/"/g, '').split(',').map((item: string) => item.trim()) : [],
       };
 
       form.setFieldsValue(processedData);
       
+      // 设置产品线ID用于智能提示
+      if (response.product_line_id) {
+        setSelectedProductLineId(response.product_line_id);
+      }
+      
       // 解析必选备件
-      if (mockData.required_parts && mockData.required_quantity) {
-        const partNumbers = mockData.required_parts.split(',');
-        const quantities = mockData.required_quantity.split(',').map(q => parseInt(q));
-        const parsedRequiredParts = partNumbers.map((partNumber, index) => ({
+      if (response.required_parts && response.required_quantity) {
+        const partNumbers = response.required_parts.split(',');
+        const quantities = response.required_quantity.split(',').map((q: string) => parseInt(q));
+        const parsedRequiredParts = partNumbers.map((partNumber: string, index: number) => ({
           key: `required_${index}`,
           part_number: partNumber.trim(),
           quantity: quantities[index] || 1,
@@ -201,7 +333,7 @@ const SparePartEditPage: React.FC = () => {
         setRequiredParts(parsedRequiredParts);
       }
     } catch (error) {
-      console.error('加载备件数据失败:', error);
+      console.error('[SparePartEditPage] 加载备件数据失败:', error);
       message.error('加载备件数据失败');
     } finally {
       setLoading(false);
@@ -317,6 +449,25 @@ const SparePartEditPage: React.FC = () => {
   const onFinish = async (values: any) => {
     try {
       setSubmitting(true);
+      console.log('[SparePartEditPage] 提交表单数据', values);
+
+      // 客户端验证
+      if (!values.product_line_id) {
+        message.error('请选择产品线');
+        return;
+      }
+      if (!values.part_number) {
+        message.error('请输入料号');
+        return;
+      }
+      if (!values.name_zh) {
+        message.error('请输入中文名称');
+        return;
+      }
+      if (!values.name_en) {
+        message.error('请输入英文名称');
+        return;
+      }
 
       // 处理必选备件数据
       const partNumbers = requiredParts.map(item => item.part_number).filter(pn => pn.trim());
@@ -325,25 +476,25 @@ const SparePartEditPage: React.FC = () => {
       );
 
       // 转换表单数据为API格式
-      const formData: Partial<SparePartFormData> = {
+      const formData: SparePartFormData = {
         product_line_id: values.product_line_id,
-        app_model: Array.isArray(values.app_model) ? values.app_model.join(',') : values.app_model,
-        model: values.model,
+        app_model: Array.isArray(values.app_model) ? values.app_model.join(',') : values.app_model || '',
+        model: values.model || '',
         is_consumable: values.is_consumable,
-        image_url: values.image_url,
+        image_url: values.image_url || '',
         part_number: values.part_number,
         name_zh: values.name_zh,
         name_en: values.name_en,
-        spec: values.spec,
-        spec_imperial: values.spec_imperial,
-        app_sn: Array.isArray(values.app_sn) ? values.app_sn.join(',') : values.app_sn,
-        package_size_cm: values.package_size_cm,
-        package_size_inch: values.package_size_inch,
-        net_weight_kg: values.net_weight_kg,
-        net_weight_lbs: values.net_weight_lbs,
-        gross_weight_kg: values.gross_weight_kg,
-        gross_weight_lbs: values.gross_weight_lbs,
-        pcs_per_box: values.pcs_per_box,
+        spec: values.spec || '',
+        spec_imperial: values.spec_imperial || '',
+        app_sn: Array.isArray(values.app_sn) ? values.app_sn.join(',') : values.app_sn || '',
+        package_size_cm: values.package_size_cm || '',
+        package_size_inch: values.package_size_inch || '',
+        net_weight_kg: values.net_weight_kg || 0,
+        net_weight_lbs: values.net_weight_lbs || 0,
+        gross_weight_kg: values.gross_weight_kg || 0,
+        gross_weight_lbs: values.gross_weight_lbs || 0,
+        pcs_per_box: values.pcs_per_box || 1,
         required_parts: partNumbers.join(','),
         required_quantity: quantities.join(','),
         status: values.status,
@@ -351,17 +502,25 @@ const SparePartEditPage: React.FC = () => {
       };
 
       if (isEditMode && id) {
-        // await sparePartService.updateSparePart(parseInt(id), formData);
+        await sparePartService.updateSparePart(parseInt(id), formData);
         message.success('备件更新成功');
       } else {
-        // await sparePartService.createSparePart(formData);
+        await sparePartService.createSparePart(formData);
         message.success('备件创建成功');
       }
 
       navigate('/admin/spare-parts');
-    } catch (error) {
-      console.error('保存备件失败:', error);
-      message.error('保存备件失败');
+    } catch (error: any) {
+      console.error('[SparePartEditPage] 提交失败:', error);
+      
+      // 详细错误处理
+      if (error?.response?.data?.message) {
+        message.error(`提交失败: ${error.response.data.message}`);
+      } else if (error?.message) {
+        message.error(`提交失败: ${error.message}`);
+      } else {
+        message.error(isEditMode ? '更新备件失败' : '创建备件失败');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -370,6 +529,16 @@ const SparePartEditPage: React.FC = () => {
   const handleBack = () => {
     navigate('/admin/spare-parts');
   };
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="flex justify-center items-center h-64">
+          <Spin size="large" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="spare-part-edit-page">
@@ -407,7 +576,7 @@ const SparePartEditPage: React.FC = () => {
                           name="product_line_id"
                           rules={[{ required: true, message: '请选择所属产品线' }]}
                         >
-                          <Select placeholder="请选择产品线">
+                          <Select placeholder="请选择产品线" onChange={handleProductLineChange}>
                             {productLines && productLines.map((line) => (
                               <Option key={line.id} value={line.id}>
                                 {line.title_zh || line.title_en || `产品线${line.id}`}
@@ -419,13 +588,20 @@ const SparePartEditPage: React.FC = () => {
 
                       <Col span={8}>
                         <Form.Item
-                          label="料号"
+                          label="料号 (Part Number)"
                           name="part_number"
                           rules={[{ required: true, message: '请输入料号' }]}
-                          extra="在同一产品线下必须唯一"
+                          extra={`参考该产品线下${selectedModel ? '同型号' : ''}的备件料号，当前共 ${sparePartOptions.length} 个料号`}
                         >
                           <div style={{ display: 'flex', gap: 8 }}>
-                            <Input placeholder="例如: 15S00001" style={{ flex: 1 }} />
+                            <AutoComplete
+                              options={sparePartOptions}
+                              placeholder="请输入料号，可参考下拉提示"
+                              style={{ flex: 1 }}
+                              filterOption={(inputValue, option) =>
+                                option?.value.toLowerCase().includes(inputValue.toLowerCase()) || false
+                              }
+                            />
                             <CRMDataFetcher
                               partNumber={form.getFieldValue('part_number') || ''}
                               onDataFetched={handleCRMDataFetched}
@@ -438,84 +614,100 @@ const SparePartEditPage: React.FC = () => {
 
                       <Col span={8}>
                         <Form.Item
-                          label="配件型号"
+                          label="配件型号 (Model)"
                           name="model"
                           rules={[{ required: true, message: '请选择配件型号' }]}
+                          extra={`参考该产品线下的备件型号，当前共 ${sparePartModelOptions.length} 个型号`}
                         >
-                          <Select placeholder="选择配件型号">
-                            {modelOptions.map((option) => (
-                              <Option key={option.value} value={option.value}>
-                                {option.label}
-                              </Option>
-                            ))}
-                          </Select>
+                          <AutoComplete
+                            options={sparePartModelOptions}
+                            placeholder="请选择配件型号，可参考下拉提示"
+                            onSelect={handleModelChange}
+                            filterOption={(inputValue, option) =>
+                              option?.value.toLowerCase().includes(inputValue.toLowerCase()) || false
+                            }
+                          />
                         </Form.Item>
                       </Col>
 
                       <Col span={12}>
                         <Form.Item
-                          label="中文名称"
+                          label="中文名称 (Chinese Name)"
                           name="name_zh"
                           rules={[{ required: true, message: '请输入中文名称' }]}
+                          extra={`参考该产品线下${selectedModel ? '同型号' : ''}的备件中文名称，当前共 ${sparePartNameZhOptions.length} 个名称`}
                         >
-                          <Input placeholder="例如: 传感器" />
+                          <AutoComplete
+                            options={sparePartNameZhOptions}
+                            placeholder="请输入中文名称，可参考下拉提示"
+                            filterOption={(inputValue, option) =>
+                              option?.value.toLowerCase().includes(inputValue.toLowerCase()) || false
+                            }
+                          />
                         </Form.Item>
                       </Col>
 
                       <Col span={12}>
                         <Form.Item
-                          label="英文名称"
+                          label="英文名称 (English Name)"
                           name="name_en"
                           rules={[{ required: true, message: '请输入英文名称' }]}
+                          extra={`参考该产品线下${selectedModel ? '同型号' : ''}的备件英文名称，当前共 ${sparePartNameEnOptions.length} 个名称`}
                         >
-                          <Input placeholder="例如: Sensor" />
+                          <AutoComplete
+                            options={sparePartNameEnOptions}
+                            placeholder="请输入英文名称，可参考下拉提示"
+                            filterOption={(inputValue, option) =>
+                              option?.value.toLowerCase().includes(inputValue.toLowerCase()) || false
+                            }
+                          />
                         </Form.Item>
                       </Col>
 
                       <Col span={8}>
                         <Form.Item
-                          label="是否易损备件"
+                          label="是否易损备件 (Is Consumable)"
                           name="is_consumable"
                           rules={[{ required: true, message: '请选择是否易损备件' }]}
                         >
                           <Radio.Group>
-                            <Radio value={true}>是</Radio>
-                            <Radio value={false}>否</Radio>
+                            <Radio value={true}>是 (Yes)</Radio>
+                            <Radio value={false}>否 (No)</Radio>
                           </Radio.Group>
                         </Form.Item>
                       </Col>
 
                       <Col span={8}>
                         <Form.Item
-                          label="状态"
+                          label="状态 (Status)"
                           name="status"
                           rules={[{ required: true, message: '请选择状态' }]}
                         >
-                          <Select>
-                            <Option value="draft">草稿</Option>
-                            <Option value="publish">已发布</Option>
-                            <Option value="trash">回收站</Option>
+                          <Select placeholder="请选择状态">
+                            <Option value="publish">已发布 (Published)</Option>
+                            <Option value="draft">草稿 (Draft)</Option>
+                            <Option value="trash">回收站 (Trash)</Option>
                           </Select>
                         </Form.Item>
                       </Col>
 
                       <Col span={8}>
                         <Form.Item
-                          label="单位"
+                          label="单位 (Unit)"
                           name="unit"
                           rules={[{ required: true, message: '请选择单位' }]}
                         >
-                          <Select>
-                            <Option value="pcs">件</Option>
-                            <Option value="roll">卷</Option>
-                            <Option value="box">箱</Option>
+                          <Select placeholder="请选择单位">
+                            <Option value="pcs">件 (Pieces)</Option>
+                            <Option value="roll">卷 (Roll)</Option>
+                            <Option value="box">箱 (Box)</Option>
                           </Select>
                         </Form.Item>
                       </Col>
 
                       <Col span={12}>
                         <Form.Item
-                          label="适配机型"
+                          label="适配机型 (Compatible Models)"
                           name="app_model"
                           extra="支持多个机型，可多选"
                         >
@@ -535,7 +727,7 @@ const SparePartEditPage: React.FC = () => {
 
                       <Col span={12}>
                         <Form.Item
-                          label="适配序列号"
+                          label="适配序列号 (Compatible Serial Numbers)"
                           name="app_sn"
                           extra="多个序列号用逗号分隔"
                         >
@@ -545,39 +737,44 @@ const SparePartEditPage: React.FC = () => {
 
                       <Col span={12}>
                         <Form.Item
-                          label="规格参数(公制)"
+                          label="规格参数(公制) (Specification - Metric)"
                           name="spec"
+                          extra={`参考该产品线下${selectedModel ? '同型号' : ''}的备件规格，当前共 ${sparePartSpecOptions.length} 个规格`}
                         >
-                          <TextArea 
-                            rows={2}
-                            placeholder="例如: 12V 100mA, 尺寸: 50x30x20mm" 
+                          <AutoComplete
+                            options={sparePartSpecOptions}
+                            placeholder="例如: 12V 100mA, 尺寸: 50x30x20mm"
+                            filterOption={(inputValue, option) =>
+                              option?.value.toLowerCase().includes(inputValue.toLowerCase()) || false
+                            }
                           />
                         </Form.Item>
                       </Col>
 
                       <Col span={12}>
                         <Form.Item
-                          label="规格参数(英制)"
+                          label="规格参数(英制) (Specification - Imperial)"
                           name="spec_imperial"
+                          extra={`参考该产品线下${selectedModel ? '同型号' : ''}的备件英制规格，当前共 ${sparePartSpecImperialOptions.length} 个规格`}
                         >
-                          <TextArea 
-                            rows={2}
-                            placeholder="例如: 12V 100mA, Size: 2x1.2x0.8inch" 
+                          <AutoComplete
+                            options={sparePartSpecImperialOptions}
+                            placeholder="例如: 12V 100mA, Size: 2x1.2x0.8inch"
+                            filterOption={(inputValue, option) =>
+                              option?.value.toLowerCase().includes(inputValue.toLowerCase()) || false
+                            }
                           />
                         </Form.Item>
                       </Col>
 
                       <Col span={24}>
                         <Form.Item
-                          label="产品图片"
+                          label="产品图片 (Product Image)"
                           name="image_url"
-                          extra="支持 JPG, PNG, GIF, WEBP 格式，文件大小不超过 10MB"
                         >
-                          <FileUploader
-                            type="image"
-                            maxSize={10}
-                            placeholder="上传产品图片"
-                            preview
+                          <FileUrlInput
+                            placeholder="请输入图片URL或点击上传"
+                            uploadPath="/uploads/spare-parts/images/"
                           />
                         </Form.Item>
                       </Col>

@@ -110,4 +110,18 @@ mysql -u root -p < backup_file.sql
 # 重新部署之前版本
 git checkout previous_version
 ./deploy-production.sh
-``` 
+```
+
+## 📝 部署检查清单
+
+- [ ] 系统要求满足（Docker, Docker Compose）
+- [ ] 环境变量配置完成（.env.production）
+- [ ] SSL证书准备就绪（nginx/ssl/目录）
+- [ ] 域名DNS解析正确指向服务器
+- [ ] 防火墙开放80和443端口
+- [ ] 部署脚本执行成功
+- [ ] 服务健康检查通过
+- [ ] WordPress管理后台可访问
+- [ ] 前端应用正常加载
+- [ ] API接口响应正常 
+- [ ] 查看故障排除指南（[生产环境故障排除指南](PRODUCTION_TROUBLESHOOTING_GUIDE.md)） 

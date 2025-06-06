@@ -249,8 +249,124 @@ export const adminShapeService = new AdminShapeService();
 export const adminMaterialService = new AdminMaterialService();
 export const adminSpecificationService = new AdminSpecificationService();
 
+// 通用字典项类型
+export interface DictionaryItem {
+  code: string;
+  name: string;  // 基于语言的名称
+  name_zh?: string;
+  name_en?: string;
+  id?: number;
+  sort_order?: number;
+  [key: string]: any; // 允许额外属性
+}
+
+// 通用字典服务
+class AdminGeneralDictionaryService extends BaseService {
+  constructor() {
+    super('/dictionaries');
+  }
+
+  // 获取字典类型列表
+  async getDictionaryTypes(): Promise<{ success: boolean; data: { types: Record<string, string> } }> {
+    try {
+      const response = await this.get<{ types: Record<string, string> }>('/types');
+      return {
+        success: true,
+        data: response
+      };
+    } catch (error) {
+      console.error('获取字典类型失败:', error);
+      throw error;
+    }
+  }
+
+  // 获取特定类型的字典项
+  async getDictionaryItems(type: string, params: { lang?: string } = {}): Promise<{
+    success: boolean;
+    data: {
+      type: string;
+      items: DictionaryItem[];
+    }
+  }> {
+    try {
+      const response = await this.get<{
+        type: string;
+        items: DictionaryItem[];
+      }>(`/${type}`, params);
+      
+      console.log(`获取${type}字典数据:`, response);
+      
+      return {
+        success: true,
+        data: response
+      };
+    } catch (error) {
+      console.error(`获取${type}字典失败:`, error);
+      throw error;
+    }
+  }
+
+  // 便捷方法：获取单位选项
+  async getUnits(lang: string = 'zh'): Promise<DictionaryItem[]> {
+    const response = await this.getDictionaryItems('units', { lang });
+    return response.data.items;
+  }
+
+  // 便捷方法：获取状态选项
+  async getStatuses(lang: string = 'zh'): Promise<DictionaryItem[]> {
+    const response = await this.getDictionaryItems('statuses', { lang });
+    return response.data.items;
+  }
+
+  // 便捷方法：获取电压选项
+  async getVoltages(lang: string = 'zh'): Promise<DictionaryItem[]> {
+    const response = await this.getDictionaryItems('voltages', { lang });
+    return response.data.items;
+  }
+
+  // 便捷方法：获取频率选项
+  async getFrequencies(lang: string = 'zh'): Promise<DictionaryItem[]> {
+    const response = await this.getDictionaryItems('frequencies', { lang });
+    return response.data.items;
+  }
+
+  // 便捷方法：获取袋型选项
+  async getBagTypes(lang: string = 'zh'): Promise<DictionaryItem[]> {
+    const response = await this.getDictionaryItems('bag_types', { lang });
+    return response.data.items;
+  }
+
+  // 便捷方法：获取品牌选项
+  async getBrands(lang: string = 'zh'): Promise<DictionaryItem[]> {
+    const response = await this.getDictionaryItems('brands', { lang });
+    return response.data.items;
+  }
+
+  // 便捷方法：获取国家选项
+  async getCountries(lang: string = 'zh'): Promise<DictionaryItem[]> {
+    const response = await this.getDictionaryItems('countries', { lang });
+    return response.data.items;
+  }
+
+  // 便捷方法：获取用户角色选项
+  async getUserRoles(lang: string = 'zh'): Promise<DictionaryItem[]> {
+    const response = await this.getDictionaryItems('user_roles', { lang });
+    return response.data.items;
+  }
+
+  // 便捷方法：获取产品类型选项
+  async getProductTypes(lang: string = 'zh'): Promise<DictionaryItem[]> {
+    const response = await this.getDictionaryItems('product_types', { lang });
+    return response.data.items;
+  }
+}
+
+// 导出通用字典服务实例
+export const adminGeneralDictionaryService = new AdminGeneralDictionaryService();
+
 export default {
   shapes: adminShapeService,
   materials: adminMaterialService,
   specifications: adminSpecificationService,
+  general: adminGeneralDictionaryService,
 }; 

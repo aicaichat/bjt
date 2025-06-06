@@ -142,7 +142,7 @@ export interface ConsumableFormData {
 // 消耗品型号查询参数接口
 interface ConsumableModelQueryParams {
   page: number;
-  page_size: number;
+  per_page: number;
   search?: string;
   product_line_id?: number;
   status?: string;
@@ -151,7 +151,7 @@ interface ConsumableModelQueryParams {
 // 消耗品料号查询参数接口
 interface ConsumableQueryParams {
   page: number;
-  page_size: number;
+  per_page: number;
   search?: string;
   model_id?: number;
   product_line_id?: number;
@@ -169,7 +169,7 @@ class AdminConsumableModelService extends BaseService {
       items: ConsumableModel[];
       total: number;
       page: number;
-      page_size: number;
+      per_page: number;
     }>('', params);
   }
 
@@ -207,6 +207,8 @@ class AdminConsumableService extends BaseService {
     material?: string;
     status?: string;
     search?: string;
+    sort_field?: string;
+    sort_order?: 'asc' | 'desc';
   } = {}) {
     // 过滤空值参数
     const filteredParams = Object.fromEntries(
@@ -237,7 +239,7 @@ class AdminConsumableService extends BaseService {
         items: [],
         total: 0,
         page: 1,
-        per_page: 10,
+        per_page: 50,
       };
     }
 
@@ -286,7 +288,7 @@ class AdminConsumableService extends BaseService {
       items: transformedItems,
       total: responseData.total || 0,
       page: responseData.current_page || responseData.page || 1,
-      per_page: responseData.per_page || Math.ceil((responseData.total || 0) / (responseData.total_pages || 1)) || 10,
+      per_page: responseData.per_page || Math.ceil((responseData.total || 0) / (responseData.total_pages || 1)) || 50,
     };
     
     console.log('ConsumableService: Final result:', result);

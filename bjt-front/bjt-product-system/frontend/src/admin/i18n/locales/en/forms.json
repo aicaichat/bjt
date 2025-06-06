@@ -1,0 +1,96 @@
+{
+  "fields": {
+    "name": "Name",
+    "code": "Code",
+    "description": "Description",
+    "status": "Status",
+    "createTime": "Created At",
+    "updateTime": "Updated At",
+    "voltage": "Voltage",
+    "frequency": "Frequency",
+    "brand": "Brand",
+    "unit": "Unit",
+    "price": "Price",
+    "weight": "Weight",
+    "dimension": "Dimension",
+    "productLine": "Product Line",
+    "machineModel": "Machine Model Code",
+    "machineType": "Machine Type",
+    "sort": "Sort Order",
+    "image1Url": "Main Image URL",
+    "image2Url": "Secondary Image URL",
+    "explosionDiagramPdf": "Explosion Diagram PDF URL",
+    "specPdf": "Specification PDF URL"
+  },
+  "placeholders": {
+    "enterName": "Enter name",
+    "enterCode": "Enter code",
+    "enterDescription": "Enter description",
+    "selectStatus": "Select status",
+    "selectVoltage": "Select voltage",
+    "selectBrand": "Select brand",
+    "selectProductLine": "Select product line",
+    "enterMachineModel": "Example: BJT-A100",
+    "enterMachineType": "Example: Packaging Machine",
+    "enterChineseName": "请输入中文名称",
+    "enterEnglishName": "Please enter English name",
+    "enterChineseDescription": "请输入中文描述",
+    "enterEnglishDescription": "Please enter English description",
+    "enterImage1Url": "Example: https://example.com/image1.jpg",
+    "enterImage2Url": "Example: https://example.com/image2.jpg",
+    "enterExplosionDiagramPdf": "Example: https://example.com/diagram.pdf",
+    "enterSpecPdf": "Example: https://example.com/spec.pdf"
+  },
+  "validation": {
+    "nameRequired": "Name is required",
+    "codeRequired": "Code is required",
+    "statusRequired": "Status is required",
+    "productLineRequired": "Product line is required",
+    "machineModelRequired": "Machine model code is required",
+    "machineTypeRequired": "Machine type is required",
+    "sortRequired": "Sort order is required"
+  },
+  "content": {
+    "languages": {
+      "chinese": "中文",
+      "english": "English"
+    },
+    "placeholders": {
+      "enterChinese": "请输入中文内容",
+      "enterEnglish": "Please enter English content"
+    },
+    "actions": {
+      "copyFrom": "Copy from {{from}}"
+    },
+    "hints": {
+      "translateFromChinese": "Suggest translating Chinese content",
+      "translateFromEnglish": "Suggest translating English content",
+      "bothLanguagesRequired": "Both Chinese and English content are required"
+    }
+  },
+  "sections": {
+    "basicInfo": "Basic Information",
+    "machineInfo": "Machine Information", 
+    "machineTitle": "Machine Name",
+    "machineDescription": "Machine Description",
+    "imagesAndDocs": "Images and Documents"
+  },
+  "machines": {
+    "title": "Machine Models",
+    "create": {
+      "title": "Create Machine Model",
+      "description": "Create a new machine model"
+    },
+    "edit": {
+      "title": "Edit Machine Model",
+      "description": "Edit machine model"
+    }
+  },
+  "extra": {
+    "machineModel": "Must be unique within the same product line",
+    "image1Url": "Enter image URL",
+    "image2Url": "Enter image URL",
+    "explosionDiagramPdf": "Enter PDF file URL",
+    "specPdf": "Enter specification PDF file URL"
+  }
+}

@@ -12,7 +12,6 @@ import {
   InputNumber, 
   Divider, 
   Space,
-  Typography,
   Spin,
   Alert
 } from 'antd';
@@ -21,18 +20,19 @@ import {
   ArrowLeftOutlined 
 } from '@ant-design/icons';
 import AdminPageHeader from '../../components/common/AdminPageHeader';
+import FileUrlInput from '../../components/common/FileUrlInput';
 import AdminPartService from '../../services/admin-part.service';
 import adminHostModelService from '../../services/admin-host-model.service';
 import adminProductLineService from '../../services/admin-product-line.service';
 import { AdminPart, AdminHostModel } from '../../types/admin-models.types';
+import DictionarySelect from '../../components/common/DictionarySelect';
+import { useAdminI18n } from '../../i18n/hooks/useAdminI18n';
 
 const { Option } = Select;
 const { TextArea } = Input;
-const { Title } = Typography;
 
 const PartEditPage: React.FC = () => {
-  console.log('PartEditPage: Component starting to render');
-  
+  const { t } = useAdminI18n();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
@@ -46,159 +46,162 @@ const PartEditPage: React.FC = () => {
   const [hostModels, setHostModels] = useState<AdminHostModel[]>([]);
   const [selectedProductLineId, setSelectedProductLineId] = useState<number | undefined>();
   const [error, setError] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<any>({});
-
-  console.log('PartEditPage: Component state', {
-    isEdit,
-    id,
-    loading,
-    error,
-    productLinesCount: productLines.length,
-    hostModelsCount: hostModels.length,
-    selectedProductLineId,
-    searchParams: Object.fromEntries(searchParams.entries())
-  });
   
   // Load data on mount
   useEffect(() => {
-    console.log('PartEditPage: useEffect triggered', { isEdit, id });
-    
     const loadData = async () => {
       try {
         setLoading(true);
         setError(null);
         
-        console.log('PartEditPage: Starting to load initial data');
-        
-        // 使用 Promise.allSettled 来并行加载数据，即使某些失败也能继续
+        // Load data in parallel
         const [productLinesResult, hostModelsResult] = await Promise.allSettled([
           fetchProductLines(),
           fetchHostModels()
         ]);
-
-        console.log('PartEditPage: API results', {
-          productLinesResult: productLinesResult.status,
-          hostModelsResult: hostModelsResult.status
-        });
-
-        // 记录调试信息
-        setDebugInfo({
-          productLinesLoaded: productLinesResult.status === 'fulfilled',
-          hostModelsLoaded: hostModelsResult.status === 'fulfilled',
-          productLinesError: productLinesResult.status === 'rejected' ? String(productLinesResult.reason) : null,
-          hostModelsError: hostModelsResult.status === 'rejected' ? String(hostModelsResult.reason) : null,
-          loadTime: new Date().toLocaleTimeString()
-        });
         
         if (isEdit && id) {
-          console.log('PartEditPage: Loading part data for edit mode', { id });
           await loadPart(id);
         } else {
-          console.log('PartEditPage: Setting default values for create mode');
-          // If creating new part with pre-selected host model
+          // 新建时设置默认值 - 修复默认值问题
           const hostModelId = searchParams.get('hostModel');
           const productLineId = searchParams.get('productLine');
           
-          console.log('PartEditPage: URL parameters', { hostModelId, productLineId });
-          
           const defaultValues: any = {
-            status: 'publish',
-            unit: 'pcs'
+            product_line_id: productLineId ? parseInt(productLineId) : 1, // 默认气垫机产品线
+            status: 'publish', // 默认发布状态
+            unit: 'pcs' // 默认单位
           };
           
           if (hostModelId) {
             defaultValues.host_model_id = hostModelId;
           }
-          if (productLineId) {
-            const productLineIdNum = parseInt(productLineId);
-            defaultValues.product_line_id = productLineIdNum;
-            setSelectedProductLineId(productLineIdNum);
-          }
           
-          console.log('PartEditPage: Setting form default values', defaultValues);
+          console.log('PartEditPage - Setting default values:', defaultValues);
           form.setFieldsValue(defaultValues);
+          
+          if (productLineId) {
+            setSelectedProductLineId(parseInt(productLineId));
+          } else {
+            setSelectedProductLineId(1); // 默认产品线ID
+          }
         }
       } catch (error) {
-        const errorMessage = `页面初始化失败: ${String(error)}`;
-        console.error('PartEditPage: Load data error', error);
+        const errorMessage = `${t('message.loadPartDataFailed', { ns: 'machines' })}: ${String(error)}`;
         setError(errorMessage);
       } finally {
         setLoading(false);
-        console.log('PartEditPage: Data loading completed');
       }
     };
     
     loadData();
-  }, [id, isEdit, searchParams, form]);
+  }, [id, isEdit, searchParams, form, t]);
+
+  // 确保产品线和主机型号数据加载完成后，重新设置默认选中的产品线
+  useEffect(() => {
+    if (!isEdit && productLines.length > 0 && hostModels.length > 0) {
+      const productLineId = searchParams.get('productLine');
+      const defaultProductLineId = productLineId ? parseInt(productLineId) : 1;
+      
+      console.log('PartEditPage - Data loaded, ensuring product line selection:', {
+        defaultProductLineId,
+        currentSelectedProductLineId: selectedProductLineId,
+        productLinesCount: productLines.length,
+        hostModelsCount: hostModels.length
+      });
+      
+      // 如果还没有选中产品线，设置默认值
+      if (!selectedProductLineId) {
+        setSelectedProductLineId(defaultProductLineId);
+        console.log('PartEditPage - Set default selectedProductLineId:', defaultProductLineId);
+      }
+      
+      // 同时确保表单字段也有正确的值
+      const currentFormProductLineId = form.getFieldValue('product_line_id');
+      if (!currentFormProductLineId) {
+        console.log('PartEditPage - Setting form product_line_id:', defaultProductLineId);
+        form.setFieldValue('product_line_id', defaultProductLineId);
+      }
+    }
+  }, [productLines, hostModels, selectedProductLineId, isEdit, searchParams, form]);
 
   const fetchProductLines = async () => {
-    console.log('PartEditPage: Fetching product lines');
     try {
       const response = await adminProductLineService.getProductLines();
-      console.log('PartEditPage: Product lines response', response);
+      console.log('PartEditPage - Product lines loaded:', response.items);
       
       if (response && response.items && Array.isArray(response.items)) {
         setProductLines(response.items);
-        console.log('PartEditPage: Product lines loaded successfully', response.items.length);
+        
+        // 确保默认产品线存在
+        const defaultProductLine = response.items.find((line: any) => line.id === 1);
+        if (defaultProductLine) {
+          console.log('PartEditPage - Default product line found:', defaultProductLine);
+        } else {
+          console.warn('PartEditPage - Default product line (ID=1) not found in response');
+        }
       } else {
-        console.warn('PartEditPage: Invalid product lines response format', response);
         setProductLines([]);
       }
     } catch (error) {
-      console.error('PartEditPage: Failed to fetch product lines', error);
       setProductLines([]);
       throw error;
     }
   };
 
   const fetchHostModels = async () => {
-    console.log('PartEditPage: Fetching host models');
     try {
       const response = await adminHostModelService.getHostModels({ page: 1, page_size: 100 });
-      console.log('PartEditPage: Host models response', response);
+      console.log('PartEditPage - Host models API response:', {
+        success: !!response,
+        itemsCount: response?.items?.length || 0,
+        totalCount: response?.total || 0
+      });
       
       if (response && response.items && Array.isArray(response.items)) {
         setHostModels(response.items);
-        console.log('PartEditPage: Host models loaded successfully', response.items.length);
+        if (response.items.length > 0) {
+          console.log('PartEditPage - First host model structure:', JSON.stringify(response.items[0], null, 2));
+          console.log('PartEditPage - Host models product_line_id values:', response.items.map(model => ({
+            id: model.id,
+            model: model.model || model.code,
+            product_line_id: model.product_line_id,
+            product_line_id_type: typeof model.product_line_id
+          })));
+        }
       } else {
-        console.warn('PartEditPage: Invalid host models response format', response);
+        console.warn('PartEditPage - Host models response format unexpected:', response);
         setHostModels([]);
       }
     } catch (error) {
-      console.error('PartEditPage: Failed to fetch host models', error);
+      console.error('PartEditPage - Failed to fetch host models:', error);
       setHostModels([]);
-      throw error;
+      // 不要抛出错误，继续运行
     }
   };
 
   const loadPart = async (partId: string) => {
-    console.log('PartEditPage: Loading part data', { partId });
     setLoading(true);
     try {
       const response = await AdminPartService.getPart(partId);
-      console.log('PartEditPage: Part data response', response);
       
       // Check if response is wrapped in ApiResponse format
       let part: AdminPart | null = null;
       if (response && typeof response === 'object') {
         if ('data' in response && response.data) {
-          // If it's wrapped in ApiResponse format
           part = response.data as AdminPart;
         } else {
-          // If it's direct data
           part = response as AdminPart;
         }
       }
       
       if (!part) {
-        throw new Error('无法获取料号数据');
+        throw new Error(t('message.loadPartDataFailed', { ns: 'machines' }));
       }
-      
-      console.log('PartEditPage: Processing part data', part);
       
       // Fill form with part data
       const formValues = {
-        host_model_id: part.model || part.host_model_id, // 后端返回的是model字段
+        host_model_id: part.model || part.host_model_id,
         product_line_id: part.product_line_id,
         voltage: part.voltage,
         part_number: part.part_number,
@@ -226,139 +229,181 @@ const PartEditPage: React.FC = () => {
         unit: part.unit || 'pcs',
       };
       
-      console.log('PartEditPage: Setting form values', formValues);
       form.setFieldsValue(formValues);
       setSelectedProductLineId(part.product_line_id);
-    } catch (error: any) {
-      console.error('PartEditPage: Error loading part data', error);
-      
-      let errorMessage = '加载料号数据失败';
-      
-      if (error && typeof error === 'object') {
-        if (error.code === 401 || error.message?.includes('permission')) {
-          errorMessage = '认证失败或权限不足，请检查登录状态';
-        } else if (error.code === 404) {
-          errorMessage = `料号 ID ${partId} 不存在`;
-        } else if (error.message) {
-          errorMessage = `加载失败: ${error.message}`;
-        } else {
-          errorMessage = `加载失败: ${JSON.stringify(error)}`;
-        }
-      } else {
-        errorMessage = `加载失败: ${String(error)}`;
-      }
-      
-      message.error(errorMessage);
-      setError(errorMessage);
+    } catch (error) {
+      throw new Error(t('message.loadPartDataFailed', { ns: 'machines' }));
     } finally {
       setLoading(false);
     }
   };
 
   const handleSubmit = async (values: any) => {
-    console.log('PartEditPage: Form submitted', values);
     setSubmitting(true);
     try {
+      // 调试：打印提交的表单数据
+      console.log('PartEditPage - Form values submitted:', values);
       
-      // 根据后端BJT_Machine_Part_Controller的字段映射
+      // 验证必填字段（与后端一致）
+      const requiredFields = {
+        product_line_id: '产品线',
+        model: '型号', // 注意：这里需要的是型号代码，不是ID
+        part_number: '料号',
+        name_zh: '中文名称',
+        name_en: '英文名称',
+        unit: '单位'
+      };
+      
+      const missingFields = [];
+      for (const [field, label] of Object.entries(requiredFields)) {
+        const fieldValue = field === 'model' ? values.host_model_id : values[field];
+        if (!fieldValue || (typeof fieldValue === 'string' && fieldValue.trim() === '')) {
+          missingFields.push(label);
+        }
+      }
+      
+      if (missingFields.length > 0) {
+        message.error(`请填写必填字段：${missingFields.join('、')}`);
+        return;
+      }
+      
+      // 准备提交数据，按照后端期望的字段格式
       const formData: any = {
         product_line_id: values.product_line_id,
-        model: values.host_model_id, // 后端使用model字段表示主机型号代码
-        voltage: values.voltage,
+        model: values.host_model_id, // 这里应该是型号代码（如"LA-E4S V2.0"），不是ID
+        voltage: values.voltage || '',
         part_number: values.part_number,
         name_zh: values.name_zh,
         name_en: values.name_en,
-        brand: values.brand,
-        spec: values.spec,
-        spec_imperial: values.spec_imperial,
-        package_size_cm: values.package_size_cm,
-        package_size_inch: values.package_size_inch,
-        net_weight_kg: values.net_weight_kg,
-        net_weight_lbs: values.net_weight_lbs,
-        gross_weight_kg: values.gross_weight_kg,
-        gross_weight_lbs: values.gross_weight_lbs,
-        pcs_per_box: values.pcs_per_box,
-        pallet_size_cm: values.pallet_size_cm,
-        pallet_size_inch: values.pallet_size_inch,
-        pcs_per_pallet: values.pcs_per_pallet,
-        pallet_height_cm: values.pallet_height_cm,
-        pallet_height_inch: values.pallet_height_inch,
-        pallet_gross_weight_kg: values.pallet_gross_weight_kg,
-        pallet_gross_weight_lbs: values.pallet_gross_weight_lbs,
-        image_url: values.image_url,
-        status: values.status,
-        unit: values.unit,
+        brand: values.brand || '',
+        spec: values.spec || '',
+        spec_imperial: values.spec_imperial || '',
+        package_size_cm: values.package_size_cm || '',
+        package_size_inch: values.package_size_inch || '',
+        net_weight_kg: values.net_weight_kg || null,
+        net_weight_lbs: values.net_weight_lbs || null,
+        gross_weight_kg: values.gross_weight_kg || null,
+        gross_weight_lbs: values.gross_weight_lbs || null,
+        pcs_per_box: values.pcs_per_box || null,
+        pallet_size_cm: values.pallet_size_cm || '',
+        pallet_size_inch: values.pallet_size_inch || '',
+        pcs_per_pallet: values.pcs_per_pallet || null,
+        pallet_height_cm: values.pallet_height_cm || null,
+        pallet_height_inch: values.pallet_height_inch || null,
+        pallet_gross_weight_kg: values.pallet_gross_weight_kg || null,
+        pallet_gross_weight_lbs: values.pallet_gross_weight_lbs || null,
+        image_url: values.image_url || '',
+        status: values.status || 'publish',
+        unit: values.unit || 'pcs',
       };
 
-      console.log('PartEditPage: Sending data to API', formData);
+      console.log('PartEditPage - Data to be submitted to API:', formData);
 
       if (isEdit && id) {
         await AdminPartService.updatePart(id, formData);
-        message.success('料号更新成功');
-        console.log('PartEditPage: Part updated successfully');
+        message.success(t('message.partUpdateSuccess', { ns: 'machines' }));
       } else {
-        await AdminPartService.createPart(formData);
-        message.success('料号创建成功');
-        console.log('PartEditPage: Part created successfully');
+        const result = await AdminPartService.createPart(formData);
+        console.log('PartEditPage - Create part result:', result);
+        message.success(t('message.partCreateSuccess', { ns: 'machines' }));
       }
       
       navigate('/admin/machines');
     } catch (error) {
-      console.error('PartEditPage: Submit error', error);
-      message.error(isEdit ? '料号更新失败' : '料号创建失败');
+      console.error('PartEditPage - Submit error:', error);
+      
+      // 提供更详细的错误信息
+      let errorMessage = isEdit ? t('message.updateFailed', { ns: 'machines' }) : t('message.createFailed', { ns: 'machines' });
+      
+      if (error && typeof error === 'object') {
+        if ('message' in error && error.message) {
+          errorMessage += `: ${error.message}`;
+        } else if ('data' in error && error.data && error.data.message) {
+          errorMessage += `: ${error.data.message}`;
+        }
+      }
+      
+      message.error(errorMessage);
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleBack = () => {
-    console.log('PartEditPage: Navigating back to machines page');
     navigate('/admin/machines');
   };
 
   const handleProductLineChange = (productLineId: number) => {
-    console.log('PartEditPage: Product line changed', productLineId);
+    console.log('PartEditPage - Product line changed to:', productLineId);
     setSelectedProductLineId(productLineId);
-    // Filter host models by product line
     form.setFieldsValue({ host_model_id: undefined });
   };
 
+  // 修复过滤逻辑 - 支持数字和字符串类型的product_line_id
   const filteredHostModels = selectedProductLineId 
-    ? hostModels.filter(model => model.product_line_id === selectedProductLineId.toString())
+    ? hostModels.filter(model => {
+        // 支持数字和字符串类型比较
+        const modelProductLineId = model.product_line_id;
+        const selectedId = selectedProductLineId;
+        
+        // 处理不同数据类型的比较
+        let isMatch = false;
+        if (typeof modelProductLineId === 'string' && typeof selectedId === 'number') {
+          // 字符串 vs 数字：将字符串转为数字比较
+          isMatch = Number(modelProductLineId) === selectedId;
+        } else if (typeof modelProductLineId === 'number' && typeof selectedId === 'number') {
+          // 数字 vs 数字：直接比较
+          isMatch = modelProductLineId === selectedId;
+        } else if (typeof modelProductLineId === 'string' && typeof selectedId === 'string') {
+          // 字符串 vs 字符串：直接比较
+          isMatch = modelProductLineId === selectedId;
+        } else {
+          // 其他情况：转字符串比较
+          isMatch = String(modelProductLineId) === String(selectedId);
+        }
+        
+        return isMatch;
+      })
     : hostModels;
 
-  console.log('PartEditPage: Filtered host models', {
-    selectedProductLineId,
-    totalHostModels: hostModels.length,
-    filteredCount: filteredHostModels.length
-  });
+  // 只在关键时刻输出过滤结果，避免日志过多
+  React.useEffect(() => {
+    if (selectedProductLineId && hostModels.length > 0) {
+      console.log('PartEditPage - Filtering models for product line:', selectedProductLineId);
+      console.log('PartEditPage - Total models:', hostModels.length);
+      console.log('PartEditPage - Filtered models count:', filteredHostModels.length);
+      console.log('PartEditPage - Filtered models list:', filteredHostModels.map(m => ({
+        id: m.id,
+        model: m.model || m.code,
+        product_line_id: m.product_line_id
+      })));
+    }
+  }, [selectedProductLineId, hostModels.length, filteredHostModels.length]);
 
   if (loading) {
-    console.log('PartEditPage: Rendering loading state');
     return (
       <div className="flex justify-center items-center h-64">
         <Spin size="large" />
-        <span className="ml-2">正在加载数据...</span>
+        <span className="ml-2">{t('message.loadingData', { ns: 'machines' })}</span>
       </div>
     );
   }
 
   if (error) {
-    console.log('PartEditPage: Rendering error state', error);
     return (
       <div className="p-6">
         <Alert
-          message="页面加载错误"
+          message={t('message.loadFailed', { ns: 'machines' })}
           description={error}
           type="error"
           showIcon
           action={
             <Space>
               <Button onClick={() => window.location.reload()}>
-                重新加载
+                {t('buttons.reload', { ns: 'machines' })}
               </Button>
               <Button onClick={handleBack}>
-                返回列表
+                {t('buttons.back', { ns: 'machines' })}
               </Button>
             </Space>
           }
@@ -367,36 +412,17 @@ const PartEditPage: React.FC = () => {
     );
   }
 
-  console.log('PartEditPage: Rendering main form');
-
   return (
     <div className="p-6">
-      
       <AdminPageHeader
-        title={isEdit ? '编辑料号' : '新增料号'}
-        description={isEdit ? `编辑料号 ID: ${id}` : '创建新的料号记录'}
+        title={isEdit ? t('edit.title', { ns: 'machines' }) : t('create.title', { ns: 'machines' })}
+        description={isEdit ? `${t('edit.description', { ns: 'machines' })} ID: ${id}` : t('create.description', { ns: 'machines' })}
         extra={
           <Button key="back" icon={<ArrowLeftOutlined />} onClick={handleBack}>
-            返回列表
+            {t('buttons.back', { ns: 'machines' })}
           </Button>
         }
       />
-
-      {/* 调试信息卡片 - 开发环境显示 */}
-      {process.env.NODE_ENV === 'development' && (
-        <Card size="small" style={{ marginBottom: 16, backgroundColor: '#f6f6f6' }}>
-          <Title level={5}>调试信息</Title>
-          <div style={{ fontSize: '12px', fontFamily: 'monospace' }}>
-            <div>页面模式: {isEdit ? '编辑' : '创建'}</div>
-            <div>料号ID: {id || '无'}</div>
-            <div>加载状态: {loading ? '加载中' : '完成'}</div>
-            <div>产品线数量: {productLines.length}</div>
-            <div>主机型号数量: {hostModels.length}</div>
-            <div>当前表单值: {JSON.stringify(form.getFieldsValue(), null, 2)}</div>
-            <div>调试信息: {JSON.stringify(debugInfo, null, 2)}</div>
-          </div>
-        </Card>
-      )}
 
       <Card>
         <Form
@@ -408,13 +434,14 @@ const PartEditPage: React.FC = () => {
           <Row gutter={24}>
             {/* 基本信息 */}
             <Col span={24}>
-              <Divider orientation="left">基本信息</Divider>
+              <Divider orientation="left">基本信息 (Basic Information)</Divider>
             </Col>
 
             <Col span={8}>
               <Form.Item
-                label="产品线"
+                label="产品线 (Product Line)"
                 name="product_line_id"
+                initialValue={1}
                 rules={[{ required: true, message: '请选择产品线' }]}
               >
                 <Select 
@@ -433,12 +460,12 @@ const PartEditPage: React.FC = () => {
 
             <Col span={8}>
               <Form.Item
-                label="主机型号"
+                label="型号 (Model)"
                 name="host_model_id"
-                rules={[{ required: true, message: '请选择主机型号' }]}
+                rules={[{ required: true, message: '请选择型号' }]}
               >
                 <Select 
-                  placeholder="请选择主机型号"
+                  placeholder="请选择机器型号"
                   loading={hostModels.length === 0}
                 >
                   {filteredHostModels.map(model => (
@@ -452,49 +479,61 @@ const PartEditPage: React.FC = () => {
 
             <Col span={8}>
               <Form.Item
-                label="料号"
+                label="料号 (Part No.)"
                 name="part_number"
                 rules={[{ required: true, message: '请输入料号' }]}
               >
-                <Input placeholder="请输入料号" />
+                <Input placeholder="例如: 60A01001" />
               </Form.Item>
             </Col>
 
             <Col span={8}>
               <Form.Item
-                label="型号"
-                name="model"
-              >
-                <Input placeholder="请输入型号" />
-              </Form.Item>
-            </Col>
-
-            <Col span={8}>
-              <Form.Item
-                label="电压"
+                label="电压 (Voltage)"
                 name="voltage"
               >
-                <Input placeholder="例如: 220V" />
+                <DictionarySelect
+                  dictionaryType="voltages"
+                  placeholder="请选择电压"
+                  allowClear={true}
+                />
               </Form.Item>
             </Col>
 
             <Col span={8}>
               <Form.Item
-                label="品牌"
+                label="品牌 (Brand)"
                 name="brand"
               >
-                <Input placeholder="请输入品牌" />
+                <DictionarySelect
+                  dictionaryType="brands"
+                  placeholder="请选择品牌"
+                  allowClear={true}
+                />
+              </Form.Item>
+            </Col>
+
+            <Col span={8}>
+              <Form.Item
+                label="状态 (Status)"
+                name="status"
+                initialValue="publish"
+              >
+                <DictionarySelect
+                  dictionaryType="statuses"
+                  placeholder="请选择状态"
+                />
               </Form.Item>
             </Col>
 
             {/* 名称信息 */}
             <Col span={24}>
-              <Divider orientation="left">名称信息</Divider>
+              <Divider orientation="left">名称信息 (Item Info)</Divider>
             </Col>
 
             <Col span={12}>
               <Form.Item
-                label="中文名称"
+                label="中文名称 (Chinese Name)"
                 name="name_zh"
                 rules={[{ required: true, message: '请输入中文名称' }]}
               >
@@ -504,212 +543,204 @@ const PartEditPage: React.FC = () => {
 
             <Col span={12}>
               <Form.Item
-                label="英文名称"
+                label="英文名称 (English Name)"
                 name="name_en"
-                rules={[{ required: true, message: '请输入英文名称' }]}
+                rules={[{ required: true, message: 'Please enter English name' }]}
               >
-                <Input placeholder="请输入英文名称" />
+                <Input placeholder="Please enter English name" />
               </Form.Item>
             </Col>
 
-            {/* 规格参数 */}
+            {/* 规格信息 */}
             <Col span={24}>
-              <Divider orientation="left">规格参数</Divider>
+              <Divider orientation="left">规格信息 (Specification Info)</Divider>
             </Col>
 
             <Col span={12}>
               <Form.Item
-                label="规格参数(公制)"
+                label="规格描述 (Spec.)"
                 name="spec"
               >
-                <TextArea rows={3} placeholder="请输入公制规格参数" />
+                <Input placeholder="例如: 长×宽×高(cm)" />
               </Form.Item>
             </Col>
 
             <Col span={12}>
               <Form.Item
-                label="规格参数(英制)"
+                label="规格描述 (Spec.) - 英制"
                 name="spec_imperial"
               >
-                <TextArea rows={3} placeholder="请输入英制规格参数" />
+                <Input placeholder="例如: L×W×H(inch)" />
               </Form.Item>
             </Col>
 
             {/* 包装信息 */}
             <Col span={24}>
-              <Divider orientation="left">包装信息</Divider>
+              <Divider orientation="left">包装信息 (Package Info)</Divider>
             </Col>
 
             <Col span={8}>
               <Form.Item
-                label="包装尺寸(cm)"
+                label="包装尺寸 (Packaging Dim.) - 公制"
                 name="package_size_cm"
               >
-                <Input placeholder="例如: 40×34.5×39" />
+                <Input placeholder="长×宽×高" />
               </Form.Item>
             </Col>
 
             <Col span={8}>
               <Form.Item
-                label="包装尺寸(inch)"
+                label="包装尺寸 (Packaging Dim.) - 英制"
                 name="package_size_inch"
               >
-                <Input placeholder="例如: 15.7×13.6×15.4" />
+                <Input placeholder="L×W×H" />
               </Form.Item>
             </Col>
 
             <Col span={8}>
               <Form.Item
-                label="单箱数量"
+                label="单箱数量 (Qty per Carton)"
                 name="pcs_per_box"
               >
-                <InputNumber min={0} style={{ width: '100%' }} placeholder="请输入单箱数量" />
+                <InputNumber min={1} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
 
             <Col span={6}>
               <Form.Item
-                label="净重(kg)"
+                label="单件净重 (Net Weight) - kg"
                 name="net_weight_kg"
               >
-                <InputNumber min={0} step={0.01} style={{ width: '100%' }} placeholder="净重" />
+                <InputNumber min={0} precision={3} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
 
             <Col span={6}>
               <Form.Item
-                label="净重(lbs)"
+                label="单件净重 (Net Weight) - lbs"
                 name="net_weight_lbs"
               >
-                <InputNumber min={0} step={0.01} style={{ width: '100%' }} placeholder="净重" />
+                <InputNumber min={0} precision={3} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
 
             <Col span={6}>
               <Form.Item
-                label="毛重(kg)"
+                label="包装毛重 (Gross Weight) - kg"
                 name="gross_weight_kg"
               >
-                <InputNumber min={0} step={0.01} style={{ width: '100%' }} placeholder="毛重" />
+                <InputNumber min={0} precision={3} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
 
             <Col span={6}>
               <Form.Item
-                label="毛重(lbs)"
+                label="包装毛重 (Gross Weight) - lbs"
                 name="gross_weight_lbs"
               >
-                <InputNumber min={0} step={0.01} style={{ width: '100%' }} placeholder="毛重" />
+                <InputNumber min={0} precision={3} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
 
             {/* 托盘信息 */}
             <Col span={24}>
-              <Divider orientation="left">托盘信息</Divider>
+              <Divider orientation="left">托盘信息 (Pallet Info)</Divider>
             </Col>
 
             <Col span={8}>
               <Form.Item
-                label="托盘尺寸(cm)"
+                label="托盘尺寸 (Pallet Size) - 公制"
                 name="pallet_size_cm"
               >
-                <Input placeholder="例如: 100×120" />
+                <Input placeholder="长×宽" />
               </Form.Item>
             </Col>
 
             <Col span={8}>
               <Form.Item
-                label="托盘尺寸(inch)"
+                label="托盘尺寸 (Pallet Size) - 英制"
                 name="pallet_size_inch"
               >
-                <Input placeholder="例如: 39.4×47.2" />
+                <Input placeholder="L×W" />
               </Form.Item>
             </Col>
 
             <Col span={8}>
               <Form.Item
-                label="一托数量"
+                label="一托数量 (Packs per Pallet)"
                 name="pcs_per_pallet"
               >
-                <InputNumber min={0} style={{ width: '100%' }} placeholder="一托数量" />
+                <InputNumber min={1} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
 
             <Col span={6}>
               <Form.Item
-                label="打托高度(cm)"
+                label="打托高度 (Pallet Height) - cm"
                 name="pallet_height_cm"
               >
-                <InputNumber min={0} step={0.01} style={{ width: '100%' }} placeholder="打托高度" />
+                <InputNumber min={0} precision={2} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
 
             <Col span={6}>
               <Form.Item
-                label="打托高度(inch)"
+                label="打托高度 (Pallet Height) - inch"
                 name="pallet_height_inch"
               >
-                <InputNumber min={0} step={0.01} style={{ width: '100%' }} placeholder="打托高度" />
+                <InputNumber min={0} precision={2} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
 
             <Col span={6}>
               <Form.Item
-                label="整托毛重(kg)"
+                label="整托毛重 (GW per Pallet) - kg"
                 name="pallet_gross_weight_kg"
               >
-                <InputNumber min={0} step={0.01} style={{ width: '100%' }} placeholder="整托毛重" />
+                <InputNumber min={0} precision={3} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
 
             <Col span={6}>
               <Form.Item
-                label="整托毛重(lbs)"
+                label="整托毛重 (GW per Pallet) - lbs"
                 name="pallet_gross_weight_lbs"
               >
-                <InputNumber min={0} step={0.01} style={{ width: '100%' }} placeholder="整托毛重" />
+                <InputNumber min={0} precision={3} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
 
             {/* 其他信息 */}
             <Col span={24}>
-              <Divider orientation="left">其他信息</Divider>
+              <Divider orientation="left">其他信息 (Other Info)</Divider>
             </Col>
 
             <Col span={12}>
               <Form.Item
-                label="产品图片URL"
+                label="产品图片 (Product Image)"
                 name="image_url"
+                extra="支持上传图片文件或输入图片URL地址，文件大小不超过 10MB"
               >
-                <Input placeholder="请输入图片URL" />
+                <FileUrlInput
+                  placeholder="请输入图片URL地址或点击上传"
+                  fileType="image"
+                  maxSize={10}
+                  uploadPath="/uploads/parts/images/"
+                  preview
+                />
               </Form.Item>
             </Col>
 
-            <Col span={6}>
+            <Col span={12}>
               <Form.Item
-                label="状态"
-                name="status"
-                rules={[{ required: true, message: '请选择状态' }]}
-              >
-                <Select>
-                  <Option value="publish">已发布</Option>
-                  <Option value="draft">草稿</Option>
-                  <Option value="trash">回收站</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-
-            <Col span={6}>
-              <Form.Item
-                label="单位"
+                label="单位 (Unit)"
                 name="unit"
-                rules={[{ required: true, message: '请选择单位' }]}
+                initialValue="pcs"
               >
-                <Select>
-                  <Option value="pcs">个</Option>
-                  <Option value="roll">卷</Option>
-                  <Option value="box">箱</Option>
-                </Select>
+                <DictionarySelect
+                  dictionaryType="units"
+                  placeholder="请选择单位"
+                />
               </Form.Item>
             </Col>
           </Row>
@@ -724,17 +755,15 @@ const PartEditPage: React.FC = () => {
                 loading={submitting}
                 size="large"
               >
-                {isEdit ? '保存更改' : '创建料号'}
+                {isEdit ? t('buttons.saveChanges', { ns: 'machines' }) : t('buttons.createMachine', { ns: 'machines' })}
               </Button>
               <Button onClick={handleBack} size="large">
-                取消
+                {t('buttons.cancel', { ns: 'machines' })}
               </Button>
             </Space>
           </Form.Item>
         </Form>
       </Card>
-      
-
     </div>
   );
 };

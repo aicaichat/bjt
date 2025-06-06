@@ -1,10 +1,20 @@
 # BJT Core Entities API 接口文档
 
-**版本**: v1.4.0  
-**最后更新**: 2025-05-28  
+**版本**: v1.5.0  
+**最后更新**: 2025-01-08  
 **基础URL**: `/wp-json/bjt/v1`
 
 ## 更新日志
+
+### v1.5.0 (2025-01-08)
+- ✨ **新增文件上传接口**: 实现完整的文件上传管理功能
+  - **POST /upload/specification**: PDF规格文档上传，支持主机设备规格说明书上传
+  - **GET /upload/nonce**: 上传认证nonce获取，兼容传统AJAX调用
+- 🔐 **JWT认证支持**: 文件上传接口使用JWT Bearer Token认证
+- 📁 **文件存储规则**: 规范化存储路径和文件命名规则
+- 🚀 **前端集成**: 提供React组件示例和认证Token获取方法
+- ⚡ **自动重试机制**: 支持401错误时自动重新登录并重试上传
+- 🛡️ **安全验证**: 文件类型、大小限制和权限控制
 
 ### v1.4.0 (2025-05-28)
 - ✨ **新增系统设置接口**: 实现完整的系统设置管理功能
@@ -55,8 +65,9 @@
 13. [主机料号接口](#13-主机料号接口)
 14. [关系接口](#14-关系接口)
 15. [系统设置接口](#15-系统设置接口)
-16. [必选备件逻辑说明](#16-必选备件逻辑说明)
-17. [错误码](#17-错误码)
+16. [文件上传接口](#16-文件上传接口)
+17. [必选备件逻辑说明](#17-必选备件逻辑说明)
+18. [错误码](#18-错误码)
 
 ---
 
@@ -4538,4 +4549,512 @@ $response = wp_remote_request('http://localhost:5173/wp-json/bjt/v1/settings', [
   'headers' => ['Content-Type' => 'application/json'],
   'body' => json_encode($settings)
 ]);
+```
+
+## 16. 文件上传接口
+
+文件上传接口使用BJT Core Entities插件提供的上传控制器，支持PDF规格文档上传等功能。
+
+### 16.1 上传PDF规格文档
+
+上传主机设备的PDF规格说明书
+
+**请求**:  
+- 方法: `POST`
+- 路径: `/upload/specification`
+- 认证: 需要（JWT Token）
+
+**请求参数**:
+- `host_id` (整数, 必需): 主机ID，用于关联上传的文件
+- `upload_dir` (字符串, 可选): 上传目录，默认为 `frontend/public/uploads`
+- `pdf_file` (文件, 必需): 要上传的PDF文件
+
+**请求示例**:
+```javascript
+const formData = new FormData();
+formData.append('pdf_file', file);
+formData.append('host_id', '123');
+formData.append('upload_dir', 'frontend/public/uploads');
+
+const response = await fetch('/wp-json/bjt/v1/upload/specification', {
+  method: 'POST',
+  body: formData,
+  credentials: 'include',
+  headers: {
+    'Authorization': `Bearer ${jwtToken}`,
+  },
+});
+```
+
+**成功响应** (状态码: 200):
+```json
+{
+  "success": true,
+  "message": "PDF规格说明书上传成功",
+  "data": {
+    "url": "http://example.com/frontend/public/uploads/specifications/123/document_1672531200.pdf",
+    "filename": "document_1672531200.pdf",
+    "host_id": 123,
+    "file_size": 2048576,
+    "upload_path": "/path/to/frontend/public/uploads/specifications/123/document_1672531200.pdf"
+  }
+}
+```
+
+**失败响应**:
+- 状态码 `400`: 请求参数错误
+```json
+{
+  "success": false,
+  "code": "invalid_host_id",
+  "message": "无效的主机ID",
+  "data": {
+    "status": 400
+  }
+}
+```
+- 状态码 `400`: 文件类型错误
+```json
+{
+  "success": false,
+  "code": "invalid_file_type",
+  "message": "只能上传PDF文件",
+  "data": {
+    "status": 400
+  }
+}
+```
+- 状态码 `400`: 文件过大
+```json
+{
+  "success": false,
+  "code": "file_too_large",
+  "message": "文件大小不能超过10MB",
+  "data": {
+    "status": 400
+  }
+}
+```
+- 状态码 `401`: 认证失败
+```json
+{
+  "success": false,
+  "code": "rest_not_logged_in",
+  "message": "未提供授权令牌",
+  "data": {
+    "status": 401
+  }
+}
+```
+- 状态码 `403`: 权限不足
+```json
+{
+  "success": false,
+  "code": "insufficient_permissions",
+  "message": "权限不足，无法上传文件",
+  "data": {
+    "status": 403
+  }
+}
+```
+
+### 16.2 获取上传nonce
+
+获取用于上传的认证nonce（兼容传统AJAX调用）
+
+**请求**:  
+- 方法: `GET`
+- 路径: `/upload/nonce`
+- 认证: 需要（JWT Token）
+
+**成功响应** (状态码: 200):
+```json
+{
+  "success": true,
+  "message": "Nonce生成成功",
+  "data": {
+    "nonce": "abc123def456",
+    "action": "bjt_upload_specification",
+    "user_id": 1
+  }
+}
+```
+
+**失败响应**:
+- 状态码 `401`: 用户未认证
+```json
+{
+  "success": false,
+  "code": "user_not_authenticated",
+  "message": "用户未认证",
+  "data": {
+    "status": 401
+  }
+}
+```
+
+### 16.3 文件存储规则
+
+#### 16.3.1 存储路径
+- **基础路径**: `frontend/public/uploads/`
+- **规格文档路径**: `frontend/public/uploads/specifications/{host_id}/`
+- **文件命名**: `{原文件名}_{时间戳}.{扩展名}`
+
+#### 16.3.2 文件限制
+- **支持格式**: PDF (.pdf)
+- **最大大小**: 10MB
+- **文件名**: 自动添加时间戳避免冲突
+
+#### 16.3.3 权限要求
+- **允许角色**: admin, editor, manager
+- **认证方式**: JWT Bearer Token
+- **API端点**: BJT Core Entities (`/wp-json/bjt/v1/upload/*`)
+
+### 16.4 前端集成示例
+
+#### 16.4.1 React组件示例
+```typescript
+interface PdfUploaderProps {
+  hostId?: number;
+  onChange?: (url: string) => void;
+}
+
+const PdfUploader: React.FC<PdfUploaderProps> = ({ hostId, onChange }) => {
+  const handleUpload = async (file: File) => {
+    const formData = new FormData();
+    formData.append('pdf_file', file);
+    formData.append('host_id', hostId?.toString() || '0');
+    formData.append('upload_dir', 'frontend/public/uploads');
+
+    try {
+      const response = await fetch('/wp-json/bjt/v1/upload/specification', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${getAuthToken()}`,
+        },
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        onChange?.(result.data.url);
+      }
+    } catch (error) {
+      console.error('Upload failed:', error);
+    }
+  };
+};
+```
+
+#### 16.4.2 认证Token获取
+```javascript
+// 通过登录获取JWT Token
+const getAuthToken = async () => {
+  const response = await fetch('/wp-json/bjt/v1/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      username: 'admin',
+      password: 'password123'
+    })
+  });
+  
+  const data = await response.json();
+  return data.success ? data.data.token : null;
+};
+```
+
+### 16.5 错误处理
+
+#### 16.5.1 文件上传相关错误码
+
+| 状态码 | 错误码 | 描述 |
+|--------|--------|------|
+| 400 | invalid_host_id | 主机ID无效 |
+| 400 | no_file | 没有上传文件 |
+| 400 | upload_error | 文件上传错误 |
+| 400 | invalid_file_type | 文件类型无效 |
+| 400 | file_too_large | 文件过大 |
+| 401 | rest_not_logged_in | 未提供授权令牌 |
+| 401 | user_not_authenticated | 用户未认证 |
+| 403 | insufficient_permissions | 权限不足 |
+| 500 | save_failed | 保存文件失败 |
+
+#### 16.5.2 自动重试机制
+前端组件支持自动重试机制：
+- 遇到401错误时自动尝试重新登录
+- 获取新token后重试上传
+- 最多重试一次，避免无限循环
+
+## 17. 必选备件逻辑说明
+
+### 17.1 业务逻辑概述
+
+在BJT产品系统中，必选备件（Required Parts）是指某些产品在使用时必须配套的其他零部件。根据产品类型的不同，必选备件的查询逻辑也有所区别：
+
+### 17.2 产品类型与必选备件关系
+
+#### 17.2.1 主机（Host Parts）
+- **料号格式**: `60A01xxx`
+- **必选备件**: 主机本身**没有必选备件**
+- **API返回**: `required_parts` 字段始终返回空数组 `[]`
+- **关系查询**: 主机的配件和备件关系通过关系接口 `/relations/{part_number}` 查询
+
+**示例主机料号**:
+- `60A01143` - LA-E4S V2.0主机-标准版
+- `60A01141` - LA-E4S V2.0主机-美标版
+- `60A01148` - LA-E4S(paper)主机-标准版
+- `60A01149` - LA-E4S(paper)主机-美标版
+
+#### 17.2.2 配件（Accessories）
+- **料号格式**: `60Axxxxx`（除主机外的60A开头料号）
+- **必选备件**: 某些配件有必选备件
+- **数据来源**: 查询 `wp_bjt_relations` 表，使用 `child_part_number` 字段匹配
+- **API接口**: `/accessories/{accessoryId}/required`
+
+**有必选备件的配件**:
+- `60A11002` (FR8002 收卷车) → 必选备件：`05A0101289,05A0101290` (数量：2,2)
+- `60A11009` (FR8004 收卷车) → 必选备件：`05A0101289,05A0101290` (数量：2,2)
+- `60A04005` (EC2005 工作台) → 必选备件：`05A0101289,05A0101290` (数量：2,2)
+
+#### 17.2.3 备件（Spare Parts）
+- **料号格式**: 非60A开头的各种格式
+- **必选备件**: 某些备件有必选备件
+- **数据来源**: 查询 `wp_bjt_spare_parts` 表的 `required_parts` 字段
+- **API接口**: 在备件详情接口中直接返回
+
+**有必选备件的备件**:
+- `01A0101038` (去皱硅胶) → 必选备件：`11A0103002,11A0101003` (数量：2,2)
+- `07A0105325` (陶瓷刀片) → 必选备件：`11A0103157,11A0101002` (数量：1,1)
+
+### 17.3 数据格式统一
+
+#### 17.3.1 数据库存储格式
+在数据库中，必选备件信息以逗号分隔的字符串形式存储：
+- `required_parts`: `"05A0101289,05A0101290"`
+- `required_quantity`: `"2,2"`
+
+#### 17.3.2 API返回格式
+在API响应中，必选备件信息统一返回为数组格式：
+```json
+{
+  "required_parts": [
+    {
+      "part_number": "05A0101289",
+      "quantity": 2
+    },
+    {
+      "part_number": "05A0101290", 
+      "quantity": 2
+    }
+  ]
+}
+```
+
+#### 17.3.3 空值处理
+- 如果产品没有必选备件，返回空数组：`"required_parts": []`
+- 不返回 `null` 或 `undefined`
+
+### 17.4 API控制器实现
+
+#### 17.4.1 主机控制器 (class-part-controller.php)
+```php
+// 主机没有必选备件，直接返回空数组
+$formatted_item['required_parts'] = [];
+```
+
+#### 17.4.2 配件控制器 (class-accessory-controller.php)
+```php
+// 从关系表查询必选备件
+$relations = $wpdb->get_results($wpdb->prepare(
+    "SELECT required_parts, required_quantity 
+     FROM {$wpdb->prefix}bjt_relations 
+     WHERE child_part_number = %s 
+     AND required_parts IS NOT NULL 
+     AND required_parts != ''",
+    $part_number
+));
+```
+
+#### 17.4.3 备件控制器 (class-spare-part-controller.php)
+```php
+// 从备件表直接获取必选备件信息
+// required_parts 字段已存在于表中
+$required_parts = $item_db_object->required_parts;
+$required_quantity = $item_db_object->required_quantity;
+```
+
+### 17.5 前端使用指南
+
+#### 17.5.1 判断产品类型
+```javascript
+function determinePartType(partNumber) {
+  if (partNumber.startsWith('60A01')) {
+    return 'host';
+  } else if (partNumber.startsWith('60A')) {
+    return 'accessory';
+  } else {
+    return 'spare_part';
+  }
+}
+```
+
+#### 17.5.2 获取必选备件
+```javascript
+// 主机：直接返回空数组
+if (partType === 'host') {
+  return [];
+}
+
+// 配件：调用专门的必选备件接口
+if (partType === 'accessory') {
+  const response = await fetch(`/wp-json/bjt/v1/accessories/${accessoryId}/required`);
+  return response.data.items;
+}
+
+// 备件：从详情接口获取
+if (partType === 'spare_part') {
+  const response = await fetch(`/wp-json/bjt/v1/spare-parts/${sparePartId}`);
+  return response.data.required_parts;
+}
+```
+
+### 17.6 测试验证
+
+#### 17.6.1 测试用例
+系统提供了完整的测试脚本 `test-required-parts-logic.php` 来验证必选备件逻辑：
+
+```bash
+# 运行测试脚本
+php test-required-parts-logic.php
+```
+
+#### 17.6.2 预期结果
+- 主机接口：`required_parts` 始终为空数组
+- 配件接口：正确返回必选备件信息（如果有）
+- 备件接口：正确返回必选备件信息（如果有）
+
+---
+
+## 18. 错误码
+
+以下是API可能返回的错误码及其含义：
+
+### 18.1 通用错误码
+
+| 状态码 | 错误码 | 描述 |
+|--------|--------|------|
+| 400 | invalid_param | 请求参数无效 |
+| 400 | missing_field | 缺少必要字段 |
+| 400 | invalid_json | JSON格式错误 |
+| 401 | rest_not_logged_in | 用户未登录 |
+| 403 | rest_forbidden | 没有操作权限 |
+| 404 | rest_not_found | 资源不存在 |
+| 405 | rest_method_not_allowed | 请求方法不允许 |
+| 500 | db_error | 数据库操作错误 |
+| 500 | server_error | 服务器内部错误 |
+
+### 18.2 认证错误码
+
+| 状态码 | 错误码 | 描述 |
+|--------|--------|------|
+| 401 | invalid_credentials | 用户名或密码错误 |
+| 401 | invalid_token | 无效的令牌 |
+| 401 | expired_token | 令牌已过期 |
+
+### 18.3 产品相关错误码
+
+| 状态码 | 错误码 | 描述 |
+|--------|--------|------|
+| 400 | invalid_product_type | 产品类型无效 |
+| 404 | product_not_found | 产品不存在 |
+| 400 | duplicate_part_number | 料号重复 |
+| 400 | missing_part_number | 缺少料号 |
+| 400 | missing_product_line_id | 缺少产品线ID |
+| 409 | duplicate_spare_part | 该产品线中已存在相同料号的备件 |
+| 400 | invalid_required_parts_format | 必选配件格式无效 |
+| 400 | required_parts_not_found | 必选配件不存在 |
+| 400 | insufficient_inventory | 库存不足 |
+| 400 | invalid_pricing_tier | 定价层级无效 |
+
+### 18.4 备件相关错误码
+
+| 状态码 | 错误码 | 描述 |
+|--------|--------|------|
+| 404 | spare_part_not_found | 备件不存在 |
+| 400 | invalid_spare_part_id | 备件ID无效 |
+| 400 | spare_part_required_parts_missing | 必选配件缺失 |
+| 400 | spare_part_compatibility_check_failed | 备件兼容性检查失败 |
+| 400 | invalid_app_model_format | 适用机型格式无效 |
+| 400 | invalid_serial_number_format | 序列号格式无效 |
+| 400 | spare_part_filter_options_unavailable | 备件筛选选项不可用 |
+
+### 18.5 购物车错误码
+
+| 状态码 | 错误码 | 描述 |
+|--------|--------|------|
+| 400 | cart_empty | 购物车为空 |
+| 400 | invalid_quantity | 数量无效 |
+| 404 | cart_item_not_found | 购物车项目不存在 |
+
+### 18.6 订单错误码
+
+| 状态码 | 错误码 | 描述 |
+|--------|--------|------|
+| 400 | invalid_order_status | 订单状态无效 |
+| 400 | insufficient_inventory | 库存不足 |
+| 400 | invalid_address | 地址信息无效 |
+| 404 | order_not_found | 订单不存在 |
+
+### 18.7 关系接口错误码
+
+| 状态码 | 错误码 | 描述 |
+|--------|--------|------|
+| 400 | invalid_max_levels | 最大层级数超出范围(1-5) |
+| 400 | invalid_part_number | 料号格式无效 |
+| 404 | part_not_found | 指定料号不存在 |
+| 404 | no_accessories_found | 未找到相关配件 |
+
+### 18.8 系统设置相关错误码
+
+| 状态码 | 错误码 | 描述 |
+|--------|--------|------|
+| 400 | missing_settings_data | 缺少设置数据 |
+| 400 | settings_validation_failed | 设置数据验证失败 |
+| 400 | json_encode_failed | JSON编码失败 |
+| 500 | settings_get_failed | 获取设置失败 |
+| 500 | settings_update_failed | 更新设置失败 |
+| 500 | database_save_failed | 数据库保存失败 |
+
+### 18.9 错误响应格式
+
+错误响应的JSON格式如下：
+
+```json
+{
+  "success": false,
+  "code": "error_code",
+  "message": "错误描述信息",
+  "data": {
+    // 可能包含的额外错误信息
+  },
+  "status": 400 // HTTP状态码
+}
+```
+
+### 18.10 错误响应格式
+
+错误响应的JSON格式如下：
+
+```json
+{
+  "success": false,
+  "code": "error_code",
+  "message": "错误描述信息",
+  "data": {
+    // 可能包含的额外错误信息
+  },
+  "status": 400 // HTTP状态码
+}
 ```

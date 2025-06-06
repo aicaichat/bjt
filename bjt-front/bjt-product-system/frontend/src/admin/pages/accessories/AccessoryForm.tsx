@@ -5,6 +5,7 @@ import {
 } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import AdminPageHeader from '../../components/common/AdminPageHeader';
+import DictionarySelect from '../../components/common/DictionarySelect';
 import { useAdminApi } from '../../hooks/useAdminApi';
 import { accessoryService, AccessoryFormData } from '../../services/admin-accessory.service';
 import adminProductLineService from '../../services/admin-product-line.service';
@@ -145,7 +146,7 @@ const AccessoryForm: React.FC = () => {
                     placeholder="请选择产品线"
                     loading={productLineLoading}
                   >
-                    {productLineData?.items?.map(line => (
+                    {(productLineData as any)?.items?.map((line: any) => (
                       <Option key={line.id} value={line.id}>
                         {line.title_zh || line.title_en}
                       </Option>
@@ -246,11 +247,10 @@ const AccessoryForm: React.FC = () => {
                   label="状态"
                   rules={[{ required: true, message: '请选择状态' }]}
                 >
-                  <Select placeholder="请选择状态">
-                    <Option value="publish">已发布</Option>
-                    <Option value="draft">草稿</Option>
-                    <Option value="trash">已删除</Option>
-                  </Select>
+                  <DictionarySelect
+                    dictionaryType="statuses"
+                    placeholder="请选择状态"
+                  />
                 </Form.Item>
               </Col>
               <Col span={8}>
@@ -259,11 +259,10 @@ const AccessoryForm: React.FC = () => {
                   label="单位"
                   rules={[{ required: true, message: '请选择单位' }]}
                 >
-                  <Select placeholder="请选择单位">
-                    <Option value="pcs">件(pcs)</Option>
-                    <Option value="box">箱(box)</Option>
-                    <Option value="roll">卷(roll)</Option>
-                  </Select>
+                  <DictionarySelect
+                    dictionaryType="units"
+                    placeholder="请选择单位"
+                  />
                 </Form.Item>
               </Col>
               <Col span={8}>

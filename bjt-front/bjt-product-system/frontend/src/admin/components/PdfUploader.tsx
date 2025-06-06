@@ -25,57 +25,24 @@ const PdfUploader: React.FC<PdfUploaderProps> = ({
   // 获取认证token
   const getAuthToken = async (): Promise<string> => {
     try {
-      // 首先尝试从全局变量获取JWT token
+      // 首先尝试从localStorage获取JWT token（和其他API一致）
+      const jwtToken = localStorage.getItem('bjt_token') || sessionStorage.getItem('bjt_token');
+      if (jwtToken) {
+        console.log('PdfUploader: Using JWT token from storage');
+        return jwtToken;
+      }
+      
+      // 作为fallback，尝试从全局变量获取
       const globalToken = (window as any).bjtApiToken || (window as any).wpApiSettings?.nonce;
       if (globalToken) {
         console.log('PdfUploader: Using global token:', globalToken.substring(0, 20) + '...');
         return globalToken;
       }
 
-      // 如果全局变量不存在，尝试通过BJT Core Entities API获取
-      console.log('PdfUploader: Fetching auth token from BJT API...');
-      const response = await fetch('/wp-json/bjt/v1/upload/nonce', {
-        credentials: 'include',
-      });
-      
-      if (response.ok) {
-        const tokenData = await response.json();
-        console.log('PdfUploader: Got token response:', tokenData);
-        
-        if (tokenData.success && tokenData.data?.nonce) {
-          console.log('PdfUploader: Got nonce from BJT API:', tokenData.data.nonce);
-          return tokenData.data.nonce;
-        }
-      }
-      
-      // 作为fallback，尝试WordPress用户API
-      console.log('PdfUploader: Fallback to WordPress API...');
-      const wpResponse = await fetch('/wp-json/wp/v2/users/me', {
-        credentials: 'include',
-      });
-      
-      if (wpResponse.ok) {
-        const userData = await wpResponse.json();
-        console.log('PdfUploader: WordPress user authentication successful:', userData);
-        
-        // 检查响应头中的token
-        const tokenFromHeader = wpResponse.headers.get('X-WP-Nonce') || 
-                                wpResponse.headers.get('x-wp-nonce') || 
-                                wpResponse.headers.get('Authorization') || '';
-        
-        if (tokenFromHeader) {
-          console.log('PdfUploader: Got token from header:', tokenFromHeader.substring(0, 20) + '...');
-          return tokenFromHeader.replace('Bearer ', '');
-        }
-        
-        // 使用用户ID作为fallback
-        return `user_${userData.id}`;
-      }
-      
-      console.warn('PdfUploader: Failed to get auth token, using empty token');
+      console.warn('PdfUploader: No authentication token found');
       return '';
     } catch (error) {
-      console.error('PdfUploader: Error fetching auth token:', error);
+      console.error('PdfUploader: Error getting auth token:', error);
       return '';
     }
   };
@@ -118,20 +85,18 @@ const PdfUploader: React.FC<PdfUploaderProps> = ({
         }
       }, 100);
 
-      // 使用BJT Core Entities的上传API
+      // 使用BJT Core Entities的通用文件上传API
       const formData = new FormData();
-      formData.append('pdf_file', file as File);
-      formData.append('host_id', hostId ? hostId.toString() : '0');
-      formData.append('upload_dir', 'frontend/public/uploads');
+      formData.append('file', file as File);
+      formData.append('upload_dir', 'uploads/machines/pdfs');
 
       console.log('PdfUploader: Uploading to BJT Core Entities API with data:', {
-        host_id: hostId,
-        upload_dir: 'frontend/public/uploads',
+        upload_dir: 'uploads/machines/pdfs',
         file_name: (file as File).name,
         file_size: (file as File).size
       });
 
-      const response = await fetch('/wp-json/bjt/v1/upload/specification', {
+      const response = await fetch('/wp-json/bjt/v1/upload/file', {
         method: 'POST',
         body: formData,
         credentials: 'include',
@@ -171,11 +136,10 @@ const PdfUploader: React.FC<PdfUploaderProps> = ({
                 
                 // 更新token并重新尝试上传
                 const newFormData = new FormData();
-                newFormData.append('pdf_file', file as File);
-                newFormData.append('host_id', hostId ? hostId.toString() : '0');
-                newFormData.append('upload_dir', 'frontend/public/uploads');
+                newFormData.append('file', file as File);
+                newFormData.append('upload_dir', 'uploads/machines/pdfs');
                 
-                const retryResponse = await fetch('/wp-json/bjt/v1/upload/specification', {
+                const retryResponse = await fetch('/wp-json/bjt/v1/upload/file', {
                   method: 'POST',
                   body: newFormData,
                   credentials: 'include',
