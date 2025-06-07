@@ -226,7 +226,7 @@ export interface SparePart {
   part_number: string;
   name: string;
   app_model: string;
-  is_consumable: boolean;
+  is_consumable: number; // 1=易损，2=非易损，3=隐藏
   image_url: string;
   spec: string;
   spec_imperial: string;
@@ -250,7 +250,7 @@ export interface SparePartQueryParams {
   status?: string;
   product_line_id?: number;
   app_model?: string;
-  is_consumable?: boolean;
+  is_consumable?: number | null;
 }
 
 // ===== 购物车相关 =====
@@ -432,7 +432,7 @@ export interface ProductFilters {
   thickness?: number;
   width?: number;
   length?: number;
-  is_consumable?: boolean;
+  is_consumable?: number | null; // 1=易损，2=非易损，3=隐藏，null=全部
   search?: string;
 }
 

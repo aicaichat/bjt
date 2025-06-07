@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { SparePart } from '../types/spareParts';
 import { useTranslation } from 'react-i18next';
+import { formatCompositeDimension, formatWeight } from '../utils/formatUtils';
 
 interface SparePartTooltipProps {
   sparePart: SparePart | null;
@@ -65,10 +66,18 @@ export const SparePartTooltip: React.FC<SparePartTooltipProps> = ({
   }
 
   const displayName = language === 'zh' ? sparePart.name_zh : sparePart.name_en;
-  const displaySpec = language === 'zh' ? sparePart.spec : sparePart.spec_imperial;
   
-  // 根据用户区域选择公制或英制
-  const isImperial = userRegion === 'na' || userRegion === 'au';
+  // 根据用户区域确定单位制
+  const unitSystem = (userRegion === 'na' || userRegion === 'au') ? 'imperial' : 'metric';
+  
+  // 智能选择规格显示
+  const displaySpec = (() => {
+    if (unitSystem === 'metric') {
+      return sparePart.spec?.trim() || sparePart.spec_imperial?.trim() || '';
+    } else {
+      return sparePart.spec_imperial?.trim() || sparePart.spec?.trim() || '';
+    }
+  })();
 
   return (
     <div
@@ -94,82 +103,71 @@ export const SparePartTooltip: React.FC<SparePartTooltipProps> = ({
         </p>
       </div>
 
-      {/* 基础信息 - 严格按照展示逻辑 */}
-      <div className="space-y-2 mb-4">
-        <h4 className="font-medium text-orange-400 text-sm">
-          {language === 'zh' ? '基础信息' : 'Basic Information'}
-        </h4>
-        
-        {/* 适配机型 */}
-        {sparePart.app_model && (
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-400">{language === 'zh' ? '适配机型' : 'Compatible Model'}:</span>
-            <span className="text-white max-w-48 text-right">{sparePart.app_model}</span>
-          </div>
-        )}
-        
-        {/* 规格 */}
-        {displaySpec && (
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-400">{language === 'zh' ? '规格' : 'Specification'}:</span>
-            <span className="text-white max-w-48 text-right">
-              {isImperial ? (sparePart.spec_imperial || sparePart.spec) : (sparePart.spec || sparePart.spec_imperial)}
-            </span>
-          </div>
-        )}
-        
-        {/* 适配序列号 */}
-        {sparePart.app_sn && (
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-400">{language === 'zh' ? '适配序列号' : 'Compatible S/N'}:</span>
-            <span className="text-white max-w-48 text-right">{sparePart.app_sn}</span>
-          </div>
-        )}
-
-        {/* 单箱数量 */}
-        {sparePart.pcs_per_box && (
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-400">{language === 'zh' ? '单箱数量' : 'Pcs per Box'}:</span>
-            <span className="text-white">{sparePart.pcs_per_box} {t('details.properties.unit', { ns: 'spareParts' })}</span>
-          </div>
-        )}
-      </div>
-
-      {/* 包装信息 - 严格按照展示逻辑 */}
+      {/* 详细信息 - 严格按照3个必需字段展示 */}
       <div className="space-y-2 mb-4">
         <h4 className="font-medium text-blue-400 text-sm">
-          {language === 'zh' ? '包装信息' : 'Packaging Information'}
+          {language === 'zh' ? '详细信息' : 'Detailed Information'}
         </h4>
         
-        {/* 包装尺寸 */}
-        {(sparePart.package_size_cm || sparePart.package_size_inch) && (
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-400">
-              {language === 'zh' ? '包装尺寸' : 'Package Size'}:
-            </span>
-            <span className="text-white max-w-48 text-right">
-              {isImperial 
-                ? `${sparePart.package_size_inch || 'N/A'} inch`
-                : `${sparePart.package_size_cm || 'N/A'} cm`
-              }
-            </span>
-          </div>
-        )}
+        {/* 适配序列号 - 第1个必需字段 */}
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-400">{language === 'zh' ? '适配序列号' : 'Compatible Serial Number'}:</span>
+          <span className="text-white max-w-48 text-right">
+            {sparePart.app_sn || (language === 'zh' ? '通用' : 'Universal')}
+          </span>
+        </div>
         
-        {/* 单件净重 */}
-        {(sparePart.net_weight_kg || sparePart.net_weight_lbs) && (
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-400">
-              {language === 'zh' ? '单件净重' : 'Net Weight'}:
-            </span>
-            <span className="text-white">
-              {isImperial 
-                ? `${sparePart.net_weight_lbs || 'N/A'} lbs`
-                : `${sparePart.net_weight_kg || 'N/A'} kg`
+        {/* 包装尺寸 - 第2个必需字段，智能显示单位制 */}
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-400">
+            {(() => {
+              if (unitSystem === 'metric') {
+                return String(t('details.properties.packageSizeCm', { ns: 'spareParts' }) || (language === 'zh' ? '包装尺寸(cm)' : 'Package Size(cm)'));
+              } else {
+                return String(t('details.properties.packageSizeInch', { ns: 'spareParts' }) || (language === 'zh' ? '包装尺寸(inch)' : 'Package Size(inch)'));
               }
-            </span>
-          </div>
-        )}
+            })()}:
+          </span>
+          <span className="text-white max-w-48 text-right">
+            {(() => {
+              if (unitSystem === 'metric') {
+                return formatCompositeDimension(sparePart.package_size_cm) || 
+                       formatCompositeDimension(sparePart.package_size_inch) || 
+                       (language === 'zh' ? '请咨询客服' : 'Please contact service');
+              } else {
+                return formatCompositeDimension(sparePart.package_size_inch) || 
+                       formatCompositeDimension(sparePart.package_size_cm) || 
+                       (language === 'zh' ? '请咨询客服' : 'Please contact service');
+              }
+            })()}
+          </span>
+        </div>
+        
+        {/* 单件净重 - 第3个必需字段，智能显示单位制 */}
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-400">
+            {(() => {
+              if (unitSystem === 'metric') {
+                return String(t('details.properties.netWeightKg', { ns: 'spareParts' }) || (language === 'zh' ? '净重(kg)' : 'Net Weight(kg)'));
+              } else {
+                return String(t('details.properties.netWeightLbs', { ns: 'spareParts' }) || (language === 'zh' ? '净重(lbs)' : 'Net Weight(lbs)'));
+              }
+            })()}:
+          </span>
+          <span className="text-white">
+            {(() => {
+              if (unitSystem === 'metric') {
+                return formatWeight(sparePart.net_weight_kg) || 
+                       formatWeight(sparePart.net_weight_lbs) || 
+                       (language === 'zh' ? '请咨询客服' : 'Please contact service');
+              } else {
+                return formatWeight(sparePart.net_weight_lbs) || 
+                       formatWeight(sparePart.net_weight_kg) || 
+                       (language === 'zh' ? '请咨询客服' : 'Please contact service');
+              }
+            })()}
+          </span>
+        </div>
       </div>
 
       {/* 必选备件信息（如果有） */}

@@ -1,0 +1,124 @@
+类型,属性,商城中该字段的中文名,商城中该字段的英文名,单位,选型商城,CRM字段中文,CRM字段英文,API,CRM规格,U8/CRM/商城 填写要求,例子,U8字段现状,U8字段计划更改,U8须要的操作
+,易损,,,,橙色：商城上编辑,易损件,Wear Parts,customItem210__c,文本,,Y,,,NA
+"物品属性
+Item Info",产品图片,产品图片,Product Image,,橙色：商城上编辑,产品图片,Product Image,fileImage1,,,,,,NA
+,型号(公制),型号,Model,,"绿色：从CRM获取，
+耗材商品：直接从CRM获取，
+设备、配件：从CRM获取后，商城进行模糊匹配出型号表中的具体型号，边上显示CRM原始文本做人工核对；",Model,Model,customItem157__c,文本,按照产品完整型号填写,MEX-RH30-13-20-13-L,已新增型号（公制）,与厚度/克重，互换,"新增型号(公制)，然后把耗材的型号内容移入；设备填写完整型号和大版本号，不含版本小版本号
+设备的英文名称，要把型号 版本号移走？"
+,型号(英制),型号,Model,,"耗材商品：直接从CRM获取，
+设备、配件：CRM中此值是空，商城用不到此属性。",Model(Inch),Model（Inch),customItem180__c,文本,按照产品完整型号填写,MEX-RH30-05-08-5-L,已将英文名(英制)更改为型号（英制）,不动,有，U8字段名称改为型号(英制)，设备的英文名(英制)要清空
+,品牌,品牌,Brand,,,品牌名,Brand Name,customItem168__c,单选,只能用这两个品牌，且大小写注意,LockedAir/LockedPaper,？?,测试将字体长度改小，填写是进行数据选择,有，LockedAir/LockedPaper
+,料号,料号,Part No.,,,产品编号,Product Code,productName,,和U8一致,90R01258,,不动,有
+,名称(英文),名称,Item,,,英文名称,Product English Name,customItem156__c,文本,膜：袋型的英文名+film,"MEX:Air pillow film
+MEC:Box-packed air pillow film
+MEY: Open air pillow film
+MFA:Air tube film
+MFB:Air bubble film
+MFC:Air square bubble film
+MFD:Air round bubble film
+MFE:Air  tube-wider film
+MFF:Air tiny bubble film
+MFH:Air heart shape film
+MFG:Air larger bubble film
+MFJ:空白
+纸塑系列：
+MEX:Paper pillow film
+MFC:Paper square bubble film
+MFB:Paper bubble film",英文名,不动，编写规则需确定,已有，用于保存存货名称英文，耗材的和设备；设备的英文名称，要把型号 版本号移走？
+,电压,电压,Voltage,V,,电压(v),Voltage(v),customItem211__c,文本,纯数字，宽压就写范围,"110；
+220；
+100~240   ",已新增,不动,无，新增
+,频率,频率,Frequency,Hz,,频率(hz),Frequency(Hz),customItem212__c,文本,纯数字，,"50;
+60;
+50/60",已新增,不动,无，新增
+,Spec.(公制),规格描述,Spec.,,,Spec.(公制),Spec.,customItem227__c,文本,"膜耗材：厚度 材质 袋型 宽度x长度 一卷长度 一托数量
+纸耗材：
+湿水胶带：
+气柱袋：
+设备：
+外设：
+备件：","13um 30%HDPE Pillow, 20cmx13cm,1000m,150R/PL",已将规格型号（英文）变更,不动，编写规则需确定,无，可使用规格型号(英文)
+,Spec.(英制),规格描述,Spec.,,,Spec.(英制),Spec.(Imperial),customItem228__c,文本,,".5mil  30%HDPE Pillow, 8""x5.0"", 3281', 150R/PL",,将物料号状态改成Spec.(英制），新增一个物料号状态,无，新增
+,适用机型,适用机型,Applicable Machine,,"黄色：
+商城型号复选，选项从型号表获取
+从CRM获取后，商城进行模糊匹配出型号表中的具体型号，边上显示CRM原始文本做人工核对；",适配序列号,Compatible Models,customItem229__c,文本,写完整型号，型号需要和商城一致；,LA-E4C/LA-E4S,,新增，最后加,无，新增
+,适配序列号,适配序列号,Applicable SN.,,橙色：商城上编辑,,Compatible Serial Numbers,customItem230__c,文本,,,,新增，最后加,无，新增
+,商品单位,单位,Unit,,,unit,unit,unit,文本,填写：Pcs /Box /Roll / Unit,,单位已改成英文,不动,已有，要全英文
+"额外属性
+Other Info",袋型,袋型,Film Type,,从CRM获取后，商城进行模糊匹配出型号表中的具体型号，边上显示CRM原始文本做人工核对；,Style,Style,customItem226__c,文本,只能是例子中的这几种，有新增须讨论确定后才能用；,"Pillow；
+Bubble；
+Tube;
+Precut Air Pillow;",,把宽度（英制）改为袋型,无，新增
+,系列,袋型编码,Film Type Code,,从CRM获取后，商城进行模糊匹配出型号表中的具体型号，边上显示CRM原始文本做人工核对；,Series,Series,,文本,根据耗材的型号要求,MEX,,把长度改为系列,无，新增
+,材质,材质,Material,,,材质,Material,customItem185__c,文本,只能是例子中的这几种，有新增须讨论确定后才能用；,"HDPE;
+LDPE;
+PAPE;
+PAPER-PE",材质,不动，编写规则需确定,有
+,泡径,泡径,Bubble Dia.,mm,,泡径(mm),Bubble Diameter(mm),customItem221__c,数字,纯数字，,13,泡径(公制),把印刷成本改为泡径,无，新增
+,泡径(英制),泡径,Bubble Dia.,inch,,泡径(inch),Bubble Diameter (Inch),customItem236__c,文本,纯数字，,5,跑径(英制),把内层纸改为泡径(英制),无，新增
+,厚度/克重(公制),厚度/克重(公制),Thickness/Basis Weight,μm   / gsm,,厚度/克重(um/gsm),"Thickness(um)
+/Base Weight(gsm)","
+customItem186__c",文本,纯数字，,13,厚度/克重,与型号(公制)做替换,有
+,厚度/克重(英制),厚度/克重(英制),Thickness/Basis Weight,mil   / lb,,厚度/克重(mil/lb),Thickness (mil)/Base Weight (lb),customItem237__c,文本,纯数字，,05,,新增在频率下边,无，新增
+,宽度(公制),宽度,Width,cm,,宽度(cm),Width(cm),customItem148__c,数字,纯数字，,20,宽度,不动,有
+,宽度(英制),宽度,Width,inch,,宽度 (inch),Width (inch),customItem233__c,文本,纯数字，,08,宽度(英制),需新增，宽度(英制),有
+,袋长(公制),袋长,Perforation,cm,,长度(cm),Perforation Width(cm),customItem150__c,数字,纯数字，,13,虚线宽度,改名字,有，改为虚线间距？
+,袋长(英制),袋长,Perforation,inch,,长度(inch),Perforation Width(Inch),customItem234__c,文本,纯数字，,5,,把外层纸改为袋长(英制),无，新增
+,总长(公制),总长,Length,m,,长度(m),Length(m),customItem149__c,数字,纯数字，,1000,长度,包/拖盘改名字,有
+,总长(英制),总长,Length,ft,,Length（Feet）,Length（Feet）,customItem235__c,文本,纯数字，,3281,,总厚度改名字,无，新增
+,筋数,筋数,Reinforcement,,,加筋数量,Reinforcement Quantity,customItem154__c,数字,纯数字，,5,加筋数量,不动,有
+,层数,层数,Ply,,,层数,Number of Layers,customItem200__c,数字,纯数字，只用于牛皮纸,1,层数,不动,有
+,颜色,颜色,Color,,,颜色,Color,customItem238__c,文本,首字母大写，只用于纸和纸胶带,Black,颜色,不动,有
+,印刷,印刷,Printing,,,是否印刷,Print or not,customItem187__c,单选,只能是例子中的这几种，有新增须讨论确定后才能用；,"YES;
+NO;
+Customized",印刷,改为选择项,有
+,纸筒内径(公制),纸筒内径,Inner Dia.,cm,,纸筒内径(公制),Inner Diameter (cm),customItem239__c,文本,纯数字，,5.08,,改厂家型号,无，新增
+,纸筒内径(英制),纸筒内径,Inner Dia.,inch,,纸筒内径(英制),Inner Diameter (inch),customItem240__c,文本,纯数字，,2,,改焊接方式,无，新增
+,必选品,必选品,Necessaries,,橙色：商城上编辑,NA,NA,,,,,NA,,NA
+,必选品数量,必选品数量,Qty. of necessaries,,橙色：商城上编辑,,,,,,,,,
+"包装属性
+Package Info",包装方式,包装方式,Packaging Method,,,包装方式,Packaging Method,customItem241__c,文本,,"Box;
+",,,新增，英文描述包装方式
+,包装图片,包装图片,Packaging Image,,橙色：商城上编辑,包装图片,Packaging Image,customItem242__c,文本,,,,,NA
+,包装尺寸,包装尺寸,Packaging Dim.,cm,,包装尺寸(cm),Packaging Dimensions(cm),customItem243__c,文本,纯数字，,21*21*42,,,无，新增
+,包装尺寸(英制),包装尺寸,Packaging Dim.,inch,,包装尺寸(Inch),Packaging Dimensions(Inch),customItem244__c,文本,纯数字，,8.3*8.3*16.5,,,无，新增
+,单件净重,单件净重,Net Weight,kg,,单件净重(kg),Net Weight(kg),customItem245__c,文本,纯数字，,4.65,净重,,有
+,单件净重(英制),单件净重,Net Weight,lb,,单件净重(lb),Net Weight(lb),customItem246__c,文本,纯数字，,10.25,,,无，新增
+,包装毛重,包装毛重,Gross Weight,kg,,包装毛重(kg),Gross Weight(kg),customItem247__c,文本,纯数字，,10.13,毛重,,有
+,包装毛重(英制),包装毛重,Gross Weight,lb,,包装毛重(lb),Gross Weight(lb),customItem248__c,文本,纯数字，,22.34,,,无，新增
+,单箱数量,单箱数量,Qty per Carton,,,单箱数量,Quantity per Carton,customItem249__c,文本,纯数字，,2,,,无，新增
+"打托属性
+Pallet Info",托盘尺寸,托盘尺寸,Pallet Size,cm,橙色：商城上编辑,托盘尺寸(cm),Pallet Size(cm),customItem250__c,文本,纯数字，,110*110,,,NA
+,托盘尺寸(英制),托盘尺寸,Pallet Size,inch,橙色：商城上编辑,托盘尺寸(英制),Pallet Size(Inch),customItem251__c,文本,纯数字，,43.3*43.3,,,NA
+,一托数量1,一托数量,Packs per Pallet,,橙色：商城上编辑,一托数量1,Packs per Pallet 1,customItem252__c,文本,纯数字，,150,包/托,,有，用不到，商城上单独编辑
+,打托高度1,打托高度,Pallet Height,cm,橙色：商城上编辑,打托高度1(cm),Pallet Height 1,customItem253__c,文本,纯数字，,141,,,NA
+,打托高度1(英制),打托高度1,Pallet Height,inch,橙色：商城上编辑,打托高度1(Inch),Pallet Height 1 (Inch),customItem254__c,文本,纯数字，,55.51,,,NA
+,整托毛重1,整托毛重1,GW per Pallet,kg,橙色：商城上编辑,整托毛重1(kg),Total Gross Weight per Pallet 1(kg),customItem255__c,文本,纯数字，,775.05,,,NA
+,整托毛重1(英制),整托毛重1,GW per Pallet,lb,橙色：商城上编辑,整托毛重1(lb),Total Gross Weight per Pallet 1 (lb),customItem256__c,文本,纯数字，,1708.69,,,NA
+,一托数量2,一托数量2,Packs per Pallet,,橙色：商城上编辑,一托数量2,Packs per Pallet 2,customItem257__c,文本,纯数字，,200,,,NA
+,打托高度2,打托高度2,Pallet Height,cm,橙色：商城上编辑,打托高度2(cm),Pallet Height 2(cm),customItem258__c,文本,纯数字，,185,,,NA
+,打托高度2(英制),打托高度2,Pallet Height,inch,橙色：商城上编辑,打托高度2(Inch),Pallet Height 2 (Inch),customItem259__c,文本,纯数字，,72.83,,,NA
+,整托毛重2,整托毛重2,GW per Pallet,kg,橙色：商城上编辑,整托毛重2(kg),Total Gross Weight per Pallet 2(kg),customItem260__c,文本,纯数字，,1028.4,,,NA
+,整托毛重2(英制),整托毛重2,GW per Pallet,lb,橙色：商城上编辑,整托毛重2(lb),Total Gross Weight per Pallet 2 (lb),customItem261__c,文本,纯数字，,2267.23,,,NA
+,一托数量3,一托数量3,Packs per Pallet,,橙色：商城上编辑,一托数量3,Packs per Pallet 3,customItem262__c,文本,纯数字，,100,,,NA
+,打托高度3,打托高度3,Pallet Height,cm,橙色：商城上编辑,打托高度3(cm),Pallet Height 3(cm),customItem263__c,文本,纯数字，,100,,,NA
+,打托高度3(英制),打托高度3,Pallet Height,inch,橙色：商城上编辑,打托高度3(Inch),Pallet Height 3 (Inch),customItem264__c,文本,纯数字，,39.37,,,NA
+,整托毛重3,整托毛重3,GW per Pallet,kg,橙色：商城上编辑,整托毛重3(kg),Total Gross Weight per Pallet 3(kg),customItem265__c,文本,纯数字，,521.7,,,NA
+,整托毛重3(英制),整托毛重3,GW per Pallet,lb,橙色：商城上编辑,整托毛重3(lb),Total Gross Weight per Pallet 3 (lb),customItem266__c,文本,纯数字，,1150.15,,,NA
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+U8特有属性,总厚度,,,,,,,,,,,,,
+,厂家型号,,,,,,,,,,,,,
+,内层纸,,,,,,,,,,,,,
+,外层纸,,,,,,,,,,,,,
+,存货名称,,,,,,,,,,,,,
+,是否装箱,,,,,,,,,,,,,
+,规格型号,,,,,,,,,,,,,
+,工程图号,,,,,,,,,,,,,
+,,,,,,,,,,,,,,

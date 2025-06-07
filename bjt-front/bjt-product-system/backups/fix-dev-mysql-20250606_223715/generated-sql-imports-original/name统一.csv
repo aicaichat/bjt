@@ -1,0 +1,110 @@
+类型,属性,商城中该字段的中文名,商城中该字段的英文名,单位,例子
+,易损,,,,Y
+"物品属性
+Item Info",产品图片,产品图片,Product Image,,
+,型号(公制),型号,Model,,MEX-RH30-13-20-13-L
+,型号(英制),型号,Model,,MEX-RH30-05-08-5-L
+,品牌,品牌,Brand,,LockedAir/LockedPaper
+,料号,料号,Part No.,,90R01258
+,名称(英文),名称,Item,,"MEX:Air pillow film
+MEC:Box-packed air pillow film
+MEY: Open air pillow film
+MFA:Air tube film
+MFB:Air bubble film
+MFC:Air square bubble film
+MFD:Air round bubble film
+MFE:Air  tube-wider film
+MFF:Air tiny bubble film
+MFH:Air heart shape film
+MFG:Air larger bubble film
+MFJ:空白
+纸塑系列：
+MEX:Paper pillow film
+MFC:Paper square bubble film
+MFB:Paper bubble film"
+,电压,电压,Voltage,V,"110；
+220；
+100~240   "
+,频率,频率,Frequency,Hz,"50;
+60;
+50/60"
+,Spec.(公制),规格描述,Spec.,,"13um 30%HDPE Pillow, 20cmx13cm,1000m,150R/PL"
+,Spec.(英制),规格描述,Spec.,,".5mil  30%HDPE Pillow, 8""x5.0"", 3281', 150R/PL"
+,适用机型,适用机型,Applicable Machine,,LA-E4C/LA-E4S
+,适配序列号,适配序列号,Applicable SN.,,
+,商品单位,单位,Unit,,
+"额外属性
+Other Info",袋型,袋型,Film Type,,"Pillow；
+Bubble；
+Tube;
+Precut Air Pillow;"
+,系列,袋型编码,Film Type Code,,MEX
+,材质,材质,Material,,"HDPE;
+LDPE;
+PAPE;
+PAPER-PE"
+,泡径,泡径,Bubble Dia.,mm,13
+,泡径(英制),泡径,Bubble Dia.,inch,5
+,厚度/克重(公制),厚度/克重(公制),Thickness/Basis Weight,μm   / gsm,13
+,厚度/克重(英制),厚度/克重(英制),Thickness/Basis Weight,mil   / lb,05
+,宽度(公制),宽度,Width,cm,20
+,宽度(英制),宽度,Width,inch,08
+,袋长(公制),袋长,Perforation,cm,13
+,袋长(英制),袋长,Perforation,inch,5
+,总长(公制),总长,Length,m,1000
+,总长(英制),总长,Length,ft,3281
+,筋数,筋数,Reinforcement,,5
+,层数,层数,Ply,,1
+,颜色,颜色,Color,,Black
+,印刷,印刷,Printing,,"YES;
+NO;
+Customized"
+,纸筒内径(公制),纸筒内径,Inner Dia.,cm,5.08
+,纸筒内径(英制),纸筒内径,Inner Dia.,inch,2
+,必选品,必选品,Necessaries,,
+,必选品数量,必选品数量,Qty. of necessaries,,
+"包装属性
+Package Info",包装方式,包装方式,Packaging Method,,"Box;
+"
+,包装图片,包装图片,Packaging Image,,
+,包装尺寸,包装尺寸,Packaging Dim.,cm,21*21*42
+,包装尺寸(英制),包装尺寸,Packaging Dim.,inch,8.3*8.3*16.5
+,单件净重,单件净重,Net Weight,kg,4.65
+,单件净重(英制),单件净重,Net Weight,lb,10.25
+,包装毛重,包装毛重,Gross Weight,kg,10.13
+,包装毛重(英制),包装毛重,Gross Weight,lb,22.34
+,单箱数量,单箱数量,Qty per Carton,,2
+"打托属性
+Pallet Info",托盘尺寸,托盘尺寸,Pallet Size,cm,110*110
+,托盘尺寸(英制),托盘尺寸,Pallet Size,inch,43.3*43.3
+,一托数量1,一托数量,Packs per Pallet,,150
+,打托高度1,打托高度,Pallet Height,cm,141
+,打托高度1(英制),打托高度1,Pallet Height,inch,55.51
+,整托毛重1,整托毛重1,GW per Pallet,kg,775.05
+,整托毛重1(英制),整托毛重1,GW per Pallet,lb,1708.69
+,一托数量2,一托数量2,Packs per Pallet,,200
+,打托高度2,打托高度2,Pallet Height,cm,185
+,打托高度2(英制),打托高度2,Pallet Height,inch,72.83
+,整托毛重2,整托毛重2,GW per Pallet,kg,1028.4
+,整托毛重2(英制),整托毛重2,GW per Pallet,lb,2267.23
+,一托数量3,一托数量3,Packs per Pallet,,100
+,打托高度3,打托高度3,Pallet Height,cm,100
+,打托高度3(英制),打托高度3,Pallet Height,inch,39.37
+,整托毛重3,整托毛重3,GW per Pallet,kg,521.7
+,整托毛重3(英制),整托毛重3,GW per Pallet,lb,1150.15
+,,,,,
+,,,,,
+,,,,,
+,,,,,
+,,,,,
+,,,,,
+,,,,,
+U8特有属性,总厚度,,,,
+,厂家型号,,,,
+,内层纸,,,,
+,外层纸,,,,
+,存货名称,,,,
+,是否装箱,,,,
+,规格型号,,,,
+,工程图号,,,,
+,,,,,

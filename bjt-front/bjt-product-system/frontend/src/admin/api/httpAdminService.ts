@@ -37,6 +37,16 @@ axiosAdminInstance.interceptors.request.use(
     if (!config.headers['Content-Type']) {
       config.headers['Content-Type'] = 'application/json';
     }
+    
+    // 调试日志：显示实际发送的Authorization header
+    console.log('[HttpAdminService] Request interceptor:', {
+      method: config.method?.toUpperCase(),
+      url: config.url,
+      authorization: config.headers['Authorization'] ? 'Bearer ***' + (config.headers['Authorization'] as string).slice(-10) : 'None',
+      hasAdminToken: !!localStorage.getItem('admin_token'),
+      hasAuthToken: !!localStorage.getItem('auth_token')
+    });
+    
     return config;
   },
   (error) => {

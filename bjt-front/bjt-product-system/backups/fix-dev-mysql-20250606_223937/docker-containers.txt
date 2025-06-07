@@ -1,0 +1,2 @@
+CONTAINER ID   IMAGE       COMMAND                  CREATED         STATUS    PORTS     NAMES
+242b5e9624a3   mysql:8.0   "docker-entrypoint.s…"   4 minutes ago   Created             dev-mysql-1

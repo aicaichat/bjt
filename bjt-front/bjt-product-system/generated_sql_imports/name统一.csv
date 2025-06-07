@@ -2,6 +2,10 @@
 ,易损,,,,Y
 "物品属性
 Item Info",产品图片,产品图片,Product Image,,
+,产品ID,产品ID,Product ID,,1001
+,单位,单位,Unit,,pcs
+,强关联物料,强关联物料,Related Parts,,08A01,14A01
+,是否易损,易损,Consumable Status,,1
 ,型号(公制),型号,Model,,MEX-RH30-13-20-13-L
 ,型号(英制),型号,Model,,MEX-RH30-05-08-5-L
 ,品牌,品牌,Brand,,LockedAir/LockedPaper
@@ -67,10 +71,10 @@ Customized"
 Package Info",包装方式,包装方式,Packaging Method,,"Box;
 "
 ,包装图片,包装图片,Packaging Image,,
-,包装尺寸,包装尺寸,Packaging Dim.,cm,21*21*42
-,包装尺寸(英制),包装尺寸,Packaging Dim.,inch,8.3*8.3*16.5
-,单件净重,单件净重,Net Weight,kg,4.65
-,单件净重(英制),单件净重,Net Weight,lb,10.25
+,包装尺寸,包装尺寸(cm),Package Size(cm),cm,21*21*42
+,包装尺寸(英制),包装尺寸(inch),Package Size(inch),inch,8.3*8.3*16.5
+,单件净重,单件净重(kg),Net Weight(kg),kg,4.65
+,单件净重(英制),单件净重(lbs),Net Weight(lbs),lb,10.25
 ,包装毛重,包装毛重,Gross Weight,kg,10.13
 ,包装毛重(英制),包装毛重,Gross Weight,lb,22.34
 ,单箱数量,单箱数量,Qty per Carton,,2

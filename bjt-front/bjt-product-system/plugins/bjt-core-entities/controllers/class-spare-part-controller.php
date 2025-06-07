@@ -11,7 +11,8 @@ class BJT_Spare_Part_Controller extends BJT_API_Controller {
     protected $fillable_fields = [
         'product_line_id',
         'app_model',        // Applicable host models (comma-separated string)
-        'is_consumable',    // Boolean (0 or 1)
+        'model',            // Spare part model/type - 添加缺失的model字段
+        'is_consumable',    // Integer (1=易损，2=非易损，3=隐藏)
         'image_url',
         'part_number',      // Unique part number for the spare part
         'name_zh',
@@ -142,10 +143,15 @@ class BJT_Spare_Part_Controller extends BJT_API_Controller {
                 'id' => ['type' => 'integer', 'readonly' => true, 'context' => ['view', 'edit', 'embed']],
                 'product_line_id' => ['type' => 'integer', 'description' => 'Associated Product Line ID.'],
                 'part_number' => ['type' => 'string', 'description' => 'Unique part number for the spare part.'],
+                'model' => ['type' => 'string', 'description' => 'Spare part model/type.'],
                 'name_zh' => ['type' => 'string', 'description' => 'Chinese name of the spare part.'],
                 'name_en' => ['type' => 'string', 'description' => 'English name of the spare part.'],
                 'app_model' => ['type' => 'string', 'description' => 'Applicable host models (comma-separated).'],
-                'is_consumable' => ['type' => 'boolean', 'description' => 'Is this spare part also a consumable?'],
+                'is_consumable' => [
+                    'type' => 'integer', 
+                    'enum' => [1, 2, 3],
+                    'description' => 'Consumable status: 1=Consumable, 2=Non-consumable, 3=Hidden from display'
+                ],
                 'image_url' => ['type' => 'string', 'format' => 'uri', 'description' => 'Optional. Image URL.'],
                 'spec' => ['type' => 'string', 'description' => 'Metric specifications.'],
                 'spec_imperial' => ['type' => 'string', 'description' => 'Imperial specifications.'],
@@ -178,7 +184,14 @@ class BJT_Spare_Part_Controller extends BJT_API_Controller {
                         $data[$db_column] = absint($value);
                         break;
                     case 'is_consumable':
-                        $data[$db_column] = rest_sanitize_boolean($value);
+                        $value = (int) $value;
+                        if (in_array($value, [0, 1, 2], true)) {
+                            $data[$db_column] = $value;
+                        } else {
+                            // 如果值不在0/1/2范围内，默认为2（非易损）
+                            // 0=不展示，1=易损，2=非易损
+                            $data[$db_column] = 2;
+                        }
                         break;
                     case 'net_weight_kg':
                     case 'net_weight_lbs':
@@ -537,13 +550,24 @@ class BJT_Spare_Part_Controller extends BJT_API_Controller {
         
         $base_query = "FROM {$this->table_name}";
         $where_clauses = [
-            "status = 'publish'",
-            "is_consumable != 0"  // 排除不展示的记录（0=不展示）
+            "status = 'publish'"
         ];
+
+        // 🔧 可选择性排除隐藏备件（is_consumable = 0）
+        $exclude_hidden = $request->get_param('exclude_hidden');
+        if ($exclude_hidden === null || $exclude_hidden === 'true' || $exclude_hidden === true) {
+            // 默认排除隐藏备件，保持向后兼容
+            $where_clauses[] = "is_consumable != 0";
+        }
+        // 如果明确设置 exclude_hidden=false，则显示所有备件包括隐藏的
 
         // Example filter: by product_line_id
         if ($request->get_param('product_line_id')) {
             $where_clauses[] = $wpdb->prepare("product_line_id = %d", absint($request->get_param('product_line_id')));
+        }
+        // Example filter: by model
+        if ($request->get_param('model')) {
+            $where_clauses[] = $wpdb->prepare("model = %s", sanitize_text_field($request->get_param('model')));
         }
         // Example filter: by part_number (exact match)
         if ($request->get_param('part_number')) {
@@ -807,14 +831,152 @@ class BJT_Spare_Part_Controller extends BJT_API_Controller {
      * Check write permission
      */
     public function check_write_permission($request) {
-        return current_user_can('manage_options'); // 只有管理员可以写入
+        error_log('[BJT_Spare_Part_Controller] Checking write permission');
+        
+        // Using BJT Auth Controller instead of WordPress capabilities
+        if (!class_exists('BJT_Auth_Controller')) {
+            $auth_controller_path = dirname(__FILE__) . '/class-auth-controller.php';
+            if (file_exists($auth_controller_path)) {
+                require_once $auth_controller_path;
+            } else {
+                error_log('[BJT_Spare_Part_Controller] BJT_Auth_Controller class file not found at: ' . $auth_controller_path);
+                return new WP_Error('rest_controller_not_found', 'Authentication controller not found.', ['status' => 500]);
+            }
+        }
+        
+        if (!class_exists('BJT_Auth_Controller')) {
+            error_log('[BJT_Spare_Part_Controller] BJT_Auth_Controller class still not found after include attempt');
+            return new WP_Error('rest_controller_not_loadable', 'Authentication controller class not loadable.', ['status' => 500]);
+        }
+
+        $auth_controller = new BJT_Auth_Controller();
+        $is_authenticated = $auth_controller->check_auth($request);
+
+        if (true !== $is_authenticated && is_wp_error($is_authenticated)) {
+            error_log('[BJT_Spare_Part_Controller] Authentication failed: ' . $is_authenticated->get_error_message());
+            return $is_authenticated;
+        }
+        
+        if (!$is_authenticated) {
+            error_log('[BJT_Spare_Part_Controller] User not authenticated');
+            return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
+        }
+
+        // 使用BJT用户角色系统检查权限
+        $user = $GLOBALS['bjt_current_user'];
+        if (!$user) {
+            error_log('[BJT_Spare_Part_Controller] No current user found in globals');
+            return new WP_Error('rest_forbidden', __('User information not available.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户状态
+        if ($user->status !== 'active') {
+            error_log('[BJT_Spare_Part_Controller] User is not active: ' . $user->username);
+            return new WP_Error('rest_forbidden', __('Your account is not active.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户角色 - admin和manager可以管理备件
+        $has_write_permission = false;
+        if (isset($user->role)) {
+            $allowed_write_roles = ['admin', 'manager'];
+            $has_write_permission = in_array($user->role, $allowed_write_roles);
+        }
+
+        // 检查用户权限
+        if (isset($user->permissions) && is_array($user->permissions)) {
+            $has_write_permission = $has_write_permission || 
+                                    in_array('edit_products', $user->permissions) || 
+                                    in_array('manage_products', $user->permissions) ||
+                                    in_array('manage_spare_parts', $user->permissions);
+        }
+
+        if (!$has_write_permission) {
+            error_log('[BJT_Spare_Part_Controller] User does not have write permission: ' . $user->username . ', role: ' . $user->role);
+            return new WP_Error(
+                'rest_forbidden',
+                __('You do not have permission to manage spare parts.', 'bjt'),
+                ['status' => 403, 'success' => false]
+            );
+        }
+
+        error_log('[BJT_Spare_Part_Controller] Write permission granted for user: ' . $user->username);
+        return true;
     }
 
     /**
      * Check delete permission
      */
     public function check_delete_permission($request) {
-        return current_user_can('manage_options'); // 只有管理员可以删除
+        error_log('[BJT_Spare_Part_Controller] Checking delete permission');
+        
+        // Using BJT Auth Controller instead of WordPress capabilities
+        if (!class_exists('BJT_Auth_Controller')) {
+            $auth_controller_path = dirname(__FILE__) . '/class-auth-controller.php';
+            if (file_exists($auth_controller_path)) {
+                require_once $auth_controller_path;
+            } else {
+                error_log('[BJT_Spare_Part_Controller] BJT_Auth_Controller class file not found at: ' . $auth_controller_path);
+                return new WP_Error('rest_controller_not_found', 'Authentication controller not found.', ['status' => 500]);
+            }
+        }
+        
+        if (!class_exists('BJT_Auth_Controller')) {
+            error_log('[BJT_Spare_Part_Controller] BJT_Auth_Controller class still not found after include attempt');
+            return new WP_Error('rest_controller_not_loadable', 'Authentication controller class not loadable.', ['status' => 500]);
+        }
+
+        $auth_controller = new BJT_Auth_Controller();
+        $is_authenticated = $auth_controller->check_auth($request);
+
+        if (true !== $is_authenticated && is_wp_error($is_authenticated)) {
+            error_log('[BJT_Spare_Part_Controller] Authentication failed: ' . $is_authenticated->get_error_message());
+            return $is_authenticated;
+        }
+        
+        if (!$is_authenticated) {
+            error_log('[BJT_Spare_Part_Controller] User not authenticated');
+            return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
+        }
+
+        // 使用BJT用户角色系统检查权限
+        $user = $GLOBALS['bjt_current_user'];
+        if (!$user) {
+            error_log('[BJT_Spare_Part_Controller] No current user found in globals');
+            return new WP_Error('rest_forbidden', __('User information not available.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户状态
+        if ($user->status !== 'active') {
+            error_log('[BJT_Spare_Part_Controller] User is not active: ' . $user->username);
+            return new WP_Error('rest_forbidden', __('Your account is not active.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户角色 - admin和manager可以删除备件
+        $has_delete_permission = false;
+        if (isset($user->role)) {
+            $allowed_delete_roles = ['admin', 'manager'];
+            $has_delete_permission = in_array($user->role, $allowed_delete_roles);
+        }
+
+        // 检查用户权限
+        if (isset($user->permissions) && is_array($user->permissions)) {
+            $has_delete_permission = $has_delete_permission || 
+                                     in_array('delete_products', $user->permissions) || 
+                                     in_array('manage_products', $user->permissions) ||
+                                     in_array('manage_spare_parts', $user->permissions);
+        }
+
+        if (!$has_delete_permission) {
+            error_log('[BJT_Spare_Part_Controller] User does not have delete permission: ' . $user->username . ', role: ' . $user->role);
+            return new WP_Error(
+                'rest_forbidden',
+                __('You do not have permission to delete spare parts.', 'bjt'),
+                ['status' => 403, 'success' => false]
+            );
+        }
+
+        error_log('[BJT_Spare_Part_Controller] Delete permission granted for user: ' . $user->username);
+        return true;
     }
 
     /**

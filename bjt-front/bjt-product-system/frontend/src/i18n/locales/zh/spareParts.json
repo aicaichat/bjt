@@ -34,7 +34,7 @@
     "nonConsumable": "非耗材",
     "label": {
       "productType": "产品类型",
-      "model": "配件型号",
+      "model": "适配机型",
       "partType": "零件类型"
     },
     "model": {
@@ -89,7 +89,11 @@
       "appSn": "适配序列号",
       "pcsPerBox": "单箱数量",
       "packageSize": "包装尺寸",
+      "packageSizeCm": "包装尺寸(cm)",
+      "packageSizeInch": "包装尺寸(inch)",
       "netWeight": "净重",
+      "netWeightKg": "净重(kg)",
+      "netWeightLbs": "净重(lbs)",
       "unit": "单位"
     },
     "title": "备件详细信息",
@@ -115,7 +119,7 @@
   },
   "fields": {
     "compatibleModels": "适配机型",
-    "partModel": "配件型号",
+    "partModel": "适配机型",
     "partType": "类型",
     "specifications": "规格",
     "compatibleSerialNumber": "适配序列号",

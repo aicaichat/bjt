@@ -1,0 +1,120 @@
+ M bjt-front/bjt-product-system/DEPLOYMENT.md
+ M bjt-front/bjt-product-system/docker/dev/docker-compose.dev.yml
+ M bjt-front/bjt-product-system/docker/dev/docker-compose.nginx.yml
+ M bjt-front/bjt-product-system/docker/prod/docker-compose.prod.yml
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/05A0101289.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/05A0101290.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/08A0105796.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/08A0105797.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/14A0101175.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/14A01041.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/14A01066.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/14A01067.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/14A01068.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/14A01179.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/14A01180.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/14A01202.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/14A01204.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/14A01242.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/14A01246.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/60A05001.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/EC2005.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/EC2007.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/EC401.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/EC402.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/ET1003.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/ET1004.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/ET1005.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/ET1007.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/ET2002.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/ET400.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/FR8002.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/FR8003.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/FR8004.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/accessory/LT9002.jpg
+ M "bjt-front/bjt-product-system/frontend/public/uploads/accessory/external drum.jpg"
+ M bjt-front/bjt-product-system/frontend/public/uploads/consumables/images/1749232396_48a801.png
+ M bjt-front/bjt-product-system/frontend/public/uploads/consumables/images/1749232401_23043f.png
+ M "bjt-front/bjt-product-system/frontend/public/uploads/host/LA-E4S V2.0.jpg"
+ M bjt-front/bjt-product-system/frontend/public/uploads/host/LA-E4S(paper).jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/machines/images/1749221492_3ac33d.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/machines/images/1749221558_4e54df.png
+ M bjt-front/bjt-product-system/frontend/public/uploads/machines/images/1749221907_a0ff34.png
+ M bjt-front/bjt-product-system/frontend/public/uploads/machines/images/1749221918_e86455.png
+ M bjt-front/bjt-product-system/frontend/public/uploads/machines/images/1749221985_17f81f.png
+ M bjt-front/bjt-product-system/frontend/public/uploads/machines/images/1749221995_9f77f0.png
+ M bjt-front/bjt-product-system/frontend/public/uploads/machines/pdfs/1749221518_37ab6c.pdf
+ M bjt-front/bjt-product-system/frontend/public/uploads/machines/pdfs/1749221556_a3a42d.pdf
+ M bjt-front/bjt-product-system/frontend/public/uploads/machines/pdfs/1749221893_436c4a.pdf
+ M bjt-front/bjt-product-system/frontend/public/uploads/machines/pdfs/1749221928_ce208f.pdf
+ M bjt-front/bjt-product-system/frontend/public/uploads/machines/pdfs/1749222005_7a6313.pdf
+ M bjt-front/bjt-product-system/frontend/public/uploads/machines/pdfs/1749222012_ec3582.pdf
+ M bjt-front/bjt-product-system/frontend/public/uploads/machines/pdfs/1749231090_e74d77.pdf
+ M bjt-front/bjt-product-system/frontend/public/uploads/machines/pdfs/1749231100_5c39b7.pdf
+ M bjt-front/bjt-product-system/frontend/public/uploads/machines/pdfs/1749233686_d84cb9.pdf
+ M bjt-front/bjt-product-system/frontend/public/uploads/machines/pdfs/1749233960_1fc70f.pdf
+ M bjt-front/bjt-product-system/frontend/public/uploads/parts/images/1749221972_5bc4b0.png
+ M bjt-front/bjt-product-system/frontend/public/uploads/parts/images/1749222057_793e7d.png
+ M bjt-front/bjt-product-system/frontend/public/uploads/parts/images/1749231075_d223ab.png
+ M "bjt-front/bjt-product-system/frontend/public/uploads/product_lines/Air Column Bag.jpg"
+ M "bjt-front/bjt-product-system/frontend/public/uploads/product_lines/Air Cushioning System.jpg"
+ M "bjt-front/bjt-product-system/frontend/public/uploads/product_lines/Paper Cushioning Machine.jpg"
+ M "bjt-front/bjt-product-system/frontend/public/uploads/product_lines/Water Activated Tape Dispenser.jpg"
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare-parts/images/1749232778_f15b6f.png
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/01A0101038.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/04A0101033.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/07A0101019.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/07A0105325.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/08A0104103.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/08A0104209.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/08A0105127.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/08A0105449.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/08A0105464.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/08A0105724.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/08A0105795.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/09A0101107.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/11A0101002.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/11A0101003.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/11A0101013.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/11A0101021.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/11A0101029.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/11A0101053.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/11A0101075.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/11A0101291.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/11A0101312.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/11A0101374.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/11A0102029.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/11A0103002.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/11A0103003.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/11A0103016.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/11A0103157.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/13A02026.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/13A02073-02.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/14A01126.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/14A01127.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/14A01143.jpg
+ M bjt-front/bjt-product-system/frontend/public/uploads/spare_parts/14A01144.jpg
+ M bjt-front/bjt-product-system/frontend/src/admin/components/common/CRMDataFetcher.tsx
+ M bjt-front/bjt-product-system/frontend/src/admin/pages/spare-parts/SparePartEditPage.tsx
+ M bjt-front/bjt-product-system/frontend/src/admin/services/admin-spare-part.service.ts
+ M bjt-front/package-lock.json
+ M bjt-front/package.json
+?? bjt-front/bjt-product-system/.env.development.backup
+?? bjt-front/bjt-product-system/.env.local-ip
+?? bjt-front/bjt-product-system/1.ini
+?? bjt-front/bjt-product-system/DEV_MYSQL_FIX_GUIDE.md
+?? bjt-front/bjt-product-system/backups/fix-dev-mysql-20250606_223715/
+?? bjt-front/bjt-product-system/backups/fix-dev-mysql-20250606_223735/
+?? bjt-front/bjt-product-system/backups/fix-dev-mysql-20250606_223937/
+?? bjt-front/bjt-product-system/backups/fix-dev-mysql-20250606_224117/
+?? bjt-front/bjt-product-system/docker/dev/docker-compose.backend-only.yml
+?? bjt-front/bjt-product-system/docker/prod/docker-compose.local-ip.yml
+?? bjt-front/bjt-product-system/fix-dev-mysql-safe.sh
+?? bjt-front/bjt-product-system/frontend/public/uploads/.gitkeep
+?? bjt-front/bjt-product-system/frontend/public/uploads/README.md
+?? bjt-front/bjt-product-system/nginx/conf.d/local-ip.conf
+?? bjt-front/bjt-product-system/scripts/setup-upload-directories.sh
+?? bjt-front/bjt-product-system/scripts/start-dev-isolated.sh
+?? bjt-front/bjt-product-system/scripts/start-dev.sh
+?? bjt-front/bjt-product-system/scripts/start-local-ip.sh
+?? bjt-front/bjt-product-system/scripts/start-prod-isolated.sh

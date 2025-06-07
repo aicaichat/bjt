@@ -82,7 +82,7 @@ export interface CartItem {
 export interface SparePartFilter {
   searchText: string;
   machineType?: string;
-  isConsumable?: boolean;
+  isConsumable?: number | null;
 }
 
 /**

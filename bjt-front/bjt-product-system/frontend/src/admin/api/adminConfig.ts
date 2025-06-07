@@ -2,8 +2,8 @@ import { API_BASE_URL, getDefaultHeaders, REQUEST_TIMEOUT, ERROR_MESSAGES, getEr
 
 // Admin-specific auth headers
 export const getAdminAuthHeaders = () => {
+  // 优先使用admin_token
   const adminToken = localStorage.getItem('admin_token');
-  
   if (adminToken) {
     return {
       ...getDefaultHeaders(),
@@ -11,6 +11,16 @@ export const getAdminAuthHeaders = () => {
     };
   }
   
+  // 如果没有admin_token，尝试使用auth_token作为备用
+  const authToken = localStorage.getItem('auth_token');
+  if (authToken) {
+    return {
+      ...getDefaultHeaders(),
+      'Authorization': `Bearer ${authToken}`
+    };
+  }
+  
+  // 如果都没有，返回默认headers
   return getDefaultHeaders();
 };
 

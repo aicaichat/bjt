@@ -86,8 +86,8 @@ sudo apt install certbot
 sudo certbot certonly --standalone -d your-domain.com -d www.your-domain.com
 
 # 复制证书到项目目录
-sudo cp /etc/letsencrypt/live/your-domain.com/fullchain.pem nginx/ssl/cert.pem
-sudo cp /etc/letsencrypt/live/your-domain.com/privkey.pem nginx/ssl/key.pem
+sudo cp /etc/letsencrypt/live/bjt.nh.cool/fullchain.pem nginx/ssl/cert.pem
+sudo cp /etc/letsencrypt/live/bjt.nh.cool/privkey.pem nginx/ssl/key.pem
 sudo chmod 644 nginx/ssl/*
 ```
 

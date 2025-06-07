@@ -41,7 +41,7 @@ export interface ExtendedCartItem extends OriginalCartItem {
   spec_imperial?: string;
   app_model?: string;
   app_sn?: string;
-  is_consumable?: boolean;
+  is_consumable?: number; // 1=易损，2=非易损，3=隐藏
   unit?: string;
   status?: string;
   
@@ -63,6 +63,7 @@ export interface ExtendedCartItem extends OriginalCartItem {
   // 定价和库存信息
   pricing?: any[];
   inventory?: any[];
+  product_type: 'machine' | 'accessory' | 'spare_part' | 'consumable'; // 必需字段，与OriginalCartItem一致
 }
 
 // For backward compatibility, export ExtendedCartItem as CartItem for external use
@@ -231,7 +232,7 @@ const mapServiceCartItemToUICartItem = (item: OriginalCartItem): ExtendedCartIte
     spec_imperial: (item as any).spec_imperial || item.properties?.spec_imperial || '',
     app_model: (item as any).app_model || item.properties?.app_model || '',
     app_sn: (item as any).app_sn || item.properties?.app_sn || '',
-    is_consumable: (item as any).is_consumable ?? item.properties?.is_consumable ?? false,
+    is_consumable: (item as any).is_consumable ?? item.properties?.is_consumable ?? 0,
     unit: (item as any).unit || item.properties?.unit || 'pcs',
     status: (item as any).status || item.properties?.status || 'publish',
     
@@ -252,7 +253,8 @@ const mapServiceCartItemToUICartItem = (item: OriginalCartItem): ExtendedCartIte
     
     // 定价和库存信息
     pricing: (item as any).pricing || item.properties?.pricing || [],
-    inventory: (item as any).inventory || item.properties?.inventory || []
+    inventory: (item as any).inventory || item.properties?.inventory || [],
+    product_type: item.product_type
   };
 };
 

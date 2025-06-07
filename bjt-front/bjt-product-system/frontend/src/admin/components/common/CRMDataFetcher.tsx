@@ -44,9 +44,9 @@ const CRMDataFetcher: React.FC<CRMDataFetcherProps> = ({
   onDataFetched,
   onError,
   fields,
-  disabled = false,
+  disabled = true,
   className = '',
-  autoFetch = true,
+  autoFetch = false,
 }) => {
   const [loading, setLoading] = useState(false);
   const [lastFetchedPartNumber, setLastFetchedPartNumber] = useState<string>('');
@@ -128,6 +128,9 @@ const CRMDataFetcher: React.FC<CRMDataFetcherProps> = ({
 
   // 自动获取数据
   useEffect(() => {
+    // 完全禁用自动获取功能
+    return;
+    
     if (autoFetch && partNumber && partNumber !== lastFetchedPartNumber && !loading) {
       const timer = setTimeout(() => {
         fetchCRMData(partNumber);
@@ -173,7 +176,7 @@ const CRMDataFetcher: React.FC<CRMDataFetcherProps> = ({
           icon={<SearchIcon />}
           onClick={handleManualFetch}
           loading={loading}
-          disabled={disabled || !partNumber || !partNumber.trim()}
+          disabled={true}
           size="small"
         >
           获取CRM数据
@@ -183,7 +186,7 @@ const CRMDataFetcher: React.FC<CRMDataFetcherProps> = ({
           icon={<ReloadIcon />}
           onClick={() => fetchCRMData(partNumber)}
           loading={loading}
-          disabled={disabled || !partNumber || !partNumber.trim()}
+          disabled={true}
           size="small"
           title="重新获取"
         />

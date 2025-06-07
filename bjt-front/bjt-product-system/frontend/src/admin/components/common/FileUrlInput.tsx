@@ -133,14 +133,27 @@ const FileUrlInput: React.FC<FileUrlInputProps> = ({
       // 获取认证token
       const getAuthToken = async (): Promise<string> => {
         try {
-          // 首先尝试从localStorage获取JWT token（和其他API一致）
+          // 在管理员系统中，优先使用admin_token
+          const adminToken = localStorage.getItem('admin_token');
+          if (adminToken) {
+            console.log('FileUrlInput: Using admin token');
+            return adminToken;
+          }
+          
+          // 作为fallback，尝试其他token
+          const authToken = localStorage.getItem('auth_token');
+          if (authToken) {
+            console.log('FileUrlInput: Using auth token');
+            return authToken;
+          }
+          
           const jwtToken = localStorage.getItem('bjt_token') || sessionStorage.getItem('bjt_token');
           if (jwtToken) {
             console.log('FileUrlInput: Using JWT token from storage');
             return jwtToken;
           }
           
-          // 作为fallback，尝试从全局变量获取
+          // 作为最后的fallback，尝试从全局变量获取
           const globalToken = (window as any).bjtApiToken || (window as any).wpApiSettings?.nonce;
           if (globalToken) {
             console.log('FileUrlInput: Using global token:', globalToken.substring(0, 20) + '...');

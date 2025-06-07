@@ -16,7 +16,7 @@ import {
 import { SaveOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import AdminPageHeader from '../../components/common/AdminPageHeader';
 import MultilingualInput, { MultilingualValue } from '../../components/common/MultilingualInput';
-import FileUploader from '../../components/common/FileUploader';
+import FileUrlInput from '../../components/common/FileUrlInput';
 import adminProductLineService, { ProductLineFormData } from '../../services/admin-product-line.service';
 import { useAdminI18n } from '../../i18n/hooks/useAdminI18n';
 
@@ -58,37 +58,46 @@ const ProductLineEditPage: React.FC = () => {
     if (isEditMode && id) {
       loadProductLine(parseInt(id));
     } else {
-      // 新建时设置默认值
-      form.setFieldsValue({
-        code: '',
+      // 新建时设置默认值 - 按照修复模板优化
+      console.log('[ProductLineEditPage] 设置默认值');
+      const defaultValues = {
+        code: "自动分配",  // 显示提示文本，不参与提交
         title: { zh: '', en: '' },
         description: { zh: '', en: '' },
         subitem1: { zh: '耗材', en: 'Consumables' },
         subitem2: { zh: '备件', en: 'Spare Parts' },
         subitem3: { zh: '', en: '' },
         image_url: '',
-        status: 'draft',
+        status: 'publish',    // 默认为发布状态
         sort_order: 1,
-      });
+      };
+      form.setFieldsValue(defaultValues);
+      
+      // 延迟确保默认值设置成功
+      setTimeout(() => {
+        console.log('[ProductLineEditPage] 验证默认值设置:', form.getFieldsValue());
+      }, 100);
     }
   }, [id, isEditMode, form]);
 
   const loadProductLine = async (productLineId: number) => {
     try {
       setLoading(true);
-      const data = await adminProductLineService.getProductLine(productLineId);
+      const data: any = await adminProductLineService.getProductLine(productLineId);
       
-      console.log('API返回的原始数据:', data);
+      console.log('[ProductLineEditPage] API返回的原始数据:', data);
       
-      // 转换数据格式以适应表单 - 从API的平坦结构转换为表单的嵌套结构
+      // 转换数据格式以适应表单 - 处理API字段映射
       const formValues = {
-        code: data.code || data.id?.toString() || '',
+        code: data.id?.toString() || id,  // 显示产品线ID
         title: {
-          zh: data.title_zh || '',
-          en: data.title_en || ''
+          // API可能返回title_zh/title_en 或 name_cn/name_en
+          zh: data.title_zh || data.name_cn || '',
+          en: data.title_en || data.name_en || ''
         },
         description: {
-          zh: data.description_zh || '',
+          // API可能返回description_zh/description_en 或 description_cn/description_en
+          zh: data.description_zh || data.description_cn || '',
           en: data.description_en || ''
         },
         subitem1: {
@@ -104,71 +113,76 @@ const ProductLineEditPage: React.FC = () => {
           en: data.subitem3_en || ''
         },
         image_url: data.image_url || '',
-        status: data.status || 'draft',
-        sort_order: data.sort_order || 1,
+        status: data.status || 'publish',
+        sort_order: data.sort_order || data.menu_order || 1,  // 处理menu_order字段映射
       };
       
-      console.log('转换后的表单数据:', formValues);
+      console.log('[ProductLineEditPage] 转换后的表单数据:', formValues);
       
       form.setFieldsValue(formValues);
+      
+      // 延迟验证表单值是否正确设置
+      setTimeout(() => {
+        const currentValues = form.getFieldsValue();
+        console.log('[ProductLineEditPage] 验证表单值设置结果:', currentValues);
+        
+        // 检查关键字段是否正确设置
+        if (!currentValues.title?.zh) {
+          console.warn('[ProductLineEditPage] 关键字段未正确设置，重新设置');
+          form.setFieldsValue(formValues);
+        }
+      }, 100);
+      
     } catch (error) {
-      console.error('加载产品线数据失败:', error);
-      message.error(t('messages.error', { ns: 'productLines' }));
+      console.error('[ProductLineEditPage] 加载产品线数据失败:', error);
+      message.error('加载产品线数据失败');
     } finally {
       setLoading(false);
     }
-  };
-
-  const validateCode = async (rule: any, value: string) => {
-    if (!value) {
-      throw new Error(t('form.validation.codeRequired', { ns: 'productLines' }));
-    }
-
-    if (!/^[A-Z0-9_-]+$/.test(value)) {
-      throw new Error(t('form.validation.codeFormat', { ns: 'productLines' }));
-    }
-
-    // TODO: 检查代码唯一性 - 需要后端API支持
   };
 
   const onFinish = async (values: any) => {
     try {
       setSubmitting(true);
 
-      console.log('表单提交的原始值:', values);
+      console.log('[ProductLineEditPage] 表单提交的原始值:', values);
 
-      // 转换表单数据为API格式 - 从表单的嵌套结构转换为API的平坦结构
-      const formData: ProductLineFormData = {
-        code: values.code,
-        title_zh: values.title?.zh || '',
-        title_en: values.title?.en || '',
-        description_zh: values.description?.zh || '',
+      // 转换表单数据为API格式 - 修复字段映射问题
+      const formData: any = {
+        // code字段不提交，ID由后端自动分配或在编辑时保持不变
+        name_cn: values.title?.zh || '',           // API期望name_cn，映射到数据库title_zh
+        name_en: values.title?.en || '',           // API期望name_en，映射到数据库title_en
+        description_cn: values.description?.zh || '', // API期望description_cn，映射到数据库description_zh
         description_en: values.description?.en || '',
-        subitem1_zh: values.subitem1?.zh || '',
-        subitem1_en: values.subitem1?.en || '',
-        subitem2_zh: values.subitem2?.zh || '',
-        subitem2_en: values.subitem2?.en || '',
-        subitem3_zh: values.subitem3?.zh || '',
-        subitem3_en: values.subitem3?.en || '',
         image_url: values.image_url || '',
-        status: values.status || 'draft',
-        sort_order: values.sort_order || 1,
+        status: values.status || 'publish',        // 默认为publish而不是draft
+        menu_order: values.sort_order || 1,       // API期望menu_order，映射到数据库sort_order
       };
 
-      console.log('转换后的API数据:', formData);
+      console.log('[ProductLineEditPage] 转换后的API数据:', formData);
 
       if (isEditMode && id) {
         await adminProductLineService.updateProductLine(parseInt(id), formData);
-        message.success(t('messages.success.updated', { ns: 'productLines' }));
+        message.success('产品线更新成功');
       } else {
-        await adminProductLineService.createProductLine(formData);
-        message.success(t('messages.success.created', { ns: 'productLines' }));
+        const result = await adminProductLineService.createProductLine(formData);
+        console.log('[ProductLineEditPage] 创建结果:', result);
+        message.success('产品线创建成功');
       }
 
       navigate('/admin/product-lines');
-    } catch (error) {
-      console.error('保存产品线失败:', error);
-      message.error(isEditMode ? t('messages.error.update', { ns: 'productLines' }) : t('messages.error.create', { ns: 'productLines' }));
+    } catch (error: any) {
+      console.error('[ProductLineEditPage] 保存产品线失败:', error);
+      
+      // 增强错误处理
+      let errorMessage = isEditMode ? '更新产品线失败' : '创建产品线失败';
+      if (error?.response?.data?.message) {
+        errorMessage += `: ${error.response.data.message}`;
+      } else if (error?.message) {
+        errorMessage += `: ${error.message}`;
+      }
+      
+      message.error(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -197,11 +211,11 @@ const ProductLineEditPage: React.FC = () => {
   return (
     <div className="product-line-edit-page">
       <AdminPageHeader
-        title={isEditMode ? t('form.title.edit', { ns: 'productLines' }) : t('form.title.add', { ns: 'productLines' })}
-        description={isEditMode ? t('form.description.edit', { ns: 'productLines', id }) : t('form.description.add', { ns: 'productLines' })}
+        title={isEditMode ? '编辑产品线' : '新增产品线'}
+        description={isEditMode ? `编辑产品线 ID: ${id}` : '创建新的产品线'}
         extra={
           <ButtonComponent key="back" icon={<ArrowLeftIcon />} onClick={handleBack}>
-            {t('actions.backToList', { ns: 'productLines' })}
+            返回产品线列表
           </ButtonComponent>
         }
       />
@@ -217,42 +231,42 @@ const ProductLineEditPage: React.FC = () => {
           <RowComponent gutter={24}>
             {/* 基本信息 */}
             <ColComponent span={24}>
-              <DividerComponent orientation="left">{t('form.sections.basicInfo', { ns: 'productLines' })}</DividerComponent>
+              <DividerComponent orientation="left">基本信息 (Basic Information)</DividerComponent>
             </ColComponent>
 
             <ColComponent span={12}>
               <FormItemComponent
-                label={t('form.fields.code', { ns: 'productLines' })}
+                label="产品线代码 (Product Line Code)"
                 name="code"
-                rules={[
-                  { required: true, message: t('form.validation.codeRequired', { ns: 'productLines' }) },
-                  { validator: validateCode },
-                ]}
-                extra={t('form.help.codeFormat', { ns: 'productLines' })}
+                extra="产品线的唯一数字标识，系统自动分配"
               >
-                <InputComponent placeholder={t('form.placeholders.code', { ns: 'productLines' })} />
+                <InputComponent 
+                  placeholder={isEditMode ? `产品线 ID: ${id}` : "新产品线将自动分配ID"}
+                  disabled
+                  value={isEditMode ? id : "自动分配"}
+                />
               </FormItemComponent>
             </ColComponent>
 
             <ColComponent span={6}>
               <FormItemComponent
-                label={t('form.fields.status', { ns: 'productLines' })}
+                label="状态 (Status)"
                 name="status"
-                rules={[{ required: true, message: t('form.validation.statusRequired', { ns: 'productLines' }) }]}
+                rules={[{ required: true, message: '请选择状态' }]}
               >
                 <SelectComponent>
-                  <OptionComponent value="draft">{t('filters.status.draft', { ns: 'productLines' })}</OptionComponent>
-                  <OptionComponent value="publish">{t('filters.status.publish', { ns: 'productLines' })}</OptionComponent>
-                  <OptionComponent value="trash">{t('filters.status.trash', { ns: 'productLines' })}</OptionComponent>
+                  <OptionComponent value="draft">草稿 (Draft)</OptionComponent>
+                  <OptionComponent value="publish">已发布 (Published)</OptionComponent>
+                  <OptionComponent value="trash">回收站 (Trash)</OptionComponent>
                 </SelectComponent>
               </FormItemComponent>
             </ColComponent>
 
             <ColComponent span={6}>
               <FormItemComponent
-                label={t('form.fields.sortOrder', { ns: 'productLines' })}
+                label="排序 (Sort Order)"
                 name="sort_order"
-                rules={[{ required: true, message: t('form.validation.sortOrderRequired', { ns: 'productLines' }) }]}
+                rules={[{ required: true, message: '请输入排序值' }]}
               >
                 <InputNumberComponent min={1} style={{ width: '100%' }} />
               </FormItemComponent>
@@ -260,18 +274,18 @@ const ProductLineEditPage: React.FC = () => {
 
             {/* 多语言标题 */}
             <ColComponent span={24}>
-              <DividerComponent orientation="left">{t('form.sections.title', { ns: 'productLines' })}</DividerComponent>
+              <DividerComponent orientation="left">产品线名称 (Product Line Name)</DividerComponent>
             </ColComponent>
 
             <ColComponent span={24}>
               <FormItemComponent
-                label={t('form.fields.name', { ns: 'productLines' })}
+                label="产品线名称 (Product Line Name)"
                 name="title"
                 rules={[
                   {
                     validator: (_: any, value: any) => {
                       if (!value?.zh || !value?.en) {
-                        return Promise.reject(t('form.validation.nameRequired', { ns: 'productLines' }));
+                        return Promise.reject('请输入中英文产品线名称');
                       }
                       return Promise.resolve();
                     }
@@ -281,43 +295,43 @@ const ProductLineEditPage: React.FC = () => {
                 <MultilingualInput
                   type="input"
                   required
-                  placeholder={{ zh: t('form.placeholders.nameZh', { ns: 'productLines' }), en: t('form.placeholders.nameEn', { ns: 'productLines' }) }}
+                  placeholder={{ zh: '请输入中文产品线名称', en: 'Please enter English product line name' }}
                 />
               </FormItemComponent>
             </ColComponent>
 
             {/* 多语言描述 */}
             <ColComponent span={24}>
-              <DividerComponent orientation="left">{t('form.sections.description', { ns: 'productLines' })}</DividerComponent>
+              <DividerComponent orientation="left">产品线描述 (Description)</DividerComponent>
             </ColComponent>
 
             <ColComponent span={24}>
               <FormItemComponent
-                label={t('form.fields.description', { ns: 'productLines' })}
+                label="产品线描述 (Product Line Description)"
                 name="description"
               >
                 <MultilingualInput
                   type="textarea"
                   rows={4}
-                  placeholder={{ zh: t('form.placeholders.descriptionZh', { ns: 'productLines' }), en: t('form.placeholders.descriptionEn', { ns: 'productLines' }) }}
+                  placeholder={{ zh: '请输入中文产品线描述', en: 'Please enter English product line description' }}
                 />
               </FormItemComponent>
             </ColComponent>
 
             {/* 子项目设置 */}
             <ColComponent span={24}>
-              <DividerComponent orientation="left">{t('form.sections.subitems', { ns: 'productLines' })}</DividerComponent>
+              <DividerComponent orientation="left">子项目设置 (Sub-items Configuration)</DividerComponent>
             </ColComponent>
 
             <ColComponent span={12}>
               <FormItemComponent
-                label={t('form.fields.subitem1', { ns: 'productLines' })}
+                label="子项目1 (Sub-item 1) - 通常为耗材"
                 name="subitem1"
                 rules={[
                   {
                     validator: (_: any, value: any) => {
                       if (!value?.zh || !value?.en) {
-                        return Promise.reject(t('form.validation.subitem1Required', { ns: 'productLines' }));
+                        return Promise.reject('请输入中英文子项目1名称');
                       }
                       return Promise.resolve();
                     }
@@ -327,20 +341,20 @@ const ProductLineEditPage: React.FC = () => {
                 <MultilingualInput
                   type="input"
                   required
-                  placeholder={{ zh: t('form.placeholders.subitem1Zh', { ns: 'productLines' }), en: t('form.placeholders.subitem1En', { ns: 'productLines' }) }}
+                  placeholder={{ zh: '如：耗材', en: 'e.g., Consumables' }}
                 />
               </FormItemComponent>
             </ColComponent>
 
             <ColComponent span={12}>
               <FormItemComponent
-                label={t('form.fields.subitem2', { ns: 'productLines' })}
+                label="子项目2 (Sub-item 2) - 通常为备件"
                 name="subitem2"
                 rules={[
                   {
                     validator: (_: any, value: any) => {
                       if (!value?.zh || !value?.en) {
-                        return Promise.reject(t('form.validation.subitem2Required', { ns: 'productLines' }));
+                        return Promise.reject('请输入中英文子项目2名称');
                       }
                       return Promise.resolve();
                     }
@@ -350,38 +364,39 @@ const ProductLineEditPage: React.FC = () => {
                 <MultilingualInput
                   type="input"
                   required
-                  placeholder={{ zh: t('form.placeholders.subitem2Zh', { ns: 'productLines' }), en: t('form.placeholders.subitem2En', { ns: 'productLines' }) }}
+                  placeholder={{ zh: '如：备件', en: 'e.g., Spare Parts' }}
                 />
               </FormItemComponent>
             </ColComponent>
 
             <ColComponent span={12}>
               <FormItemComponent
-                label={t('form.fields.subitem3', { ns: 'productLines' })}
+                label="子项目3 (Sub-item 3) - 可选"
                 name="subitem3"
               >
                 <MultilingualInput
                   type="input"
-                  placeholder={{ zh: t('form.placeholders.subitem3Zh', { ns: 'productLines' }), en: t('form.placeholders.subitem3En', { ns: 'productLines' }) }}
+                  placeholder={{ zh: '可选的第三个子项目', en: 'Optional third sub-item' }}
                 />
               </FormItemComponent>
             </ColComponent>
 
             {/* 产品线图片 */}
             <ColComponent span={24}>
-              <DividerComponent orientation="left">{t('form.sections.image', { ns: 'productLines' })}</DividerComponent>
+              <DividerComponent orientation="left">产品线图片 (Product Line Image)</DividerComponent>
             </ColComponent>
 
             <ColComponent span={24}>
               <FormItemComponent
-                label={t('form.fields.image', { ns: 'productLines' })}
+                label="产品线图片 (Product Line Image)"
                 name="image_url"
-                extra={t('form.help.imageFormat', { ns: 'productLines' })}
+                extra="支持上传图片文件或输入图片URL地址，文件大小不超过 10MB"
               >
-                <FileUploader
-                  type="image"
+                <FileUrlInput
+                  fileType="image"
                   maxSize={10}
-                  placeholder={t('form.placeholders.image', { ns: 'productLines' })}
+                  placeholder="请输入图片URL地址或点击上传"
+                  uploadPath="/uploads/product-lines/images/"
                   preview
                 />
               </FormItemComponent>
@@ -398,10 +413,10 @@ const ProductLineEditPage: React.FC = () => {
                 loading={submitting}
                 size="large"
               >
-                {isEditMode ? t('actions.saveChanges', { ns: 'productLines' }) : t('actions.create', { ns: 'productLines' })}
+                {isEditMode ? '保存更改' : '创建产品线'}
               </ButtonComponent>
               <ButtonComponent onClick={handleBack} size="large">
-                {t('actions.cancel', { ns: 'productLines' })}
+                取消
               </ButtonComponent>
             </SpaceComponent>
           </FormItemComponent>

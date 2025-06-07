@@ -1,0 +1,74 @@
+类型,属性,CRM字段中文,CRM字段英文,CRM操作,U8字段,U8操作,key,附件,气垫机,气垫机配件,充气膜,气垫机备件,纸垫机,纸垫机配件,纸耗材,纸备件,胶带机,胶带机配件,胶带机耗材,胶带机备件
+,易损,易损件,Wear Parts,无，新增，Y/N,,无，新增，Y/N,consumable,,,,,√,,,,√,,,,√
+,类型,,,,,无，新增,type,,,,,,,,,,,,,
+"物品属性
+Item Info",产品图片,产品图片,Product Image,有,,NA,pic,,√,√,√,√,√,√,√,√,√,√,√,√
+,型号(公制),Model,Model,有,英文名,有，设备的英文名挪走,model_met,√,√,√,√,,√,√,√,,√,√,√,
+,型号(英制),Model(Inch),Model（Inch),有,英文名(英制),有，设备的英文名挪走,model_imp,,,,√,,,,√,,,,√,
+,品牌,品牌名,Brand Name,有,,有，Lockedair/Lockedpaper,brand,,√,√,√,,√,√,√,,√,√,√,
+,料号,产品编号,Product Code,有,,有,part_number,√,√,√,√,√,√,√,√,√,√,√,√,√
+,名称(英文),英文名称,Product English Name,有,,新增，用于保存存货名称英文,name,√,√,√,,√,√,√,,√,√,√,,√
+,电压,电压,Voltage,无，新增,,无，新增,voltage,,√,√,,,√,√,,,√,√,,
+,频率,频率,Frequency,无，新增,,无，新增,frequency,,,√,,,,,,,√,√,,
+,Spec.(公制),,,,,无，可使用规格型号(英文),spec_met,√,√,√,√,√,√,√,√,√,√,√,√,√
+,Spec.(英制),,,,,无，新增,spec_imp,√,√,√,√,√,√,√,√,√,√,√,√,√
+,适用机型,适用机型,Compatible Models,无，新增,,无，新增,app_model,,,,√,√,,,√,√,,,√,√
+,适配序列号,适配序列号,Compatible Serial Numbers,无，新增,,无，新增,app_sn,,,,,√,,,,√,,,,√
+"额外属性
+Other Info",袋型,Style,Style,有,,无，新增,pak_shape,,,,√,,,,,,,,,
+,材质,材质,Material,有,材质,有,material,,,,√,,,,√,,,,,
+,泡径,泡径,Bubble Diameter,有,泡径(公制),无，新增,bubble_dia_met,,,,√,,,,,,,,,
+,泡径(英制),泡径（英制）,Bubble Diameter (Inch),根据上面的字段计算,跑径(英制),无，新增,bubble_dia_imp,,,,√,,,,,,,,,
+,厚度/克重(公制),厚度/克重,Thickness/Base Weight(um/gsm),有,厚度/克重,有,thickness_met,,,,√,,,,√,,,,√,
+,厚度/克重(英制),Thickness/Base Weight (mil/lb),Thickness/Base Weight (mil/lb),根据上面的字段计算,,无，新增,thickness_imp,,,,√,,,,√,,,,√,
+,克重(公制),,,,,有，重命名,gram_met,,,,,,,,,,,,,
+,克重(英制),,,,,无，新增,gram_imp,,,,,,,,,,,,,
+,宽度(公制),宽度,Width(cm),有,宽度,有,pcs_width_met,,,,√,,,,√,,,,√,
+,宽度(英制),Width (inch),Width (inch),根据上面的字段计算,宽度(英制),有,pcs_width_imp,,,,√,,,,√,,,,√,
+,长度(公制),虚线宽度,Perforation Width,有,虚线宽度,有，改为虚线间距？,pcs_length_met,,,,√,,,,,,,,,
+,长度(英制),虚线宽度（英制）,Perforation Width(Inch),根据上面的字段计算,,无，新增,pcs_length_imp,,,,√,,,,,,,,,
+,总长(公制),长度,Length,有,长度,有,total_length_met,,,,√,,,,√,,,,√,
+,总长(英制),Length（Feet）,Length（Feet）,根据上面的字段计算,,无，新增,total_length_imp,,,,√,,,,√,,,,√,
+,筋数,加筋数量,Reinforcement Quantity,有,加筋数量,有,reinforcement,,,,,,,,,,,,√,
+,层数,层数,Number of Layers,有,层数,有,layer,,,,,,,,√,,,,,
+,颜色,颜色,Color,无,颜色,有,color,,,,,,,,,,,,√,
+,印刷,是否印刷,Print or not,有,印刷,有,printing,,,,,,,,,,,,√,
+,纸筒内径(公制),纸筒内径(公制),Inner Diameter (cm),无,,无，新增,inner_diameter_met,,,,√,,,,,,,,,
+,纸筒内径(英制),纸筒内径(英制),Inner Diameter (inch),根据上面的字段计算,,无，新增,inner_diameter_imp,,,,√,,,,,,,,,
+,强关联物料,NA,NA,NA,NA,NA,attachment,,,√,,√,,√,,√,,√,,√
+"包装属性
+Package Info",包装方式,包装方式,Packaging Method,无，新增,,新增，英文描述包装方式,packing_method,,,,√,,√,√,,,√,,,
+,包装图片,包装图片,Packaging Image,无，新增,,NA,pak_pic,,,,√,,,,√,,,,√,
+,包装尺寸,包装尺寸,Packaging Dimensions,无，新增,,无，新增,package_size_met,,√,√,√,√,√,√,√,√,√,√,√,√
+,包装尺寸(英制),,,无，新增,,无，新增,package_size_imp,,√,√,√,√,√,√,√,√,√,√,√,√
+,单件净重,净重,Net Weight(kg),分英制/公制2个字段,净重,有,net_weight_met,,√,√,√,√,√,√,√,√,√,√,√,√
+,单件净重(英制),,,无，新增,,无，新增,net_weight_imp,,√,√,√,√,√,√,√,√,√,√,√,√
+,包装毛重,毛重,Gross Weight,无，新增,毛重,有,package_weight_met,,√,√,√,√,√,√,√,√,√,√,√,√
+,包装毛重(英制),,,无，新增,,无，新增,package_weight_imp,,√,√,√,√,√,√,√,√,√,√,√,√
+,单箱数量,单箱数量,Quantity per Carton,无，新增,,无，新增,pcs_per_box,,√,√,√,√,√,√,√,√,√,√,√,√
+"打托属性
+Pallet Info",托盘尺寸,托盘尺寸,Pallet Size,分英制/公制2个字段,,无，新增,pallet_size_met,,√,√,√,,√,√,√,,√,,√,
+,托盘尺寸(英制),,,无，新增,,无，新增,pallet_size_imp,,√,√,√,,√,√,√,,√,,√,
+,一托数量1,包/托盘,Packs per Pallet,无，新增,包/托,有，重命名“一托数量_1”,pcs_per_pallet_1,,√,√,√,,√,√,√,,√,,√,
+,打托高度1,打托高度1,Pallet Height,无，新增,,无，新增,pallet_height_1_met,,√,√,√,,√,√,√,,√,,√,
+,打托高度1(英制),,,无，新增,,无，新增,pallet_height_1_imp,,√,√,√,,√,√,√,,√,,√,
+,整托毛重1,整托毛重1,Total Gross Weight per Pallet,无，新增,,无，新增,pallet_weight_1_met,,√,√,√,,√,√,√,,√,,√,
+,整托毛重1(英制),,,无，新增,,无，新增,pallet_weight_1_imp,,√,√,√,,√,√,√,,√,,√,
+,一托数量2,,,无，新增,,无，新增,pcs_per_pallet_2,,,,√,,,,,,,,,
+,打托高度2,,,无，新增,,无，新增,pallet_height_2_met,,,,√,,,,,,,,,
+,打托高度2(英制),,,无，新增,,无，新增,pallet_height_2_imp,,,,√,,,,,,,,,
+,整托毛重2,,,无，新增,,无，新增,pallet_weight_2_met,,,,√,,,,,,,,,
+,整托毛重2(英制),,,无，新增,,无，新增,pallet_weight_2_imp,,,,√,,,,,,,,,
+,一托数量3,,,无，新增,,无，新增,pcs_per_pallet_3,,,,√,,,,,,,,,
+,打托高度3,,,无，新增,,无，新增,pallet_height_3_met,,,,√,,,,,,,,,
+,打托高度3(英制),,,无，新增,,无，新增,pallet_height_3_imp,,,,√,,,,,,,,,
+,整托毛重3,,,无，新增,,无，新增,pallet_weight_3_met,,,,√,,,,,,,,,
+,整托毛重3(英制),,,无，新增,,无，新增,pallet_weight_3_imp,,,,√,,,,,,,,,
+,U8特有属性,,,,,,,,,,,,,,,,,,,
+,总厚度,,,,,,,,,,,,,,,,,,,
+,厂家型号,,,,,,,,,,,,,,,,,,,
+,内层纸,,,,,,,,,,,,,,,,,,,
+,外层纸,,,,,,,,,,,,,,,,,,,
+,存货名称,,,,,,,,,,,,,,,,,,,
+,是否装箱,,,,,,,,,,,,,,,,,,,
+,规格型号,,,,,,,,,,,,,,,,,,,

@@ -1,0 +1,11 @@
+REPOSITORY       TAG         IMAGE ID       CREATED        SIZE
+prod-nginx       latest      b4febf22478a   2 days ago     224MB
+prod-wordpress   latest      00090dacc6f2   2 days ago     1.11GB
+dev-frontend     latest      8024c0b55e81   9 days ago     1.48GB
+dev-wordpress    latest      6e2c7b2c3286   10 days ago    966MB
+wordpress        latest      56c5be977240   5 weeks ago    984MB
+nginx            alpine      65645c7bb6a0   7 weeks ago    75.9MB
+<none>           <none>      51d7ec709cde   7 weeks ago    1.05GB
+mysql            8.0         4890b3247d48   7 weeks ago    1.05GB
+node             18-alpine   8d6421d663b4   2 months ago   180MB
+alpine           3.18        de0eb0b3f2a4   3 months ago   11.7MB

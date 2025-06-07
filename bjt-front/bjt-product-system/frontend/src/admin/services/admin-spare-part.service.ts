@@ -44,7 +44,7 @@ export interface SparePart {
   product_line_id: number;        // 产品线ID - 必填
   app_model: string;             // 适配机型
   model: string;                 // 配件型号
-  is_consumable: boolean;        // 是否易损 - radio选项
+  is_consumable: number;         // 是否易损 - 0:不显示备件, 1:易损, 2:非易损
   image_url: string;             // 产品图片
   part_number: string;           // 料号 - 必填，同产品线下唯一
   name_zh: string;               // 中文名称 - 必填
@@ -79,7 +79,7 @@ export interface SparePartFormData {
   product_line_id: number;
   app_model?: string;
   model?: string;
-  is_consumable: boolean;
+  is_consumable: number;         // 是否易损 - 0:不显示备件, 1:易损, 2:非易损
   image_url?: string;
   part_number: string;
   name_zh: string;
@@ -117,7 +117,7 @@ interface SparePartQueryParams {
   search?: string;
   model_id?: number;
   product_line_id?: number;
-  is_consumable?: boolean;
+  is_consumable?: number; // 0:不显示备件, 1:易损, 2:非易损
   status?: string;
 }
 
@@ -177,7 +177,19 @@ class AdminSparePartService extends BaseService {
   }
 
   async updateSparePart(id: number, data: SparePartFormData) {
-    return this.put<SparePart>(`/${id}`, data);
+    console.log('🔍 [AdminSparePartService] updateSparePart调用:', {
+      id,
+      'data.is_consumable': data.is_consumable,
+      'is_consumable类型': typeof data.is_consumable,
+      '完整data': data,
+      'URL': `${this.baseUrl}/${id}`
+    });
+    
+    const result = this.put<SparePart>(`/${id}`, data);
+    
+    console.log('🔍 [AdminSparePartService] updateSparePart API调用完成');
+    
+    return result;
   }
 
   async deleteSparePart(id: number) {

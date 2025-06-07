@@ -151,6 +151,32 @@ chmod +x test-db-init.sh
 ### 开发环境脚本
 - **`scripts/deploy-spec-pdf-feature-dev.sh`** - 开发环境功能部署（494行）
 
+### 🔧 开发环境故障排除工具
+- **`fix-dev-mysql-safe.sh`** - 开发环境MySQL启动问题安全修复脚本（406行）
+- **`DEV_MYSQL_FIX_GUIDE.md`** - 开发环境MySQL修复详细指南
+
+**MySQL启动问题修复：**
+```bash
+# 诊断MySQL问题（安全，不执行修复）
+./fix-dev-mysql-safe.sh --diagnose
+
+# 执行完整修复流程
+./fix-dev-mysql-safe.sh --fix
+
+# 查看修复状态
+./fix-dev-mysql-safe.sh --status
+
+# 如果修复失败，一键回滚
+./fix-dev-mysql-safe.sh --rollback
+```
+
+**安全保障机制：**
+- ✅ **生产环境保护** - 每次操作前验证生产环境配置完整性
+- ✅ **环境隔离** - 只修改开发环境配置，绝不影响生产环境
+- ✅ **自动备份** - 操作前自动创建完整备份
+- ✅ **中断恢复** - 支持中断后从断点继续执行
+- ✅ **一键回滚** - 如果出现问题可立即回滚到修复前状态
+
 ### 推荐使用流程
 
 **首次部署：**
@@ -182,6 +208,8 @@ chmod +x test-db-init.sh
 | `scripts/pre-deploy-check.sh` | 部署前检查 | 任何部署前 | 233行，全面环境验证 |
 | `scripts/health-monitor.sh` | 健康监控 | 7x24小时监控 | 392行，自动修复、多渠道告警 |
 | `scripts/deploy-spec-pdf-feature-dev.sh` | 开发环境部署 | 本地开发测试 | 494行，开发环境专用 |
+| `fix-dev-mysql-safe.sh` | 开发环境MySQL修复 | MySQL启动问题 | 406行，安全修复、中断恢复、自动回滚 |
+| `validate-data.sh` | 数据质量验证 | 数据导入前验证 | 全面检查、格式验证、安全检测 |
 
 ### 🎯 快速决策指南
 
@@ -193,6 +221,8 @@ chmod +x test-db-init.sh
 - 🏥 **日常监控** → `health-monitor.sh` (定时任务)
 - 🐛 **故障排查** → `health-monitor.sh --report` + 故障排除指南
 - 🧪 **本地开发** → `deploy-spec-pdf-feature-dev.sh`
+- 🔧 **开发环境MySQL问题** → `fix-dev-mysql-safe.sh`
+- 📝 **数据导入前验证** → `validate-data.sh`
 
 ## 📁 项目结构
 
@@ -221,7 +251,15 @@ bjt-product-system/
 ├── nginx/                      # Nginx配置文件
 │   ├── conf.d/                # 各种环境的Nginx配置
 │   └── ssl/                   # SSL证书目录
-└── docs/                      # 项目文档
+├── docs/                      # 项目文档
+├── fix-dev-mysql-safe.sh      # 开发环境MySQL安全修复脚本
+├── DEV_MYSQL_FIX_GUIDE.md     # 开发环境MySQL修复指南
+├── validate-data.sh           # 数据质量验证工具
+├── DATA_INPUT_GUIDELINES.md   # 数据输入规范指南
+├── 数据录入操作手册.md         # 操作人员数据录入指南
+├── 数据录入快速参考卡.md       # 打印版快速参考卡
+├── logs/                      # 修复脚本日志目录
+└── backups/                   # 修复脚本备份目录
 ```
 
 ## 🔧 部署选项详解
@@ -297,6 +335,65 @@ docker-compose -f docker/prod/docker-compose.prod.yml logs db-init
 ```
 
 ## 📊 数据导入
+
+### 📝 数据输入规范（重要！）
+
+为确保系统稳定性和数据质量，请严格遵循数据输入规范：
+
+#### ⚠️ 严禁使用的字符
+```
+SQL危险字符: ' " ; -- /* */
+HTML/XSS风险: < > script javascript
+系统保留字符: \ ` | & 
+控制字符: \n \r \t \0
+```
+
+#### ✅ 推荐格式
+```bash
+# 产品名称/型号
+✅ "HP LaserJet Pro M404n"
+❌ " HP LaserJet Pro M404n " (首尾空格)
+❌ "HP@LaserJet#Pro" (特殊符号)
+
+# 价格
+✅ "2599.99"
+❌ "￥2,599.99" (货币符号和千位分隔符)
+
+# 电话
+✅ "010-12345678" 或 "13812345678"
+❌ "+86 138-1234-5678" (特殊符号)
+
+# 邮箱
+✅ "user@example.com"
+❌ "用户@example.com" (中文字符)
+```
+
+#### 📏 字段长度限制
+- 产品名称：1-100字符
+- 产品型号：1-50字符
+- 规格描述：1-500字符
+- 价格：1-10字符（纯数字）
+
+### 🔍 数据验证工具
+
+在导入数据前，使用验证工具检查数据质量：
+
+```bash
+# 验证CSV文件
+./validate-data.sh products.csv 3        # 第3列是价格
+./validate-data.sh products.csv 3 5      # 第3列价格，第5列电话
+./validate-data.sh products.csv 3 5 6    # 第3列价格，第5列电话，第6列邮箱
+./validate-data.sh products.csv 3 5 6 7  # 第3列价格，第5列电话，第6列邮箱，第7列URL
+
+# 自动清理数据问题
+./clean-data.sh products.csv
+```
+
+**验证功能：**
+- ✅ 检查危险字符和安全风险
+- ✅ 验证价格、电话、邮箱格式
+- ✅ 检查字段长度和编码问题
+- ✅ 统计数据质量并提供修复建议
 
 ### Excel数据转换
 系统支持从Excel文件自动转换为SQL数据：
@@ -453,11 +550,17 @@ docker-compose -f docker/prod/docker-compose.prod.yml up -d
 - [📊 SQL Excel转换器](SQL_EXCEL_CONVERTER_README.md)
 - [📁 文件上传系统](docs/FILE_UPLOAD_SYSTEM.md)
 - [📄 PDF上传功能](PDF_UPLOAD_IMPLEMENTATION.md) - 152行功能实现文档
+- [📝 **数据输入规范指南**](DATA_INPUT_GUIDELINES.md) - **完整的数据质量规范**
+
+### 📋 操作人员文档
+- [👥 **数据录入操作手册**](数据录入操作手册.md) - **给非技术人员的简明操作指南**
+- [📋 **数据录入快速参考卡**](数据录入快速参考卡.md) - **可打印的桌面参考卡片**
 
 ### 开发调试
 - [🔧 Docker构建修复](DOCKER_BUILD_FIXES.md)
 - [🛠️ 基础故障排除指南](TROUBLESHOOTING.md)
 - [🧪 开发环境部署](scripts/deploy-spec-pdf-feature-dev.sh) - 494行开发脚本
+- [🔧 **开发环境MySQL修复指南**](DEV_MYSQL_FIX_GUIDE.md) - **完整的MySQL问题解决方案**
 
 ## 🎯 访问地址
 
@@ -478,6 +581,14 @@ docker-compose -f docker/prod/docker-compose.prod.yml up -d
 - **WordPress管理后台**: http://localhost:8080/wp-admin
 - **API接口**: http://localhost:8080/wp-json/bjt/v1
 
+### 本地开发环境（使用nginx配置）
+- **前端应用**: http://localhost （nginx代理）
+- **前端开发服务器**: http://localhost:5173 （Vite开发服务器）
+- **WordPress后端**: http://localhost:8080
+- **WordPress管理后台**: http://localhost:8080/wp-admin
+- **API接口**: http://localhost:8080/wp-json/bjt/v1
+- **MySQL数据库**: localhost:3306
+
 ## 🛠️ 开发指南
 
 ### 本地开发环境
@@ -493,6 +604,27 @@ npm run dev
 # 后端开发
 # WordPress插件开发在 plugins/ 目录
 ```
+
+### 开发环境常见问题
+
+#### MySQL启动问题
+如果开发环境MySQL启动失败，使用安全修复工具：
+
+```bash
+# 快速诊断问题
+./fix-dev-mysql-safe.sh --diagnose
+
+# 自动修复（如果诊断发现问题）
+./fix-dev-mysql-safe.sh --fix
+```
+
+**常见MySQL问题：**
+- 端口3306被占用
+- Docker容器冲突
+- 数据卷权限问题
+- 配置文件错误
+
+详细指南请参考：[开发环境MySQL修复指南](DEV_MYSQL_FIX_GUIDE.md)
 
 ### 代码贡献
 1. Fork项目
@@ -558,9 +690,13 @@ docker-compose -f docker/prod/docker-compose.prod.yml exec mysql mysql -u root -
 
 # 部署前环境检查  
 ./scripts/pre-deploy-check.sh
+
+# 开发环境MySQL问题修复
+./fix-dev-mysql-safe.sh --diagnose  # 诊断问题
+./fix-dev-mysql-safe.sh --fix       # 执行修复
 ```
 
-### 📋 故障报告模板
+### 📄 故障报告模板
 
 当提交问题时，请包含以下信息：
 

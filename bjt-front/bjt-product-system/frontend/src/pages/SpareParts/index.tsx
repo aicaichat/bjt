@@ -19,6 +19,22 @@ import { RequiredPartsDisplay } from '../../components/RequiredPartsDisplay';
 // 导入备件详细信息Tooltip组件
 import { SparePartTooltip } from '../../components/SparePartTooltip';
 
+// 导入格式化工具函数
+import { 
+  formatCompositeDimension, 
+  formatConsumableStatus, 
+  formatWeight, 
+  formatQuantity, 
+  formatAppModel, 
+  safeStringRender 
+} from '../../utils/formatUtils';
+
+// 导入筛选验证工具
+import { filterValidationService } from '../../utils/filterValidation';
+
+// 导入独立的筛选调试工具
+// import { debugFilter, quickDataOverview, filterDebugger } = useDebugFilter('/wp-json/bjt/v1/spare-parts');
+
 // 导入SQL Mock数据服务
 import { useSpareParts } from '../../hooks/useMockData';
 import MockServiceStatus from '../../components/MockServiceStatus';
@@ -110,7 +126,7 @@ const SparePartsPage = () => {
   // 状态管理
   const [showCartModal, setShowCartModal] = useState(false);
   const [showConfirmClear, setShowConfirmClear] = useState(false);
-  const [currentProductType, setCurrentProductType] = useState('machine');
+  const [currentProductType, setCurrentProductType] = useState('all'); // 修复：初始值改为'all'，不应用筛选
   const [selectedModel, setSelectedModel] = useState('');
   const [activeNotification, setActiveNotification] = useState<HTMLDivElement | null>(null);
   const [notificationTimeout, setNotificationTimeout] = useState<Timeout | null>(null);
@@ -168,7 +184,7 @@ const SparePartsPage = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [totalItems, setTotalItems] = useState<number>(0);
-  const [pageSize] = useState<number>(20); // 每页显示数量
+  const [pageSize] = useState<number>(50); // 每页显示数量
   
   // 添加产品类型和型号过滤选项状态
   const [productTypes, setProductTypes] = useState<Array<{ value: string; label: string }>>([
@@ -265,11 +281,6 @@ const SparePartsPage = () => {
     return roles[role] || roles['guest'];
   };
   
-  // 创建一个包装函数用于按钮点击事件
-  const handleReloadData = useCallback(() => {
-    loadSparePartsData(0, 2);
-  }, []);
-  
   // 创建一个包装函数用于筛选选项重新加载
   const handleReloadFilterOptions = useCallback(() => {
     loadFilterOptions(0, 2);
@@ -295,65 +306,11 @@ const SparePartsPage = () => {
     loadFilterOptions();
   }, []);
   
-  // 添加直接测试Mock数据的useEffect
-  useEffect(() => {
-    // 直接测试Mock数据
-    const testMockData = async () => {
-      try {
-        console.log('🧪 [SpareParts] Testing Mock data directly...');
-        
-        // 直接导入Mock数据
-        const { getAllMockSpareParts } = await import('../../services/mocks/spareParts.mocks');
-        const mockParts = getAllMockSpareParts();
-        
-        console.log('🧪 [SpareParts] Direct Mock data test:', {
-          totalParts: mockParts.length,
-          firstPartSpec: mockParts[0]?.spec,
-          allSpecs: mockParts.map(p => ({ id: p.id, part_number: p.part_number, spec: p.spec }))
-        });
-        
-        // 测试真实API调用
-        console.log('🧪 [SpareParts] Testing real API call...');
-        const token = localStorage.getItem('auth_token');
-        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1';
-        
-        const response = await fetch(`${baseUrl}/spare-parts?page=1&page_size=5`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            ...(token && { 'Authorization': `Bearer ${token}` })
-          }
-        });
-        
-        if (response.ok) {
-          const apiData = await response.json();
-          console.log('🧪 [SpareParts] Real API response test:', {
-            hasData: !!apiData,
-            responseKeys: Object.keys(apiData || {}),
-            dataLength: Array.isArray(apiData) ? apiData.length : (apiData?.data?.length || 0),
-            firstApiItem: Array.isArray(apiData) ? apiData[0] : (apiData?.data?.[0] || null)
-          });
-        } else {
-          console.log('🧪 [SpareParts] Real API test failed:', response.status, response.statusText);
-        }
-        
-      } catch (error) {
-        console.error('🧪 [SpareParts] API test failed:', error);
-      }
-    };
-    
-    testMockData();
-  }, []);
-  
   // 加载备件数据
   const loadSparePartsData = async (retryCount = 0, maxRetries = 2) => {
-    console.log(`🔄 [loadSparePartsData] Starting (attempt ${retryCount + 1}/${maxRetries + 1}) with pagination:`, {
-      currentPage,
-      pageSize,
-      totalPages,
-      totalItems,
-      filters: { selectedIsConsumable, currentProductType, selectedModel }
+    console.log(`🔄 [loadSparePartsData] Starting (attempt ${retryCount + 1}/${maxRetries + 1}) - FRONTEND_FILTERING_ONLY:`, {
+      strategy: 'FRONTEND_FILTERING_ONLY', // 只使用前端筛选，API不筛选
+      note: '获取所有基础数据，在前端进行筛选'
     });
     
     setLoading(true);
@@ -365,35 +322,22 @@ const SparePartsPage = () => {
       if (!storedToken) {
         throw new Error('No authentication token found');
       }
-      const currentToken: string = storedToken; // Type assertion after null check
+      const currentToken: string = storedToken;
 
       const baseUrl = API_BASE_URL;
       
-      // 构建查询参数
-      const queryParams = new URLSearchParams({
-        page: currentPage.toString(),
-        per_page: pageSize.toString(),
-        lang: currentLanguage,
-        status: 'publish'
-      });
+      // 🔧 前端筛选策略：API只获取基础数据，不传递任何筛选参数
+      const queryParams = new URLSearchParams();
+      queryParams.append('per_page', '1000'); // 获取足够多的数据
+      queryParams.append('status', 'publish'); // 只获取已发布的数据
+      queryParams.append('exclude_hidden', 'false'); // 🔧 包含隐藏备件，让前端自己筛选
       
-      // 添加筛选参数
-      if (selectedModel && selectedModel !== 'all' && selectedModel !== '') {
-        queryParams.append('app_model', selectedModel);
-        console.log('🔍 [loadSparePartsData] Adding app_model filter:', selectedModel);
-      }
-      
-      if (selectedIsConsumable !== null) {
-        // 将 boolean 转换为数字：true -> 1, false -> 2
-        const consumableValue = selectedIsConsumable ? 1 : 2;
-        queryParams.append('is_consumable', consumableValue.toString());
-        console.log('🔍 [loadSparePartsData] Adding is_consumable filter:', consumableValue);
-      }
+      console.log('🔧 [loadSparePartsData] 使用纯前端筛选策略：API获取所有备件包括隐藏的');
       
       const url = `${baseUrl}/spare-parts?${queryParams.toString()}`;
       
       console.log('🔍 [loadSparePartsData] Request URL:', url);
-      console.log('🔍 [loadSparePartsData] Query params:', Object.fromEntries(queryParams));
+      console.log('🔍 [loadSparePartsData] Query params (minimal):', Object.fromEntries(queryParams));
       
       const response = await fetch(url, {
         method: 'GET',
@@ -440,68 +384,47 @@ const SparePartsPage = () => {
         sparePartsData = [];
       }
       
-      // 提取分页信息
-      let paginationInfo = {
-        total: sparePartsData.length,
-        totalPages: Math.ceil(sparePartsData.length / pageSize),
-        currentPage: currentPage
-      };
+      console.log(`📦 [loadSparePartsData] 原始数据加载完成: ${sparePartsData.length} 条`);
       
-      if (jsonData && jsonData.success && jsonData.data) {
-        // WordPress API格式的分页信息
-        paginationInfo = {
-          total: jsonData.data.total || sparePartsData.length,
-          totalPages: jsonData.data.total_pages || Math.ceil((jsonData.data.total || sparePartsData.length) / pageSize),
-          currentPage: jsonData.data.page || currentPage
-        };
-      } else if (jsonData && jsonData.pagination) {
-        // 标准分页格式
-        paginationInfo = {
-          total: jsonData.pagination.total || sparePartsData.length,
-          totalPages: jsonData.pagination.totalPages || Math.ceil((jsonData.pagination.total || sparePartsData.length) / pageSize),
-          currentPage: jsonData.pagination.currentPage || currentPage
-        };
-      }
-      
-      // 设置分页状态
-      setTotalItems(paginationInfo.total);
-      setTotalPages(Math.max(1, paginationInfo.totalPages));
-      if (
-        jsonData &&
-        ((jsonData.success && jsonData.data && jsonData.data.page) || (jsonData.pagination && jsonData.pagination.currentPage)) &&
-        paginationInfo.currentPage !== currentPage
-      ) {
-        setCurrentPage(Math.max(1, paginationInfo.currentPage));
-      }
-      
-      // 如果没有数据，尝试不带筛选条件重新获取
-      if (sparePartsData.length === 0) {
-        const fallbackUrl = `${baseUrl}/spare-parts?page=${currentPage}&per_page=${pageSize}&lang=${currentLanguage}&status=publish`;
-        
-        const fallbackResponse = await fetch(fallbackUrl, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${currentToken}`
-          }
+      // 🔍 快速数据质量检查
+      if (sparePartsData.length > 0) {
+        const sample = sparePartsData[0];
+        console.log('📋 数据样本:', {
+          part_number: sample.part_number,
+          name: sample.name_zh || sample.name_en,
+          app_model: sample.app_model,
+          is_consumable: sample.is_consumable,
+          product_type: sample.product_type,
+          product_line_id: sample.product_line_id
         });
         
-        if (fallbackResponse.ok) {
-          const fallbackData = await fallbackResponse.json();
-          
-          if (fallbackData && fallbackData.success && fallbackData.data && fallbackData.data.items && Array.isArray(fallbackData.data.items)) {
-            sparePartsData = fallbackData.data.items;
-          } else if (fallbackData && fallbackData.data && Array.isArray(fallbackData.data)) {
-            sparePartsData = fallbackData.data;
-          } else if (fallbackData && Array.isArray(fallbackData)) {
-            sparePartsData = fallbackData;
-          }
-        }
+        // 统计基础字段
+        const stats = {
+          withAppModel: sparePartsData.filter(p => p.app_model).length,
+          isConsumableValues: {} as Record<string, number>
+        };
+        
+        sparePartsData.forEach(part => {
+          const ic = String(part.is_consumable);
+          stats.isConsumableValues[ic] = (stats.isConsumableValues[ic] || 0) + 1;
+        });
+        
+        console.log('📊 数据统计:', {
+          总数: sparePartsData.length,
+          有app_model: stats.withAppModel,
+          is_consumable分布: stats.isConsumableValues
+        });
+      } else {
+        console.warn('⚠️ API返回了空数据数组');
       }
       
+      // 设置原始数据（未筛选）
       setSpareParts(sparePartsData);
       updateAccessoryModels(sparePartsData);
+      
+      // 前端分页处理（在筛选之后）
+      setTotalItems(sparePartsData.length);
+      setTotalPages(Math.max(1, Math.ceil(sparePartsData.length / pageSize)));
       
     } catch (err) {
       console.error(`Error loading spare parts data from API (attempt ${retryCount + 1}/${maxRetries + 1}):`, err);
@@ -509,7 +432,7 @@ const SparePartsPage = () => {
       // 如果是第一次尝试且是API错误，尝试重试
       if (retryCount < maxRetries) {
         console.log(`Retrying API call (${retryCount + 1}/${maxRetries})...`);
-        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))); // 递增延迟
+        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
         return loadSparePartsData(retryCount + 1, maxRetries);
       }
       
@@ -722,137 +645,116 @@ const SparePartsPage = () => {
       .trim();
   };
   
-  // 根据筛选条件过滤备件
+  // 根据筛选条件过滤备件 - 主要前端筛选逻辑
   const getFilteredParts = () => {
-    // 确保 spareParts 不是 null 或 undefined
-    if (!Array.isArray(spareParts)) return [];
-    
-    // 【调试日志】打印当前筛选条件
-    console.log('【筛选条件】', {
+    console.log(`🔍 [getFilteredParts] 开始前端筛选:`, {
       selectedModel,
       currentProductType,
-      selectedIsConsumable
+      selectedIsConsumable,
+      totalParts: spareParts.length,
+      strategy: 'FRONTEND_FILTERING'
     });
 
-    // 【调试日志】打印数据样本
-    spareParts.slice(0, 3).forEach((item, idx) => {
-      console.log(`【数据${idx}】`, {
-        id: item.id,
-        part_number: item.part_number,
-        name_zh: item.name_zh,
-        name_en: item.name_en,
-        app_model: item.app_model,
-        app_model_type: typeof item.app_model,
-        is_consumable: item.is_consumable,
-        product_line_id: item.product_line_id
-      });
-    });
+    if (!spareParts || spareParts.length === 0) {
+      console.log('⚠️ [getFilteredParts] 没有基础数据');
+      return [];
+    }
+
+    console.log('🔧 [getFilteredParts] 执行前端筛选逻辑...');
     
-    let filteredResults = [...spareParts];
+    // 🔧 基础过滤：除非明确筛选is_consumable=0，否则过滤掉隐藏的备件
+    let baseFilteredParts = spareParts;
+    if (selectedIsConsumable !== 0) {
+      baseFilteredParts = spareParts.filter(part => part.is_consumable !== 0);
+      console.log(`📊 [基础数据] 过滤隐藏备件: ${spareParts.length} → ${baseFilteredParts.length} 条`);
+    } else {
+      console.log(`📊 [基础数据] 保留隐藏备件（调试模式）: ${spareParts.length} 条`);
+    }
     
-    // 标准化处理函数，移除引号、空格，转为小写
-    const normalize = (v: string): string => {
-      if (!v) return '';
-      return v.toString()
-        .toLowerCase()
-        .replace(/['"]/g, '') // 移除所有引号
-        .replace(/\s+/g, '')  // 移除所有空格
-        .trim();
-    };
-    
-    // 根据选定的型号进行筛选
+    console.log(`📊 [基础数据] 起始数据量: ${baseFilteredParts.length} 条（已过滤不展示备件）`);
+
+    let filteredParts = [...baseFilteredParts];
+
+    // 1. 型号筛选
     if (selectedModel && selectedModel !== 'all' && selectedModel !== '') {
-      console.log('🔍 [筛选] 应用型号筛选:', selectedModel);
+      console.log(`🔍 [getFilteredParts] 应用型号筛选: ${selectedModel}`);
+      const beforeCount = filteredParts.length;
       
-      filteredResults = filteredResults.filter(part => {
-        // 检查app_model是否存在
+      filteredParts = filteredParts.filter(part => {
         if (!part.app_model) {
-          console.log(`❌ [筛选] 备件 ${part.part_number} 没有 app_model 字段`);
+          console.log(`⚠️ [型号筛选] ${part.part_number}: app_model为空`);
           return false;
         }
         
         const normalizedSelectedModel = normalize(selectedModel);
         
-        // 如果是数组，直接查找
         if (Array.isArray(part.app_model)) {
-          const found = part.app_model.some(model => {
+          const match = part.app_model.some(model => {
             const normalizedModel = normalize(model);
-            return normalizedModel.includes(normalizedSelectedModel) || 
-                   normalizedSelectedModel.includes(normalizedModel);
+            const isMatch = normalizedModel === normalizedSelectedModel;
+            console.log(`🔍 [型号匹配] ${part.part_number}: "${model}" vs "${selectedModel}" → ${isMatch}`);
+            return isMatch;
           });
-          console.log(`🔍 [筛选] 备件 ${part.part_number} (数组): ${part.app_model.join(', ')} ${found ? '✅匹配' : '❌不匹配'} ${selectedModel}`);
-          return found;
-        }
-        
-        // 如果是字符串（兼容旧数据），转换为数组后查找
-        const modelString = String(part.app_model);
-        const modelArray = modelString
-          .replace(/['"]/g, '') // 移除引号
-          .split(',')
-          .map(m => m.trim())
-          .filter(m => m.length > 0); // 过滤空字符串
+          if (match) {
+            console.log(`✅ [型号筛选] ${part.part_number}: 匹配成功 ${JSON.stringify(part.app_model)}`);
+          }
+          return match;
+        } else {
+          const modelString = String(part.app_model);
+          const modelArray = modelString.replace(/['"]/g, '').split(',').map(m => m.trim()).filter(m => m.length > 0);
+          console.log(`🔍 [型号解析] ${part.part_number}: "${part.app_model}" → [${modelArray.join(', ')}]`);
           
-        const found = modelArray.some(model => {
-          const normalizedModel = normalize(model);
-          // 双向匹配：选中的型号包含模型或模型包含选中的型号
-          return normalizedModel.includes(normalizedSelectedModel) || 
-                 normalizedSelectedModel.includes(normalizedModel);
-        });
-        
-        console.log(`🔍 [筛选] 备件 ${part.part_number} (字符串): [${modelArray.join(', ')}] ${found ? '✅匹配' : '❌不匹配'} ${selectedModel} (normalized: ${normalizedSelectedModel})`);
-        return found;
-      });
-      
-      console.log(`🔍 [筛选] 型号筛选后剩余: ${filteredResults.length} 个备件`);
-    }
-    
-    // 根据产品类型筛选
-    if (currentProductType && currentProductType !== 'all') {
-      console.log('🔍 [筛选] 应用产品类型筛选:', currentProductType);
-      
-      filteredResults = filteredResults.filter(part => {
-        // 这里需要根据实际数据结构调整
-        // 如果数据中有 product_type 字段，使用它
-        if (part.product_type) {
-          const matches = normalize(part.product_type) === normalize(currentProductType);
-          console.log(`🔍 [筛选] 备件 ${part.part_number} product_type: ${part.product_type} ${matches ? '✅匹配' : '❌不匹配'} ${currentProductType}`);
-          return matches;
+          const match = modelArray.some(model => {
+            const normalizedModel = normalize(model);
+            const isMatch = normalizedModel === normalizedSelectedModel;
+            console.log(`🔍 [型号匹配] ${part.part_number}: "${model}" vs "${selectedModel}" → ${isMatch}`);
+            return isMatch;
+          });
+          if (match) {
+            console.log(`✅ [型号筛选] ${part.part_number}: 匹配成功 "${part.app_model}"`);
+          }
+          return match;
         }
-        
-        // 如果没有 product_type，根据 product_line_id 判断
-        if (part.product_line_id) {
-          // 简单映射：product_line_id = 1 为主机，其他为配件
-          const isMainProduct = part.product_line_id === 1;
-          const matches = (currentProductType === 'machine' && isMainProduct) || 
-                         (currentProductType === 'accessory' && !isMainProduct);
-          console.log(`🔍 [筛选] 备件 ${part.part_number} product_line_id: ${part.product_line_id} ${matches ? '✅匹配' : '❌不匹配'} ${currentProductType}`);
-          return matches;
-        }
-        
-        // 默认显示所有
-        console.log(`🔍 [筛选] 备件 ${part.part_number} 无产品类型信息，默认显示`);
-        return true;
       });
       
-      console.log(`🔍 [筛选] 产品类型筛选后剩余: ${filteredResults.length} 个备件`);
+      console.log(`📊 [型号筛选] ${selectedModel}: ${beforeCount} → ${filteredParts.length} 条`);
     }
-    
-    // 根据是否为耗材筛选
-    if (selectedIsConsumable !== null) {
-      console.log('🔍 [筛选] 应用耗材类型筛选:', selectedIsConsumable);
+
+    // 🚨 移除产品类型筛选逻辑 - 产品类型只影响适配机型选项，不筛选备件列表
+    // 备件页面显示所有备件，不按照product_type筛选
+    console.log(`ℹ️ [产品类型] 当前选择: ${currentProductType} (仅影响适配机型选项，不筛选备件列表)`);
+
+    // 2. 易损性筛选
+    if (selectedIsConsumable !== null && selectedIsConsumable !== undefined) {
+      console.log(`🔍 [getFilteredParts] 应用易损性筛选: ${selectedIsConsumable}`);
+      const beforeCount = filteredParts.length;
       
-      filteredResults = filteredResults.filter(part => {
-        // 根据新的值定义进行筛选：1=易耗，2=非易耗
-        const matches = part.is_consumable === selectedIsConsumable;
-        console.log(`🔍 [筛选] 备件 ${part.part_number} is_consumable: ${part.is_consumable} ${matches ? '✅匹配' : '❌不匹配'} ${selectedIsConsumable}`);
-        return matches;
+      filteredParts = filteredParts.filter(part => {
+        return Number(part.is_consumable) === Number(selectedIsConsumable);
       });
       
-      console.log(`🔍 [筛选] 耗材类型筛选后剩余: ${filteredResults.length} 个备件`);
+      console.log(`📊 [易损性筛选] ${selectedIsConsumable}: ${beforeCount} → ${filteredParts.length} 条`);
     }
-    
-    console.log(`✅ [筛选] 最终筛选结果: ${filteredResults.length} 个备件`);
-    return filteredResults;
+
+    // 记录筛选后的结果样本
+    const sampleData = filteredParts.slice(0, 3).map(part => ({
+      part_number: part.part_number,
+      name: part.name_zh || part.name_en,
+      app_model: part.app_model,
+      is_consumable: part.is_consumable,
+      product_type: part.product_type,
+      product_line_id: part.product_line_id
+    }));
+
+    console.log(`✅ [getFilteredParts] 前端筛选完成:`, {
+      原始数据: spareParts.length,
+      筛选后: filteredParts.length,
+      筛选条件: { selectedModel, selectedIsConsumable },
+      产品类型选择: currentProductType + ' (仅影响适配机型选项)',
+      样本数据: sampleData
+    });
+
+    return filteredParts;
   };
   
   // 找到适合数量的价格区间
@@ -1630,11 +1532,11 @@ const SparePartsPage = () => {
           <p className="text-content-light mb-4">{error}</p>
           <div className="flex flex-col sm:flex-row gap-4">
             <button 
-              onClick={handleReloadData} 
+              onClick={() => loadSparePartsData()} 
               className="flex items-center px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                <path fillRule="evenodd" d="M4 2a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
               </svg>
               {t('error.retry', {ns: 'spareParts'})}
             </button>
@@ -1670,7 +1572,7 @@ const SparePartsPage = () => {
                 setSelectedModel('');
                 setSelectedIsConsumable(null);
                 // 重新加载数据
-                setTimeout(() => handleReloadData(), 100);
+                setTimeout(() => loadSparePartsData(), 100);
               }}
               className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors"
             >
@@ -1678,7 +1580,7 @@ const SparePartsPage = () => {
             </button>
             
             <button 
-              onClick={handleReloadData}
+              onClick={() => loadSparePartsData()}
               className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors flex items-center justify-center"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -1712,7 +1614,7 @@ const SparePartsPage = () => {
                   </div>
                   <div className="text-center md:text-left">
                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${part.is_consumable === 1 ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}`}>
-                      {part.is_consumable === 1 ? String(t('partTypes.consumable', { ns: 'spareParts' }) || 'Consumable') : String(t('partTypes.nonConsumable', { ns: 'spareParts' }) || 'Non-Consumable')}
+                      {formatConsumableStatus(part.is_consumable, currentLanguage as 'zh' | 'en')}
                     </span>
                   </div>
                 </div>
@@ -1744,84 +1646,58 @@ const SparePartsPage = () => {
                   </div>
                   
                   <div className="bg-card-alt rounded-lg p-4 mt-3 shadow-sm">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                       {/* 适配机型 - 重要字段，优先显示 */}
                       <div className="flex items-start sm:col-span-2">
-                        <strong className="w-20 text-label font-medium flex-shrink-0">{String(t('table.columns.compatibility', { ns: 'spareParts' }) || '适配机型')}:</strong>
-                        <span className="text-content font-medium line-clamp-2 ml-2">
+                        <strong className="w-28 text-label font-medium flex-shrink-0 mr-3">{String(t('table.columns.compatibility', { ns: 'spareParts' }) || '适配机型')}:</strong>
+                        <span className="text-content font-medium line-clamp-2 flex-1">
+                          {formatAppModel(part.app_model) || '通用型号'}
+                        </span>
+                      </div>
+                      
+                      {/* 规格参数 - 根据用户地区智能显示公制或英制 */}
+                      <div className="flex items-start sm:col-span-2">
+                        <strong className="w-28 text-label font-medium flex-shrink-0 mr-3">{String(t('fields.specifications', { ns: 'spareParts' }) || 'Spec.')}:</strong>
+                        <span className="text-content font-medium line-clamp-2 flex-1">
                           {(() => {
-                            // 处理app_model字段，可能是字符串或数组
-                            let appModel = part.app_model;
+                            // 根据用户区域确定单位制：北美和澳洲使用英制，其他地区使用公制
+                            const unitSystem = (userRegion === 'na' || userRegion === 'au') ? 'imperial' : 'metric';
                             
-                            if (Array.isArray(appModel)) {
-                              return appModel.join(', ');
-                            } else if (typeof appModel === 'string' && appModel.trim() !== '') {
-                              // 处理可能包含引号的字符串
-                              return appModel.replace(/"/g, '').split(',').map(m => m.trim()).join(', ');
+                            if (unitSystem === 'metric') {
+                              // 优先显示公制规格，如果为空则fallback到英制
+                              const spec = part.spec?.trim();
+                              if (spec && spec !== '' && spec !== 'null') {
+                                return spec;
+                              }
+                              
+                              const specImperial = part.spec_imperial?.trim();
+                              if (specImperial && specImperial !== '' && specImperial !== 'null') {
+                                return specImperial;
+                              }
+                            } else {
+                              // 优先显示英制规格，如果为空则fallback到公制
+                              const specImperial = part.spec_imperial?.trim();
+                              if (specImperial && specImperial !== '' && specImperial !== 'null') {
+                                return specImperial;
+                              }
+                              
+                              const spec = part.spec?.trim();
+                              if (spec && spec !== '' && spec !== 'null') {
+                                return spec;
+                              }
                             }
                             
-                            return '通用型号';
-                          })()}
-                        </span>
-                      </div>
-                      
-                      {/* 配件型号 - 来自model字段 */}
-                      <div className="flex items-center">
-                        <strong className="w-16 text-label font-medium">{String(t('fields.partModel', { ns: 'spareParts' }) || 'Part Model')}:</strong>
-                        <span className="text-content font-medium ml-2">
-                          {part.model || String(t('defaultValues.notSpecified', { ns: 'spareParts' }) || 'Not Specified')}
-                        </span>
-                      </div>
-                      
-                      {/* 是否易损件 */}
-                      <div className="flex items-center">
-                        <strong className="w-16 text-label font-medium">{String(t('fields.partType', { ns: 'spareParts' }) || 'Type')}:</strong>
-                        <span className={`ml-2 px-2 py-1 rounded text-xs font-medium ${
-                          part.is_consumable 
-                            ? 'bg-orange-100 text-orange-800' 
-                            : 'bg-green-100 text-green-800'
-                        }`}>
-                          {part.is_consumable === 1 ? String(t('partTypes.consumable', { ns: 'spareParts' }) || 'Consumable') : String(t('partTypes.nonConsumable', { ns: 'spareParts' }) || 'Non-Consumable')}
-                        </span>
-                      </div>
-                      
-                      {/* 规格参数 */}
-                      <div className="flex items-start">
-                        <strong className="w-16 text-label font-medium flex-shrink-0">{String(t('fields.specifications', { ns: 'spareParts' }) || 'Specifications')}:</strong>
-                        <span className="text-content font-medium line-clamp-2 ml-2">
-                          {(() => {
-                            console.log('🔍 [renderSpareParts] Part spec data:', {
-                              partId: part.id,
-                              partNumber: part.part_number,
-                              spec: part.spec,
-                              specType: typeof part.spec,
-                              specImperial: part.spec_imperial,
-                              specImperialType: typeof part.spec_imperial,
-                              allFields: Object.keys(part)
-                            });
-                            
-                            // 检查spec字段是否有有效值
-                            const spec = part.spec?.trim();
-                            const specImperial = part.spec_imperial?.trim();
-                            
-                            if (spec && spec !== '' && spec !== 'null') {
-                              return spec;
-                            }
-                            
-                            if (specImperial && specImperial !== '' && specImperial !== 'null') {
-                              return specImperial;
-                            }
-                            
-                            // 如果规格为空，显示友好提示
+                            // 如果两个规格都为空，显示友好提示
                             return String(t('defaultValues.contactServiceSpecs', { ns: 'spareParts' }) || 'Please contact service for specification details');
                           })()}
                         </span>
                       </div>
                       
+                      
                       {/* 适配序列号 */}
                       <div className="flex items-start">
-                        <strong className="w-20 text-label font-medium flex-shrink-0">{String(t('fields.compatibleSerialNumber', { ns: 'spareParts' }) || 'Compatible Serial Number')}:</strong>
-                        <span className="text-content font-medium line-clamp-1 ml-2">
+                        <strong className="w-28 text-label font-medium flex-shrink-0 mr-3">{String(t('fields.compatibleSerialNumber', { ns: 'spareParts' }) || 'Serial No.')}:</strong>
+                        <span className="text-content font-medium line-clamp-1 flex-1">
                           {(() => {
                             console.log('🔍 [renderSpareParts] Part app_sn data:', {
                               partId: part.id,
@@ -1845,8 +1721,10 @@ const SparePartsPage = () => {
                       
                       {/* 单箱数量 */}
                       <div className="flex items-center">
-                        <strong className="w-16 text-label font-medium">{String(t('fields.pcsPerBox', { ns: 'spareParts' }) || 'Pieces Per Box')}:</strong>
-                        <span className="text-content font-medium ml-2">
+                        <strong className="w-28 text-label font-medium flex-shrink-0 mr-3">
+                          {String(t('fields.pcsPerBox', { ns: 'spareParts' }) || (currentLanguage === 'zh' ? '单箱数量(件)' : 'Qty per Carton(pcs)'))}:
+                        </strong>
+                        <span className="text-content font-medium flex-1">
                           {(() => {
                             console.log('🔍 [renderSpareParts] Part pcs_per_box data:', {
                               partId: part.id,
@@ -1856,40 +1734,19 @@ const SparePartsPage = () => {
                             });
                             
                             return part.pcs_per_box !== null && part.pcs_per_box !== undefined && part.pcs_per_box > 0 
-                              ? part.pcs_per_box 
+                              ? String(part.pcs_per_box)  // 只显示纯数值
                               : '1';
                           })()}
                         </span>
                       </div>
                       
-                      {/* 包装尺寸 - 根据单位制显示 */}
+                      {/* ProductId - 修复翻译和布局 */}
                       <div className="flex items-center">
-                        <strong className="w-16 text-label font-medium">{String(t('fields.packageSize', { ns: 'spareParts' }) || 'Package Size')}:</strong>
-                        <span className="text-content font-medium ml-2">
-                          {(() => {
-                            console.log('🔍 [renderSpareParts] Part package size data:', {
-                              partId: part.id,
-                              partNumber: part.part_number,
-                              package_size_cm: part.package_size_cm,
-                              package_size_inch: part.package_size_inch,
-                              package_size_cmType: typeof part.package_size_cm,
-                              package_size_inchType: typeof part.package_size_inch
-                            });
-                            
-                            const packageSizeCm = part.package_size_cm?.trim?.() || part.package_size_cm;
-                            const packageSizeInch = part.package_size_inch?.trim?.() || part.package_size_inch;
-                            
-                            if (packageSizeCm && packageSizeCm !== '' && packageSizeCm !== 'null' && packageSizeCm !== null) {
-                              return `${packageSizeCm} cm`;
-                            }
-                            
-                            if (packageSizeInch && packageSizeInch !== '' && packageSizeInch !== 'null' && packageSizeInch !== null) {
-                              return `${packageSizeInch} inch`;
-                            }
-                            
-                            // 如果包装尺寸为空，显示友好提示
-                            return String(t('defaultValues.contactService', { ns: 'spareParts' }) || 'Please contact service');
-                          })()}
+                        <strong className="w-28 text-label font-medium flex-shrink-0 mr-3">
+                          {String(t('fields.productId', { ns: 'spareParts' }) || (currentLanguage === 'zh' ? '产品ID' : 'Product ID'))}:
+                        </strong>
+                        <span className="text-content font-medium flex-1">
+                          {part.id}
                         </span>
                       </div>
                     </div>
@@ -1905,72 +1762,71 @@ const SparePartsPage = () => {
                               <span className="font-bold text-gray-800 text-sm">{String(t('details.title', { ns: 'spareParts' }) || 'Spare Part Details')}</span>
                             </div>
                             <div className="space-y-2">
-                              {/* 适配序列号 */}
-                              {part.app_sn && (
-                                <div className="flex justify-between items-center py-1">
-                                  <span className="text-gray-600 font-medium text-xs">🔗 {String(t('details.properties.appSn', { ns: 'spareParts' }) || 'Compatible Serial Number')}:</span>
-                                  <span className="text-gray-800 font-semibold text-xs bg-blue-50 px-2 py-1 rounded">
-                                    {part.app_sn}
-                                  </span>
-                                </div>
-                              )}
-                              
-                              {/* 包装尺寸 */}
+                              {/* 适配序列号 - 第1个必需字段 */}
                               <div className="flex justify-between items-center py-1">
-                                <span className="text-gray-600 font-medium text-xs">📦 {String(t('details.properties.packageSize', { ns: 'spareParts' }) || 'Package Size')}:</span>
+                                <span className="text-gray-600 font-medium text-xs">
+                                  🔗 {String(t('details.properties.appSn', { ns: 'spareParts' }) || 'Compatible Serial Number')}:
+                                </span>
+                                <span className="text-gray-800 font-semibold text-xs bg-blue-50 px-2 py-1 rounded">
+                                  {part.app_sn || String(t('defaultValues.universal', { ns: 'spareParts' }) || 'Universal')}
+                                </span>
+                              </div>
+                              
+                              {/* 包装尺寸 - 第2个必需字段，智能显示单位制 */}
+                              <div className="flex justify-between items-center py-1">
+                                <span className="text-gray-600 font-medium text-xs">
+                                  📦 {(() => {
+                                    const unitSystem = (userRegion === 'na' || userRegion === 'au') ? 'imperial' : 'metric';
+                                    if (unitSystem === 'metric') {
+                                      return String(t('details.properties.packageSizeCm', { ns: 'spareParts' }) || (currentLanguage === 'zh' ? '包装尺寸(cm)' : 'Package Size(cm)'));
+                                    } else {
+                                      return String(t('details.properties.packageSizeInch', { ns: 'spareParts' }) || (currentLanguage === 'zh' ? '包装尺寸(inch)' : 'Package Size(inch)'));
+                                    }
+                                  })()}:
+                                </span>
                                 <span className="text-gray-800 font-semibold text-xs bg-green-50 px-2 py-1 rounded">
                                   {(() => {
                                     const unitSystem = (userRegion === 'na' || userRegion === 'au') ? 'imperial' : 'metric';
                                     if (unitSystem === 'metric') {
-                                      return part.package_size_cm || 'N/A';
+                                      return formatCompositeDimension(part.package_size_cm) || 
+                                             formatCompositeDimension(part.package_size_inch) || 
+                                             String(t('defaultValues.contactService', { ns: 'spareParts' }) || 'Please contact service');
                                     } else {
-                                      return part.package_size_inch || part.package_size_cm || 'N/A';
+                                      return formatCompositeDimension(part.package_size_inch) || 
+                                             formatCompositeDimension(part.package_size_cm) || 
+                                             String(t('defaultValues.contactService', { ns: 'spareParts' }) || 'Please contact service');
                                     }
                                   })()}
                                 </span>
                               </div>
                               
-                              {/* 单件净重 */}
+                              {/* 单件净重 - 第3个必需字段，智能显示单位制 */}
                               <div className="flex justify-between items-center py-1">
-                                <span className="text-gray-600 font-medium text-xs">⚖️ {String(t('details.properties.netWeight', { ns: 'spareParts' }) || 'Net Weight')}:</span>
+                                <span className="text-gray-600 font-medium text-xs">
+                                  ⚖️ {(() => {
+                                    const unitSystem = (userRegion === 'na' || userRegion === 'au') ? 'imperial' : 'metric';
+                                    if (unitSystem === 'metric') {
+                                      return String(t('details.properties.netWeightKg', { ns: 'spareParts' }) || (currentLanguage === 'zh' ? '净重(kg)' : 'Net Weight(kg)'));
+                                    } else {
+                                      return String(t('details.properties.netWeightLbs', { ns: 'spareParts' }) || (currentLanguage === 'zh' ? '净重(lbs)' : 'Net Weight(lbs)'));
+                                    }
+                                  })()}:
+                                </span>
                                 <span className="text-gray-800 font-semibold text-xs bg-yellow-50 px-2 py-1 rounded">
                                   {(() => {
                                     const unitSystem = (userRegion === 'na' || userRegion === 'au') ? 'imperial' : 'metric';
                                     if (unitSystem === 'metric') {
-                                      return part.net_weight_kg ? `${part.net_weight_kg} kg` : 'N/A';
+                                      return formatWeight(part.net_weight_kg) || 
+                                             formatWeight(part.net_weight_lbs) || 
+                                             String(t('defaultValues.contactService', { ns: 'spareParts' }) || 'Please contact service');
                                     } else {
-                                      return part.net_weight_lbs ? `${part.net_weight_lbs} lbs` : part.net_weight_kg ? `${part.net_weight_kg} kg` : 'N/A';
+                                      return formatWeight(part.net_weight_lbs) || 
+                                             formatWeight(part.net_weight_kg) || 
+                                             String(t('defaultValues.contactService', { ns: 'spareParts' }) || 'Please contact service');
                                     }
                                   })()}
                                 </span>
                               </div>
-                              
-                              {/* 包装毛重（可选） */}
-                              {(part.gross_weight_kg || part.gross_weight_lbs) && (
-                                <div className="flex justify-between items-center py-1">
-                                  <span className="text-gray-600 font-medium text-xs">📊 Gross Weight:</span>
-                                  <span className="text-gray-800 font-semibold text-xs bg-orange-50 px-2 py-1 rounded">
-                                    {(() => {
-                                      const unitSystem = (userRegion === 'na' || userRegion === 'au') ? 'imperial' : 'metric';
-                                      if (unitSystem === 'metric') {
-                                        return part.gross_weight_kg ? `${part.gross_weight_kg} kg` : 'N/A';
-                                      } else {
-                                        return part.gross_weight_lbs ? `${part.gross_weight_lbs} lbs` : part.gross_weight_kg ? `${part.gross_weight_kg} kg` : 'N/A';
-                                      }
-                                    })()}
-                                  </span>
-                                </div>
-                              )}
-                              
-                              {/* 单箱数量（可选） */}
-                              {part.pcs_per_box && (
-                                <div className="flex justify-between items-center py-1">
-                                  <span className="text-gray-600 font-medium text-xs">📦 {String(t('details.properties.pcsPerBox', { ns: 'spareParts' }) || 'Pieces Per Box')}:</span>
-                                  <span className="text-gray-800 font-semibold text-xs bg-purple-50 px-2 py-1 rounded">
-                                    {part.pcs_per_box} {String(t('details.properties.unit', { ns: 'spareParts' }) || 'pieces')}
-                                  </span>
-                                </div>
-                              )}
                             </div>
                             <div className="mt-3 pt-2 border-t border-gray-100 text-center">
                               <span className="text-xs text-gray-500">💡 悬停查看详细规格信息</span>
@@ -2587,7 +2443,7 @@ const SparePartsPage = () => {
   
   // 添加缺失的状态变量
   const [filterRegion, setFilterRegion] = useState<string>(userRegion || 'CN');
-  const [category, setCategory] = useState<string>(currentProductType || 'all');
+  const [category, setCategory] = useState<string>('all'); // 修复：与currentProductType保持一致
   const [selectedVoltage, setSelectedVoltage] = useState<string>('220V');
   
   // 在筛选条件变化时重新加载数据
@@ -2603,6 +2459,17 @@ const SparePartsPage = () => {
     loadSparePartsData();
   }, [selectedIsConsumable, currentProductType, selectedModel]);
   
+  // 🔍 调试功能：手动触发筛选验证
+  // const handleManualValidation = useCallback(async () => {
+  //   console.log('🔍 [Manual Validation] Starting comprehensive filter validation...');
+  //   // ... 大量的验证代码已移除 ...
+  // }, [selectedModel, selectedIsConsumable, currentProductType]);
+  
+  // 🔍 验证数据库数据一致性
+  // const validateDatabaseConsistency = async (validationService: any, filters: any) => {
+  //   // ... 验证代码已移除 ...
+  // };
+  
   // 渲染主页面
   return (
     <div className="spare-parts-page bg-background min-h-screen p-6">
@@ -2612,78 +2479,115 @@ const SparePartsPage = () => {
       {/* Header */}
       <div className="max-w-7xl mx-auto mb-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-card p-4 rounded-lg shadow-sm border border-border mb-6">
-          <div>
+          <div className="spare-parts-header">
             <h1 className="text-xl font-bold text-title">{t('title', {ns: 'spareParts'})}</h1>
             <p className="text-sm text-content-light">{t('subtitle', {ns: 'spareParts'})}</p>
           </div>
-          {/* 移除了查看购物车按钮 */}
+          
+          {/* 移除调试按钮区域 */}
         </div>
-
-        {/* Filter Container */}
-        <div className="bg-card p-6 rounded-lg shadow-md mb-6">
-          <div className="flex items-center mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary mr-2" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
-            </svg>
-            <h2 className="text-lg font-medium text-title">{t('filters.title', {ns: 'spareParts'})}</h2>
+      </div>
+      
+      {/* Filter Container */}
+      <div className="bg-card p-6 rounded-lg shadow-md mb-6">
+        <div className="flex items-center mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
+          </svg>
+          <h2 className="text-lg font-medium text-title">{t('filters.title', {ns: 'spareParts'})}</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+          <div>
+            <label className="block text-sm font-medium text-label mb-2">{t('filters.label.productType', {ns: 'spareParts'})}:</label>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => {
+                  setCurrentProductType('all');
+                  setSelectedModel('all'); // 重置机型选择
+                  loadModelsForProductType('all'); // 加载对应的机型选项
+                }}
+                data-product-type="all"
+                className={`px-4 py-2 rounded text-sm ${currentProductType === 'all' ? 'bg-primary text-white' : 'bg-background text-content border border-border hover:bg-brand-light'}`}
+              >
+                {t('filters.allProductTypes', {ns: 'spareParts'})}
+              </button>
+              <button
+                onClick={() => {
+                  setCurrentProductType('machine');
+                  setSelectedModel('all'); // 重置机型选择
+                  loadModelsForProductType('machine'); // 加载主机机型选项
+                }}
+                data-product-type="machine"
+                className={`px-4 py-2 rounded text-sm ${currentProductType === 'machine' ? 'bg-primary text-white' : 'bg-background text-content border border-border hover:bg-brand-light'}`}
+              >
+                {t('productTypes.machine', {ns: 'spareParts'})}
+              </button>
+              <button
+                onClick={() => {
+                  setCurrentProductType('accessory');
+                  setSelectedModel('all'); // 重置机型选择
+                  loadModelsForProductType('accessory'); // 加载配件机型选项
+                }}
+                data-product-type="accessory"
+                className={`px-4 py-2 rounded text-sm ${currentProductType === 'accessory' ? 'bg-primary text-white' : 'bg-background text-content border border-border hover:bg-brand-light'}`}
+              >
+                {t('productTypes.accessory', {ns: 'spareParts'})}
+              </button>
+            </div>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-label mb-2">{t('filters.label.productType', {ns: 'spareParts'})}:</label>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setCurrentProductType('machine')}
-                  className={`px-4 py-2 rounded text-sm ${currentProductType === 'machine' ? 'bg-primary text-white' : 'bg-background text-content border border-border hover:bg-brand-light'}`}
-                >
-                  {t('productTypes.machine', {ns: 'spareParts'})}
-                </button>
-                <button
-                  onClick={() => setCurrentProductType('accessory')}
-                  className={`px-4 py-2 rounded text-sm ${currentProductType === 'accessory' ? 'bg-primary text-white' : 'bg-background text-content border border-border hover:bg-brand-light'}`}
-                >
-                  {t('productTypes.accessory', {ns: 'spareParts'})}
-                </button>
-              </div>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-label mb-2">{t('filters.label.model', {ns: 'spareParts'})}:</label>
-              <select
-                className="block w-full border border-border rounded-md bg-background px-3 py-2 text-sm"
-                value={selectedModel}
-                onChange={(e) => setSelectedModel(e.target.value)}
+          <div>
+            <label className="block text-sm font-medium text-label mb-2">{t('filters.label.model', {ns: 'spareParts'})}:</label>
+            <select
+              className="block w-full border border-border rounded-md bg-background px-3 py-2 text-sm"
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value)}
+              data-filter="model"
+              name="model"
+            >
+              <option value="">{t('filters.model.allModels', {ns: 'spareParts'})}</option>
+              {currentModels.map((model) => (
+                <option key={model.value} value={model.value}>{model.label}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-label mb-2">{t('filters.label.partType', {ns: 'spareParts'})}:</label>
+            <div className="flex flex-wrap gap-2">
+              <div className="inline-flex rounded-md shadow-sm" role="group">
+              <button
+                onClick={() => setSelectedIsConsumable(null)}
+                data-consumable="null"
+                className={`px-4 py-2 rounded text-sm ${selectedIsConsumable === null ? 'bg-primary text-white' : 'bg-background text-content border border-gray-300'}`}
               >
-                <option value="">{t('filters.model.allModels', {ns: 'spareParts'})}</option>
-                {currentModels.map((model) => (
-                  <option key={model.value} value={model.value}>{model.label}</option>
-                ))}
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-label mb-2">{t('filters.label.partType', {ns: 'spareParts'})}:</label>
-              <div className="flex flex-wrap gap-2">
-                <div className="inline-flex rounded-md shadow-sm" role="group">
+                  {String(t('filters.allTypes', { ns: 'spareParts' }) || '全部类型')}
+              </button>
+              <button
+                  onClick={() => setSelectedIsConsumable(1)}
+                  data-consumable="1"
+                  className={`px-4 py-2 rounded text-sm ${selectedIsConsumable === 1 ? 'bg-primary text-white' : 'bg-background text-content border border-gray-300'}`}
+              >
+                  {String(t('filters.consumable', { ns: 'spareParts' }) || '易损')}
+              </button>
+              <button
+                  onClick={() => setSelectedIsConsumable(2)}
+                  data-consumable="2"
+                  className={`px-4 py-2 rounded text-sm ${selectedIsConsumable === 2 ? 'bg-primary text-white' : 'bg-background text-content border border-gray-300'}`}
+              >
+                  {String(t('filters.nonConsumable', { ns: 'spareParts' }) || '非易损')}
+              </button>
+              {/* 🔧 添加隐藏类型选项用于调试数据 */}
+              {process.env.NODE_ENV === 'development' && (
                 <button
-                  onClick={() => setSelectedIsConsumable(null)}
-                    className={`px-4 py-2 rounded text-sm ${selectedIsConsumable === null ? 'bg-primary text-white' : 'bg-background text-content border border-gray-300'}`}
+                    onClick={() => setSelectedIsConsumable(0)}
+                    data-consumable="0"
+                    className={`px-4 py-2 rounded text-sm ${selectedIsConsumable === 0 ? 'bg-primary text-white' : 'bg-background text-content border border-gray-300'}`}
                 >
-                    {String(t('filters.allTypes', { ns: 'spareParts' }) || '全部类型')}
+                    {String('隐藏(调试)')}
                 </button>
-                <button
-                    onClick={() => setSelectedIsConsumable(1)}
-                    className={`px-4 py-2 rounded text-sm ${selectedIsConsumable === 1 ? 'bg-primary text-white' : 'bg-background text-content border border-gray-300'}`}
-                >
-                    {String(t('filters.consumable', { ns: 'spareParts' }) || '耗材')}
-                </button>
-                <button
-                    onClick={() => setSelectedIsConsumable(2)}
-                    className={`px-4 py-2 rounded text-sm ${selectedIsConsumable === 2 ? 'bg-primary text-white' : 'bg-background text-content border border-gray-300'}`}
-                >
-                    {String(t('filters.nonConsumable', { ns: 'spareParts' }) || '非耗材')}
-                </button>
-                </div>
+              )}
               </div>
             </div>
           </div>

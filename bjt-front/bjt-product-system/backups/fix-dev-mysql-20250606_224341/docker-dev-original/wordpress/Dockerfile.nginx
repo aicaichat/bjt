@@ -1,0 +1,26 @@
+FROM wordpress:php8.0-fpm
+
+# 安装依赖
+RUN apt-get update && apt-get install -y \
+    curl \
+    less \
+    mariadb-client \
+    nano \
+    && rm -rf /var/lib/apt/lists/*
+
+# 复制WP-CLI
+COPY wp-cli.phar /usr/local/bin/wp
+RUN chmod +x /usr/local/bin/wp
+
+# 设置工作目录
+WORKDIR /var/www/html
+
+# 创建必要的目录
+RUN mkdir -p /var/log/nginx && \
+    chown -R www-data:www-data /var/log/nginx
+
+# 暴露端口
+EXPOSE 9000
+
+# 启动PHP-FPM
+CMD ["php-fpm", "-F"] 

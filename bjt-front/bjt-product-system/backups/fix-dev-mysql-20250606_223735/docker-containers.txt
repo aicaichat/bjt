@@ -1,0 +1,6 @@
+CONTAINER ID   IMAGE            COMMAND                  CREATED          STATUS    PORTS     NAMES
+34430f45427c   prod-nginx       "/docker-entrypoint.…"   35 minutes ago   Created             prod-nginx-1
+fdc766a55f54   prod-wordpress   "docker-entrypoint.s…"   35 minutes ago   Created             prod-wordpress-1
+15d387a6e32f   mysql:8.0        "docker-entrypoint.s…"   35 minutes ago   Created             prod-mysql-1
+b3b1e8d3763d   mysql:8.0        "docker-entrypoint.s…"   37 minutes ago   Created             prod-db-init-1
+efa01e9038e2   mysql:8.0        "docker-entrypoint.s…"   45 minutes ago   Created             reverent_noether

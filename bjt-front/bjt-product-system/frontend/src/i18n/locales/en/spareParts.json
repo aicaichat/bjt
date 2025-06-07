@@ -34,7 +34,7 @@
     "nonConsumable": "Non-Consumable",
     "label": {
       "productType": "Product Type",
-      "model": "Part Model",
+      "model": "Applicable Machine",
       "partType": "Part Type"
     },
     "model": {
@@ -89,7 +89,11 @@
       "appSn": "Compatible Serial Number",
       "pcsPerBox": "Pieces Per Box",
       "packageSize": "Package Size",
+      "packageSizeCm": "Package Size (cm)",
+      "packageSizeInch": "Package Size (inch)",
       "netWeight": "Net Weight",
+      "netWeightKg": "Net Weight (kg)",
+      "netWeightLbs": "Net Weight (lbs)",
       "unit": "Unit"
     },
     "title": "Spare Part Details",
@@ -115,12 +119,16 @@
   },
   "fields": {
     "compatibleModels": "Compatible Models",
-    "partModel": "Part Model",
+    "partModel": "Applicable Machine",
     "partType": "Type",
+    "is_consumable": "Consumable Status",
+    "app_model": "Applicable Machine",
+    "net_weight_kg": "Net Weight (kg)",
     "specifications": "Specifications",
     "compatibleSerialNumber": "Compatible Serial Number",
     "pcsPerBox": "Pieces Per Box",
-    "packageSize": "Package Size"
+    "packageSize": "Package Size",
+    "productId": "Product ID"
   },
   "actions": {
     "addToCart": "Add to Cart",

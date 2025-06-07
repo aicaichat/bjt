@@ -53,7 +53,7 @@ export const getSparePartByPartNumber = (partNumber: string): SparePart | undefi
     product_line_id: record.product_line_id,
     app_model: record.app_model,
     model: record.model,
-    is_consumable: record.is_consumable === 1, // Convert 0/1 to boolean
+    is_consumable: record.is_consumable, // 保持原始数字值：1=易损，2=非易损，3=隐藏
     image_url: record.image_url,
     part_number: record.part_number,
     name_zh: record.name_zh,
