@@ -110,16 +110,16 @@ export const SparePartTooltip: React.FC<SparePartTooltipProps> = ({
         </h4>
         
         {/* 适配序列号 - 第1个必需字段 */}
-        <div className="flex justify-between text-sm">
+          <div className="flex justify-between text-sm">
           <span className="text-gray-400">{language === 'zh' ? '适配序列号' : 'Compatible Serial Number'}:</span>
-          <span className="text-white max-w-48 text-right">
+            <span className="text-white max-w-48 text-right">
             {sparePart.app_sn || (language === 'zh' ? '通用' : 'Universal')}
-          </span>
-        </div>
-        
+            </span>
+          </div>
+
         {/* 包装尺寸 - 第2个必需字段，智能显示单位制 */}
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-400">
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-400">
             {(() => {
               if (unitSystem === 'metric') {
                 return String(t('details.properties.packageSizeCm', { ns: 'spareParts' }) || (language === 'zh' ? '包装尺寸(cm)' : 'Package Size(cm)'));
@@ -127,8 +127,8 @@ export const SparePartTooltip: React.FC<SparePartTooltipProps> = ({
                 return String(t('details.properties.packageSizeInch', { ns: 'spareParts' }) || (language === 'zh' ? '包装尺寸(inch)' : 'Package Size(inch)'));
               }
             })()}:
-          </span>
-          <span className="text-white max-w-48 text-right">
+            </span>
+            <span className="text-white max-w-48 text-right">
             {(() => {
               if (unitSystem === 'metric') {
                 return formatCompositeDimension(sparePart.package_size_cm) || 
@@ -140,12 +140,12 @@ export const SparePartTooltip: React.FC<SparePartTooltipProps> = ({
                        (language === 'zh' ? '请咨询客服' : 'Please contact service');
               }
             })()}
-          </span>
-        </div>
+            </span>
+          </div>
         
         {/* 单件净重 - 第3个必需字段，智能显示单位制 */}
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-400">
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-400">
             {(() => {
               if (unitSystem === 'metric') {
                 return String(t('details.properties.netWeightKg', { ns: 'spareParts' }) || (language === 'zh' ? '净重(kg)' : 'Net Weight(kg)'));
@@ -153,8 +153,8 @@ export const SparePartTooltip: React.FC<SparePartTooltipProps> = ({
                 return String(t('details.properties.netWeightLbs', { ns: 'spareParts' }) || (language === 'zh' ? '净重(lbs)' : 'Net Weight(lbs)'));
               }
             })()}:
-          </span>
-          <span className="text-white">
+            </span>
+            <span className="text-white">
             {(() => {
               if (unitSystem === 'metric') {
                 return formatWeight(sparePart.net_weight_kg) || 
@@ -166,8 +166,8 @@ export const SparePartTooltip: React.FC<SparePartTooltipProps> = ({
                        (language === 'zh' ? '请咨询客服' : 'Please contact service');
               }
             })()}
-          </span>
-        </div>
+            </span>
+          </div>
       </div>
 
       {/* 必选备件信息（如果有） */}

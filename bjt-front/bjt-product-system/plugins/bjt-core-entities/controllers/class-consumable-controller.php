@@ -294,137 +294,203 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
         return $data;
     }
 
+
     protected function format_item_for_response($item_db_object) {
-        global $wpdb;
-        if (!$item_db_object) {
-            return null;
-        }
+    global $wpdb;
+    if (!$item_db_object) {
+        return null;
+    }
 
-        $consumable_id = (int) $item_db_object->id;
-        $product_line_id_for_join = isset($item_db_object->product_line_id) ? (int) $item_db_object->product_line_id : 0;
+    $consumable_id = (int) $item_db_object->id;
+    $product_line_id_for_join = isset($item_db_object->product_line_id) ? (int) $item_db_object->product_line_id : 0;
 
-        // TEMPORARY DEBUGGING
-        error_log("[BJT_DEBUG] format_item_for_response for Consumable ID: " . $consumable_id . ", PL_ID: " . $product_line_id_for_join);
+    // TEMPORARY DEBUGGING
+    error_log("[BJT_DEBUG] format_item_for_response for Consumable ID: " . $consumable_id . ", PL_ID: " . $product_line_id_for_join);
 
-        // --- Fetch Pricing --- 
-        $pricing_table = $wpdb->prefix . 'bjt_prices';
-        $raw_prices = $wpdb->get_results($wpdb->prepare(
-            "SELECT region, currency, base_price, min_quantity, max_quantity 
-             FROM {$pricing_table} 
-             WHERE target_type = 'consumable' AND part_number = %s AND product_line_id = %d AND status = 'active' 
-             ORDER BY min_quantity ASC, region ASC",
-            $item_db_object->part_number,
-            $product_line_id_for_join
-        ));
+    // --- Fetch Pricing --- 
+    $pricing_table = $wpdb->prefix . 'bjt_prices';
+    $raw_prices = $wpdb->get_results($wpdb->prepare(
+        "SELECT region, currency, base_price, min_quantity, max_quantity 
+         FROM {$pricing_table} 
+         WHERE target_type = 'consumable' AND part_number = %s AND product_line_id = %d AND status = 'active' 
+         ORDER BY min_quantity ASC, region ASC",
+        $item_db_object->part_number,
+        $product_line_id_for_join
+    ));
 
-        // TEMPORARY DEBUGGING
-        error_log("[BJT_DEBUG] Raw prices count for Consumable ID " . $consumable_id . ": " . count($raw_prices));
+    // TEMPORARY DEBUGGING
+    error_log("[BJT_DEBUG] Raw prices count for Consumable ID " . $consumable_id . ": " . count($raw_prices));
 
-        $pricing_tiers = [];
-        if (!empty($raw_prices)) {
-            $grouped_by_tier = [];
-            foreach ($raw_prices as $price_row) {
-                $tier_key = $price_row->min_quantity . '-' . ($price_row->max_quantity ?? 'inf');
-                if (!isset($grouped_by_tier[$tier_key])) {
-                    $grouped_by_tier[$tier_key] = [
-                        'min_quantity' => (int)$price_row->min_quantity,
-                        'max_quantity' => $price_row->max_quantity ? (int)$price_row->max_quantity : null,
-                        'regional_prices_raw' => []
-                    ];
-                }
-                $grouped_by_tier[$tier_key]['regional_prices_raw'][] = $price_row;
-            }
-
-            foreach ($grouped_by_tier as $tier_data) {
-                $range_str = $tier_data['min_quantity'];
-                if ($tier_data['max_quantity'] === null) {
-                    $range_str .= '+'; // Or '>' as per frontend example e.g. '>10'
-                                       // The frontend code parses for '-' or '>' so '11+' should be fine if min_quantity is 11
-                                       // Let's use min_quantity for single quantity tier if max is not set or equal to min
-                                       // For now: min-max or min+
-                     if($tier_data['min_quantity'] > 1 && $tier_data['max_quantity'] === null ) $range_str = '>' . ($tier_data['min_quantity'] -1) ;
-                     else if ($tier_data['max_quantity'] === null) $range_str = (string)$tier_data['min_quantity']; // single item tier if no max_quantity
-                     else $range_str = (string)$tier_data['min_quantity'];
-
-                } else if ($tier_data['max_quantity'] == $tier_data['min_quantity']) {
-                    $range_str = (string)$tier_data['min_quantity'];
-                } else {
-                    $range_str .= '-' . $tier_data['max_quantity'];
-                }
-                
-                $regional_prices_map = [];
-                $default_region_price = 0.00; // Fallback
-
-                foreach ($tier_data['regional_prices_raw'] as $rp_row) {
-                    $region_code_lower = strtolower($rp_row->region); // e.g. cn, eu
-                    $regional_prices_map[$region_code_lower] = (float)$rp_row->base_price;
-                    if (strtoupper($rp_row->region) === 'CN') { // Assuming CN is default for tier.price
-                        $default_region_price = (float)$rp_row->base_price;
-                    }
-                }
-                // If CN price was not found, pick first available as default, or keep 0.00
-                if ($default_region_price == 0.00 && !empty($regional_prices_map)) {
-                    $default_region_price = reset($regional_prices_map); 
-                }
-
-                $pricing_tiers[] = [
-                    'range' => $range_str,
-                    'price' => $default_region_price, // Default region price
-                    'regionalPrices' => $regional_prices_map 
+    $pricing_tiers = [];
+    if (!empty($raw_prices)) {
+        $grouped_by_tier = [];
+        foreach ($raw_prices as $price_row) {
+            $tier_key = $price_row->min_quantity . '-' . ($price_row->max_quantity ?? 'inf');
+            if (!isset($grouped_by_tier[$tier_key])) {
+                $grouped_by_tier[$tier_key] = [
+                    'min_quantity' => (int)$price_row->min_quantity,
+                    'max_quantity' => $price_row->max_quantity ? (int)$price_row->max_quantity : null,
+                    'regional_prices_raw' => []
                 ];
             }
+            $grouped_by_tier[$tier_key]['regional_prices_raw'][] = $price_row;
         }
 
-        // --- Fetch Inventory --- 
-        $inventory_table = $wpdb->prefix . 'bjt_inventory';
-        $raw_inventory = $wpdb->get_results($wpdb->prepare(
-            "SELECT region, SUM(quantity) as total_quantity
-             FROM {$inventory_table} 
-             WHERE target_type = 'consumable' AND part_number = %s AND product_line_id = %d AND status = 'active' 
-             GROUP BY region", // Restored GROUP BY and SUM, status back to 'active'
-            $item_db_object->part_number,
-            $product_line_id_for_join
-        ));
-        
-        // TEMPORARY DEBUGGING
-        error_log("[BJT_DEBUG] Raw inventory count for Consumable ID " . $consumable_id . ": " . count($raw_inventory));
+        foreach ($grouped_by_tier as $tier_data) {
+            $range_str = $tier_data['min_quantity'];
+            if ($tier_data['max_quantity'] === null) {
+                $range_str .= '+';
+                 if($tier_data['min_quantity'] > 1 && $tier_data['max_quantity'] === null ) $range_str = '>' . ($tier_data['min_quantity'] -1) ;
+                 else if ($tier_data['max_quantity'] === null) $range_str = (string)$tier_data['min_quantity'];
+                 else $range_str = (string)$tier_data['min_quantity'];
 
-        $inventory_map = new stdClass(); // Restored to original logic
-        if (!empty($raw_inventory)) {
-            foreach ($raw_inventory as $inv_row) {
-                $inventory_map->{strtoupper($inv_row->region)} = (int)$inv_row->total_quantity; // Restored
+            } else if ($tier_data['max_quantity'] == $tier_data['min_quantity']) {
+                $range_str = (string)$tier_data['min_quantity'];
+            } else {
+                $range_str .= '-' . $tier_data['max_quantity'];
             }
-        }
+            
+            $regional_prices_map = [];
+            $default_region_price = 0.00;
 
-        $response_data = [
-            'id' => $consumable_id,
-            'product_line_id' => $product_line_id_for_join === 0 ? null : $product_line_id_for_join,
-            'code' => $item_db_object->part_number ?? null, 
-            'name' => $item_db_object->model ?? null,       
-            'model' => $item_db_object->model ?? null,      
-            'model_imperial' => $item_db_object->model_imperial ?? null,
-            'brand' => $item_db_object->brand ?? null,
-            'sales_unit' => $item_db_object->package_type ?? null, 
-            'image_url' => $item_db_object->image_url ?? null,
-            'status' => $item_db_object->status ?? 'draft',
-            'specs' => [
-                'material' => $item_db_object->material ?? null,
-                'shape' => $item_db_object->bag_type ?? null, 
-                'thickness' => isset($item_db_object->thickness_met) ? $item_db_object->thickness_met . ' um' : null,
-                'width' => isset($item_db_object->width_met) ? $item_db_object->width_met . ' mm' : null, 
-                'length' => isset($item_db_object->length_met) ? $item_db_object->length_met . ' m' : null, 
-                'rollLength' => isset($item_db_object->total_length_met) ? $item_db_object->total_length_met . ' m' : null,
-                'compatibility' => $item_db_object->app_model ?? null, 
-                'package_image_url' => $item_db_object->package_image_url ?? null,
-            ],
-            'pricing' => $pricing_tiers,
-            'inventory' => $inventory_map, // Restored
-            'created_at' => $item_db_object->created_at ?? null,
-            'updated_at' => $item_db_object->updated_at ?? null,
-        ];
-        
-        return $response_data;
+            foreach ($tier_data['regional_prices_raw'] as $rp_row) {
+                $region_code_lower = strtolower($rp_row->region);
+                $regional_prices_map[$region_code_lower] = (float)$rp_row->base_price;
+                if (strtoupper($rp_row->region) === 'CN') {
+                    $default_region_price = (float)$rp_row->base_price;
+                }
+            }
+            if ($default_region_price == 0.00 && !empty($regional_prices_map)) {
+                $default_region_price = reset($regional_prices_map); 
+            }
+
+            $pricing_tiers[] = [
+                'range' => $range_str,
+                'price' => $default_region_price,
+                'regionalPrices' => $regional_prices_map 
+            ];
+        }
     }
+
+    // --- Fetch Inventory --- 
+    $inventory_table = $wpdb->prefix . 'bjt_inventory';
+    $raw_inventory = $wpdb->get_results($wpdb->prepare(
+        "SELECT region, SUM(quantity) as total_quantity
+         FROM {$inventory_table} 
+         WHERE target_type = 'consumable' AND part_number = %s AND product_line_id = %d AND status = 'active' 
+         GROUP BY region",
+        $item_db_object->part_number,
+        $product_line_id_for_join
+    ));
+    
+    // TEMPORARY DEBUGGING
+    error_log("[BJT_DEBUG] Raw inventory count for Consumable ID " . $consumable_id . ": " . count($raw_inventory));
+
+    $inventory_map = new stdClass();
+    if (!empty($raw_inventory)) {
+        foreach ($raw_inventory as $inv_row) {
+            $inventory_map->{strtoupper($inv_row->region)} = (int)$inv_row->total_quantity;
+        }
+    }
+
+    $response_data = [
+        'id' => $consumable_id,
+        'product_line_id' => $product_line_id_for_join === 0 ? null : $product_line_id_for_join,
+        
+        // === 向后兼容字段（保持现有逻辑） ===
+        'code' => $item_db_object->part_number ?? null, 
+        'name' => $item_db_object->model ?? null,       
+        'model' => $item_db_object->model ?? null,      
+        'model_imperial' => $item_db_object->model_imperial ?? null,
+        'brand' => $item_db_object->brand ?? null,
+        'sales_unit' => $item_db_object->package_type ?? null, 
+        'image_url' => $item_db_object->image_url ?? null,
+        'status' => $item_db_object->status ?? 'draft',
+        
+        // === 新增：前端期望的直接字段映射 ===
+        // 筛选功能关键字段
+        'part_number' => $item_db_object->part_number ?? null,
+        'app_model' => $item_db_object->app_model ?? null,
+        'shape' => $item_db_object->bag_type ?? null,  // 关键映射！
+        'material' => $item_db_object->material ?? null,
+        
+        // 规格数值字段（纯数值，不加单位）
+        'thickness_met' => $item_db_object->thickness_met ?? null,
+        'thickness_imp' => $item_db_object->thickness_imp ?? null,
+        'width_met' => $item_db_object->width_met ?? null,
+        'width_imp' => $item_db_object->width_imp ?? null,
+        'length_met' => $item_db_object->length_met ?? null,
+        'length_imp' => $item_db_object->length_imp ?? null,
+        
+        // 列表展示字段
+        'bubble_diameter_met' => $item_db_object->bubble_diameter_met ?? null,
+        'bubble_diameter_imp' => $item_db_object->bubble_diameter_imp ?? null,
+        'pcs_per_box' => $item_db_object->pcs_per_box ?? null,
+        'spec' => $item_db_object->spec ?? null,
+        'spec_imperial' => $item_db_object->spec_imperial ?? null,
+        
+        // 详细信息字段
+        'package_type' => $item_db_object->package_type ?? null,
+        'package_size_cm' => $item_db_object->package_size_cm ?? null,
+        'package_size_inch' => $item_db_object->package_size_inch ?? null,
+        'net_weight_kg' => $item_db_object->net_weight_kg ?? null,
+        'net_weight_lbs' => $item_db_object->net_weight_lbs ?? null,
+        'gross_weight_kg' => $item_db_object->gross_weight_kg ?? null,
+        'gross_weight_lbs' => $item_db_object->gross_weight_lbs ?? null,
+        'package_image_url' => $item_db_object->package_image_url ?? null,
+        'total_length_met' => $item_db_object->total_length_met ?? null,
+        'total_length_imp' => $item_db_object->total_length_imp ?? null,
+        
+        // 托盘信息字段
+        'pallet_size_cm' => $item_db_object->pallet_size_cm ?? null,
+        'pallet_size_inch' => $item_db_object->pallet_size_inch ?? null,
+        
+        // A方案托盘字段
+        'pcs_per_pallet_a' => $item_db_object->pcs_per_pallet_a ?? null,
+        'pallet_gross_weight_a_kg' => $item_db_object->pallet_gross_weight_a_kg ?? null,
+        'pallet_gross_weight_a_lbs' => $item_db_object->pallet_gross_weight_a_lbs ?? null,
+        'pallet_height_a_cm' => $item_db_object->pallet_height_a_cm ?? null,
+        'pallet_height_a_inch' => $item_db_object->pallet_height_a_inch ?? null,
+        
+        // B方案托盘字段
+        'pcs_per_pallet_b' => $item_db_object->pcs_per_pallet_b ?? null,
+        'pallet_gross_weight_b_kg' => $item_db_object->pallet_gross_weight_b_kg ?? null,
+        'pallet_gross_weight_b_lbs' => $item_db_object->pallet_gross_weight_b_lbs ?? null,
+        'pallet_height_b_cm' => $item_db_object->pallet_height_b_cm ?? null,
+        'pallet_height_b_inch' => $item_db_object->pallet_height_b_inch ?? null,
+        
+        // C方案托盘字段
+        'pcs_per_pallet_c' => $item_db_object->pcs_per_pallet_c ?? null,
+        'pallet_gross_weight_c_kg' => $item_db_object->pallet_gross_weight_c_kg ?? null,
+        'pallet_gross_weight_c_lbs' => $item_db_object->pallet_gross_weight_c_lbs ?? null,
+        'pallet_height_c_cm' => $item_db_object->pallet_height_c_cm ?? null,
+        'pallet_height_c_inch' => $item_db_object->pallet_height_c_inch ?? null,
+        
+        // 纸筒字段
+        'tube_inner_diameter_cm' => $item_db_object->tube_inner_diameter_cm ?? null,
+        'tube_inner_diameter_inch' => $item_db_object->tube_inner_diameter_inch ?? null,
+        
+        // === 保持现有specs结构（向后兼容） ===
+        'specs' => [
+            'material' => $item_db_object->material ?? null,
+            'shape' => $item_db_object->bag_type ?? null, 
+            'thickness' => isset($item_db_object->thickness_met) ? $item_db_object->thickness_met . ' um' : null,
+            'width' => isset($item_db_object->width_met) ? $item_db_object->width_met . ' mm' : null, 
+            'length' => isset($item_db_object->length_met) ? $item_db_object->length_met . ' m' : null, 
+            'rollLength' => isset($item_db_object->total_length_met) ? $item_db_object->total_length_met . ' m' : null,
+            'compatibility' => $item_db_object->app_model ?? null, 
+            'package_image_url' => $item_db_object->package_image_url ?? null,
+        ],
+        
+        'pricing' => $pricing_tiers,
+        'inventory' => $inventory_map,
+        'created_at' => $item_db_object->created_at ?? null,
+        'updated_at' => $item_db_object->updated_at ?? null,
+    ];
+    
+    return $response_data;
+}
+
 
     // --- CRUD Methods ---
 
@@ -694,15 +760,20 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
         // Model (maps to DB 'app_model' or 'model' depending on frontend intent)
         // For now, let's assume frontend 'model' filter maps to DB 'app_model' (compatible host machines)
         $filter_model = $request->get_param('model'); // machine model filter from frontend
-        if (!empty($filter_model) && $filter_model !== 'all') {
-             // 🔥 修复：改用FIND_IN_SET来处理逗号分隔的值
-             $where_clauses[] = $wpdb->prepare("(app_model LIKE %s OR FIND_IN_SET(%s, REPLACE(app_model, '\"', '')))", 
-                '%' . $wpdb->esc_like($filter_model) . '%', $filter_model);
+        $filter_app_model = $request->get_param('app_model'); // 🔥 新增：支持app_model参数
+        $model_filter_value = !empty($filter_app_model) ? $filter_app_model : $filter_model;
+        
+        if (!empty($model_filter_value) && $model_filter_value !== 'all') {
+             // 🔥 修复：精确匹配app_model字段中的机型，处理复杂格式
+             $where_clauses[] = $this->build_app_model_where_clause($wpdb, $model_filter_value);
         }
         $filter_shape = $request->get_param('shape'); // maps to 'bag_type'
-        if (!empty($filter_shape) && $filter_shape !== 'all') {
+        $filter_bag_type = $request->get_param('bag_type'); // 🔥 新增：支持bag_type参数
+        $shape_filter_value = !empty($filter_bag_type) ? $filter_bag_type : $filter_shape;
+        
+        if (!empty($shape_filter_value) && $shape_filter_value !== 'all') {
              // 🔥 修复：正确映射shape到bag_type，处理不同的形状值
-             $where_clauses[] = $wpdb->prepare("bag_type = %s", $filter_shape);
+             $where_clauses[] = $wpdb->prepare("bag_type = %s", $shape_filter_value);
         }
         $filter_material = $request->get_param('material');
         if (!empty($filter_material) && $filter_material !== 'all') {
@@ -737,7 +808,11 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
         // 🔥 新增：添加调试日志
         error_log('[BJT Consumables API] Applied filters: ' . json_encode([
             'model' => $filter_model,
+            'app_model' => $filter_app_model,
+            'model_filter_value' => $model_filter_value,
             'shape' => $filter_shape, 
+            'bag_type' => $filter_bag_type,
+            'shape_filter_value' => $shape_filter_value,
             'material' => $filter_material,
             'thickness' => $filter_thickness,
             'width' => $filter_width,
@@ -771,452 +846,262 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
 
         $formatted_items = array_map(array($this, 'format_item_for_response'), $items_db);
         
-        // --- Fetch Filter Options from Dictionary ---
-        $filter_options = [];
-        if (class_exists('BJT_Dictionary_Controller')) {
-            $dictionary_controller = new BJT_Dictionary_Controller();
-            $lang = $request->get_param('lang') ?: 'zh';
-
-            // Mock a WP_REST_Request for the dictionary controller
-            $dictionary_request = new WP_REST_Request('GET');
-            $dictionary_request->set_param('lang', $lang);
-
-            // Helper function to fetch and format dictionary items
-            $fetch_formatted_dictionary_items = function($type) use ($dictionary_controller, $dictionary_request) {
-                $dictionary_request->set_param('type', $type);
-                $response = $dictionary_controller->get_dictionary_items($dictionary_request);
-                if ($response instanceof WP_REST_Response && $response->get_status() === 200) {
-                    $data = $response->get_data();
-                    if (isset($data['data']['items']) && is_array($data['data']['items'])) {
-                        return array_map(function($item) {
-                            // 保留所有字段，特别是id和image_url
-                            $formatted_item = [
-                                'id' => $item['code'] ?? null, // 使用code作为id
-                                'code' => $item['code'] ?? null, 
-                                'name' => $item['name'] ?? null
-                            ];
-                            
-                            // 添加额外字段（如image_url等）
-                            if (isset($item['image_url'])) {
-                                $formatted_item['image_url'] = $item['image_url'];
-                            }
-                            if (isset($item['image_url2'])) {
-                                $formatted_item['image_url2'] = $item['image_url2'];
-                            }
-                            if (isset($item['name_en'])) {
-                                $formatted_item['name_en'] = $item['name_en'];
-                            }
-                            if (isset($item['sort_order'])) {
-                                $formatted_item['sort_order'] = $item['sort_order'];
-                            }
-                            
-                            return $formatted_item;
-                        }, $data['data']['items']);
-                    }
-                }
-                return [];
-            };
-            
-            // Fetch Shapes
-            $filter_options['shapes'] = $fetch_formatted_dictionary_items('shapes');
-
-            // Fetch Materials
-            $filter_options['materials'] = $fetch_formatted_dictionary_items('materials');
-            
-            // Fetch Host Models (for machine model filter)
-            $filter_options['models'] = $fetch_formatted_dictionary_items('host_models');
-
-            // Fetch and process Specifications
-            $dictionary_request->set_param('type', 'specifications');
-            $spec_response = $dictionary_controller->get_dictionary_items($dictionary_request);
-            $processed_specs = [
-                'thicknesses' => [],
-                'widths' => [],
-                'lengths' => [],
-                'weights' => [],
-            ];
-
-            if ($spec_response instanceof WP_REST_Response && $spec_response->get_status() === 200) {
-                $spec_data = $spec_response->get_data();
-                if (isset($spec_data['data']['items']) && is_array($spec_data['data']['items'])) {
-                    $temp_unique_specs = [
-                        'thicknesses' => [],
-                        'widths' => [],
-                        'lengths' => [],
-                        'weights' => [],
-                    ];
-                    foreach ($spec_data['data']['items'] as $spec_item) {
-                        $spec_type_key = null;
-                        $value_key = 'metric_value'; // Assuming we use metric for filter codes/names
-                        $unit_key = 'metric_unit';
-                        $display_name = $spec_item['name'] ?? ''; // Name from dictionary (e.g., "厚度")
-                        $spec_code_value = $spec_item[$value_key] ?? null;
-                        $spec_unit_value = $spec_item[$unit_key] ?? '';
-                        
-                        // Use the 'code' from dictionary item which is spec_type (thickness, width etc)
-                        $dict_spec_type = $spec_item['code'] ?? '';
-
-                        if ($spec_code_value !== null) {
-                            $item_code_str = strval($spec_code_value) . strtolower(trim($spec_unit_value));
-                            $item_name_str = strval($spec_code_value) . ' ' . trim($spec_unit_value);
-
-                            switch ($dict_spec_type) {
-                                case 'thickness': $spec_type_key = 'thicknesses'; break;
-                                case 'width':     $spec_type_key = 'widths';      break;
-                                case 'length':    $spec_type_key = 'lengths';     break;
-                                case 'weight':    $spec_type_key = 'weights';     break;
-                            }
-
-                            if ($spec_type_key && !isset($temp_unique_specs[$spec_type_key][$item_code_str])) {
-                                $temp_unique_specs[$spec_type_key][$item_code_str] = ['code' => $item_code_str, 'name' => $item_name_str];
-                            }
-                        }
-                    }
-                    foreach($temp_unique_specs as $key => $unique_values_map) {
-                        $processed_specs[$key] = array_values($unique_values_map);
-                         // Sort them naturally if possible (e.g., 10mm, 2mm, 100mm -> 2mm, 10mm, 100mm)
-                        usort($processed_specs[$key], function($a, $b) {
-                            return strnatcmp($a['name'], $b['name']);
-                        });
-                    }
-                }
-            }
-            $filter_options = array_merge($filter_options, $processed_specs);
-        }
-        // --- End Fetch Filter Options ---
+        // --- 🔥 修复：动态生成筛选项（从实际数据） ---
+        $filter_options = $this->generate_dynamic_filter_options($wpdb);
         
-        // The frontend expects a specific structure for the list response
-        $list_response_data = [
+        $total_pages = ceil($total_items / $per_page);
+
+        return $this->format_response([
             'items' => $formatted_items,
-            'total' => (int) $total_items,
-            'total_pages' => ceil($total_items / $per_page),
-            'current_page' => (int) $page,
-            'filterOptions' => $filter_options, // Added filter options
-        ];
-        
-        $response = new WP_REST_Response(['success' => true, 'data' => $list_response_data], 200);
-        
-        // WordPress REST API typically adds these headers, but BJT_API_Controller might not if not extending WP_REST_Controller fully.
-        // For custom controller, we might need to add them if client relies on them.
-        // $response->header('X-WP-Total', $total_items);
-        // $response->header('X-WP-TotalPages', $total_pages);
-        // Link headers also might be needed if client uses them for pagination.
-
-        return $response;
-    }
-
-    /**
-     * Format a successful response with the standard structure
-     */
-    protected function format_response($data = null, $message = '', $success = true, $code = 200) {
-        $response = [
-            'success' => $success
-        ];
-        
-        if (!empty($data)) {
-            $response['data'] = $data;
-        }
-        
-        if (!empty($message)) {
-            $response['message'] = $message;
-        }
-        
-        return new WP_REST_Response($response, $code);
+            'total' => intval($total_items),
+            'total_pages' => intval($total_pages),
+            'current_page' => intval($page),
+            'filterOptions' => $filter_options
+        ]);
     }
     
     /**
-     * Format an error response
+     * 🔥 新增方法：动态生成筛选项（从实际数据）
+     * 解决静态字典配置与实际数据不匹配的问题
      */
-    protected function error_response($message, $code = 'bjt_api_error', $status = 400, $data = null) {
-        return new WP_Error(
-            $code,
-            $message,
-            [
-                'status' => $status,
-                'data' => $data
-            ]
-        );
-    }
-
-    /**
-     * 批量获取耗材价格
-     *
-     * @param WP_REST_Request $request 请求对象，包含耗材IDs、区域和数量
-     * @return WP_REST_Response 耗材价格响应
-     */
-    public function batch_get_prices($request) {
-        global $wpdb;
-        $prices_table = $wpdb->prefix . 'bjt_prices';
-        $consumables_table = $this->table_name;
+    private function generate_dynamic_filter_options($wpdb) {
+        // 获取所有已发布的耗材数据用于生成筛选项
+        $all_items_query = "SELECT bag_type, material, app_model, thickness_met, width_met, length_met, bubble_diameter_met FROM {$this->table_name} WHERE status = 'publish'";
+        $all_items = $wpdb->get_results($all_items_query);
         
-        // 获取请求参数
-        $params = $request->get_json_params();
-        if (null === $params) {
-            $params = $request->get_body_params();
-        }
+        $filter_options = [
+            'shapes' => [],
+            'materials' => [],
+            'models' => [],
+                'thicknesses' => [],
+                'widths' => [],
+                'lengths' => [],
+            'weights' => []
+        ];
         
-        // Support both formats: items array (new format) or ids array (old format)
-        $ids = [];
-        $region = $params['region'] ?? $request->get_param('region') ?? 'CN';
-        $quantity = (int)($params['quantity'] ?? $request->get_param('quantity') ?? 1);
+        // 用于去重的Set
+        $shapes_set = [];
+        $materials_set = [];
+        $models_set = [];
+        $thickness_set = [];
+        $width_set = [];
+        $length_set = [];
         
-        // Check for items array (new format)
-        if (isset($params['items']) && is_array($params['items'])) {
-            foreach ($params['items'] as $item) {
-                if (isset($item['item_id'])) {
-                    $ids[] = intval($item['item_id']);
-                }
-            }
-        } 
-        // Fallback to ids array (old format)
-        else {
-            $ids = $request->get_param('ids');
-        }
-        
-        // 验证IDs参数
-        if (empty($ids) || !is_array($ids)) {
-            return $this->error_response('无效的IDs参数，必须提供耗材ID数组', 'invalid_ids', 400);
-        }
-        
-        // 安全处理ID数组
-        $ids = array_map('intval', $ids);
-        $ids_str = implode(',', $ids);
-        
-        // 查询耗材基本信息
-        $consumables = $wpdb->get_results(
-            "SELECT id, product_line_id, part_number, model 
-             FROM {$consumables_table} 
-             WHERE id IN ({$ids_str}) AND status = 'publish'"
-        );
-        
-        if (!$consumables) {
-            return $this->error_response('未找到有效的耗材', 'consumables_not_found', 404);
-        }
-        
-        $response_data = [];
-        
-        foreach ($consumables as $consumable) {
-            $consumable_id = (int)$consumable->id;
-            $product_line_id = (int)$consumable->product_line_id;
-            
-            // 查询适用于指定数量的价格
-            $price_data = $wpdb->get_row($wpdb->prepare(
-                "SELECT base_price, currency, discount_rate 
-                 FROM {$prices_table} 
-                 WHERE target_type = 'consumable' 
-                 AND target_id = %d 
-                 AND product_line_id = %d 
-                 AND region = %s 
-                 AND min_quantity <= %d 
-                 AND (max_quantity IS NULL OR max_quantity >= %d) 
-                 AND status = 'active' 
-                 ORDER BY min_quantity DESC 
-                 LIMIT 1",
-                $consumable_id,
-                $product_line_id,
-                $region,
-                $quantity,
-                $quantity
-            ));
-            
-            $price_info = [
-                'id' => $consumable_id,
-                'part_number' => $consumable->part_number,
-                'model' => $consumable->model,
-                'found' => false,
-                'price' => null,
-                'currency' => null,
-                'discount_rate' => null,
-                'final_price' => null
-            ];
-            
-            if ($price_data) {
-                $base_price = (float)$price_data->base_price;
-                $discount_rate = $price_data->discount_rate ? (float)$price_data->discount_rate : null;
-                
-                $price_info['found'] = true;
-                $price_info['price'] = $base_price;
-                $price_info['currency'] = $price_data->currency;
-                $price_info['discount_rate'] = $discount_rate;
-                
-                // 计算最终价格（应用折扣）
-                $final_price = $discount_rate ? $base_price * (1 - $discount_rate) : $base_price;
-                $price_info['final_price'] = $final_price;
-            }
-            
-            $response_data[] = $price_info;
-        }
-        
-        return $this->format_response([
-            'region' => $region,
-            'quantity' => $quantity,
-            'items' => $response_data
-        ]);
-    }
-
-    /**
-     * 批量获取耗材库存
-     *
-     * @param WP_REST_Request $request 请求对象，包含耗材IDs、区域和仓库
-     * @return WP_REST_Response 耗材库存响应
-     */
-    public function batch_get_inventory($request) {
-        global $wpdb;
-        $inventory_table = $wpdb->prefix . 'bjt_inventory';
-        $consumables_table = $this->table_name;
-        
-        // 获取请求参数
-        $params = $request->get_json_params();
-        if (null === $params) {
-            $params = $request->get_body_params();
-        }
-        
-        // Support both formats: items array (new format) or ids array (old format)
-        $ids = [];
-        $region = $params['region'] ?? $request->get_param('region');
-        $warehouse = $params['warehouse'] ?? $request->get_param('warehouse');
-        
-        // Check for items array (new format)
-        if (isset($params['items']) && is_array($params['items'])) {
-            foreach ($params['items'] as $item) {
-                if (isset($item['item_id'])) {
-                    $ids[] = intval($item['item_id']);
-                }
-            }
-        } 
-        // Fallback to ids array (old format)
-        else {
-            $ids = $request->get_param('ids');
-        }
-        
-        // 验证IDs参数
-        if (empty($ids) || !is_array($ids)) {
-            return $this->error_response('无效的IDs参数，必须提供耗材ID数组', 'invalid_ids', 400);
-        }
-        
-        // 安全处理ID数组
-        $ids = array_map('intval', $ids);
-        $ids_str = implode(',', $ids);
-        
-        // 查询耗材基本信息
-        $consumables = $wpdb->get_results(
-            "SELECT id, product_line_id, part_number, model 
-             FROM {$consumables_table} 
-             WHERE id IN ({$ids_str}) AND status = 'publish'"
-        );
-        
-        if (!$consumables) {
-            return $this->error_response('未找到有效的耗材', 'consumables_not_found', 404);
-        }
-        
-        $response_data = [];
-        
-        foreach ($consumables as $consumable) {
-            $consumable_id = (int)$consumable->id;
-            $product_line_id = (int)$consumable->product_line_id;
-            
-            // 构建库存查询SQL
-            $inventory_sql = "SELECT region, warehouse, quantity, reserved 
-                              FROM {$inventory_table} 
-                              WHERE target_type = 'consumable' 
-                              AND target_id = %d 
-                              AND product_line_id = %d";
-            
-            $sql_params = [$consumable_id, $product_line_id];
-            
-            // 添加区域过滤条件
-            if (!empty($region)) {
-                $inventory_sql .= " AND region = %s";
-                $sql_params[] = $region;
-            }
-            
-            // 添加仓库过滤条件
-            if (!empty($warehouse)) {
-                $inventory_sql .= " AND warehouse = %s";
-                $sql_params[] = $warehouse;
-            }
-            
-            $inventory_sql .= " AND status = 'active'";
-            
-            // 执行库存查询
-            $inventory_data = $wpdb->get_results($wpdb->prepare($inventory_sql, $sql_params));
-            
-            $formatted_inventory = [];
-            $total_quantity = 0;
-            $total_available = 0;
-            
-            // 格式化库存数据
-            foreach ($inventory_data as $inventory) {
-                $quantity = (int)$inventory->quantity;
-                $reserved = (int)$inventory->reserved;
-                $available = $quantity - $reserved;
-                
-                $total_quantity += $quantity;
-                $total_available += $available;
-                
-                $formatted_inventory[] = [
-                    'region' => $inventory->region,
-                    'warehouse' => $inventory->warehouse,
-                    'quantity' => $quantity,
-                    'reserved' => $reserved,
-                    'available' => $available
+        foreach ($all_items as $item) {
+            // 1. 处理形状（bag_type）
+            if (!empty($item->bag_type) && !isset($shapes_set[$item->bag_type])) {
+                $shapes_set[$item->bag_type] = true;
+                $filter_options['shapes'][] = [
+                    'id' => $item->bag_type,
+                    'code' => $item->bag_type,
+                    'name' => $this->get_shape_display_name($item->bag_type),
+                    'image_url' => $this->get_shape_image_url($item->bag_type),
+                    'sort_order' => count($filter_options['shapes']) * 10
                 ];
             }
             
-            $response_data[] = [
-                'id' => $consumable_id,
-                'part_number' => $consumable->part_number,
-                'model' => $consumable->model,
-                'found' => !empty($formatted_inventory),
-                'total_quantity' => $total_quantity,
-                'total_available' => $total_available,
-                'inventory' => $formatted_inventory
-            ];
+            // 2. 处理材质
+            if (!empty($item->material) && !isset($materials_set[$item->material])) {
+                $materials_set[$item->material] = true;
+                $filter_options['materials'][] = [
+                    'id' => $item->material,
+                    'code' => $item->material,
+                    'name' => $this->get_material_display_name($item->material),
+                    'sort_order' => count($filter_options['materials']) * 10
+                ];
+            }
+            
+            // 3. 处理适用机型（app_model）- 解析逗号分隔的值
+            if (!empty($item->app_model)) {
+                // 处理复杂的app_model字段：LA-E4C,"LA-E4S V2.0",LA-F2
+                $app_models = $this->parse_app_model_field($item->app_model);
+                foreach ($app_models as $model) {
+                    $model = trim($model);
+                    if (!empty($model) && !isset($models_set[$model])) {
+                        $models_set[$model] = true;
+                        $filter_options['models'][] = [
+                            'id' => $model,
+                            'code' => $model,
+                            'name' => $this->get_model_display_name($model),
+                            'sort_order' => count($filter_options['models']) * 10
+                        ];
+                    }
+                }
+            }
+            
+            // 4. 处理厚度
+            if (!empty($item->thickness_met) && $item->thickness_met > 0) {
+                $thickness_val = floatval($item->thickness_met);
+                $thickness_key = number_format($thickness_val, 0) . 'um';
+                if (!isset($thickness_set[$thickness_key])) {
+                    $thickness_set[$thickness_key] = true;
+                    $filter_options['thicknesses'][] = [
+                        'code' => $thickness_key,
+                        'name' => number_format($thickness_val, 0) . ' um',
+                        'value' => $thickness_val
+                    ];
+                }
+            }
+            
+            // 5. 处理膜宽
+            if (!empty($item->width_met) && $item->width_met > 0) {
+                $width_val = floatval($item->width_met);
+                $width_key = number_format($width_val, 0) . 'cm';
+                if (!isset($width_set[$width_key])) {
+                    $width_set[$width_key] = true;
+                    $filter_options['widths'][] = [
+                        'code' => $width_key,
+                        'name' => number_format($width_val, 0) . ' cm',
+                        'value' => $width_val
+                    ];
+                }
+            }
+            
+            // 6. 处理袋长
+            if (!empty($item->length_met) && $item->length_met > 0) {
+                $length_val = floatval($item->length_met);
+                $length_key = number_format($length_val, 1) . 'cm';
+                if (!isset($length_set[$length_key])) {
+                    $length_set[$length_key] = true;
+                    $filter_options['lengths'][] = [
+                        'code' => $length_key,
+                        'name' => number_format($length_val, 1) . ' cm',
+                        'value' => $length_val
+                    ];
+                }
+            }
         }
         
-        return $this->format_response([
-            'items' => $response_data
-        ]);
+        // 排序筛选项
+        usort($filter_options['shapes'], function($a, $b) { return $a['sort_order'] - $b['sort_order']; });
+        usort($filter_options['materials'], function($a, $b) { return $a['sort_order'] - $b['sort_order']; });
+        usort($filter_options['models'], function($a, $b) { return $a['sort_order'] - $b['sort_order']; });
+        usort($filter_options['thicknesses'], function($a, $b) { return $a['value'] - $b['value']; });
+        usort($filter_options['widths'], function($a, $b) { return $a['value'] - $b['value']; });
+        usort($filter_options['lengths'], function($a, $b) { return $a['value'] - $b['value']; });
+        
+        // 添加调试信息
+        error_log('[BJT Consumables] Dynamic filter options generated: ' . json_encode([
+            'shapes_count' => count($filter_options['shapes']),
+            'materials_count' => count($filter_options['materials']),
+            'models_count' => count($filter_options['models']),
+            'thicknesses_count' => count($filter_options['thicknesses']),
+            'widths_count' => count($filter_options['widths']),
+            'lengths_count' => count($filter_options['lengths'])
+        ]));
+        
+        return $filter_options;
+    }
+    
+    /**
+     * 🔥 新增方法：解析app_model字段（处理逗号分隔和引号）
+     */
+    private function parse_app_model_field($app_model_str) {
+        // 处理格式：LA-E4C,"LA-E4S V2.0",LA-F2
+        // 分解步骤：
+        // 1. 先按逗号分隔
+        // 2. 去除每个部分的引号
+        // 3. 清理空白字符
+        
+        $models = [];
+        $parts = explode(',', $app_model_str);
+        
+        foreach ($parts as $part) {
+            $part = trim($part);
+            // 移除前后的引号
+            $part = trim($part, '"\'');
+            if (!empty($part)) {
+                $models[] = $part;
+            }
+        }
+        
+        return $models;
+    }
+    
+    /**
+     * 🔥 新增方法：获取形状显示名称
+     */
+    private function get_shape_display_name($shape) {
+        $shape_names = [
+            'Bubble' => '气泡膜',
+            'Tube' => '气枕膜', 
+            'paper Bubble' => '纸质气泡膜',
+            'paper air Pillow' => '纸质气垫枕'
+        ];
+        
+        return isset($shape_names[$shape]) ? $shape_names[$shape] : $shape;
+    }
+    
+    /**
+     * 🔥 新增方法：获取形状图片URL
+     */
+    private function get_shape_image_url($shape) {
+        $shape_images = [
+            'Bubble' => '/images/MFF/values/MFF.png',
+            'Tube' => '/images/MFC/values/MFC.png',
+            'paper Bubble' => '/images/MFB/values/MFB.png',
+            'paper air Pillow' => '/images/MEX/values/MEX.png'
+        ];
+        
+        return isset($shape_images[$shape]) ? $shape_images[$shape] : '/images/default/shape.png';
+    }
+    
+    /**
+     * 🔥 新增方法：获取材质显示名称
+     */
+    private function get_material_display_name($material) {
+        $material_names = [
+            'HDPE' => 'HDPE',
+            '50% HDPE' => '50%回料HDPE',
+            'PAPE' => 'PAPE共挤膜',
+            'PAPER' => '纸塑膜',
+            'LDPE' => 'LDPE'
+        ];
+        
+        return isset($material_names[$material]) ? $material_names[$material] : $material;
+    }
+    
+    /**
+     * 🔥 新增方法：获取机型显示名称
+     */
+    private function get_model_display_name($model) {
+        $model_names = [
+            'LA-E4S V2.0' => 'LA-E4S V2.0 商用型缓冲气垫机',
+            'LA-E4S(paper)' => 'LA-E4S(paper)商用型缓冲气垫机',
+            'LA-E4C' => 'LA-E4C 商用型缓冲气垫机',
+            'LA-F2' => 'LA-F2 便携式缓冲气垫机'
+        ];
+        
+        return isset($model_names[$model]) ? $model_names[$model] : $model;
     }
 
     /**
-     * 检查耗材与机器的兼容性
-     *
-     * @param WP_REST_Request $request 请求对象，包含耗材ID和机器型号
-     * @return WP_REST_Response|WP_Error 兼容性检查结果
+     * Check if a specific consumable is compatible with a machine model
      */
     public function check_compatibility($request) {
+        $consumable_id = $request->get_param('consumable_id');
+        $machine_model = $request->get_param('machine_model');
+        
+        if (empty($consumable_id) || empty($machine_model)) {
+            return new WP_Error('missing_params', 'Missing consumable_id or machine_model parameter', ['status' => 400]);
+        }
+
         global $wpdb;
         
-        $consumable_id = (int)$request->get_param('id');
-        $machine_model = sanitize_text_field($request->get_param('model'));
-        
-        if (empty($machine_model)) {
-            return $this->error_response('必须提供要检查兼容性的机器型号', 'missing_model', 400);
-        }
-        
-        // 检查耗材是否存在
+        // Get consumable info
         $consumable = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM {$this->table_name} WHERE id = %d AND status = 'publish'",
+            "SELECT app_model FROM {$this->table_name} WHERE id = %d AND status = 'publish'",
             $consumable_id
         ));
         
         if (!$consumable) {
-            return $this->error_response('未找到指定的耗材', 'consumable_not_found', 404);
+            return new WP_Error('consumable_not_found', 'Consumable not found', ['status' => 404]);
         }
         
-        // 检查兼容性（直接从app_model字段获取）
-        $is_compatible = false;
+        // Check compatibility
+        $app_models = $this->parse_app_model_field($consumable->app_model);
+        $is_compatible = in_array($machine_model, $app_models);
         
-        if (!empty($consumable->app_model)) {
-            // 兼容性字段可能是逗号分隔的型号列表
-            $compatible_models = explode(',', $consumable->app_model);
-            $compatible_models = array_map('trim', $compatible_models);
-            
-            $is_compatible = in_array($machine_model, $compatible_models);
-        }
-        
-        // 返回兼容性结果
         return $this->format_response([
             'consumable_id' => $consumable_id,
             'machine_model' => $machine_model,
@@ -1380,5 +1265,34 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
 
         error_log('[BJT_Consumable_Controller] Delete permission granted for user: ' . $user->username);
         return true;
+    }
+
+    /**
+     * 🔥 新增方法：构建app_model字段的精确匹配WHERE子句
+     * 处理复杂格式：LA-E4C,"LA-E4S V2.0",LA-F2
+     */
+    private function build_app_model_where_clause($wpdb, $model_filter_value) {
+        // 清理引号
+        $clean_model = str_replace('"', '', $model_filter_value);
+        
+        // 构建多种匹配模式来覆盖所有可能的情况
+        $conditions = [
+            // 1. 完全匹配（单独的机型）
+            $wpdb->prepare("app_model = %s", $model_filter_value),
+            $wpdb->prepare("app_model = %s", $clean_model),
+            
+            // 2. 在引号内的匹配（带引号的机型）
+            $wpdb->prepare("app_model LIKE %s", '%"' . $wpdb->esc_like($model_filter_value) . '"%'),
+            
+            // 3. 在逗号分隔中的匹配（没有引号的机型）
+            $wpdb->prepare("app_model LIKE %s", $wpdb->esc_like($clean_model) . ',%'),  // 开头
+            $wpdb->prepare("app_model LIKE %s", '%,' . $wpdb->esc_like($clean_model) . ',%'),  // 中间
+            $wpdb->prepare("app_model LIKE %s", '%,' . $wpdb->esc_like($clean_model)),  // 结尾
+            
+            // 4. 单独存在（整个字段就是这个值）
+            $wpdb->prepare("app_model = %s", $model_filter_value),
+        ];
+        
+        return '(' . implode(' OR ', $conditions) . ')';
     }
 } 

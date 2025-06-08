@@ -419,7 +419,7 @@ class BJT_Dictionary_Controller extends BJT_API_Controller {
             
             // 添加额外属性（如果有）
             foreach ($item as $key => $value) {
-                if (!in_array($key, ['code', 'name_zh', 'name_en'])) {
+                if (!in_array($key, ['code'])) { // 不排除name_zh和name_en，只排除code避免重复
                     $formatted_item[$key] = $value;
                 }
             }

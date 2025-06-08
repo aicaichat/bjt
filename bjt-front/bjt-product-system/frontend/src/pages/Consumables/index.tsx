@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Spin, Button, Select, InputNumber, Tabs, Tag, Tooltip, Modal } from 'antd';
@@ -36,6 +36,9 @@ import './Consumables.css';
 
 // 在文件顶部的import部分添加
 import { adminSpecificationService, SpecificationData } from '../../admin/services/admin-dictionary.service';
+
+// 🔥 导入Model筛选修复工具
+import { ModelFilterFix, debugModelFilter } from './ModelFilterFix';
 
 const { Option } = Select;
 
@@ -796,7 +799,217 @@ const materialIdToSpecsMaterial: Record<string, string> = {
   'nylon': 'NYLON'
 };
 
+// 类型定义
+interface SpecificationsOptions {
+  thickness: SpecificationData[];
+  weight: SpecificationData[];
+  width: SpecificationData[];
+  length: SpecificationData[];
+}
+
+// 增强的智能筛选选项类型
+interface SmartFilterOptionsType {
+  models: SmartFilterOption[];
+  shapes: SmartFilterOption[];
+  materials: SmartFilterOption[];
+  thicknesses: SmartFilterOption[];
+  weights: SmartFilterOption[];
+  widths: SmartFilterOption[];
+  lengths: SmartFilterOption[];
+  bubbleDiameters: SmartFilterOption[];
+}
+
+// 智能筛选选项接口
+interface SmartFilterOption {
+  id: string;
+  name: string;
+  count: number;
+  disabled: boolean;
+  originalData?: any; // 保存原始数据引用
+  children?: SmartFilterOption[]; // 子级选项
+}
+
+// 筛选配置选项
+interface SmartFilterConfig {
+  showCount: boolean;
+  hideEmptyOptions: boolean; // 保持显示但禁用，提供更好的用户体验
+  cascadeUpdate: boolean;
+  enableAnimation: boolean;
+  minCount: number; // 最小显示数量阈值
+}
+
+// 筛选状态接口
+interface FilterState {
+  selectedModel: string;
+  selectedShape: string;
+  selectedMaterial: string;
+  selectedSpecs: {
+    thickness: string;
+    weight: string;
+    width: string;
+    length: string;
+    bubbleDiameter: string;
+  };
+}
+
+// 性能缓存接口
+interface FilterCache {
+  key: string;
+  timestamp: number;
+  result: SmartFilterOptionsType;
+}
+
+// 工具函数
+const normalize = (v: any) => (v ?? '').toString().toLowerCase().replace(/\s+/g, '').replace(/%/g, '');
+
+const extractNumber = (value: string | number | undefined | null): number | undefined => {
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    const num = parseFloat(value.replace(/[^\d.-]/g, ''));
+    return isNaN(num) ? undefined : num;
+  }
+  return undefined;
+};
+
+// 获取本地化选项名称
+const getLocalizedOptionName = (option: FilterOptionItem): string => {
+  // 简化处理，直接返回中文名称
+  return option.name_zh || option.name_en || '';
+};
+
+// 智能筛选配置
+const smartFilterConfig: SmartFilterConfig = {
+  showCount: true,
+  hideEmptyOptions: false, // 保持显示但禁用，提供更好的用户体验
+  cascadeUpdate: true,
+  enableAnimation: true,
+  minCount: 0
+};
+
+// 智能筛选选项组件
+interface SmartFilterSelectProps {
+  title: string;
+  value: string;
+  options: SmartFilterOption[];
+  onChange: (value: string) => void;
+  placeholder?: string;
+  showCount?: boolean;
+  disabled?: boolean;
+}
+
+const SmartFilterSelect: React.FC<SmartFilterSelectProps> = ({
+  title,
+  value,
+  options,
+  onChange,
+  placeholder = '请选择',
+  showCount = true,
+  disabled = false
+}) => {
+  const { t } = useTranslation('consumables');
+  
+  return (
+    <div className="smart-filter-select">
+      <label className="block text-sm font-medium text-gray-700 mb-2">{title}</label>
+      <Select
+        value={value}
+        onChange={onChange}
+        className="w-full"
+        size="large"
+        placeholder={placeholder}
+        disabled={disabled}
+        style={{ minWidth: '200px' }}
+      >
+        <Option value="all">
+          <div className="flex items-center justify-between">
+            <span>{String(t('filter.all') || '全部')}</span>
+            {showCount && (
+              <span className="text-gray-500 text-xs ml-2">
+                ({options.reduce((sum, opt) => sum + opt.count, 0)})
+              </span>
+            )}
+          </div>
+        </Option>
+        {options.map((option) => (
+          <Option 
+            key={option.id} 
+            value={option.id}
+            disabled={option.disabled}
+          >
+            <div className={`flex items-center justify-between ${option.disabled ? 'opacity-50 text-gray-400' : ''}`}>
+              <span className={option.disabled ? 'line-through' : ''}>{option.name}</span>
+              {showCount && (
+                <span className={`text-xs ml-2 ${option.disabled ? 'text-gray-300' : 'text-blue-500'}`}>
+                  ({option.count})
+                </span>
+              )}
+            </div>
+          </Option>
+        ))}
+      </Select>
+    </div>
+  );
+};
+
+// 筛选面包屑组件
+interface FilterBreadcrumbProps {
+  filters: {
+    model?: string;
+    shape?: string;
+    material?: string;
+    thickness?: string;
+    weight?: string;
+    width?: string;
+    length?: string;
+  };
+  onRemoveFilter: (filterType: string) => void;
+  onClearAll: () => void;
+}
+
+const FilterBreadcrumb: React.FC<FilterBreadcrumbProps> = ({ filters, onRemoveFilter, onClearAll }) => {
+  const { t } = useTranslation('consumables');
+  
+  const activeFilters = Object.entries(filters).filter(([_, value]) => value && value !== 'all');
+  
+  if (activeFilters.length === 0) return null;
+  
+  return (
+    <div className="filter-breadcrumb bg-blue-50 rounded-lg p-4 mb-4">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm font-medium text-gray-700">
+          {String(t('ui.activeFilters') || '当前筛选条件')}:
+        </span>
+        <Button type="text" size="small" onClick={onClearAll} className="text-blue-600 hover:text-blue-800">
+          {String(t('ui.clearAll') || '清除全部')}
+        </Button>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {activeFilters.map(([type, value]) => (
+          <div
+            key={type}
+            className="inline-flex items-center bg-white border border-blue-200 rounded-full px-3 py-1 text-sm"
+          >
+            <span className="text-gray-600 mr-1">
+              {String(t(`filter.${type}`) || type)}:
+            </span>
+            <span className="font-medium text-gray-900">{value}</span>
+            <button
+              onClick={() => onRemoveFilter(type)}
+              className="ml-2 text-gray-400 hover:text-red-500 transition-colors duration-200"
+            >
+              ×
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const ConsumablesPage: React.FC = () => {
+  // ===== 所有hooks必须在组件最顶部，不能有条件调用 =====
+  
+  // 基础hooks - 顺序固定，不能变化
   const { t, i18n } = useTranslation('consumables');
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -806,63 +1019,29 @@ const ConsumablesPage: React.FC = () => {
   // 现代化UI组件hooks
   const { success, error: showErrorToast, warning, info } = useToastNotifications();
   
-  // 获取当前语言
-  const currentLanguage = (i18n.language || 'zh').toLowerCase().startsWith('en') ? 'en' : 'zh';
+  // ===== 所有状态定义 - 按功能分组，确保调用顺序一致 =====
   
-  // 规格选项hooks - 必须在所有其他hooks之前定义
-  const [specOptions, setSpecOptions] = useState<{
-    thickness: SpecificationData[];
-    weight: SpecificationData[];
-    width: SpecificationData[];
-    length: SpecificationData[];
-  }>({ thickness: [], weight: [], width: [], length: [] });
-  
-  // 所有状态定义 - 必须在组件顶部，不能有条件调用
-  const [consumables, setConsumables] = useState<ConsumableProduct[]>([]);
+  // 1. 基础页面状态
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [debugMode, setDebugMode] = useState(false);
+  const [apiFailureCount, setApiFailureCount] = useState(0);
+  
+  // 2. 数据状态
+  const [consumables, setConsumables] = useState<ConsumableProduct[]>([]);
+  const [allConsumables, setAllConsumables] = useState<ConsumableProduct[]>([]);
+  const [filterOptions, setFilterOptions] = useState<FilterOptionsType | null>(null);
+  const [specOptions, setSpecOptions] = useState<SpecificationsOptions>({
+    thickness: [],
+    weight: [],
+    width: [],
+    length: []
+  });
+  
+  // 3. 购物车状态
   const [quantities, setQuantities] = useState<{[key: string]: number}>({});
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [showCartModal, setShowCartModal] = useState(false);
-  const [totalItems, setTotalItems] = useState<number>(0);
-  const [totalPages, setTotalPages] = useState<number>(1);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [filterOptions, setFilterOptions] = useState<FilterOptionsType | null>(null);
-  
-  // 筛选条件状态
-  const [selectedModel, setSelectedModel] = useState<string>('all');
-  const [selectedShape, setSelectedShape] = useState<string>('all');  // 改为all，显示所有形状
-  const [selectedMaterial, setSelectedMaterial] = useState<string>('all');
-  const [selectedThickness, setSelectedThickness] = useState<string>('all');
-  const [selectedWeight, setSelectedWeight] = useState<string>('all');
-  const [selectedWidth, setSelectedWidth] = useState<string>('all');
-  const [selectedLength, setSelectedLength] = useState<string>('all');
-  const [showModelUsage, setShowModelUsage] = useState<boolean>(false);
-  
-  // 详细信息Modal状态
-  const [detailModalVisible, setDetailModalVisible] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<ConsumableProduct | null>(null);
-  
-  // 添加状态来跟踪当前选中形状的尺寸图片
-  const [currentDimensionImage, setCurrentDimensionImage] = useState<string>(dimensionGuidePlaceholder);
-
-  // 现代化UI状态
-  const [confirmDialog, setConfirmDialog] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    type: 'default' | 'danger' | 'warning' | 'info';
-    onConfirm: () => void;
-    loading?: boolean;
-  }>({
-    isOpen: false,
-    title: '',
-    message: '',
-    type: 'default',
-    onConfirm: () => {},
-    loading: false
-  });
-  
   const [cartAnimation, setCartAnimation] = useState<{
     isActive: boolean;
     startElement: HTMLElement | null;
@@ -874,69 +1053,463 @@ const ConsumablesPage: React.FC = () => {
     startElement: null,
     targetElement: null
   });
-
-  // 获取用户区域
-  const userRegion = user?.region || DEFAULT_REGION;
-
-  // 在组件开始处添加ref
-  const cartButtonRef = useRef<HTMLElement>(null);
   
-  // 工具函数：根据当前语言获取筛选选项的本地化名称
-  const getLocalizedOptionName = (option: FilterOptionItem): string => {
-    console.log('🌐 [getLocalizedOptionName] Debug info:', {
-      currentLanguage,
-      option: {
-        id: option.id,
-        name_zh: option.name_zh,
-        name_en: option.name_en
-      },
-      i18nLanguage: i18n.language,
-      willUseEnglish: currentLanguage === 'en' && option.name_en,
-      result: currentLanguage === 'en' && option.name_en ? option.name_en : option.name_zh
+  // 4. 分页状态
+  const [totalItems, setTotalItems] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  
+  // 5. 筛选状态
+  const [selectedModel, setSelectedModel] = useState<string>('all');
+  const [selectedShape, setSelectedShape] = useState<string>('all');
+  const [selectedMaterial, setSelectedMaterial] = useState<string>('all');
+  const [selectedThickness, setSelectedThickness] = useState<string>('all');
+  const [selectedWeight, setSelectedWeight] = useState<string>('all');
+  const [selectedWidth, setSelectedWidth] = useState<string>('all');
+  const [selectedLength, setSelectedLength] = useState<string>('all');
+  
+  // 6. 智能筛选状态
+  const [smartFilterOptions, setSmartFilterOptions] = useState<SmartFilterOptionsType>({
+    models: [],
+    shapes: [],
+    materials: [],
+    thicknesses: [],
+    weights: [],
+    widths: [],
+    lengths: [],
+    bubbleDiameters: []
+  });
+  
+  // 7. 模态框状态
+  const [selectedProduct, setSelectedProduct] = useState<ConsumableProduct | null>(null);
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'warning' | 'info' | 'danger';
+    loading: boolean;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info',
+    loading: false,
+    onConfirm: () => {}
+  });
+  
+  // 8. UI辅助状态
+  const cartButtonRef = useRef<HTMLButtonElement>(null);
+  const currentLanguage = i18n.language;
+  const userRegion = getUserRegionFromEmail(user?.email || '');
+  
+  // 9. 性能缓存状态
+  const [filterCache, setFilterCache] = useState<Map<string, FilterCache>>(new Map());
+  const cacheTimeoutRef = useRef<NodeJS.Timeout>();
+  
+  // ===== 动态计算变量（非状态） =====
+  const currentDimensionImage = useMemo(() => {
+    if (selectedShape === 'all') return shapePlaceholderImage;
+    
+    const shapeData = filterOptions?.shapes?.find(s => s.id === selectedShape);
+    return shapeData?.image_url || shapePlaceholderImage;
+  }, [selectedShape, filterOptions?.shapes]);
+  
+  // 筛选后的耗材数据
+  const filteredConsumables = useMemo(() => {
+    console.log('🔄 [筛选计算] 开始重新计算筛选结果...');
+    console.log('🔄 筛选条件:', {
+      selectedModel, selectedShape, selectedMaterial,
+      selectedThickness, selectedWeight, selectedWidth, selectedLength
     });
     
-    if (currentLanguage === 'en' && option.name_en) {
-      return option.name_en;
-    }
-    return option.name_zh;
-  };
-
-  // 工具函数：根据ID和类型获取翻译键的本地化名称
-  const getFilterOptionTranslation = (type: 'shapes' | 'materials' | 'models', id: string): string => {
-    const translationKey = `filterOptions.${type}.${id}`;
-    const translated = t(translationKey);
-    
-    // 如果翻译键存在且不等于键本身，返回翻译结果
-    if (translated && translated !== translationKey) {
-      return translated;
+    if (!allConsumables?.length) {
+      console.log('🔄 [筛选计算] 没有可筛选的数据');
+      return [];
     }
     
-    // 否则返回原始ID或查找对应选项的本地化名称
-    const optionMap = {
-      shapes: filterOptions?.shapes || [],
-      materials: filterOptions?.materials || [],
-      models: filterOptions?.models || []
+    const filtered = allConsumables.filter((item) => {
+      // 1. 设备型号筛选（基于app_model字段）
+      if (selectedModel !== 'all') {
+        const itemModelId = item.app_model?.toString() || '';
+        if (itemModelId !== selectedModel) {
+          return false;
+        }
+      }
+      
+      // 2. 形状筛选（基于shape字段）
+      if (selectedShape !== 'all') {
+        const itemShape = normalize(item.shape || '');
+        const targetShape = normalize(selectedShape);
+        if (itemShape !== targetShape) {
+          return false;
+        }
+      }
+      
+      // 3. 材质筛选（基于material字段）
+      if (selectedMaterial !== 'all') {
+        const itemMaterial = normalize(item.material || '');
+        const targetMaterial = normalize(selectedMaterial);
+        if (itemMaterial !== targetMaterial) {
+          return false;
+        }
+      }
+      
+      // 4. 厚度/重量筛选（基于thickness_met字段，根据材质判断是厚度还是重量）
+      if (isPaperMaterial(item.material || '')) {
+        // 纸质材料按重量筛选
+        if (selectedWeight !== 'all') {
+          const itemWeight = extractNumber(item.thickness_met);
+          const targetWeight = extractNumber(selectedWeight);
+          if (itemWeight !== targetWeight) {
+            return false;
+          }
+        }
+      } else {
+        // 非纸质材料按厚度筛选
+        if (selectedThickness !== 'all') {
+          const itemThickness = extractNumber(item.thickness_met);
+          const targetThickness = extractNumber(selectedThickness);
+          if (itemThickness !== targetThickness) {
+            return false;
+          }
+        }
+      }
+      
+      // 5. 宽度筛选（基于width_met字段）
+      if (selectedWidth !== 'all') {
+        const itemWidth = extractNumber(item.width_met);
+        const targetWidth = extractNumber(selectedWidth);
+        if (itemWidth !== targetWidth) {
+          return false;
+        }
+      }
+      
+      // 6. 长度筛选（基于length_met字段）
+      if (selectedLength !== 'all') {
+        const itemLength = extractNumber(item.length_met);
+        const targetLength = extractNumber(selectedLength);
+        if (itemLength !== targetLength) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+    
+    console.log(`🔄 [筛选计算] 筛选完成: ${filtered.length}/${allConsumables.length} 个产品符合条件`);
+    return filtered;
+  }, [
+    allConsumables, selectedModel, selectedShape, selectedMaterial,
+    selectedThickness, selectedWeight, selectedWidth, selectedLength
+  ]);
+  
+  // ===== 智能筛选选项计算的函数 =====
+  const calculateSmartFilterOptions = useCallback(() => {
+    if (!allConsumables?.length) {
+      console.log('📊 [智能筛选] 没有数据，跳过计算');
+      return;
+    }
+    
+    console.log('📊 [智能筛选] 开始计算智能筛选选项...');
+    
+    // 生成缓存键
+    const cacheKey = `${selectedModel}-${selectedShape}-${selectedMaterial}-${selectedThickness}-${selectedWeight}-${selectedWidth}-${selectedLength}`;
+    const now = Date.now();
+    
+    // 检查缓存
+    const cached = filterCache.get(cacheKey);
+    if (cached && (now - cached.timestamp) < 5000) { // 5秒缓存
+      console.log('📊 [智能筛选] 使用缓存结果');
+      setSmartFilterOptions(cached.result);
+      return;
+    }
+    
+    // 清理过期缓存
+    if (cacheTimeoutRef.current) {
+      clearTimeout(cacheTimeoutRef.current);
+    }
+    cacheTimeoutRef.current = setTimeout(() => {
+      setFilterCache(prev => {
+        const newCache = new Map(prev);
+        for (const [key, value] of newCache.entries()) {
+          if (now - value.timestamp > 30000) { // 30秒后清理
+            newCache.delete(key);
+          }
+        }
+        return newCache;
+      });
+    }, 1000);
+    
+    // 创建筛选条件快照
+    const currentFilters: FilterState = {
+      selectedModel,
+      selectedShape,
+      selectedMaterial,
+      selectedSpecs: {
+        thickness: selectedThickness,
+        weight: selectedWeight,
+        width: selectedWidth,
+        length: selectedLength,
+        bubbleDiameter: 'all'
+      }
     };
     
-    const option = optionMap[type].find(item => item.id === id);
-    return option ? getLocalizedOptionName(option) : id;
-  };
-  
-  // 页面加载时获取规格数据
-  useEffect(() => {
-    adminSpecificationService.getSpecifications({ lang: currentLanguage }).then(res => {
-      if (res.success && res.data && res.data.items) {
-        const grouped = { thickness: [], weight: [], width: [], length: [] };
-        res.data.items.forEach(item => {
-          if (item.code === 'thickness') grouped.thickness.push(item);
-          if (item.code === 'weight') grouped.weight.push(item);
-          if (item.code === 'width') grouped.width.push(item);
-          if (item.code === 'length') grouped.length.push(item);
+    // 智能联动筛选逻辑
+    const calculateCascadingOptions = (excludeField?: keyof FilterState) => {
+      return allConsumables.filter(item => {
+        // 应用除了排除字段外的所有筛选条件
+        if (excludeField !== 'selectedModel' && currentFilters.selectedModel !== 'all') {
+          const itemModelId = item.app_model?.toString() || '';
+          if (itemModelId !== currentFilters.selectedModel) return false;
+        }
+        
+        if (excludeField !== 'selectedShape' && currentFilters.selectedShape !== 'all') {
+          const itemShape = normalize(item.shape || '');
+          const targetShape = normalize(currentFilters.selectedShape);
+          if (itemShape !== targetShape) return false;
+        }
+        
+        if (excludeField !== 'selectedMaterial' && currentFilters.selectedMaterial !== 'all') {
+          const itemMaterial = normalize(item.material || '');
+          const targetMaterial = normalize(currentFilters.selectedMaterial);
+          if (itemMaterial !== targetMaterial) return false;
+        }
+        
+        // 规格筛选
+        const isPaper = isPaperMaterial(item.material || '');
+        
+        if (isPaper && excludeField !== 'selectedSpecs' && currentFilters.selectedSpecs.weight !== 'all') {
+          const itemWeight = extractNumber(item.thickness_met);
+          const targetWeight = extractNumber(currentFilters.selectedSpecs.weight);
+          if (itemWeight !== targetWeight) return false;
+        } else if (!isPaper && excludeField !== 'selectedSpecs' && currentFilters.selectedSpecs.thickness !== 'all') {
+          const itemThickness = extractNumber(item.thickness_met);
+          const targetThickness = extractNumber(currentFilters.selectedSpecs.thickness);
+          if (itemThickness !== targetThickness) return false;
+        }
+        
+        if (excludeField !== 'selectedSpecs' && currentFilters.selectedSpecs.width !== 'all') {
+          const itemWidth = extractNumber(item.width_met);
+          const targetWidth = extractNumber(currentFilters.selectedSpecs.width);
+          if (itemWidth !== targetWidth) return false;
+        }
+        
+        if (excludeField !== 'selectedSpecs' && currentFilters.selectedSpecs.length !== 'all') {
+          const itemLength = extractNumber(item.length_met);
+          const targetLength = extractNumber(currentFilters.selectedSpecs.length);
+          if (itemLength !== targetLength) return false;
+        }
+        
+        return true;
+      });
+    };
+    
+    // 生成机型选项
+    const generateModelOptions = (): SmartFilterOption[] => {
+      const availableItems = calculateCascadingOptions('selectedModel');
+      const modelCountMap = new Map<string, number>();
+      
+      // 🔥 修复：正确解析app_model字段，处理复杂格式
+      availableItems.forEach(item => {
+        if (item.app_model) {
+          // 解析复杂的app_model格式：'LA-E4C,"LA-E4S V2.0"','"LA-E4S V2.0",LA-F2'等
+          const appModels = (item.app_model || '').split(',').map(m => m.trim().replace(/^[\"']|[\"']$/g, ''));
+          appModels.forEach(model => {
+            if (model && model.length > 0) {
+              modelCountMap.set(model, (modelCountMap.get(model) || 0) + 1);
+            }
+          });
+        }
+      });
+      
+      // 生成选项时使用解析出的实际模型而不是静态配置
+      const dynamicModelOptions: SmartFilterOption[] = [];
+      
+      // 添加"全部"选项
+      const totalItems = availableItems.length;
+      dynamicModelOptions.push({
+        id: 'all',
+        name: `全部 (${totalItems})`,
+        count: totalItems,
+        disabled: false
+      });
+      
+      // 基于实际数据动态生成模型选项
+      Array.from(modelCountMap.entries())
+        .sort(([, a], [, b]) => b - a) // 按数量排序
+        .forEach(([model, count]) => {
+          dynamicModelOptions.push({
+            id: model,
+            name: `${model} (${count})`,
+            count: count,
+            disabled: count === 0
+          });
         });
-        setSpecOptions(grouped);
-      }
+      
+      console.log('🔧 [Model筛选] 动态生成的模型选项:', dynamicModelOptions);
+      return dynamicModelOptions;
+    };
+    
+    // 生成形状选项
+    const generateShapeOptions = (): SmartFilterOption[] => {
+      const availableItems = calculateCascadingOptions('selectedShape');
+      const shapeCountMap = new Map<string, number>();
+      
+      availableItems.forEach(item => {
+        const shapeKey = item.shape || '';
+        if (shapeKey) {
+          shapeCountMap.set(shapeKey, (shapeCountMap.get(shapeKey) || 0) + 1);
+        }
+      });
+      
+      return (filterOptions?.shapes || []).map(shape => ({
+        id: shape.id.toString(),
+        name: getLocalizedOptionName(shape),
+        count: shapeCountMap.get(shape.name_zh || shape.name_en || '') || 0,
+        disabled: !smartFilterConfig.hideEmptyOptions && (shapeCountMap.get(shape.name_zh || shape.name_en || '') || 0) === 0,
+        originalData: shape
+      })).filter(option => smartFilterConfig.hideEmptyOptions ? option.count > 0 : true);
+    };
+    
+    // 生成材质选项
+    const generateMaterialOptions = (): SmartFilterOption[] => {
+      const availableItems = calculateCascadingOptions('selectedMaterial');
+      const materialCountMap = new Map<string, number>();
+      
+      availableItems.forEach(item => {
+        const materialKey = item.material || '';
+        if (materialKey) {
+          materialCountMap.set(materialKey, (materialCountMap.get(materialKey) || 0) + 1);
+        }
+      });
+      
+      return (filterOptions?.materials || []).map(material => ({
+        id: material.id.toString(),
+        name: getLocalizedOptionName(material),
+        count: materialCountMap.get(material.name_zh || material.name_en || '') || 0,
+        disabled: !smartFilterConfig.hideEmptyOptions && (materialCountMap.get(material.name_zh || material.name_en || '') || 0) === 0,
+        originalData: material
+      })).filter(option => smartFilterConfig.hideEmptyOptions ? option.count > 0 : true);
+    };
+    
+    // 生成规格选项（厚度、重量、宽度、长度）
+    const generateSpecOptions = (fieldName: 'thickness' | 'weight' | 'width' | 'length'): SmartFilterOption[] => {
+      const availableItems = calculateCascadingOptions('selectedSpecs');
+      const specCountMap = new Map<string, number>();
+      
+      availableItems.forEach(item => {
+        let value: number | undefined;
+        
+        switch (fieldName) {
+          case 'thickness':
+          case 'weight':
+            value = extractNumber(item.thickness_met);
+            break;
+          case 'width':
+            value = extractNumber(item.width_met);
+            break;
+          case 'length':
+            value = extractNumber(item.length_met);
+            break;
+        }
+        
+        if (value !== undefined) {
+          const key = value.toString();
+          specCountMap.set(key, (specCountMap.get(key) || 0) + 1);
+        }
+      });
+      
+      return Array.from(specCountMap.entries())
+        .map(([value, count]) => ({
+          id: value,
+          name: `${value} ${userRegion === 'na' || userRegion === 'au' ? 
+            (fieldName === 'thickness' ? 'mil' : fieldName === 'weight' ? '#' : 'inch') : 
+            (fieldName === 'thickness' ? 'μm' : fieldName === 'weight' ? 'gsm' : 'cm')
+          }`,
+          count,
+          disabled: !smartFilterConfig.hideEmptyOptions && count === 0,
+          originalData: { value: parseFloat(value), fieldName }
+        }))
+        .filter(option => smartFilterConfig.hideEmptyOptions ? option.count > 0 : true)
+        .sort((a, b) => parseFloat(a.id) - parseFloat(b.id));
+    };
+    
+    // 生成泡径选项（如果适用）
+    const generateBubbleDiameterOptions = (): SmartFilterOption[] => {
+      const availableItems = calculateCascadingOptions();
+      const bubbleCountMap = new Map<string, number>();
+      
+      availableItems.forEach(item => {
+        // 检查泡径信息，使用现有字段
+        const bubbleDiameter = item.bubble_diameter_met;
+        if (bubbleDiameter) {
+          const value = extractNumber(bubbleDiameter);
+          if (value !== undefined) {
+            const key = value.toString();
+            bubbleCountMap.set(key, (bubbleCountMap.get(key) || 0) + 1);
+          }
+        }
+      });
+      
+      return Array.from(bubbleCountMap.entries())
+        .map(([value, count]) => ({
+          id: value,
+          name: `Φ${value} ${userRegion === 'na' || userRegion === 'au' ? 'inch' : 'cm'}`,
+          count,
+          disabled: !smartFilterConfig.hideEmptyOptions && count === 0,
+          originalData: { value: parseFloat(value), fieldName: 'bubbleDiameter' }
+        }))
+        .filter(option => smartFilterConfig.hideEmptyOptions ? option.count > 0 : true)
+        .sort((a, b) => parseFloat(a.id) - parseFloat(b.id));
+    };
+    
+    // 生成最终的筛选选项
+    const newSmartFilterOptions: SmartFilterOptionsType = {
+      models: generateModelOptions(),
+      shapes: generateShapeOptions(),
+      materials: generateMaterialOptions(),
+      thicknesses: generateSpecOptions('thickness'),
+      weights: generateSpecOptions('weight'),
+      widths: generateSpecOptions('width'),
+      lengths: generateSpecOptions('length'),
+      bubbleDiameters: generateBubbleDiameterOptions()
+    };
+    
+    // 缓存结果
+    setFilterCache(prev => {
+      const newCache = new Map(prev);
+      newCache.set(cacheKey, {
+        key: cacheKey,
+        timestamp: now,
+        result: newSmartFilterOptions
+      });
+      return newCache;
     });
-  }, [currentLanguage]);
+    
+    setSmartFilterOptions(newSmartFilterOptions);
+    console.log('📊 [智能筛选] 计算完成:', newSmartFilterOptions);
+  }, [
+    allConsumables, selectedModel, selectedShape, selectedMaterial,
+    selectedThickness, selectedWeight, selectedWidth, selectedLength,
+    filterOptions, userRegion, filterCache
+  ]);
+  
+  // ===== useEffect hooks - 确保调用顺序一致 =====
+  
+  // 1. 更新consumables和总数
+  useEffect(() => {
+    setConsumables(filteredConsumables);
+    setTotalItems(filteredConsumables.length);
+    setTotalPages(Math.ceil(filteredConsumables.length / 20));
+    setCurrentPage(1);
+  }, [filteredConsumables]);
+  
+  // 2. 智能筛选选项计算
+  useEffect(() => {
+    calculateSmartFilterOptions();
+  }, [calculateSmartFilterOptions]);
   
   // 使用useCallback稳定回调函数引用
   const handleConsumablesSuccess = useCallback((data: any) => {
@@ -947,71 +1520,93 @@ const ConsumablesPage: React.FC = () => {
     console.error('❌ 耗材页面数据加载失败:', error);
   }, []);
   
-  // SQL Mock数据服务Hook
-  const { 
-    data: mockConsumablesData, 
-    loading: mockLoading, 
-    error: mockError 
-  } = useConsumables({
-    page: 1,
-    pageSize: 20,
-    shape: 'all',
-    material: 'all'
-  }, {
-    onSuccess: handleConsumablesSuccess,
-    onError: handleConsumablesError
-  });
-  
-  // 获取形状和材料数据
-  const { data: shapesData } = useShapes();
-  
-  const { data: materialsData } = useMaterials();
-  
-  // 初始化默认尺寸图片
+  // 🔥 强制使用真实API数据 - 直接调用WordPress API
   useEffect(() => {
-    if (filterOptions?.shapes && filterOptions.shapes.length > 0) {
-      // 查找默认选中形状(MEX)的image_url2
-      const defaultShape = filterOptions.shapes.find(shape => shape.id === selectedShape);
-      if (defaultShape && defaultShape.image_url2) {
-        setCurrentDimensionImage(defaultShape.image_url2);
+    const fetchRealApiData = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        console.log('🚀 开始从真实API获取耗材数据...');
+        
+        // 直接调用WordPress API，绕过服务层的mock判断
+        const token = localStorage.getItem('auth_token');
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1';
+        const apiUrl = `${baseUrl}/consumables?page=1&per_page=1000`;
+        
+        console.log('🔍 API URL:', apiUrl);
+        
+        const response = await fetch(apiUrl, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` })
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('✅ 真实API数据获取成功:', data);
+        
+        // 处理API响应格式
+        let consumablesData = [];
+        let filterOptionsData = null;
+        
+        if (data.success && data.data) {
+          if (Array.isArray(data.data.items)) {
+            consumablesData = data.data.items;
+            filterOptionsData = data.data.filterOptions;
+          } else if (Array.isArray(data.data)) {
+            consumablesData = data.data;
+          }
+        } else if (Array.isArray(data)) {
+          consumablesData = data;
+        }
+        
+        console.log(`📊 解析到 ${consumablesData.length} 个耗材产品`);
+        console.log('🔍 数据样本:', consumablesData.slice(0, 2));
+        
+        setAllConsumables(consumablesData);
+        setFilterOptions(filterOptionsData);
+        setLoading(false);
+        
+        // 触发筛选选项重新计算
+        setTimeout(() => {
+          console.log('🔄 开始计算智能筛选选项...');
+        }, 100);
+        
+      } catch (err: any) {
+        console.error('❌ 真实API数据获取失败:', err);
+        setError(err.message || '加载耗材数据失败');
+        setLoading(false);
       }
-    }
-  }, [filterOptions?.shapes, selectedShape]);
-
-  // 1. 新增全量数据状态
-  const [allConsumables, setAllConsumables] = useState<ConsumableProduct[]>([]);
-
-  // 2. 页面加载时只请求一次全量数据
-  useEffect(() => {
-    setLoading(true);
-    setError(null);
-    consumablesService.getConsumables({ page: 1, page_size: 1000 })
-      .then(data => {
-        setAllConsumables(data.items || []);
-        setFilterOptions(data.filterOptions);
-        setLoading(false);
-      })
-      .catch(err => {
-        setError(err.message || String(t('ui.loadConsumablesFailed') || '加载耗材数据失败'));
-        setLoading(false);
-      });
+    };
+    
+    fetchRealApiData();
   }, []);
- 
+
   useEffect(() => {
     console.log('当前筛选后的 consumables:', consumables);
   }, [consumables]);
   // 3. 本地筛选和分页逻辑全部放在一个useEffect
   useEffect(() => {
-    // Shape筛选映射 - 根据数据库真实的bag_type字段值进行映射
+    // Shape筛选映射 - API返回的形状ID直接对应数据库的bag_type字段值
+    // API返回的形状ID: Pillow, Precut Air Pillow, Bubble, Tube, paper Bubble, paper air Pillow
+    // 数据库bag_type字段值: Pillow, Precut Air Pillow, Bubble, Tube, paper Bubble, paper air Pillow
+    // 所以直接映射，无需转换
     const shapeIdToBagType: Record<string, string> = {
-      'MEX': 'Pillow',                 // 气泡枕 -> Pillow
-      'MEY': 'Precut Air Pillow',      // 开口气泡枕 -> Precut Air Pillow
-      'MFB': 'Bubble',                 // 葫芦膜 -> Bubble
-      'MFC': 'Tube',                   // 气枕膜 -> Tube  
-      'MFF': 'Bubble'                  // 葫芦膜变种 -> Bubble (数据库中MFF也是Bubble)
+      'Pillow': 'Pillow',
+      'Precut Air Pillow': 'Precut Air Pillow',
+      'Bubble': 'Bubble',
+      'Tube': 'Tube',
+      'paper Bubble': 'paper Bubble',
+      'paper air Pillow': 'paper air Pillow'
     };
 
-    // Material筛选 - 直接对应material字段的真实值
+    // Material筛选 - API返回的材质ID直接对应数据库material字段值
     // 数据库中的真实material值：30% HDPE, 50% HDPE, HDPE, 50% LDPE, LDPE, PAPE, PAPER
 
     const normalize = (v: any) => (v ?? '').toString().toLowerCase().replace(/\s+/g, '').replace(/%/g, '');
@@ -1048,10 +1643,11 @@ const ConsumablesPage: React.FC = () => {
     });
 
     const filtered = allConsumables.filter(item => {
-      // 型号筛选 - 检查app_model字段（兼容性）
+      // 🔥 修复型号筛选 - 正确解析app_model字段的复杂格式
       if (selectedModel !== 'all') {
-        const appModels = (item.app_model || '').split(',').map(m => m.trim().replace(/"/g, ''));
-        const matches = appModels.some(m => normalize(m) === normalize(selectedModel));
+        // 解析复杂的app_model格式：'LA-E4C,"LA-E4S V2.0"','LA-E4S V2.0",LA-F2'等
+        const appModels = (item.app_model || '').split(',').map(m => m.trim().replace(/^[\"']|[\"']$/g, ''));
+        const matches = appModels.some(m => m === selectedModel); // 精确匹配，不进行normalize
         if (!matches) {
           console.log(`🔍 [型号筛选] ${item.id} 不匹配: ${item.app_model} vs ${selectedModel}`);
           return false;
@@ -1060,8 +1656,8 @@ const ConsumablesPage: React.FC = () => {
 
       // 形状筛选 - 使用数据库真实的bag_type字段
       if (selectedShape !== 'all') {
-        const expectedBagType = shapeIdToBagType[selectedShape];
-        if (!expectedBagType || normalize(item.bag_type) !== normalize(expectedBagType)) {
+        const expectedBagType = shapeIdToBagType[selectedShape] || selectedShape;
+        if (normalize(item.bag_type) !== normalize(expectedBagType)) {
           console.log(`🔍 [形状筛选] ${item.id} 不匹配: ${item.bag_type} vs ${expectedBagType} (from shape ${selectedShape})`);
           return false;
         }
@@ -1405,18 +2001,72 @@ const ConsumablesPage: React.FC = () => {
     setShowCartModal(!showCartModal);
   };
   
+  // 处理面包屑筛选移除
+  const handleRemoveFilter = (filterType: string) => {
+    console.log(`🗑️ [Filter Remove] Removing filter: ${filterType}`);
+    
+    switch (filterType) {
+      case 'model':
+    setSelectedModel('all');
+        break;
+      case 'shape':
+    setSelectedShape('all');
+        break;
+      case 'material':
+    setSelectedMaterial('all');
+        break;
+      case 'thickness':
+    setSelectedThickness('all');
+        break;
+      case 'weight':
+    setSelectedWeight('all');
+        break;
+      case 'width':
+    setSelectedWidth('all');
+        break;
+      case 'length':
+    setSelectedLength('all');
+        break;
+    }
+    setCurrentPage(1);
+  };
+  
+  // 智能重置筛选器
+  const handleSmartResetFilters = () => {
+    console.log('🔄 [Smart Reset] 智能重置所有筛选条件');
+    
+    // 使用动画效果重置
+    if (smartFilterConfig.enableAnimation) {
+      const resetWithDelay = (setter: Function, delay: number) => {
+        setTimeout(() => setter('all'), delay);
+      };
+      
+      resetWithDelay(setSelectedModel, 0);
+      resetWithDelay(setSelectedShape, 100);
+      resetWithDelay(setSelectedMaterial, 200);
+      resetWithDelay(setSelectedThickness, 300);
+      resetWithDelay(setSelectedWeight, 300);
+      resetWithDelay(setSelectedWidth, 400);
+      resetWithDelay(setSelectedLength, 500);
+    } else {
+      setSelectedModel('all');
+      setSelectedShape('all');
+      setSelectedMaterial('all');
+      setSelectedThickness('all');
+      setSelectedWeight('all');
+      setSelectedWidth('all');
+      setSelectedLength('all');
+    }
+    
+    setCurrentPage(1);
+    
+    // 清理缓存
+    setFilterCache(new Map());
+  };
+
   // 重置筛选
   const handleResetFilters = () => {
-    console.log('🔄 [handleResetFilters] Resetting all filters to default values');
-    
-    setSelectedModel('all');
-    setSelectedShape('all');
-    setSelectedMaterial('all');
-    setSelectedThickness('all');
-    setSelectedWeight('all');
-    setSelectedWidth('all');
-    setSelectedLength('all');
-    setCurrentPage(1);
+    handleSmartResetFilters();
   };
   
   // 应用筛选
@@ -1952,6 +2602,21 @@ const ConsumablesPage: React.FC = () => {
           </div>
 
           <div className="p-6 space-y-8">
+            {/* 筛选面包屑 */}
+            <FilterBreadcrumb
+              filters={{
+                model: selectedModel !== 'all' ? selectedModel : undefined,
+                shape: selectedShape !== 'all' ? selectedShape : undefined,
+                material: selectedMaterial !== 'all' ? selectedMaterial : undefined,
+                thickness: selectedThickness !== 'all' ? selectedThickness : undefined,
+                weight: selectedWeight !== 'all' ? selectedWeight : undefined,
+                width: selectedWidth !== 'all' ? selectedWidth : undefined,
+                length: selectedLength !== 'all' ? selectedLength : undefined
+              }}
+              onRemoveFilter={handleRemoveFilter}
+              onClearAll={handleSmartResetFilters}
+            />
+
             {/* 第一行：机器型号筛选 */}
             <div className="bg-gray-50 rounded-xl p-5 slide-up">
               <div className="flex items-center space-x-3 mb-4">
@@ -1963,29 +2628,14 @@ const ConsumablesPage: React.FC = () => {
                   <InfoCircleOutlined className="text-gray-400 hover:text-blue-500 cursor-help transition-colors duration-200" />
                 </Tooltip>
               </div>
-              <Select 
+              <SmartFilterSelect
+                title=""
                 value={selectedModel} 
+                options={smartFilterOptions.models}
                 onChange={handleModelChange}
-                className="w-full max-w-md"
-                size="large"
                 placeholder={String(t('ui.selectDeviceModelPlaceholder') || '请选择设备型号')}
-                suffixIcon={<div className="text-gray-400">▼</div>}
-              >
-                <Option value="all">
-                  <div className="flex items-center space-x-2">
-                    <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
-                    <span>{String(t('ui.allModels') || '所有型号')}</span>
-                  </div>
-                </Option>
-                {models.map((model, index) => (
-                  <Option key={`model-${model.id}-${index}`} value={model.id}>
-                    <div className="flex items-center space-x-2">
-                      <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                      <span>{getLocalizedOptionName(model)}</span>
-                    </div>
-                  </Option>
-                ))}
-              </Select>
+                showCount={smartFilterConfig.showCount}
+              />
             </div>
 
             {/* 第二行：产品形状筛选 */}
@@ -2026,10 +2676,15 @@ const ConsumablesPage: React.FC = () => {
                       </div>
                     </div>
                     <div className={`
-                      text-base font-medium transition-colors duration-200
+                      text-base font-medium transition-colors duration-200 flex items-center justify-center
                       ${selectedShape === 'all' ? 'text-blue-700' : 'text-gray-700'}
                     `}>
-                      {String(t('ui.allShapes') || '全部形状')}
+                      <span>{String(t('ui.allShapes') || '全部形状')}</span>
+                      {smartFilterConfig.showCount && (
+                        <span className="ml-2 text-xs text-blue-500">
+                          ({smartFilterOptions.shapes.reduce((sum, opt) => sum + opt.count, 0)})
+                        </span>
+                      )}
                     </div>
                     {selectedShape === 'all' && (
                       <div className="absolute -top-1 -right-1 w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center">
@@ -2040,7 +2695,7 @@ const ConsumablesPage: React.FC = () => {
                     )}
                   </label>
                 </div>
-                {shapes.map((shape, index) => (
+                {smartFilterOptions.shapes.map((shape, index) => (
                   <div key={`shape-${shape.id}-${index}`} className="relative">
                     <input 
                       type="radio"
@@ -2049,11 +2704,13 @@ const ConsumablesPage: React.FC = () => {
                       checked={selectedShape === shape.id}
                       onChange={() => handleShapeChange(shape.id)}
                       className="sr-only"
+                      disabled={shape.disabled}
                     />
                     <label 
                       htmlFor={`shape-${shape.id}`} 
                       className={`
                         block p-5 rounded-xl border-2 cursor-pointer transition-all duration-300 text-center
+                        ${shape.disabled ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}
                         ${selectedShape === shape.id 
                           ? 'border-blue-500 bg-blue-50 shadow-lg scale-105' 
                           : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md hover:bg-blue-25'
@@ -2062,18 +2719,24 @@ const ConsumablesPage: React.FC = () => {
                     >
                       <div className="mb-4 flex justify-center">
                         <img
-                          src={shape.image_url || shapePlaceholderImage}
-                          alt={getLocalizedOptionName(shape)}
+                          src={shape.originalData?.image_url || shapePlaceholderImage}
+                          alt={shape.name}
                           className="h-28 w-32 object-contain"
                         />
                       </div>
                       <div className={`
-                        text-base font-medium transition-colors duration-200
+                        text-base font-medium transition-colors duration-200 flex flex-col items-center
                         ${selectedShape === shape.id ? 'text-blue-700' : 'text-gray-700'}
+                        ${shape.disabled ? 'text-gray-400' : ''}
                       `}>
-                        {getLocalizedOptionName(shape)}
+                        <span className={shape.disabled ? 'line-through' : ''}>{shape.name}</span>
+                        {smartFilterConfig.showCount && (
+                          <span className={`text-xs mt-1 ${shape.disabled ? 'text-gray-300' : 'text-blue-500'}`}>
+                            ({shape.count})
+                          </span>
+                        )}
                       </div>
-                      {selectedShape === shape.id && (
+                      {selectedShape === shape.id && !shape.disabled && (
                         <div className="absolute -top-1 -right-1 w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center">
                           <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -2086,7 +2749,7 @@ const ConsumablesPage: React.FC = () => {
               </div>
             </div>
 
-            {/* 第三行：材质和尺寸筛选 */}
+            {/* 第三行：材质和规格筛选 */}
             <div className="bg-gray-50 rounded-xl p-5 slide-up" style={{ animationDelay: '0.2s' }}>
               <div className="flex items-center space-x-3 mb-6">
                 <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center pulse">
@@ -2101,7 +2764,7 @@ const ConsumablesPage: React.FC = () => {
                 <div className="flex flex-wrap gap-2">
                   <button 
                     className={`
-                      material-btn px-4 py-2 rounded-lg border transition-all duration-200 font-medium text-sm relative overflow-hidden
+                      material-btn px-4 py-2 rounded-lg border transition-all duration-200 font-medium text-sm relative overflow-hidden flex items-center
                       ${selectedMaterial === 'all' 
                         ? 'bg-purple-500 text-white border-purple-500 shadow-md scale-105' 
                         : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400 hover:bg-purple-50 hover:shadow-sm hover:scale-105'
@@ -2109,22 +2772,34 @@ const ConsumablesPage: React.FC = () => {
                     `}
                     onClick={() => handleMaterialChange('all')}
                   >
-                    {String(t('ui.allMaterials') || '全部材质')}
+                    <span>{String(t('ui.allMaterials') || '全部材质')}</span>
+                    {smartFilterConfig.showCount && (
+                      <span className="ml-2 text-xs">
+                        ({smartFilterOptions.materials.reduce((sum, opt) => sum + opt.count, 0)})
+                      </span>
+                    )}
                   </button>
-                  {materials.map((material, index) => (
+                  {smartFilterOptions.materials.map((material, index) => (
                     <button 
                       key={`material-${material.id}-${index}`}
                       className={`
-                        material-btn px-4 py-2 rounded-lg border transition-all duration-200 font-medium text-sm relative overflow-hidden
+                        material-btn px-4 py-2 rounded-lg border transition-all duration-200 font-medium text-sm relative overflow-hidden flex items-center
+                        ${material.disabled ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''}
                         ${selectedMaterial === material.id 
                           ? 'bg-purple-500 text-white border-purple-500 shadow-md active scale-105' 
                           : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400 hover:bg-purple-50 hover:shadow-sm hover:scale-105'
                         }
                       `}
-                      onClick={() => handleMaterialChange(material.id)}
+                      onClick={() => !material.disabled && handleMaterialChange(material.id)}
                       style={{ animationDelay: `${index * 0.05}s` }}
+                      disabled={material.disabled}
                     >
-                      {getLocalizedOptionName(material)}
+                      <span className={material.disabled ? 'line-through' : ''}>{material.name}</span>
+                      {smartFilterConfig.showCount && (
+                        <span className={`ml-2 text-xs ${material.disabled ? 'text-gray-300' : ''}`}>
+                          ({material.count})
+                        </span>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -2133,61 +2808,32 @@ const ConsumablesPage: React.FC = () => {
               {/* 尺寸筛选器 */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {isPaperMaterial(selectedMaterial) ? String(t('ui.weight') || '重量') : String(t('ui.thickness') || '厚度')}
-                    </label>
-                    <Select
+                  <SmartFilterSelect
+                    title={isPaperMaterial(selectedMaterial) ? String(t('ui.weight') || '重量') : String(t('ui.thickness') || '厚度')}
                       value={isPaperMaterial(selectedMaterial) ? selectedWeight : selectedThickness}
+                    options={isPaperMaterial(selectedMaterial) ? smartFilterOptions.weights : smartFilterOptions.thicknesses}
                       onChange={isPaperMaterial(selectedMaterial) ? handleWeightChange : handleThicknessChange}
-                      className="w-full"
-                      size="large"
                       placeholder={isPaperMaterial(selectedMaterial) ? String(t('ui.selectWeight') || '选择重量') : String(t('ui.selectThickness') || '选择厚度')}
-                    >
-                      <Option value="all">{String(t('filter.all') || '全部')}</Option>
-                      {(isPaperMaterial(selectedMaterial) ? specOptions.weight : specOptions.thickness).map((item) => (
-                        <Option key={item.id} value={item.metric_value}>
-                          {`${item.metric_value} ${item.metric_unit}`}
-                        </Option>
-                      ))}
-                    </Select>
-                  </div>
+                    showCount={smartFilterConfig.showCount}
+                  />
                   
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">{String(t('filter.width') || '宽度')}</label>
-                    <Select
+                  <SmartFilterSelect
+                    title={String(t('filter.width') || '宽度')}
                       value={selectedWidth}
+                    options={smartFilterOptions.widths}
                       onChange={handleWidthChange}
-                      className="w-full"
-                      size="large"
                       placeholder={String(t('ui.selectWidth') || '选择宽度')}
-                    >
-                      <Option value="all">{String(t('filter.all') || '全部')}</Option>
-                      {specOptions.width.map((item) => (
-                        <Option key={item.id} value={item.metric_value}>
-                          {`${item.metric_value} ${item.metric_unit}`}
-                        </Option>
-                      ))}
-                    </Select>
-                  </div>
+                    showCount={smartFilterConfig.showCount}
+                  />
                   
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">{String(t('filter.length') || '长度')}</label>
-                    <Select
+                  <SmartFilterSelect
+                    title={String(t('filter.length') || '长度')}
                       value={selectedLength}
+                    options={smartFilterOptions.lengths}
                       onChange={handleLengthChange}
-                      className="w-full"
-                      size="large"
                       placeholder={String(t('ui.selectLength') || '选择长度')}
-                    >
-                      <Option value="all">{String(t('filter.all') || '全部')}</Option>
-                      {specOptions.length.map((item) => (
-                        <Option key={item.id} value={item.metric_value}>
-                          {`${item.metric_value} ${item.metric_unit}`}
-                        </Option>
-                      ))}
-                    </Select>
-                  </div>
+                    showCount={smartFilterConfig.showCount}
+                  />
                 </div>
                 
                 {/* 尺寸指导图片 */}
@@ -2327,49 +2973,6 @@ const ConsumablesPage: React.FC = () => {
                     {String(selectedProduct.code || '')}
                   </span>
                   <h3 className="text-xl font-bold text-title mb-2">{String(selectedProduct.name || '')}</h3>
-                  {selectedProduct.model && (
-                    <p className="text-content-light mb-2">{String(t('ui.model') || '型号')}: {String(selectedProduct.model || '')}</p>
-                  )}
-                  <p className="text-xs text-content-light opacity-60">{String(t('ui.productId') || '产品ID')}: {String(selectedProduct.id || '')}</p>
-                </div>
-                
-                {/* 价格信息 */}
-                <div className="bg-card-alt rounded-lg p-4 mb-4">
-                  <h4 className="font-medium text-sm text-label mb-2">{String(t('price') || 'Price')}:</h4>
-                  <div className="space-y-2">
-                    {selectedProduct.pricing.map((price, idx) => {
-                      const quantity = parseInt(price.range.replace(/[^0-9]/g, '') || '1') || 1;
-                      const priceValue = getRegionalPrice(selectedProduct, quantity);
-                      const displayPrice = isNaN(priceValue) ? 0 : priceValue;
-                      
-                      return (
-                        <div key={idx} className="flex justify-between items-center bg-background rounded px-3 py-2">
-                          <span className="text-content-light">{price.range}:</span>
-                          <span className="font-semibold text-brand-primary text-lg">
-                            {getCurrencySymbolByRegion()}{displayPrice.toFixed(2)}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* 详细规格 */}
-            <div className="bg-card-alt rounded-lg p-4 mb-4">
-              <h4 className="font-medium text-base text-label mb-3">{String(t('specs') || 'Specifications')}:</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-label font-medium">{String(t('width') || 'Width')}:</span>
-                    <span className="text-content">
-                      {userRegion === 'na' || userRegion === 'au' ? 
-                        (selectedProduct.specs?.width ? selectedProduct.specs.width + ' inch' : 'N/A') : 
-                        (selectedProduct.specs?.width ? selectedProduct.specs.width : 'N/A')
-                      }
-                    </span>
-                  </div>
                   <div className="flex justify-between">
                     <span className="text-label font-medium">{String(t('length') || 'Length')}:</span>
                     <span className="text-content">

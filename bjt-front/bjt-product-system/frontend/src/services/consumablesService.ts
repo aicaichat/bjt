@@ -4,68 +4,74 @@ import { getMockConsumables as getBaseMockConsumables, getMockConsumableById as 
 import { Consumable as CentralConsumable, ConsumablePriceTier as CentralConsumablePriceTier, ConsumableInventoryDetail as CentralConsumableInventory, ConsumableFilterOptions as CentralConsumableFilterOptions } from '../types/consumables';
 import { delay } from '../utils/delay';
 
-// 耗材接口定义 (LOCAL TO THIS SERVICE)
+// 耗材接口定义 (LOCAL TO THIS SERVICE) - 基于CSV文件要求完整重构
 export interface ConsumableProduct {
+  // 基础字段
   id: string;
   name: string;
   code: string;
-  model: string;
-  model_imperial?: string | null;
-  spec?: string | null;
-  spec_imperial?: string | null;
   
-  // 基础信息字段
-  part_number?: string | null;
-  brand?: string | null;
-  app_model?: string | null;
-  bag_type?: string | null;
-  material?: string | null;
+  // ===== CSV文件定义的核心字段 =====
+  // 筛选项字段（7个维度）
+  app_model: string;              // 适用机型（CSV列1）
+  shape: string;                  // 形状（CSV列11）- 新增关键字段
+  material: string;               // 材质（CSV列3）
+  thickness_met?: number | null;  // 厚度/克重(um/gsm)（CSV列4）
+  thickness_imp?: number | null;  // 厚度/克重(mil/#)（CSV列5）
+  width_met?: number | null;      // 膜宽(cm)（CSV列6）
+  width_imp?: number | null;      // 膜宽(inch)（CSV列7）
+  length_met?: number | null;     // 袋长(cm)（CSV列8）
+  length_imp?: number | null;     // 袋长(inch)（CSV列9）
   
-  // 尺寸规格字段
-  thickness_met?: number | null;
-  thickness_imp?: number | null;
-  width_met?: number | null;
-  width_imp?: number | null;
-  length_met?: number | null;
-  length_imp?: number | null;
-  bubble_diameter_met?: number | null;
-  bubble_diameter_imp?: number | null;
-  total_length_met?: number | null;
-  total_length_imp?: number | null;
+  // 选型页商品展示字段（CSV第7行√标记）
+  image_url: string;              // 产品图片袋型实物（CSV列12）
+  part_number: string;            // 料号（CSV列13）
+  model: string;                  // 型号（公制）（CSV列14）
+  model_imperial?: string | null; // 型号(英制)（CSV列15）
+  spec?: string | null;           // Spec.（CSV列16）
+  spec_imperial?: string | null;  // Spec.(英制)（CSV列17）
+  brand?: string | null;          // 品牌（CSV列18）
+  bubble_diameter_met?: number | null; // 泡径(cm)（CSV列19）- 新增关键字段
+  bubble_diameter_imp?: number | null; // 泡径(inch)（CSV列20）- 新增关键字段
+  pcs_per_box?: number | null;    // 单箱数量（CSV列32）
   
-  // 包装属性字段
-  package_type?: string | null;
-  package_size_cm?: string | null;
-  package_size_inch?: string | null;
-  net_weight_kg?: number | null;
-  net_weight_lbs?: number | null;
-  gross_weight_kg?: number | null;
-  gross_weight_lbs?: number | null;
-  pcs_per_box?: number | null;
-  package_image_url?: string | null;
+  // 详细信息弹窗字段（CSV第9行√标记）
+  total_length_met?: number | null;   // 总长(m)（CSV列21）
+  total_length_imp?: number | null;   // 总长(ft)（CSV列22）
+  package_type?: string | null;       // 包装方式（CSV列23）
+  package_size_cm?: string | null;    // 包装尺寸(cm)（CSV列24）
+  package_size_inch?: string | null;  // 包装尺寸(inch)（CSV列25）
+  net_weight_kg?: number | null;      // 单件净重(kg)（CSV列28）
+  net_weight_lbs?: number | null;     // 单件净重(lbs)（CSV列29）
+  gross_weight_kg?: number | null;    // 包装毛重(kg)（CSV列30）
+  gross_weight_lbs?: number | null;   // 包装毛重(lbs)（CSV列31）
+  package_image_url?: string | null;  // 包装实物图片（CSV列33）
   
-  // 打托属性字段
-  pallet_size_cm?: string | null;
-  pallet_size_inch?: string | null;
-  pcs_per_pallet_a?: number | null;
-  pallet_gross_weight_a_kg?: number | null;
-  pallet_gross_weight_a_lbs?: number | null;
-  pallet_height_a_cm?: number | null;
-  pallet_height_a_inch?: number | null;
-  pcs_per_pallet_b?: number | null;
-  pallet_gross_weight_b_kg?: number | null;
-  pallet_gross_weight_b_lbs?: number | null;
-  pallet_height_b_cm?: number | null;
-  pallet_height_b_inch?: number | null;
-  pcs_per_pallet_c?: number | null;
-  pallet_gross_weight_c_kg?: number | null;
-  pallet_gross_weight_c_lbs?: number | null;
-  pallet_height_c_cm?: number | null;
-  pallet_height_c_inch?: number | null;
-  tube_inner_diameter_cm?: number | null;
-  tube_inner_diameter_inch?: number | null;
+  // 打托属性字段（A/B/C配置，CSV第9行√标记）
+  pallet_size_cm?: string | null;        // 托盘尺寸(cm)（CSV列34）
+  pallet_size_inch?: string | null;      // 托盘尺寸(inch)（CSV列35）
+  pcs_per_pallet_a?: number | null;      // 一托卷数A（CSV列36）
+  pallet_gross_weight_a_kg?: number | null;  // 整托毛重A(kg)（CSV列37）
+  pallet_gross_weight_a_lbs?: number | null; // 整托毛重A(lbs)（CSV列38）
+  pallet_height_a_cm?: number | null;    // 打托高度A(cm)（CSV列39）
+  pallet_height_a_inch?: number | null;  // 打托高度A(inch)（CSV列40）
+  pcs_per_pallet_b?: number | null;      // 一托卷数B（CSV列41）
+  pallet_gross_weight_b_kg?: number | null;  // 整盘毛重(kg)（CSV列42）
+  pallet_gross_weight_b_lbs?: number | null; // 整盘毛重B(lbs)（CSV列43）
+  pallet_height_b_cm?: number | null;    // 打托高度(cm)（CSV列44）
+  pallet_height_b_inch?: number | null;  // 打托高度B(inch)（CSV列45）
+  pcs_per_pallet_c?: number | null;      // 一托卷数C（CSV列46）
+  pallet_gross_weight_c_kg?: number | null;  // 整托毛重(kg)（CSV列47）
+  pallet_gross_weight_c_lbs?: number | null; // 整托毛重C(lbs)（CSV列48）
+  pallet_height_c_cm?: number | null;    // 打托高度C(cm)（CSV列49）
+  pallet_height_c_inch?: number | null;  // 打托高度C(inch)（CSV列50）
+  tube_inner_diameter_cm?: number | null;    // 纸筒内径(cm)（CSV列51）
+  tube_inner_diameter_inch?: number | null;  // 纸筒内径(inch)（CSV列52）
   
-  image_url: string;
+  // 兼容字段（保持向后兼容）
+  bag_type?: string | null;       // 兼容旧版本，实际使用shape字段
+  
+  // 业务逻辑字段
   specs: {
     material: string;
     shape: string;
@@ -277,21 +283,73 @@ const mockGetConsumables_local = async (filters: ConsumableFilters): Promise<Con
       model_imperial: product.model_imperial || '',
       spec: product.spec || '',
       spec_imperial: product.spec_imperial || '',
+      
+      // ===== CSV文件要求的必需字段 =====
+      app_model: product.specs?.compatibility || (product as any).app_model || 'LA-E4S', // 必需字段，提供默认值
+      shape: product.specs?.shape || (product as any).shape || 'Pillow', // 必需字段，提供默认值
+      material: product.specs?.material || (product as any).material || 'HDPE', // 必需字段，提供默认值
+      part_number: product.part_number || product.code || '', // 必需字段
+      
+      // 规格字段
+      thickness_met: (product as any).thickness_met || null,
+      thickness_imp: (product as any).thickness_imp || null,
+      width_met: (product as any).width_met || null,
+      width_imp: (product as any).width_imp || null,
+      length_met: (product as any).length_met || null,
+      length_imp: (product as any).length_imp || null,
       bubble_diameter_met: (product as any).bubble_diameter_met || null,
       bubble_diameter_imp: (product as any).bubble_diameter_imp || null,
+      total_length_met: (product as any).total_length_met || null,
+      total_length_imp: (product as any).total_length_imp || null,
+      
+      // 显示字段
       pcs_per_box: product.pcs_per_box || null,
-      brand: product.brand || '',
-      part_number: product.part_number || '',
+      brand: product.brand || 'Lockedair',
+      
+      // 包装字段
+      package_type: (product as any).package_type || null,
+      package_size_cm: (product as any).package_size_cm || null,
+      package_size_inch: (product as any).package_size_inch || null,
+      net_weight_kg: (product as any).net_weight_kg || null,
+      net_weight_lbs: (product as any).net_weight_lbs || null,
+      gross_weight_kg: (product as any).gross_weight_kg || null,
+      gross_weight_lbs: (product as any).gross_weight_lbs || null,
+      package_image_url: (product as any).package_image_url || null,
+      
+      // 打托字段
+      pallet_size_cm: (product as any).pallet_size_cm || null,
+      pallet_size_inch: (product as any).pallet_size_inch || null,
+      pcs_per_pallet_a: (product as any).pcs_per_pallet_a || null,
+      pallet_gross_weight_a_kg: (product as any).pallet_gross_weight_a_kg || null,
+      pallet_gross_weight_a_lbs: (product as any).pallet_gross_weight_a_lbs || null,
+      pallet_height_a_cm: (product as any).pallet_height_a_cm || null,
+      pallet_height_a_inch: (product as any).pallet_height_a_inch || null,
+      pcs_per_pallet_b: (product as any).pcs_per_pallet_b || null,
+      pallet_gross_weight_b_kg: (product as any).pallet_gross_weight_b_kg || null,
+      pallet_gross_weight_b_lbs: (product as any).pallet_gross_weight_b_lbs || null,
+      pallet_height_b_cm: (product as any).pallet_height_b_cm || null,
+      pallet_height_b_inch: (product as any).pallet_height_b_inch || null,
+      pcs_per_pallet_c: (product as any).pcs_per_pallet_c || null,
+      pallet_gross_weight_c_kg: (product as any).pallet_gross_weight_c_kg || null,
+      pallet_gross_weight_c_lbs: (product as any).pallet_gross_weight_c_lbs || null,
+      pallet_height_c_cm: (product as any).pallet_height_c_cm || null,
+      pallet_height_c_inch: (product as any).pallet_height_c_inch || null,
+      tube_inner_diameter_cm: (product as any).tube_inner_diameter_cm || null,
+      tube_inner_diameter_inch: (product as any).tube_inner_diameter_inch || null,
+      
+      // 兼容字段
+      bag_type: product.specs?.shape || (product as any).shape || null,
       image_url: ASSETS.getUrl(product.image_url || '/images/placeholder.jpg'), 
+      
       specs: {
-        material: product.specs?.material || '',
-        shape: product.specs?.shape || '',
+        material: product.specs?.material || (product as any).material || 'HDPE',
+        shape: product.specs?.shape || (product as any).shape || 'Pillow',
         thickness: product.specs?.thickness || '',
         weight: product.specs?.weight || '',
         width: product.specs?.width || '',
         length: product.specs?.length || '',
         rollLength: product.specs?.rollLength || '',
-        compatibility: product.specs?.compatibility || '',
+        compatibility: product.specs?.compatibility || (product as any).app_model || 'LA-E4S',
       },
       pricing: product.pricing || [],
       inventory: Array.isArray(product.inventory)
@@ -416,14 +474,14 @@ const apiGetConsumables_local = async (filters: ConsumableFilters): Promise<Cons
       spec: centralItem.spec || null,
       spec_imperial: centralItem.spec_imperial || null,
       
-      // 基础信息字段 - 从specs对象或顶级字段获取
-      part_number: centralItem.part_number || centralItem.code,
-      brand: centralItem.brand || null,
-      app_model: centralItem.specs?.compatibility || (centralItem as any).app_model || null, // 尝试多个位置
-      bag_type: centralItem.specs?.shape || (centralItem as any).bag_type || null, // 尝试多个位置
-      material: centralItem.specs?.material || (centralItem as any).material || null, // 尝试多个位置
+      // ===== CSV文件要求的必需字段 =====
+      app_model: centralItem.specs?.compatibility || (centralItem as any).app_model || 'LA-E4S', // 必需字段，提供默认值
+      shape: centralItem.specs?.shape || (centralItem as any).shape || 'Pillow', // 必需字段，提供默认值
+      material: centralItem.specs?.material || (centralItem as any).material || 'HDPE', // 必需字段，提供默认值
+      part_number: centralItem.part_number || centralItem.code || '', // 必需字段
+      brand: centralItem.brand || 'Lockedair',
       
-      // 尺寸规格字段 - 从数字字段获取
+      // 规格字段
       thickness_met: (centralItem as any).thickness_met || null,
       thickness_imp: (centralItem as any).thickness_imp || null,
       width_met: (centralItem as any).width_met || null,
@@ -467,16 +525,19 @@ const apiGetConsumables_local = async (filters: ConsumableFilters): Promise<Cons
       tube_inner_diameter_cm: centralItem.tube_inner_diameter_cm || null,
       tube_inner_diameter_inch: centralItem.tube_inner_diameter_inch || null,
       
+      // 兼容字段
+      bag_type: centralItem.specs?.shape || (centralItem as any).shape || null,
       image_url: ASSETS.getUrl(centralItem.image_url || '/images/placeholder.jpg'),
+      
       specs: {
-        material: centralItem.specs?.material || '',
-        shape: centralItem.specs?.shape || '',
+        material: centralItem.specs?.material || (centralItem as any).material || 'HDPE',
+        shape: centralItem.specs?.shape || (centralItem as any).shape || 'Pillow',
         thickness: centralItem.specs?.thickness || '',
         weight: centralItem.specs?.weight || '',
         width: centralItem.specs?.width || '',
         length: centralItem.specs?.length || '',
         rollLength: centralItem.specs?.rollLength || '',
-        compatibility: centralItem.specs?.compatibility || '',
+        compatibility: centralItem.specs?.compatibility || (centralItem as any).app_model || 'LA-E4S',
       },
       pricing: centralItem.pricing || [],
       inventory: centralItem.inventory || {}
@@ -488,8 +549,9 @@ const apiGetConsumables_local = async (filters: ConsumableFilters): Promise<Cons
         id: transformed.id,
         model: transformed.model,
         app_model: transformed.app_model,
-        bag_type: transformed.bag_type,
+        shape: transformed.shape,
         material: transformed.material,
+        part_number: transformed.part_number,
         thickness_met: transformed.thickness_met,
         width_met: transformed.width_met,
         length_met: transformed.length_met,
@@ -560,21 +622,71 @@ const transformCentralConsumableToLocal = (product?: CentralConsumable): Consuma
       model_imperial: product.model_imperial || '',
       spec: product.spec || '',
       spec_imperial: product.spec_imperial || '',
+      
+      // ===== CSV文件要求的必需字段 =====
+      app_model: product.specs?.compatibility || (product as any).app_model || 'LA-E4S', // 必需字段，提供默认值
+      shape: product.specs?.shape || (product as any).shape || 'Pillow', // 必需字段，提供默认值
+      material: product.specs?.material || (product as any).material || 'HDPE', // 必需字段，提供默认值
+      part_number: product.part_number || product.code || '', // 必需字段
+      brand: product.brand || 'Lockedair',
+      
+      // 规格字段
+      thickness_met: (product as any).thickness_met || null,
+      thickness_imp: (product as any).thickness_imp || null,
+      width_met: (product as any).width_met || null,
+      width_imp: (product as any).width_imp || null,
+      length_met: (product as any).length_met || null,
+      length_imp: (product as any).length_imp || null,
       bubble_diameter_met: (product as any).bubble_diameter_met || null,
       bubble_diameter_imp: (product as any).bubble_diameter_imp || null,
+      total_length_met: (product as any).total_length_met || null,
+      total_length_imp: (product as any).total_length_imp || null,
       pcs_per_box: product.pcs_per_box || null,
-      brand: product.brand || '',
-      part_number: product.part_number || '',
+      
+      // 包装字段
+      package_type: (product as any).package_type || null,
+      package_size_cm: (product as any).package_size_cm || null,
+      package_size_inch: (product as any).package_size_inch || null,
+      net_weight_kg: (product as any).net_weight_kg || null,
+      net_weight_lbs: (product as any).net_weight_lbs || null,
+      gross_weight_kg: (product as any).gross_weight_kg || null,
+      gross_weight_lbs: (product as any).gross_weight_lbs || null,
+      package_image_url: (product as any).package_image_url || null,
+      
+      // 打托字段
+      pallet_size_cm: (product as any).pallet_size_cm || null,
+      pallet_size_inch: (product as any).pallet_size_inch || null,
+      pcs_per_pallet_a: (product as any).pcs_per_pallet_a || null,
+      pallet_gross_weight_a_kg: (product as any).pallet_gross_weight_a_kg || null,
+      pallet_gross_weight_a_lbs: (product as any).pallet_gross_weight_a_lbs || null,
+      pallet_height_a_cm: (product as any).pallet_height_a_cm || null,
+      pallet_height_a_inch: (product as any).pallet_height_a_inch || null,
+      pcs_per_pallet_b: (product as any).pcs_per_pallet_b || null,
+      pallet_gross_weight_b_kg: (product as any).pallet_gross_weight_b_kg || null,
+      pallet_gross_weight_b_lbs: (product as any).pallet_gross_weight_b_lbs || null,
+      pallet_height_b_cm: (product as any).pallet_height_b_cm || null,
+      pallet_height_b_inch: (product as any).pallet_height_b_inch || null,
+      pcs_per_pallet_c: (product as any).pcs_per_pallet_c || null,
+      pallet_gross_weight_c_kg: (product as any).pallet_gross_weight_c_kg || null,
+      pallet_gross_weight_c_lbs: (product as any).pallet_gross_weight_c_lbs || null,
+      pallet_height_c_cm: (product as any).pallet_height_c_cm || null,
+      pallet_height_c_inch: (product as any).pallet_height_c_inch || null,
+      tube_inner_diameter_cm: (product as any).tube_inner_diameter_cm || null,
+      tube_inner_diameter_inch: (product as any).tube_inner_diameter_inch || null,
+      
+      // 兼容字段
+      bag_type: product.specs?.shape || (product as any).shape || null,
       image_url: ASSETS.getUrl(product.image_url || '/images/placeholder.jpg'),
+      
       specs: {
-        material: product.specs?.material || '',
-        shape: product.specs?.shape || '',
+        material: product.specs?.material || (product as any).material || 'HDPE',
+        shape: product.specs?.shape || (product as any).shape || 'Pillow',
         thickness: product.specs?.thickness || '',
         weight: product.specs?.weight || '',
         width: product.specs?.width || '',
         length: product.specs?.length || '',
         rollLength: product.specs?.rollLength || '',
-        compatibility: product.specs?.compatibility || '',
+        compatibility: product.specs?.compatibility || (product as any).app_model || 'LA-E4S',
       },
       pricing: product.pricing || [],
       inventory: Array.isArray(product.inventory)
@@ -590,7 +702,7 @@ const transformCentralConsumableToLocal = (product?: CentralConsumable): Consuma
             }, {})
           : {})
     };
-}
+};
 
 export const consumablesService = {
   /**

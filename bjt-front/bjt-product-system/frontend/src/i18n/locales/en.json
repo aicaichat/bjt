@@ -52,6 +52,97 @@
     "account": "Account",
     "language": "Language"
   },
+  "ui": {
+    "noProductId": "No product ID information",
+    "loadingDetails": "Loading details...",
+    "loadConsumablesFailed": "Failed to load consumables data",
+    "addToCartFailed": "Failed to add to cart",
+    "partNumberMissing": "Product part number missing, please refresh the page and try again",
+    "authExpired": "Authentication expired, please refresh the page and log in again",
+    "invalidRequest": "Invalid request parameters, please check product information",
+    "loadingProductData": "Loading product data...",
+    "dataLoadFailed": "Data loading failed",
+    "reload": "Reload",
+    "noMatchingProducts": "No matching products",
+    "noProductsFound": "No consumable products found matching current filter criteria",
+    "resetFilterConditions": "Reset filter conditions",
+    "stockStatus": {
+      "sufficient": "In Stock",
+      "low": "Low Stock",
+      "out": "Out of Stock"
+    },
+    "partNumber": "Part Number",
+    "compatibleModel": "Compatible Model",
+    "modelNumber": "Model Number",
+    "brand": "Brand",
+    "productId": "Product ID",
+    "productSpecs": "Product Specifications",
+    "qtyPerCarton": "Quantity per Carton",
+    "viewDetailedSpecs": "View Detailed Specifications",
+    "startingPrice": "Starting Price",
+    "priceInquiry": "Price Inquiry",
+    "minimumOrder": "Minimum Order",
+    "priceSteps": "Price Tiers",
+    "moreSteps": "More pricing",
+    "stockStatus": "Stock Status",
+    "sufficient": "✓ In Stock",
+    "lowWarning": "⚠ Low Stock",
+    "outIcon": "✗ Out of Stock",
+    "totalStock": "Total Stock",
+    "lowStockWarning": "⚠️ Low stock, recommend ordering soon",
+    "addToCart": "Add to Cart",
+    "addedToCart": "Product added, click cart to checkout",
+    "buyNow": "Buy Now",
+    "totalProducts": "Total {{count}} products",
+    "pageInfo": "Page {{current}} / {{total}}",
+    "smartFilter": "Smart Filter",
+    "smartFilterDescription": "Find exactly what you need",
+    "resetFilters": "Reset Filters",
+    "selectDeviceModel": "Select Device Model",
+    "deviceModelTooltip": "Select your device model to show compatible consumables",
+    "selectDeviceModelPlaceholder": "Please select device model",
+    "allModels": "All Models",
+    "selectProductShape": "Select Product Shape",
+    "productShapeTooltip": "Different shapes are suitable for different packaging needs",
+    "allShapes": "All Shapes",
+    "materialAndSpecs": "Material & Specifications Filter",
+    "materialType": "Material Type",
+    "allMaterials": "All Materials",
+    "weight": "Weight",
+    "thickness": "Thickness",
+    "selectWeight": "Select Weight",
+    "selectThickness": "Select Thickness",
+    "selectWidth": "Select Width",
+    "selectLength": "Select Length",
+    "dimensionGuide": "Dimension Guide",
+    "dimensionGuideAlt": "Product dimension guide",
+    "previousPage": "Previous",
+    "nextPage": "Next",
+    "detailInfo": "Detail Information",
+    "productDetail": "Product Details",
+    "close": "Close",
+    "model": "Model"
+  },
+  "filter": {
+    "all": "All",
+    "material": "Material",
+    "shape": "Shape",
+    "thickness": "Thickness",
+    "width": "Width",
+    "length": "Length",
+    "weightImp": "Weight(#)",
+    "weightMet": "Weight(gsm)",
+    "thicknessImp": "Thickness(mil)",
+    "thicknessMet": "Thickness(um)",
+    "widthImp": "Width(inch)",
+    "widthMet": "Width(cm)",
+    "lengthImp": "Length(inch)",
+    "lengthMet": "Length(cm)",
+    "bubbleDiameterImp": "Bubble Diameter(inch)",
+    "bubbleDiameterMet": "Bubble Diameter(cm)",
+    "totalLengthImp": "Total Length(ft)",
+    "totalLengthMet": "Total Length(m)"
+  },
   "machines": {
     "pageTitle": "Machine Selection",
     "tableHeaders": {
@@ -305,24 +396,42 @@
     "defaultValues": {
       "notAvailable": "Not Available"
     },
-    "quantity": "Quantity"
+    "quantity": "Quantity",
+    "detailInfo": "{{name}} Details",
+    "sections": {
+      "公制规格": "Metric Specifications",
+      "英制规格": "Imperial Specifications"
+    }
   },
+  "countries": {
+    "china": "China",
+    "usa": "United States",
+    "uk": "United Kingdom",
+    "germany": "Germany",
+    "japan": "Japan",
+    "australia": "Australia"
+  },
+  "english": "English",
+  "chinese": "Chinese",
+  "profile": "Profile",
+  "myOrders": "My Orders",
+  "logout": "Logout",
   "spareParts": {
     "title": "Spare Parts",
-    "loading": "Loading spare parts...",
+    "loading": "Loading spare parts list...",
     "error": "Failed to load spare parts",
     "noResults": "No matching spare parts found",
     "filters": {
       "allTypes": "All Types",
       "consumable": "Consumable",
-      "nonConsumable": "Non-Consumable",
+      "nonConsumable": "Non-consumable",
       "model": "Model",
       "partNumber": "Part Number",
-      "searchPlaceholder": "Search spare parts name or part number..."
+      "searchPlaceholder": "Search spare part name or part number..."
     },
     "consumableTypes": {
       "1": "Consumable",
-      "2": "Non-Consumable"
+      "2": "Non-consumable"
     },
     "columns": {
       "image": "Image",
@@ -351,11 +460,10 @@
       "notApplicable": "N/A"
     }
   },
-  "english": "English",
-  "chinese": "中文",
-  "profile": "Profile",
-  "myOrders": "My Orders",
-  "logout": "Logout",
-  "support": "Support",
-  "contactUs": "Contact Us"
+  "regions": {
+    "china": "China",
+    "usa": "United States",
+    "europe": "Europe",
+    "asia": "Asia"
+  }
 } 
