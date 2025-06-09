@@ -217,7 +217,77 @@ class AdminService {
 
   // 管理员认证
   static async login(username: string, password: string): Promise<ApiResponse<{ token: string }>> {
-    return HttpAdminService.post(ADMIN_API_ENDPOINTS.LOGIN, { username, password });
+    // 前端安全检查：只允许admin账号
+    if (username !== 'admin') {
+      return {
+        success: false,
+        message: '访问被拒绝：只有管理员账号可以登录后台管理系统',
+        data: { token: '' }
+      };
+    }
+
+    try {
+      // 调用后端API进行验证，传递login_type参数表明这是后台管理登录
+      const response = await HttpAdminService.post<{ token: string; user?: any }>(
+        ADMIN_API_ENDPOINTS.LOGIN, 
+        { 
+          username, 
+          password,
+          login_type: 'admin_login' // 明确标识为后台管理登录
+        }
+      );
+      
+      // 额外验证：检查响应中的用户信息
+      if (response.success && response.data) {
+        // 如果后端返回了用户信息，再次确认是管理员
+        const user = response.data.user;
+        if (user && user.username && user.username !== 'admin') {
+          return {
+            success: false,
+            message: '用户验证失败：非管理员账号',
+            data: { token: '' }
+          };
+        }
+        
+        // 验证用户角色
+        if (user && user.role && user.role.toLowerCase() !== 'admin') {
+          return {
+            success: false,
+            message: '用户验证失败：用户角色不足',
+            data: { token: '' }
+          };
+        }
+        
+        // 验证登录类型
+        if (user && user.login_type && user.login_type !== 'admin_login') {
+          return {
+            success: false,
+            message: '登录类型验证失败',
+            data: { token: '' }
+          };
+        }
+        
+        // 验证通过，返回成功响应（只返回token部分）
+        return {
+          success: response.success,
+          message: response.message,
+          data: { token: response.data.token || '' }
+        };
+      }
+      
+      return {
+        success: false,
+        message: response.message || '登录失败',
+        data: { token: '' }
+      };
+    } catch (error: any) {
+      // 包装错误响应
+      return {
+        success: false,
+        message: error.message || '登录失败',
+        data: { token: '' }
+      };
+    }
   }
 
   static async logout(): Promise<ApiResponse<void>> {

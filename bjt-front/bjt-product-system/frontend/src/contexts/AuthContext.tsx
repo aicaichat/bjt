@@ -27,6 +27,7 @@ interface AuthContextType {
   getUserRole: () => UserRole | null;
   getPreferredUnit: () => UnitSystem;
   setPreferredUnit: (unit: UnitSystem) => Promise<void>;
+  updatePreferredUnit: (unit: UnitSystem) => Promise<void>;
 }
 
 // 创建认证上下文
@@ -243,6 +244,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // 向后兼容的别名函数
+  const updatePreferredUnit = setPreferredUnit;
+
   // 上下文值
   const contextValue: AuthContextType = {
     user,
@@ -256,6 +260,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     getUserRole,
     getPreferredUnit,
     setPreferredUnit,
+    updatePreferredUnit,
   };
 
   return (

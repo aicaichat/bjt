@@ -5,11 +5,14 @@ import {
   UserOutlined,
   GlobalOutlined,
 } from '@ant-design/icons';
+import LanguageSwitch from '../../i18n/components/LanguageSwitch';
+import { useAdminI18n } from '../../i18n/hooks/useAdminI18n';
 
 const { Header } = Layout;
 
 const AdminHeader: React.FC = () => {
   const navigate = useNavigate();
+  const { tc } = useAdminI18n();
 
   const handleLogout = () => {
     localStorage.removeItem('admin_token');
@@ -20,26 +23,15 @@ const AdminHeader: React.FC = () => {
     {
       key: 'profile',
       icon: <UserOutlined />,
-      label: '个人信息',
+      label: String(tc('profile') || '个人信息'),
     },
     {
       type: 'divider',
     },
     {
       key: 'logout',
-      label: '退出登录',
+      label: String(tc('logout') || '退出登录'),
       onClick: handleLogout,
-    },
-  ];
-
-  const languageMenuItems = [
-    {
-      key: 'zh',
-      label: '中文',
-    },
-    {
-      key: 'en',
-      label: 'English',
     },
   ];
 
@@ -87,13 +79,11 @@ const AdminHeader: React.FC = () => {
     <Header className="bg-white px-6 flex justify-between items-center border-b">
       <div className="flex-1" />
       <Space size="large">
-        <Dropdown menu={{ items: languageMenuItems }} placement="bottomRight">
-          <GlobalOutlined className="text-lg cursor-pointer" />
-        </Dropdown>
+        <LanguageSwitch size="small" />
         <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
           <Space className="cursor-pointer">
             <Avatar icon={<UserOutlined />} />
-            <span>管理员</span>
+            <span>{String(tc('admin') || '管理员')}</span>
           </Space>
         </Dropdown>
       </Space>

@@ -1,0 +1,1802 @@
+{
+  "机器页面": {
+    "商品列表": [
+      {
+        "originalField": "型号",
+        "standardKey": "Model",
+        "chineseName": "型号",
+        "englishName": "Model",
+        "category": "未分类",
+        "unit": "",
+        "example": "MEX-RH30-13-20-13-L",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "电压",
+        "standardKey": "Voltage",
+        "chineseName": "电压",
+        "englishName": "Voltage",
+        "category": "未分类",
+        "unit": "V",
+        "example": "110；",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "图片",
+        "standardKey": "Packaging Image",
+        "chineseName": "包装图片",
+        "englishName": "Packaging Image",
+        "category": "未分类",
+        "unit": "",
+        "example": "",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "料号",
+        "standardKey": "Part No.",
+        "chineseName": "料号",
+        "englishName": "Part No.",
+        "category": "未分类",
+        "unit": "",
+        "example": "90R01258",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "名称",
+        "standardKey": "Item",
+        "chineseName": "名称",
+        "englishName": "Item",
+        "category": "未分类",
+        "unit": "",
+        "example": "MEX:Air pillow film",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "单箱数量",
+        "standardKey": "Qty per Carton",
+        "chineseName": "单箱数量",
+        "englishName": "Qty per Carton",
+        "category": "未分类",
+        "unit": "",
+        "example": "2",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "托盘尺寸cm",
+        "standardKey": "托盘尺寸cm",
+        "chineseName": "托盘尺寸cm",
+        "englishName": "托盘尺寸cm",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "托盘尺寸inch",
+        "standardKey": "托盘尺寸inch",
+        "chineseName": "托盘尺寸inch",
+        "englishName": "托盘尺寸inch",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "一托数量",
+        "standardKey": "Packs per Pallet",
+        "chineseName": "一托数量",
+        "englishName": "Packs per Pallet",
+        "category": "未分类",
+        "unit": "",
+        "example": "150",
+        "matchType": "contains",
+        "matchScore": 0.8
+      }
+    ],
+    "购物车": [
+      {
+        "originalField": "型号",
+        "standardKey": "Model",
+        "chineseName": "型号",
+        "englishName": "Model",
+        "category": "未分类",
+        "unit": "",
+        "example": "MEX-RH30-13-20-13-L",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "电压",
+        "standardKey": "Voltage",
+        "chineseName": "电压",
+        "englishName": "Voltage",
+        "category": "未分类",
+        "unit": "V",
+        "example": "110；",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "图片",
+        "standardKey": "Packaging Image",
+        "chineseName": "包装图片",
+        "englishName": "Packaging Image",
+        "category": "未分类",
+        "unit": "",
+        "example": "",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "料号",
+        "standardKey": "Part No.",
+        "chineseName": "料号",
+        "englishName": "Part No.",
+        "category": "未分类",
+        "unit": "",
+        "example": "90R01258",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "名称",
+        "standardKey": "Item",
+        "chineseName": "名称",
+        "englishName": "Item",
+        "category": "未分类",
+        "unit": "",
+        "example": "MEX:Air pillow film",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "单箱数量",
+        "standardKey": "Qty per Carton",
+        "chineseName": "单箱数量",
+        "englishName": "Qty per Carton",
+        "category": "未分类",
+        "unit": "",
+        "example": "2",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "托盘尺寸cm",
+        "standardKey": "托盘尺寸cm",
+        "chineseName": "托盘尺寸cm",
+        "englishName": "托盘尺寸cm",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "托盘尺寸inch",
+        "standardKey": "托盘尺寸inch",
+        "chineseName": "托盘尺寸inch",
+        "englishName": "托盘尺寸inch",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "一托数量",
+        "standardKey": "Packs per Pallet",
+        "chineseName": "一托数量",
+        "englishName": "Packs per Pallet",
+        "category": "未分类",
+        "unit": "",
+        "example": "150",
+        "matchType": "contains",
+        "matchScore": 0.8
+      }
+    ],
+    "tooltip": [
+      {
+        "originalField": "包装尺寸cm",
+        "standardKey": "Package Size(cm)",
+        "chineseName": "包装尺寸(cm)",
+        "englishName": "Package Size(cm)",
+        "category": "未分类",
+        "unit": "cm",
+        "example": "21*21*42",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "包装尺寸inch",
+        "standardKey": "Package Size(cm)",
+        "chineseName": "包装尺寸(cm)",
+        "englishName": "Package Size(cm)",
+        "category": "未分类",
+        "unit": "cm",
+        "example": "21*21*42",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "单件净重kg",
+        "standardKey": "Net Weight(kg)",
+        "chineseName": "单件净重(kg)",
+        "englishName": "Net Weight(kg)",
+        "category": "未分类",
+        "unit": "kg",
+        "example": "4.65",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "单件净重lbs",
+        "standardKey": "Net Weight(kg)",
+        "chineseName": "单件净重(kg)",
+        "englishName": "Net Weight(kg)",
+        "category": "未分类",
+        "unit": "kg",
+        "example": "4.65",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "打托高度cm",
+        "standardKey": "打托高度cm",
+        "chineseName": "打托高度cm",
+        "englishName": "打托高度cm",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "打托高度inch",
+        "standardKey": "打托高度inch",
+        "chineseName": "打托高度inch",
+        "englishName": "打托高度inch",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "整托毛重kg",
+        "standardKey": "整托毛重kg",
+        "chineseName": "整托毛重kg",
+        "englishName": "整托毛重kg",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "整托毛重lbs",
+        "standardKey": "整托毛重lbs",
+        "chineseName": "整托毛重lbs",
+        "englishName": "整托毛重lbs",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      }
+    ],
+    "PO页": [
+      {
+        "originalField": "型号",
+        "standardKey": "Model",
+        "chineseName": "型号",
+        "englishName": "Model",
+        "category": "未分类",
+        "unit": "",
+        "example": "MEX-RH30-13-20-13-L",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "料号",
+        "standardKey": "Part No.",
+        "chineseName": "料号",
+        "englishName": "Part No.",
+        "category": "未分类",
+        "unit": "",
+        "example": "90R01258",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "名称",
+        "standardKey": "Item",
+        "chineseName": "名称",
+        "englishName": "Item",
+        "category": "未分类",
+        "unit": "",
+        "example": "MEX:Air pillow film",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "品牌",
+        "standardKey": "Brand",
+        "chineseName": "品牌",
+        "englishName": "Brand",
+        "category": "未分类",
+        "unit": "",
+        "example": "LockedAir/LockedPaper",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "Spec.",
+        "standardKey": "Spec.",
+        "chineseName": "规格描述",
+        "englishName": "Spec.",
+        "category": "未分类",
+        "unit": "",
+        "example": "13um 30%HDPE Pillow, 20cmx13cm,1000m,150R/PL",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "Spec.(英制)",
+        "standardKey": "Spec.",
+        "chineseName": "规格描述",
+        "englishName": "Spec.",
+        "category": "未分类",
+        "unit": "",
+        "example": ".5mil  30%HDPE Pillow, 8x5.0, 3281', 150R/PL",
+        "matchType": "exact",
+        "matchScore": 1
+      }
+    ]
+  },
+  "耗材页面": {
+    "商品列表": [
+      {
+        "originalField": "适用机型",
+        "standardKey": "Applicable Machine",
+        "chineseName": "适用机型",
+        "englishName": "Applicable Machine",
+        "category": "未分类",
+        "unit": "",
+        "example": "LA-E4C/LA-E4S",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "名称(英文)新增需求",
+        "standardKey": "Item",
+        "chineseName": "名称",
+        "englishName": "Item",
+        "category": "未分类",
+        "unit": "",
+        "example": "MEX:Air pillow film",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "形状",
+        "standardKey": "形状",
+        "chineseName": "形状",
+        "englishName": "形状",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "产品图片袋型实物",
+        "standardKey": "产品图片袋型实物",
+        "chineseName": "产品图片袋型实物",
+        "englishName": "产品图片袋型实物",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "料号",
+        "standardKey": "Part No.",
+        "chineseName": "料号",
+        "englishName": "Part No.",
+        "category": "未分类",
+        "unit": "",
+        "example": "90R01258",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "型号（公制）",
+        "standardKey": "Model",
+        "chineseName": "型号",
+        "englishName": "Model",
+        "category": "未分类",
+        "unit": "",
+        "example": "MEX-RH30-13-20-13-L",
+        "matchType": "clean_exact",
+        "matchScore": 0.95
+      },
+      {
+        "originalField": "型号(英制)",
+        "standardKey": "Model",
+        "chineseName": "型号",
+        "englishName": "Model",
+        "category": "未分类",
+        "unit": "",
+        "example": "MEX-RH30-05-08-5-L",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "Spec.",
+        "standardKey": "Spec.",
+        "chineseName": "规格描述",
+        "englishName": "Spec.",
+        "category": "未分类",
+        "unit": "",
+        "example": "13um 30%HDPE Pillow, 20cmx13cm,1000m,150R/PL",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "Spec.(英制)",
+        "standardKey": "Spec.",
+        "chineseName": "规格描述",
+        "englishName": "Spec.",
+        "category": "未分类",
+        "unit": "",
+        "example": ".5mil  30%HDPE Pillow, 8x5.0, 3281', 150R/PL",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "泡径cm",
+        "standardKey": "Bubble Dia.",
+        "chineseName": "泡径",
+        "englishName": "Bubble Dia.",
+        "category": "未分类",
+        "unit": "mm",
+        "example": "13",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "泡径inch",
+        "standardKey": "Bubble Dia.",
+        "chineseName": "泡径",
+        "englishName": "Bubble Dia.",
+        "category": "未分类",
+        "unit": "mm",
+        "example": "13",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "productId",
+        "standardKey": "productid",
+        "chineseName": "productId",
+        "englishName": "productId",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "单箱数量",
+        "standardKey": "Qty per Carton",
+        "chineseName": "单箱数量",
+        "englishName": "Qty per Carton",
+        "category": "未分类",
+        "unit": "",
+        "example": "2",
+        "matchType": "exact",
+        "matchScore": 1
+      }
+    ],
+    "购物车": [
+      {
+        "originalField": "适用机型",
+        "standardKey": "Applicable Machine",
+        "chineseName": "适用机型",
+        "englishName": "Applicable Machine",
+        "category": "未分类",
+        "unit": "",
+        "example": "LA-E4C/LA-E4S",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "名称(英文)新增需求",
+        "standardKey": "Item",
+        "chineseName": "名称",
+        "englishName": "Item",
+        "category": "未分类",
+        "unit": "",
+        "example": "MEX:Air pillow film",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "产品图片袋型实物",
+        "standardKey": "产品图片袋型实物",
+        "chineseName": "产品图片袋型实物",
+        "englishName": "产品图片袋型实物",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "料号",
+        "standardKey": "Part No.",
+        "chineseName": "料号",
+        "englishName": "Part No.",
+        "category": "未分类",
+        "unit": "",
+        "example": "90R01258",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "型号（公制）",
+        "standardKey": "Model",
+        "chineseName": "型号",
+        "englishName": "Model",
+        "category": "未分类",
+        "unit": "",
+        "example": "MEX-RH30-13-20-13-L",
+        "matchType": "clean_exact",
+        "matchScore": 0.95
+      },
+      {
+        "originalField": "型号(英制)",
+        "standardKey": "Model",
+        "chineseName": "型号",
+        "englishName": "Model",
+        "category": "未分类",
+        "unit": "",
+        "example": "MEX-RH30-05-08-5-L",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "Spec.",
+        "standardKey": "Spec.",
+        "chineseName": "规格描述",
+        "englishName": "Spec.",
+        "category": "未分类",
+        "unit": "",
+        "example": "13um 30%HDPE Pillow, 20cmx13cm,1000m,150R/PL",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "Spec.(英制)",
+        "standardKey": "Spec.",
+        "chineseName": "规格描述",
+        "englishName": "Spec.",
+        "category": "未分类",
+        "unit": "",
+        "example": ".5mil  30%HDPE Pillow, 8x5.0, 3281', 150R/PL",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "泡径cm",
+        "standardKey": "Bubble Dia.",
+        "chineseName": "泡径",
+        "englishName": "Bubble Dia.",
+        "category": "未分类",
+        "unit": "mm",
+        "example": "13",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "泡径inch",
+        "standardKey": "Bubble Dia.",
+        "chineseName": "泡径",
+        "englishName": "Bubble Dia.",
+        "category": "未分类",
+        "unit": "mm",
+        "example": "13",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "productId",
+        "standardKey": "productid",
+        "chineseName": "productId",
+        "englishName": "productId",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "单箱数量",
+        "standardKey": "Qty per Carton",
+        "chineseName": "单箱数量",
+        "englishName": "Qty per Carton",
+        "category": "未分类",
+        "unit": "",
+        "example": "2",
+        "matchType": "exact",
+        "matchScore": 1
+      }
+    ],
+    "tooltip": [
+      {
+        "originalField": "材质",
+        "standardKey": "Material",
+        "chineseName": "材质",
+        "englishName": "Material",
+        "category": "未分类",
+        "unit": "",
+        "example": "HDPE;",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "厚度/克重um/gsm",
+        "standardKey": "厚度/克重um/gsm",
+        "chineseName": "厚度/克重um/gsm",
+        "englishName": "厚度/克重um/gsm",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "厚度/克重mil/#",
+        "standardKey": "厚度/克重mil/#",
+        "chineseName": "厚度/克重mil/#",
+        "englishName": "厚度/克重mil/#",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "膜宽cm",
+        "standardKey": "膜宽cm",
+        "chineseName": "膜宽cm",
+        "englishName": "膜宽cm",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "膜宽inch",
+        "standardKey": "膜宽inch",
+        "chineseName": "膜宽inch",
+        "englishName": "膜宽inch",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "袋长cm",
+        "standardKey": "袋长cm",
+        "chineseName": "袋长cm",
+        "englishName": "袋长cm",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "袋长inch",
+        "standardKey": "袋长inch",
+        "chineseName": "袋长inch",
+        "englishName": "袋长inch",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "名称(英文)新增需求",
+        "standardKey": "Item",
+        "chineseName": "名称",
+        "englishName": "Item",
+        "category": "未分类",
+        "unit": "",
+        "example": "MEX:Air pillow film",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "总长m",
+        "standardKey": "总长m",
+        "chineseName": "总长m",
+        "englishName": "总长m",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "总长ft",
+        "standardKey": "总长ft",
+        "chineseName": "总长ft",
+        "englishName": "总长ft",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "包装方式",
+        "standardKey": "包装方式",
+        "chineseName": "包装方式",
+        "englishName": "包装方式",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "包装尺寸cm",
+        "standardKey": "Package Size(cm)",
+        "chineseName": "包装尺寸(cm)",
+        "englishName": "Package Size(cm)",
+        "category": "未分类",
+        "unit": "cm",
+        "example": "21*21*42",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "包装尺寸inch",
+        "standardKey": "Package Size(cm)",
+        "chineseName": "包装尺寸(cm)",
+        "englishName": "Package Size(cm)",
+        "category": "未分类",
+        "unit": "cm",
+        "example": "21*21*42",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "单件净重kg",
+        "standardKey": "Net Weight(kg)",
+        "chineseName": "单件净重(kg)",
+        "englishName": "Net Weight(kg)",
+        "category": "未分类",
+        "unit": "kg",
+        "example": "4.65",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "单件净重lbs",
+        "standardKey": "Net Weight(kg)",
+        "chineseName": "单件净重(kg)",
+        "englishName": "Net Weight(kg)",
+        "category": "未分类",
+        "unit": "kg",
+        "example": "4.65",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "包装实物图片",
+        "standardKey": "包装实物图片",
+        "chineseName": "包装实物图片",
+        "englishName": "包装实物图片",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "托盘尺寸cm",
+        "standardKey": "托盘尺寸cm",
+        "chineseName": "托盘尺寸cm",
+        "englishName": "托盘尺寸cm",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "一托卷数A",
+        "standardKey": "一托卷数a",
+        "chineseName": "一托卷数A",
+        "englishName": "一托卷数A",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "整托毛重Akg",
+        "standardKey": "整托毛重akg",
+        "chineseName": "整托毛重Akg",
+        "englishName": "整托毛重Akg",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "整托毛重Albs",
+        "standardKey": "整托毛重albs",
+        "chineseName": "整托毛重Albs",
+        "englishName": "整托毛重Albs",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "打托高度Acm",
+        "standardKey": "打托高度acm",
+        "chineseName": "打托高度Acm",
+        "englishName": "打托高度Acm",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "打托高度Ainch",
+        "standardKey": "打托高度ainch",
+        "chineseName": "打托高度Ainch",
+        "englishName": "打托高度Ainch",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "一托卷数B",
+        "standardKey": "一托卷数b",
+        "chineseName": "一托卷数B",
+        "englishName": "一托卷数B",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "整盘毛重kg",
+        "standardKey": "整盘毛重kg",
+        "chineseName": "整盘毛重kg",
+        "englishName": "整盘毛重kg",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "整盘毛重Blbs",
+        "standardKey": "整盘毛重blbs",
+        "chineseName": "整盘毛重Blbs",
+        "englishName": "整盘毛重Blbs",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "打托高度cm",
+        "standardKey": "打托高度cm",
+        "chineseName": "打托高度cm",
+        "englishName": "打托高度cm",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "打托高度Binch",
+        "standardKey": "打托高度binch",
+        "chineseName": "打托高度Binch",
+        "englishName": "打托高度Binch",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "一托卷数C",
+        "standardKey": "一托卷数c",
+        "chineseName": "一托卷数C",
+        "englishName": "一托卷数C",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "整托毛重kg",
+        "standardKey": "整托毛重kg",
+        "chineseName": "整托毛重kg",
+        "englishName": "整托毛重kg",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "整托毛重Clbs",
+        "standardKey": "整托毛重clbs",
+        "chineseName": "整托毛重Clbs",
+        "englishName": "整托毛重Clbs",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "打托高度Ccm",
+        "standardKey": "打托高度ccm",
+        "chineseName": "打托高度Ccm",
+        "englishName": "打托高度Ccm",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "打托高度Cinch",
+        "standardKey": "打托高度cinch",
+        "chineseName": "打托高度Cinch",
+        "englishName": "打托高度Cinch",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "纸筒内径cm",
+        "standardKey": "纸筒内径cm",
+        "chineseName": "纸筒内径cm",
+        "englishName": "纸筒内径cm",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "纸筒内径inch",
+        "standardKey": "纸筒内径inch",
+        "chineseName": "纸筒内径inch",
+        "englishName": "纸筒内径inch",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      }
+    ],
+    "PO页": [
+      {
+        "originalField": "名称(英文)新增需求",
+        "standardKey": "Item",
+        "chineseName": "名称",
+        "englishName": "Item",
+        "category": "未分类",
+        "unit": "",
+        "example": "MEX:Air pillow film",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "料号",
+        "standardKey": "Part No.",
+        "chineseName": "料号",
+        "englishName": "Part No.",
+        "category": "未分类",
+        "unit": "",
+        "example": "90R01258",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "型号（公制）",
+        "standardKey": "Model",
+        "chineseName": "型号",
+        "englishName": "Model",
+        "category": "未分类",
+        "unit": "",
+        "example": "MEX-RH30-13-20-13-L",
+        "matchType": "clean_exact",
+        "matchScore": 0.95
+      },
+      {
+        "originalField": "型号(英制)",
+        "standardKey": "Model",
+        "chineseName": "型号",
+        "englishName": "Model",
+        "category": "未分类",
+        "unit": "",
+        "example": "MEX-RH30-05-08-5-L",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "Spec.",
+        "standardKey": "Spec.",
+        "chineseName": "规格描述",
+        "englishName": "Spec.",
+        "category": "未分类",
+        "unit": "",
+        "example": "13um 30%HDPE Pillow, 20cmx13cm,1000m,150R/PL",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "Spec.(英制)",
+        "standardKey": "Spec.",
+        "chineseName": "规格描述",
+        "englishName": "Spec.",
+        "category": "未分类",
+        "unit": "",
+        "example": ".5mil  30%HDPE Pillow, 8x5.0, 3281', 150R/PL",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "品牌",
+        "standardKey": "Brand",
+        "chineseName": "品牌",
+        "englishName": "Brand",
+        "category": "未分类",
+        "unit": "",
+        "example": "LockedAir/LockedPaper",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "productId",
+        "standardKey": "productid",
+        "chineseName": "productId",
+        "englishName": "productId",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      }
+    ]
+  },
+  "备件页面": {
+    "商品列表": [
+      {
+        "originalField": "适配机型",
+        "standardKey": "适配机型",
+        "chineseName": "适配机型",
+        "englishName": "适配机型",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "是否易损",
+        "standardKey": "Consumable Status",
+        "chineseName": "易损",
+        "englishName": "Consumable Status",
+        "category": "未分类",
+        "unit": "",
+        "example": "1",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "产品图片",
+        "standardKey": "产品图片",
+        "chineseName": "产品图片",
+        "englishName": "产品图片",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "料号",
+        "standardKey": "Part No.",
+        "chineseName": "料号",
+        "englishName": "Part No.",
+        "category": "未分类",
+        "unit": "",
+        "example": "90R01258",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "名称(英文)",
+        "standardKey": "Item",
+        "chineseName": "名称",
+        "englishName": "Item",
+        "category": "未分类",
+        "unit": "",
+        "example": "MEX:Air pillow film",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "Spec.",
+        "standardKey": "Spec.",
+        "chineseName": "规格描述",
+        "englishName": "Spec.",
+        "category": "未分类",
+        "unit": "",
+        "example": "13um 30%HDPE Pillow, 20cmx13cm,1000m,150R/PL",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "适配序列号",
+        "standardKey": "Applicable SN.",
+        "chineseName": "适配序列号",
+        "englishName": "Applicable SN.",
+        "category": "未分类",
+        "unit": "",
+        "example": "",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "Unit",
+        "standardKey": "unit",
+        "chineseName": "Unit",
+        "englishName": "Unit",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "单箱数量",
+        "standardKey": "Qty per Carton",
+        "chineseName": "单箱数量",
+        "englishName": "Qty per Carton",
+        "category": "未分类",
+        "unit": "",
+        "example": "2",
+        "matchType": "exact",
+        "matchScore": 1
+      }
+    ],
+    "购物车": [
+      {
+        "originalField": "适配机型",
+        "standardKey": "适配机型",
+        "chineseName": "适配机型",
+        "englishName": "适配机型",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "产品图片",
+        "standardKey": "产品图片",
+        "chineseName": "产品图片",
+        "englishName": "产品图片",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "料号",
+        "standardKey": "Part No.",
+        "chineseName": "料号",
+        "englishName": "Part No.",
+        "category": "未分类",
+        "unit": "",
+        "example": "90R01258",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "名称(英文)",
+        "standardKey": "Item",
+        "chineseName": "名称",
+        "englishName": "Item",
+        "category": "未分类",
+        "unit": "",
+        "example": "MEX:Air pillow film",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "Spec.",
+        "standardKey": "Spec.",
+        "chineseName": "规格描述",
+        "englishName": "Spec.",
+        "category": "未分类",
+        "unit": "",
+        "example": "13um 30%HDPE Pillow, 20cmx13cm,1000m,150R/PL",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "适配序列号",
+        "standardKey": "Applicable SN.",
+        "chineseName": "适配序列号",
+        "englishName": "Applicable SN.",
+        "category": "未分类",
+        "unit": "",
+        "example": "",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "包装尺寸cm",
+        "standardKey": "Package Size(cm)",
+        "chineseName": "包装尺寸(cm)",
+        "englishName": "Package Size(cm)",
+        "category": "未分类",
+        "unit": "cm",
+        "example": "21*21*42",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "包装尺寸inch",
+        "standardKey": "Package Size(cm)",
+        "chineseName": "包装尺寸(cm)",
+        "englishName": "Package Size(cm)",
+        "category": "未分类",
+        "unit": "cm",
+        "example": "21*21*42",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "Unit",
+        "standardKey": "unit",
+        "chineseName": "Unit",
+        "englishName": "Unit",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "单件净重kg",
+        "standardKey": "Net Weight(kg)",
+        "chineseName": "单件净重(kg)",
+        "englishName": "Net Weight(kg)",
+        "category": "未分类",
+        "unit": "kg",
+        "example": "4.65",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "单件净重lbs",
+        "standardKey": "Net Weight(kg)",
+        "chineseName": "单件净重(kg)",
+        "englishName": "Net Weight(kg)",
+        "category": "未分类",
+        "unit": "kg",
+        "example": "4.65",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "单箱数量",
+        "standardKey": "Qty per Carton",
+        "chineseName": "单箱数量",
+        "englishName": "Qty per Carton",
+        "category": "未分类",
+        "unit": "",
+        "example": "2",
+        "matchType": "exact",
+        "matchScore": 1
+      }
+    ],
+    "tooltip": [
+      {
+        "originalField": "包装尺寸cm",
+        "standardKey": "Package Size(cm)",
+        "chineseName": "包装尺寸(cm)",
+        "englishName": "Package Size(cm)",
+        "category": "未分类",
+        "unit": "cm",
+        "example": "21*21*42",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "包装尺寸inch",
+        "standardKey": "Package Size(cm)",
+        "chineseName": "包装尺寸(cm)",
+        "englishName": "Package Size(cm)",
+        "category": "未分类",
+        "unit": "cm",
+        "example": "21*21*42",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "单件净重kg",
+        "standardKey": "Net Weight(kg)",
+        "chineseName": "单件净重(kg)",
+        "englishName": "Net Weight(kg)",
+        "category": "未分类",
+        "unit": "kg",
+        "example": "4.65",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "单件净重lbs",
+        "standardKey": "Net Weight(kg)",
+        "chineseName": "单件净重(kg)",
+        "englishName": "Net Weight(kg)",
+        "category": "未分类",
+        "unit": "kg",
+        "example": "4.65",
+        "matchType": "contains",
+        "matchScore": 0.8
+      }
+    ],
+    "PO页": [
+      {
+        "originalField": "料号",
+        "standardKey": "Part No.",
+        "chineseName": "料号",
+        "englishName": "Part No.",
+        "category": "未分类",
+        "unit": "",
+        "example": "90R01258",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "名称(英文)",
+        "standardKey": "Item",
+        "chineseName": "名称",
+        "englishName": "Item",
+        "category": "未分类",
+        "unit": "",
+        "example": "MEX:Air pillow film",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "Spec.",
+        "standardKey": "Spec.",
+        "chineseName": "规格描述",
+        "englishName": "Spec.",
+        "category": "未分类",
+        "unit": "",
+        "example": "13um 30%HDPE Pillow, 20cmx13cm,1000m,150R/PL",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "Spec.(英制)",
+        "standardKey": "Spec.",
+        "chineseName": "规格描述",
+        "englishName": "Spec.",
+        "category": "未分类",
+        "unit": "",
+        "example": ".5mil  30%HDPE Pillow, 8x5.0, 3281', 150R/PL",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "Unit",
+        "standardKey": "unit",
+        "chineseName": "Unit",
+        "englishName": "Unit",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      }
+    ]
+  },
+  "配件页面": {
+    "商品列表": [
+      {
+        "originalField": "产品图片",
+        "standardKey": "产品图片",
+        "chineseName": "产品图片",
+        "englishName": "产品图片",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "型号",
+        "standardKey": "Model",
+        "chineseName": "型号",
+        "englishName": "Model",
+        "category": "未分类",
+        "unit": "",
+        "example": "MEX-RH30-13-20-13-L",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "料号",
+        "standardKey": "Part No.",
+        "chineseName": "料号",
+        "englishName": "Part No.",
+        "category": "未分类",
+        "unit": "",
+        "example": "90R01258",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "产品名称",
+        "standardKey": "产品名称",
+        "chineseName": "产品名称",
+        "englishName": "产品名称",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "电压V",
+        "standardKey": "Voltage",
+        "chineseName": "电压",
+        "englishName": "Voltage",
+        "category": "未分类",
+        "unit": "V",
+        "example": "110；",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "频率Hz",
+        "standardKey": "Frequency",
+        "chineseName": "频率",
+        "englishName": "Frequency",
+        "category": "未分类",
+        "unit": "Hz",
+        "example": "50;",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "单箱数量",
+        "standardKey": "Qty per Carton",
+        "chineseName": "单箱数量",
+        "englishName": "Qty per Carton",
+        "category": "未分类",
+        "unit": "",
+        "example": "2",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "托盘尺寸cm",
+        "standardKey": "托盘尺寸cm",
+        "chineseName": "托盘尺寸cm",
+        "englishName": "托盘尺寸cm",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "托盘尺寸inch",
+        "standardKey": "托盘尺寸inch",
+        "chineseName": "托盘尺寸inch",
+        "englishName": "托盘尺寸inch",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "一托数量",
+        "standardKey": "Packs per Pallet",
+        "chineseName": "一托数量",
+        "englishName": "Packs per Pallet",
+        "category": "未分类",
+        "unit": "",
+        "example": "150",
+        "matchType": "contains",
+        "matchScore": 0.8
+      }
+    ],
+    "购物车": [
+      {
+        "originalField": "产品图片",
+        "standardKey": "产品图片",
+        "chineseName": "产品图片",
+        "englishName": "产品图片",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "型号",
+        "standardKey": "Model",
+        "chineseName": "型号",
+        "englishName": "Model",
+        "category": "未分类",
+        "unit": "",
+        "example": "MEX-RH30-13-20-13-L",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "料号",
+        "standardKey": "Part No.",
+        "chineseName": "料号",
+        "englishName": "Part No.",
+        "category": "未分类",
+        "unit": "",
+        "example": "90R01258",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "产品名称",
+        "standardKey": "产品名称",
+        "chineseName": "产品名称",
+        "englishName": "产品名称",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "电压V",
+        "standardKey": "Voltage",
+        "chineseName": "电压",
+        "englishName": "Voltage",
+        "category": "未分类",
+        "unit": "V",
+        "example": "110；",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "频率Hz",
+        "standardKey": "Frequency",
+        "chineseName": "频率",
+        "englishName": "Frequency",
+        "category": "未分类",
+        "unit": "Hz",
+        "example": "50;",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "单箱数量",
+        "standardKey": "Qty per Carton",
+        "chineseName": "单箱数量",
+        "englishName": "Qty per Carton",
+        "category": "未分类",
+        "unit": "",
+        "example": "2",
+        "matchType": "exact",
+        "matchScore": 1
+      }
+    ],
+    "tooltip": [
+      {
+        "originalField": "包装尺寸cm",
+        "standardKey": "Package Size(cm)",
+        "chineseName": "包装尺寸(cm)",
+        "englishName": "Package Size(cm)",
+        "category": "未分类",
+        "unit": "cm",
+        "example": "21*21*42",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "包装尺寸inch",
+        "standardKey": "Package Size(cm)",
+        "chineseName": "包装尺寸(cm)",
+        "englishName": "Package Size(cm)",
+        "category": "未分类",
+        "unit": "cm",
+        "example": "21*21*42",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "单件净重kg",
+        "standardKey": "Net Weight(kg)",
+        "chineseName": "单件净重(kg)",
+        "englishName": "Net Weight(kg)",
+        "category": "未分类",
+        "unit": "kg",
+        "example": "4.65",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "单件净重lbs",
+        "standardKey": "Net Weight(kg)",
+        "chineseName": "单件净重(kg)",
+        "englishName": "Net Weight(kg)",
+        "category": "未分类",
+        "unit": "kg",
+        "example": "4.65",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "打托高度cm",
+        "standardKey": "打托高度cm",
+        "chineseName": "打托高度cm",
+        "englishName": "打托高度cm",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "打托高度inch",
+        "standardKey": "打托高度inch",
+        "chineseName": "打托高度inch",
+        "englishName": "打托高度inch",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "整托毛重kg",
+        "standardKey": "整托毛重kg",
+        "chineseName": "整托毛重kg",
+        "englishName": "整托毛重kg",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "整托毛重lbs",
+        "standardKey": "整托毛重lbs",
+        "chineseName": "整托毛重lbs",
+        "englishName": "整托毛重lbs",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      }
+    ],
+    "PO页": [
+      {
+        "originalField": "型号",
+        "standardKey": "Model",
+        "chineseName": "型号",
+        "englishName": "Model",
+        "category": "未分类",
+        "unit": "",
+        "example": "MEX-RH30-13-20-13-L",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "品牌",
+        "standardKey": "Brand",
+        "chineseName": "品牌",
+        "englishName": "Brand",
+        "category": "未分类",
+        "unit": "",
+        "example": "LockedAir/LockedPaper",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "料号",
+        "standardKey": "Part No.",
+        "chineseName": "料号",
+        "englishName": "Part No.",
+        "category": "未分类",
+        "unit": "",
+        "example": "90R01258",
+        "matchType": "exact",
+        "matchScore": 1
+      },
+      {
+        "originalField": "产品名称",
+        "standardKey": "产品名称",
+        "chineseName": "产品名称",
+        "englishName": "产品名称",
+        "category": "未标准化",
+        "unit": "",
+        "example": "",
+        "matchType": "unmatched",
+        "matchScore": 0
+      },
+      {
+        "originalField": "Spec.",
+        "standardKey": "Spec.",
+        "chineseName": "规格描述",
+        "englishName": "Spec.",
+        "category": "未分类",
+        "unit": "",
+        "example": "13um 30%HDPE Pillow, 20cmx13cm,1000m,150R/PL",
+        "matchType": "contains",
+        "matchScore": 0.8
+      },
+      {
+        "originalField": "Spec.(英制)",
+        "standardKey": "Spec.",
+        "chineseName": "规格描述",
+        "englishName": "Spec.",
+        "category": "未分类",
+        "unit": "",
+        "example": ".5mil  30%HDPE Pillow, 8x5.0, 3281', 150R/PL",
+        "matchType": "exact",
+        "matchScore": 1
+      }
+    ]
+  }
+}

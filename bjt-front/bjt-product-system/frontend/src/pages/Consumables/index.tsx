@@ -12,6 +12,17 @@ import {
   useToastNotifications
 } from '../../components/ui';
 
+// 新增：导入标准化字段显示组件
+import { 
+  ConsumableProductList, 
+  ConsumableCartItem, 
+  ConsumableTooltip,
+  ConsumablePOPage,
+  ConsumableFields
+} from '../../components/ConsumableFieldDisplay';
+import { useConsumableFieldDisplay } from '../../hooks/useConsumableFieldDisplay';
+import { CONSUMABLE_DISPLAY_CONFIG } from '../../config/consumable-display-config';
+
 // 导入SQL Mock数据服务
 import { useConsumables, useShapes, useMaterials } from '../../hooks/useMockData';
 import MockServiceStatus from '../../components/MockServiceStatus';
@@ -36,9 +47,7 @@ import './Consumables.css';
 
 // 在文件顶部的import部分添加
 import { adminSpecificationService, SpecificationData } from '../../admin/services/admin-dictionary.service';
-
-// 🔥 导入Model筛选修复工具
-import { ModelFilterFix, debugModelFilter } from './ModelFilterFix';
+import './consumables.scss'; // 引入Premium样式
 
 const { Option } = Select;
 
@@ -86,9 +95,10 @@ function cleanImageUrl(url: string | undefined | null): string {
     fixed += '.png';
   }
   
-  console.error('Image load failed:');
-  console.error('  Original URL:', url);
-  console.error('  Cleaned URL:', fixed);
+  console.log('🖼️ [Image URL] 处理结果:', {
+    original: url,
+    cleaned: fixed
+  });
   return fixed;
 }
 
@@ -98,10 +108,93 @@ interface ConsumableTooltipContentProps {
   userRegion: string;
 }
 
+// 字段分组配置
+const TOOLTIP_FIELD_GROUPS = {
+  BASIC_INFO: {
+    title: { zh: '基础信息', en: 'Basic Information' },
+    icon: '📋',
+    fields: ['app_model', 'name', 'shape', 'material'],
+    priority: 1
+  },
+  
+  SPECIFICATIONS: {
+    title: { zh: '规格参数', en: 'Specifications' },
+    icon: '📏',
+    fields: ['thickness', 'width', 'length', 'bubble_diameter'],
+    priority: 2
+  },
+  
+  PACKAGING: {
+    title: { zh: '包装信息', en: 'Packaging Details' },
+    icon: '📦',
+    fields: ['package_size', 'unit_weight', 'pcs_per_box', 'packaging_type'],
+    priority: 3
+  },
+  
+  PALLET_INFO: {
+    title: { zh: '打托信息', en: 'Pallet Information' },
+    icon: '🏗️',
+    fields: [
+      'pallet_size', 'pallet_rolls_a', 'pallet_weight_a', 'pallet_height_a',
+      'pallet_rolls_b', 'pallet_weight_b', 'pallet_height_b',
+      'pallet_rolls_c', 'pallet_weight_c', 'pallet_height_c'
+    ],
+    priority: 4
+  },
+  
+  TECHNICAL: {
+    title: { zh: '技术参数', en: 'Technical Details' },
+    icon: '⚙️',
+    fields: ['core_diameter', 'roll_length', 'total_length'],
+    priority: 5
+  }
+};
 
+// 单个字段组件
+const TooltipField = ({ fieldKey, label, value }: { fieldKey: string; label: string; value: string }) => {
+  const hasUnit = label.includes('(') && label.includes(')');
+  const isNumeric = /^\d+(\.\d+)?$/.test(value);
+  const isEmpty = !value || value === 'N/A' || value === '';
+  
+  return (
+    <div className="tooltip-field">
+      <span 
+        className="field-label" 
+        data-has-unit={hasUnit}
+      >
+        {label}
+      </span>
+      <span 
+        className="field-value"
+        data-field-type={isNumeric ? 'numeric' : 'text'}
+        data-empty={isEmpty}
+      >
+        {isEmpty ? '' : value}
+      </span>
+    </div>
+  );
+};
 
+// 保持向后兼容的原始Tooltip组件
 const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ item, userRegion }) => {
-  const { t } = useTranslation('consumables'); // 添加翻译hook
+  // 检查是否启用Premium设计
+  const usePremiumTooltip = import.meta.env.VITE_USE_PREMIUM_TOOLTIP !== 'false'; // 默认启用
+  
+  // 暂时注释掉PremiumTooltipContent，因为它未定义
+  // if (usePremiumTooltip) {
+  //   return <PremiumTooltipContent item={item} userRegion={userRegion} />;
+  // }
+  
+  // 原有的Tooltip逻辑保持不变 (向后兼容)
+  const { t, i18n } = useTranslation(['consumables', 'common']);
+  
+  // 🔥 强制设置英语显示
+  React.useEffect(() => {
+    if (i18n.language !== 'en') {
+      i18n.changeLanguage('en');
+    }
+  }, [i18n]);
+  
   const [detailData, setDetailData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -208,32 +301,32 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
             roll_length_ft: item.specs?.rollLength || 'N/A',
             
             // 包装属性
-            packaging_type: String(t('tooltip.cartonPack') || '纸箱装'),
-            package_size_cm: String(t('common.toBeFilled') || '待补充'),
-            package_size_inch: String(t('common.toBeFilled') || '待补充'),
-            unit_weight_kg: String(t('common.toBeFilled') || '待补充'),
-            unit_weight_lbs: String(t('common.toBeFilled') || '待补充'),
-            pallet_size_cm: String(t('common.toBeFilled') || '待补充'),
+            packaging_type: String(t('tooltip.cartonPack') || 'Carton Pack'),
+            package_size_cm: String(t('common.toBeFilled') || 'To be filled'),
+            package_size_inch: String(t('common.toBeFilled') || 'To be filled'),
+            unit_weight_kg: String(t('common.toBeFilled') || 'To be filled'),
+            unit_weight_lbs: String(t('common.toBeFilled') || 'To be filled'),
+            pallet_size_cm: String(t('common.toBeFilled') || 'To be filled'),
             package_image_url: '',
             
             // 打托属性
-            pallet_rolls_a: String(t('common.toBeFilled') || '待补充'),
-            pallet_weight_a_kg: String(t('common.toBeFilled') || '待补充'),
-            pallet_weight_a_lbs: String(t('common.toBeFilled') || '待补充'),
-            pallet_height_a_cm: String(t('common.toBeFilled') || '待补充'),
-            pallet_height_a_inch: String(t('common.toBeFilled') || '待补充'),
-            pallet_rolls_b: String(t('common.toBeFilled') || '待补充'),
-            pallet_weight_b_kg: String(t('common.toBeFilled') || '待补充'),
-            pallet_weight_b_lbs: String(t('common.toBeFilled') || '待补充'),
-            pallet_height_b_cm: String(t('common.toBeFilled') || '待补充'),
-            pallet_height_b_inch: String(t('common.toBeFilled') || '待补充'),
-            pallet_rolls_c: String(t('common.toBeFilled') || '待补充'),
-            pallet_weight_c_kg: String(t('common.toBeFilled') || '待补充'),
-            pallet_weight_c_lbs: String(t('common.toBeFilled') || '待补充'),
-            pallet_height_c_cm: String(t('common.toBeFilled') || '待补充'),
-            pallet_height_c_inch: String(t('common.toBeFilled') || '待补充'),
-            core_diameter_cm: String(t('common.toBeFilled') || '待补充'),
-            core_diameter_inch: String(t('common.toBeFilled') || '待补充')
+            pallet_rolls_a: String(t('common.toBeFilled') || 'To be filled'),
+            pallet_weight_a_kg: String(t('common.toBeFilled') || 'To be filled'),
+            pallet_weight_a_lbs: String(t('common.toBeFilled') || 'To be filled'),
+            pallet_height_a_cm: String(t('common.toBeFilled') || 'To be filled'),
+            pallet_height_a_inch: String(t('common.toBeFilled') || 'To be filled'),
+            pallet_rolls_b: String(t('common.toBeFilled') || 'To be filled'),
+            pallet_weight_b_kg: String(t('common.toBeFilled') || 'To be filled'),
+            pallet_weight_b_lbs: String(t('common.toBeFilled') || 'To be filled'),
+            pallet_height_b_cm: String(t('common.toBeFilled') || 'To be filled'),
+            pallet_height_b_inch: String(t('common.toBeFilled') || 'To be filled'),
+            pallet_rolls_c: String(t('common.toBeFilled') || 'To be filled'),
+            pallet_weight_c_kg: String(t('common.toBeFilled') || 'To be filled'),
+            pallet_weight_c_lbs: String(t('common.toBeFilled') || 'To be filled'),
+            pallet_height_c_cm: String(t('common.toBeFilled') || 'To be filled'),
+            pallet_height_c_inch: String(t('common.toBeFilled') || 'To be filled'),
+            core_diameter_cm: String(t('common.toBeFilled') || 'To be filled'),
+            core_diameter_inch: String(t('common.toBeFilled') || 'To be filled')
           };
           setDetailData(fallbackData);
           setDebugInfo(prev => `${prev}\n使用Fallback数据: ${JSON.stringify(fallbackData, null, 2)}`);
@@ -277,50 +370,67 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
       value = data.specs[field];
     }
     
-    // 特殊字段映射
+    // 特殊字段映射 - 完整的33个字段映射
     const fieldMappings: { [key: string]: string[] } = {
       // 基本信息映射
       'material': ['material', 'specs.material'],
-      'thickness': ['thickness', 'specs.thickness'], 
-      'width': ['width', 'specs.width'],
-      'length': ['length', 'specs.length'],
-      'rollLength': ['rollLength', 'specs.rollLength'],
+      'thickness': ['thickness', 'specs.thickness', 'thickness_met', 'thickness_imp'], 
+      'width': ['width', 'specs.width', 'width_met', 'width_imp'],
+      'length': ['length', 'specs.length', 'length_met', 'length_imp'],
+      'rollLength': ['rollLength', 'specs.rollLength', 'total_length_met', 'total_length_imp'],
+      'shape': ['shape', 'specs.shape'],
       
       // 单位转换字段映射
-      'width_cm': ['width_met_val', 'specs.width', 'width'],
-      'width_inch': ['width_imp_val', 'specs.width_imperial', 'model_imperial'],
-      'length_cm': ['length_met_val', 'specs.length', 'length'],
-      'length_inch': ['length_imp_val', 'specs.length_imperial', 'model_imperial'],
-      'roll_length_m': ['total_length_met_val', 'specs.rollLength', 'rollLength'],
-      'roll_length_ft': ['total_length_imp_val', 'specs.rollLength_imperial', 'model_imperial'],
+      'width_cm': ['width_met', 'width_met_val', 'specs.width', 'width'],
+      'width_inch': ['width_imp', 'width_imp_val', 'specs.width_imperial', 'model_imperial'],
+      'length_cm': ['length_met', 'length_met_val', 'specs.length', 'length'],
+      'length_inch': ['length_imp', 'length_imp_val', 'specs.length_imperial', 'model_imperial'],
+      'roll_length_m': ['total_length_met', 'total_length_met_val', 'specs.rollLength', 'rollLength'],
+      'roll_length_ft': ['total_length_imp', 'total_length_imp_val', 'specs.rollLength_imperial', 'model_imperial'],
+      
+      // 🔥 新增：产品标识字段
+      'part_number': ['part_number', 'code', 'product_code', 'specs.part_number'],
+      'model': ['model', 'model_met', 'specs.model'],
+      'model_imperial': ['model_imperial', 'model_imp', 'specs.model_imperial'],
+      'spec': ['spec', 'spec_met', 'specs.spec'],
+      'spec_imperial': ['spec_imperial', 'spec_imp', 'specs.spec_imperial'],
+      'brand': ['brand', 'specs.brand'],
+      
+      // 🔥 新增：泡径字段（条件显示）
+      'bubble_diameter_met': ['bubble_diameter_met', 'specs.bubble_diameter_met'],
+      'bubble_diameter_inch': ['bubble_diameter_inch', 'specs.bubble_diameter_inch'],
       
       // 包装属性映射
-      'packaging_type': ['package_type', 'specs.package_type'],
+      'packaging_type': ['package_type', 'packaging_type', 'sales_unit', 'specs.package_type'],
       'package_size_cm': ['package_size_cm', 'specs.package_size_cm'],
       'package_size_inch': ['package_size_inch', 'specs.package_size_inch'],
-      'unit_weight_kg': ['net_weight_kg', 'specs.net_weight_kg'],
-      'unit_weight_lbs': ['net_weight_lbs', 'specs.net_weight_lbs'],
+      'unit_weight_kg': ['net_weight_kg', 'unit_weight_kg', 'specs.net_weight_kg'],
+      'unit_weight_lbs': ['net_weight_lbs', 'unit_weight_lbs', 'specs.net_weight_lbs'],
+      // 🔥 新增：包装毛重和单箱数量
+      'package_gross_weight_kg': ['package_gross_weight_kg', 'gross_weight_kg', 'specs.package_gross_weight_kg'],
+      'package_gross_weight_lbs': ['package_gross_weight_lbs', 'gross_weight_lbs', 'specs.package_gross_weight_lbs'],
+      'pcs_per_box': ['pcs_per_box', 'per_box', 'box_quantity', 'specs.pcs_per_box'],
       'pallet_size_cm': ['pallet_size_cm', 'specs.pallet_size_cm'],
-      'package_image_url': ['package_image_url', 'specs.package_image_url'],
+      'package_image_url': ['package_image_url', 'packaging_image', 'specs.package_image_url'],
       
       // 打托属性映射
-      'pallet_rolls_a': ['pcs_per_pallet_a', 'specs.pcs_per_pallet_a'],
+      'pallet_rolls_a': ['pcs_per_pallet_a', 'pallet_rolls_a', 'specs.pcs_per_pallet_a'],
       'pallet_weight_a_kg': ['pallet_gross_weight_a_kg', 'specs.pallet_gross_weight_a_kg'],
       'pallet_weight_a_lbs': ['pallet_gross_weight_a_lbs', 'specs.pallet_gross_weight_a_lbs'],
       'pallet_height_a_cm': ['pallet_height_a_cm', 'specs.pallet_height_a_cm'],
       'pallet_height_a_inch': ['pallet_height_a_inch', 'specs.pallet_height_a_inch'],
-      'pallet_rolls_b': ['pcs_per_pallet_b', 'specs.pcs_per_pallet_b'],
+      'pallet_rolls_b': ['pcs_per_pallet_b', 'pallet_rolls_b', 'specs.pcs_per_pallet_b'],
       'pallet_weight_b_kg': ['pallet_gross_weight_b_kg', 'specs.pallet_gross_weight_b_kg'],
       'pallet_weight_b_lbs': ['pallet_gross_weight_b_lbs', 'specs.pallet_gross_weight_b_lbs'],
       'pallet_height_b_cm': ['pallet_height_b_cm', 'specs.pallet_height_b_cm'],
       'pallet_height_b_inch': ['pallet_height_b_inch', 'specs.pallet_height_b_inch'],
-      'pallet_rolls_c': ['pcs_per_pallet_c', 'specs.pcs_per_pallet_c'],
+      'pallet_rolls_c': ['pcs_per_pallet_c', 'pallet_rolls_c', 'specs.pcs_per_pallet_c'],
       'pallet_weight_c_kg': ['pallet_gross_weight_c_kg', 'specs.pallet_gross_weight_c_kg'],
       'pallet_weight_c_lbs': ['pallet_gross_weight_c_lbs', 'specs.pallet_gross_weight_c_lbs'],
       'pallet_height_c_cm': ['pallet_height_c_cm', 'specs.pallet_height_c_cm'],
       'pallet_height_c_inch': ['pallet_height_c_inch', 'specs.pallet_height_c_inch'],
-      'core_diameter_cm': ['tube_inner_diameter_cm', 'specs.tube_inner_diameter_cm'],
-      'core_diameter_inch': ['tube_inner_diameter_inch', 'specs.tube_inner_diameter_inch']
+      'core_diameter_cm': ['tube_inner_diameter_cm', 'core_diameter_cm', 'specs.tube_inner_diameter_cm'],
+      'core_diameter_inch': ['tube_inner_diameter_inch', 'core_diameter_inch', 'specs.tube_inner_diameter_inch']
     };
     
     // 尝试映射字段
@@ -349,434 +459,631 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
     return String(value);
   };
 
+  // 🔥 新增：条件显示逻辑
+  const shouldShowBubbleDiameter = (): boolean => {
+    const shape = safeGet('shape', '').toLowerCase();
+    return shape.includes('bubble') || shape.includes('葫芦') || 
+           shape.includes('mfb') || shape.includes('气泡');
+  };
+
+  const shouldShowField = (fieldName: string): boolean => {
+    const value = safeGet(fieldName, '');
+    return value !== 'N/A' && value !== '' && value !== 'To be filled';
+  };
+
   return (
-    <div className="p-4 bg-white rounded-lg shadow-lg border border-gray-200">
-      <div className="flex items-center mb-4 pb-3 border-b border-gray-100">
-        <InfoCircleOutlined className="text-blue-500 mr-2" />
-        <span className="font-bold text-gray-800 text-base">{String(item.name || '')} - {String(t('tooltip.detailInfo') || '详细信息')}</span>
+    <div className="consumable-tooltip">
+      {/* 标题区域 */}
+      <div className="tooltip-header">
+        <div className="product-image">
+          <img 
+            src={cleanImageUrl(item.image_url)} 
+            alt={String(item.name || '')}
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              if (!target.src.startsWith('data:')) {
+                target.src = placeholderImage;
+              }
+            }}
+          />
+        </div>
+        <div className="product-title">
+          <h4>{String(item.name || '')}</h4>
+          <div className="product-code">{String(item.code || item.id || '')}</div>
+        </div>
       </div>
       
       {error && (
-        <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-700">
+        <div className="mb-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-700" style={{ margin: '0 16px 16px 16px' }}>
           ⚠️ {String(t('tooltip.apiError') || 'API调用失败，显示基础信息')}: {error}
         </div>
       )}
       
-      {/* 调试信息展示 (开发环境) */}
-      {process.env.NODE_ENV === 'development' && debugInfo && (
-        <details className="mb-3 p-2 bg-gray-50 border border-gray-200 rounded text-xs">
-          <summary className="cursor-pointer font-medium">🔍 {String(t('tooltip.debugInfo') || '调试信息')} ({String(t('tooltip.clickToExpand') || '点击展开')})</summary>
-          <pre className="mt-2 whitespace-pre-wrap overflow-x-auto">{debugInfo}</pre>
-        </details>
-      )}
-      
-      {/* 包装图片调试信息 (开发环境) */}
-      {process.env.NODE_ENV === 'development' && (
-        <details className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
-          <summary className="cursor-pointer font-medium">📦 {String(t('tooltip.packageImageDebug') || '包装图片调试信息')}</summary>
-          <div className="mt-2 space-y-1">
-            <div><strong>{String(t('tooltip.originalUrl') || '原始URL')}:</strong> {data.package_image_url || 'undefined'}</div>
-            <div><strong>{String(t('tooltip.safeGetResult') || 'SafeGet结果')}:</strong> {safeGet('package_image_url', '')}</div>
-            <div><strong>{String(t('tooltip.cleanedUrl') || '清理后URL')}:</strong> {cleanImageUrl(safeGet('package_image_url', ''))}</div>
-            <div><strong>{String(t('tooltip.showImage') || '是否显示图片')}:</strong> {safeGet('package_image_url', '') !== 'N/A' && safeGet('package_image_url', '') !== '' ? String(t('common.yes') || '是') : String(t('common.no') || '否')}</div>
+      {/* 字段网格布局 - 重新设计为紧凑布局 */}
+      <div className="tooltip-content-grid">
+        {/* 左栏：核心规格信息 */}
+        <div className="left-column">
+          {/* 核心规格信息 - 最重要，放在最上方 */}
+          <div className="specs-summary-card">
+            <h5 className="section-title">
+              <span className="title-icon">📐</span>
+              {t('tooltip.coreSpecs', 'Core Specifications')}
+            </h5>
+            <div className="specs-grid">
+              <div className="spec-item">
+                <span className="spec-label">{t('tooltip.material', 'Material')}</span>
+                <span className="spec-value">{safeGet('material', t('common.toBeFilled', 'To be filled'))}</span>
+              </div>
+              <div className="spec-item">
+                <span className="spec-label">
+                  {userRegion === 'na' || userRegion === 'au' ? 
+                    t('tooltip.thickness.imperial', 'Thickness(mil)') : 
+                    t('tooltip.thickness.metric', 'Thickness(μm)')
+                  }
+                </span>
+                <span className="spec-value">
+                  {(() => {
+                    if (userRegion === 'na' || userRegion === 'au') {
+                      const thicknessImp = safeGet('thickness_imp', '');
+                      const thickness = safeGet('thickness', '');
+                      return thicknessImp !== 'N/A' && thicknessImp !== '' ? thicknessImp : 
+                             (thickness !== 'N/A' && thickness !== '' ? thickness : 'N/A');
+                    } else {
+                      const thicknessMet = safeGet('thickness_met', '');
+                      const thickness = safeGet('thickness', '');
+                      return thicknessMet !== 'N/A' && thicknessMet !== '' ? thicknessMet : 
+                             (thickness !== 'N/A' && thickness !== '' ? thickness : 'N/A');
+                    }
+                  })()}
+                </span>
+              </div>
+              <div className="spec-item">
+                <span className="spec-label">
+                  {userRegion === 'na' || userRegion === 'au' ? 
+                    t('tooltip.dimensions.imperial', 'Dimensions(inch)') : 
+                    t('tooltip.dimensions.metric', 'Dimensions(cm)')
+                  }
+                </span>
+                <span className="spec-value">
+                  {(() => {
+                    const width = userRegion === 'na' || userRegion === 'au' ? 
+                      safeGet('width_imp', safeGet('width', '')) : 
+                      safeGet('width_met', safeGet('width', ''));
+                    const length = userRegion === 'na' || userRegion === 'au' ? 
+                      safeGet('length_imp', safeGet('length', '')) : 
+                      safeGet('length_met', safeGet('length', ''));
+                    
+                    if (width !== 'N/A' && length !== 'N/A' && width !== '' && length !== '') {
+                      return `${width} × ${length}`;
+                    } else if (width !== 'N/A' && width !== '') {
+                      return `W: ${width}`;
+                    } else if (length !== 'N/A' && length !== '') {
+                      return `L: ${length}`;
+                    }
+                    return 'N/A';
+                  })()}
+                </span>
+              </div>
+              {shouldShowBubbleDiameter() && (
+                <div className="spec-item">
+                  <span className="spec-label">
+                    {userRegion === 'na' || userRegion === 'au' ? 
+                      t('tooltip.bubbleDiameter.imperial', 'Bubble Diameter(inch)') : 
+                      t('tooltip.bubbleDiameter.metric', 'Bubble Diameter(cm)')
+                    }
+                  </span>
+                  <span className="spec-value">
+                    {(() => {
+                      if (userRegion === 'na' || userRegion === 'au') {
+                        const bubbleDiameterImp = safeGet('bubble_diameter_imp', '');
+                        const bubbleDiameter = safeGet('bubble_diameter', '');
+                        return bubbleDiameterImp !== 'N/A' && bubbleDiameterImp !== '' ? bubbleDiameterImp : 
+                               (bubbleDiameter !== 'N/A' && bubbleDiameter !== '' ? bubbleDiameter : 'N/A');
+                      } else {
+                        const bubbleDiameterMet = safeGet('bubble_diameter_met', '');
+                        const bubbleDiameter = safeGet('bubble_diameter', '');
+                        return bubbleDiameterMet !== 'N/A' && bubbleDiameterMet !== '' ? bubbleDiameterMet : 
+                               (bubbleDiameter !== 'N/A' && bubbleDiameter !== '' ? bubbleDiameter : 'N/A');
+                      }
+                    })()}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
-        </details>
-      )}
-      
-      {/* 基本规格 */}
-      <div className="mb-5">
-        <div className="font-bold text-gray-700 text-sm mb-3 bg-gray-50 px-3 py-2 rounded">{String(t('tooltip.basicSpecs') || '基本规格')}</div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex justify-between items-center py-2">
-            <span className="text-gray-700 font-medium text-sm">{String(t('filter.material') || '材质')}:</span>
-            <span className="text-gray-900 font-semibold text-sm bg-blue-50 px-3 py-1 rounded">
-              {safeGet('material', item.specs?.material || 'N/A')}
-            </span>
-          </div>
-          <div className="flex justify-between items-center py-2">
-            <span className="text-gray-700 font-medium text-sm">
-              {userRegion === 'na' || userRegion === 'au' ? 
-                String(t('tooltip.thickness.imperial') || '厚度/克重 mil/#') : 
-                String(t('tooltip.thickness.metric') || '厚度/克重 um/gsm')
-              }:
-            </span>
-            <span className="text-gray-900 font-semibold text-sm bg-green-50 px-3 py-1 rounded">
+
+          {/* 托盘配置信息 - 简化显示 */}
+          <div className="pallet-configs-card">
+            <h5 className="section-title">
+              <span className="title-icon">🏗️</span>
+              {t('tooltip.palletConfigs', 'Pallet Configurations')}
+            </h5>
+            <div className="pallet-configs-compact">
+              {/* 配置A */}
               {(() => {
-                const material = safeGet('material', '').toUpperCase();
-                const thickness = safeGet('thickness', 'N/A');
+                const pcsA = safeGet('pcs_per_pallet_a', '');
+                const weightA = safeGet(userRegion === 'na' || userRegion === 'au' ? 'pallet_gross_weight_a_lbs' : 'pallet_gross_weight_a_kg', '');
                 
-                // 如果是纸质材料，显示格式可能不同
-                if (material === 'PAPER' || material.includes('PAPER')) {
-                  if (userRegion === 'na' || userRegion === 'au') {
-                    // 英制：显示mil/#格式 
-                    return thickness !== 'N/A' ? thickness : 'N/A';
-                  } else {
-                    // 公制：显示um/gsm格式
-                    return thickness !== 'N/A' ? thickness : 'N/A';
-                  }
-                } else {
-                  // 非纸质材料，显示厚度
-                  if (userRegion === 'na' || userRegion === 'au') {
-                    return thickness !== 'N/A' ? `${thickness} mil` : 'N/A';
-                  } else {
-                    return thickness !== 'N/A' ? thickness : 'N/A';
-                  }
+                if (pcsA !== 'N/A' && pcsA !== '' && weightA !== 'N/A' && weightA !== '') {
+                  return (
+                    <div className="pallet-config-row">
+                      <span className="config-label">{t('tooltip.configA', 'Configuration A')}</span>
+                      <span className="config-value">{pcsA}卷 | {weightA}{userRegion === 'na' || userRegion === 'au' ? 'lbs' : 'kg'}</span>
+                    </div>
+                  );
                 }
+                return null;
               })()}
-            </span>
-          </div>
-          <div className="flex justify-between items-center py-2">
-            <span className="text-gray-700 font-medium text-sm">
-              {userRegion === 'na' || userRegion === 'au' ? 
-                String(t('tooltip.width.imperial') || '膜宽 inch') : 
-                String(t('tooltip.width.metric') || '膜宽 cm')
-              }:
-            </span>
-            <span className="text-gray-900 font-semibold text-sm bg-yellow-50 px-3 py-1 rounded">
+              
+              {/* 配置B */}
               {(() => {
-                if (userRegion === 'na' || userRegion === 'au') {
-                  const widthInch = safeGet('width_inch', '');
-                  const width = safeGet('width', '');
-                  if (widthInch !== 'N/A' && widthInch !== '') {
-                    return widthInch.includes('inch') ? widthInch : `${widthInch} inch`;
-                  } else if (width !== 'N/A' && width !== '') {
-                    return width.includes('inch') || width.includes('mm') ? width : `${width} inch`;
-                  }
-                  return 'N/A';
-                } else {
-                  const widthCm = safeGet('width_cm', '');
-                  const width = safeGet('width', '');
-                  if (widthCm !== 'N/A' && widthCm !== '') {
-                    return widthCm.includes('cm') || widthCm.includes('mm') ? widthCm : `${widthCm} cm`;
-                  } else if (width !== 'N/A' && width !== '') {
-                    return width;
-                  }
-                  return 'N/A';
+                const pcsB = safeGet('pcs_per_pallet_b', '');
+                const weightB = safeGet(userRegion === 'na' || userRegion === 'au' ? 'pallet_gross_weight_b_lbs' : 'pallet_gross_weight_b_kg', '');
+                
+                if (pcsB !== 'N/A' && pcsB !== '' && weightB !== 'N/A' && weightB !== '') {
+                  return (
+                    <div className="pallet-config-row">
+                      <span className="config-label">{t('tooltip.configB', 'Configuration B')}</span>
+                      <span className="config-value">{pcsB}卷 | {weightB}{userRegion === 'na' || userRegion === 'au' ? 'lbs' : 'kg'}</span>
+                    </div>
+                  );
                 }
+                return null;
               })()}
-            </span>
-          </div>
-          <div className="flex justify-between items-center py-2">
-            <span className="text-gray-700 font-medium text-sm">
-              {userRegion === 'na' || userRegion === 'au' ? 
-                String(t('tooltip.length.imperial') || '袋长 inch') : 
-                String(t('tooltip.length.metric') || '袋长 cm')
-              }:
-            </span>
-            <span className="text-gray-900 font-semibold text-sm bg-purple-50 px-3 py-1 rounded">
+              
+              {/* 配置C */}
               {(() => {
-                if (userRegion === 'na' || userRegion === 'au') {
-                  const lengthInch = safeGet('length_inch', '');
-                  const length = safeGet('length', '');
-                  if (lengthInch !== 'N/A' && lengthInch !== '') {
-                    return lengthInch.includes('inch') ? lengthInch : `${lengthInch} inch`;
-                  } else if (length !== 'N/A' && length !== '') {
-                    return length.includes('inch') || length.includes('m') ? length : `${length} inch`;
-                  }
-                  return 'N/A';
-                } else {
-                  const lengthCm = safeGet('length_cm', '');
-                  const length = safeGet('length', '');
-                  if (lengthCm !== 'N/A' && lengthCm !== '') {
-                    return lengthCm.includes('cm') || lengthCm.includes('m') ? lengthCm : `${lengthCm} cm`;
-                  } else if (length !== 'N/A' && length !== '') {
-                    return length;
-                  }
-                  return 'N/A';
+                const pcsC = safeGet('pcs_per_pallet_c', '');
+                const weightC = safeGet(userRegion === 'na' || userRegion === 'au' ? 'pallet_gross_weight_c_lbs' : 'pallet_gross_weight_c_kg', '');
+                
+                if (pcsC !== 'N/A' && pcsC !== '' && weightC !== 'N/A' && weightC !== '') {
+                  return (
+                    <div className="pallet-config-row">
+                      <span className="config-label">{t('tooltip.configC', 'Configuration C')}</span>
+                      <span className="config-value">{pcsC}卷 | {weightC}{userRegion === 'na' || userRegion === 'au' ? 'lbs' : 'kg'}</span>
+                    </div>
+                  );
                 }
+                return null;
               })()}
-            </span>
-          </div>
-          <div className="flex justify-between items-center py-2 col-span-2">
-            <span className="text-gray-700 font-medium text-sm">
-              {userRegion === 'na' || userRegion === 'au' ? 
-                String(t('tooltip.rollLength.imperial') || '总长 ft') : 
-                String(t('tooltip.rollLength.metric') || '总长 m')
-              }:
-            </span>
-            <span className="text-gray-900 font-semibold text-sm bg-pink-50 px-3 py-1 rounded">
+              
+              {/* 托盘尺寸 */}
               {(() => {
-                if (userRegion === 'na' || userRegion === 'au') {
-                  const rollLengthFt = safeGet('roll_length_ft', '');
-                  const rollLength = safeGet('rollLength', '');
-                  if (rollLengthFt !== 'N/A' && rollLengthFt !== '') {
-                    return rollLengthFt.includes('ft') ? rollLengthFt : `${rollLengthFt} ft`;
-                  } else if (rollLength !== 'N/A' && rollLength !== '') {
-                    return rollLength.includes('ft') || rollLength.includes('m') ? rollLength : `${rollLength} ft`;
-                  }
-                  return 'N/A';
-                } else {
-                  const rollLengthM = safeGet('roll_length_m', '');
-                  const rollLength = safeGet('rollLength', '');
-                  if (rollLengthM !== 'N/A' && rollLengthM !== '') {
-                    return rollLengthM.includes('m') ? rollLengthM : `${rollLengthM} m`;
-                  } else if (rollLength !== 'N/A' && rollLength !== '') {
-                    return rollLength;
-                  }
-                  return 'N/A';
+                const palletSize = safeGet(userRegion === 'na' || userRegion === 'au' ? 'pallet_size_inch' : 'pallet_size_cm', '');
+                if (palletSize !== 'N/A' && palletSize !== '') {
+                  return (
+                    <div className="pallet-config-row">
+                      <span className="config-label">{t('tooltip.palletSize', 'Pallet Size')}</span>
+                      <span className="config-value">{palletSize}</span>
+                    </div>
+                  );
                 }
+                return null;
               })()}
-            </span>
+            </div>
+          </div>
+        </div>
+
+        {/* 右栏：包装信息和技术参数 */}
+        <div className="right-column">
+          {/* 包装信息 */}
+          <div className="package-info-card">
+            <h5 className="section-title">
+              <span className="title-icon">📦</span>
+              {t('tooltip.packageInfo', 'Package Information')}
+            </h5>
+            <div className="package-details">
+              <div className="package-row">
+                <span className="package-label">{t('tooltip.packagingMethod', 'Packaging Method')}</span>
+                <span className="package-value">
+                  {(() => {
+                    const packagingType = safeGet('packaging_type', '');
+                    const salesUnit = safeGet('sales_unit', '');
+                    if (packagingType !== 'N/A' && packagingType !== '') {
+                      return packagingType;
+                    } else if (salesUnit !== 'N/A' && salesUnit !== '') {
+                      return salesUnit === 'Carton' ? t('tooltip.cartonPack', 'Carton Pack') : salesUnit;
+                    }
+                    return t('tooltip.cartonPack', 'Carton Pack');
+                  })()}
+                </span>
+              </div>
+              <div className="package-row">
+                <span className="package-label">{t('tooltip.pcsPerBox', 'Pieces per Box')}</span>
+                <span className="package-value">
+                  {(() => {
+                    const pcsPerBox = safeGet('pcs_per_box', '');
+                    return pcsPerBox !== 'N/A' && pcsPerBox !== '' ? pcsPerBox : t('common.toBeFilled', 'To be filled');
+                  })()}
+                </span>
+              </div>
+              <div className="package-row">
+                <span className="package-label">
+                  {userRegion === 'na' || userRegion === 'au' ? 
+                    t('tooltip.unitWeight.imperial', 'Unit Weight(lbs)') : 
+                    t('tooltip.unitWeight.metric', 'Unit Weight(kg)')
+                  }
+                </span>
+                <span className="package-value">
+                  {(() => {
+                    const weightField = userRegion === 'na' || userRegion === 'au' ? 'net_weight_lbs' : 'net_weight_kg';
+                    const weight = safeGet(weightField, '');
+                    return weight !== 'N/A' && weight !== '' ? weight : t('common.toBeFilled', 'To be filled');
+                  })()}
+                </span>
+              </div>
+              <div className="package-row">
+                <span className="package-label">
+                  {userRegion === 'na' || userRegion === 'au' ? 
+                    t('tooltip.totalLength.imperial', 'Total Length(ft)') : 
+                    t('tooltip.totalLength.metric', 'Total Length(m)')
+                  }
+                </span>
+                <span className="package-value">
+                  {(() => {
+                    if (userRegion === 'na' || userRegion === 'au') {
+                      const totalLengthFt = safeGet('total_length_ft', '');
+                      const rollLengthFt = safeGet('roll_length_ft', '');
+                      const rollLength = safeGet('rollLength', '');
+                      if (totalLengthFt !== 'N/A' && totalLengthFt !== '') {
+                        return totalLengthFt;
+                      } else if (rollLengthFt !== 'N/A' && rollLengthFt !== '') {
+                        return rollLengthFt;
+                      } else if (rollLength !== 'N/A' && rollLength !== '') {
+                        return rollLength;
+                      }
+                      return 'N/A';
+                    } else {
+                      const totalLengthM = safeGet('total_length_m', '');
+                      const rollLengthM = safeGet('roll_length_m', '');
+                      const rollLength = safeGet('rollLength', '');
+                      if (totalLengthM !== 'N/A' && totalLengthM !== '') {
+                        return totalLengthM;
+                      } else if (rollLengthM !== 'N/A' && rollLengthM !== '') {
+                        return rollLengthM;
+                      } else if (rollLength !== 'N/A' && rollLength !== '') {
+                        return rollLength;
+                      }
+                      return 'N/A';
+                    }
+                  })()}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* 技术参数 */}
+          <div className="tech-params-card">
+            <h5 className="section-title">
+              <span className="title-icon">⚙️</span>
+              {t('tooltip.techParams', 'Technical Parameters')}
+            </h5>
+            <div className="tech-params-compact">
+              {(() => {
+                const tubeField = userRegion === 'na' || userRegion === 'au' ? 'tube_inner_diameter_inch' : 'tube_inner_diameter_cm';
+                const tubeDiameter = safeGet(tubeField, '');
+                const packageSize = safeGet(userRegion === 'na' || userRegion === 'au' ? 'package_size_inch' : 'package_size_cm', '');
+                
+                if (tubeDiameter !== 'N/A' && tubeDiameter !== '') {
+                  return (
+                    <div className="tech-param-row">
+                      <span className="param-label">
+                        {userRegion === 'na' || userRegion === 'au' ? 
+                          t('tooltip.tubeInnerDiameter.imperial', 'Core Diameter(inch)') : 
+                          t('tooltip.tubeInnerDiameter.metric', 'Core Diameter(cm)')
+                        }
+                      </span>
+                      <span className="param-value">{tubeDiameter}</span>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+              
+              {(() => {
+                const packageSize = safeGet(userRegion === 'na' || userRegion === 'au' ? 'package_size_inch' : 'package_size_cm', '');
+                if (packageSize !== 'N/A' && packageSize !== '') {
+                  return (
+                    <div className="tech-param-row">
+                      <span className="param-label">
+                        {userRegion === 'na' || userRegion === 'au' ? 
+                          t('tooltip.packageSize.imperial', 'Package Size(inch)') : 
+                          t('tooltip.packageSize.metric', 'Package Size(cm)')
+                        }
+                      </span>
+                      <span className="param-value">{packageSize}</span>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+            </div>
           </div>
         </div>
       </div>
+    </div>
+  );
+};
 
-      {/* 包装属性 Package Info */}
-      <div className="mb-5">
-        <div className="font-bold text-gray-700 text-sm mb-3 bg-gray-50 px-3 py-2 rounded">{String(t('tooltip.packageInfo') || '包装属性 Package Info')}</div>
-        <div className="grid grid-cols-2 gap-4">
-          {/* 左侧：包装信息 */}
-          <div className="space-y-3">
-            <div className="flex justify-between items-center py-2">
-              <span className="text-gray-700 font-medium text-sm">{String(t('tooltip.packagingMethod') || '包装方式')}:</span>
-              <span className="text-gray-900 font-semibold text-sm bg-blue-50 px-3 py-1 rounded">
-                {(() => {
-                  const packagingType = safeGet('packaging_type', '');
-                  const salesUnit = safeGet('sales_unit', '');
-                  if (packagingType !== 'N/A' && packagingType !== '') {
-                    return packagingType;
-                  } else if (salesUnit !== 'N/A' && salesUnit !== '') {
-                    return salesUnit === 'Carton' ? String(t('tooltip.cartonPack') || '纸箱装') : salesUnit;
-                  }
-                  return String(t('tooltip.cartonPack') || '纸箱装'); // 默认值
-                })()}
-              </span>
+// 新增：标准化产品项展示组件
+interface StandardConsumableItemProps {
+  item: ConsumableProduct;
+  userRegion: string;
+  index: number;
+  onAddToCart: (itemId: string, buttonElement?: HTMLElement) => void;
+  onQuantityChange: (itemId: string, value: number) => void;
+  quantities: Record<string, number>;
+  getCurrencySymbolByRegion: () => string;
+  getRegionalPrice: (product: ConsumableProduct, quantity: number) => number;
+  handleImageError: (e: React.SyntheticEvent<HTMLImageElement>) => void;
+}
+
+const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
+  item,
+  userRegion,
+  index,
+  onAddToCart,
+  onQuantityChange,
+  quantities,
+  getCurrencySymbolByRegion,
+  getRegionalPrice,
+  handleImageError
+}) => {
+  const { t } = useTranslation(['consumables', 'common']);
+  const { 
+    getLocalizedValue, 
+    shouldShowField, 
+    getFieldLabel,
+    isImperial 
+  } = useConsumableFieldDisplay();
+  
+  // 获取标准化字段配置
+  const fieldsToDisplay = CONSUMABLE_DISPLAY_CONFIG.STANDARD_FIELDS.PRODUCT_LIST;
+  
+  // 获取库存状态
+  const totalStock = Object.values(item.inventory || {}).reduce((sum, stock) => sum + (Number(stock) || 0), 0);
+  const stockStatus = totalStock > 10 ? 'high' : totalStock > 0 ? 'low' : 'out';
+  const stockColor = stockStatus === 'high' ? 'text-green-600' : stockStatus === 'low' ? 'text-yellow-600' : 'text-red-600';
+  const stockBg = stockStatus === 'high' ? 'bg-green-50' : stockStatus === 'low' ? 'bg-yellow-50' : 'bg-red-50';
+  
+  // 计算最优价格
+  const bestPrice = item.pricing?.reduce((min, pricing) => {
+    const quantity = parseInt(pricing.range.replace(/[^0-9]/g, '') || '1') || 1;
+    const priceValue = getRegionalPrice(item, quantity);
+    return priceValue > 0 && priceValue < min ? priceValue : min;
+  }, Infinity) || 0;
+
+  return (
+    <div className="consumable-product-card slide-up" style={{ animationDelay: `${index * 0.1}s` }}>
+      {/* 库存状态标签 */}
+      <div className={`stock-status-badge ${stockStatus === 'high' ? 'high-stock' : stockStatus === 'low' ? 'low-stock' : 'out-stock'}`}>
+        {stockStatus === 'high' ? String(t('ui.stockStatus.sufficient') || '库存充足') : 
+         stockStatus === 'low' ? String(t('ui.stockStatus.low') || '库存紧张') : 
+         String(t('ui.stockStatus.out') || '暂时缺货')}
+      </div>
+
+      <div className="product-card-content">
+        <div className="product-layout">
+          {/* 产品图片区域 */}
+          <div className="product-image-section">
+            <div className="image-container">
+              <img 
+                src={cleanImageUrl(getLocalizedValue(item, 'image_url'))} 
+                alt={getLocalizedValue(item, 'name')} 
+                onError={handleImageError} 
+              />
             </div>
-            <div className="flex justify-between items-center py-2">
-              <span className="text-gray-700 font-medium text-sm">
-                {userRegion === 'na' || userRegion === 'au' ? 
-                  String(t('tooltip.packageSize.imperial') || '包装尺寸 inch') : 
-                  String(t('tooltip.packageSize.metric') || '包装尺寸 cm')
-                }:
-              </span>
-              <span className="text-gray-900 font-semibold text-sm bg-green-50 px-3 py-1 rounded">
-                {(() => {
-                  const sizeField = userRegion === 'na' || userRegion === 'au' ? 'package_size_inch' : 'package_size_cm';
-                  const size = safeGet(sizeField, '');
-                  return size !== 'N/A' && size !== '' ? size : String(t('common.toBeFilled') || '待补充');
-                })()}
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-2">
-              <span className="text-gray-700 font-medium text-sm">
-                {userRegion === 'na' || userRegion === 'au' ? 
-                  String(t('tooltip.unitWeight.imperial') || '单件净重 lbs') : 
-                  String(t('tooltip.unitWeight.metric') || '单件净重 kg')
-                }:
-              </span>
-              <span className="text-gray-900 font-semibold text-sm bg-yellow-50 px-3 py-1 rounded">
-                {(() => {
-                  const weightField = userRegion === 'na' || userRegion === 'au' ? 'unit_weight_lbs' : 'unit_weight_kg';
-                  const weight = safeGet(weightField, '');
-                  return weight !== 'N/A' && weight !== '' ? weight : String(t('common.toBeFilled') || '待补充');
-                })()}
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-2">
-              <span className="text-gray-700 font-medium text-sm">{String(t('tooltip.palletSize') || '托盘尺寸 cm')}:</span>
-              <span className="text-gray-900 font-semibold text-sm bg-purple-50 px-3 py-1 rounded">
-                {(() => {
-                  const palletSize = safeGet('pallet_size_cm', '');
-                  return palletSize !== 'N/A' && palletSize !== '' ? palletSize : String(t('common.toBeFilled') || '待补充');
-                })()}
-              </span>
+            <div className="product-code-badge">
+              {getLocalizedValue(item, 'code')}
             </div>
           </div>
-          
-          {/* 右侧：包装实物图片 */}
-          <div className="flex flex-col items-center">
-            <div className="text-gray-700 font-medium text-sm mb-2">{String(t('tooltip.packageImage') || '包装实物图片')}</div>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 w-full h-32 flex items-center justify-center">
-              {safeGet('package_image_url', '') !== 'N/A' && safeGet('package_image_url', '') !== '' ? (
-                <img 
-                  src={cleanImageUrl(safeGet('package_image_url', ''))} 
-                  alt={String(t('tooltip.packageImage') || '包装实物图片')}
-                  className="max-w-full max-h-full object-contain rounded"
-                  onError={(e) => {
-                    const originalUrl = safeGet('package_image_url', '');
-                    const cleanedUrl = cleanImageUrl(originalUrl);
-                    console.error('Image load failed:');
-                    console.error('  Original URL:', originalUrl);
-                    console.error('  Cleaned URL:', cleanedUrl);
-                    console.error('  实际请求URL:', (e.target as HTMLImageElement).src);
-                    
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    const parent = target.parentElement;
-                    if (parent) {
-                      const fallback = parent.querySelector('.package-fallback') as HTMLElement;
-                      if (fallback) {
-                        fallback.classList.remove('hidden');
-                      }
-                    }
-                  }}
-                />
-              ) : null}
-              <div className={`text-center text-gray-500 text-xs package-fallback ${safeGet('package_image_url', '') !== 'N/A' && safeGet('package_image_url', '') !== '' ? 'hidden' : ''}`}>
-                <div>📦</div>
-                <div>{String(t('tooltip.noPackageImage') || '暂无包装图片')}</div>
-                {/* 调试信息 */}
-                {process.env.NODE_ENV === 'development' && (
-                  <div className="text-xs text-gray-500 mt-1">
-                    {String(t('tooltip.imageUrl') || '图片URL')}: {safeGet('package_image_url', '')}
+
+          {/* 产品信息区域 */}
+          <div className="product-info-section">
+            <div className="product-title">
+              <h3 className="product-name">
+                {getLocalizedValue(item, 'name')}
+              </h3>
+              
+              {/* 适用机型信息 */}
+              {shouldShowField(item, 'app_model') && (
+                <div className="compatibility-info">
+                  <span className="label">{getFieldLabel('app_model')}:</span>
+                  <span className="value">{getLocalizedValue(item, 'app_model')}</span>
+                </div>
+              )}
+              
+              <div className="product-id">
+                {getFieldLabel('id')}: {getLocalizedValue(item, 'id')}
+              </div>
+            </div>
+
+            {/* 规格展示卡片 */}
+            <div className="specs-showcase">
+              <div className="specs-title">
+                <svg className="title-icon" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span className="title-text">{String(t('ui.productSpecs') || '产品规格')}</span>
+              </div>
+              
+              <div className="specs-grid">
+                {/* 形状字段 */}
+                {fieldsToDisplay.includes('shape') && shouldShowField(item, 'shape') && (
+                  <div className="spec-badge">
+                    <div className="spec-label">{getFieldLabel('shape')}</div>
+                    <div className="spec-value">{getLocalizedValue(item, 'shape')}</div>
                   </div>
+                )}
+                
+                {/* 材质字段 */}
+                {fieldsToDisplay.includes('material') && shouldShowField(item, 'material') && (
+                  <div className="spec-badge">
+                    <div className="spec-label">{getFieldLabel('material')}</div>
+                    <div className="spec-value">{getLocalizedValue(item, 'material')}</div>
+                  </div>
+                )}
+                
+                {/* 型号字段 - 注释掉避免重复显示 */}
+                {/* {fieldsToDisplay.includes('model') && shouldShowField(item, 'model') && (
+                  <div className="spec-badge">
+                    <div className="spec-label">{getFieldLabel('model')}</div>
+                    <div className="spec-value">{getLocalizedValue(item, 'model')}</div>
+                  </div>
+                )} */}
+                
+                {/* 规格字段 */}
+                {fieldsToDisplay.includes('spec') && shouldShowField(item, 'spec') && (
+                  <div className="spec-badge">
+                    <div className="spec-label">{getFieldLabel('spec')}</div>
+                    <div className="spec-value">{getLocalizedValue(item, 'spec')}</div>
+                  </div>
+                )}
+                
+                {/* 泡径字段 - 条件显示 */}
+                {fieldsToDisplay.includes('bubble_diameter') && shouldShowField(item, 'bubble_diameter') && (
+                  <div className="spec-badge">
+                    <div className="spec-label">{getFieldLabel('bubble_diameter')}</div>
+                    <div className="spec-value">{getLocalizedValue(item, 'bubble_diameter')}</div>
+                  </div>
+                )}
+                
+                {/* 单箱数量字段 */}
+                {fieldsToDisplay.includes('pcs_per_box') && shouldShowField(item, 'pcs_per_box') && (
+                  <div className="spec-badge">
+                    <div className="spec-label">{getFieldLabel('pcs_per_box')}</div>
+                    <div className="spec-value">{getLocalizedValue(item, 'pcs_per_box')}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 操作按钮区域 */}
+            <div className="product-actions">
+              <Tooltip
+                title={<ConsumableTooltipContent item={item} userRegion={userRegion} />}
+                placement="topRight"
+                classNames={{ tooltip: "consumables-custom-tooltip" }}
+                color="white"
+                arrow={false}
+                trigger="hover"
+                destroyTooltipOnHide={true}
+                fresh={true}
+                overlayStyle={{
+                  maxWidth: 'min(600px, 90vw)',
+                  zIndex: 10000
+                }}
+              >
+                <button className="tooltip-trigger-btn">
+                  <InfoCircleOutlined className="action-icon" />
+                  {String(t('ui.viewDetailedSpecs') || '查看详细规格')}
+                </button>
+              </Tooltip>
+            </div>
+          </div>
+
+          {/* 价格与购买区域 */}
+          <div className="price-purchase-section">
+            {/* 价格展示 */}
+            <div className="price-display">
+              <div className="price-label">{String(t('ui.startingPrice') || '起始价格')}</div>
+              <div className="price-value">
+                {getCurrencySymbolByRegion()}{(bestPrice === Infinity || bestPrice === 0) ? String(t('ui.priceInquiry') || '询价') : bestPrice.toFixed(2)}
+              </div>
+              <div className="price-note">{String(t('ui.minimumOrder') || '最低订购量')}</div>
+            </div>
+
+            {/* 价格阶梯 */}
+            <div className="price-tiers">
+              <div className="tiers-title">{String(t('ui.priceSteps') || '价格阶梯')}</div>
+              {item.pricing?.slice(0, 3).map((price, idx) => {
+                const quantity = parseInt(price.range.replace(/[^0-9]/g, '') || '1') || 1;
+                const priceValue = getRegionalPrice(item, quantity);
+                const displayPrice = isNaN(priceValue) ? 0 : priceValue;
+                
+                return (
+                  <div key={idx} className="tier-item">
+                    <span className="tier-range">{price.range}</span>
+                    <span className="tier-price">
+                      {getCurrencySymbolByRegion()}{displayPrice.toFixed(2)}
+                    </span>
+                  </div>
+                );
+              })}
+              {item.pricing && item.pricing.length > 3 && (
+                <div className="more-tiers">
+                  +{item.pricing.length - 3} {String(t('ui.moreSteps') || '更多价格')}
+                </div>
+              )}
+            </div>
+
+            {/* 库存信息 */}
+            <div className={`stock-info ${stockStatus === 'high' ? 'high-stock' : stockStatus === 'low' ? 'low-stock' : 'out-stock'}`}>
+              <div className="stock-header">
+                <span className="stock-label">{String(t('ui.stockStatus') || '库存状态')}</span>
+                <span className="stock-status-text">
+                  {stockStatus === 'high' ? String(t('ui.sufficient') || '✓ 充足') : 
+                   stockStatus === 'low' ? String(t('ui.lowWarning') || '⚠ 紧张') : 
+                   String(t('ui.outIcon') || '✗ 缺货')}
+                </span>
+              </div>
+              <div className="stock-details">
+                <div className="total-stock">
+                  {String(t('ui.totalStock') || '总库存')}: <span className="stock-number">{totalStock}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 购买操作 */}
+            <div className="purchase-actions">
+              <div className="quantity-selector">
+                <InputNumber
+                  min={1}
+                  value={quantities[item.id] || 1}
+                  onChange={(value) => onQuantityChange(item.id, value || 1)}
+                  className="quantity-input"
+                  size="large"
+                  disabled={stockStatus === 'out'}
+                />
+              </div>
+              
+              {/* 库存警告 */}
+              {stockStatus === 'low' && (
+                <div className="stock-warning">
+                  <div className="warning-text">
+                    {String(t('ui.lowStockWarning') || '⚠️ 库存紧张，建议尽快下单')}
+                  </div>
+                </div>
+              )}
+              
+              <div className="action-buttons">
+                <Button
+                  type="primary"
+                  onClick={(e) => onAddToCart(item.id, e.currentTarget)}
+                  disabled={stockStatus === 'out'}
+                  className={`add-to-cart-btn ${stockStatus === 'out' ? 'unavailable' : 'available'}`}
+                  icon={<ShoppingCartOutlined />}
+                >
+                  {stockStatus === 'out' ? String(t('ui.stockStatus.out') || '暂时缺货') : String(t('ui.addToCart') || '加入购物车')}
+                </Button>
+                
+                {/* 快速购买按钮 */}
+                {stockStatus !== 'out' && (
+                  <Button
+                    className="quick-buy-btn"
+                    onClick={() => {
+                      onAddToCart(item.id);
+                      // 这里可以添加跳转到结算页面的逻辑
+                      // success(String(t('ui.addedToCart') || '商品已添加，点击购物车进行结算'));
+                    }}
+                  >
+                    {String(t('ui.buyNow') || '立即购买')}
+                  </Button>
                 )}
               </div>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* 打托属性 Pallet Info */}
-      <div className="mb-4">
-        <div className="font-bold text-gray-700 text-sm mb-3 bg-gray-50 px-3 py-2 rounded">{String(t('tooltip.palletInfo') || '打托属性 Pallet Info')}</div>
-        <div className="grid grid-cols-3 gap-4">
-          {/* 配置A */}
-          <div className="bg-blue-50 p-3 rounded-lg">
-            <div className="font-semibold text-blue-800 text-sm mb-2">{String(t('tooltip.configA') || '配置A')}</div>
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-gray-700">{String(t('tooltip.palletRolls') || '一托卷数')}:</span>
-                <span className="font-semibold text-gray-800">{safeGet('pallet_rolls_a', '') !== 'N/A' ? safeGet('pallet_rolls_a', '') : String(t('common.toBeFilled') || '待补充')}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-700">
-                  {userRegion === 'na' || userRegion === 'au' ? 
-                    String(t('tooltip.grossWeight.imperial') || '毛重 lbs') : 
-                    String(t('tooltip.grossWeight.metric') || '毛重 kg')
-                  }:
-                </span>
-                <span className="font-semibold text-gray-800">
-                  {(() => {
-                    const weightField = userRegion === 'na' || userRegion === 'au' ? 'pallet_weight_a_lbs' : 'pallet_weight_a_kg';
-                    const weight = safeGet(weightField, '');
-                    return weight !== 'N/A' ? weight : String(t('common.toBeFilled') || '待补充');
-                  })()}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-700">
-                  {userRegion === 'na' || userRegion === 'au' ? 
-                    String(t('tooltip.height.imperial') || '高度 inch') : 
-                    String(t('tooltip.height.metric') || '高度 cm')
-                  }:
-                </span>
-                <span className="font-semibold text-gray-800">
-                  {(() => {
-                    const heightField = userRegion === 'na' || userRegion === 'au' ? 'pallet_height_a_inch' : 'pallet_height_a_cm';
-                    const height = safeGet(heightField, '');
-                    return height !== 'N/A' ? height : String(t('common.toBeFilled') || '待补充');
-                  })()}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* 配置B */}
-          <div className="bg-green-50 p-3 rounded-lg">
-            <div className="font-semibold text-green-800 text-sm mb-2">{String(t('tooltip.configB') || '配置B')}</div>
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-gray-700">{String(t('tooltip.palletRolls') || '一托卷数')}:</span>
-                <span className="font-semibold text-gray-800">{safeGet('pallet_rolls_b', '') !== 'N/A' ? safeGet('pallet_rolls_b', '') : String(t('common.toBeFilled') || '待补充')}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-700">
-                  {userRegion === 'na' || userRegion === 'au' ? 
-                    String(t('tooltip.grossWeight.imperial') || '毛重 lbs') : 
-                    String(t('tooltip.grossWeight.metric') || '毛重 kg')
-                  }:
-                </span>
-                <span className="font-semibold text-gray-800">
-                  {(() => {
-                    const weightField = userRegion === 'na' || userRegion === 'au' ? 'pallet_weight_b_lbs' : 'pallet_weight_b_kg';
-                    const weight = safeGet(weightField, '');
-                    return weight !== 'N/A' ? weight : String(t('common.toBeFilled') || '待补充');
-                  })()}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-700">
-                  {userRegion === 'na' || userRegion === 'au' ? 
-                    String(t('tooltip.height.imperial') || '高度 inch') : 
-                    String(t('tooltip.height.metric') || '高度 cm')
-                  }:
-                </span>
-                <span className="font-semibold text-gray-800">
-                  {(() => {
-                    const heightField = userRegion === 'na' || userRegion === 'au' ? 'pallet_height_b_inch' : 'pallet_height_b_cm';
-                    const height = safeGet(heightField, '');
-                    return height !== 'N/A' ? height : String(t('common.toBeFilled') || '待补充');
-                  })()}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* 配置C */}
-          <div className="bg-yellow-50 p-3 rounded-lg">
-            <div className="font-semibold text-yellow-800 text-sm mb-2">{String(t('tooltip.configC') || '配置C')}</div>
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-gray-700">{String(t('tooltip.palletRolls') || '一托卷数')}:</span>
-                <span className="font-semibold text-gray-800">{safeGet('pallet_rolls_c', '') !== 'N/A' ? safeGet('pallet_rolls_c', '') : String(t('common.toBeFilled') || '待补充')}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-700">
-                  {userRegion === 'na' || userRegion === 'au' ? 
-                    String(t('tooltip.grossWeight.imperial') || '毛重 lbs') : 
-                    String(t('tooltip.grossWeight.metric') || '毛重 kg')
-                  }:
-                </span>
-                <span className="font-semibold text-gray-800">
-                  {(() => {
-                    const weightField = userRegion === 'na' || userRegion === 'au' ? 'pallet_weight_c_lbs' : 'pallet_weight_c_kg';
-                    const weight = safeGet(weightField, '');
-                    return weight !== 'N/A' ? weight : String(t('common.toBeFilled') || '待补充');
-                  })()}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-700">
-                  {userRegion === 'na' || userRegion === 'au' ? 
-                    String(t('tooltip.height.imperial') || '高度 inch') : 
-                    String(t('tooltip.height.metric') || '高度 cm')
-                  }:
-                </span>
-                <span className="font-semibold text-gray-800">
-                  {(() => {
-                    const heightField = userRegion === 'na' || userRegion === 'au' ? 'pallet_height_c_inch' : 'pallet_height_c_cm';
-                    const height = safeGet(heightField, '');
-                    return height !== 'N/A' ? height : String(t('common.toBeFilled') || '待补充');
-                  })()}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* 纸筒内径 */}
-        <div className="mt-3 bg-purple-50 p-3 rounded-lg">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-700 font-medium text-sm">
-              {userRegion === 'na' || userRegion === 'au' ? 
-                String(t('tooltip.coreDiameter.imperial') || '纸筒内径 inch') : 
-                String(t('tooltip.coreDiameter.metric') || '纸筒内径 cm')
-              }:
-            </span>
-            <span className="text-gray-900 font-semibold text-sm bg-white px-3 py-1 rounded shadow-sm">
-              {(() => {
-                const diameterField = userRegion === 'na' || userRegion === 'au' ? 'core_diameter_inch' : 'core_diameter_cm';
-                const diameter = safeGet(diameterField, '');
-                return diameter !== 'N/A' ? diameter : String(t('common.toBeFilled') || '待补充');
-              })()}
-            </span>
-          </div>
-        </div>
-      </div>
-      
-      <div className="mt-4 pt-3 border-t border-gray-100 text-center">
-        <span className="text-sm text-gray-500">{String(t('tooltip.hoverInfo') || '悬停查看更多规格信息')}</span>
       </div>
     </div>
   );
@@ -895,6 +1202,7 @@ interface SmartFilterSelectProps {
   placeholder?: string;
   showCount?: boolean;
   disabled?: boolean;
+  totalCount?: number; // 新增：用于"全部"选项的正确计数
 }
 
 const SmartFilterSelect: React.FC<SmartFilterSelectProps> = ({
@@ -904,9 +1212,22 @@ const SmartFilterSelect: React.FC<SmartFilterSelectProps> = ({
   onChange,
   placeholder = '请选择',
   showCount = true,
-  disabled = false
+  disabled = false,
+  totalCount // 新增参数
 }) => {
-  const { t } = useTranslation('consumables');
+  const { t } = useTranslation(['consumables', 'common']);
+  
+  // 计算"全部"选项的正确计数
+  const getAllCount = () => {
+    // 优先使用传入的totalCount
+    if (totalCount !== undefined) {
+      return totalCount;
+    }
+    
+    // 如果没有传入totalCount，则使用子选项计数相加作为fallback
+    // 但这种方式在某些情况下可能不准确（如有重复计数）
+    return options.reduce((sum, opt) => sum + opt.count, 0);
+  };
   
   return (
     <div className="smart-filter-select">
@@ -925,7 +1246,7 @@ const SmartFilterSelect: React.FC<SmartFilterSelectProps> = ({
             <span>{String(t('filter.all') || '全部')}</span>
             {showCount && (
               <span className="text-gray-500 text-xs ml-2">
-                ({options.reduce((sum, opt) => sum + opt.count, 0)})
+                ({getAllCount()})
               </span>
             )}
           </div>
@@ -967,11 +1288,11 @@ interface FilterBreadcrumbProps {
 }
 
 const FilterBreadcrumb: React.FC<FilterBreadcrumbProps> = ({ filters, onRemoveFilter, onClearAll }) => {
-  const { t } = useTranslation('consumables');
+  const { t } = useTranslation(['consumables', 'common']);
   
-  const activeFilters = Object.entries(filters).filter(([_, value]) => value && value !== 'all');
+  const hasActiveFilters = Object.values(filters).some(value => value && value !== '' && value !== 'all');
   
-  if (activeFilters.length === 0) return null;
+  if (!hasActiveFilters) return null;
   
   return (
     <div className="filter-breadcrumb bg-blue-50 rounded-lg p-4 mb-4">
@@ -984,7 +1305,7 @@ const FilterBreadcrumb: React.FC<FilterBreadcrumbProps> = ({ filters, onRemoveFi
         </Button>
       </div>
       <div className="flex flex-wrap gap-2">
-        {activeFilters.map(([type, value]) => (
+        {Object.entries(filters).map(([type, value]) => (
           <div
             key={type}
             className="inline-flex items-center bg-white border border-blue-200 rounded-full px-3 py-1 text-sm"
@@ -1261,20 +1582,20 @@ const ConsumablesPage: React.FC = () => {
       return allConsumables.filter(item => {
         // 应用除了排除字段外的所有筛选条件
         if (excludeField !== 'selectedModel' && currentFilters.selectedModel !== 'all') {
-          const itemModelId = item.app_model?.toString() || '';
-          if (itemModelId !== currentFilters.selectedModel) return false;
+          // 🔥 修复：正确解析app_model字段
+          const appModels = (item.app_model || '').split(',').map(m => m.trim().replace(/^[\"']|[\"']$/g, ''));
+          const matches = appModels.some(m => normalize(m) === normalize(currentFilters.selectedModel));
+          if (!matches) return false;
         }
         
         if (excludeField !== 'selectedShape' && currentFilters.selectedShape !== 'all') {
-          const itemShape = normalize(item.shape || '');
-          const targetShape = normalize(currentFilters.selectedShape);
-          if (itemShape !== targetShape) return false;
+          // 🔥 修复：直接使用shape字段
+          if (normalize(item.shape || '') !== normalize(currentFilters.selectedShape)) return false;
         }
         
         if (excludeField !== 'selectedMaterial' && currentFilters.selectedMaterial !== 'all') {
-          const itemMaterial = normalize(item.material || '');
-          const targetMaterial = normalize(currentFilters.selectedMaterial);
-          if (itemMaterial !== targetMaterial) return false;
+          // 🔥 修复：直接使用material字段
+          if (normalize(item.material || '') !== normalize(currentFilters.selectedMaterial)) return false;
         }
         
         // 规格筛选
@@ -1308,69 +1629,158 @@ const ConsumablesPage: React.FC = () => {
     
     // 生成机型选项
     const generateModelOptions = (): SmartFilterOption[] => {
-      const availableItems = calculateCascadingOptions('selectedModel');
+      // 1. 收集所有型号
       const modelCountMap = new Map<string, number>();
-      
-      // 🔥 修复：正确解析app_model字段，处理复杂格式
-      availableItems.forEach(item => {
-        if (item.app_model) {
-          // 解析复杂的app_model格式：'LA-E4C,"LA-E4S V2.0"','"LA-E4S V2.0",LA-F2'等
-          const appModels = (item.app_model || '').split(',').map(m => m.trim().replace(/^[\"']|[\"']$/g, ''));
-          appModels.forEach(model => {
-            if (model && model.length > 0) {
-              modelCountMap.set(model, (modelCountMap.get(model) || 0) + 1);
-            }
-          });
-        }
-      });
-      
-      // 生成选项时使用解析出的实际模型而不是静态配置
-      const dynamicModelOptions: SmartFilterOption[] = [];
-      
-      // 添加"全部"选项
-      const totalItems = availableItems.length;
-      dynamicModelOptions.push({
-        id: 'all',
-        name: `全部 (${totalItems})`,
-        count: totalItems,
-        disabled: false
-      });
-      
-      // 基于实际数据动态生成模型选项
-      Array.from(modelCountMap.entries())
-        .sort(([, a], [, b]) => b - a) // 按数量排序
-        .forEach(([model, count]) => {
-          dynamicModelOptions.push({
-            id: model,
-            name: `${model} (${count})`,
-            count: count,
-            disabled: count === 0
-          });
+      allConsumables.forEach(item => {
+        (item.app_model || '').split(',').forEach(m => {
+          const model = m.trim().replace(/^[\"']|[\"']$/g, '');
+          if (model) {
+            modelCountMap.set(model, (modelCountMap.get(model) || 0) + 1);
+          }
         });
-      
-      console.log('🔧 [Model筛选] 动态生成的模型选项:', dynamicModelOptions);
-      return dynamicModelOptions;
+      });
+
+      // 2. 生成选项数组
+      const modelOptions = Array.from(modelCountMap.entries())
+        .map(([model, count]) => ({
+          id: model,
+          name: model,
+          count,
+          disabled: false
+        }))
+        // 3. 按数量降序、字母顺序排序
+        .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+
+      return modelOptions;
     };
     
     // 生成形状选项
     const generateShapeOptions = (): SmartFilterOption[] => {
       const availableItems = calculateCascadingOptions('selectedShape');
       const shapeCountMap = new Map<string, number>();
-      
+
+      // 🔥 修复：使用真实数据库的shape字段统计数量
       availableItems.forEach(item => {
-        const shapeKey = item.shape || '';
-        if (shapeKey) {
-          shapeCountMap.set(shapeKey, (shapeCountMap.get(shapeKey) || 0) + 1);
+        if (item.shape) {
+          const normalizedShape = item.shape.trim();
+          shapeCountMap.set(normalizedShape, (shapeCountMap.get(normalizedShape) || 0) + 1);
         }
       });
-      
-      return (filterOptions?.shapes || []).map(shape => ({
-        id: shape.id.toString(),
-        name: getLocalizedOptionName(shape),
-        count: shapeCountMap.get(shape.name_zh || shape.name_en || '') || 0,
-        disabled: !smartFilterConfig.hideEmptyOptions && (shapeCountMap.get(shape.name_zh || shape.name_en || '') || 0) === 0,
-        originalData: shape
-      })).filter(option => smartFilterConfig.hideEmptyOptions ? option.count > 0 : true);
+
+      console.log('🔧 [Shape筛选] 数据库中的形状统计:', Object.fromEntries(shapeCountMap));
+      console.log('🔧 [Shape筛选] API返回的形状配置:', filterOptions?.shapes);
+
+      // 动态生成形状选项，优先使用API返回的形状配置
+      const shapeOptions: SmartFilterOption[] = [];
+      const processedShapes = new Set<string>();
+
+      // 1. 🔥 修复：处理API返回的形状配置，正确映射数据库记录
+      if (filterOptions?.shapes && Array.isArray(filterOptions.shapes)) {
+        console.log('🔧 [Shape筛选] 开始处理API形状配置...');
+        
+        filterOptions.shapes.forEach(shapeConfig => {
+          // 🔥 优化：支持多种形状标识方式
+          const possibleIds = [
+            shapeConfig.id,
+            shapeConfig.name_en, 
+            shapeConfig.name_zh,
+            shapeConfig.shape_name,
+            shapeConfig.category_name
+          ].filter(Boolean);
+          
+          console.log('🔧 [Shape筛选] 处理形状配置:', {
+            config: shapeConfig,
+            possibleIds
+          });
+          
+          // 🔥 修复：智能匹配形状数量，支持中英文名称
+          let matchedCount = 0;
+          let matchedShapeId = '';
+          
+          for (const id of possibleIds) {
+            if (shapeCountMap.has(id)) {
+              matchedCount = shapeCountMap.get(id) || 0;
+              matchedShapeId = id;
+              break;
+            }
+          }
+          
+          // 如果没有直接匹配，尝试模糊匹配
+          if (matchedCount === 0) {
+            for (const [dbShape, count] of shapeCountMap.entries()) {
+              for (const configId of possibleIds) {
+                const normalizedDbShape = dbShape.toLowerCase().replace(/\s+/g, '');
+                const normalizedConfigId = configId.toLowerCase().replace(/\s+/g, '');
+                
+                if (normalizedDbShape.includes(normalizedConfigId) || 
+                    normalizedConfigId.includes(normalizedDbShape)) {
+                  matchedCount = count;
+                  matchedShapeId = dbShape;
+                  console.log('🔧 [Shape筛选] 模糊匹配成功:', { dbShape, configId, count });
+                  break;
+                }
+              }
+              if (matchedCount > 0) break;
+            }
+          }
+          
+          const finalShapeId = matchedShapeId || possibleIds[0] || shapeConfig.id;
+          
+          if (finalShapeId && !processedShapes.has(finalShapeId)) {
+            // 🔥 修复：正确使用数据库中的图片URL
+            const imageUrl = cleanImageUrl(shapeConfig.image_url || shapeConfig.featured_image);
+            
+            console.log('🔧 [Shape筛选] 添加形状选项:', {
+              id: finalShapeId,
+              name: shapeConfig.name_zh || shapeConfig.name_en || finalShapeId,
+              count: matchedCount,
+              imageUrl: imageUrl,
+              originalImageUrl: shapeConfig.image_url
+            });
+            
+            shapeOptions.push({
+              id: finalShapeId,
+              name: shapeConfig.name_zh || shapeConfig.name_en || finalShapeId,
+              count: matchedCount,
+              disabled: matchedCount === 0,
+              originalData: {
+                ...shapeConfig,
+                // 🔥 修复：直接使用数据库中的图片URL
+                image_url: imageUrl
+              }
+            });
+            processedShapes.add(finalShapeId);
+          }
+        });
+      }
+
+      // 2. 🔥 补充：处理数据库中存在但API配置中没有的形状
+      shapeCountMap.forEach((count, shapeId) => {
+        if (!processedShapes.has(shapeId) && count > 0) {
+          console.log('🔧 [Shape筛选] 添加API未配置的形状:', { shapeId, count });
+          
+          shapeOptions.push({
+            id: shapeId,
+            name: shapeId,
+            count,
+            disabled: false,
+            originalData: {
+              id: shapeId,
+              name_zh: shapeId,
+              name_en: shapeId,
+              // 对于API未配置的形状，使用占位符图片
+              image_url: shapePlaceholderImage
+            }
+          });
+          processedShapes.add(shapeId);
+        }
+      });
+
+      // 3. 按数量排序
+      shapeOptions.sort((a, b) => b.count - a.count);
+
+      console.log('🔧 [Shape筛选] 最终生成的形状选项:', shapeOptions);
+      return shapeOptions;
     };
     
     // 生成材质选项
@@ -1378,20 +1788,29 @@ const ConsumablesPage: React.FC = () => {
       const availableItems = calculateCascadingOptions('selectedMaterial');
       const materialCountMap = new Map<string, number>();
       
+      // 🔥 修复：直接使用material字段统计
       availableItems.forEach(item => {
-        const materialKey = item.material || '';
-        if (materialKey) {
-          materialCountMap.set(materialKey, (materialCountMap.get(materialKey) || 0) + 1);
+        if (item.material) {
+          materialCountMap.set(item.material, (materialCountMap.get(item.material) || 0) + 1);
         }
       });
       
-      return (filterOptions?.materials || []).map(material => ({
-        id: material.id.toString(),
-        name: getLocalizedOptionName(material),
-        count: materialCountMap.get(material.name_zh || material.name_en || '') || 0,
-        disabled: !smartFilterConfig.hideEmptyOptions && (materialCountMap.get(material.name_zh || material.name_en || '') || 0) === 0,
-        originalData: material
-      })).filter(option => smartFilterConfig.hideEmptyOptions ? option.count > 0 : true);
+      const materialOptions: SmartFilterOption[] = [];
+      
+      // 按真实数据库中的材质数量排序
+      Array.from(materialCountMap.entries())
+        .sort(([, a], [, b]) => b - a)
+        .forEach(([material, count]) => {
+          materialOptions.push({
+            id: material,
+            name: `${material}`,
+            count: count,
+            disabled: false
+          });
+        });
+      
+      console.log('🔧 [Material筛选] 动态生成的材质选项:', materialOptions);
+      return materialOptions;
     };
     
     // 生成规格选项（厚度、重量、宽度、长度）
@@ -1587,28 +2006,18 @@ const ConsumablesPage: React.FC = () => {
     
     fetchRealApiData();
   }, []);
-
+  
+  // 获取形状和材料数据
+  const { data: shapesData } = useShapes();
+  
+  const { data: materialsData } = useMaterials();
+ 
   useEffect(() => {
     console.log('当前筛选后的 consumables:', consumables);
   }, [consumables]);
   // 3. 本地筛选和分页逻辑全部放在一个useEffect
   useEffect(() => {
-    // Shape筛选映射 - API返回的形状ID直接对应数据库的bag_type字段值
-    // API返回的形状ID: Pillow, Precut Air Pillow, Bubble, Tube, paper Bubble, paper air Pillow
-    // 数据库bag_type字段值: Pillow, Precut Air Pillow, Bubble, Tube, paper Bubble, paper air Pillow
-    // 所以直接映射，无需转换
-    const shapeIdToBagType: Record<string, string> = {
-      'Pillow': 'Pillow',
-      'Precut Air Pillow': 'Precut Air Pillow',
-      'Bubble': 'Bubble',
-      'Tube': 'Tube',
-      'paper Bubble': 'paper Bubble',
-      'paper air Pillow': 'paper air Pillow'
-    };
-
-    // Material筛选 - API返回的材质ID直接对应数据库material字段值
-    // 数据库中的真实material值：30% HDPE, 50% HDPE, HDPE, 50% LDPE, LDPE, PAPE, PAPER
-
+    // 🔥 修复：移除错误的字段映射，直接使用数据库真实字段
     const normalize = (v: any) => (v ?? '').toString().toLowerCase().replace(/\s+/g, '').replace(/%/g, '');
 
     // 打印当前筛选条件
@@ -1622,74 +2031,83 @@ const ConsumablesPage: React.FC = () => {
       length: selectedLength
     });
 
-    // 打印映射关系调试信息
-    console.log('🗺️ [Shape映射] 当前形状映射:', shapeIdToBagType);
-    console.log('🗺️ [Shape映射] selectedShape:', selectedShape, '-> expectedBagType:', shapeIdToBagType[selectedShape]);
-    console.log('🗺️ [Material映射] 材质直接匹配，selectedMaterial:', selectedMaterial);
-
     // 打印数据样本，展示真实的数据库字段
     allConsumables.slice(0, 3).forEach((item, idx) => {
       console.log(`【数据${idx}分析】`, {
         id: item.id,
         name: item.name,
-        bag_type: item.bag_type,           // Shape对应字段
-        material: item.material,           // Material对应字段
-        app_model: item.app_model,         // 型号兼容性
-        thickness_met: item.thickness_met, // 厚度（数据库字段）
-        width_met: item.width_met,         // 宽度（数据库字段）
-        length_met: item.length_met,       // 长度（数据库字段）
+        shape: item.shape,              // 🔥 直接使用shape字段
+        material: item.material,        // 🔥 直接使用material字段
+        app_model: item.app_model,      // 🔥 兼容性字段
+        thickness_met: item.thickness_met, 
+        width_met: item.width_met,      
+        length_met: item.length_met,    
         specs: item.specs
       });
     });
 
     const filtered = allConsumables.filter(item => {
-      // 🔥 修复型号筛选 - 正确解析app_model字段的复杂格式
+      // 型号筛选 - 🔥 修复：正确解析app_model字段的复杂格式
       if (selectedModel !== 'all') {
-        // 解析复杂的app_model格式：'LA-E4C,"LA-E4S V2.0"','LA-E4S V2.0",LA-F2'等
         const appModels = (item.app_model || '').split(',').map(m => m.trim().replace(/^[\"']|[\"']$/g, ''));
-        const matches = appModels.some(m => m === selectedModel); // 精确匹配，不进行normalize
+        const matches = appModels.some(m => normalize(m) === normalize(selectedModel));
         if (!matches) {
           console.log(`🔍 [型号筛选] ${item.id} 不匹配: ${item.app_model} vs ${selectedModel}`);
           return false;
         }
       }
 
-      // 形状筛选 - 使用数据库真实的bag_type字段
+      // 🔥 修复：形状筛选 - 直接使用shape字段，移除错误的bag_type映射
       if (selectedShape !== 'all') {
-        const expectedBagType = shapeIdToBagType[selectedShape] || selectedShape;
-        if (normalize(item.bag_type) !== normalize(expectedBagType)) {
-          console.log(`🔍 [形状筛选] ${item.id} 不匹配: ${item.bag_type} vs ${expectedBagType} (from shape ${selectedShape})`);
-          return false;
-        }
-      }
-
-      // 材质筛选 - 使用数据库真实的material字段，考虑百分比符号
-      if (selectedMaterial !== 'all') {
-        // 处理带百分比的材质名称，如 "30% HDPE" vs "30%HDPE" 
-        const itemMaterial = normalize(item.material);
-        const selectedMaterialNorm = normalize(selectedMaterial);
+        const itemShape = normalize(item.shape);
+        const targetShape = normalize(selectedShape);
         
-        if (itemMaterial !== selectedMaterialNorm) {
-          console.log(`🔍 [材质筛选] ${item.id} 不匹配: ${item.material} (${itemMaterial}) vs ${selectedMaterial} (${selectedMaterialNorm})`);
+        // 支持多种匹配方式
+        let shapeMatches = false;
+        if (itemShape === targetShape) {
+          shapeMatches = true;
+        } else {
+          // 查找选中形状的配置信息
+          const selectedShapeConfig = smartFilterOptions.shapes.find(s => s.id === selectedShape);
+          if (selectedShapeConfig && selectedShapeConfig.originalData) {
+            const config = selectedShapeConfig.originalData;
+            // 支持中英文名称匹配
+            shapeMatches = itemShape === normalize(config.name_en) || 
+                          itemShape === normalize(config.name_zh) ||
+                          normalize(config.name_en) === targetShape ||
+                          normalize(config.name_zh) === targetShape;
+          }
+        }
+        
+        if (!shapeMatches) {
+          console.log(`🔍 [形状筛选] ${item.id} 不匹配: ${item.shape} vs ${selectedShape}`);
           return false;
         }
       }
 
-      // 数值筛选 - 使用数据库的真实字段名
+      // 🔥 修复：材质筛选 - 直接使用material字段
+      if (selectedMaterial !== 'all') {
+        if (normalize(item.material) !== normalize(selectedMaterial)) {
+          console.log(`🔍 [材质筛选] ${item.id} 不匹配: ${item.material} vs ${selectedMaterial}`);
+          return false;
+        }
+      }
+
+      // 🔥 修复：数值筛选 - 正确处理字符串数值
       const extractNumber = (value: string | number | undefined | null): number | undefined => {
         if (value === null || value === undefined) return undefined;
         if (typeof value === 'number') return value;
-        const match = String(value).match(/(\d+(?:\.\d+)?)/);
-        return match ? parseFloat(match[1]) : undefined;
+        const numValue = parseFloat(String(value));
+        return isNaN(numValue) ? undefined : numValue;
       };
 
-      // 厚度筛选 - 优先使用thickness_met字段
+      // 厚度筛选 - 使用thickness_met字段
       if (selectedThickness !== 'all') {
-        const itemThickness = extractNumber(item.thickness_met) || extractNumber(item.specs?.thickness);
+        const itemThickness = extractNumber(item.thickness_met);
         const targetThickness = extractNumber(selectedThickness);
         if (itemThickness === undefined || targetThickness === undefined || 
             Math.abs(itemThickness - targetThickness) > 0.01) {
-          console.log(`🔍 [厚度筛选] ${item.id} 不匹配: ${itemThickness} (from thickness_met: ${item.thickness_met}) vs ${targetThickness}`);
+          console.log(`🔍 [厚度筛选] ${item.id} 不匹配: ${itemThickness} vs ${targetThickness}`);
           return false;
         }
       }
@@ -1711,24 +2129,24 @@ const ConsumablesPage: React.FC = () => {
         }
       }
 
-      // 宽度筛选 - 优先使用width_met字段
+      // 宽度筛选 - 使用width_met字段
       if (selectedWidth !== 'all') {
-        const itemWidth = extractNumber(item.width_met) || extractNumber(item.specs?.width);
+        const itemWidth = extractNumber(item.width_met);
         const targetWidth = extractNumber(selectedWidth);
         if (itemWidth === undefined || targetWidth === undefined || 
             Math.abs(itemWidth - targetWidth) > 0.01) {
-          console.log(`🔍 [宽度筛选] ${item.id} 不匹配: ${itemWidth} (from width_met: ${item.width_met}) vs ${targetWidth}`);
+          console.log(`🔍 [宽度筛选] ${item.id} 不匹配: ${itemWidth} vs ${targetWidth}`);
           return false;
         }
       }
 
-      // 长度筛选 - 优先使用length_met字段
+      // 长度筛选 - 使用length_met字段
       if (selectedLength !== 'all') {
-        const itemLength = extractNumber(item.length_met) || extractNumber(item.specs?.length);
+        const itemLength = extractNumber(item.length_met);
         const targetLength = extractNumber(selectedLength);
         if (itemLength === undefined || targetLength === undefined || 
             Math.abs(itemLength - targetLength) > 0.01) {
-          console.log(`🔍 [长度筛选] ${item.id} 不匹配: ${itemLength} (from length_met: ${item.length_met}) vs ${targetLength}`);
+          console.log(`🔍 [长度筛选] ${item.id} 不匹配: ${itemLength} vs ${targetLength}`);
           return false;
         }
       }
@@ -2219,6 +2637,28 @@ const ConsumablesPage: React.FC = () => {
     return (
       <div className="space-y-6">
         {consumables.map((item, index) => {
+          // 功能开关：启用标准化字段显示
+          const useStandardizedFields = import.meta.env.VITE_USE_STANDARDIZED_FIELDS === 'true' || true; // 临时启用
+          
+          if (useStandardizedFields) {
+            // 使用新的标准化产品项组件
+            return (
+              <StandardConsumableItem
+                key={item.id}
+                item={item}
+                userRegion={userRegion}
+                index={index}
+                onAddToCart={addToCart}
+                onQuantityChange={handleQuantityChange}
+                quantities={quantities}
+                getCurrencySymbolByRegion={getCurrencySymbolByRegion}
+                getRegionalPrice={getRegionalPrice}
+                handleImageError={handleImageError}
+              />
+            );
+          }
+          
+          // 保留原有的产品项显示逻辑（向后兼容）
           // 获取库存状态
           const totalStock = Object.values(item.inventory || {}).reduce((sum, stock) => sum + (Number(stock) || 0), 0);
           const stockStatus = totalStock > 10 ? 'high' : totalStock > 0 ? 'low' : 'out';
@@ -2240,7 +2680,9 @@ const ConsumablesPage: React.FC = () => {
             >
               {/* 库存状态标签 */}
               <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-medium ${stockBg} ${stockColor} z-10`}>
-                {stockStatus === 'high' ? String(t('ui.stockStatus.sufficient') || '库存充足') : stockStatus === 'low' ? String(t('ui.stockStatus.low') || '库存紧张') : String(t('ui.stockStatus.out') || '暂时缺货')}
+                {stockStatus === 'high' ? String(t('ui.stockStatus.sufficient') || '库存充足') : 
+                 stockStatus === 'low' ? String(t('ui.stockStatus.low') || '库存紧张') : 
+                 String(t('ui.stockStatus.out') || '暂时缺货')}
               </div>
 
               <div className="p-6">
@@ -2321,16 +2763,16 @@ const ConsumablesPage: React.FC = () => {
                       <Tooltip
                         title={<ConsumableTooltipContent item={item} userRegion={userRegion} />}
                         placement="topRight"
-                        styles={{ 
-                          root: {
-                            maxWidth: '650px',
-                            zIndex: 10000
-                          }
-                        }}
-                        classNames={{ root: "consumables-custom-tooltip" }}
+                        classNames={{ tooltip: "consumables-custom-tooltip" }}
                         color="white"
-                        arrow={true}
+                        arrow={false}
                         trigger="hover"
+                        destroyTooltipOnHide={true}
+                        fresh={true}
+                        overlayStyle={{
+                          maxWidth: 'min(600px, 90vw)',
+                          zIndex: 10000
+                        }}
                       >
                         <button className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-600 rounded-lg hover:from-blue-100 hover:to-indigo-100 transition-all duration-200 border border-blue-200 font-medium text-sm">
                           <InfoCircleOutlined className="mr-2" />
@@ -2629,12 +3071,13 @@ const ConsumablesPage: React.FC = () => {
                 </Tooltip>
               </div>
               <SmartFilterSelect
-                title=""
+                title={String(t('filter.model') || '设备型号')}
                 value={selectedModel} 
                 options={smartFilterOptions.models}
                 onChange={handleModelChange}
                 placeholder={String(t('ui.selectDeviceModelPlaceholder') || '请选择设备型号')}
                 showCount={smartFilterConfig.showCount}
+                totalCount={allConsumables.length}
               />
             </div>
 
@@ -2676,13 +3119,13 @@ const ConsumablesPage: React.FC = () => {
                       </div>
                     </div>
                     <div className={`
-                      text-base font-medium transition-colors duration-200 flex items-center justify-center
+                      text-base font-medium transition-colors duration-200 flex flex-col items-center
                       ${selectedShape === 'all' ? 'text-blue-700' : 'text-gray-700'}
                     `}>
-                      <span>{String(t('ui.allShapes') || '全部形状')}</span>
+                      <span>全部形状</span>
                       {smartFilterConfig.showCount && (
-                        <span className="ml-2 text-xs text-blue-500">
-                          ({smartFilterOptions.shapes.reduce((sum, opt) => sum + opt.count, 0)})
+                        <span className="text-xs mt-1 text-blue-500">
+                          ({allConsumables.length})
                         </span>
                       )}
                     </div>
@@ -2722,6 +3165,13 @@ const ConsumablesPage: React.FC = () => {
                           src={shape.originalData?.image_url || shapePlaceholderImage}
                           alt={shape.name}
                           className="h-28 w-32 object-contain"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            if (!target.src.startsWith('data:')) {
+                              console.warn('🖼️ [Shape Image] 加载失败，使用占位图片:', shape.originalData?.image_url);
+                              target.src = shapePlaceholderImage;
+                            }
+                          }}
                         />
                       </div>
                       <div className={`
@@ -2775,7 +3225,7 @@ const ConsumablesPage: React.FC = () => {
                     <span>{String(t('ui.allMaterials') || '全部材质')}</span>
                     {smartFilterConfig.showCount && (
                       <span className="ml-2 text-xs">
-                        ({smartFilterOptions.materials.reduce((sum, opt) => sum + opt.count, 0)})
+                        ({allConsumables.length})
                       </span>
                     )}
                   </button>
@@ -2815,6 +3265,7 @@ const ConsumablesPage: React.FC = () => {
                       onChange={isPaperMaterial(selectedMaterial) ? handleWeightChange : handleThicknessChange}
                       placeholder={isPaperMaterial(selectedMaterial) ? String(t('ui.selectWeight') || '选择重量') : String(t('ui.selectThickness') || '选择厚度')}
                     showCount={smartFilterConfig.showCount}
+                    totalCount={allConsumables.length}
                   />
                   
                   <SmartFilterSelect
@@ -2824,6 +3275,7 @@ const ConsumablesPage: React.FC = () => {
                       onChange={handleWidthChange}
                       placeholder={String(t('ui.selectWidth') || '选择宽度')}
                     showCount={smartFilterConfig.showCount}
+                    totalCount={allConsumables.length}
                   />
                   
                   <SmartFilterSelect
@@ -2833,6 +3285,7 @@ const ConsumablesPage: React.FC = () => {
                       onChange={handleLengthChange}
                       placeholder={String(t('ui.selectLength') || '选择长度')}
                     showCount={smartFilterConfig.showCount}
+                    totalCount={allConsumables.length}
                   />
                 </div>
                 

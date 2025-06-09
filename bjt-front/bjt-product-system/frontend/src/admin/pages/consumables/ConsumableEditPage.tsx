@@ -623,8 +623,8 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={12}>
                         <Form.Item
                           name="model_imperial"
-                          label="规格描述(英制) (Specification Imperial)"
-                          extra={`参考该产品线下已有的耗材英制规格，当前共 ${consumableSpecImperialOptions.length} 个规格`}
+                          label="型号(英制) (model Imperial)"
+                          extra={`参考该产品线下已有的耗材型号英制规格，当前共 ${consumableSpecImperialOptions.length} 个规格`}
                         >
                           <AutoComplete
                             options={consumableSpecImperialOptions}

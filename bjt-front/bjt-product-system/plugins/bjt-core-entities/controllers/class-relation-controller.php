@@ -1023,11 +1023,18 @@ class BJT_Relation_Controller extends BJT_API_Controller {
         $region = $request->get_param('region');
         
         try {
+            // 🔧 设置当前主机料号上下文
+            $this->current_host_part_number = $part_number;
+            
             $accessories_table = $wpdb->prefix . 'bjt_accessories';
             $name_column = ($lang === 'en') ? 'name_en' : 'name_zh';
             
-            // 递归获取多级配件
-            $result = $this->get_accessories_recursive($part_number, 1, $max_levels, $lang, $region);
+            error_log("BJT Relations: get_multi_level_accessories - Starting for host: {$part_number}, max_levels: {$max_levels}");
+            
+            // 🔧 修复：递归获取多级配件，主机节点的父级上下文为null
+            $result = $this->get_accessories_recursive($part_number, 1, $max_levels, $lang, $region, [], null);
+            
+            error_log("BJT Relations: get_multi_level_accessories - Completed for host: {$part_number}, returned " . count($result) . " top-level accessories");
             
             return new WP_REST_Response([
                 'success' => true,
@@ -1045,66 +1052,118 @@ class BJT_Relation_Controller extends BJT_API_Controller {
     }
     
     /**
-     * 递归获取配件关系
+     * 递归获取配件关系 - 按照admin RelationsPage的buildTreeNodes逻辑实现
      * 
-     * @param string $part_number
-     * @param int $current_level
-     * @param int $max_levels
-     * @param string $lang
-     * @param string $region
+     * @param string $part_number 当前处理的部件号
+     * @param int $current_level 当前层级
+     * @param int $max_levels 最大层级
+     * @param string $lang 语言
+     * @param string $region 区域
+     * @param array $visited_nodes 已访问节点，防止循环引用
+     * @param string $current_parent_part_number 当前节点的父级料号，用于确定上下文路径
      * @return array
      */
-    private function get_accessories_recursive($part_number, $current_level, $max_levels, $lang, $region) {
+    private function get_accessories_recursive($part_number, $current_level, $max_levels, $lang, $region, $visited_nodes = [], $current_parent_part_number = null) {
         global $wpdb;
         
         if ($current_level > $max_levels) {
+            error_log("BJT Relations: get_accessories_recursive - Max levels ({$max_levels}) reached for part_number: {$part_number}");
             return [];
         }
         
-        // 获取当前料号的直接子配件
-        $relations = $wpdb->get_results(
-            $wpdb->prepare(
-                "SELECT child_part_number FROM {$this->table_name} 
-                 WHERE part_number = %s AND status = 'publish'
-                 ORDER BY sort_order ASC",
-                $part_number
-            )
-        );
+        // 🔧 循环检测：如果当前节点已经在访问路径中，则停止递归
+        if (in_array($part_number, $visited_nodes)) {
+            error_log("BJT Relations: get_accessories_recursive - Detected cycle at node {$part_number}, stopping recursion");
+            return [];
+        }
+        
+        // 添加当前节点到访问集合
+        $new_visited_nodes = array_merge($visited_nodes, [$part_number]);
+        
+        error_log("BJT Relations: get_accessories_recursive - Processing part_number: {$part_number}, current_level: {$current_level}, parent: {$current_parent_part_number}");
+        
+        // 🔧 修正查询逻辑：根据具体的树路径上下文查找子级关系
+        if ($part_number === $this->get_current_host_part_number() && $current_parent_part_number === null) {
+            // 对于主机根节点：查找 parent_part_number = null 且 part_number = 主机料号
+            $relations_query = "SELECT r.child_part_number, r.level, r.quantity, r.sort_order, r.id, r.parent_part_number, r.child_type
+                               FROM {$this->table_name} r 
+                               WHERE r.part_number = %s 
+                               AND r.parent_part_number IS NULL 
+                               AND r.host_part_number = %s
+                               AND r.status = 'publish'
+                               ORDER BY r.sort_order ASC, r.id ASC";
+            
+            $relations = $wpdb->get_results(
+                $wpdb->prepare($relations_query, $part_number, $this->get_current_host_part_number())
+            );
+        } else {
+            // 🔧 关键修复：对于非主机节点，需要根据当前节点的具体路径上下文查找子级
+            // 查找 part_number = 当前节点 AND parent_part_number = 当前父级 的记录
+            $relations_query = "SELECT r.child_part_number, r.level, r.quantity, r.sort_order, r.id, r.parent_part_number, r.child_type
+                               FROM {$this->table_name} r 
+                               WHERE r.part_number = %s 
+                               AND r.parent_part_number = %s
+                               AND r.host_part_number = %s
+                               AND r.status = 'publish'
+                               ORDER BY r.sort_order ASC, r.id ASC";
+            
+            $relations = $wpdb->get_results(
+                $wpdb->prepare($relations_query, $part_number, $current_parent_part_number, $this->get_current_host_part_number())
+            );
+        }
+        
+        // 🎯 特殊调试：针对14A01246
+        if ($part_number === '14A01246') {
+            error_log("🎯 BJT Relations: [14A01246 DEBUG] Query context: part={$part_number}, parent={$current_parent_part_number}");
+            error_log("🎯 BJT Relations: [14A01246 DEBUG] Query executed: " . $wpdb->prepare($relations_query, $part_number, $current_parent_part_number));
+            error_log("🎯 BJT Relations: [14A01246 DEBUG] Found " . count($relations) . " child relations:");
+            foreach ($relations as $i => $rel) {
+                error_log("🎯 BJT Relations: [14A01246 DEBUG]   Child {$i}: {$rel->child_part_number} (level: {$rel->level}, quantity: {$rel->quantity}, relation_id: {$rel->id}, parent: {$rel->parent_part_number})");
+            }
+        } else {
+            error_log("BJT Relations: get_accessories_recursive - Found " . count($relations) . " child relations for part_number: {$part_number}, parent: {$current_parent_part_number}");
+        }
         
         if (empty($relations)) {
+            error_log("BJT Relations: get_accessories_recursive - No child relations found for part_number: {$part_number}, parent: {$current_parent_part_number}");
             return [];
         }
         
         $accessories = [];
         $accessories_table = $wpdb->prefix . 'bjt_accessories';
         $name_column = ($lang === 'en') ? 'name_en' : 'name_zh';
-        $processed_parts = []; // 用于去重
         
+        // 🔧 为每个子关系创建节点
         foreach ($relations as $relation) {
             $child_part_number = $relation->child_part_number;
+            if (!$child_part_number) continue;
             
-            // 跳过已处理的料号
-            if (in_array($child_part_number, $processed_parts)) {
-                continue;
+            // 🎯 特殊调试：针对14A01246的子配件
+            if ($part_number === '14A01246') {
+                error_log("🎯 BJT Relations: [14A01246 DEBUG] Processing child: {$child_part_number} (relation ID: {$relation->id})");
             }
-            $processed_parts[] = $child_part_number;
             
-            // 获取配件详细信息 - 包含所有包装和托盘相关字段
+            // 🔧 查询配件基础信息
+            $accessory_query = "SELECT id, model, part_number, {$name_column} as name, spec, spec_imperial, 
+                                       voltage, frequency, image_url, status, unit, product_line_id,
+                                       package_size_cm, package_size_inch, net_weight_kg, net_weight_lbs,
+                                       gross_weight_kg, gross_weight_lbs, pcs_per_box,
+                                       pallet_size_cm, pallet_size_inch, pcs_per_pallet,
+                                       pallet_height_cm, pallet_height_inch, pallet_gross_weight_kg, pallet_gross_weight_lbs
+                                FROM {$accessories_table} 
+                                WHERE part_number = %s AND status = 'publish'";
+            
             $accessory = $wpdb->get_row(
-                $wpdb->prepare(
-                    "SELECT id, model, part_number, {$name_column} as name, spec, spec_imperial, 
-                            voltage, frequency, image_url, status, unit,
-                            package_size_cm, package_size_inch, net_weight_kg, net_weight_lbs,
-                            gross_weight_kg, gross_weight_lbs, pcs_per_box,
-                            pallet_size_cm, pallet_size_inch, pcs_per_pallet,
-                            pallet_height_cm, pallet_height_inch, pallet_gross_weight_kg, pallet_gross_weight_lbs
-                     FROM {$accessories_table} 
-                     WHERE part_number = %s AND status = 'publish'",
-                    $child_part_number
-                )
+                $wpdb->prepare($accessory_query, $child_part_number)
             );
             
+            // 创建配件数据结构
             if ($accessory) {
+                // 🎯 特殊调试：针对14A01246的子配件
+                if ($part_number === '14A01246') {
+                    error_log("🎯 BJT Relations: [14A01246 DEBUG] Found accessory data for child {$child_part_number}: {$accessory->name}");
+                }
+                
                 $accessory_data = [
                     'id' => $accessory->id,
                     'part_number' => $accessory->part_number,
@@ -1116,8 +1175,9 @@ class BJT_Relation_Controller extends BJT_API_Controller {
                     'frequency' => $accessory->frequency,
                     'image_url' => $accessory->image_url,
                     'unit' => $accessory->unit,
+                    'product_line_id' => $accessory->product_line_id,
                     'level' => $current_level,
-                    // 添加包装相关字段
+                    // 包装信息
                     'package_size_cm' => $accessory->package_size_cm,
                     'package_size_inch' => $accessory->package_size_inch,
                     'net_weight_kg' => $accessory->net_weight_kg,
@@ -1125,7 +1185,7 @@ class BJT_Relation_Controller extends BJT_API_Controller {
                     'gross_weight_kg' => $accessory->gross_weight_kg,
                     'gross_weight_lbs' => $accessory->gross_weight_lbs,
                     'pcs_per_box' => $accessory->pcs_per_box,
-                    // 添加托盘相关字段
+                    // 托盘信息
                     'pallet_size_cm' => $accessory->pallet_size_cm,
                     'pallet_size_inch' => $accessory->pallet_size_inch,
                     'pcs_per_pallet' => $accessory->pcs_per_pallet,
@@ -1133,72 +1193,164 @@ class BJT_Relation_Controller extends BJT_API_Controller {
                     'pallet_height_inch' => $accessory->pallet_height_inch,
                     'pallet_gross_weight_kg' => $accessory->pallet_gross_weight_kg,
                     'pallet_gross_weight_lbs' => $accessory->pallet_gross_weight_lbs,
+                    // 关系信息
+                    'relation_id' => $relation->id,
+                    'quantity' => (int) $relation->quantity,
+                    'sort_order' => (int) $relation->sort_order,
+                    'child_type' => $relation->child_type,
                     'children' => []
                 ];
-                
-                // 添加价格信息（如果提供了region）
-                if ($region) {
-                    $prices_table = $wpdb->prefix . 'bjt_prices';
-                    $price_data = $wpdb->get_row(
-                        $wpdb->prepare(
-                            "SELECT base_price, currency, discount_rate 
-                             FROM {$prices_table} 
-                             WHERE target_type = 'accessory' AND target_id = %d AND region = %s 
-                             AND status = 'active' ORDER BY min_quantity ASC LIMIT 1",
-                            $accessory->id,
-                            $region
-                        )
-                    );
-                    
-                    if ($price_data) {
-                        $accessory_data['pricing'] = [
-                            'base_price' => (float) $price_data->base_price,
-                            'currency' => $price_data->currency,
-                            'discount_rate' => (float) $price_data->discount_rate
-                        ];
-                    }
-                    
-                    // 添加库存信息
-                    $inventory_table = $wpdb->prefix . 'bjt_inventory';
-                    $inventory_data = $wpdb->get_results(
-                        $wpdb->prepare(
-                            "SELECT warehouse, quantity, reserved 
-                             FROM {$inventory_table} 
-                             WHERE target_type = 'accessory' AND target_id = %d AND region = %s 
-                             AND status = 'active'",
-                            $accessory->id,
-                            $region
-                        )
-                    );
-                    
-                    if ($inventory_data) {
-                        $accessory_data['inventory'] = array_map(function($inv) {
-                            return [
-                                'warehouse' => $inv->warehouse,
-                                'quantity' => (int) $inv->quantity,
-                                'reserved' => (int) $inv->reserved,
-                                'available' => (int) $inv->quantity - (int) $inv->reserved
-                            ];
-                        }, $inventory_data);
-                    }
+            } else {
+                // 🔧 配件基础数据不存在，创建占位符
+                error_log("BJT Relations: get_accessories_recursive - Accessory not found for child_part_number: {$child_part_number}, creating placeholder");
+                // 🎯 特殊调试：针对14A01246的子配件
+                if ($part_number === '14A01246') {
+                    error_log("🎯 BJT Relations: [14A01246 DEBUG] ⚠️ Accessory data not found for child: {$child_part_number}, creating placeholder");
                 }
                 
-                // 递归获取子配件
-                if ($current_level < $max_levels) {
-                    $accessory_data['children'] = $this->get_accessories_recursive(
-                        $child_part_number, 
-                        $current_level + 1, 
-                        $max_levels, 
-                        $lang, 
-                        $region
-                    );
+                $accessory_data = [
+                    'id' => "missing_" . $child_part_number,
+                    'part_number' => $child_part_number,
+                    'model' => null,
+                    'name' => "⚠️ 配件数据缺失: {$child_part_number}",
+                    'spec' => "数据缺失 - 需要在配件表中添加此料号",
+                    'spec_imperial' => "Data Missing - Need to add this part number to accessories table",
+                    'voltage' => null,
+                    'frequency' => null,
+                    'image_url' => '/images/placeholder-missing.jpg',
+                    'unit' => 'pcs',
+                    'product_line_id' => 1,
+                    'level' => $current_level,
+                    // 所有物理属性设为null
+                    'package_size_cm' => null, 'package_size_inch' => null,
+                    'net_weight_kg' => null, 'net_weight_lbs' => null,
+                    'gross_weight_kg' => null, 'gross_weight_lbs' => null,
+                    'pcs_per_box' => null, 'pallet_size_cm' => null,
+                    'pallet_size_inch' => null, 'pcs_per_pallet' => null,
+                    'pallet_height_cm' => null, 'pallet_height_inch' => null,
+                    'pallet_gross_weight_kg' => null, 'pallet_gross_weight_lbs' => null,
+                    // 关系信息
+                    'relation_id' => $relation->id,
+                    'quantity' => (int) $relation->quantity,
+                    'sort_order' => (int) $relation->sort_order,
+                    'child_type' => $relation->child_type,
+                    'children' => [],
+                    // 数据状态标记
+                    'data_status' => 'missing_from_accessories_table',
+                    'error_message' => "配件基础数据缺失，仅显示关系结构"
+                ];
+            }
+            
+            // 添加价格和库存信息（如果需要）
+            if ($region && $accessory) {
+                $this->add_pricing_and_inventory($accessory_data, $accessory->id, $region);
+            }
+            
+            // 🔧 递归获取子配件 - 传递正确的父级上下文
+            if ($current_level < $max_levels) {
+                // 🎯 特殊调试：针对14A01246的子配件
+                if ($part_number === '14A01246') {
+                    error_log("🎯 BJT Relations: [14A01246 DEBUG] Recursively getting children for {$child_part_number} at level " . ($current_level + 1) . " with parent context: {$part_number}");
                 }
                 
-                $accessories[] = $accessory_data;
+                $child_accessories = $this->get_accessories_recursive(
+                    $child_part_number, 
+                    $current_level + 1, 
+                    $max_levels, 
+                    $lang, 
+                    $region,
+                    $new_visited_nodes,
+                    $part_number // 🔧 关键修复：传递当前节点作为子级的父级上下文
+                );
+                
+                $accessory_data['children'] = $child_accessories;
+                
+                // 🎯 特殊调试：针对14A01246的子配件
+                if ($part_number === '14A01246') {
+                    error_log("🎯 BJT Relations: [14A01246 DEBUG] Found " . count($child_accessories) . " grandchildren for {$child_part_number}");
+                }
+            }
+            
+            $accessories[] = $accessory_data;
+            
+            // 🎯 特殊调试：针对14A01246
+            if ($part_number === '14A01246') {
+                error_log("🎯 BJT Relations: [14A01246 DEBUG] Added accessory {$child_part_number} to result");
+            }
+        }
+        
+        error_log("BJT Relations: get_accessories_recursive - Returning " . count($accessories) . " accessories for part_number: {$part_number}, parent: {$current_parent_part_number}");
+        
+        // 🎯 特殊调试：针对14A01246
+        if ($part_number === '14A01246') {
+            error_log("🎯 BJT Relations: [14A01246 DEBUG] Final result - returning " . count($accessories) . " accessories");
+            foreach ($accessories as $i => $acc) {
+                error_log("🎯 BJT Relations: [14A01246 DEBUG]   Result {$i}: {$acc['part_number']} (children: " . count($acc['children']) . ")");
             }
         }
         
         return $accessories;
+    }
+    
+    /**
+     * 获取当前处理的主机料号
+     */
+    private function get_current_host_part_number() {
+        // 从当前请求上下文获取主机料号
+        // 这个方法需要在调用时设置当前主机料号
+        return $this->current_host_part_number ?? '';
+    }
+    
+    /**
+     * 添加价格和库存信息
+     */
+    private function add_pricing_and_inventory(&$accessory_data, $accessory_id, $region) {
+        global $wpdb;
+        
+        // 添加价格信息
+        $prices_table = $wpdb->prefix . 'bjt_prices';
+        $price_data = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT base_price, currency, discount_rate 
+                 FROM {$prices_table} 
+                 WHERE target_type = 'accessory' AND target_id = %d AND region = %s 
+                 AND status = 'active' ORDER BY min_quantity ASC LIMIT 1",
+                $accessory_id,
+                $region
+            )
+        );
+        
+        if ($price_data) {
+            $accessory_data['pricing'] = [
+                'base_price' => (float) $price_data->base_price,
+                'currency' => $price_data->currency,
+                'discount_rate' => (float) $price_data->discount_rate
+            ];
+        }
+        
+        // 添加库存信息
+        $inventory_table = $wpdb->prefix . 'bjt_inventory';
+        $inventory_data = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT warehouse, quantity, reserved 
+                 FROM {$inventory_table} 
+                 WHERE target_type = 'accessory' AND target_id = %d AND region = %s 
+                 AND status = 'active'",
+                $accessory_id,
+                $region
+            )
+        );
+        
+        if ($inventory_data) {
+            $accessory_data['inventory'] = array_map(function($inv) {
+                return [
+                    'warehouse' => $inv->warehouse,
+                    'quantity' => (int) $inv->quantity,
+                    'reserved' => (int) $inv->reserved,
+                    'available' => (int) $inv->quantity - (int) $inv->reserved
+                ];
+            }, $inventory_data);
+        }
     }
 
     /**

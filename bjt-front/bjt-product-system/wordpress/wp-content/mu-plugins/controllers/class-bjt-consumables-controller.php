@@ -150,7 +150,144 @@ class BJT_Consumables_Controller extends BJT_API_Controller {
         // 根据语言和区域处理数据
         $items = $this->prepare_consumables_for_response($items, $region, $lang);
         
-        return $this->get_paginated_response($items, $total, $request);
+        // 🔥 修复：添加正确的筛选选项配置
+        $filterOptions = $this->get_filter_options($lang);
+        
+        return $this->get_paginated_response($items, $total, $request, $filterOptions);
+    }
+    
+    /**
+     * 生成筛选选项配置
+     */
+    private function get_filter_options($lang = 'en') {
+        return array(
+            'shapes' => array(
+                array(
+                    'id' => 'MEX',
+                    'code' => 'MEX',
+                    'name_zh' => '气泡枕',
+                    'name_en' => 'Pillow',
+                    'image_url' => '/images/MEX/values/MEX.png',
+                    'image_url2' => '/images/MEX/values/MEX-2.png',
+                    'sort_order' => 10
+                ),
+                array(
+                    'id' => 'MEY',
+                    'code' => 'MEY',
+                    'name_zh' => '开口气泡枕',
+                    'name_en' => 'Precut Air Pillow',
+                    'image_url' => '/images/MEX/values/MEX.png',
+                    'image_url2' => '/images/MEX/values/MEX-2.png',
+                    'sort_order' => 20
+                ),
+                array(
+                    'id' => 'MFF',
+                    'code' => 'MFF',
+                    'name_zh' => '气泡膜',
+                    'name_en' => 'Bubble',
+                    'image_url' => '/images/MFF/values/MFF.png',
+                    'image_url2' => '/images/MFF/values/MFF-2.png',
+                    'sort_order' => 30
+                ),
+                array(
+                    'id' => 'MFC',
+                    'code' => 'MFC',
+                    'name_zh' => '气枕膜',
+                    'name_en' => 'Tube',
+                    'image_url' => '/images/MFC/values/MFC.png',
+                    'image_url2' => '/images/MFC/values/MFC-2.png',
+                    'sort_order' => 40
+                ),
+                array(
+                    'id' => 'MFB',
+                    'code' => 'MFB',
+                    'name_zh' => '纸质气泡膜',
+                    'name_en' => 'paper Bubble',
+                    'image_url' => '/images/MFB/values/MFB.png',
+                    'image_url2' => '/images/MFB/values/MFB-2.png',
+                    'sort_order' => 50
+                ),
+                array(
+                    'id' => 'MEX-PAPER',
+                    'code' => 'MEX-PAPER',
+                    'name_zh' => '纸质气垫枕',
+                    'name_en' => 'paper air Pillow',
+                    'image_url' => '/images/MEX/values/MEX.png',
+                    'image_url2' => '/images/MEX/values/MEX-2.png',
+                    'sort_order' => 60
+                )
+            ),
+            'materials' => array(
+                array(
+                    'id' => 'HDPE',
+                    'code' => 'HDPE',
+                    'name_zh' => 'HDPE',
+                    'name_en' => 'HDPE'
+                ),
+                array(
+                    'id' => '50% HDPE',
+                    'code' => '50% HDPE',
+                    'name_zh' => '50%回料HDPE',
+                    'name_en' => '50%Recycled HDPE'
+                ),
+                array(
+                    'id' => '30% HDPE',
+                    'code' => '30% HDPE',
+                    'name_zh' => '30%回料HDPE',
+                    'name_en' => '30%Recycled HDPE'
+                ),
+                array(
+                    'id' => 'LDPE',
+                    'code' => 'LDPE',
+                    'name_zh' => 'LDPE',
+                    'name_en' => 'LDPE'
+                ),
+                array(
+                    'id' => 'PAPE',
+                    'code' => 'PAPE',
+                    'name_zh' => '牛皮纸',
+                    'name_en' => 'Paper'
+                ),
+                array(
+                    'id' => 'PAPER',
+                    'code' => 'PAPER',
+                    'name_zh' => '纸质',
+                    'name_en' => 'Paper'
+                )
+            ),
+            'models' => array(
+                array(
+                    'id' => '"LA-E4S V2.0"',
+                    'model' => '"LA-E4S V2.0"',
+                    'name_zh' => '"LA-E4S V2.0"商用型缓冲气垫机',
+                    'name_en' => '"LA-E4S V2.0" Business Class Air Cushion System'
+                ),
+                array(
+                    'id' => 'LA-E4C',
+                    'model' => 'LA-E4C',
+                    'name_zh' => 'LA-E4C商用型缓冲气垫机',
+                    'name_en' => 'LA-E4C Business Class Air Cushion System'
+                ),
+                array(
+                    'id' => 'LA-E4S(paper)',
+                    'model' => 'LA-E4S(paper)',
+                    'name_zh' => 'LA-E4S(paper)商用型缓冲气垫机',
+                    'name_en' => 'LA-E4S(paper) Business Class Paper Air Bubble System'
+                ),
+                array(
+                    'id' => 'LA-E5P',
+                    'model' => 'LA-E5P',
+                    'name_zh' => 'LA-E5P工业型缓冲气垫机',
+                    'name_en' => 'LA-E5P Industrial Class Air Cushion System'
+                ),
+                array(
+                    'id' => 'LA-F2',
+                    'model' => 'LA-F2',
+                    'name_zh' => 'LA-F2基础型缓冲气垫机',
+                    'name_en' => 'LA-F2 Basic Class Air Cushion System'
+                )
+            )
+        );
     }
     
     /**

@@ -34,6 +34,13 @@ class BJT_Auth_Controller extends BJT_API_Controller {
                         'default' => false,
                         'description' => '是否记住登录状态',
                     ],
+                    'login_type' => [
+                        'required' => false,
+                        'type' => 'string',
+                        'default' => 'frontend',
+                        'enum' => ['frontend', 'admin_login'],
+                        'description' => '登录类型：frontend(前端用户) 或 admin_login(后台管理)',
+                    ],
                 ],
             ],
         ]);
@@ -121,8 +128,15 @@ class BJT_Auth_Controller extends BJT_API_Controller {
         $username = sanitize_text_field($request['username']);
         $password = $request['password'];
         $remember_me = $request->get_param('remember_me') ?: false;
+        $login_type = $request->get_param('login_type') ?: 'frontend'; // 新增：登录类型参数
         
-        error_log('[BJT_Auth_Controller] Attempting BJT user authentication with username: ' . $username);
+        error_log('[BJT_Auth_Controller] Attempting BJT user authentication with username: ' . $username . ', login_type: ' . $login_type);
+        
+        // 如果是后台管理登录，只允许admin角色
+        if ($login_type === 'admin_login' && $username !== 'admin') {
+            error_log('[BJT_Auth_Controller] Admin login attempted with non-admin username: ' . $username);
+            return $this->error_response('访问被拒绝：只有管理员账号可以登录后台管理系统', 'admin_access_denied', 403);
+        }
         
         // 查询wp_bjt_users表
         $table_name = $wpdb->prefix . 'bjt_users';
@@ -141,6 +155,12 @@ class BJT_Auth_Controller extends BJT_API_Controller {
             return $this->error_response('用户名或密码不正确', 'invalid_credentials', 401);
         }
         
+        // 如果是后台管理登录，再次验证用户角色
+        if ($login_type === 'admin_login' && strtolower($user->role) !== 'admin') {
+            error_log('[BJT_Auth_Controller] Admin login attempted with non-admin role: ' . $user->role);
+            return $this->error_response('访问被拒绝：用户角色不足，无法访问后台管理系统', 'insufficient_role', 403);
+        }
+        
         // 验证密码
         error_log('[BJT_Auth_Controller] About to verify password for user: ' . $username);
         error_log('[BJT_Auth_Controller] Password from request: ' . $password);
@@ -154,7 +174,7 @@ class BJT_Auth_Controller extends BJT_API_Controller {
             return $this->error_response('用户名或密码不正确', 'invalid_credentials', 401);
         }
         
-        error_log('[BJT_Auth_Controller] BJT user authentication successful for user ID: ' . $user->id);
+        error_log('[BJT_Auth_Controller] BJT user authentication successful for user ID: ' . $user->id . ', login_type: ' . $login_type);
         
         // 生成令牌
         $jwt_handler = new BJT_JWT_Handler();
@@ -163,7 +183,7 @@ class BJT_Auth_Controller extends BJT_API_Controller {
         // 令牌过期时间
         $expires_in = $remember_me ? (7 * DAY_IN_SECONDS) : DAY_IN_SECONDS; // 记住登录状态7天，否则24小时
         
-        // 创建JWT payload
+        // 创建JWT payload，包含登录类型信息
         $payload = [
             'iss' => get_site_url(),
             'iat' => time(),
@@ -172,6 +192,7 @@ class BJT_Auth_Controller extends BJT_API_Controller {
                 'user_id' => $user->id,
                 'username' => $user->username,
                 'role' => $user->role,
+                'login_type' => $login_type, // 在token中记录登录类型
             ]
         ];
         
@@ -198,6 +219,7 @@ class BJT_Auth_Controller extends BJT_API_Controller {
             'permissions' => $permissions,
             'created_at' => $user->created_at,
             'updated_at' => $user->updated_at,
+            'login_type' => $login_type, // 返回登录类型
         ];
         
         // 更新最后登录时间
@@ -217,7 +239,7 @@ class BJT_Auth_Controller extends BJT_API_Controller {
             'user' => $user_data,
         ];
         
-        error_log('[BJT_Auth_Controller] Preparing successful login response for BJT user: ' . $user->username);
+        error_log('[BJT_Auth_Controller] Preparing successful login response for BJT user: ' . $user->username . ' (login_type: ' . $login_type . ')');
         return $this->format_response($response_data);
     }
     

@@ -524,8 +524,7 @@ const RelationsPage: React.FC = () => {
     
     console.log(`buildTreeNodes: Total relations to search:`, relations.length);
     
-    // 🔧 修正逻辑：查找 part_number = 当前节点料号的记录
-    // 这些记录的 child_part_number 就是当前节点的子级
+    // 🔧 修正逻辑：根据具体的树路径上下文查找子级关系
     const childRelations = relations.filter(relation => {
       // 首先确保是同一个主机
       const isSameHost = relation.host_part_number?.toString() === selectedHostPartNumber;
@@ -546,21 +545,22 @@ const RelationsPage: React.FC = () => {
         
         return isHostDirectChild;
       } else {
-        // 🔧 修正逻辑：查找 part_number = 当前节点料号的记录
-        // 这些记录的 child_part_number 就是当前节点的子级
-        const isCurrentNodeRelation = relation.part_number === currentPartNumber;
+        // 🔧 关键修复：查找 part_number = 当前节点 AND parent_part_number = 当前父级 的记录
+        // 这确保了节点只显示在正确的路径上下文中
+        const isCurrentNodeRelation = relation.part_number === currentPartNumber && 
+                                     relation.parent_part_number === currentParentPartNumber;
         
-        console.log(`buildTreeNodes: Checking relation for current node ${currentPartNumber}: relation ${relation.id}, part_number=${relation.part_number}, isCurrentNodeRelation=${isCurrentNodeRelation}`);
+        console.log(`buildTreeNodes: Checking relation for current node ${currentPartNumber}, parent ${currentParentPartNumber}: relation ${relation.id}, part_number=${relation.part_number}, parent_part_number=${relation.parent_part_number}, isMatch=${isCurrentNodeRelation}`);
         
         if (isCurrentNodeRelation) {
-          console.log(`buildTreeNodes: Found child for node ${currentPartNumber}: ${relation.child_part_number} (relation ${relation.id})`);
+          console.log(`buildTreeNodes: Found child for node ${currentPartNumber} with correct parent context: ${relation.child_part_number} (relation ${relation.id})`);
         }
         
         return isCurrentNodeRelation;
       }
     });
 
-    console.log(`buildTreeNodes: Found ${childRelations.length} child relations for ${currentPartNumber} (as parent) under host ${selectedHostPartNumber}`);
+    console.log(`buildTreeNodes: Found ${childRelations.length} child relations for ${currentPartNumber} with parent context ${currentParentPartNumber} under host ${selectedHostPartNumber}`);
     
     // 打印详细的关系信息用于调试
     if (childRelations.length > 0) {
@@ -594,8 +594,9 @@ const RelationsPage: React.FC = () => {
 
       const typeInfo = getTypeInfo();
 
-      // 🔧 修正递归调用：传递 child_part_number 作为下一级的 currentPartNumber
-      // 因为我们要查找以 child_part_number 为 part_number 的关系
+      // 🔧 修正递归调用：传递正确的父级上下文
+      // child_part_number 作为下一级的 currentPartNumber
+      // currentPartNumber 作为下一级的 currentParentPartNumber  
       const grandChildren = buildTreeNodes(relations, relation.child_part_number, currentPartNumber, newVisitedNodes);
       
       const node: RelationTreeNode = {
@@ -677,7 +678,7 @@ const RelationsPage: React.FC = () => {
       nodes.push(node);
     });
 
-    console.log(`buildTreeNodes: Created ${nodes.length} tree nodes for ${currentPartNumber} under host ${selectedHostPartNumber}`);
+    console.log(`buildTreeNodes: Created ${nodes.length} tree nodes for ${currentPartNumber} with parent context ${currentParentPartNumber} under host ${selectedHostPartNumber}`);
     return nodes;
   };
 
@@ -1043,6 +1044,7 @@ const RelationsPage: React.FC = () => {
             page: currentPage,
             page_size: 100,
             product_line_id: productLineId,
+            is_consumable: 0, // 筛选非易损备件（is_consumable = 0）
             status: 'publish'
           });
           
@@ -1089,7 +1091,7 @@ const RelationsPage: React.FC = () => {
           page: currentPage,
           page_size: 100,
           product_line_id: productLineId,
-          is_consumable: false, // 筛选非易损备件（is_consumable = 0）
+          is_consumable: 0, // 筛选非易损备件（is_consumable = 0）
           status: 'publish'
         });
         

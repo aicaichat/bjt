@@ -1,0 +1,24 @@
+{
+  "name": "bjt-tree-structure-verifier",
+  "version": "1.0.0",
+  "description": "数据库与API树形结构一致性验证工具",
+  "main": "scripts/verify-tree-structure.js",
+  "scripts": {
+    "verify": "node scripts/verify-tree-structure.js",
+    "verify:debug": "DEBUG=1 node scripts/verify-tree-structure.js",
+    "verify:host": "node scripts/verify-tree-structure.js"
+  },
+  "dependencies": {
+    "axios": "^1.9.0",
+    "mysql2": "^3.14.1"
+  },
+  "author": "BJT Team",
+  "license": "MIT",
+  "keywords": [
+    "validation",
+    "tree-structure",
+    "database",
+    "api",
+    "consistency"
+  ]
+}

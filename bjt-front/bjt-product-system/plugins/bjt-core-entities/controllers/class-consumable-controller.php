@@ -1033,10 +1033,15 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
     }
     
     /**
-     * 🔥 新增方法：获取形状图片URL
+     * 🔥 修复方法：获取形状图片URL
      */
     private function get_shape_image_url($shape) {
         $shape_images = [
+            // 🔥 新增：Pillow和Precut Air Pillow的正确映射
+            'Pillow' => '/images/MEX/values/MEX.png',
+            'Precut Air Pillow' => '/images/MEX/values/MEX.png',
+            
+            // 现有映射
             'Bubble' => '/images/MFF/values/MFF.png',
             'Tube' => '/images/MFC/values/MFC.png',
             'paper Bubble' => '/images/MFB/values/MFB.png',

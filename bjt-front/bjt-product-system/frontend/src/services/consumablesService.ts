@@ -130,6 +130,9 @@ export interface FilterOptionItem {
   name_en?: string;
   image_url?: string;
   image_url2?: string;
+  shape_name?: string;        // 添加缺失字段
+  category_name?: string;     // 添加缺失字段
+  featured_image?: string;    // 添加缺失字段
 }
 
 export interface FilterOptionsType {

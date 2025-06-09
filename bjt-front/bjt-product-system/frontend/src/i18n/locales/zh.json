@@ -144,6 +144,77 @@
     "totalLengthImp": "总长(ft)",
     "totalLengthMet": "总长(m)"
   },
+  "consumable": {
+    "fields": {
+      "app_model": "适用机型",
+      "name": "名称(英文)",
+      "shape": "形状",
+      "image_url": "产品图片",
+      "code": "料号",
+      "model": "型号",
+      "spec": "规格",
+      "bubble_diameter": "泡径",
+      "id": "产品ID",
+      "pcs_per_box": "单箱数量",
+      "material": "材质",
+      "thickness": "厚度/克重",
+      "width": "膜宽",
+      "length": "袋长",
+      "total_length": "总长",
+      "package_type": "包装方式",
+      "package_size": "包装尺寸",
+      "net_weight": "单件净重",
+      "package_image_url": "包装实物图片",
+      "pallet_size": "托盘尺寸",
+      "pcs_per_pallet_a": "一托卷数A",
+      "pallet_gross_weight_a": "整托毛重A",
+      "pallet_height_a": "打托高度A",
+      "pcs_per_pallet_b": "一托卷数B",
+      "pallet_gross_weight_b": "整盘毛重B",
+      "pallet_height_b": "打托高度B",
+      "pcs_per_pallet_c": "一托卷数C",
+      "pallet_gross_weight_c": "整托毛重C",
+      "pallet_height_c": "打托高度C",
+      "tube_inner_diameter": "纸筒内径",
+      "brand": "品牌"
+    },
+    "fieldsWithUnits": {
+      "metric": {
+        "bubble_diameter": "泡径(cm)",
+        "thickness": "厚度/克重(μm/gsm)",
+        "width": "膜宽(cm)",
+        "length": "袋长(cm)",
+        "total_length": "总长(m)",
+        "package_size": "包装尺寸(cm)",
+        "net_weight": "单件净重(kg)",
+        "pallet_size": "托盘尺寸(cm)",
+        "pallet_gross_weight_a": "整托毛重A(kg)",
+        "pallet_height_a": "打托高度A(cm)",
+        "pallet_gross_weight_b": "整盘毛重B(kg)",
+        "pallet_height_b": "打托高度B(cm)",
+        "pallet_gross_weight_c": "整托毛重C(kg)",
+        "pallet_height_c": "打托高度C(cm)",
+        "tube_inner_diameter": "纸筒内径(cm)"
+      },
+      "imperial": {
+        "bubble_diameter": "泡径(inch)",
+        "thickness": "厚度/克重(mil/#)",
+        "width": "膜宽(inch)",
+        "length": "袋长(inch)",
+        "total_length": "总长(ft)",
+        "package_size": "包装尺寸(inch)",
+        "net_weight": "单件净重(lbs)",
+        "pallet_size": "托盘尺寸(inch)",
+        "pallet_gross_weight_a": "整托毛重A(lbs)",
+        "pallet_height_a": "打托高度A(inch)",
+        "pallet_gross_weight_b": "整盘毛重B(lbs)",
+        "pallet_height_b": "打托高度B(inch)",
+        "pallet_gross_weight_c": "整托毛重C(lbs)",
+        "pallet_height_c": "打托高度C(inch)",
+        "tube_inner_diameter": "纸筒内径(inch)"
+      }
+    }
+  },
   "machines": {
     "pageTitle": "设备选型",
     "tableHeaders": {
@@ -318,7 +389,8 @@
     "login": "登录",
     "cancel": "取消",
     "loginRequired": "需要登录",
-    "loginPrompt": "您需要登录后才能访问此内容。是否前往登录页面？"
+    "loginPrompt": "您需要登录后才能访问此内容。是否前往登录页面？",
+    "toBeFilled": "待补充"
   },
   "order": {
     "title": "确认订单",
@@ -558,5 +630,53 @@
     "usa": "美国",
     "europe": "欧洲",
     "asia": "亚洲"
-  }
+  },
+  "tooltip": {
+    "coreSpecs": "核心规格",
+    "material": "材质",
+    "palletConfigs": "托盘配置",
+    "configA": "配置A",
+    "configB": "配置B",
+    "configC": "配置C",
+    "packageInfo": "包装信息",
+    "packagingMethod": "包装方式",
+    "pcsPerBox": "单箱数量",
+    "techParams": "技术参数",
+    "cartonPack": "纸箱装",
+    "apiError": "API调用失败，显示基础信息",
+    "thickness": {
+      "metric": "厚度(μm)",
+      "imperial": "厚度(mil)"
+    },
+    "dimensions": {
+      "metric": "尺寸(cm)",
+      "imperial": "尺寸(inch)"
+    },
+    "bubbleDiameter": {
+      "metric": "泡径(cm)",
+      "imperial": "泡径(inch)"
+    },
+    "unitWeight": {
+      "metric": "单件净重(kg)",
+      "imperial": "单件净重(lbs)"
+    },
+    "totalLength": {
+      "metric": "总长(m)",
+      "imperial": "总长(ft)"
+    },
+    "tubeInnerDiameter": {
+      "metric": "纸筒内径(cm)",
+      "imperial": "纸筒内径(inch)"
+    },
+    "packageSize": {
+      "metric": "包装尺寸(cm)",
+      "imperial": "包装尺寸(inch)"
+    },
+    "palletSize": "托盘尺寸"
+  },
+  "rollLength": "总长",
+  "length": "长度",
+  "width": "宽度",
+  "thickness": "厚度",
+  "inventory": "库存"
 } 

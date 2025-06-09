@@ -2,6 +2,7 @@ import React from 'react';
 import { Button, Dropdown, Space } from 'antd';
 import { GlobalOutlined } from '@ant-design/icons';
 import { useLanguage } from '../hooks/useAdminI18n';
+import { useAdminI18n } from '../hooks/useAdminI18n';
 
 interface LanguageSwitchProps {
   size?: 'small' | 'middle' | 'large';
@@ -13,6 +14,7 @@ const LanguageSwitch: React.FC<LanguageSwitchProps> = ({
   type = 'default' 
 }) => {
   const { language, changeLanguage } = useLanguage();
+  const { tc } = useAdminI18n();
 
   const languageOptions = [
     {

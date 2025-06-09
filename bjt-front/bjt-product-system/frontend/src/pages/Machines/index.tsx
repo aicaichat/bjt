@@ -19,6 +19,20 @@ import {
 import { MachineProduct, MachineListData, MachineAccessory, MachinePart, MachinePartListData } from '../../types/machines';
 import { PriceTier, InventoryData } from '../../types/common';
 
+// 本地类型定义
+interface AccessoryWithChildren extends MachineAccessory {
+  children?: AccessoryWithChildren[];
+  relation_id: string | number;
+}
+
+interface FlattenedAccessory extends MachineAccessory {
+  level: number;
+  relation_id: string | number;
+  hierarchyPath: string;
+  uniqueKey: string;
+  children: []; // 展开后清空children
+}
+
 import './Machines.css';
 import './accessibility.css';
 
@@ -145,6 +159,11 @@ const MachinesPage: React.FC = () => {
   const userRegion = filterRegion || user?.region || DEFAULT_REGION;
   
   const currentLanguage = i18n.language.startsWith('zh') ? 'zh' : 'en';
+
+  // 现代化通知功能
+  const toastNotifications = useToastNotifications();
+  const showSuccessToast = toastNotifications.success;
+  const showInfoToast = toastNotifications.info;
 
   const getMachineName = (machine: MachinePart): string => {
     const name = currentLanguage === 'zh' ? machine.name_zh : machine.name_en;
@@ -738,6 +757,78 @@ const MachinesPage: React.FC = () => {
           if (jsonData.success && jsonData.data && jsonData.data.accessories) {
             const accessoriesData = jsonData.data.accessories;
             
+            // ✅ 新增：专门的层级结构分析函数
+            const analyzeAccessoryHierarchy = (items: any[], depth: number = 0) => {
+              const indent = '  '.repeat(depth);
+              console.log(`${indent}📊 [analyzeAccessoryHierarchy] Analyzing ${items.length} items at depth ${depth}:`);
+              
+              items.forEach((item: any, index: number) => {
+                const isTarget = item.part_number === '14A01246';
+                console.log(`${indent}${index + 1}. ${isTarget ? '🎯 ' : ''}${item.part_number} (${item.name}) - Level ${item.level}`, {
+                  id: item.id,
+                  hasChildren: !!item.children,
+                  childrenCount: item.children?.length || 0,
+                  allKeys: Object.keys(item)
+                });
+                
+                if (isTarget) {
+                  console.log(`${indent}   🎯 [FOUND 14A01246] Full details:`, {
+                    fullObject: item,
+                    parent_context: `Found at depth ${depth}, index ${index}`,
+                    children_analysis: item.children ? {
+                      count: item.children.length,
+                      children_details: item.children.map((child: any, childIndex: number) => ({
+                        childIndex,
+                        id: child.id,
+                        part_number: child.part_number,
+                        name: child.name,
+                        level: child.level
+                      }))
+                    } : 'No children'
+                  });
+                }
+                
+                // 递归分析子配件
+                if (item.children && Array.isArray(item.children) && item.children.length > 0) {
+                  analyzeAccessoryHierarchy(item.children, depth + 1);
+                }
+              });
+            };
+            
+            console.log('🔍 [loadAccessories] Starting complete hierarchy analysis:');
+            analyzeAccessoryHierarchy(accessoriesData);
+            
+            // ✅ 新增：查找14A01246在所有层级中的位置
+            const findItemInHierarchy = (items: any[], targetPartNumber: string, path: string[] = []): any => {
+              for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                const currentPath = [...path, `${item.part_number}(L${item.level})`];
+                
+                if (item.part_number === targetPartNumber) {
+                  console.log(`🎯 [findItemInHierarchy] Found ${targetPartNumber} at path:`, currentPath.join(' > '));
+                  return {
+                    item,
+                    path: currentPath,
+                    depth: path.length,
+                    parentItem: path.length > 0 ? items : null
+                  };
+                }
+                
+                if (item.children && Array.isArray(item.children)) {
+                  const found = findItemInHierarchy(item.children, targetPartNumber, currentPath);
+                  if (found) return found;
+                }
+              }
+              return null;
+            };
+            
+            const found14A01246 = findItemInHierarchy(accessoriesData, '14A01246');
+            if (found14A01246) {
+              console.log('🎯 [loadAccessories] 14A01246 location analysis:', found14A01246);
+            } else {
+              console.warn('⚠️ [loadAccessories] 14A01246 not found in hierarchy!');
+            }
+            
             // 新的数据转换逻辑：正确处理嵌套层级结构
             const flattenAccessoriesByLevel = (items: any[], targetLevel: number = 1) => {
               const result: MachineAccessory[] = [];
@@ -745,68 +836,139 @@ const MachinesPage: React.FC = () => {
               console.log('🔍 [flattenAccessoriesByLevel] Input items:', items);
               console.log('🔍 [flattenAccessoriesByLevel] Target level:', targetLevel);
               
+              // ✅ 新增：针对14A01246的特殊调试
+              const targetPart = items.find(item => item.part_number === '14A01246');
+              if (targetPart) {
+                console.log('🎯 [DEBUG] Found 14A01246 in input data:', {
+                  id: targetPart.id,
+                  part_number: targetPart.part_number,
+                  name: targetPart.name,
+                  level: targetPart.level,
+                  hasChildren: !!targetPart.children,
+                  childrenCount: targetPart.children?.length || 0,
+                  childrenData: targetPart.children,
+                  allProperties: Object.keys(targetPart)
+                });
+                
+                if (targetPart.children && targetPart.children.length > 0) {
+                  console.log('🎯 [DEBUG] 14A01246 children details:', targetPart.children.map((child: any, index: number) => ({
+                    index,
+                    id: child.id,
+                    part_number: child.part_number,
+                    name: child.name,
+                    level: child.level,
+                    hasGrandChildren: !!child.children,
+                    grandChildrenCount: child.children?.length || 0
+                  })));
+                }
+              } else {
+                console.warn('⚠️ [DEBUG] 14A01246 not found in input data');
+                console.log('🔍 [DEBUG] Available part numbers:', items.map(item => item.part_number));
+              }
+              
               const processItems = (itemsList: any[], parentId?: string) => {
                 itemsList.forEach((item: any, index: number) => {
-                  console.log(`🔍 [processItems] Processing item ${index}:`, {
+                  // ✅ 特殊标记14A01246的处理
+                  const isTarget14A01246 = item.part_number === '14A01246';
+                  
+                  console.log(`🔍 [processItems] Processing item ${index}${isTarget14A01246 ? ' 🎯 (14A01246)' : ''}:`, {
                     id: item.id,
                     part_number: item.part_number,
                     level: item.level,
                     name: item.name,
-                    hasChildren: item.children?.length > 0
+                    hasChildren: item.children?.length > 0,
+                    childrenCount: item.children?.length || 0,
+                    childrenData: item.children // ✅ 显示原始子数据
                   });
+                  
+                  // ✅ 针对14A01246的详细分析
+                  if (isTarget14A01246) {
+                    console.log('🎯 [processItems] Detailed analysis for 14A01246:', {
+                      targetLevel,
+                      itemLevel: item.level,
+                      willBeProcessed: item.level === targetLevel,
+                      childrenExists: !!item.children,
+                      childrenIsArray: Array.isArray(item.children),
+                      childrenLength: item.children?.length || 0,
+                      childrenRawData: item.children
+                    });
+                  }
                   
                   // 检查是否为目标层级的配件
                   if (item.level === targetLevel) {
-                    console.log(`✅ [processItems] Found target level ${targetLevel} item:`, item.part_number);
+                    console.log(`✅ [processItems] Found target level ${targetLevel} item${isTarget14A01246 ? ' 🎯 (14A01246)' : ''}:`, item.part_number);
                     
-                    // ✅ 修复：递归转换子级数据
+                    // ✅ 修复：递归转换子级数据，确保子级数据完整
                     const convertChildren = (childrenData: any[]): MachineAccessory[] => {
                       if (!childrenData || !Array.isArray(childrenData) || childrenData.length === 0) {
+                        console.log(`⚠️ [convertChildren] No children data for ${item.part_number}${isTarget14A01246 ? ' 🎯 (14A01246)' : ''}`);
                         return [];
                       }
                       
-                      return childrenData.map((child: any) => ({
-                        id: String(child.id || child.part_number || ''),
-                        product_line_id: child.product_line_id,
-                        model: child.model || '',
-                        brand: child.brand || '',
-                        part_number: child.part_number || '',
-                        name_zh: child.name || child.name_zh || '',
-                        name_en: child.name || child.name_en || '',
-                        title: child.name || child.title || '',
-                        title_zh: child.name || child.title_zh || '',
-                        title_en: child.name || child.title_en || '',
-                        spec: child.spec || '',
-                        spec_imperial: child.spec_imperial || '',
-                        voltage: child.voltage || '',
-                        frequency: child.frequency || '',
-                        package_size_cm: child.package_size_cm || '',
-                        package_size_inch: child.package_size_inch || '',
-                        net_weight_kg: child.net_weight_kg ? parseFloat(child.net_weight_kg) : undefined,
-                        net_weight_lbs: child.net_weight_lbs ? parseFloat(child.net_weight_lbs) : undefined,
-                        gross_weight_kg: child.gross_weight_kg ? parseFloat(child.gross_weight_kg) : undefined,
-                        gross_weight_lbs: child.gross_weight_lbs ? parseFloat(child.gross_weight_lbs) : undefined,
-                        pcs_per_box: child.pcs_per_box ? parseInt(child.pcs_per_box) : undefined,
-                        pallet_size_cm: child.pallet_size_cm || '',
-                        pallet_size_inch: child.pallet_size_inch || '',
-                        pcs_per_pallet: child.pcs_per_pallet ? parseInt(child.pcs_per_pallet) : undefined,
-                        pallet_height_cm: child.pallet_height_cm ? parseFloat(child.pallet_height_cm) : undefined,
-                        pallet_height_inch: child.pallet_height_inch ? parseFloat(child.pallet_height_inch) : undefined,
-                        pallet_gross_weight_kg: child.pallet_gross_weight_kg ? parseFloat(child.pallet_gross_weight_kg) : undefined,
-                        pallet_gross_weight_lbs: child.pallet_gross_weight_lbs ? parseFloat(child.pallet_gross_weight_lbs) : undefined,
-                        image_url: child.image_url || '/images/placeholder.jpg',
-                        level: child.level || (targetLevel + 1),
-                        parts: [],
-                        parent_id: item.id || item.part_number,
-                        compatible_machines: [],
-                        child_accessories: [],
-                        children: convertChildren(child.children), // 递归转换子级
-                        status: child.status || 'publish',
-                        unit: child.unit || 'pcs',
-                        created_at: child.created_at,
-                        updated_at: child.updated_at,
-                        is_required: false
-                      }));
+                      console.log(`🔍 [convertChildren] Converting ${childrenData.length} children for ${item.part_number}${isTarget14A01246 ? ' 🎯 (14A01246)' : ''}:`, childrenData);
+                      
+                      return childrenData.map((child: any) => {
+                        console.log(`🔍 [convertChildren] Converting child${isTarget14A01246 ? ' of 14A01246 🎯' : ''}:`, {
+                          id: child.id,
+                          part_number: child.part_number,
+                          name: child.name,
+                          level: child.level,
+                          hasGrandChildren: child.children?.length > 0
+                        });
+                        
+                        const convertedChild: MachineAccessory = {
+                          id: String(child.id || child.part_number || ''),
+                          product_line_id: child.product_line_id,
+                          model: child.model || '',
+                          brand: child.brand || '',
+                          part_number: child.part_number || '',
+                          name_zh: child.name || child.name_zh || '',
+                          name_en: child.name || child.name_en || '',
+                          title: child.name || child.title || '',
+                          title_zh: child.name || child.title_zh || '',
+                          title_en: child.name || child.title_en || '',
+                          spec: child.spec || '',
+                          spec_imperial: child.spec_imperial || '',
+                          voltage: child.voltage || '',
+                          frequency: child.frequency || '',
+                          package_size_cm: child.package_size_cm || '',
+                          package_size_inch: child.package_size_inch || '',
+                          net_weight_kg: child.net_weight_kg ? parseFloat(child.net_weight_kg) : undefined,
+                          net_weight_lbs: child.net_weight_lbs ? parseFloat(child.net_weight_lbs) : undefined,
+                          gross_weight_kg: child.gross_weight_kg ? parseFloat(child.gross_weight_kg) : undefined,
+                          gross_weight_lbs: child.gross_weight_lbs ? parseFloat(child.gross_weight_lbs) : undefined,
+                          pcs_per_box: child.pcs_per_box ? parseInt(child.pcs_per_box) : undefined,
+                          pallet_size_cm: child.pallet_size_cm || '',
+                          pallet_size_inch: child.pallet_size_inch || '',
+                          pcs_per_pallet: child.pcs_per_pallet ? parseInt(child.pcs_per_pallet) : undefined,
+                          pallet_height_cm: child.pallet_height_cm ? parseFloat(child.pallet_height_cm) : undefined,
+                          pallet_height_inch: child.pallet_height_inch ? parseFloat(child.pallet_height_inch) : undefined,
+                          pallet_gross_weight_kg: child.pallet_gross_weight_kg ? parseFloat(child.pallet_gross_weight_kg) : undefined,
+                          pallet_gross_weight_lbs: child.pallet_gross_weight_lbs ? parseFloat(child.pallet_gross_weight_lbs) : undefined,
+                          image_url: child.image_url || '/images/placeholder.jpg',
+                          level: child.level || (targetLevel + 1),
+                          parts: [],
+                          parent_id: item.id || item.part_number,
+                          compatible_machines: [],
+                          child_accessories: [],
+                          children: convertChildren(child.children), // ✅ 递归转换更深层级的子配件
+                          status: child.status || 'publish',
+                          unit: child.unit || 'pcs',
+                          created_at: child.created_at,
+                          updated_at: child.updated_at,
+                          is_required: false
+                        };
+                        
+                        console.log(`✅ [convertChildren] Converted child${isTarget14A01246 ? ' of 14A01246 🎯' : ''}:`, {
+                          id: convertedChild.id,
+                          part_number: convertedChild.part_number,
+                          title: convertedChild.title,
+                          level: convertedChild.level,
+                          childrenCount: convertedChild.children.length
+                        });
+                        
+                        return convertedChild;
+                      });
                     };
                     
                     // 正确映射API字段到MachineAccessory类型
@@ -854,32 +1016,54 @@ const MachinesPage: React.FC = () => {
                     };
                     
                     result.push(convertedAccessory);
-                    console.log(`✅ [processItems] Successfully converted and added accessory:`, {
+                    console.log(`✅ [processItems] Successfully converted and added accessory${isTarget14A01246 ? ' 🎯 (14A01246)' : ''}:`, {
                       id: convertedAccessory.id,
                       part_number: convertedAccessory.part_number,
                       title: convertedAccessory.title,
                       level: convertedAccessory.level,
-                      childrenCount: convertedAccessory.children.length // ✅ 显示子级数量
+                      childrenCount: convertedAccessory.children.length, // ✅ 显示子级数量
+                      childrenDetails: convertedAccessory.children.map(c => ({ // ✅ 显示子级详情
+                        part_number: c.part_number,
+                        title: c.title,
+                        level: c.level
+                      }))
                     });
                   } else {
-                    console.log(`⏭️ [processItems] Skipping item (level ${item.level} != ${targetLevel}):`, item.part_number);
+                    console.log(`⏭️ [processItems] Skipping item (level ${item.level} != ${targetLevel})${isTarget14A01246 ? ' 🎯 (14A01246)' : ''}:`, item.part_number);
                   }
                   
-                  // 递归处理子级
+                  // ✅ 重要：无论是否是目标层级，都要递归处理子级，确保所有层级的数据都被处理
                   if (item.children && Array.isArray(item.children) && item.children.length > 0) {
-                    console.log(`🔍 [processItems] Processing ${item.children.length} children for item ${item.part_number}`);
+                    console.log(`🔍 [processItems] Processing ${item.children.length} children for item ${item.part_number}${isTarget14A01246 ? ' 🎯 (14A01246)' : ''}`);
                     processItems(item.children, item.id || item.part_number);
                   }
                 });
               };
               
               processItems(items);
+              
+              // ✅ 新增：验证14A01246是否在最终结果中
+              const found14A01246 = result.find(r => r.part_number === '14A01246');
+              if (found14A01246) {
+                console.log('🎯 [DEBUG] 14A01246 in final result:', {
+                  id: found14A01246.id,
+                  part_number: found14A01246.part_number,
+                  title: found14A01246.title,
+                  level: found14A01246.level,
+                  childrenCount: found14A01246.children.length,
+                  childrenPartNumbers: found14A01246.children.map(c => c.part_number)
+                });
+              } else {
+                console.warn('⚠️ [DEBUG] 14A01246 NOT FOUND in final result!');
+              }
+              
               console.log(`🔍 [flattenAccessoriesByLevel] Final result count for level ${targetLevel}:`, result.length);
               console.log(`🔍 [flattenAccessoriesByLevel] Final result items:`, result.map(r => ({ 
                 part_number: r.part_number, 
                 title: r.title, 
                 level: r.level,
-                childrenCount: r.children.length // ✅ 显示每个配件的子级数量
+                childrenCount: r.children.length, // ✅ 显示每个配件的子级数量
+                childrenPartNumbers: r.children.map(c => c.part_number) // ✅ 显示子级料号
               })));
               return result;
             };
@@ -1213,6 +1397,21 @@ const MachinesPage: React.FC = () => {
       
       const selectedAccessory = currentLevelAccessories.find(acc => acc.id === accessoryId);
       
+      console.log(`🔍 [handleAccessorySelection] Level ${level} selection:`, {
+        accessoryId,
+        accessoryName,
+        selectedAccessory: selectedAccessory ? {
+          id: selectedAccessory.id,
+          part_number: selectedAccessory.part_number,
+          title: selectedAccessory.title,
+          level: selectedAccessory.level,
+          hasChildren: selectedAccessory.children?.length > 0,
+          childrenCount: selectedAccessory.children?.length || 0,
+          childrenData: selectedAccessory.children
+        } : null,
+        currentLevelAccessoriesCount: currentLevelAccessories.length
+      });
+      
       if (selectedAccessory?.is_required) {
         const requiredAccessories = currentLevelAccessories.filter(acc => acc.is_required);
         const selectedRequiredAccessories = requiredAccessories.filter(acc => 
@@ -1277,25 +1476,49 @@ const MachinesPage: React.FC = () => {
         }
       }
 
-      // Get child accessories data
+      // ✅ 增强子配件数据处理逻辑
       if (selectedAccessory?.children?.length > 0) {
-        const nextLevelAccessories = selectedAccessory.children.map(child => ({
-          ...child,
-          level: nextLevel
-        }));
+        console.log(`🔍 [handleAccessorySelection] Processing ${selectedAccessory.children.length} children for next level ${nextLevel}:`, selectedAccessory.children);
+        
+        const nextLevelAccessories = selectedAccessory.children.map((child, index) => {
+          console.log(`🔍 [handleAccessorySelection] Mapping child ${index}:`, {
+            id: child.id,
+            part_number: child.part_number,
+            title: child.title,
+            originalLevel: child.level,
+            newLevel: nextLevel
+          });
+          
+          return {
+            ...child,
+            level: nextLevel // ✅ 确保子配件有正确的层级
+          };
+        });
+        
+        console.log(`✅ [handleAccessorySelection] Processed next level accessories:`, nextLevelAccessories.map(a => ({
+          id: a.id,
+          part_number: a.part_number,
+          title: a.title,
+          level: a.level,
+          hasChildren: a.children?.length > 0
+        })));
         
         switch (nextLevel) {
           case 2:
             setLevel2Accessories(nextLevelAccessories);
+            console.log(`✅ [handleAccessorySelection] Set ${nextLevelAccessories.length} level 2 accessories`);
             break;
           case 3:
             setLevel3Accessories(nextLevelAccessories);
+            console.log(`✅ [handleAccessorySelection] Set ${nextLevelAccessories.length} level 3 accessories`);
             break;
           case 4:
             setLevel4Accessories(nextLevelAccessories);
+            console.log(`✅ [handleAccessorySelection] Set ${nextLevelAccessories.length} level 4 accessories`);
             break;
           case 5:
             setLevel5Accessories(nextLevelAccessories);
+            console.log(`✅ [handleAccessorySelection] Set ${nextLevelAccessories.length} level 5 accessories`);
             break;
         }
         
@@ -1303,6 +1526,7 @@ const MachinesPage: React.FC = () => {
         const nextLevelDiv = document.getElementById(`accessory-level-${nextLevel}`);
         if (nextLevelDiv) {
           nextLevelDiv.style.display = 'block';
+          console.log(`✅ [handleAccessorySelection] Showed level ${nextLevel} accessory area`);
         }
         
         // 显示成功加载下一级配件的提示
@@ -1314,6 +1538,8 @@ const MachinesPage: React.FC = () => {
           }) || `已为您加载了 ${nextLevelAccessories.length} 个${nextLevel}级配件选项`
         );
       } else {
+        console.log(`⚠️ [handleAccessorySelection] No children found for accessory ${accessoryId} (${accessoryName})`);
+        
         // 当没有下一级配件时的提醒消息
         if (nextLevel <= 5) {
           info(
@@ -1402,45 +1628,6 @@ const MachinesPage: React.FC = () => {
               <div className="w-full md:w-3/5 md:px-6">
                 <div className="mb-4">
                   <span className="inline-block bg-blue-500 text-white px-3 py-1 text-sm font-bold rounded-lg shadow-sm">{machine.part_number}</span>
-                  {/* 临时调试按钮 */}
-                  <button 
-                    onClick={async () => {
-                      console.log('🔍 [DEBUG] Machine data:', machine);
-                      
-                      // 检查图片文件是否存在
-                      if (machine.image_url) {
-                        try {
-                          const imgResponse = await fetch(machine.image_url, { method: 'HEAD' });
-                          console.log(`🔍 [DEBUG] Image file check for ${machine.image_url}:`, {
-                            exists: imgResponse.ok,
-                            status: imgResponse.status,
-                            statusText: imgResponse.statusText
-                          });
-                        } catch (error) {
-                          console.log(`❌ [DEBUG] Image file check failed for ${machine.image_url}:`, error);
-                        }
-                      }
-                      
-                      // 检查PDF文件是否存在
-                      if (machine.model_explosion_diagram_pdf) {
-                        try {
-                          const pdfResponse = await fetch(machine.model_explosion_diagram_pdf, { method: 'HEAD' });
-                          console.log(`🔍 [DEBUG] PDF file check for ${machine.model_explosion_diagram_pdf}:`, {
-                            exists: pdfResponse.ok,
-                            status: pdfResponse.status,
-                            statusText: pdfResponse.statusText
-                          });
-                        } catch (error) {
-                          console.log(`❌ [DEBUG] PDF file check failed for ${machine.model_explosion_diagram_pdf}:`, error);
-                        }
-                      }
-                      
-                      alert(`机器数据已输出到控制台\n图片URL: ${machine.image_url}\nPDF: ${machine.model_explosion_diagram_pdf}\n\n文件存在性检查结果请查看控制台`);
-                    }}
-                    className="ml-2 text-xs bg-yellow-400 text-black px-2 py-1 rounded"
-                  >
-                    调试
-                  </button>
                   <h3 className="text-xl font-bold text-gray-900 mt-2 leading-tight">{getMachineName(machine)}</h3>
                 </div>
                 
@@ -1491,33 +1678,128 @@ const MachinesPage: React.FC = () => {
                     onClick={() => {
                       // 从主机型号表中查找对应的PDF - 改进匹配逻辑
                       const hostModel = hostModels.find(model => {
+                        // 清理字符串函数 - 去除多余的引号和空格
+                        const cleanString = (str: string) => {
+                          if (!str) return '';
+                          return str.replace(/^["']+|["']+$/g, '').trim(); // 去除开头和结尾的引号
+                        };
+                        
+                        // 清理机器和主机型号的字符串
+                        const cleanMachineModel = cleanString(machine.model || '');
+                        const cleanMachineName = cleanString(machine.name_zh || '');
+                        const cleanHostModel = cleanString(model.model || '');
+                        const cleanHostCode = cleanString((model as any).code || '');
+                        const cleanHostTitleZh = cleanString(model.title_zh || '');
+                        const cleanHostTitleEn = cleanString(model.title_en || '');
+                        
+                        console.log('🔍 [String Cleaning Debug]:', {
+                          original_machine_model: machine.model,
+                          cleaned_machine_model: cleanMachineModel,
+                          original_host_code: (model as any).code,
+                          cleaned_host_code: cleanHostCode,
+                          model_id: model.id,
+                          exact_code_match: cleanHostCode === cleanMachineModel,
+                          exact_model_match: cleanHostModel === cleanMachineModel
+                        });
+                        
                         // 优先策略1: ID匹配（如果主机型号表中有对应的机器ID）
                         if ((model as any).machine_id === machine.id) return true;
                         if ((model as any).part_number === machine.part_number) return true;
                         
-                        // 优先策略2: 精确完整匹配
-                        if (model.model === machine.model) return true;
-                        if ((model as any).code === machine.model) return true;
-                        if (model.title_zh === machine.name_zh) return true;
-                        if (model.title_en === machine.name_en) return true;
+                        // 优先策略2: 精确完整匹配 - 最高优先级，包括括号内容
+                        if (cleanHostCode && cleanMachineModel && cleanHostCode === cleanMachineModel) {
+                          console.log('✅ [Exact Match Found] Code匹配成功:', {
+                            cleanHostCode,
+                            cleanMachineModel,
+                            model_id: model.id
+                          });
+                          return true;
+                        }
+                        if (cleanHostModel && cleanMachineModel && cleanHostModel === cleanMachineModel) {
+                          console.log('✅ [Exact Match Found] Model匹配成功:', {
+                            cleanHostModel,
+                            cleanMachineModel,
+                            model_id: model.id
+                          });
+                          return true;
+                        }
+                        if (cleanHostTitleZh && cleanMachineName && cleanHostTitleZh === cleanMachineName) return true;
+                        if (cleanHostTitleEn && cleanMachineName && cleanHostTitleEn === cleanMachineName) return true;
                         
-                        // 策略3: 去除版本号和测试后缀的匹配 - 更严格的匹配
-                        const cleanMachineModel = machine.model?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
-                        const cleanHostModel = model.model?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
-                        const cleanHostCode = (model as any).code?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
+                        // 策略3: 去除版本号和测试后缀的匹配 - 但保留括号内容
+                        const cleanVersionMachineModel = cleanMachineModel?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
+                        const cleanVersionHostModel = cleanHostModel?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
+                        const cleanVersionHostCode = cleanHostCode?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
                         
                         // 更严格的匹配：只有当清理后的字符串完全相同且长度大于3时才匹配
-                        if (cleanMachineModel && cleanHostModel && cleanMachineModel.length > 3 && cleanMachineModel === cleanHostModel) return true;
-                        if (cleanMachineModel && cleanHostCode && cleanMachineModel.length > 3 && cleanMachineModel === cleanHostCode) return true;
+                        if (cleanVersionMachineModel && cleanVersionHostModel && cleanVersionMachineModel.length > 3 && cleanVersionMachineModel === cleanVersionHostModel) return true;
+                        if (cleanVersionMachineModel && cleanVersionHostCode && cleanVersionMachineModel.length > 3 && cleanVersionMachineModel === cleanVersionHostCode) return true;
                         
-                        // 策略4: 基础型号匹配 (例如 LA-E4S) - 但要求更精确
-                        const baseMachineModel = machine.model?.split(/[\s\(]/)[0]; // 取第一部分
-                        const baseHostModel = model.model?.split(/[\s\(]/)[0];
-                        const baseHostCode = (model as any).code?.split(/[\s\(]/)[0];
+                        // 策略4: 基础型号匹配（去除括号内容）- 降低优先级，只有在没有精确匹配时才使用
+                        const getBaseModel = (modelStr: string) => {
+                          if (!modelStr) return '';
+                          // 去除括号及其内容，例如 "LA-E4S(paper)" -> "LA-E4S"
+                          return modelStr.split('(')[0].trim();
+                        };
                         
-                        // 只有当基础型号长度大于4且完全匹配时才认为匹配
-                        if (baseMachineModel && baseHostModel && baseMachineModel.length > 4 && baseMachineModel === baseHostModel) return true;
-                        if (baseMachineModel && baseHostCode && baseMachineModel.length > 4 && baseMachineModel === baseHostCode) return true;
+                        const machineBaseModel = getBaseModel(cleanMachineModel);
+                        const hostBaseModel = getBaseModel(cleanHostModel);
+                        const hostBaseCode = getBaseModel(cleanHostCode);
+                        
+                        // 基础型号匹配（降低优先级，且要求更严格的条件）
+                        if (machineBaseModel && hostBaseModel && machineBaseModel.length > 6 && machineBaseModel === hostBaseModel) {
+                          // 额外检查：确保原始字符串没有精确匹配项存在
+                          const hasExactMatch = hostModels.some(m => 
+                            cleanString((m as any).code || '') === cleanMachineModel ||
+                            cleanString(m.model || '') === cleanMachineModel
+                          );
+                          if (!hasExactMatch) {
+                            console.log('🔍 [Base Match] 基础型号匹配:', {
+                              machineBaseModel,
+                              hostBaseModel,
+                              model_id: model.id,
+                              no_exact_match_available: !hasExactMatch
+                            });
+                            return true;
+                          }
+                        }
+                        if (machineBaseModel && hostBaseCode && machineBaseModel.length > 6 && machineBaseModel === hostBaseCode) {
+                          // 额外检查：确保原始字符串没有精确匹配项存在
+                          const hasExactMatch = hostModels.some(m => 
+                            cleanString((m as any).code || '') === cleanMachineModel ||
+                            cleanString(m.model || '') === cleanMachineModel
+                          );
+                          if (!hasExactMatch) {
+                            console.log('🔍 [Base Match] 基础code匹配:', {
+                              machineBaseModel,
+                              hostBaseCode,
+                              model_id: model.id,
+                              no_exact_match_available: !hasExactMatch
+                            });
+                            return true;
+                          }
+                        }
+                        
+                        // 策略5: 分段匹配 (例如 LA-E4S) - 最低优先级
+                        const baseMachineModel = cleanMachineModel?.split(/[\s\(]/)[0]; // 取第一部分
+                        const baseHostModel = cleanHostModel?.split(/[\s\(]/)[0];
+                        const baseHostCode = cleanHostCode?.split(/[\s\(]/)[0];
+                        
+                        // 只有当基础型号长度大于4且完全匹配时才认为匹配，且没有更好的匹配
+                        if (baseMachineModel && baseHostModel && baseMachineModel.length > 4 && baseMachineModel === baseHostModel) {
+                          const hasExactMatch = hostModels.some(m => 
+                            cleanString((m as any).code || '') === cleanMachineModel ||
+                            cleanString(m.model || '') === cleanMachineModel
+                          );
+                          if (!hasExactMatch) return true;
+                        }
+                        if (baseMachineModel && baseHostCode && baseMachineModel.length > 4 && baseMachineModel === baseHostCode) {
+                          const hasExactMatch = hostModels.some(m => 
+                            cleanString((m as any).code || '') === cleanMachineModel ||
+                            cleanString(m.model || '') === cleanMachineModel
+                          );
+                          if (!hasExactMatch) return true;
+                        }
                         
                         return false;
                       });
@@ -1601,61 +1883,60 @@ const MachinesPage: React.FC = () => {
                         (hostModel as any).explosion_diagram_pdf ||
                         (hostModel as any).model_explosion_diagram_pdf : null;
                       
+                      console.log('🔍 [Machine PDF Debug] PDF URL processing:', {
+                        hostModel: hostModel ? {
+                          id: hostModel.id,
+                          model: hostModel.model,
+                          spec_pdf: (hostModel as any).spec_pdf,
+                          explosion_diagram_pdf: (hostModel as any).explosion_diagram_pdf,
+                          model_explosion_diagram_pdf: (hostModel as any).model_explosion_diagram_pdf
+                        } : null,
+                        found_pdf_url: pdfUrl,
+                        current_url: window.location.href,
+                        env_vars: {
+                          VITE_API_URL: import.meta.env.VITE_API_URL,
+                          DEV: import.meta.env.DEV,
+                          MODE: import.meta.env.MODE
+                        }
+                      });
+                      
                       if (pdfUrl && !pdfUrl.includes('placeholder')) {
-                        // 修复PDF URL转换逻辑
-                        let absolutePdfUrl = pdfUrl;
+                        let finalPdfUrl = pdfUrl;
                         
-                        // 修复基础URL计算
-                        const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1';
-                        let serverBaseUrl = '';
-                        
-                        if (!pdfUrl.startsWith('http')) {
+                        // 如果不是绝对URL，则转换为绝对URL
+                        if (!pdfUrl.startsWith('http://') && !pdfUrl.startsWith('https://')) {
+                          // 简化URL构建逻辑
+                          const baseUrl = window.location.origin;  // 使用当前页面的域名
                           
-                          if (apiBaseUrl.includes('/wp-json/bjt/v1')) {
-                            serverBaseUrl = apiBaseUrl.replace('/wp-json/bjt/v1', '');
-                          } else {
-                            // 如果API URL格式不对，使用默认值
-                            serverBaseUrl = 'http://localhost:8080';
-                          }
-                          
-                          // 修复：当VITE_API_URL是相对路径时的处理
-                          if (!serverBaseUrl || serverBaseUrl === '') {
-                            // 使用当前窗口的origin作为基础URL
-                            serverBaseUrl = window.location.origin;
-                          }
-                          
-                          // 清理路径：移除多余的前缀
+                          // 确保路径以/开头
                           let cleanPath = pdfUrl;
-                          if (cleanPath.startsWith('/frontend/public')) {
-                            cleanPath = cleanPath.replace('/frontend/public', '');
-                          }
                           if (!cleanPath.startsWith('/')) {
                             cleanPath = '/' + cleanPath;
                           }
                           
-                          absolutePdfUrl = serverBaseUrl + cleanPath;
+                          // 移除可能的多余前缀
+                          cleanPath = cleanPath.replace('/frontend/public', '');
+                          
+                          finalPdfUrl = baseUrl + cleanPath;
                         }
                         
                         console.log('✅ [Machine PDF Debug] Opening PDF:', {
-                          original_pdf_url: pdfUrl,
-                          cleaned_pdf_url: absolutePdfUrl,
-                          api_base_url: import.meta.env.VITE_API_URL,
-                          calculated_server_base: serverBaseUrl,
-                          env_check: {
-                            VITE_API_URL: import.meta.env.VITE_API_URL,
-                            DEV: import.meta.env.DEV,
-                            MODE: import.meta.env.MODE
-                          }
+                          original_url: pdfUrl,
+                          final_url: finalPdfUrl,
+                          is_absolute: pdfUrl.startsWith('http'),
+                          base_url: window.location.origin
                         });
                         
-                        window.open(absolutePdfUrl, '_blank');
+                        // 尝试打开PDF
+                        window.open(finalPdfUrl, '_blank');
                       } else {
-                        info(t('noSpecPdf') || '暂无规格说明文档');
-                        console.warn('🔍 [Machine PDF Debug] No valid PDF found for machine:', {
+                        showInfoToast('暂无规格说明文档');
+                        console.warn('🔍 [Machine PDF Debug] No valid PDF found:', {
                           machine_part_number: machine.part_number,
                           machine_model: machine.model,
                           host_model_found: !!hostModel,
-                          pdf_url: pdfUrl
+                          pdf_url: pdfUrl,
+                          host_model_data: hostModel
                         });
                       }
                     }}
@@ -1957,7 +2238,7 @@ const MachinesPage: React.FC = () => {
     console.log('📝 [addRequiredPartsToCartForAccessory] Simplified version - skipping required parts processing');
   };
 
-  // 渲染配件部分 - 支持完整的多语言和详细信息展示
+  // 渲染配件部分 - 完整恢复样式和交互
   const renderAccessory = (accessory: MachineAccessory, level: number, index: number) => {
     const accessoryPart = accessory.parts?.[0];
     const partSpecs = accessoryPart?.specs;
@@ -1973,12 +2254,13 @@ const MachinesPage: React.FC = () => {
       index
     });
 
-    // 尝试从多个位置获取数据的工具函数
+    // 尝试从多个位置获取数据
     const getFieldValue = (field: string) => {
       // 首先尝试从 partSpecs 获取
       if (partSpecs && partSpecs.hasOwnProperty(field)) {
         const value = partSpecs[field];
         console.log(`✅ [getFieldValue] Found ${field} in partSpecs:`, value);
+        // 检查是否为null、undefined或空字符串
         if (value === null || value === undefined || value === '') {
           return 'N/A';
         }
@@ -1988,6 +2270,7 @@ const MachinesPage: React.FC = () => {
       if (accessoryPart && (accessoryPart as any).hasOwnProperty(field)) {
         const value = (accessoryPart as any)[field];
         console.log(`✅ [getFieldValue] Found ${field} in accessoryPart:`, value);
+        // 检查是否为null、undefined或空字符串
         if (value === null || value === undefined || value === '') {
           return 'N/A';
         }
@@ -1997,6 +2280,7 @@ const MachinesPage: React.FC = () => {
       if ((accessory as any).hasOwnProperty(field)) {
         const value = (accessory as any)[field];
         console.log(`✅ [getFieldValue] Found ${field} in accessory root:`, value);
+        // 检查是否为null、undefined或空字符串
         if (value === null || value === undefined || value === '') {
           return 'N/A';
         }
@@ -2006,6 +2290,14 @@ const MachinesPage: React.FC = () => {
       return 'N/A';
     };
 
+    // 获取料号 - 优先从accessoryPart获取，然后从accessory根级别
+    const getPartNumber = () => {
+      return accessoryPart?.part_number || 
+             (accessory as any).part_number || 
+             accessory.model || 
+             'N/A';
+    };
+
     // 检查是否为电气配件（有电压或频率信息）
     const isElectricalAccessory = () => {
       const voltage = getFieldValue('voltage');
@@ -2013,92 +2305,62 @@ const MachinesPage: React.FC = () => {
       return voltage !== 'N/A' || frequency !== 'N/A';
     };
 
-    // 获取级别对应的颜色
-    const getLevelColor = (level: number) => {
-      const colors = {
-        1: 'blue',
-        2: 'green',
-        3: 'yellow',
-        4: 'orange',
-        5: 'red'
-      };
-      return colors[level as keyof typeof colors] || 'blue';
-    };
-
-    const levelColor = getLevelColor(level);
-
     return (
-      <div key={`accessory-level-${level}-${accessory.id}-${accessoryPart?.part_number || 'no-part'}-${index}`} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 mb-4 overflow-hidden">
+      <div key={`accessory-level-${level}-${accessory.id}-${accessoryPart?.part_number || 'no-part'}-${index}`} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 text-gray-900 mb-4 overflow-hidden">
         <div className="flex flex-col md:flex-row p-6">
           {/* Column 1: Image & Selection */}
           <div className="w-full md:w-1/5 flex flex-col items-center md:items-start mb-6 md:mb-0 md:pr-6">
             <div className="relative mb-4">
               <img 
-                src={accessory.image_url || DEFAULT_IMAGE} 
+                src={accessory.image_url || '/images/placeholder.jpg'} 
                 alt={accessory.title}
                 className="w-32 h-32 object-contain border-2 border-gray-200 rounded-lg bg-gray-50 p-2 shadow-sm hover:shadow-md transition-shadow duration-200"
                 onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  if (target.src !== DEFAULT_IMAGE) {
-                    target.src = DEFAULT_IMAGE;
-                  }
+                  (e.target as HTMLImageElement).src = '/images/placeholder.jpg';
                 }}
               />
             </div>
-            <label className={`inline-flex items-center cursor-pointer bg-gray-100 px-3 py-2 rounded-lg hover:bg-${levelColor}-500 hover:text-white transition-colors duration-200`}>
+            <label className="inline-flex items-center cursor-pointer bg-gray-100 px-3 py-2 rounded-lg hover:bg-blue-500 hover:text-white transition-colors duration-200">
               <input 
                 type="radio" 
                 name={`accessory-level-${level}`}
-                className={`form-radio text-${levelColor}-500 mr-2`}
+                className="form-radio text-blue-500 mr-2"
                 checked={selectedAccessories[`level${level}`] === accessory.id.toString()}
                 onChange={() => handleAccessorySelection(level, accessory.id.toString(), accessory.title)}
               />
-              <span className="text-sm font-medium">
-                {accessory.children && accessory.children.length > 0 
-                  ? `选择并展开 (${accessory.children.length})` 
-                  : (t('actions.selectAccessory') || '选择配件')
-                }
-              </span>
+              <span className="text-sm font-medium">{t('actions.selectAccessory') || '选择配件'}</span>
             </label>
           </div>
 
           {/* Column 2: Info & Specs */}
           <div className="w-full md:w-3/5 md:px-6">
             <div className="mb-4">
-              <span className={`inline-block bg-${levelColor}-500 text-white px-3 py-1 text-sm font-bold rounded-lg shadow-sm`}>
-                {accessory.part_number || accessoryPart?.part_number || accessory.model || accessory.id}
-              </span>
-              {/* ✅ 添加子级指示器 */}
-              {accessory.children && accessory.children.length > 0 && (
-                <span className="ml-2 inline-block bg-orange-100 text-orange-700 px-2 py-1 text-xs font-medium rounded-lg border border-orange-200">
-                  🔗 {accessory.children.length} 个子配件
-                </span>
-              )}
-              <h3 className="text-xl font-bold text-gray-900 mt-2 leading-tight">{accessory.title}</h3>
+              <span className="inline-block bg-blue-500 text-white px-3 py-1 text-sm font-bold rounded-lg shadow-sm">{getPartNumber()}</span>
+              <h3 className="text-xl font-bold text-gray-800 mt-2 leading-tight">{accessory.title}</h3>
             </div>
 
             <div className="bg-gray-50 rounded-lg p-4 mt-3 shadow-sm">
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="flex items-center">
-                  <strong className="w-24 text-gray-600 font-medium">{t('tableHeaders.model') || '型号'}:</strong>
+                  <strong className="w-24 text-gray-600 font-medium">型号:</strong>
                   <span className="text-gray-800 font-medium">{accessory.model || getFieldValue('model')}</span>
                 </div>
                 {/* 只有当电气配件时才显示电压 */}
                 {isElectricalAccessory() && getFieldValue('voltage') !== 'N/A' && (
                   <div className="flex items-center">
-                    <strong className="w-24 text-gray-600 font-medium">{t('tableHeaders.voltage') || '电压(V)'}:</strong>
+                    <strong className="w-24 text-gray-600 font-medium">电压(V):</strong>
                     <span className="text-gray-800 font-medium">{getFieldValue('voltage')}</span>
                   </div>
                 )}
                 {/* 频率字段强调显示，只有当电气配件时才显示 */}
                 {isElectricalAccessory() && getFieldValue('frequency') !== 'N/A' && (
                   <div className="flex items-center frequency-highlight px-3 py-2 rounded-lg border-l-4 border-yellow-400 col-span-2">
-                    <strong className="w-24 text-gray-700 font-bold text-yellow-800">⚡ {t('tableHeaders.frequency') || '频率(Hz)'}:</strong>
+                    <strong className="w-24 text-gray-600 font-bold text-yellow-800">⚡ 频率(Hz):</strong>
                     <span className="text-yellow-900 font-bold text-lg ml-2">{getFieldValue('frequency')}</span>
                   </div>
                 )}
                 <div className="flex items-center">
-                  <strong className="w-24 text-gray-600 font-medium">{t('specs.packageSize') || '包装尺寸'}:</strong>
+                  <strong className="w-24 text-gray-600 font-medium">包装尺寸:</strong>
                   <span className="text-gray-800 font-medium">
                     {unitSystem === 'metric' 
                       ? getFieldValue('package_size_cm')
@@ -2107,11 +2369,11 @@ const MachinesPage: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex items-center">
-                  <strong className="w-24 text-gray-600 font-medium">{t('specs.pcsPerBox') || '单箱数量'}:</strong>
+                  <strong className="w-24 text-gray-600 font-medium">单箱数量:</strong>
                   <span className="text-gray-800 font-medium">{getFieldValue('pcs_per_box')}</span>
                 </div>
                 <div className="flex items-center">
-                  <strong className="w-24 text-gray-600 font-medium">{t('specs.palletSize') || '托盘尺寸'}:</strong>
+                  <strong className="w-24 text-gray-600 font-medium">托盘尺寸:</strong>
                   <span className="text-gray-800 font-medium">
                     {unitSystem === 'metric' 
                       ? getFieldValue('pallet_size_cm')
@@ -2120,67 +2382,113 @@ const MachinesPage: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex items-center">
-                  <strong className="w-24 text-gray-600 font-medium">{t('specs.pcsPerPallet') || '一托数量'}:</strong>
+                  <strong className="w-24 text-gray-600 font-medium">一托数量:</strong>
                   <span className="text-gray-800 font-medium">{getFieldValue('pcs_per_pallet')}</span>
                 </div>
               </div>
             </div>
 
             <div className="mt-4 flex gap-3">
-              {/* 规格说明按钮 - 放在前面，和主机一样 */}
+              {/* 规格说明按钮 - 和主机一样 */}
               <Button 
                 size="small"
                 icon={<InfoCircleOutlined />}
                 onClick={() => {
-                  // 尝试从多个字段获取PDF链接，扩展查找范围
-                  const pdfUrl = getFieldValue('spec_pdf') || 
-                               // 尝试直接从accessory对象获取（如果API返回了这些字段）
-                               (accessory as any).spec_pdf ||
-                               getFieldValue('explosion_diagram_pdf') ||
-                               (accessory as any).explosion_diagram_pdf ||
-                               getFieldValue('model_explosion_diagram_pdf') || 
-                               getFieldValue('pdf_url') ||
-                               getFieldValue('spec_document');
+                  // 查找配件的PDF文档
+                  const accessoryPdfUrl = 
+                    (accessoryPart as any)?.spec_pdf || 
+                    (accessory as any).spec_pdf || 
+                    (accessoryPart as any)?.explosion_diagram_pdf || 
+                    (accessory as any).explosion_diagram_pdf ||
+                    (accessory as any).pdf_url;
                   
-                  console.log('🔍 [PDF Debug] Trying to open PDF:', {
+                  console.log('🔍 [Accessory PDF Debug] Looking for accessory PDF:', {
                     accessory_id: accessory.id,
-                    part_number: accessory.part_number,
-                    found_pdf_url: pdfUrl,
-                    getFieldValue_spec_pdf: getFieldValue('spec_pdf'),
-                    accessory_any_spec_pdf: (accessory as any).spec_pdf,
-                    getFieldValue_explosion_pdf: getFieldValue('explosion_diagram_pdf'),
-                    accessory_any_explosion_pdf: (accessory as any).explosion_diagram_pdf,
-                    accessory_image_url: accessory.image_url
+                    accessory_part_number: getPartNumber(),
+                    accessory_title: accessory.title,
+                    accessory_model: accessory.model,
+                    pdf_sources: {
+                      accessoryPart_spec_pdf: (accessoryPart as any)?.spec_pdf,
+                      accessory_spec_pdf: (accessory as any).spec_pdf,
+                      accessoryPart_explosion_pdf: (accessoryPart as any)?.explosion_diagram_pdf,
+                      accessory_explosion_pdf: (accessory as any).explosion_diagram_pdf,
+                      accessory_pdf_url: (accessory as any).pdf_url
+                    },
+                    found_pdf_url: accessoryPdfUrl
                   });
                   
-                  if (pdfUrl && !pdfUrl.includes('placeholder')) {
-                    window.open(pdfUrl, '_blank');
+                  if (accessoryPdfUrl && !accessoryPdfUrl.includes('placeholder')) {
+                    // 修复PDF URL转换逻辑
+                    let absolutePdfUrl = accessoryPdfUrl;
+                    
+                    if (!accessoryPdfUrl.startsWith('http')) {
+                      // 修复基础URL计算
+                      const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1';
+                      let serverBaseUrl = '';
+                      
+                      if (apiBaseUrl.includes('/wp-json/bjt/v1')) {
+                        serverBaseUrl = apiBaseUrl.replace('/wp-json/bjt/v1', '');
+                      } else {
+                        // 如果API URL格式不对，使用默认值
+                        serverBaseUrl = 'http://localhost:8080';
+                      }
+                      
+                      // 修复：当VITE_API_URL是相对路径时的处理
+                      if (!serverBaseUrl || serverBaseUrl === '') {
+                        // 使用当前窗口的origin作为基础URL
+                        serverBaseUrl = window.location.origin;
+                      }
+                      
+                      // 清理路径：移除多余的前缀
+                      let cleanPath = accessoryPdfUrl;
+                      if (cleanPath.startsWith('/frontend/public')) {
+                        cleanPath = cleanPath.replace('/frontend/public', '');
+                      }
+                      if (!cleanPath.startsWith('/')) {
+                        cleanPath = '/' + cleanPath;
+                      }
+                      
+                      absolutePdfUrl = serverBaseUrl + cleanPath;
+                    }
+                    
+                    console.log('✅ [Accessory PDF Debug] Opening PDF:', {
+                      original_pdf_url: accessoryPdfUrl,
+                      cleaned_pdf_url: absolutePdfUrl,
+                      api_base_url: import.meta.env.VITE_API_URL
+                    });
+                    
+                    window.open(absolutePdfUrl, '_blank');
                   } else {
-                    info(t('noSpecPdf') || '暂无规格说明文档');
-                    console.warn('🔍 [PDF Debug] No valid PDF found for accessory:', accessory.part_number);
+                    showInfoToast('暂无该配件的规格说明文档');
+                    console.warn('🔍 [Accessory PDF Debug] No valid PDF found for accessory:', {
+                      accessory_part_number: getPartNumber(),
+                      accessory_title: accessory.title,
+                      accessory_model: accessory.model,
+                      pdf_url: accessoryPdfUrl
+                    });
                   }
                 }}
                 className="bg-gray-100 text-gray-600 hover:bg-gray-600 hover:text-white border-gray-300 transition-colors duration-200"
               >
-                {t('specDetails') || '规格说明'}
+                {t('specDetails') || '规格详情'}
               </Button>
-              
+
               <Tooltip
                 title={
                   <div className="p-3 bg-white rounded-lg shadow-lg border border-gray-200">
                     <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
                       <InfoCircleOutlined className="text-blue-500 mr-2" />
-                      <span className="font-bold text-gray-800 text-sm">{t('tooltip.accessoryDetailInfo') || '配件详细信息'}</span>
+                      <span className="font-bold text-gray-800 text-sm">{t('moreInfo')}</span>
                     </div>
                     <div className="space-y-2">
                       <div className="flex justify-between items-center py-1">
-                        <span className="text-gray-600 font-medium text-xs">📦 包装尺寸 {unitSystem === 'metric' ? 'cm' : 'inch'}:</span>
+                        <span className="text-gray-600 font-medium text-xs">📦 包装尺寸:</span>
                         <span className="text-gray-800 font-semibold text-xs bg-blue-50 px-2 py-1 rounded">
                           {unitSystem === 'metric' ? getFieldValue('package_size_cm') : getFieldValue('package_size_inch')}
                         </span>
                       </div>
                       <div className="flex justify-between items-center py-1">
-                        <span className="text-gray-600 font-medium text-xs">⚖️ 单件净重 {unitSystem === 'metric' ? 'kg' : 'lbs'}:</span>
+                        <span className="text-gray-600 font-medium text-xs">⚖️ 单件净重:</span>
                         <span className="text-gray-800 font-semibold text-xs bg-green-50 px-2 py-1 rounded">
                           {unitSystem === 'metric' 
                             ? (getFieldValue('net_weight_kg') !== 'N/A' ? `${getFieldValue('net_weight_kg')} kg` : 'N/A')
@@ -2189,7 +2497,7 @@ const MachinesPage: React.FC = () => {
                         </span>
                       </div>
                       <div className="flex justify-between items-center py-1">
-                        <span className="text-gray-600 font-medium text-xs">📊 单件毛重 {unitSystem === 'metric' ? 'kg' : 'lbs'}:</span>
+                        <span className="text-gray-600 font-medium text-xs">📊 单件毛重:</span>
                         <span className="text-gray-800 font-semibold text-xs bg-orange-50 px-2 py-1 rounded">
                           {unitSystem === 'metric' 
                             ? (getFieldValue('gross_weight_kg') !== 'N/A' ? `${getFieldValue('gross_weight_kg')} kg` : 'N/A')
@@ -2198,7 +2506,7 @@ const MachinesPage: React.FC = () => {
                         </span>
                       </div>
                       <div className="flex justify-between items-center py-1">
-                        <span className="text-gray-600 font-medium text-xs">📏 打托高度 {unitSystem === 'metric' ? 'cm' : 'inch'}:</span>
+                        <span className="text-gray-600 font-medium text-xs">📏 打托高度:</span>
                         <span className="text-gray-800 font-semibold text-xs bg-yellow-50 px-2 py-1 rounded">
                           {unitSystem === 'metric' 
                             ? (getFieldValue('pallet_height_cm') !== 'N/A' ? `${getFieldValue('pallet_height_cm')} cm` : 'N/A')
@@ -2207,7 +2515,7 @@ const MachinesPage: React.FC = () => {
                         </span>
                       </div>
                       <div className="flex justify-between items-center py-1">
-                        <span className="text-gray-600 font-medium text-xs">🏗️ 整托毛重 {unitSystem === 'metric' ? 'kg' : 'lbs'}:</span>
+                        <span className="text-gray-600 font-medium text-xs">🏗️ 整托毛重:</span>
                         <span className="text-gray-800 font-semibold text-xs bg-purple-50 px-2 py-1 rounded">
                           {unitSystem === 'metric' 
                             ? (getFieldValue('pallet_gross_weight_kg') !== 'N/A' ? `${getFieldValue('pallet_gross_weight_kg')} kg` : 'N/A')
@@ -2217,27 +2525,24 @@ const MachinesPage: React.FC = () => {
                       </div>
                     </div>
                     <div className="mt-3 pt-2 border-t border-gray-100 text-center">
-                      <span className="text-xs text-gray-500">💡 {t('tooltip.hoverInfo') || '悬停查看详细规格信息'}</span>
+                      <span className="text-xs text-gray-500">💡 悬停查看详细规格信息</span>
                     </div>
                   </div>
                 }
                 placement="topRight"
-                styles={{ 
-                  root: {
-                    maxWidth: '350px',
-                    zIndex: 1000
-                  }
+                overlayStyle={{ 
+                  maxWidth: '350px',
+                  zIndex: 1000
                 }}
-                classNames={{ root: "custom-tooltip" }}
                 color="white"
                 arrow={true}
               >
                 <Button 
                   size="small"
                   icon={<InfoCircleOutlined />}
-                  className="bg-blue-50 text-blue-600 hover:bg-blue-500 hover:text-white border-blue-300 transition-colors duration-200"
+                  className="bg-blue-100 text-blue-600 hover:bg-blue-500 hover:text-white border-blue-300 transition-colors duration-200"
                 >
-                  {t('buttons.moreInfo') || '更多信息'}
+                  {t('moreInfo') || '更多信息'}
                 </Button>
               </Tooltip>
             </div>
@@ -2248,14 +2553,11 @@ const MachinesPage: React.FC = () => {
             {/* Price */}
             <div className="mb-4">
               <div className="font-medium text-sm text-gray-600 mb-2">
-                {t('tableHeaders.price') || '价格'} ({getCurrencySymbol(userRegion)}):
+                价格:
               </div>
               
-              <div className="text-2xl font-bold text-green-600 mb-2">
+              <div className="text-2xl font-bold text-blue-600 mb-2">
                 {getCurrencySymbol(userRegion)}{formatPrice(partPrices?.base || 0)}
-                <span className="text-base text-gray-500 font-normal ml-2">
-                  {t('pricing.from') || '起价'}
-                </span>
               </div>
             </div>
             
@@ -2263,76 +2565,23 @@ const MachinesPage: React.FC = () => {
             {isSales && partInventory && partInventory.length > 0 && (
               <div className="mb-4">
                 <div className="font-medium text-sm text-gray-600 mb-2">
-                  {t('tableHeaders.stock') || '库存'}:
+                  库存:
                 </div>
                 <div className="flex flex-wrap gap-1">
-                  {partInventory.map((inv, invIndex) => {
-                    const stockStatus = getStockStatus(inv.amount);
-                    // 尝试映射区域名称，如果没有找到就使用原始名称
-                    const regionKey = inv.region.toUpperCase();
-                    const regionName = REGIONS[regionKey as keyof typeof REGIONS]?.nameCn || inv.region;
-                    return (
-                      <Tag 
-                        key={`accessory-${accessory.id}-level-${level}-index-${index}-inventory-${inv.region}-${invIndex}`}
-                        color={stockStatus.color}
-                        className="text-xs"
-                      >
-                        {regionName}: {inv.amount}
-                      </Tag>
-                    );
-                  })}
+                  {partInventory.map((inv, invIndex) => (
+                    <Tag 
+                      key={`accessory-${accessory.id}-level-${level}-index-${index}-inventory-${inv.region}-${invIndex}`}
+                      color={getStockStatus(inv.amount).color}
+                      className="text-xs"
+                    >
+                      {inv.region}: {inv.amount}
+                    </Tag>
+                  ))}
                 </div>
-               </div>
-             )}
+              </div>
+            )}
             
-            {/* 如果没有真实库存数据但是是销售用户，显示Mock库存 */}
-            {isSales && (!partInventory || partInventory.length === 0) && (
-              <div className="mb-4">
-                <div className="font-medium text-sm text-gray-600 mb-2">
-                  {t('tableHeaders.stock') || '库存'}:
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {(Object.keys(REGIONS) as Array<keyof typeof REGIONS>).map((regionKey) => {
-                    // Mock库存数据
-                    const mockStock = Math.floor(Math.random() * 50) + 10; // 10-60之间的随机数
-                    const stockStatus = getStockStatus(mockStock);
-                    return (
-                      <Tag 
-                        key={`accessory-${accessory.id}-level-${level}-index-${index}-mock-inventory-${regionKey}`}
-                        color={stockStatus.color}
-                        className="text-xs"
-                      >
-                        {REGIONS[regionKey].nameCn}: {mockStock}
-                      </Tag>
-                    );
-                  })}
-                </div>
-               </div>
-             )}
-             
-            {/* 非销售账号也显示库存状态（但不显示具体数量） */}
-            {!isSales && partInventory && partInventory.length > 0 && (
-              <div className="mb-4">
-                <div className="font-medium text-sm text-gray-600 mb-2">
-                  {t('inventory.status') || '库存状态'}:
-                </div>
-                <div className="text-xs">
-                  {(() => {
-                    const totalStock = partInventory.reduce((total, inv) => total + inv.amount, 0);
-                    const stockStatus = getStockStatus(totalStock);
-                    return (
-                      <Tag color={stockStatus.color} className="text-xs">
-                        {totalStock > 100 ? t('inventory.abundant') || '库存充足' :
-                         totalStock > 10 ? t('inventory.adequate') || '库存充裕' :
-                         totalStock > 0 ? t('inventory.lowStock') || '库存偏低' :
-                         t('inventory.outOfStock') || '暂时缺货'}
-                      </Tag>
-                    );
-                  })()}
-                </div>
-               </div>
-             )}
-             
+            {/* Actions */}
             <div className="space-y-3">
               <div className="flex items-center justify-center gap-2 bg-gray-50 rounded-lg p-2">
                 <Button 
@@ -2340,19 +2589,34 @@ const MachinesPage: React.FC = () => {
                   onClick={() => handleQuantityChange(accessory.id.toString(), (quantities[accessory.id.toString()] || 1) - 1)}
                   disabled={(quantities[accessory.id.toString()] || 1) <= 1}
                   size="small"
+                  style={{
+                    backgroundColor: '#f3f4f6',
+                    borderColor: '#d1d5db',
+                    color: '#374151'
+                  }}
                   className="hover:border-blue-500 hover:bg-blue-500 hover:text-white transition-colors duration-200"
                 />
                 <InputNumber
                   min={1}
                   value={quantities[accessory.id.toString()] || 1}
                   onChange={(value: number | null) => handleQuantityChange(accessory.id.toString(), value as number)}
-                  className="w-16 text-center"
+                  className="w-16 text-center quantity-input-field"
                   size="small"
+                  style={{
+                    backgroundColor: '#ffffff',
+                    color: '#333333',
+                    borderColor: '#d1d5db'
+                  }}
                 />
                 <Button 
                   icon={<PlusOutlined />}
                   onClick={() => handleQuantityChange(accessory.id.toString(), (quantities[accessory.id.toString()] || 1) + 1)}
                   size="small"
+                  style={{
+                    backgroundColor: '#f3f4f6',
+                    borderColor: '#d1d5db',
+                    color: '#374151'
+                  }}
                   className="hover:border-blue-500 hover:bg-blue-500 hover:text-white transition-colors duration-200"
                 />
               </div>
@@ -2361,10 +2625,10 @@ const MachinesPage: React.FC = () => {
                 type="primary"
                 icon={<ShoppingCartOutlined />}
                 onClick={() => handleAddToCart(accessory, 'accessory')}
-                className={`w-full bg-${levelColor}-500 hover:bg-${levelColor}-600 border-${levelColor}-500 hover:border-${levelColor}-600 text-white font-medium py-2 h-10 rounded-lg shadow-md hover:shadow-lg transition-all duration-200`}
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 h-10 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
                 size="large"
               >
-                {t('addToCart') || '加入购物车'}
+                {t('buttons.addToCart') || '添加到购物车'}
               </Button>
             </div>
           </div>
@@ -2372,6 +2636,68 @@ const MachinesPage: React.FC = () => {
       </div>
     );
   };
+
+  // 🔧 更新后的层级展开函数 - 匹配admin RelationsPage逻辑
+  const flattenAccessoriesByLevel = useCallback((
+    accessories: AccessoryWithChildren[], 
+    currentLevel: number = 1,
+    parentPath: string = '',
+    visitedNodes: Set<string> = new Set()
+  ): FlattenedAccessory[] => {
+    console.log(`flattenAccessoriesByLevel: Processing ${accessories.length} accessories at level ${currentLevel}`);
+    console.log(`flattenAccessoriesByLevel: Parent path: ${parentPath}`);
+    console.log(`flattenAccessoriesByLevel: Visited nodes:`, Array.from(visitedNodes));
+    
+    const flattened: FlattenedAccessory[] = [];
+    
+    accessories.forEach((accessory, index) => {
+      // 🔧 严格按照admin逻辑：每个accessory都有唯一的relation_id
+      const nodeKey = `${accessory.relation_id}-${accessory.part_number}`;
+      const currentPath = parentPath ? `${parentPath} > ${accessory.part_number}` : accessory.part_number;
+      
+      // 🔧 循环检测：使用relation_id + part_number作为唯一标识
+      if (visitedNodes.has(nodeKey)) {
+        console.warn(`flattenAccessoriesByLevel: Detected cycle at ${nodeKey}, skipping`);
+        return;
+      }
+      
+      const newVisitedNodes = new Set(visitedNodes);
+      newVisitedNodes.add(nodeKey);
+      
+      console.log(`flattenAccessoriesByLevel: Processing accessory ${index}: ${accessory.part_number} (relation_id: ${accessory.relation_id}, level: ${currentLevel})`);
+      
+      // 🔧 创建展开的配件对象
+      const flattenedAccessory: FlattenedAccessory = {
+        ...accessory,
+        level: currentLevel,
+        relation_id: accessory.relation_id, // 保持原始关系ID
+        hierarchyPath: currentPath,
+        uniqueKey: nodeKey, // 添加唯一标识
+        children: [] // 清空children，因为会被展开
+      };
+      
+      flattened.push(flattenedAccessory);
+      console.log(`flattenAccessoriesByLevel: Added accessory ${accessory.part_number} at level ${currentLevel} with path: ${currentPath}`);
+      
+      // 🔧 严格按照admin逻辑：递归处理子配件，不做任何去重
+      if (accessory.children && accessory.children.length > 0) {
+        console.log(`flattenAccessoriesByLevel: Processing ${accessory.children.length} children for ${accessory.part_number}`);
+        
+        const childrenFlattened = flattenAccessoriesByLevel(
+          accessory.children,
+          currentLevel + 1,
+          currentPath,
+          newVisitedNodes
+        );
+        
+        console.log(`flattenAccessoriesByLevel: Got ${childrenFlattened.length} flattened children from ${accessory.part_number}`);
+        flattened.push(...childrenFlattened);
+      }
+    });
+    
+    console.log(`flattenAccessoriesByLevel: Returning ${flattened.length} flattened accessories from level ${currentLevel}`);
+    return flattened;
+  }, []);
 
   // Return the main component JSX
   return (
@@ -2706,6 +3032,52 @@ const MachinesPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* 购物车通知浮层 */}
+      {showNotification && (
+        <div className="fixed top-4 right-4 z-[9999] transform transition-all duration-300 ease-out">
+          <div className="bg-white rounded-xl shadow-2xl border border-gray-200 p-6 max-w-sm">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0">
+                <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                  <ShoppingCartOutlined className="text-white text-lg" />
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 mb-1">
+                  添加成功！
+                </p>
+                <p className="text-sm text-gray-600 leading-5">
+                  {notificationProduct} × {notificationQuantity} 已添加到购物车
+                </p>
+              </div>
+              <button
+                onClick={hideCartNotification}
+                className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+              >
+                <DeleteOutlined className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="mt-4 flex space-x-3">
+              <button
+                onClick={() => {
+                  hideCartNotification();
+                  // 可以添加跳转到购物车的逻辑
+                }}
+                className="flex-1 bg-blue-500 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors duration-200"
+              >
+                查看购物车
+              </button>
+              <button
+                onClick={hideCartNotification}
+                className="flex-1 bg-gray-100 text-gray-700 text-sm font-medium py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors duration-200"
+              >
+                继续购物
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

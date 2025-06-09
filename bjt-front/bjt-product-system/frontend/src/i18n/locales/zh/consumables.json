@@ -277,10 +277,20 @@
     "no": "否"
   },
   "tooltip": {
+    "coreSpecs": "核心规格",
+    "material": "材质",
+    "palletConfigs": "托盘配置",
+    "techParams": "技术参数",
+    "packageInfo": "包装信息",
+    "apiError": "API调用失败，显示基础信息",
     "basicSpecs": "基本规格",
-    "packageInfo": "包装属性 Package Info",
     "packagingMethod": "包装方式",
     "cartonPack": "纸箱装",
+    "pcsPerBox": "单箱数量",
+    "configA": "配置A",
+    "configB": "配置B",
+    "configC": "配置C",
+    "palletSize": "托盘尺寸",
     "packageSize": {
       "metric": "包装尺寸 cm",
       "imperial": "包装尺寸 inch"
@@ -289,12 +299,24 @@
       "metric": "单件净重 kg",
       "imperial": "单件净重 lbs"
     },
-    "palletSize": "托盘尺寸 cm",
+    "totalLength": {
+      "metric": "总长 m",
+      "imperial": "总长 ft"
+    },
+    "tubeInnerDiameter": {
+      "metric": "纸筒内径 cm",
+      "imperial": "纸筒内径 inch"
+    },
+    "dimensions": {
+      "metric": "尺寸(cm)",
+      "imperial": "尺寸(inch)"
+    },
+    "bubbleDiameter": {
+      "metric": "泡径(cm)",
+      "imperial": "泡径(inch)"
+    },
     "packageImage": "包装实物图片",
     "palletInfo": "打托属性 Pallet Info",
-    "configA": "配置A",
-    "configB": "配置B",
-    "configC": "配置C",
     "palletRolls": "一托卷数",
     "grossWeight": {
       "metric": "毛重 kg",
@@ -310,8 +332,8 @@
     },
     "hoverInfo": "悬停查看更多规格信息",
     "thickness": {
-      "metric": "厚度/克重 um/gsm",
-      "imperial": "厚度/克重 mil/#"
+      "metric": "厚度(μm)",
+      "imperial": "厚度(mil)"
     },
     "width": {
       "metric": "膜宽 cm",

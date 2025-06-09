@@ -1,0 +1,1267 @@
+/* === Consumer Page Enhancement Markers === */
+// ENHANCED: Premium Tooltip Design
+// ENHANCED: World-class Product Card
+// ENHANCED: Smart Unit Display  
+// ENHANCED: Standard Fields Integration
+// ENHANCED: Responsive Design Tokens - mobile, tablet, desktop adaptive
+/* === End Enhancement Markers === */
+
+// Consumer页面设计令牌
+:root {
+  // === 主色彩系统 ===
+  --consumable-primary: #3b82f6;
+  --consumable-primary-dark: #1d4ed8;
+  --consumable-primary-light: #60a5fa;
+  
+  --consumable-secondary: #10b981;
+  --consumable-secondary-dark: #059669;
+  --consumable-secondary-light: #34d399;
+  
+  --consumable-accent: #f59e0b;
+  --consumable-accent-dark: #d97706;
+  --consumable-accent-light: #fbbf24;
+  
+  // === 中性色系统 ===
+  --consumable-gray-50: #f9fafb;
+  --consumable-gray-100: #f3f4f6;
+  --consumable-gray-200: #e5e7eb;
+  --consumable-gray-300: #d1d5db;
+  --consumable-gray-400: #9ca3af;
+  --consumable-gray-500: #6b7280;
+  --consumable-gray-600: #4b5563;
+  --consumable-gray-700: #374151;
+  --consumable-gray-800: #1f2937;
+  --consumable-gray-900: #111827;
+  
+  // === 响应式断点 === mobile responsive design 
+  --breakpoint-xs: 480px;
+  --breakpoint-sm: 640px;  
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+  
+  // === 间距系统 ===
+  --space-xs: 0.25rem;    // 4px
+  --space-sm: 0.5rem;     // 8px  
+  --space-md: 1rem;       // 16px
+  --space-lg: 1.5rem;     // 24px
+  --space-xl: 2rem;       // 32px
+  --space-2xl: 3rem;      // 48px
+  --space-3xl: 4rem;      // 64px
+  
+  // === 圆角系统 ===
+  --radius-sm: 0.375rem;  // 6px
+  --radius-md: 0.5rem;    // 8px
+  --radius-lg: 0.75rem;   // 12px
+  --radius-xl: 1rem;      // 16px
+  --radius-2xl: 1.5rem;   // 24px
+  --radius-full: 9999px;
+  
+  // === 阴影系统 ===
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  
+  // === 过渡效果 ===
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 300ms ease-in-out;
+  --transition-slow: 500ms ease-in-out;
+  
+  // === 字体系统 ===
+  --font-size-xs: 12px;
+  --font-size-sm: 13px;
+  --font-size-base: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
+  --font-size-2xl: 20px;
+  --font-size-3xl: 24px;
+  
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+}
+
+// === Responsive Design System 响应式设计系统 ===
+// Mobile-first responsive design approach
+
+// Breakpoint mixins
+@mixin mobile {
+  @media (max-width: #{var(--breakpoint-sm)}) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: #{var(--breakpoint-sm)}) and (max-width: #{var(--breakpoint-lg)}) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: #{var(--breakpoint-lg)}) {
+    @content;
+  }
+}
+
+// 深色模式设计令牌
+[data-theme="dark"] {
+  // === 背景色调整 ===
+  --consumable-bg-primary: #0f172a;
+  --consumable-bg-secondary: #1e293b;
+  --consumable-bg-tertiary: #334155;
+  
+  // === 文字色调整 ===
+  --consumable-text-primary: #f8fafc;
+  --consumable-text-secondary: #cbd5e1;
+  --consumable-text-tertiary: #94a3b8;
+  
+  // === 边框色调整 ===
+  --consumable-border-primary: rgba(255, 255, 255, 0.1);
+  --consumable-border-secondary: rgba(255, 255, 255, 0.05);
+}
+
+// === Antd Tooltip 自定义样式覆盖 ===
+.consumables-custom-tooltip {
+  .ant-tooltip-inner {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    max-width: 650px !important;
+  }
+  
+  .ant-tooltip-arrow {
+    display: none !important;
+  }
+  
+  // 确保我们的自定义tooltip样式能够正确显示
+  .consumable-tooltip {
+    position: relative;
+    z-index: 1000;
+  }
+}
+
+// === Premium Tooltip样式 - 多栏紧凑型设计 ===
+.consumable-tooltip {
+  // === 容器设计 ===
+  min-width: 600px;
+  max-width: 800px; // 增加最大宽度以容纳多栏布局
+  // 移除最大高度限制，确保不出现滚动条
+  background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 16px;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.15),
+    0 10px 10px -5px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  animation: tooltipFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(12px);
+  // 移除滚动设置
+  
+  // 添加整体文字阴影提升可读性
+  * {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  // === 动画效果 ===
+  @keyframes tooltipFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-8px) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  
+  // === 标题区域 ===
+  .tooltip-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    border-radius: 12px;
+    border-bottom: none;
+    
+    .product-image {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-right: 12px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+        
+        &:hover {
+          transform: scale(1.05);
+        }
+      }
+    }
+    
+    .product-title {
+      flex: 1;
+      
+      h4 {
+        font-size: 16px;
+        font-weight: 700;
+        color: #ffffff;
+        margin: 0 0 4px 0;
+        line-height: 1.3;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      }
+      
+      .product-code {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 3px 8px;
+        border-radius: 6px;
+        display: inline-block;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+    }
+  }
+}
+
+// === 新的多栏内容网格 ===
+.tooltip-content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; // 两栏布局
+  gap: 16px;
+  
+  // 如果内容较少，可以使用单栏
+  &.single-column {
+    grid-template-columns: 1fr;
+  }
+  
+  // 三栏布局（适用于内容较多的情况）
+  &.three-columns {
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+  
+  // 响应式：移动端始终单栏
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+  
+  // === 左栏和右栏样式 ===
+  .left-column,
+  .right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .left-column {
+    // 左栏可以有特殊样式
+  }
+  
+  .right-column {
+    // 右栏可以有特殊样式
+  }
+}
+
+// === 通用卡片样式优化 ===
+.specs-summary-card,
+.package-info-card,
+.pallet-configs-card,
+.tech-params-card {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  padding: 12px;
+  transition: all 0.2s ease;
+  height: fit-content; // 自适应内容高度
+  
+  &:hover {
+    background: rgba(255, 255, 255, 1);
+    border-color: rgba(59, 130, 246, 0.2);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// === 区域标题样式优化 ===
+.section-title {
+  font-size: 13px; // 稍微减小字体
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 8px 0; // 减小底部间距
+  display: flex;
+  align-items: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  
+  .title-icon {
+    margin-right: 6px;
+    font-size: 14px;
+  }
+}
+
+// === 核心规格网格优化 ===
+.specs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; // 保持两列
+  gap: 6px; // 减小间距
+  
+  .spec-item {
+    display: flex;
+    flex-direction: column;
+    background: rgba(248, 250, 252, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    border-radius: 6px;
+    padding: 6px 8px; // 减小内边距
+    text-align: center;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background: rgba(59, 130, 246, 0.05);
+      border-color: rgba(59, 130, 246, 0.2);
+    }
+    
+    .spec-label {
+      font-size: 10px; // 减小字体
+      color: #6b7280;
+      font-weight: 500;
+      margin-bottom: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      line-height: 1.2;
+    }
+    
+    .spec-value {
+      font-size: 12px; // 减小字体
+      font-weight: 600;
+      color: #1f2937;
+      line-height: 1.2;
+      
+      &:not([data-empty="true"]) {
+        font-family: ui-monospace, 'SF Mono', 'Monaco', monospace;
+        color: #059669;
+      }
+    }
+  }
+}
+
+// === 包装信息样式优化 ===
+.package-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px; // 减小间距
+  
+  .package-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0; // 减小内边距
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+    
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    .package-label {
+      font-size: 11px; // 减小字体
+      font-weight: 500;
+      color: #374151;
+      flex: 1;
+    }
+    
+    .package-value {
+      font-size: 11px; // 减小字体
+      font-weight: 600;
+      color: #111827;
+      text-align: right;
+      max-width: 100px; // 减小最大宽度
+      word-wrap: break-word;
+      
+      // 数值样式
+      &:not(:empty) {
+        font-family: ui-monospace, 'SF Mono', 'Monaco', monospace;
+        background: rgba(16, 185, 129, 0.1);
+        color: #065f46;
+        padding: 1px 4px; // 减小内边距
+        border-radius: 3px;
+      }
+    }
+  }
+}
+
+// === 托盘配置紧凑样式优化 ===
+.pallet-configs-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px; // 减小间距
+  
+  .pallet-config-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 8px; // 减小内边距
+    background: rgba(248, 250, 252, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background: rgba(239, 68, 68, 0.05);
+      border-color: rgba(239, 68, 68, 0.2);
+    }
+    
+    .config-label {
+      font-size: 11px; // 减小字体
+      font-weight: 600;
+      color: #ef4444;
+    }
+    
+    .config-value {
+      font-size: 11px; // 减小字体
+      font-weight: 600;
+      color: #111827;
+      font-family: ui-monospace, 'SF Mono', 'Monaco', monospace;
+    }
+  }
+}
+
+// === 技术参数紧凑样式优化 ===
+.tech-params-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px; // 减小间距
+  
+  .tech-param-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0; // 减小内边距
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+    
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    .param-label {
+      font-size: 11px; // 减小字体
+      font-weight: 500;
+      color: #8b5cf6;
+      flex: 1;
+    }
+    
+    .param-value {
+      font-size: 11px; // 减小字体
+      font-weight: 600;
+      color: #111827;
+      text-align: right;
+      font-family: ui-monospace, 'SF Mono', 'Monaco', monospace;
+      background: rgba(139, 92, 246, 0.1);
+      color: #6b21a8;
+      padding: 1px 4px; // 减小内边距
+      border-radius: 3px;
+    }
+  }
+}
+
+// === 世界级商品卡片设计 ===
+.consumable-product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 24px;
+  padding: 24px 0;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    padding: 16px 0;
+  }
+}
+
+.consumable-product-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      0 12px 24px rgba(0, 0, 0, 0.1),
+      0 0 0 1px rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.2);
+  }
+  
+  // === 库存状态标签优化 ===
+  .stock-status-badge {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 10;
+    backdrop-filter: blur(8px);
+    
+    &.high-stock {
+      background: rgba(16, 185, 129, 0.9);
+      color: white;
+      box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+    }
+    
+    &.low-stock {
+      background: rgba(245, 158, 11, 0.9);
+      color: white;
+      box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+    }
+    
+    &.out-stock {
+      background: rgba(239, 68, 68, 0.9);
+      color: white;
+      box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+    }
+  }
+  
+  // === 卡片内容布局 ===
+  .product-card-content {
+    padding: 24px;
+    
+    .product-layout {
+      display: grid;
+      grid-template-columns: 200px 1fr auto;
+      gap: 24px;
+      align-items: start;
+      
+      @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+    }
+  }
+  
+  // === 产品图片区域优化 ===
+  .product-image-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    
+    .image-container {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s ease;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+      
+      &:hover {
+        transform: scale(1.02);
+      }
+      
+      img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+      }
+    }
+    
+    .product-code-badge {
+      margin-top: 12px;
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    }
+  }
+  
+  // === 产品信息区域优化 ===
+  .product-info-section {
+    flex: 1;
+    
+    .product-title {
+      .product-name {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1f2937;
+        line-height: 1.3;
+        margin-bottom: 8px;
+        transition: color 0.2s ease;
+        
+        &:hover {
+          color: #3b82f6;
+        }
+      }
+      
+      .compatibility-info {
+        color: #6b7280;
+        font-size: 14px;
+        margin-bottom: 4px;
+        
+        .label {
+          font-weight: 500;
+        }
+        
+        .value {
+          font-weight: 600;
+          color: #374151;
+        }
+      }
+      
+      .product-id {
+        color: #9ca3af;
+        font-size: 12px;
+        font-weight: 500;
+      }
+    }
+    
+    // === 规格展示卡片 ===
+    .specs-showcase {
+      background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+      border: 1px solid rgba(59, 130, 246, 0.1);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 16px 0;
+      
+      .specs-title {
+        display: flex;
+        align-items: center;
+        margin-bottom: 12px;
+        
+        .title-icon {
+          width: 20px;
+          height: 20px;
+          margin-right: 8px;
+          color: #3b82f6;
+        }
+        
+        .title-text {
+          font-size: 14px;
+          font-weight: 600;
+          color: #1f2937;
+        }
+      }
+      
+      .specs-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 8px;
+        
+        .spec-badge {
+          background: rgba(255, 255, 255, 0.8);
+          border: 1px solid rgba(59, 130, 246, 0.1);
+          border-radius: 8px;
+          padding: 8px 12px;
+          text-align: center;
+          transition: all 0.2s ease;
+          
+          &:hover {
+            background: rgba(59, 130, 246, 0.05);
+            border-color: rgba(59, 130, 246, 0.2);
+            transform: translateY(-1px);
+          }
+          
+          .spec-label {
+            font-size: 11px;
+            color: #6b7280;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+          }
+          
+          .spec-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1f2937;
+            line-height: 1.2;
+          }
+        }
+      }
+    }
+    
+    // === 操作按钮区域 ===
+    .product-actions {
+      margin-top: 16px;
+      
+      .tooltip-trigger-btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 16px;
+        background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+        color: #3b82f6;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        
+        &:hover {
+          background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 100%);
+          border-color: rgba(59, 130, 246, 0.3);
+          transform: translateY(-1px);
+          box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+        }
+        
+        .action-icon {
+          margin-right: 6px;
+          font-size: 14px;
+        }
+      }
+    }
+  }
+  
+  // === 价格与购买区域优化 ===
+  .price-purchase-section {
+    min-width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    
+    // === 价格展示优化 ===
+    .price-display {
+      text-align: center;
+      background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+      border: 1px solid rgba(34, 197, 94, 0.1);
+      border-radius: 12px;
+      padding: 16px;
+      
+      .price-label {
+        font-size: 12px;
+        color: #6b7280;
+        font-weight: 500;
+        margin-bottom: 4px;
+      }
+      
+      .price-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: #059669;
+        margin-bottom: 4px;
+        font-family: ui-monospace, 'SF Mono', 'Monaco', monospace;
+      }
+      
+      .price-note {
+        font-size: 11px;
+        color: #9ca3af;
+        font-weight: 500;
+      }
+    }
+    
+    // === 价格阶梯优化 ===
+    .price-tiers {
+      background: #f9fafb;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: 10px;
+      padding: 12px;
+      max-height: 120px;
+      overflow-y: auto;
+      
+      .tiers-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        position: sticky;
+        top: 0;
+        background: #f9fafb;
+      }
+      
+      .tier-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 4px 0;
+        font-size: 12px;
+        
+        .tier-range {
+          color: #6b7280;
+          font-weight: 500;
+        }
+        
+        .tier-price {
+          color: #059669;
+          font-weight: 700;
+          font-family: ui-monospace, 'SF Mono', 'Monaco', monospace;
+        }
+      }
+      
+      .more-tiers {
+        text-align: center;
+        padding: 6px 0;
+        font-size: 11px;
+        color: #3b82f6;
+        font-weight: 500;
+      }
+    }
+    
+    // === 库存信息优化 ===
+    .stock-info {
+      border-radius: 10px;
+      padding: 12px;
+      border: 1px solid;
+      
+      &.high-stock {
+        background: rgba(16, 185, 129, 0.05);
+        border-color: rgba(16, 185, 129, 0.2);
+        
+        .stock-status-text {
+          color: #059669;
+        }
+      }
+      
+      &.low-stock {
+        background: rgba(245, 158, 11, 0.05);
+        border-color: rgba(245, 158, 11, 0.2);
+        
+        .stock-status-text {
+          color: #d97706;
+        }
+      }
+      
+      &.out-stock {
+        background: rgba(239, 68, 68, 0.05);
+        border-color: rgba(239, 68, 68, 0.2);
+        
+        .stock-status-text {
+          color: #dc2626;
+        }
+      }
+      
+      .stock-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        
+        .stock-label {
+          font-size: 12px;
+          font-weight: 500;
+          color: #6b7280;
+        }
+        
+        .stock-status-text {
+          font-size: 12px;
+          font-weight: 700;
+        }
+      }
+      
+      .stock-details {
+        text-align: center;
+        
+        .total-stock {
+          font-size: 11px;
+          color: #6b7280;
+          
+          .stock-number {
+            font-weight: 600;
+            color: #374151;
+          }
+        }
+      }
+    }
+    
+    // === 购买操作区域优化 ===
+    .purchase-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      
+      .quantity-selector {
+        .quantity-input {
+          width: 100%;
+          height: 44px;
+          border: 1px solid rgba(0, 0, 0, 0.1);
+          border-radius: 8px;
+          text-align: center;
+          font-size: 16px;
+          font-weight: 500;
+          transition: all 0.2s ease;
+          
+          &:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+          }
+          
+          &:disabled {
+            background: #f3f4f6;
+            color: #9ca3af;
+            cursor: not-allowed;
+          }
+        }
+      }
+      
+      .stock-warning {
+        background: rgba(245, 158, 11, 0.1);
+        border: 1px solid rgba(245, 158, 11, 0.2);
+        border-radius: 8px;
+        padding: 8px 12px;
+        
+        .warning-text {
+          font-size: 11px;
+          color: #d97706;
+          font-weight: 500;
+          text-align: center;
+        }
+      }
+      
+      .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        
+        .add-to-cart-btn {
+          height: 48px;
+          border-radius: 10px;
+          font-size: 14px;
+          font-weight: 600;
+          border: none;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          position: relative;
+          overflow: hidden;
+          
+          &.available {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+            
+            &:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+            }
+            
+            &:active {
+              transform: translateY(0);
+            }
+          }
+          
+          &.unavailable {
+            background: #f3f4f6;
+            color: #9ca3af;
+            cursor: not-allowed;
+            box-shadow: none;
+          }
+        }
+        
+        .quick-buy-btn {
+          height: 40px;
+          border-radius: 8px;
+          font-size: 13px;
+          font-weight: 500;
+          background: transparent;
+          color: #3b82f6;
+          border: 1px solid rgba(59, 130, 246, 0.3);
+          cursor: pointer;
+          transition: all 0.2s ease;
+          
+          &:hover {
+            background: rgba(59, 130, 246, 0.05);
+            border-color: rgba(59, 130, 246, 0.4);
+          }
+        }
+      }
+    }
+  }
+}
+
+// === 智能响应式布局 ===
+.consumable-products-container {
+  // 超大屏幕 (>1400px) - 4列布局
+  @media (min-width: 1400px) {
+    .consumable-product-grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 32px;
+    }
+  }
+  
+  // 大屏幕 (1200px-1400px) - 3列布局
+  @media (min-width: 1200px) and (max-width: 1399px) {
+    .consumable-product-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+    }
+  }
+  
+  // 中等屏幕 (768px-1199px) - 2列布局
+  @media (min-width: 768px) and (max-width: 1199px) {
+    .consumable-product-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+  }
+  
+  // 小屏幕 (<768px) - 1列布局
+  @media (max-width: 640px) {
+    .consumable-product-grid {
+      grid-template-columns: 1fr;
+      gap: 20px;
+      padding: 16px;
+    }
+    
+    .consumable-product-card {
+      .core-specifications {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      
+      .extended-info .info-grid {
+        .info-row {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 4px;
+        }
+      }
+    }
+    
+    .consumable-tooltip {
+      min-width: unset;
+      max-width: calc(100vw - 32px);
+      margin: 16px;
+      padding: 16px;
+      max-height: 80vh;
+      
+      .tooltip-header {
+        flex-direction: column;
+        text-align: center;
+        
+        .product-image {
+          align-self: center;
+          margin: 0 0 8px 0;
+        }
+      }
+      
+      .tooltip-content-grid {
+        .left-column,
+        .right-column {
+          gap: 8px;
+        }
+      }
+      
+      .specs-grid {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+      
+      .package-row,
+      .pallet-config-row,
+      .tech-param-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        
+        .package-label,
+        .config-label,
+        .param-label {
+          margin-bottom: 2px;
+        }
+        
+        .package-value,
+        .config-value,
+        .param-value {
+          text-align: left;
+          max-width: 100%;
+        }
+      }
+    }
+  }
+}
+
+// === 深色模式适配 ===
+[data-theme="dark"] {
+  .consumable-product-card {
+    background: var(--consumable-bg-secondary);
+    border-color: var(--consumable-border-primary);
+    color: var(--consumable-text-primary);
+    
+    .product-name {
+      color: var(--consumable-text-primary);
+    }
+    
+    .product-code {
+      color: var(--consumable-text-tertiary);
+    }
+    
+    .extended-info {
+      background: var(--consumable-bg-tertiary);
+      border-color: var(--consumable-border-secondary);
+    }
+  }
+  
+  .consumable-tooltip {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-color: var(--consumable-border-primary);
+    color: var(--consumable-text-primary);
+    
+    .field-group {
+      background: rgba(255, 255, 255, 0.03);
+      border-color: var(--consumable-border-secondary);
+    }
+  }
+}
+
+// === 高级微交互动画 ===
+@keyframes cardHover {
+  0% {
+    transform: translateY(0) scale(1);
+    box-shadow: var(--shadow-md);
+  }
+  100% {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: var(--shadow-2xl);
+  }
+}
+
+@keyframes tooltipShow {
+  0% {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.94);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes fieldValueHighlight {
+  0% {
+    background: transparent;
+  }
+  50% {
+    background: rgba(59, 130, 246, 0.1);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+@keyframes buttonSuccess {
+  0% {
+    background: var(--consumable-primary);
+  }
+  50% {
+    background: var(--consumable-success);
+    transform: scale(1.05);
+  }
+  100% {
+    background: var(--consumable-success);
+    transform: scale(1);
+  }
+}
+
+// 应用动画
+.consumable-product-card:hover {
+  animation: cardHover 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.consumable-tooltip {
+  animation: tooltipShow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tooltip-field .field-value[data-field-type="numeric"]:hover {
+  animation: fieldValueHighlight 0.6s ease-in-out;
+}
+
+.add-to-cart-btn.success {
+  animation: buttonSuccess 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// === 性能优化 ===
+.consumable-product-card {
+  // 使用transform代替top/left进行动画
+  will-change: transform;
+  
+  // 启用硬件加速
+  transform: translateZ(0);
+  
+  // 优化重绘
+  backface-visibility: hidden;
+  
+  // 合成层优化
+  &:hover {
+    transform: translateY(-4px) translateZ(0);
+  }
+}
+
+// 减少动画敏感性
+@media (prefers-reduced-motion: reduce) {
+  .consumable-product-card,
+  .consumable-tooltip,
+  .tooltip-field {
+    animation: none;
+    transition: none;
+  }
+}
+
+// 高对比度模式支持
+@media (prefers-contrast: high) {
+  .consumable-product-card {
+    border-width: 2px;
+    border-color: #000;
+    
+    .field-value[data-field-type="numeric"] {
+      border: 2px solid #000;
+    }
+  }
+}
+
+// === 耗材产品列表优化样式 ===
+.consumables-page {
+  .products-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+}
+
+// === 动画效果 ===
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-up {
+  animation: slideUp 0.4s ease-out;
+} 

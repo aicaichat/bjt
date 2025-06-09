@@ -277,10 +277,20 @@
     "no": "No"
   },
   "tooltip": {
-    "basicSpecs": "Basic Specifications",
+    "coreSpecs": "Core Specifications",
+    "material": "Material",
+    "palletConfigs": "Pallet Configurations",
+    "techParams": "Technical Parameters",
     "packageInfo": "Package Information",
+    "apiError": "API call failed, showing basic information",
+    "basicSpecs": "Basic Specifications",
     "packagingMethod": "Packaging Method",
     "cartonPack": "Carton Pack",
+    "pcsPerBox": "Pieces per Box",
+    "configA": "Configuration A",
+    "configB": "Configuration B",
+    "configC": "Configuration C",
+    "palletSize": "Pallet Size",
     "packageSize": {
       "metric": "Package Size cm",
       "imperial": "Package Size inch"
@@ -289,12 +299,24 @@
       "metric": "Unit Weight kg",
       "imperial": "Unit Weight lbs"
     },
-    "palletSize": "Pallet Size cm",
+    "totalLength": {
+      "metric": "Total Length m",
+      "imperial": "Total Length ft"
+    },
+    "tubeInnerDiameter": {
+      "metric": "Core Diameter cm",
+      "imperial": "Core Diameter inch"
+    },
+    "dimensions": {
+      "metric": "Dimensions(cm)",
+      "imperial": "Dimensions(inch)"
+    },
+    "bubbleDiameter": {
+      "metric": "Bubble Diameter(cm)",
+      "imperial": "Bubble Diameter(inch)"
+    },
     "packageImage": "Package Image",
     "palletInfo": "Pallet Information",
-    "configA": "Configuration A",
-    "configB": "Configuration B",
-    "configC": "Configuration C",
     "palletRolls": "Rolls per Pallet",
     "grossWeight": {
       "metric": "Gross Weight kg",
@@ -310,8 +332,8 @@
     },
     "hoverInfo": "Hover to view more specifications",
     "thickness": {
-      "metric": "Thickness/Weight um/gsm",
-      "imperial": "Thickness/Weight mil/#"
+      "metric": "Thickness(μm)",
+      "imperial": "Thickness(mil)"
     },
     "width": {
       "metric": "Film Width cm",

@@ -1,5 +1,6 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import LanguageDetector from 'i18next-browser-languagedetector';
 
 // 导入翻译资源
 import zhCommon from './locales/zh/common.json';
@@ -29,6 +30,7 @@ import productLinesEn from '../../i18n/locales/en/productLines.json';
 const adminI18n = i18n.createInstance();
 
 adminI18n
+  .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources: {
@@ -71,6 +73,13 @@ adminI18n
     // 确保实例独立
     defaultNS: 'common',
     ns: ['common', 'forms', 'accessories', 'spare-parts', 'machines', 'consumables', 'relations', 'dictionary', 'navigation'],
+    
+    // 语言检测配置
+    detection: {
+      order: ['localStorage', 'navigator'],
+      caches: ['localStorage'],
+      lookupLocalStorage: 'admin_i18nextLng', // 独立存储key，避免冲突
+    },
     
     // 防止与主应用i18n冲突
     keySeparator: '.',

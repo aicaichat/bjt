@@ -1,80 +1,46 @@
 import React from 'react';
-import { Card, Alert, Space, Button } from 'antd';
-import { useNavigate } from 'react-router-dom';
-import { CheckCircleOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons';
+import { Card, Space, Typography, Button } from 'antd';
+import { useAdminI18n } from '../i18n/hooks/useAdminI18n';
+import LanguageSwitch from '../i18n/components/LanguageSwitch';
+
+const { Title, Text } = Typography;
 
 const AdminTestPage: React.FC = () => {
-  const navigate = useNavigate();
+  const { tc, language, t } = useAdminI18n();
 
   return (
-    <div className="p-6">
-      <Space direction="vertical" size="large" style={{ width: '100%' }}>
-        <Card title="🎉 Admin后台访问成功" className="text-center">
-          <Alert
-            message="恭喜！"
-            description="您已成功登录Admin管理后台，登录验证正常工作！"
-            type="success"
-            icon={<CheckCircleOutlined />}
-            showIcon
-            className="mb-4"
-          />
-          
-          <p className="text-gray-600 mb-6">
-            当前页面可以正常访问，说明admin路由保护机制工作正常。
-          </p>
-          
-          <Space wrap>
-            <Button 
-              type="primary" 
-              icon={<SettingOutlined />}
-              onClick={() => navigate('/admin/settings')}
-            >
-              前往系统设置
-            </Button>
-            
-            <Button 
-              icon={<UserOutlined />}
-              onClick={() => navigate('/admin/users')}
-            >
-              用户管理
-            </Button>
-            
-            <Button 
-              onClick={() => navigate('/admin/product-lines')}
-            >
-              产品线管理
-            </Button>
-          </Space>
-        </Card>
-
-        <Card title="🔧 功能测试" size="small">
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span>✅ Admin登录验证</span>
-              <span className="text-green-600">正常</span>
-            </div>
-            <div className="flex justify-between">
-              <span>✅ 路由保护</span>
-              <span className="text-green-600">正常</span>
-            </div>
-            <div className="flex justify-between">
-              <span>✅ 默认重定向</span>
-              <span className="text-green-600">到设置页面</span>
-            </div>
-            <div className="flex justify-between">
-              <span>✅ Token存储</span>
-              <span className="text-green-600">{localStorage.getItem('admin_token') ? '已保存' : '未保存'}</span>
-            </div>
+    <div style={{ padding: '20px' }}>
+      <Card title="多语言切换测试页面" extra={<LanguageSwitch />}>
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          <div>
+            <Title level={4}>当前语言信息</Title>
+            <Text>当前语言: <strong>{language}</strong></Text>
           </div>
-        </Card>
 
-        <Card title="📋 当前路由信息" size="small">
-          <div className="text-sm text-gray-600">
-            <p><strong>当前路径:</strong> {window.location.pathname}</p>
-            <p><strong>管理员Token:</strong> {localStorage.getItem('admin_token') ? '✅ 已设置' : '❌ 未设置'}</p>
+          <div>
+            <Title level={4}>翻译测试</Title>
+            <Space direction="vertical">
+              <Text>保存按钮: <strong>{String(tc('actions.save'))}</strong></Text>
+              <Text>取消按钮: <strong>{String(tc('actions.cancel'))}</strong></Text>
+              <Text>删除按钮: <strong>{String(tc('actions.delete'))}</strong></Text>
+              <Text>个人信息: <strong>{String(tc('profile'))}</strong></Text>
+              <Text>退出登录: <strong>{String(tc('logout'))}</strong></Text>
+              <Text>管理员: <strong>{String(tc('admin'))}</strong></Text>
+              <Text>切换语言: <strong>{String(tc('switchLanguage'))}</strong></Text>
+            </Space>
           </div>
-        </Card>
-      </Space>
+
+          <div>
+            <Title level={4}>i18n 实例信息</Title>
+            <Text>实例状态: <strong>{t ? '已加载' : '未加载'}</strong></Text>
+          </div>
+
+          <div>
+            <Title level={4}>调试信息</Title>
+            <Text>localStorage 存储: <strong>{localStorage.getItem('admin_i18nextLng') || '未设置'}</strong></Text>
+          </div>
+        </Space>
+      </Card>
     </div>
   );
 };

@@ -143,6 +143,77 @@
     "totalLengthImp": "Total Length(ft)",
     "totalLengthMet": "Total Length(m)"
   },
+  "consumable": {
+    "fields": {
+      "app_model": "Compatible Model",
+      "name": "Product Name",
+      "shape": "Shape",
+      "image_url": "Product Image",
+      "code": "Part Number",
+      "model": "Model",
+      "spec": "Specification",
+      "bubble_diameter": "Bubble Diameter",
+      "id": "Product ID",
+      "pcs_per_box": "Pieces per Box",
+      "material": "Material",
+      "thickness": "Thickness/Weight",
+      "width": "Film Width",
+      "length": "Bag Length",
+      "total_length": "Total Length",
+      "package_type": "Packaging Type",
+      "package_size": "Package Size",
+      "net_weight": "Unit Weight",
+      "package_image_url": "Package Image",
+      "pallet_size": "Pallet Size",
+      "pcs_per_pallet_a": "Pallet Rolls A",
+      "pallet_gross_weight_a": "Pallet Weight A",
+      "pallet_height_a": "Pallet Height A",
+      "pcs_per_pallet_b": "Pallet Rolls B",
+      "pallet_gross_weight_b": "Pallet Weight B",
+      "pallet_height_b": "Pallet Height B",
+      "pcs_per_pallet_c": "Pallet Rolls C",
+      "pallet_gross_weight_c": "Pallet Weight C",
+      "pallet_height_c": "Pallet Height C",
+      "tube_inner_diameter": "Core Diameter",
+      "brand": "Brand"
+    },
+    "fieldsWithUnits": {
+      "metric": {
+        "bubble_diameter": "Bubble Diameter(cm)",
+        "thickness": "Thickness/Weight(μm/gsm)",
+        "width": "Film Width(cm)",
+        "length": "Bag Length(cm)",
+        "total_length": "Total Length(m)",
+        "package_size": "Package Size(cm)",
+        "net_weight": "Unit Weight(kg)",
+        "pallet_size": "Pallet Size(cm)",
+        "pallet_gross_weight_a": "Pallet Weight A(kg)",
+        "pallet_height_a": "Pallet Height A(cm)",
+        "pallet_gross_weight_b": "Pallet Weight B(kg)",
+        "pallet_height_b": "Pallet Height B(cm)",
+        "pallet_gross_weight_c": "Pallet Weight C(kg)",
+        "pallet_height_c": "Pallet Height C(cm)",
+        "tube_inner_diameter": "Core Diameter(cm)"
+      },
+      "imperial": {
+        "bubble_diameter": "Bubble Diameter(inch)",
+        "thickness": "Thickness/Weight(mil/#)",
+        "width": "Film Width(inch)",
+        "length": "Bag Length(inch)",
+        "total_length": "Total Length(ft)",
+        "package_size": "Package Size(inch)",
+        "net_weight": "Unit Weight(lbs)",
+        "pallet_size": "Pallet Size(inch)",
+        "pallet_gross_weight_a": "Pallet Weight A(lbs)",
+        "pallet_height_a": "Pallet Height A(inch)",
+        "pallet_gross_weight_b": "Pallet Weight B(lbs)",
+        "pallet_height_b": "Pallet Height B(inch)",
+        "pallet_gross_weight_c": "Pallet Weight C(lbs)",
+        "pallet_height_c": "Pallet Height C(inch)",
+        "tube_inner_diameter": "Core Diameter(inch)"
+      }
+    }
+  },
   "machines": {
     "pageTitle": "Machine Selection",
     "tableHeaders": {
@@ -265,7 +336,8 @@
     "login": "Login",
     "cancel": "Cancel",
     "loginRequired": "Login Required",
-    "loginPrompt": "You need to log in to access this content. Would you like to go to the login page?"
+    "loginPrompt": "You need to log in to access this content. Would you like to go to the login page?",
+    "toBeFilled": "To be filled"
   },
   "order": {
     "title": "Confirm Order",
@@ -465,5 +537,51 @@
     "usa": "United States",
     "europe": "Europe",
     "asia": "Asia"
-  }
+  },
+  "tooltip": {
+    "coreSpecs": "Core Specifications",
+    "material": "Material",
+    "palletConfigs": "Pallet Configurations",
+    "configA": "Config A",
+    "configB": "Config B",
+    "configC": "Config C",
+    "packageInfo": "Package Information",
+    "packagingMethod": "Packaging Method",
+    "pcsPerBox": "Pieces per Box",
+    "techParams": "Technical Parameters",
+    "cartonPack": "Carton Package",
+    "apiError": "API call failed, showing basic information",
+    "thickness": {
+      "metric": "Thickness(μm)",
+      "imperial": "Thickness(mil)"
+    },
+    "dimensions": {
+      "metric": "Dimensions(cm)",
+      "imperial": "Dimensions(inch)"
+    },
+    "bubbleDiameter": {
+      "metric": "Bubble Diameter(cm)",
+      "imperial": "Bubble Diameter(inch)"
+    },
+    "unitWeight": {
+      "metric": "Unit Weight(kg)",
+      "imperial": "Unit Weight(lbs)"
+    },
+    "totalLength": {
+      "metric": "Total Length(m)",
+      "imperial": "Total Length(ft)"
+    },
+    "tubeInnerDiameter": {
+      "metric": "Core Diameter(cm)",
+      "imperial": "Core Diameter(inch)"
+    },
+    "packageSize": {
+      "metric": "Package Size(cm)",
+      "imperial": "Package Size(inch)"
+    },
+    "palletSize": "Pallet Size"
+  },
+  "rollLength": "Total Length",
+  "length": "Length",
+  "width": "Width"
 } 

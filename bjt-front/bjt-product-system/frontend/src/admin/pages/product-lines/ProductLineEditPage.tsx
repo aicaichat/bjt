@@ -213,11 +213,7 @@ const ProductLineEditPage: React.FC = () => {
       <AdminPageHeader
         title={isEditMode ? '编辑产品线' : '新增产品线'}
         description={isEditMode ? `编辑产品线 ID: ${id}` : '创建新的产品线'}
-        extra={
-          <ButtonComponent key="back" icon={<ArrowLeftIcon />} onClick={handleBack}>
-            返回产品线列表
-          </ButtonComponent>
-        }
+      
       />
 
       <CardComponent loading={loading}>

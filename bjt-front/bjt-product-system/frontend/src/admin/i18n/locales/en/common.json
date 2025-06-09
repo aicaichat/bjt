@@ -19,6 +19,9 @@
     "emailValidation": "Please enter a valid email address"
   },
   "switchLanguage": "Switch Language",
+  "profile": "Profile",
+  "logout": "Logout",
+  "admin": "Administrator",
   "common": {
     "save": "Save",
     "cancel": "Cancel",

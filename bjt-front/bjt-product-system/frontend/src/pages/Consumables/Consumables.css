@@ -1247,12 +1247,15 @@
 
 /* 自定义Antd Tooltip样式 */
 .consumables-custom-tooltip .ant-tooltip-inner {
-  max-width: 650px !important;
-  min-width: 500px !important;
+  max-width: min(600px, 90vw) !important;
   padding: 0 !important;
+  width: auto !important;
   background: white !important;
-  border-radius: 8px !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+  overflow: hidden !important;
+  min-height: auto !important;
+  height: auto !important;
 }
 
 .consumables-custom-tooltip .ant-tooltip-arrow::before {
@@ -2112,4 +2115,1227 @@
 
 .ant-select-dropdown .ant-select-item-option-disabled span {
   text-decoration: line-through;
+}
+
+/* Consumer页面世界级设计令牌和样式 */
+
+/* ========= 设计令牌 (Design Tokens) ========= */
+:root {
+  /* Primary Colors - Professional Blue */
+  --consumable-primary-50: #eff6ff;
+  --consumable-primary-100: #dbeafe;
+  --consumable-primary-200: #bfdbfe;
+  --consumable-primary-300: #93c5fd;
+  --consumable-primary-400: #60a5fa;
+  --consumable-primary-500: #3b82f6;
+  --consumable-primary-600: #2563eb;
+  --consumable-primary-700: #1d4ed8;
+  --consumable-primary-800: #1e40af;
+  --consumable-primary-900: #1e3a8a;
+
+  /* Secondary Colors - Warm Gray */
+  --consumable-secondary-50: #fafaf9;
+  --consumable-secondary-100: #f5f5f4;
+  --consumable-secondary-200: #e7e5e4;
+  --consumable-secondary-300: #d6d3d1;
+  --consumable-secondary-400: #a8a29e;
+  --consumable-secondary-500: #78716c;
+  --consumable-secondary-600: #57534e;
+  --consumable-secondary-700: #44403c;
+  --consumable-secondary-800: #292524;
+  --consumable-secondary-900: #1c1917;
+
+  /* Status Colors */
+  --consumable-success-color: #10b981;
+  --consumable-warning-color: #f59e0b;
+  --consumable-error-color: #ef4444;
+  --consumable-info-color: #06b6d4;
+
+  /* Typography */
+  --consumable-font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --consumable-font-family-mono: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+  
+  /* Font Sizes */
+  --consumable-text-xs: 0.75rem;
+  --consumable-text-sm: 0.875rem;
+  --consumable-text-base: 1rem;
+  --consumable-text-lg: 1.125rem;
+  --consumable-text-xl: 1.25rem;
+  --consumable-text-2xl: 1.5rem;
+  --consumable-text-3xl: 1.875rem;
+
+  /* Spacing */
+  --consumable-space-1: 0.25rem;
+  --consumable-space-2: 0.5rem;
+  --consumable-space-3: 0.75rem;
+  --consumable-space-4: 1rem;
+  --consumable-space-5: 1.25rem;
+  --consumable-space-6: 1.5rem;
+  --consumable-space-8: 2rem;
+  --consumable-space-10: 2.5rem;
+  --consumable-space-12: 3rem;
+  --consumable-space-16: 4rem;
+
+  /* Border Radius */
+  --consumable-rounded-sm: 0.125rem;
+  --consumable-rounded: 0.25rem;
+  --consumable-rounded-md: 0.375rem;
+  --consumable-rounded-lg: 0.5rem;
+  --consumable-rounded-xl: 0.75rem;
+  --consumable-rounded-2xl: 1rem;
+
+  /* Shadows */
+  --consumable-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --consumable-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --consumable-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --consumable-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --consumable-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* Transitions */
+  --consumable-transition-fast: all 0.15s ease-in-out;
+  --consumable-transition-normal: all 0.3s ease-in-out;
+  --consumable-transition-slow: all 0.5s ease-in-out;
+
+  /* Z-index layers */
+  --consumable-z-tooltip: 1000;
+  --consumable-z-modal: 1050;
+  --consumable-z-popover: 1100;
+}
+
+/* Import Inter font for better typography */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ========= 响应式断点 ========= */
+/* Mobile: 320px - 767px */
+/* Tablet: 768px - 1023px */
+/* Desktop: 1024px+ */
+
+/* ========= 基础容器样式 ========= */
+.consumables-page {
+  font-family: var(--consumable-font-family-sans);
+  background: linear-gradient(135deg, var(--consumable-primary-50) 0%, var(--consumable-secondary-50) 100%);
+  min-height: 100vh;
+  padding: var(--consumable-space-4);
+}
+
+/* ========= 产品卡片网格 ========= */
+.consumables-grid {
+  display: grid;
+  gap: var(--consumable-space-6);
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--consumable-space-4);
+}
+
+/* 响应式网格布局 */
+@media (min-width: 320px) {
+  .consumables-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 768px) {
+  .consumables-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .consumables-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1400px) {
+  .consumables-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ========= 世界级产品卡片设计 ========= */
+.premium-consumable-card {
+  background: white;
+  border-radius: var(--consumable-rounded-xl);
+  box-shadow: var(--consumable-shadow-md);
+  overflow: hidden;
+  transition: var(--consumable-transition-normal);
+  position: relative;
+  cursor: pointer;
+  transform: translateY(0);
+  will-change: transform, box-shadow;
+}
+
+.premium-consumable-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--consumable-shadow-xl);
+  border: 1px solid var(--consumable-primary-200);
+}
+
+.premium-consumable-card:active {
+  transform: translateY(-4px);
+}
+
+/* 产品图片容器 */
+.card-image-container {
+  position: relative;
+  height: 240px;
+  background: linear-gradient(135deg, var(--consumable-secondary-50), var(--consumable-primary-50));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.card-image {
+  max-width: 85%;
+  max-height: 85%;
+  object-fit: contain;
+  transition: var(--consumable-transition-normal);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.08));
+}
+
+.premium-consumable-card:hover .card-image {
+  transform: scale(1.05);
+}
+
+/* 产品信息内容 */
+.card-content {
+  padding: var(--consumable-space-6);
+}
+
+.card-title {
+  font-size: var(--consumable-text-lg);
+  font-weight: 600;
+  color: var(--consumable-secondary-900);
+  margin: 0 0 var(--consumable-space-3) 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-subtitle {
+  font-size: var(--consumable-text-sm);
+  color: var(--consumable-secondary-600);
+  margin: 0 0 var(--consumable-space-4) 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 字段展示网格 */
+.card-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--consumable-space-3);
+  margin-top: var(--consumable-space-4);
+}
+
+.card-field {
+  padding: var(--consumable-space-3);
+  background: var(--consumable-secondary-50);
+  border-radius: var(--consumable-rounded-md);
+  border-left: 3px solid var(--consumable-primary-400);
+}
+
+.card-field-label {
+  font-size: var(--consumable-text-xs);
+  font-weight: 500;
+  color: var(--consumable-secondary-600);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  margin-bottom: var(--consumable-space-1);
+}
+
+.card-field-value {
+  font-size: var(--consumable-text-sm);
+  font-weight: 600;
+  color: var(--consumable-secondary-900);
+  word-break: break-word;
+}
+
+/* ========= Premium Tooltip设计 ========= */
+.premium-tooltip {
+  background: white;
+  border-radius: var(--consumable-rounded-lg);
+  box-shadow: var(--consumable-shadow-xl);
+  border: 1px solid var(--consumable-secondary-200);
+  padding: 0;
+  max-width: 480px;
+  overflow: hidden;
+  z-index: var(--consumable-z-tooltip);
+}
+
+.tooltip-header {
+  background: linear-gradient(135deg, var(--consumable-primary-600), var(--consumable-primary-700));
+  color: white;
+  padding: var(--consumable-space-4) var(--consumable-space-5);
+  border-bottom: 1px solid var(--consumable-primary-500);
+}
+
+.tooltip-title {
+  font-size: var(--consumable-text-lg);
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.tooltip-content {
+  padding: var(--consumable-space-5);
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Tooltip字段分组 */
+.tooltip-group {
+  margin-bottom: var(--consumable-space-6);
+}
+
+.tooltip-group:last-child {
+  margin-bottom: 0;
+}
+
+.tooltip-group-title {
+  font-size: var(--consumable-text-sm);
+  font-weight: 600;
+  color: var(--consumable-primary-700);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--consumable-space-3);
+  padding-bottom: var(--consumable-space-2);
+  border-bottom: 2px solid var(--consumable-primary-100);
+  display: flex;
+  align-items: center;
+}
+
+.tooltip-group-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: var(--consumable-space-2);
+  opacity: 0.8;
+}
+
+.tooltip-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--consumable-space-4);
+}
+
+@media (max-width: 500px) {
+  .tooltip-fields {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tooltip-field {
+  background: var(--consumable-secondary-50);
+  padding: var(--consumable-space-3);
+  border-radius: var(--consumable-rounded);
+  border-left: 3px solid var(--consumable-primary-400);
+  transition: var(--consumable-transition-fast);
+}
+
+.tooltip-field:hover {
+  background: var(--consumable-primary-50);
+  border-left-color: var(--consumable-primary-600);
+}
+
+.tooltip-field-label {
+  font-size: var(--consumable-text-xs);
+  font-weight: 500;
+  color: var(--consumable-secondary-600);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  margin-bottom: var(--consumable-space-1);
+  line-height: 1.2;
+}
+
+.tooltip-field-value {
+  font-size: var(--consumable-text-sm);
+  font-weight: 600;
+  color: var(--consumable-secondary-900);
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+/* 单位显示样式 */
+.unit-metric {
+  color: var(--consumable-primary-600);
+}
+
+.unit-imperial {
+  color: var(--consumable-info-color);
+}
+
+/* ========= 购物车样式 ========= */
+.cart-item {
+  background: white;
+  border-radius: var(--consumable-rounded-lg);
+  box-shadow: var(--consumable-shadow);
+  padding: var(--consumable-space-4);
+  margin-bottom: var(--consumable-space-3);
+  border-left: 4px solid var(--consumable-primary-400);
+  transition: var(--consumable-transition-fast);
+}
+
+.cart-item:hover {
+  box-shadow: var(--consumable-shadow-md);
+  border-left-color: var(--consumable-primary-600);
+}
+
+.cart-item-title {
+  font-size: var(--consumable-text-base);
+  font-weight: 600;
+  color: var(--consumable-secondary-900);
+  margin: 0 0 var(--consumable-space-2) 0;
+}
+
+.cart-item-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--consumable-space-2);
+  margin-top: var(--consumable-space-3);
+}
+
+.cart-field {
+  font-size: var(--consumable-text-xs);
+  color: var(--consumable-secondary-600);
+}
+
+.cart-field-value {
+  font-weight: 600;
+  color: var(--consumable-secondary-900);
+  margin-top: var(--consumable-space-1);
+}
+
+/* ========= 加载和状态样式 ========= */
+.loading-shimmer {
+  background: linear-gradient(90deg, var(--consumable-secondary-200) 25%, var(--consumable-secondary-100) 50%, var(--consumable-secondary-200) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.error-state {
+  background: var(--consumable-error-color);
+  color: white;
+  padding: var(--consumable-space-4);
+  border-radius: var(--consumable-rounded-md);
+  text-align: center;
+  font-weight: 500;
+}
+
+.success-state {
+  background: var(--consumable-success-color);
+  color: white;
+  padding: var(--consumable-space-4);
+  border-radius: var(--consumable-rounded-md);
+  text-align: center;
+  font-weight: 500;
+}
+
+/* ========= 可访问性增强 ========= */
+.premium-consumable-card:focus {
+  outline: 2px solid var(--consumable-primary-500);
+  outline-offset: 2px;
+}
+
+.tooltip-field:focus-within {
+  outline: 1px solid var(--consumable-primary-400);
+  outline-offset: 1px;
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .premium-consumable-card {
+    border: 2px solid var(--consumable-secondary-400);
+  }
+  
+  .card-field, .tooltip-field {
+    border: 1px solid var(--consumable-secondary-400);
+  }
+}
+
+/* 减少动画的用户偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .premium-consumable-card,
+  .card-image,
+  .tooltip-field,
+  .cart-item {
+    transition: none;
+  }
+  
+  .premium-consumable-card:hover {
+    transform: none;
+  }
+  
+  .loading-shimmer {
+    animation: none;
+  }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --consumable-primary-50: #1e3a8a;
+    --consumable-primary-100: #1d4ed8;
+    --consumable-primary-200: #2563eb;
+    --consumable-primary-300: #3b82f6;
+    --consumable-primary-400: #60a5fa;
+    --consumable-primary-500: #93c5fd;
+    --consumable-primary-600: #bfdbfe;
+    --consumable-primary-700: #dbeafe;
+    --consumable-primary-800: #eff6ff;
+    --consumable-primary-900: #f8fafc;
+
+    --consumable-secondary-50: #1c1917;
+    --consumable-secondary-100: #292524;
+    --consumable-secondary-200: #44403c;
+    --consumable-secondary-300: #57534e;
+    --consumable-secondary-400: #78716c;
+    --consumable-secondary-500: #a8a29e;
+    --consumable-secondary-600: #d6d3d1;
+    --consumable-secondary-700: #e7e5e4;
+    --consumable-secondary-800: #f5f5f4;
+    --consumable-secondary-900: #fafaf9;
+  }
+  
+  .consumables-page {
+    background: linear-gradient(135deg, var(--consumable-secondary-50) 0%, #0f172a 100%);
+  }
+  
+  .premium-consumable-card {
+    background: var(--consumable-secondary-100);
+    border: 1px solid var(--consumable-secondary-300);
+  }
+  
+  .premium-tooltip {
+    background: var(--consumable-secondary-100);
+    border: 1px solid var(--consumable-secondary-300);
+  }
 } 
+
+/* Tooltip overflow fixes */
+.consumables-custom-tooltip {
+  max-width: min(600px, 90vw) !important;
+}
+
+.consumables-custom-tooltip .ant-tooltip-inner {
+  max-width: min(600px, 90vw) !important;
+  padding: 0 !important;
+  width: auto !important;
+}
+
+.consumable-tooltip {
+  width: auto;
+  min-width: 320px;
+  max-width: 600px;
+  overflow: visible;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.consumable-tooltip .tooltip-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-bottom: 1px solid #f0f0f0;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.consumable-tooltip .product-image {
+  width: 50px;
+  height: 50px;
+  flex-shrink: 0;
+}
+
+.consumable-tooltip .product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.consumable-tooltip .product-title h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  line-height: 1.3;
+}
+
+.consumable-tooltip .product-code {
+  font-size: 11px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.consumable-tooltip .tooltip-content-grid {
+  display: flex;
+  gap: 16px;
+  padding: 16px 16px 12px 16px;
+  margin: 0;
+}
+
+.consumable-tooltip .left-column,
+.consumable-tooltip .right-column {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.consumable-tooltip .left-column {
+  margin-right: 8px;
+}
+
+.consumable-tooltip .right-column {
+  margin-left: 8px;
+}
+
+.consumable-tooltip .section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 8px 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.consumable-tooltip .title-icon {
+  font-size: 14px;
+}
+
+.consumable-tooltip .specs-summary-card,
+.consumable-tooltip .pallet-configs-card,
+.consumable-tooltip .package-info-card,
+.consumable-tooltip .tech-params-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+.consumable-tooltip .spec-item,
+.consumable-tooltip .pallet-config-row,
+.consumable-tooltip .package-row,
+.consumable-tooltip .tech-param-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 6px 10px;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #f3f4f6;
+  margin-bottom: 4px;
+  min-height: auto;
+}
+
+.consumable-tooltip .spec-label,
+.consumable-tooltip .config-label,
+.consumable-tooltip .package-label,
+.consumable-tooltip .param-label {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 500;
+  flex: 0 0 auto;
+  text-align: left;
+  margin-right: 12px;
+  word-break: keep-all;
+  white-space: nowrap;
+}
+
+.consumable-tooltip .spec-value,
+.consumable-tooltip .config-value,
+.consumable-tooltip .package-value,
+.consumable-tooltip .param-value {
+  font-size: 11px;
+  color: #1f2937;
+  font-weight: 600;
+  text-align: right;
+  flex: 1;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .consumables-custom-tooltip,
+  .consumables-custom-tooltip .ant-tooltip-inner {
+    max-width: 95vw !important;
+  }
+  
+  .consumable-tooltip {
+    min-width: 280px;
+    max-width: 95vw;
+  }
+  
+  .consumable-tooltip .tooltip-content-grid {
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+  }
+  
+  .consumable-tooltip .left-column,
+  .consumable-tooltip .right-column {
+    width: 100%;
+  }
+}
+
+.consumable-tooltip .specs-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+/* Custom scrollbar for better UX */
+.consumable-tooltip ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.consumable-tooltip ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.consumable-tooltip ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.consumable-tooltip ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.consumable-tooltip {
+  width: auto;
+  min-width: 320px;
+  max-width: 600px;
+  overflow: visible;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* Remove scrollbar styles and height constraints */
+.consumable-tooltip .tooltip-content-grid {
+  display: flex;
+  gap: 16px;
+  padding: 12px;
+  min-width: 0;
+  width: auto;
+  overflow: visible;
+}
+
+/* Remove height constraints from content areas */
+.consumable-tooltip .pallet-configs-compact,
+.consumable-tooltip .package-details,
+.consumable-tooltip .tech-params-compact {
+  overflow: visible;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .consumables-custom-tooltip,
+  .consumables-custom-tooltip .ant-tooltip-inner {
+    max-width: 95vw !important;
+  }
+  
+  .consumable-tooltip {
+    min-width: 280px;
+    max-width: 95vw;
+  }
+  
+  .consumable-tooltip .tooltip-content-grid {
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+  }
+  
+  .consumable-tooltip .left-column,
+  .consumable-tooltip .right-column {
+    width: 100%;
+  }
+}
+
+.more-info-btn .tooltip-content {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  
+  background-color: white;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  
+  padding: 16px;
+  margin-top: 8px;
+  
+  width: 400px;
+  max-width: 90vw;
+  
+  opacity: 0;
+  visibility: hidden;
+  
+  transition: all 0.2s ease-in-out;
+  
+  z-index: 1000;
+  
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.more-info-btn .tooltip-content::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 6px solid #d1d5db;
+}
+
+.more-info-btn .tooltip-content::after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 5px solid white;
+}
+
+/* ========================================
+   TOOLTIP STYLES - CLEAN VERSION
+   ======================================== */
+
+/* Main tooltip container */
+.consumables-custom-tooltip {
+  max-width: min(600px, 90vw) !important;
+  z-index: 10000 !important;
+}
+
+.consumables-custom-tooltip .ant-tooltip-inner {
+  max-width: min(600px, 90vw) !important;
+  padding: 0 !important;
+  width: auto !important;
+  background: white !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+  overflow: hidden !important;
+}
+
+/* Tooltip content */
+.consumable-tooltip {
+  width: auto;
+  min-width: 320px;
+  max-width: 600px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #1f2937;
+  margin: 0;
+  padding: 0;
+  display: block;
+}
+
+/* Header */
+.consumable-tooltip .tooltip-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-radius: 12px 12px 0 0;
+  margin: 0;
+}
+
+.consumable-tooltip .product-image {
+  width: 50px;
+  height: 50px;
+  flex-shrink: 0;
+}
+
+.consumable-tooltip .product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.consumable-tooltip .product-title h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  line-height: 1.3;
+}
+
+.consumable-tooltip .product-code {
+  font-size: 11px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+/* Content grid */
+.consumable-tooltip .tooltip-content-grid {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  margin: 0;
+}
+
+.consumable-tooltip .left-column,
+.consumable-tooltip .right-column {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+
+/* Section styles */
+.consumable-tooltip .section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 10px 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.consumable-tooltip .title-icon {
+  font-size: 14px;
+}
+
+/* Cards */
+.consumable-tooltip .specs-summary-card,
+.consumable-tooltip .pallet-configs-card,
+.consumable-tooltip .package-info-card,
+.consumable-tooltip .tech-params-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.consumable-tooltip .right-column .package-info-card:last-child,
+.consumable-tooltip .right-column .tech-params-card:last-child,
+.consumable-tooltip .left-column .specs-summary-card:last-child,
+.consumable-tooltip .left-column .pallet-configs-card:last-child {
+  margin-bottom: 0;
+}
+
+/* Content rows */
+.consumable-tooltip .spec-item,
+.consumable-tooltip .pallet-config-row,
+.consumable-tooltip .package-row,
+.consumable-tooltip .tech-param-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 8px 10px;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #f3f4f6;
+  margin-bottom: 6px;
+}
+
+.consumable-tooltip .spec-item:last-child,
+.consumable-tooltip .pallet-config-row:last-child,
+.consumable-tooltip .package-row:last-child,
+.consumable-tooltip .tech-param-row:last-child {
+  margin-bottom: 0;
+}
+
+/* Labels and values */
+.consumable-tooltip .spec-label,
+.consumable-tooltip .config-label,
+.consumable-tooltip .package-label,
+.consumable-tooltip .param-label {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 500;
+  margin-right: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.consumable-tooltip .spec-value,
+.consumable-tooltip .config-value,
+.consumable-tooltip .package-value,
+.consumable-tooltip .param-value {
+  font-size: 11px;
+  color: #1f2937;
+  font-weight: 600;
+  text-align: right;
+  word-wrap: break-word;
+}
+
+.consumable-tooltip .specs-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  margin: 0;
+}
+
+.consumable-tooltip .pallet-configs-compact,
+.consumable-tooltip .package-details,
+.consumable-tooltip .tech-params-compact {
+  margin: 0;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .consumables-custom-tooltip,
+  .consumables-custom-tooltip .ant-tooltip-inner {
+    max-width: 95vw !important;
+  }
+  
+  .consumable-tooltip {
+    min-width: 280px;
+    max-width: 95vw;
+  }
+  
+  .consumable-tooltip .tooltip-content-grid {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
+  
+  .consumable-tooltip .left-column,
+  .consumable-tooltip .right-column {
+    width: 100%;
+  }
+}
+
+/* ======================================== */
+
+/* ========================================
+   CONSOLIDATED TOOLTIP STYLES - FINAL VERSION
+   ======================================== */
+
+/* Remove all previous tooltip styles and replace with this single clean version */
+
+.consumables-custom-tooltip {
+  max-width: min(600px, 90vw) !important;
+  z-index: 10000 !important;
+}
+
+.consumables-custom-tooltip .ant-tooltip-inner {
+  max-width: min(600px, 90vw) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: fit-content !important;
+  height: fit-content !important;
+  background: white !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12) !important;
+  overflow: hidden !important;
+  display: block !important;
+}
+
+.consumable-tooltip {
+  width: fit-content;
+  min-width: 320px;
+  max-width: 600px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #1f2937;
+  margin: 0;
+  padding: 0;
+  display: block;
+}
+
+.consumable-tooltip .tooltip-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-radius: 12px 12px 0 0;
+  margin: 0;
+}
+
+.consumable-tooltip .product-image {
+  width: 50px;
+  height: 50px;
+  flex-shrink: 0;
+}
+
+.consumable-tooltip .product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.consumable-tooltip .product-title h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  line-height: 1.3;
+}
+
+.consumable-tooltip .product-code {
+  font-size: 11px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.consumable-tooltip .tooltip-content-grid {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  margin: 0;
+}
+
+.consumable-tooltip .left-column,
+.consumable-tooltip .right-column {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.consumable-tooltip .section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 10px 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.consumable-tooltip .title-icon {
+  font-size: 14px;
+}
+
+.consumable-tooltip .specs-summary-card,
+.consumable-tooltip .pallet-configs-card,
+.consumable-tooltip .package-info-card,
+.consumable-tooltip .tech-params-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.consumable-tooltip .left-column > div:last-child,
+.consumable-tooltip .right-column > div:last-child {
+  margin-bottom: 0;
+}
+
+.consumable-tooltip .spec-item,
+.consumable-tooltip .pallet-config-row,
+.consumable-tooltip .package-row,
+.consumable-tooltip .tech-param-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 8px 10px;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #f3f4f6;
+  margin-bottom: 6px;
+}
+
+.consumable-tooltip .spec-item:last-child,
+.consumable-tooltip .pallet-config-row:last-child,
+.consumable-tooltip .package-row:last-child,
+.consumable-tooltip .tech-param-row:last-child {
+  margin-bottom: 0;
+}
+
+.consumable-tooltip .spec-label,
+.consumable-tooltip .config-label,
+.consumable-tooltip .package-label,
+.consumable-tooltip .param-label {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 500;
+  margin-right: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.consumable-tooltip .spec-value,
+.consumable-tooltip .config-value,
+.consumable-tooltip .package-value,
+.consumable-tooltip .param-value {
+  font-size: 11px;
+  color: #1f2937;
+  font-weight: 600;
+  text-align: right;
+  word-wrap: break-word;
+}
+
+.consumable-tooltip .specs-grid,
+.consumable-tooltip .pallet-configs-compact,
+.consumable-tooltip .package-details,
+.consumable-tooltip .tech-params-compact {
+  margin: 0;
+  padding: 0;
+}
+
+.consumable-tooltip .specs-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .consumables-custom-tooltip,
+  .consumables-custom-tooltip .ant-tooltip-inner {
+    max-width: 95vw !important;
+  }
+  
+  .consumable-tooltip {
+    min-width: 280px;
+    max-width: 95vw;
+  }
+  
+  .consumable-tooltip .tooltip-content-grid {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
+  
+  .consumable-tooltip .left-column,
+  .consumable-tooltip .right-column {
+    width: 100%;
+  }
+}
+
+/* ======================================== */
