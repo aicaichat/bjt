@@ -563,8 +563,22 @@ class BJT_Upload_Controller extends BJT_API_Controller {
                 error_log('[BJT Upload Controller] File uploaded successfully: ' . $full_path);
                 
                 // 设置正确的文件权限
-                chmod($full_path, 0644);
-                error_log('[BJT Upload Controller] File permissions set to 0644');
+                if (@chmod($full_path, 0644) || true) {
+                    error_log('[BJT Upload Controller] Directory permissions setup completed (chmod may have been skipped in container environment)');
+                    
+                    // 再次检查是否可写
+                    if (!is_writable($full_path)) {
+                        error_log('[BJT Upload Controller] Directory still not writable after chmod attempt');
+                        return $this->error_response(
+                            '上传目录不可写: ' . $full_path . ' (权限: ' . sprintf('%o', fileperms($full_path) & 0777) . ')',
+                            'directory_not_writable', 
+                            500
+                        );
+                    }
+                } else {
+                    // 这个分支理论上不会被执行，因为 || true 总是使条件为真
+                    error_log('[BJT Upload Controller] chmod operation bypassed');
+                }
                 
                 // 验证文件确实存在并可读
                 if (!file_exists($full_path) || !is_readable($full_path)) {
@@ -701,12 +715,12 @@ class BJT_Upload_Controller extends BJT_API_Controller {
                 error_log('[BJT Upload Controller] Directory not writable: ' . $base_dir);
                 
                 // 尝试修改权限
-                if (chmod($base_dir, 0755)) {
-                    error_log('[BJT Upload Controller] Successfully changed permissions to 755');
+                if (@chmod($base_dir, 0755) || true) {
+                    error_log('[BJT Upload Controller] Directory permissions setup completed (chmod may have been skipped in container environment)');
                     
                     // 再次检查是否可写
                     if (!is_writable($base_dir)) {
-                        error_log('[BJT Upload Controller] Directory still not writable after chmod');
+                        error_log('[BJT Upload Controller] Directory still not writable after chmod attempt');
                         return $this->error_response(
                             '上传目录不可写: ' . $base_dir . ' (权限: ' . $perms_octal . ')',
                             'directory_not_writable', 
@@ -714,12 +728,8 @@ class BJT_Upload_Controller extends BJT_API_Controller {
                         );
                     }
                 } else {
-                    error_log('[BJT Upload Controller] Failed to change permissions');
-                    return $this->error_response(
-                        '上传目录不可写且无法修改权限: ' . $base_dir,
-                        'directory_not_writable', 
-                        500
-                    );
+                    // 这个分支理论上不会被执行，因为 || true 总是使条件为真
+                    error_log('[BJT Upload Controller] chmod operation bypassed');
                 }
             }
             
