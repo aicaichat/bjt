@@ -28,10 +28,51 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# 安全加载环境变量
+load_env_file() {
+    local env_file="$1"
+    
+    if [ ! -f "$env_file" ]; then
+        print_error "环境文件 $env_file 不存在"
+        return 1
+    fi
+    
+    # 读取文件并安全地设置环境变量
+    while IFS= read -r line; do
+        # 跳过空行和注释
+        if [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]]; then
+            continue
+        fi
+        
+        # 使用正则表达式匹配键值对
+        if [[ "$line" =~ ^([a-zA-Z_][a-zA-Z0-9_]*)=(.*)$ ]]; then
+            key="${BASH_REMATCH[1]}"
+            value="${BASH_REMATCH[2]}"
+            
+            # 去除值两边的引号（如果有）
+            # 处理单引号
+            if [[ "$value" =~ ^\'(.*)\'$ ]]; then
+                value="${BASH_REMATCH[1]}"
+            # 处理双引号
+            elif [[ "$value" =~ ^\"(.*)\"$ ]]; then
+                value="${BASH_REMATCH[1]}"
+            fi
+            
+            # 导出环境变量
+            export "$key=$value"
+        fi
+    done < "$env_file"
+}
+
 # 加载环境变量
 if [ -f ".env.production" ]; then
     print_info "Loading environment variables..."
-    export $(grep -v '^#' .env.production | xargs)
+    if load_env_file ".env.production"; then
+        print_info "Environment variables loaded successfully"
+    else
+        print_error "Failed to load environment variables"
+        exit 1
+    fi
 else
     print_error ".env.production file not found"
     exit 1
