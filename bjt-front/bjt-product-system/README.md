@@ -47,6 +47,11 @@
 - 📱 **响应式设计**：支持桌面和移动设备
 - 🔄 **Excel数据导入**：支持Excel文件批量导入产品数据
 - 📁 **文件上传系统**：支持图片、PDF等文件上传与管理，包含权限控制和自动路径处理
+  - ✅ **Docker挂载配置** - 解决容器内外文件同步问题
+  - ✅ **自动权限设置** - 部署时自动配置正确的文件权限  
+  - ✅ **目录结构创建** - 自动创建完整的uploads目录结构
+  - ✅ **HTTP访问验证** - 确保上传文件可通过web访问
+  - ✅ **集成到部署流程** - `deploy-production.sh`自动处理所有upload相关配置
 
 ## 🏗️ 技术架构
 
@@ -87,6 +92,8 @@ cp env.production.example .env.production
 # 3. 一键部署（包含数据库自动初始化）
 chmod +x deploy-with-db-init.sh
 ./deploy-with-db-init.sh
+
+# ✨ 新特性：自动处理upload权限配置，无需手动设置
 ```
 
 ### 🌐 方法二：域名部署（生产环境）
@@ -138,7 +145,14 @@ chmod +x test-db-init.sh
 ## 🛠️ 生产环境管理脚本
 
 ### 核心部署脚本
-- **`deploy-production.sh`** - 完整生产环境部署（248行）
+- **`deploy-production.sh`** - 完整生产环境部署（293行）
+  - ✅ **集成upload权限修复** - 自动创建uploads目录结构和设置正确权限
+  - ✅ **环境变量检查和加载** - 安全的配置文件处理
+  - ✅ **自动备份** - 部署前自动备份数据库和文件
+  - ✅ **前端构建** - 生产环境优化构建
+  - ✅ **Docker镜像管理** - 自动更新和构建镜像
+  - ✅ **健康检查** - 部署后自动验证所有服务（包括uploads目录访问）
+  - ✅ **错误处理** - 完善的错误处理和回滚机制
 - **`rebuilddb_production_v2.sh`** - 数据库重建脚本（137行）
 - **`deploy-frontend-zero-downtime.sh`** - 零停机前端部署（290行）
 
@@ -202,7 +216,7 @@ chmod +x test-db-init.sh
 
 | 脚本名称 | 用途 | 使用场景 | 关键特性 |
 |---------|------|----------|----------|
-| `deploy-production.sh` | 完整生产部署 | 首次部署、大版本更新 | 248行，含环境检查、备份、健康检查 |
+| `deploy-production.sh` | 完整生产部署 | 首次部署、大版本更新 | 293行，含环境检查、备份、健康检查、upload权限修复 |
 | `deploy-frontend-zero-downtime.sh` | 零停机前端更新 | 前端代码更新 | 290行，volume挂载，秒级切换 |
 | `rebuilddb_production_v2.sh` | 数据库重建 | 数据损坏、结构更新 | 137行，保留WordPress核心 |
 | `scripts/pre-deploy-check.sh` | 部署前检查 | 任何部署前 | 233行，全面环境验证 |
@@ -768,3 +782,49 @@ docker-compose -f docker/prod/docker-compose.prod.yml exec mysql mysql -u root -
 > 💡 **新用户提示**: 如果你是第一次部署，推荐使用 `./scripts/pre-deploy-check.sh` + `./deploy-production.sh` 的组合，它们会自动处理所有初始化工作。
 
 > 🚨 **运维提示**: 建议设置 `./scripts/health-monitor.sh` 为定时任务，实现24/7自动监控。
+
+## 📁 文件上传系统解决方案
+
+### 🎯 完整解决方案（2024年1月更新）
+
+我们已经完全解决了Docker环境下文件上传的所有问题：
+
+#### ✅ **问题解决状态**
+- **Docker挂载同步** - ✅ 已解决（容器内外文件完全同步）
+- **文件权限配置** - ✅ 已解决（自动设置正确权限）
+- **目录结构创建** - ✅ 已解决（自动创建完整目录树）  
+- **HTTP访问验证** - ✅ 已解决（确保web可访问）
+- **数据库同步** - ✅ 已解决（文件记录与实际文件一致）
+
+#### 🔧 **自动化集成**
+现在的 `deploy-production.sh` 脚本**自动处理**所有文件上传相关配置：
+
+```bash
+# 一键部署，upload功能开箱即用
+./deploy-production.sh
+
+# 脚本自动执行：
+# 1. 创建uploads目录结构 (/machines/pdfs, /images等)
+# 2. 设置正确权限 (755目录, 644文件)  
+# 3. 配置Docker挂载 (容器内外同步)
+# 4. 验证HTTP访问 (确保web可访问)
+# 5. 健康检查 (包含upload功能验证)
+```
+
+#### 📂 **支持的文件类型**
+- **PDF文档** - 设备规格书、说明书等
+- **图片文件** - 产品图片、设备照片等  
+- **技术文档** - Word、Excel等办公文件
+
+#### 🌐 **访问方式**
+部署完成后，上传的文件可通过以下方式访问：
+```
+https://your-domain.com/uploads/machines/pdfs/filename.pdf
+https://your-domain.com/uploads/machines/images/image.jpg
+```
+
+#### 🛠️ **手动修复工具（如需要）**
+如果遇到upload问题，也可以使用专用修复脚本：
+```bash
+./fix-uploads-permissions.sh
+```

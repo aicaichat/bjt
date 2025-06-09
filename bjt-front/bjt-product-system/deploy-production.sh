@@ -127,6 +127,43 @@ build_frontend() {
     print_message "前端构建完成"
 }
 
+# 设置upload目录权限
+setup_upload_permissions() {
+    print_message "设置upload目录权限..."
+    
+    # 确保uploads目录存在
+    mkdir -p frontend/public/uploads/machines/pdfs
+    mkdir -p frontend/public/uploads/machines/images
+    mkdir -p frontend/public/uploads/host
+    mkdir -p frontend/public/uploads/accessory
+    mkdir -p frontend/public/uploads/spare_parts
+    mkdir -p frontend/public/uploads/consumables
+    mkdir -p frontend/public/uploads/documents
+    
+    print_message "uploads目录结构已创建"
+    
+    # 设置正确的权限
+    print_message "设置目录权限..."
+    
+    # 设置目录权限为755，文件权限为644
+    find frontend/public/uploads -type d -exec chmod 755 {} \; 2>/dev/null || true
+    find frontend/public/uploads -type f -exec chmod 644 {} \; 2>/dev/null || true
+    
+    # 确保上传目录可写
+    chmod -R 755 frontend/public/uploads 2>/dev/null || true
+    
+    print_message "upload目录权限设置完成"
+    
+    # 测试文件创建权限
+    local test_file="frontend/public/uploads/test-$(date +%s).txt"
+    if echo "Test file created at $(date)" > "$test_file" 2>/dev/null; then
+        print_message "文件权限测试成功"
+        rm "$test_file" 2>/dev/null || true
+    else
+        print_warning "文件权限测试失败，但继续部署..."
+    fi
+}
+
 # 更新 Docker 镜像
 update_docker_images() {
     print_message "更新 Docker 镜像..."
@@ -185,6 +222,13 @@ health_check() {
         return 1
     fi
     
+    # 检查uploads目录访问
+    if curl -f -s "https://${DOMAIN_NAME}/uploads/" > /dev/null 2>&1; then
+        print_message "uploads目录访问正常"
+    else
+        print_warning "uploads目录可能无法通过HTTP访问，但不影响部署"
+    fi
+    
     print_message "健康检查通过"
 }
 
@@ -226,6 +270,7 @@ main() {
     check_env_vars
     backup_current_deployment
     build_frontend
+    setup_upload_permissions
     update_docker_images
     deploy
     
