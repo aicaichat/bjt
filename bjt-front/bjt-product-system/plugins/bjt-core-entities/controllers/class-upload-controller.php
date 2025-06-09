@@ -467,80 +467,156 @@ class BJT_Upload_Controller extends BJT_API_Controller {
     public function upload_file($request) {
         error_log('[BJT Upload Controller] Starting generic file upload');
         
-        // 获取参数
-        $upload_dir = $request->get_param('upload_dir') ?: 'uploads';
-        
-        error_log('[BJT Upload Controller] Generic upload parameters: upload_dir=' . $upload_dir);
-        
-        // 检查是否有文件上传
-        $files = $request->get_file_params();
-        if (empty($files['file'])) {
-            error_log('[BJT Upload Controller] No file in request. Available files: ' . implode(', ', array_keys($files)));
-            return $this->error_response('请选择要上传的文件', 'no_file', 400);
-        }
-        
-        $file = $files['file'];
-        error_log('[BJT Upload Controller] File info: name=' . $file['name'] . ', size=' . $file['size'] . ', type=' . $file['type']);
-        
-        // 检查文件上传错误
-        if ($file['error'] !== UPLOAD_ERR_OK) {
-            error_log('[BJT Upload Controller] File upload error: ' . $file['error']);
-            return $this->error_response(
-                '文件上传失败: ' . $this->get_upload_error_message($file['error']),
-                'upload_error',
-                400
-            );
-        }
-        
-        // 验证文件类型（允许常见的文件类型）
-        $file_info = wp_check_filetype($file['name']);
-        $allowed_types = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx', 'txt'];
-        if (!in_array($file_info['ext'], $allowed_types)) {
-            error_log('[BJT Upload Controller] Invalid file type: ' . $file_info['type']);
-            return $this->error_response('不支持的文件类型: ' . $file_info['ext'], 'invalid_file_type', 400);
-        }
-        
-        // 验证文件大小 (10MB)
-        $max_size = 10 * 1024 * 1024;
-        if ($file['size'] > $max_size) {
-            error_log('[BJT Upload Controller] File too large: ' . $file['size']);
-            return $this->error_response('文件大小不能超过10MB', 'file_too_large', 400);
-        }
-        
-        // 确定上传目录路径
-        $upload_result = $this->prepare_generic_upload_directory($upload_dir);
-        if (is_wp_error($upload_result)) {
-            return $upload_result;
-        }
-        
-        extract($upload_result); // $upload_path, $upload_url
-        
-        // 生成唯一文件名
-        $file_extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $filename = sanitize_file_name(pathinfo($file['name'], PATHINFO_FILENAME));
-        $timestamp = time();
-        $random = substr(md5(mt_rand()), 0, 6);
-        $unique_filename = $timestamp . '_' . $random . '.' . $file_extension;
-        $full_path = $upload_path . '/' . $unique_filename;
-        $file_url = $upload_url . '/' . $unique_filename;
-        
-        error_log('[BJT Upload Controller] File target path: ' . $full_path);
-        
-        // 移动上传的文件
-        if (move_uploaded_file($file['tmp_name'], $full_path)) {
-            error_log('[BJT Upload Controller] File uploaded successfully: ' . $full_path);
+        try {
+            // 获取参数
+            $upload_dir = $request->get_param('upload_dir') ?: 'uploads';
             
-            return $this->format_response([
-                'url' => $file_url,
-                'filename' => $unique_filename,
-                'file_size' => $file['size'],
-                'upload_path' => $full_path,
-                'file_type' => 'file',
-            ], '文件上传成功');
+            error_log('[BJT Upload Controller] Generic upload parameters: upload_dir=' . $upload_dir);
             
-        } else {
-            error_log('[BJT Upload Controller] Failed to move uploaded file');
-            return $this->error_response('保存文件失败', 'save_failed', 500);
+            // 检查是否有文件上传
+            $files = $request->get_file_params();
+            error_log('[BJT Upload Controller] Available files: ' . print_r(array_keys($files), true));
+            
+            if (empty($files['file'])) {
+                error_log('[BJT Upload Controller] No file in request. Available files: ' . implode(', ', array_keys($files)));
+                return $this->error_response('请选择要上传的文件', 'no_file', 400);
+            }
+            
+            $file = $files['file'];
+            error_log('[BJT Upload Controller] File info: name=' . $file['name'] . ', size=' . $file['size'] . ', type=' . $file['type'] . ', tmp_name=' . $file['tmp_name']);
+            
+            // 检查临时文件是否存在
+            if (!file_exists($file['tmp_name'])) {
+                error_log('[BJT Upload Controller] Temporary file does not exist: ' . $file['tmp_name']);
+                return $this->error_response('上传的临时文件不存在', 'temp_file_missing', 500);
+            }
+            
+            // 检查文件上传错误
+            if ($file['error'] !== UPLOAD_ERR_OK) {
+                error_log('[BJT Upload Controller] File upload error: ' . $file['error']);
+                return $this->error_response(
+                    '文件上传失败: ' . $this->get_upload_error_message($file['error']),
+                    'upload_error',
+                    400
+                );
+            }
+            
+            // 验证文件类型（允许常见的文件类型）
+            $file_info = wp_check_filetype($file['name']);
+            error_log('[BJT Upload Controller] File type check: ext=' . $file_info['ext'] . ', type=' . $file_info['type']);
+            
+            $allowed_types = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx', 'txt'];
+            if (!in_array($file_info['ext'], $allowed_types)) {
+                error_log('[BJT Upload Controller] Invalid file type: ' . $file_info['type']);
+                return $this->error_response('不支持的文件类型: ' . $file_info['ext'], 'invalid_file_type', 400);
+            }
+            
+            // 验证文件大小 (10MB)
+            $max_size = 10 * 1024 * 1024;
+            if ($file['size'] > $max_size) {
+                error_log('[BJT Upload Controller] File too large: ' . $file['size']);
+                return $this->error_response('文件大小不能超过10MB', 'file_too_large', 400);
+            }
+            
+            // 确定上传目录路径
+            error_log('[BJT Upload Controller] Preparing upload directory...');
+            $upload_result = $this->prepare_generic_upload_directory($upload_dir);
+            if (is_wp_error($upload_result)) {
+                error_log('[BJT Upload Controller] Failed to prepare upload directory: ' . $upload_result->get_error_message());
+                return $upload_result;
+            }
+            
+            extract($upload_result); // $upload_path, $upload_url
+            error_log('[BJT Upload Controller] Upload directory prepared: path=' . $upload_path . ', url=' . $upload_url);
+            
+            // 生成唯一文件名
+            $file_extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $filename = sanitize_file_name(pathinfo($file['name'], PATHINFO_FILENAME));
+            $timestamp = time();
+            $random = substr(md5(mt_rand()), 0, 6);
+            $unique_filename = $timestamp . '_' . $random . '.' . $file_extension;
+            $full_path = $upload_path . '/' . $unique_filename;
+            $file_url = $upload_url . '/' . $unique_filename;
+            
+            error_log('[BJT Upload Controller] File target path: ' . $full_path);
+            error_log('[BJT Upload Controller] File URL: ' . $file_url);
+            
+            // 检查目标目录是否可写
+            if (!is_writable($upload_path)) {
+                error_log('[BJT Upload Controller] Target directory not writable: ' . $upload_path);
+                return $this->error_response('目标目录不可写: ' . $upload_path, 'directory_not_writable', 500);
+            }
+            
+            // 检查磁盘空间
+            $free_space = disk_free_space($upload_path);
+            error_log('[BJT Upload Controller] Free disk space: ' . ($free_space ? number_format($free_space / 1024 / 1024, 2) . ' MB' : 'unknown'));
+            
+            if ($free_space !== false && $free_space < $file['size'] * 2) { // 需要至少2倍文件大小的空间
+                error_log('[BJT Upload Controller] Insufficient disk space');
+                return $this->error_response('磁盘空间不足', 'insufficient_disk_space', 500);
+            }
+            
+            // 移动上传的文件
+            error_log('[BJT Upload Controller] Attempting to move uploaded file from ' . $file['tmp_name'] . ' to ' . $full_path);
+            
+            if (move_uploaded_file($file['tmp_name'], $full_path)) {
+                error_log('[BJT Upload Controller] File uploaded successfully: ' . $full_path);
+                
+                // 设置正确的文件权限
+                chmod($full_path, 0644);
+                error_log('[BJT Upload Controller] File permissions set to 0644');
+                
+                // 验证文件确实存在并可读
+                if (!file_exists($full_path) || !is_readable($full_path)) {
+                    error_log('[BJT Upload Controller] File exists check failed after upload');
+                    return $this->error_response('文件上传后验证失败', 'post_upload_verification_failed', 500);
+                }
+                
+                $final_size = filesize($full_path);
+                error_log('[BJT Upload Controller] Final file size: ' . $final_size . ' bytes');
+                
+                return $this->format_response([
+                    'url' => $file_url,
+                    'filename' => $unique_filename,
+                    'file_size' => $file['size'],
+                    'final_file_size' => $final_size,
+                    'upload_path' => $full_path,
+                    'file_type' => 'file',
+                    'debug_info' => [
+                        'upload_dir' => $upload_dir,
+                        'resolved_path' => $upload_path,
+                        'resolved_url' => $upload_url,
+                        'original_filename' => $file['name'],
+                        'temp_file' => $file['tmp_name'],
+                        'php_upload_max_filesize' => ini_get('upload_max_filesize'),
+                        'php_post_max_size' => ini_get('post_max_size'),
+                        'wp_memory_limit' => WP_MEMORY_LIMIT,
+                    ]
+                ], '文件上传成功');
+                
+            } else {
+                $error_info = error_get_last();
+                error_log('[BJT Upload Controller] Failed to move uploaded file. Last error: ' . print_r($error_info, true));
+                error_log('[BJT Upload Controller] Source file exists: ' . (file_exists($file['tmp_name']) ? 'yes' : 'no'));
+                error_log('[BJT Upload Controller] Target dir exists: ' . (file_exists($upload_path) ? 'yes' : 'no'));
+                error_log('[BJT Upload Controller] Target dir writable: ' . (is_writable($upload_path) ? 'yes' : 'no'));
+                
+                return $this->error_response(
+                    '保存文件失败 - 源文件: ' . $file['tmp_name'] . ', 目标: ' . $full_path . 
+                    ', 错误: ' . ($error_info ? $error_info['message'] : '未知错误'), 
+                    'save_failed', 
+                    500
+                );
+            }
+            
+        } catch (Exception $e) {
+            error_log('[BJT Upload Controller] Exception in upload_file: ' . $e->getMessage());
+            error_log('[BJT Upload Controller] Exception trace: ' . $e->getTraceAsString());
+            return $this->error_response('文件上传时发生异常: ' . $e->getMessage(), 'upload_exception', 500);
+        } catch (Error $e) {
+            error_log('[BJT Upload Controller] Fatal error in upload_file: ' . $e->getMessage());
+            error_log('[BJT Upload Controller] Error trace: ' . $e->getTraceAsString());
+            return $this->error_response('文件上传时发生严重错误: ' . $e->getMessage(), 'upload_fatal_error', 500);
         }
     }
     
@@ -551,38 +627,129 @@ class BJT_Upload_Controller extends BJT_API_Controller {
      * @return array|WP_Error 目录信息或错误
      */
     private function prepare_generic_upload_directory($upload_dir) {
-        // 确保目录路径以 frontend/public/ 开头
-        if (strpos($upload_dir, 'frontend/public/') !== 0) {
-            $upload_dir = 'frontend/public/' . ltrim($upload_dir, '/');
-        }
+        error_log('[BJT Upload Controller] prepare_generic_upload_directory called with: ' . $upload_dir);
         
-        $base_dir = ABSPATH . $upload_dir;
-        
-        // 生成前端可访问的相对URL路径
-        // 从frontend/public/uploads/xxx 转换为 /uploads/xxx
-        $relative_path = str_replace('frontend/public/', '', $upload_dir);
-        $base_url = '/' . ltrim($relative_path, '/');
-        
-        error_log('[BJT Upload Controller] Preparing directory: ' . $base_dir);
-        error_log('[BJT Upload Controller] Generated URL path: ' . $base_url);
-        
-        // 确保目录存在
-        if (!file_exists($base_dir)) {
-            if (!wp_mkdir_p($base_dir)) {
-                error_log('[BJT Upload Controller] Failed to create directory: ' . $base_dir);
-                return $this->error_response('无法创建上传目录', 'directory_creation_failed', 500);
+        try {
+            // 确保目录路径以 frontend/public/ 开头
+            $original_upload_dir = $upload_dir;
+            if (strpos($upload_dir, 'frontend/public/') !== 0) {
+                $upload_dir = 'frontend/public/' . ltrim($upload_dir, '/');
             }
+            error_log('[BJT Upload Controller] Normalized upload_dir: ' . $original_upload_dir . ' -> ' . $upload_dir);
+            
+            $base_dir = ABSPATH . $upload_dir;
+            error_log('[BJT Upload Controller] ABSPATH: ' . ABSPATH);
+            error_log('[BJT Upload Controller] Full base_dir path: ' . $base_dir);
+            
+            // 生成前端可访问的相对URL路径
+            // 从frontend/public/uploads/xxx 转换为 /uploads/xxx
+            $relative_path = str_replace('frontend/public/', '', $upload_dir);
+            $base_url = '/' . ltrim($relative_path, '/');
+            
+            error_log('[BJT Upload Controller] Preparing directory: ' . $base_dir);
+            error_log('[BJT Upload Controller] Generated URL path: ' . $base_url);
+            error_log('[BJT Upload Controller] Relative path: ' . $relative_path);
+            
+            // 检查父目录是否存在
+            $parent_dir = dirname($base_dir);
+            error_log('[BJT Upload Controller] Parent directory: ' . $parent_dir);
+            error_log('[BJT Upload Controller] Parent exists: ' . (file_exists($parent_dir) ? 'yes' : 'no'));
+            error_log('[BJT Upload Controller] Parent writable: ' . (is_writable($parent_dir) ? 'yes' : 'no'));
+            
+            // 确保目录存在
+            if (!file_exists($base_dir)) {
+                error_log('[BJT Upload Controller] Directory does not exist, attempting to create: ' . $base_dir);
+                
+                if (!wp_mkdir_p($base_dir)) {
+                    $last_error = error_get_last();
+                    error_log('[BJT Upload Controller] Failed to create directory: ' . $base_dir);
+                    error_log('[BJT Upload Controller] Last PHP error: ' . print_r($last_error, true));
+                    
+                    // 尝试手动创建
+                    if (!mkdir($base_dir, 0755, true)) {
+                        error_log('[BJT Upload Controller] Manual mkdir also failed');
+                        return $this->error_response(
+                            '无法创建上传目录: ' . $base_dir . 
+                            ' (父目录存在: ' . (file_exists($parent_dir) ? '是' : '否') . 
+                            ', 可写: ' . (is_writable($parent_dir) ? '是' : '否') . ')',
+                            'directory_creation_failed', 
+                            500
+                        );
+                    } else {
+                        error_log('[BJT Upload Controller] Manual mkdir succeeded');
+                    }
+                } else {
+                    error_log('[BJT Upload Controller] wp_mkdir_p succeeded');
+                }
+            } else {
+                error_log('[BJT Upload Controller] Directory already exists: ' . $base_dir);
+            }
+            
+            // 验证目录确实存在
+            if (!file_exists($base_dir)) {
+                error_log('[BJT Upload Controller] Directory still does not exist after creation attempt');
+                return $this->error_response('目录创建失败: ' . $base_dir, 'directory_verification_failed', 500);
+            }
+            
+            // 检查目录权限
+            $perms = fileperms($base_dir);
+            $perms_octal = sprintf('%o', $perms & 0777);
+            error_log('[BJT Upload Controller] Directory permissions: ' . $perms_octal);
+            
+            // 检查目录是否可写
+            if (!is_writable($base_dir)) {
+                error_log('[BJT Upload Controller] Directory not writable: ' . $base_dir);
+                
+                // 尝试修改权限
+                if (chmod($base_dir, 0755)) {
+                    error_log('[BJT Upload Controller] Successfully changed permissions to 755');
+                    
+                    // 再次检查是否可写
+                    if (!is_writable($base_dir)) {
+                        error_log('[BJT Upload Controller] Directory still not writable after chmod');
+                        return $this->error_response(
+                            '上传目录不可写: ' . $base_dir . ' (权限: ' . $perms_octal . ')',
+                            'directory_not_writable', 
+                            500
+                        );
+                    }
+                } else {
+                    error_log('[BJT Upload Controller] Failed to change permissions');
+                    return $this->error_response(
+                        '上传目录不可写且无法修改权限: ' . $base_dir,
+                        'directory_not_writable', 
+                        500
+                    );
+                }
+            }
+            
+            // 检查磁盘空间
+            $free_space = disk_free_space($base_dir);
+            $total_space = disk_total_space($base_dir);
+            
+            if ($free_space !== false && $total_space !== false) {
+                error_log('[BJT Upload Controller] Disk space - Free: ' . number_format($free_space / 1024 / 1024, 2) . 'MB, Total: ' . number_format($total_space / 1024 / 1024, 2) . 'MB');
+            }
+            
+            // 检查目录所有者（如果可能）
+            if (function_exists('posix_getpwuid')) {
+                $owner_info = posix_getpwuid(fileowner($base_dir));
+                $group_info = posix_getgrgid(filegroup($base_dir));
+                error_log('[BJT Upload Controller] Directory owner: ' . ($owner_info ? $owner_info['name'] : 'unknown'));
+                error_log('[BJT Upload Controller] Directory group: ' . ($group_info ? $group_info['name'] : 'unknown'));
+            }
+            
+            error_log('[BJT Upload Controller] Directory preparation successful');
+            
+            return [
+                'upload_path' => $base_dir,
+                'upload_url' => $base_url,
+            ];
+            
+        } catch (Exception $e) {
+            error_log('[BJT Upload Controller] Exception in prepare_generic_upload_directory: ' . $e->getMessage());
+            error_log('[BJT Upload Controller] Exception trace: ' . $e->getTraceAsString());
+            return $this->error_response('准备上传目录时发生异常: ' . $e->getMessage(), 'directory_preparation_exception', 500);
         }
-        
-        // 检查目录是否可写
-        if (!is_writable($base_dir)) {
-            error_log('[BJT Upload Controller] Directory not writable: ' . $base_dir);
-            return $this->error_response('上传目录不可写', 'directory_not_writable', 500);
-        }
-        
-        return [
-            'upload_path' => $base_dir,
-            'upload_url' => $base_url,
-        ];
     }
 } 

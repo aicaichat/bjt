@@ -14,19 +14,25 @@
     "antd": "^5.24.7",
     "axios": "^1.8.4",
     "connect-history-api-fallback": "^2.0.0",
+    "lodash": "^4.17.21",
+    "node-fetch": "^3.3.2",
     "react-hook-form": "^7.55.0",
     "react-router-dom": "^6.30.0",
     "tailwindcss": "3.3.5",
-    "vite": "^6.3.2"
+    "vite": "^6.3.2",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/connect-history-api-fallback": "^1.5.4",
+    "@types/lodash": "^4.17.17",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@vitejs/plugin-react": "^4.4.0",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.3",
     "postcss-import": "^16.1.0",
-    "postcss-nested": "^7.0.2"
+    "postcss-nested": "^7.0.2",
+    "sass-embedded": "^1.89.1",
+    "typescript": "^5.8.3"
   }
 }
