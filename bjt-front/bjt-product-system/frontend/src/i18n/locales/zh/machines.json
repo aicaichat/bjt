@@ -36,20 +36,22 @@
     "quantity": "数量",
     "actions": "操作",
     "selection": "选择",
-    "image": "图片",
-    "specs": "规格",
-    "palletQty": "卡板数量",
-    "palletSize": "卡板尺寸",
+    "image": "产品图片",
+    "specs": "规格描述",
+    "palletQty": "一托数量",
+    "palletSize": "托盘尺寸",
     "packSize": "包装尺寸",
-    "netWeight": "净重",
-    "palletHeight": "卡板高度",
-    "palletGrossWeight": "卡板总毛重",
+    "packageSize": "包装尺寸",
+    "netWeight": "单件净重",
+    "grossWeight": "包装毛重",
+    "palletHeight": "打托高度",
+    "palletGrossWeight": "整托毛重",
     "stock": "库存",
-    "pcsPerBox": "每箱数量",
-    "pcsPerPallet": "每卡板数量",
+    "pcsPerBox": "单箱数量",
+    "pcsPerPallet": "一托数量",
     "frequency": "频率",
-    "priceRange": "价格区间",
-    "voltage": "电压"
+    "voltage": "电压",
+    "priceRange": "价格区间"
   },
   "table": {
     "model": "型号",
@@ -88,7 +90,9 @@
   },
   "messages": {
     "addedToCart": "已添加到购物车",
-    "addToCartFailed": "加入购物车失败"
+    "addToCartFailed": "加入购物车失败",
+    "machineSelected": "已选择主机",
+    "machineSelectedDesc": "已选择主机: {{name}}，正在加载配件选项..."
   },
   "stock": {
     "outOfStock": "缺货",
@@ -121,6 +125,8 @@
     "level5": "五级配件",
     "compatible": "兼容配件",
     "subCompatible": "子级兼容配件",
+    "level1Loaded": "一级配件已加载",
+    "level1LoadedDesc": "已为主机 {{machineName}} 加载了 {{count}} 个一级配件选项",
     "nextLevelLoaded": "下一级配件已加载",
     "nextLevelLoadedDesc": "已为您加载了 {{count}} 个{{level}}级配件选项",
     "noNextLevel": "配件选择完成",
@@ -250,5 +256,30 @@
     "inventory": "库存信息",
     "pricing": "价格信息",
     "compatibility": "兼容性信息"
-  }
+  },
+  "errors": {
+    "accessoryLoadFailed": "加载配件失败"
+  },
+  "fields": {
+    "model": "型号",
+    "voltage": "电压",
+    "frequency": "频率",
+    "packageSize": "包装尺寸",
+    "pcsPerBox": "单箱数量",
+    "palletSize": "托盘尺寸",
+    "pcsPerPallet": "一托数量",
+    "netWeight": "单件净重",
+    "grossWeight": "包装毛重",
+    "palletHeight": "打托高度",
+    "palletGrossWeight": "整托毛重"
+  },
+  "units": {
+    "cm": "cm",
+    "inch": "inch",
+    "kg": "kg",
+    "lbs": "lbs", 
+    "V": "V",
+    "Hz": "Hz"
+  },
+  "unknownMachine": "未知机器"
 } 

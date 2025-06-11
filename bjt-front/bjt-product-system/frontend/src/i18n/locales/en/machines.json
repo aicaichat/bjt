@@ -30,23 +30,25 @@
   "tableHeaders": {
     "index": "No.",
     "model": "Model",
-    "name": "Name",
+    "name": "Item",
     "price": "Price",
     "inventory": "Inventory",
     "quantity": "Quantity",
     "actions": "Actions",
     "selection": "Select",
-    "image": "Image",
-    "specs": "Specifications",
-    "palletQty": "Pallet Quantity",
+    "image": "Product Image",
+    "specs": "Spec.",
+    "palletQty": "Packs per Pallet",
     "palletSize": "Pallet Size",
     "packSize": "Package Size",
+    "packageSize": "Package Size",
     "netWeight": "Net Weight",
+    "grossWeight": "Gross Weight",
     "palletHeight": "Pallet Height",
-    "palletGrossWeight": "Pallet Gross Weight",
-    "stock": "Stock",
-    "pcsPerBox": "PCS/Box",
-    "pcsPerPallet": "PCS/Pallet",
+    "palletGrossWeight": "GW per Pallet",
+    "stock": "Inventory",
+    "pcsPerBox": "Qty per Carton",
+    "pcsPerPallet": "Packs per Pallet",
     "frequency": "Frequency",
     "voltage": "Voltage",
     "priceRange": "Price Range"
@@ -88,7 +90,9 @@
   },
   "messages": {
     "addedToCart": "Added to cart",
-    "addToCartFailed": "Failed to add to cart"
+    "addToCartFailed": "Failed to add to cart",
+    "machineSelected": "Machine Selected",
+    "machineSelectedDesc": "Selected machine: {{name}}, loading accessory options..."
   },
   "stock": {
     "outOfStock": "Out of Stock",
@@ -186,6 +190,8 @@
     "level5": "Level 5 Accessory",
     "compatible": "Compatible Accessories",
     "subCompatible": "Sub-level Compatible Accessories",
+    "level1Loaded": "Level 1 Accessories Loaded",
+    "level1LoadedDesc": "Loaded {{count}} level 1 accessory options for machine {{machineName}}",
     "nextLevelLoaded": "Next Level Accessories Loaded",
     "nextLevelLoadedDesc": "{{count}} level {{level}} accessory options have been loaded for you",
     "noNextLevel": "Accessory Selection Complete",
@@ -253,5 +259,30 @@
     "inventory": "Inventory Information",
     "pricing": "Pricing Information",
     "compatibility": "Compatibility Information"
-  }
+  },
+  "errors": {
+    "accessoryLoadFailed": "Failed to load accessories"
+  },
+  "fields": {
+    "model": "Model",
+    "voltage": "Voltage",
+    "frequency": "Frequency",
+    "packageSize": "Package Size",
+    "pcsPerBox": "Qty per Carton",
+    "palletSize": "Pallet Size",
+    "pcsPerPallet": "Packs per Pallet",
+    "netWeight": "Net Weight",
+    "grossWeight": "Gross Weight",
+    "palletHeight": "Pallet Height",
+    "palletGrossWeight": "GW per Pallet"
+  },
+  "units": {
+    "cm": "cm",
+    "inch": "inch",
+    "kg": "kg",
+    "lbs": "lbs",
+    "V": "V", 
+    "Hz": "Hz"
+  },
+  "unknownMachine": "Unknown Machine"
 } 

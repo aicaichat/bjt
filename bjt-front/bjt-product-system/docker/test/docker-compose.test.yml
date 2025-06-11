@@ -1,0 +1,103 @@
+# RelationsPage 测试环境配置
+version: '3.8'
+
+services:
+  # 测试用前端服务
+  frontend-test:
+    build:
+      context: ../../frontend
+      dockerfile: Dockerfile.test
+    image: bjt-test-frontend:latest
+    ports:
+      - "5174:5173"  # 测试专用端口
+    networks:
+      test_bjt_network:
+        aliases:
+          - frontend.test
+    volumes:
+      - ../../frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=test
+      - VITE_API_URL=http://localhost:8083/wp-json/bjt/v1
+      - VITE_USE_MOCK_DATA=false
+      - VITE_USE_PROXY=false
+    command: ["npm", "run", "test:relations"]
+    depends_on:
+      wordpress-test:
+        condition: service_healthy
+
+  # 测试用WordPress后端
+  wordpress-test:
+    build:
+      context: ../../docker/dev/wordpress
+      dockerfile: Dockerfile
+    ports:
+      - "8083:80"  # 测试专用端口
+    environment:
+      WORDPRESS_DB_HOST: mysql-test
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: bjt_test_password123
+      WORDPRESS_DB_NAME: bjt_test
+      WORDPRESS_DB_CHARSET: utf8mb4
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_HOME', 'http://localhost:8083');
+        define('WP_SITEURL', 'http://localhost:8083');
+        define('WP_DEBUG', true);
+        define('WP_DEBUG_LOG', true);
+        // 测试环境CORS设置
+        header('Access-Control-Allow-Origin: http://localhost:5174');
+        header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+        header('Access-Control-Allow-Headers: Content-Type, Authorization');
+    volumes:
+      - ../../backend:/var/www/html
+      - ../../plugins:/var/www/html/wp-content/plugins
+      - test_uploads:/var/www/html/wp-content/uploads
+    depends_on:
+      mysql-test:
+        condition: service_healthy
+    networks:
+      test_bjt_network:
+        aliases:
+          - wordpress.test
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/wp-admin/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 测试用MySQL数据库
+  mysql-test:
+    image: mysql:8.0
+    ports:
+      - "3309:3306"  # 测试专用端口
+    environment:
+      MYSQL_ROOT_PASSWORD: bjt_test_password123
+      MYSQL_DATABASE: bjt_test
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: bjt_test_password123
+    volumes:
+      - test_mysql_data:/var/lib/mysql
+      - ../../generated_sql_imports/_设备.sql:/docker-entrypoint-initdb.d/01-relations-test-data.sql:ro
+      - ./test-data/additional-test-relations.sql:/docker-entrypoint-initdb.d/02-additional-test-data.sql:ro
+    networks:
+      test_bjt_network:
+        aliases:
+          - mysql.test
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: --default-authentication-plugin=mysql_native_password
+
+networks:
+  test_bjt_network:
+    driver: bridge
+    name: bjt_test_network
+
+volumes:
+  test_mysql_data:
+    name: bjt_test_mysql_data
+  test_uploads:
+    name: bjt_test_uploads 

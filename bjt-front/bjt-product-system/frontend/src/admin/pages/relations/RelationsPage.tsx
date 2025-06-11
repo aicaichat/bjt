@@ -9,7 +9,7 @@ import {
   PlusOutlined, ArrowLeftOutlined, 
   LinkOutlined, ReloadOutlined, DeleteOutlined, EditOutlined,
   BranchesOutlined, SettingOutlined, ExclamationCircleOutlined,
-  AppstoreOutlined, BuildOutlined
+  AppstoreOutlined, BuildOutlined, InfoCircleOutlined
 } from '@ant-design/icons';
 import type { DataNode } from 'antd/es/tree';
 import AdminPageHeader from '../../components/common/AdminPageHeader';
@@ -37,6 +37,7 @@ const useDataQualityCheck = (relationsList: Relation[], selectedHostPartNumber: 
     title: string;
     description: string;
     relatedIds: number[];
+    action?: string;
   }>>([]);
 
   const checkDataQuality = useCallback(() => {
@@ -60,8 +61,50 @@ const useDataQualityCheck = (relationsList: Relation[], selectedHostPartNumber: 
       });
     }
 
-    // 检查2：孤儿关系（父级不存在）- 修正逻辑
-    const orphanRelations = relationsList.filter(relation => {
+    // 🔧 检查2：孤儿关系检测 - 重点关注作为父级但不作为子级的料号
+    const parentPartNumbers = new Set<string>();
+    const childPartNumbers = new Set<string>();
+    
+    relationsList.forEach(relation => {
+      if (relation.parent_part_number && relation.parent_part_number !== selectedHostPartNumber) {
+        parentPartNumbers.add(relation.parent_part_number);
+      }
+      if (relation.child_part_number) {
+        childPartNumbers.add(relation.child_part_number);
+      }
+    });
+    
+    // 找出作为父级但不作为子级的料号（孤儿父级）
+    const orphanParents = Array.from(parentPartNumbers).filter(partNumber => 
+      !childPartNumbers.has(partNumber)
+    );
+    
+    if (orphanParents.length > 0) {
+      const affectedRelations = relationsList.filter(relation => 
+        orphanParents.includes(relation.parent_part_number || '')
+      );
+      
+      issues.push({
+        type: 'error',
+        title: '🔗 孤儿父级关系',
+        description: `发现${orphanParents.length}个料号作为父级存在，但它们本身不作为任何关系的子级，导致相关的${affectedRelations.length}条关系无法在树中显示`,
+        relatedIds: affectedRelations.map(r => r.id),
+        action: '需要为这些料号创建到主机或其他节点的父级关系'
+      });
+      
+      console.log('🔗 孤儿父级关系检测:', {
+        orphanParents,
+        affectedRelations: affectedRelations.map(r => ({
+          id: r.id,
+          parent: r.parent_part_number,
+          part: r.part_number,
+          child: r.child_part_number
+        }))
+      });
+    }
+
+    // 检查3：传统孤儿关系（父级不存在于任何子级中）
+    const traditionalOrphanRelations = relationsList.filter(relation => {
       if (!relation.parent_part_number) return false; // 主机直接子级不算孤儿
       
       // 检查parent_part_number是否存在于其他记录的child_part_number中
@@ -71,16 +114,17 @@ const useDataQualityCheck = (relationsList: Relation[], selectedHostPartNumber: 
       
       return !parentExists;
     });
-    if (orphanRelations.length > 0) {
+    
+    if (traditionalOrphanRelations.length > 0) {
       issues.push({
         type: 'warning',
-        title: '孤儿关系',
-        description: `发现${orphanRelations.length}条记录的父级料号在关系表中不存在`,
-        relatedIds: orphanRelations.map(r => r.id)
+        title: '传统孤儿关系',
+        description: `发现${traditionalOrphanRelations.length}条记录的父级料号在关系表中不存在为子级`,
+        relatedIds: traditionalOrphanRelations.map(r => r.id)
       });
     }
 
-    // 检查3：循环引用
+    // 检查4：循环引用
     const circularRefs = relationsList.filter(relation => 
       relation.part_number === relation.child_part_number
     );
@@ -93,7 +137,7 @@ const useDataQualityCheck = (relationsList: Relation[], selectedHostPartNumber: 
       });
     }
 
-    // 检查4：重复关系 - 修正逻辑，考虑完整上下文
+    // 检查5：重复关系 - 修正逻辑，考虑完整上下文
     const relationMap = new Map<string, Relation[]>();
     relationsList.forEach(relation => {
       // 使用完整的上下文作为key，包括host, parent, part, child
@@ -129,7 +173,7 @@ const useDataQualityCheck = (relationsList: Relation[], selectedHostPartNumber: 
       })));
     }
 
-    // 检查5：层级异常
+    // 检查6：层级异常
     const levelIssues = relationsList.filter(relation => {
       if (relation.child_type === 'spare_part' && relation.level !== 1) {
         return true; // 备件应该是Level 1
@@ -172,6 +216,14 @@ interface RelationTreeNode extends DataNode {
   childType?: 'accessory' | 'spare_part';
   dependencies?: string[];
   dependencyQuantities?: number[];
+  // 🔧 新增：完整路径上下文信息
+  pathContext?: {
+    hostPartNumber: string;           // 根节点主机料号
+    parentPartNumber: string | null;  // 当前节点在这个路径中的直接父级
+    relationId?: number;              // 当前关系的ID
+    fullPath: string[];               // 完整路径数组 [host, parent1, parent2, ..., current]
+    level: number;                    // 当前节点在这个路径中的层级
+  };
 }
 
 // 主机型号选项接口
@@ -444,14 +496,23 @@ const RelationsPage: React.FC = () => {
                 型号: {selectedHostInfo.model}
               </Text>
             )}
+            {/* 🔧 为主机节点添加层级信息 */}
+            <Tag size="small" color="blue">
+              Level 0 (根节点)
+            </Tag>
           </div>
           <div className="flex items-center space-x-1">
-            <Tooltip title="添加配件">
+            <Tooltip title="添加配件 (Level 0 → Level 1)">
               <Button
                 type="text"
                 size="small"
                 icon={<PlusOutlined />}
-                onClick={() => handleAddChild('accessory', selectedHostPartNumber)}
+                onClick={() => handleAddChildWithContext('accessory', selectedHostPartNumber, {
+                  hostPartNumber: selectedHostPartNumber,
+                  parentPartNumber: null, // 主机没有父级
+                  fullPath: [selectedHostPartNumber],
+                  level: 0
+                })}
               />
             </Tooltip>
           </div>
@@ -459,11 +520,18 @@ const RelationsPage: React.FC = () => {
       ),
       nodeType: 'host',
       partNumber: selectedHostPartNumber,
-      children: []
+      children: [],
+      // 🔧 主机节点的路径上下文
+      pathContext: {
+        hostPartNumber: selectedHostPartNumber,
+        parentPartNumber: null,
+        fullPath: [selectedHostPartNumber],
+        level: 0
+      }
     };
 
     // 构建子节点
-    const builtChildren = buildTreeNodes(relations, selectedHostPartNumber, null);
+    const builtChildren = buildTreeNodes(relations, selectedHostPartNumber, null, new Set(), []);
     hostNode.children = builtChildren;
 
     // 处理展开状态
@@ -482,11 +550,13 @@ const RelationsPage: React.FC = () => {
           const nodePath = [...currentPath, node.key];
           
           if (node.partNumber === targetPartNumber) {
-            currentPath.forEach(pathKey => {
+            // 🔧 展开到目标节点的完整路径（包括目标节点本身）
+            nodePath.forEach(pathKey => {
               if (!keysToExpand.includes(pathKey)) {
                 keysToExpand.push(pathKey);
               }
             });
+            console.log('buildRelationTree: Found target node, expanding path:', nodePath);
           }
           
           if (node.children && node.children.length > 0) {
@@ -508,8 +578,9 @@ const RelationsPage: React.FC = () => {
   }, [selectedHostPartNumber, hostOptions]);
 
   // 构建树节点 - 添加循环检测，修复查询逻辑
-  const buildTreeNodes = (relations: Relation[], currentPartNumber: string, currentParentPartNumber: string | null, visitedNodes: Set<string> = new Set()): RelationTreeNode[] => {
+  const buildTreeNodes = (relations: Relation[], currentPartNumber: string, currentParentPartNumber: string | null, visitedNodes: Set<string> = new Set(), currentPath: string[] = []): RelationTreeNode[] => {
     console.log(`buildTreeNodes: Building for current=${currentPartNumber}, parent=${currentParentPartNumber}, host=${selectedHostPartNumber}`);
+    console.log(`buildTreeNodes: Current path:`, currentPath);
     console.log(`buildTreeNodes: Visited nodes so far:`, Array.from(visitedNodes));
     
     // 🔧 循环检测：如果当前节点已经在访问路径中，则停止递归
@@ -521,6 +592,10 @@ const RelationsPage: React.FC = () => {
     // 添加当前节点到访问集合
     const newVisitedNodes = new Set(visitedNodes);
     newVisitedNodes.add(currentPartNumber);
+    
+    // 🔧 构建当前路径：[主机, 路径节点1, 路径节点2, ..., 当前节点]
+    const currentFullPath = [...currentPath, currentPartNumber];
+    console.log(`buildTreeNodes: Current full path:`, currentFullPath);
     
     console.log(`buildTreeNodes: Total relations to search:`, relations.length);
     
@@ -594,10 +669,17 @@ const RelationsPage: React.FC = () => {
 
       const typeInfo = getTypeInfo();
 
-      // 🔧 修正递归调用：传递正确的父级上下文
+      // 🔧 构建子节点的完整路径
+      const childFullPath = [...currentFullPath, childPartNumber];
+
+      // 🔧 修正递归调用：传递正确的父级上下文和完整路径
       // child_part_number 作为下一级的 currentPartNumber
       // currentPartNumber 作为下一级的 currentParentPartNumber  
-      const grandChildren = buildTreeNodes(relations, relation.child_part_number, currentPartNumber, newVisitedNodes);
+      const grandChildren = buildTreeNodes(relations, relation.child_part_number, currentPartNumber, newVisitedNodes, currentFullPath);
+      
+      // 🔧 计算当前节点的实际层级
+      const currentNodeLevel = relation.level || 1;
+      const canAddChildren = currentNodeLevel < 5; // 🔧 修正：最多5层结构(Level 0-5)
       
       const node: RelationTreeNode = {
         key: `${selectedHostPartNumber}-${relation.id}-${relation.child_part_number}`,
@@ -608,15 +690,6 @@ const RelationsPage: React.FC = () => {
                 {typeInfo.typeName}
               </Tag>
               <Text strong>{relation.child_part_number}</Text>
-              <Text type="secondary" style={{ fontSize: '12px' }}>
-                (ID: {relation.id}, Level: {relation.level})
-              </Text>
-              <Text type="secondary" style={{ fontSize: '11px' }}>
-                链路: {relation.parent_part_number || 'ROOT'} → {relation.part_number} → {relation.child_part_number}
-              </Text>
-              <Text type="secondary" style={{ fontSize: '10px', color: '#999' }}>
-                Host: {relation.host_part_number}
-              </Text>
               {relation.quantity > 1 && (
                 <Badge count={relation.quantity} size="small" color="blue" />
               )}
@@ -625,6 +698,14 @@ const RelationsPage: React.FC = () => {
                   子级{grandChildren.length}项
                 </Tag>
               )}
+              {/* 🔧 显示当前层级信息 */}
+              <Tag size="small" color="blue">
+                Level {currentNodeLevel}
+              </Tag>
+              {/* 🔧 显示路径信息（调试用） */}
+              <Tag size="small" color="purple" style={{ fontSize: '10px' }}>
+                Path: {childFullPath.join(' → ')}
+              </Tag>
             </div>
             <div className="flex items-center space-x-1">
               <Tooltip title="编辑">
@@ -638,16 +719,36 @@ const RelationsPage: React.FC = () => {
                   }}
                 />
               </Tooltip>
-              {relation.child_type === 'accessory' && (
-                <Tooltip title="添加子配件">
+              {/* 🔧 修复：允许所有非必选备件的项目添加子级配件，但检查层级限制 */}
+              {relation.child_type !== 'spare_part' && canAddChildren && (
+                <Tooltip title={`添加子配件 (当前Level ${currentNodeLevel}, 下级Level ${currentNodeLevel + 1})`}>
                   <Button
                     type="text"
                     size="small"
                     icon={<PlusOutlined />}
                     onClick={(e: React.MouseEvent) => {
                       e.stopPropagation();
-                      handleAddChild('accessory', relation.child_part_number);
+                      // 🔧 传递完整的路径上下文信息
+                      handleAddChildWithContext('accessory', relation.child_part_number, {
+                        hostPartNumber: selectedHostPartNumber!,
+                        parentPartNumber: currentPartNumber,
+                        relationId: relation.id,
+                        fullPath: childFullPath,
+                        level: currentNodeLevel
+                      });
                     }}
+                  />
+                </Tooltip>
+              )}
+              {/* 🔧 显示层级限制提示 */}
+              {relation.child_type !== 'spare_part' && !canAddChildren && (
+                <Tooltip title={`已达到最大层级限制 (Level ${currentNodeLevel}/5)`}>
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={<PlusOutlined />}
+                    disabled
+                    style={{ opacity: 0.3 }}
                   />
                 </Tooltip>
               )}
@@ -672,7 +773,15 @@ const RelationsPage: React.FC = () => {
         partNumber: relation.child_part_number, // 🔧 修正：使用 child_part_number 作为节点的 partNumber
         quantity: relation.quantity,
         childType: relation.child_type,
-        children: grandChildren.length > 0 ? grandChildren : undefined
+        children: grandChildren.length > 0 ? grandChildren : undefined,
+        // 🔧 保存完整的路径上下文信息
+        pathContext: {
+          hostPartNumber: selectedHostPartNumber!,
+          parentPartNumber: currentPartNumber, // 当前节点在这个路径中的直接父级
+          relationId: relation.id,
+          fullPath: childFullPath,
+          level: currentNodeLevel
+        }
       };
 
       nodes.push(node);
@@ -696,7 +805,60 @@ const RelationsPage: React.FC = () => {
     setSelectedKeys([]);
   };
 
-  // 添加子级 - 修正关系理解
+  // 🔧 新增：带有完整路径上下文的添加子级函数
+  const handleAddChildWithContext = (childType: 'accessory' | 'spare_part', clickedPartNumber: string, pathContext: {
+    hostPartNumber: string;
+    parentPartNumber: string | null;
+    relationId?: number;
+    fullPath: string[];
+    level: number;
+  }) => {
+    setModalMode('create');
+    setEditingRelation(null);
+    
+    console.log(`handleAddChildWithContext: clicked=${clickedPartNumber}, pathContext:`, pathContext);
+    
+    // 🔧 从路径上下文中获取准确的父级信息
+    const parentPartNumber = pathContext.parentPartNumber;
+    const partNumber = clickedPartNumber; // 当前节点就是被点击的配件
+    
+    // 🔧 根据路径上下文确定下一级的level
+    const nextLevel = childType === 'spare_part' ? 1 : Math.min(pathContext.level + 1, 5);
+    
+    console.log(`handleAddChildWithContext: Using context - host=${pathContext.hostPartNumber}, parent=${parentPartNumber}, part=${partNumber}, nextLevel=${nextLevel}`);
+    console.log(`handleAddChildWithContext: Full path context:`, pathContext.fullPath.join(' → '));
+
+    // 设置表单值
+    form.setFieldsValue({
+      product_line_id: productLineId,
+      host_part_number: pathContext.hostPartNumber,
+      parent_part_number: parentPartNumber,
+      part_number: partNumber,
+      child_part_number: '', // 用户需要输入的新子级料号
+      child_type: childType,
+      level: nextLevel,
+      quantity: 1,
+      sort_order: 0,
+      status: 'publish'
+    });
+    
+    // 显示操作提示
+    const typeLabel = childType === 'spare_part' ? '必选备件' : '配件';
+    const pathDisplay = pathContext.fullPath.join(' → ');
+    const relationshipHint = `在路径 "${pathDisplay}" 下为 "${clickedPartNumber}" 添加${typeLabel}子级`;
+    
+    message.info(relationshipHint);
+    
+    // 只为配件类型加载选项，必选备件有专门的字段
+    if (childType === 'accessory') {
+      loadChildPartOptions(childType);
+    }
+    loadRequiredPartsOptions();
+    
+    setIsModalVisible(true);
+  };
+
+  // 添加子级 - 修正关系理解（保留原函数作为兼容）
   const handleAddChild = (childType: 'accessory' | 'spare_part', clickedPartNumber: string) => {
     setModalMode('create');
     setEditingRelation(null);
@@ -719,6 +881,10 @@ const RelationsPage: React.FC = () => {
       parentPartNumber = null; // 主机节点没有父级
       partNumber = selectedHostPartNumber; // 当前节点就是主机
     } else {
+      // ⚠️ 警告：这里存在歧义问题，无法确定准确的路径上下文
+      // 建议使用 handleAddChildWithContext 代替
+      console.warn('handleAddChild: 使用了旧版本的添加函数，可能存在路径上下文歧义问题');
+      
       // 用户点击某个配件节点，要为该配件添加子级
       // 需要找到被点击节点的父级料号
       const clickedNodeRelation = relationsList.find(relation => 
@@ -894,6 +1060,65 @@ const RelationsPage: React.FC = () => {
         return;
       }
 
+      // 🔧 新增：层级限制验证
+      if (finalData.level > 5) {
+        console.error('RelationsPage.handleFormSubmit - Level exceeds maximum:', finalData.level);
+        message.error(`层级不能超过5层，当前设置为Level ${finalData.level}`);
+        return;
+      }
+
+      // 🔧 新增：重复关系预检查（仅创建时）
+      if (modalMode === 'create') {
+        const duplicateRelation = relationsList.find(relation => 
+          relation.host_part_number?.toString() === finalData.host_part_number &&
+          relation.parent_part_number === finalData.parent_part_number &&
+          relation.part_number === finalData.part_number &&
+          relation.child_part_number === finalData.child_part_number
+        );
+        
+        if (duplicateRelation) {
+          console.warn('RelationsPage.handleFormSubmit - Duplicate relation detected locally:', duplicateRelation);
+          
+          // 显示智能重复处理对话框
+          Modal.confirm({
+            title: '检测到重复关系',
+            icon: <ExclamationCircleOutlined />,
+            content: (
+              <div>
+                <p><strong>发现相同的关系已存在：</strong></p>
+                <div style={{ 
+                  padding: '12px', 
+                  backgroundColor: '#f5f5f5', 
+                  borderRadius: '6px', 
+                  marginTop: '8px',
+                  fontFamily: 'monospace',
+                  fontSize: '13px'
+                }}>
+                  <div>关系ID: {duplicateRelation.id}</div>
+                  <div>主机: {duplicateRelation.host_part_number}</div>
+                  <div>父级: {duplicateRelation.parent_part_number || '(主机直接子级)'}</div>
+                  <div>当前: {duplicateRelation.part_number} → 子级: {duplicateRelation.child_part_number}</div>
+                  <div>层级: Level {duplicateRelation.level} | 数量: {duplicateRelation.quantity}</div>
+                  <div>状态: {duplicateRelation.status}</div>
+                </div>
+                <p style={{ marginTop: '12px' }}>您想要如何处理？</p>
+              </div>
+            ),
+            width: 600,
+            okText: '编辑现有关系',
+            cancelText: '取消操作',
+            onOk: () => {
+              // 切换到编辑模式
+              handleEditRelation(duplicateRelation);
+            },
+            onCancel: () => {
+              console.log('RelationsPage: User cancelled duplicate relation handling');
+            }
+          });
+          return;
+        }
+      }
+
       // 4. API调用
       if (modalMode === 'create') {
         console.log('RelationsPage.handleFormSubmit - About to call createRelation API');
@@ -904,12 +1129,13 @@ const RelationsPage: React.FC = () => {
         console.log('RelationsPage.handleFormSubmit - API response:', result);
         message.success('创建关系成功');
         
-        // 🔧 修复自动展开逻辑：展开到新创建关系的父级路径
+        // 🔧 修复自动展开逻辑：展开到新子级的父级节点
         // 新创建的关系结构是：part_number -> child_part_number
-        // 我们需要确保包含这个关系的父级节点路径被展开，这样用户就能看到新创建的关系
-        const relationParentPath = finalData.part_number; // 关系的父级节点
-        console.log('RelationsPage.handleFormSubmit - Auto-expanding to relation parent path:', relationParentPath);
-        await loadRelationTree(true, relationParentPath);
+        // 我们需要确保新子级的父级节点被展开，这样新子级就能显示出来
+        const parentOfNewChild = finalData.part_number; // 新子级的父级节点
+        console.log('RelationsPage.handleFormSubmit - Auto-expanding to parent of new child:', parentOfNewChild);
+        console.log('RelationsPage.handleFormSubmit - New child part number:', finalData.child_part_number);
+        await loadRelationTree(true, parentOfNewChild);
       } else if (editingRelation) {
         console.log('RelationsPage.handleFormSubmit - About to call updateRelation API');
         console.log('RelationsPage.handleFormSubmit - API endpoint:', `/wp-json/bjt/v1/relations/${editingRelation.id}`);
@@ -925,7 +1151,7 @@ const RelationsPage: React.FC = () => {
     } catch (error) {
       console.error('RelationsPage.handleFormSubmit - Error:', error);
       
-      // 🔧 增强错误处理 - 输出更详细的错误信息用于调试
+      // 🔧 增强错误处理 - 专门处理重复关系错误
       console.error('RelationsPage.handleFormSubmit - Detailed error info:', {
         error,
         errorType: typeof error,
@@ -939,8 +1165,9 @@ const RelationsPage: React.FC = () => {
         stack: error?.stack
       });
       
-      // 详细错误处理
+      // 🔧 智能错误处理
       let errorMessage = '操作失败';
+      let showDuplicateDialog = false;
       
       try {
         if (error instanceof Error) {
@@ -949,35 +1176,106 @@ const RelationsPage: React.FC = () => {
         } else if (typeof error === 'object' && error !== null) {
           const errorObj = error as any;
           
-          // 检查HTTP响应错误
-          if (errorObj.response?.data?.message) {
-            errorMessage = errorObj.response.data.message;
-            console.log('RelationsPage: Found response.data.message:', errorMessage);
-          } else if (errorObj.response?.data?.error) {
-            errorMessage = errorObj.response.data.error;
-            console.log('RelationsPage: Found response.data.error:', errorMessage);
-          } else if (errorObj.response?.data) {
-            try {
-              errorMessage = `API错误: ${JSON.stringify(errorObj.response.data)}`;
-              console.log('RelationsPage: Found response.data (JSON):', errorObj.response.data);
-            } catch (jsonError) {
-              errorMessage = `API错误: ${String(errorObj.response.data)}`;
-              console.log('RelationsPage: Found response.data (String):', errorObj.response.data);
-            }
-          } else if (errorObj.message) {
-            errorMessage = errorObj.message;
-            console.log('RelationsPage: Found error.message:', errorMessage);
-          } else if (errorObj.error) {
-            errorMessage = errorObj.error;
-            console.log('RelationsPage: Found error.error:', errorMessage);
+          // 🔧 专门检查重复关系错误
+          if (errorObj.code === 409 || 
+              errorObj.data?.code === 'duplicate_relation' || 
+              errorObj.message?.includes('重复') || 
+              errorObj.data?.message?.includes('Duplicate')) {
+            
+            showDuplicateDialog = true;
+            errorMessage = '关系已存在，无法重复创建';
+            
+            console.log('RelationsPage: Detected duplicate relation error, showing smart dialog');
+            
+            // 显示智能重复处理对话框
+            Modal.confirm({
+              title: '🔄 关系已存在',
+              icon: <ExclamationCircleOutlined />,
+              content: (
+                <div>
+                  <p>您尝试创建的关系已存在于系统中。</p>
+                  <div style={{ 
+                    padding: '12px', 
+                    backgroundColor: '#fff2e8', 
+                    borderRadius: '6px', 
+                    marginTop: '8px',
+                    border: '1px solid #ffd591'
+                  }}>
+                    <div><strong>🏷️ 关系详情：</strong></div>
+                    <div>主机: {form.getFieldValue('host_part_number')}</div>
+                    <div>父级: {form.getFieldValue('parent_part_number') || '(主机直接子级)'}</div>
+                    <div>当前: {form.getFieldValue('part_number')} → 子级: {form.getFieldValue('child_part_number')}</div>
+                    <div>层级: Level {form.getFieldValue('level')}</div>
+                  </div>
+                  <p style={{ marginTop: '12px' }}>您可以：</p>
+                  <ul style={{ marginLeft: '20px', marginTop: '8px' }}>
+                    <li>✏️ <strong>查找并编辑</strong>现有关系（推荐）</li>
+                    <li>❌ <strong>取消操作</strong>，检查关系树中的现有记录</li>
+                  </ul>
+                </div>
+              ),
+              width: 600,
+              okText: '🔍 查找现有关系',
+              cancelText: '❌ 取消',
+              onOk: async () => {
+                try {
+                  // 尝试在当前关系列表中查找重复项
+                  const targetRelation = relationsList.find(relation => 
+                    relation.host_part_number?.toString() === form.getFieldValue('host_part_number') &&
+                    relation.part_number === form.getFieldValue('part_number') &&
+                    relation.child_part_number === form.getFieldValue('child_part_number')
+                  );
+                  
+                  if (targetRelation) {
+                    console.log('RelationsPage: Found target relation for editing:', targetRelation);
+                    message.info('已找到现有关系，切换到编辑模式');
+                    handleEditRelation(targetRelation);
+                  } else {
+                    message.warning('未在当前树中找到对应关系，请刷新数据后重试');
+                    await loadRelationTree(true);
+                  }
+                } catch (findError) {
+                  console.error('RelationsPage: Error finding existing relation:', findError);
+                  message.error('查找现有关系失败，请手动查找并编辑');
+                }
+              },
+              onCancel: () => {
+                console.log('RelationsPage: User cancelled duplicate handling');
+                message.info('操作已取消');
+              }
+            });
+            
           } else {
-            // 如果都找不到，尝试转换为字符串
-            try {
-              errorMessage = `未知错误: ${JSON.stringify(errorObj)}`;
-              console.log('RelationsPage: Unknown error (JSON):', errorObj);
-            } catch (jsonError) {
-              errorMessage = `未知错误: ${String(errorObj)}`;
-              console.log('RelationsPage: Unknown error (String):', errorObj);
+            // 其他类型的错误处理
+            if (errorObj.response?.data?.message) {
+              errorMessage = errorObj.response.data.message;
+              console.log('RelationsPage: Found response.data.message:', errorMessage);
+            } else if (errorObj.response?.data?.error) {
+              errorMessage = errorObj.response.data.error;
+              console.log('RelationsPage: Found response.data.error:', errorMessage);
+            } else if (errorObj.response?.data) {
+              try {
+                errorMessage = `API错误: ${JSON.stringify(errorObj.response.data)}`;
+                console.log('RelationsPage: Found response.data (JSON):', errorObj.response.data);
+              } catch (jsonError) {
+                errorMessage = `API错误: ${String(errorObj.response.data)}`;
+                console.log('RelationsPage: Found response.data (String):', errorObj.response.data);
+              }
+            } else if (errorObj.message) {
+              errorMessage = errorObj.message;
+              console.log('RelationsPage: Found error.message:', errorMessage);
+            } else if (errorObj.error) {
+              errorMessage = errorObj.error;
+              console.log('RelationsPage: Found error.error:', errorMessage);
+            } else {
+              // 如果都找不到，尝试转换为字符串
+              try {
+                errorMessage = `未知错误: ${JSON.stringify(errorObj)}`;
+                console.log('RelationsPage: Unknown error (JSON):', errorObj);
+              } catch (jsonError) {
+                errorMessage = `未知错误: ${String(errorObj)}`;
+                console.log('RelationsPage: Unknown error (String):', errorObj);
+              }
             }
           }
         } else {
@@ -989,7 +1287,10 @@ const RelationsPage: React.FC = () => {
         errorMessage = '错误处理失败，请检查控制台日志';
       }
       
-      message.error(errorMessage);
+      // 只有在没有显示重复对话框时才显示错误消息
+      if (!showDuplicateDialog) {
+        message.error(errorMessage);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -1243,19 +1544,245 @@ const RelationsPage: React.FC = () => {
                   <span style={{ fontWeight: 'bold' }}>数据质量检查</span>
                   <Tag color="orange">发现 {qualityIssues.length} 个问题</Tag>
                 </div>
-                <Button size="small" onClick={checkDataQuality} icon={<ReloadOutlined />}>
-                  重新检查
-                </Button>
+                <Space>
+                  <Button size="small" onClick={checkDataQuality} icon={<ReloadOutlined />}>
+                    重新检查
+                  </Button>
+                  <Button 
+                    size="small" 
+                    type="primary"
+                    danger
+                    onClick={() => {
+                      Modal.confirm({
+                        title: '🔧 关系结构清理工具',
+                        icon: <SettingOutlined />,
+                        width: 800,
+                        content: (
+                          <div>
+                            <p><strong>检测到关系结构问题，选择清理方案：</strong></p>
+                            
+                            <div style={{ marginTop: '16px' }}>
+                              <h4>🎯 问题分析：</h4>
+                              <div style={{ 
+                                padding: '12px', 
+                                backgroundColor: '#fff2e8', 
+                                borderRadius: '6px', 
+                                marginTop: '8px',
+                                border: '1px solid #ffd591'
+                              }}>
+                                <div>• 料号60A04024在多个位置重复出现</div>
+                                <div>• 层级关系混乱，同一料号在Level 2和Level 3都存在</div>
+                                <div>• 添加子级时无法确定正确的父级位置</div>
+                              </div>
+                            </div>
+
+                            <div style={{ marginTop: '16px' }}>
+                              <h4>🔧 解决方案：</h4>
+                              <div style={{ marginTop: '8px' }}>
+                                <div style={{ 
+                                  padding: '12px', 
+                                  backgroundColor: '#f6ffed', 
+                                  borderRadius: '6px',
+                                  marginBottom: '8px',
+                                  border: '1px solid #b7eb8f'
+                                }}>
+                                  <strong>方案1: 保留主机直接子级</strong>
+                                  <div style={{ fontSize: '13px', marginTop: '4px' }}>
+                                    只保留 60A01149 → 60A04024 的关系，删除其他重复路径
+                                  </div>
+                                </div>
+                                <div style={{ 
+                                  padding: '12px', 
+                                  backgroundColor: '#e6f7ff', 
+                                  borderRadius: '6px',
+                                  marginBottom: '8px',
+                                  border: '1px solid #91d5ff'
+                                }}>
+                                  <strong>方案2: 重新设计层级结构</strong>
+                                  <div style={{ fontSize: '13px', marginTop: '4px' }}>
+                                    根据实际产品结构重新组织关系层级
+                                  </div>
+                                </div>
+                                <div style={{ 
+                                  padding: '12px', 
+                                  backgroundColor: '#f9f0ff', 
+                                  borderRadius: '6px',
+                                  border: '1px solid #d3adf7'
+                                }}>
+                                  <strong>方案3: 手动调整</strong>
+                                  <div style={{ fontSize: '13px', marginTop: '4px' }}>
+                                    查看详细的关系列表，手动编辑或删除冲突记录
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div style={{ marginTop: '16px' }}>
+                              <h4>📋 当前关系状态：</h4>
+                              <div style={{ 
+                                padding: '8px', 
+                                backgroundColor: '#f5f5f5', 
+                                borderRadius: '4px',
+                                fontFamily: 'monospace',
+                                fontSize: '12px',
+                                maxHeight: '200px',
+                                overflow: 'auto'
+                              }}>
+                                <div>✅ 主机直接子级: 60A01149 → 60A04024 (Level 2)</div>
+                                <div>⚠️  重复关系: 60A04039 → 60A04024 (Level 3)</div>
+                                <div>⚠️  孤儿关系: 60A04038 → 60A04024 (Level 2)</div>
+                                <div style={{ marginTop: '8px', color: '#666' }}>
+                                  → 60A04024的子级: 60A10001, 60A10003, 60A10004, 60A10006, 60A06006
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ),
+                        okText: '📋 查看详细关系',
+                        cancelText: '暂不处理',
+                        onOk: () => {
+                          // 显示详细的关系管理界面
+                          Modal.confirm({
+                            title: '📋 详细关系管理',
+                            width: 1000,
+                            content: (
+                              <div>
+                                <p><strong>所有涉及60A04024的关系记录：</strong></p>
+                                <div style={{ 
+                                  maxHeight: '400px', 
+                                  overflow: 'auto',
+                                  border: '1px solid #d9d9d9',
+                                  borderRadius: '6px',
+                                  padding: '12px'
+                                }}>
+                                  {relationsList
+                                    .filter(rel => rel.part_number === '60A04024' || rel.child_part_number === '60A04024')
+                                    .map(rel => (
+                                      <div key={rel.id} style={{ 
+                                        padding: '8px', 
+                                        margin: '4px 0',
+                                        backgroundColor: rel.part_number === '60A04024' ? '#e6f7ff' : '#fff2e8',
+                                        borderRadius: '4px',
+                                        border: '1px solid #d9d9d9'
+                                      }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                          <div>
+                                            <strong>ID {rel.id}:</strong> {rel.parent_part_number || '主机'} → {rel.part_number} → {rel.child_part_number}
+                                            <Tag size="small" color="blue" style={{ marginLeft: '8px' }}>Level {rel.level}</Tag>
+                                          </div>
+                                          <div>
+                                            <Button 
+                                              size="small" 
+                                              onClick={() => handleEditRelation(rel)}
+                                              style={{ marginRight: '4px' }}
+                                            >
+                                              编辑
+                                            </Button>
+                                            <Button 
+                                              size="small" 
+                                              danger 
+                                              onClick={() => handleDeleteRelation(rel)}
+                                            >
+                                              删除
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))
+                                  }
+                                </div>
+                                <div style={{ marginTop: '12px', fontSize: '13px', color: '#666' }}>
+                                  💡 <strong>建议：</strong>删除冲突的关系记录，保持清晰的层级结构
+                                </div>
+                              </div>
+                            ),
+                            okText: '关闭',
+                            cancelText: null,
+                            onOk: () => {
+                              message.info('请根据需要编辑或删除冲突的关系');
+                            }
+                          });
+                        }
+                      });
+                    }}
+                  >
+                    🔧 关系清理工具
+                  </Button>
+                </Space>
               </div>
               
               <div className="space-y-2">
                 {qualityIssues.map((issue, index) => (
                   <Alert
                     key={index}
-                    message={issue.title}
+                    message={
+                      <div className="flex items-center justify-between">
+                        <span>{issue.title}</span>
+                        {issue.title.includes('孤儿父级关系') && (
+                          <Button 
+                            size="small" 
+                            type="primary"
+                            onClick={() => {
+                              // 显示孤儿关系修复指导
+                              Modal.confirm({
+                                title: '🔗 修复孤儿父级关系',
+                                icon: <InfoCircleOutlined />,
+                                content: (
+                                  <div>
+                                    <p><strong>检测到孤儿父级关系问题：</strong></p>
+                                    <div style={{ 
+                                      padding: '12px', 
+                                      backgroundColor: '#fff2e8', 
+                                      borderRadius: '6px', 
+                                      marginTop: '8px',
+                                      border: '1px solid #ffd591'
+                                    }}>
+                                      <div>一些料号作为父级存在于关系中，但它们本身没有作为任何关系的子级存在，导致相关关系无法在树中显示。</div>
+                                    </div>
+                                    <p style={{ marginTop: '12px' }}><strong>修复步骤：</strong></p>
+                                    <ol style={{ marginLeft: '20px', marginTop: '8px' }}>
+                                      <li>找到孤儿父级料号（如：60A04038）</li>
+                                      <li>点击主机节点的"添加配件"按钮</li>
+                                      <li>在子级料号字段中输入孤儿父级料号</li>
+                                      <li>设置适当的层级和数量</li>
+                                      <li>保存后，相关的子级关系将自动显示在树中</li>
+                                    </ol>
+                                    <p style={{ marginTop: '12px', fontSize: '13px', color: '#666' }}>
+                                      <strong>示例：</strong>如果60A04038作为父级存在但未显示，请创建"主机 → 60A04038"的关系。
+                                    </p>
+                                  </div>
+                                ),
+                                width: 600,
+                                okText: '我知道了',
+                                cancelText: '关闭',
+                                onOk: () => {
+                                  message.info('请按照指导操作修复孤儿关系');
+                                },
+                                onCancel: () => {
+                                  console.log('User closed orphan relation guide');
+                                }
+                              });
+                            }}
+                          >
+                            📝 查看修复指导
+                          </Button>
+                        )}
+                      </div>
+                    }
                     description={
                       <div>
                         <p>{issue.description}</p>
+                        {issue.action && (
+                          <div style={{ 
+                            marginTop: '8px', 
+                            padding: '8px', 
+                            backgroundColor: '#f6ffed', 
+                            borderRadius: '4px',
+                            border: '1px solid #b7eb8f'
+                          }}>
+                            <strong>建议操作：</strong> {issue.action}
+                          </div>
+                        )}
                         <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
                           相关记录ID: {issue.relatedIds.join(', ')}
                         </div>
@@ -1366,7 +1893,7 @@ const RelationsPage: React.FC = () => {
             <Col span={8}>
               <Form.Item
                 name="host_part_number"
-                label="🏠 主机料号 (Host Part Number)"
+                label="主机料号 (Host Part Number)"
                 rules={[{ required: true, message: '主机料号不能为空' }]}
                 extra="整棵关系树的根节点"
               >
@@ -1389,26 +1916,26 @@ const RelationsPage: React.FC = () => {
           
           {/* 关系预览组件 */}
           <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#f8f9fa', borderRadius: '6px', border: '1px solid #e9ecef' }}>
-            <div style={{ marginBottom: '8px', fontWeight: 'bold', color: '#1890ff' }}>📊 当前关系预览:</div>
+            <div style={{ marginBottom: '8px', fontWeight: 'bold', color: '#1890ff' }}>关系预览:</div>
             <div style={{ display: 'flex', alignItems: 'center', fontSize: '14px' }}>
               <span style={{ padding: '4px 8px', backgroundColor: '#e3f2fd', borderRadius: '4px', marginRight: '8px' }}>
-                🏠 {form.getFieldValue('host_part_number') || '主机'}
+                {form.getFieldValue('host_part_number') || '主机'}
               </span>
               <span style={{ margin: '0 8px' }}>→</span>
               {form.getFieldValue('parent_part_number') && (
                 <>
                   <span style={{ padding: '4px 8px', backgroundColor: '#f3e5f5', borderRadius: '4px', marginRight: '8px' }}>
-                    🔗 {form.getFieldValue('parent_part_number')}
+                    {form.getFieldValue('parent_part_number')}
                   </span>
                   <span style={{ margin: '0 8px' }}>→</span>
                 </>
               )}
               <span style={{ padding: '4px 8px', backgroundColor: '#e8f5e8', borderRadius: '4px', marginRight: '8px' }}>
-                📦 {form.getFieldValue('part_number') || '当前节点'}
+                {form.getFieldValue('part_number') || '当前节点'}
               </span>
               <span style={{ margin: '0 8px' }}>→</span>
               <span style={{ padding: '4px 8px', backgroundColor: '#fff3e0', borderRadius: '4px' }}>
-                ➕ {form.getFieldValue('child_part_number') || '新子级'}
+                {form.getFieldValue('child_part_number') || '新子级'}
               </span>
             </div>
           </div>
@@ -1417,7 +1944,7 @@ const RelationsPage: React.FC = () => {
             <Col span={8}>
               <Form.Item
                 name="parent_part_number"
-                label="🔗 父级料号 (Parent Part Number)"
+                label="父级料号 (Parent Part Number)"
                 extra="当前节点的父级料号，为空表示直接连接主机"
               >
                 <Input placeholder="自动设置或留空" />
@@ -1426,7 +1953,7 @@ const RelationsPage: React.FC = () => {
             <Col span={8}>
               <Form.Item
                 name="part_number"
-                label="📦 当前节点料号 (Part Number)"
+                label="当前节点料号 (Part Number)"
                 rules={[{ required: true, message: '请输入当前节点料号' }]}
                 extra="当前关系记录所代表的节点"
               >
@@ -1436,7 +1963,7 @@ const RelationsPage: React.FC = () => {
             <Col span={8}>
               <Form.Item
                 name="child_part_number"
-                label="➕ 子级料号 (Child Part Number)"
+                label="子级料号 (Child Part Number)"
                 rules={[{ required: true, message: '请输入子级料号' }]}
                 extra="要添加到当前节点下的子级"
               >
@@ -1470,8 +1997,8 @@ const RelationsPage: React.FC = () => {
                     loadChildPartOptions(value);
                   }
                 }}>
-                  <Option value="accessory">🔧 配件 (Accessory)</Option>
-                  <Option value="spare_part">🛠️ 必选备件 (Required Spare Part)</Option>
+                  <Option value="accessory">配件 (Accessory)</Option>
+                  <Option value="spare_part">必选备件 (Required Spare Part)</Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -1491,9 +2018,9 @@ const RelationsPage: React.FC = () => {
                 rules={[{ required: true, message: '请选择状态' }]}
               >
                 <Select placeholder="选择状态">
-                  <Option value="publish">✅ 发布 (Published)</Option>
-                  <Option value="draft">📝 草稿 (Draft)</Option>
-                  <Option value="trash">🗑️ 回收站 (Trash)</Option>
+                  <Option value="publish">发布 (Published)</Option>
+                  <Option value="draft">草稿 (Draft)</Option>
+                  <Option value="trash">回收站 (Trash)</Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -1511,9 +2038,9 @@ const RelationsPage: React.FC = () => {
             </Col>
           </Row>
 
-          <Divider orientation="left">🔧 依赖管理 (Dependency Management)</Divider>
+          <Divider orientation="left">依赖管理 (Dependency Management)</Divider>
           <div style={{ marginBottom: '16px', padding: '8px', backgroundColor: '#fffbe6', borderRadius: '4px', fontSize: '13px' }}>
-            💡 <strong>说明:</strong> 此处配置的是"必选备件"依赖关系，用于指定当前配件必须配套的备件及数量
+            <strong>说明:</strong> 此处配置的是"必选备件"依赖关系，用于指定当前配件必须配套的备件及数量
           </div>
           
           <Row gutter={16}>
@@ -1551,68 +2078,6 @@ const RelationsPage: React.FC = () => {
               {modalMode === 'create' ? t('buttons.create', { ns: 'relations' }) : t('buttons.update', { ns: 'relations' })}
             </Button>
           </div>
-
-          {/* 🔧 使用指南面板 */}
-          <Card 
-            size="small" 
-            title="📖 关系管理使用指南 - 修正版" 
-            style={{ marginTop: '24px', backgroundColor: '#f9f9f9' }}
-            className="user-guide-panel"
-          >
-            <div style={{ fontSize: '13px', lineHeight: '1.6' }}>
-              <div style={{ marginBottom: '16px' }}>
-                <h4 style={{ margin: '0 0 8px 0', color: '#1890ff' }}>🔍 字段说明 (修正版)</h4>
-                <ul style={{ margin: 0, paddingLeft: '20px' }}>
-                  <li><strong>host_part_number</strong>：根节点（主机料号），整棵树的根基</li>
-                  <li><strong>part_number</strong>：当前节点的料号（不是父级！）</li>
-                  <li><strong>parent_part_number</strong>：当前节点的父级料号，为空表示直接连到根节点</li>
-                  <li><strong>child_part_number</strong>：当前节点的子级料号（用户要添加的新料号）</li>
-                </ul>
-              </div>
-              
-              <div style={{ marginBottom: '16px' }}>
-                <h4 style={{ margin: '0 0 8px 0', color: '#52c41a' }}>📊 关系类型说明</h4>
-                <ul style={{ margin: 0, paddingLeft: '20px' }}>
-                  <li><strong>主要关系</strong>：主机与配件的层级关系</li>
-                  <li><strong>配件</strong>：主机的各级配件组件，支持多层嵌套</li>
-                  <li><strong>必选备件</strong>：仅涉及必选备件，不包含普通备件</li>
-                  <li><strong>层级规则</strong>：配件按实际嵌套层级递增，必选备件始终为Level 1</li>
-                </ul>
-              </div>
-              
-              <div style={{ marginBottom: '16px' }}>
-                <h4 style={{ margin: '0 0 8px 0', color: '#faad14' }}>⚠️ 数据结构示例</h4>
-                <div style={{ backgroundColor: '#fafafa', padding: '8px', borderRadius: '4px', fontSize: '12px' }}>
-                  <div><strong>记录示例：</strong></div>
-                  <div>• host_part_number: "421343214123412343212142141" (主机)</div>
-                  <div>• parent_part_number: null (表示当前节点是主机直接子级)</div>
-                  <div>• part_number: "421343214123412343212142141" (当前节点=主机)</div>
-                  <div>• child_part_number: "434131" (主机的子配件)</div>
-                  <div><strong>含义：</strong>主机"421343214123412343212142141"有一个直接子配件"434131"</div>
-                </div>
-              </div>
-              
-              <div style={{ marginBottom: '16px' }}>
-                <h4 style={{ margin: '0 0 8px 0', color: '#ff4d4f' }}>❌ 常见错误修正</h4>
-                <ul style={{ margin: 0, paddingLeft: '20px' }}>
-                  <li>❌ 误解：part_number是父级 → ✅ 正确：part_number是当前节点</li>
-                  <li>❌ 混淆：所有备件都添加到关系中 → ✅ 正确：仅必选备件参与关系管理</li>
-                  <li>❌ 错误：备件可以有子级 → ✅ 正确：只有配件可以有子级嵌套</li>
-                  <li>❌ 层级混乱：备件设为Level 2+ → ✅ 正确：必选备件固定Level 1</li>
-                </ul>
-              </div>
-              
-              <div>
-                <h4 style={{ margin: '0 0 8px 0', color: '#722ed1' }}>🎯 操作建议</h4>
-                <ul style={{ margin: 0, paddingLeft: '20px' }}>
-                  <li>从主机开始，逐级添加配件关系</li>
-                  <li>必选备件作为独立项目添加，不参与配件嵌套</li>
-                  <li>确保host_part_number在所有记录中保持一致</li>
-                  <li>定期使用数据质量检查工具验证数据完整性</li>
-                </ul>
-              </div>
-            </div>
-          </Card>
         </Form>
       </Modal>
     </div>

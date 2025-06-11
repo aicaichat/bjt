@@ -125,10 +125,10 @@ const MachinesPage: React.FC = () => {
   
   // 用户交互相关状态
   const [quantities, setQuantities] = useState<Record<string, number>>({});
-  const [showNotification, setShowNotification] = useState<boolean>(false);
-  const [notificationProduct, setNotificationProduct] = useState<string>('');
-  const [notificationQuantity, setNotificationQuantity] = useState<number>(1);
-  const [cartCount, setCartCount] = useState<number>(0);
+  // 删除: const [showNotification, setShowNotification] = useState<boolean>(false);
+  // 删除: const [notificationProduct, setNotificationProduct] = useState<string>('');
+  // 删除: const [notificationQuantity, setNotificationQuantity] = useState<number>(1);
+  // 删除: const [cartCount, setCartCount] = useState<number>(0);
   
   // 根据用户偏好设置单位制
   const [unitSystem, setUnitSystem] = useState<'metric' | 'imperial'>(
@@ -165,11 +165,36 @@ const MachinesPage: React.FC = () => {
   const showSuccessToast = toastNotifications.success;
   const showInfoToast = toastNotifications.info;
 
+  // 1. 添加cartAnimation状态
+  const [cartAnimation, setCartAnimation] = useState({
+    isActive: false,
+    startElement: null,
+    targetElement: null,
+    productImage: '',
+    productName: ''
+  });
+
   const getMachineName = (machine: MachinePart): string => {
     const name = currentLanguage === 'zh' ? machine.name_zh : machine.name_en;
     if (!name) {
       const fallbackName = currentLanguage === 'zh' ? machine.name_en : machine.name_zh;
       return safeTextContent(fallbackName || machine.model || 'N/A');
+    }
+    return safeTextContent(name);
+  };
+
+  // ✅ 新增：获取配件名称，支持多语言切换
+  const getAccessoryName = (accessory: MachineAccessory): string => {
+    const name = currentLanguage === 'zh' 
+      ? (accessory.title_zh || accessory.name_zh)
+      : (accessory.title_en || accessory.name_en);
+    
+    if (!name) {
+      // 如果没有对应语言的名称，则使用备用语言
+      const fallbackName = currentLanguage === 'zh' 
+        ? (accessory.title_en || accessory.name_en)
+        : (accessory.title_zh || accessory.name_zh);
+      return safeTextContent(fallbackName || accessory.title || accessory.model || 'N/A');
     }
     return safeTextContent(name);
   };
@@ -1091,6 +1116,20 @@ const MachinesPage: React.FC = () => {
               previousMachineRef.current = selectedMachine;
               setAutoLoadedAccessories(true);
               
+              // ✅ 新增：显示配件加载成功提示
+              if (level1Accessories.length > 0) {
+                const selectedMachineData = machines.find(m => m.id.toString() === selectedMachine);
+                const machineName = selectedMachineData ? getMachineName(selectedMachineData) : t('unknownMachine');
+                
+                success(
+                  t('accessories.level1Loaded') || '一级配件已加载',
+                  t('accessories.level1LoadedDesc', { 
+                    machineName: machineName,
+                    count: level1Accessories.length 
+                  }) || `已为主机 ${machineName} 加载了 ${level1Accessories.length} 个一级配件选项`
+                );
+              }
+              
               console.log('✅ [loadAccessories] Level 1 accessories set successfully, count:', level1Accessories.length);
             }
           } else {
@@ -1104,7 +1143,7 @@ const MachinesPage: React.FC = () => {
           console.error('❌ [loadAccessories] Failed to load accessories:', error);
           if (!isCancelled) {
             setAccessories([]);
-            showErrorToast('加载配件失败');
+            showErrorToast(t('errors.accessoryLoadFailed') || '加载配件失败');
           }
         } finally {
           if (!isCancelled) {
@@ -1129,11 +1168,6 @@ const MachinesPage: React.FC = () => {
     });
   };
   
-  // 隐藏购物车通知
-  const hideCartNotification = () => {
-    setShowNotification(false);
-  };
-
   // 格式化价格
   const formatPrice = (price: number): string => {
     return safeToLocaleString(price);
@@ -1148,6 +1182,50 @@ const MachinesPage: React.FC = () => {
   // 处理电压选择
   const handleVoltageChange = (value: string) => {
     setSelectedVoltage(value);
+  };
+
+  // ✅ 新增：单位处理函数
+  const getFieldWithUnit = (fieldKey: string, unitType?: 'weight' | 'size' | 'voltage' | 'frequency') => {
+    // 按优先级顺序查找翻译
+    let baseLabel = t(`tableHeaders.${fieldKey}`) || t(`fields.${fieldKey}`) || fieldKey;
+    
+    if (unitType) {
+      let unitLabel = '';
+      switch (unitType) {
+        case 'weight':
+          unitLabel = unitSystem === 'metric' 
+            ? t('units.kg') || 'kg'
+            : t('units.lbs') || 'lbs';
+          break;
+        case 'size':
+          unitLabel = unitSystem === 'metric' 
+            ? t('units.cm') || 'cm'
+            : t('units.inch') || 'inch';
+          break;
+        case 'voltage':
+          unitLabel = t('units.V') || 'V';
+          break;
+        case 'frequency':
+          unitLabel = t('units.Hz') || 'Hz';
+          break;
+        default:
+          unitLabel = '';
+      }
+      return `${baseLabel}(${unitLabel})`;
+    }
+    return baseLabel;
+  };
+
+  // ✅ 新增：从数据中去除单位的函数
+  const removeUnitFromValue = (value: string | number | null | undefined): string => {
+    if (value === null || value === undefined) return 'N/A';
+    if (typeof value === 'number') return value.toString();
+    
+    const strValue = value.toString();
+    // 去除常见的单位后缀
+    return strValue
+      .replace(/\s*(cm|inch|in|kg|lbs|g|lb|V|Hz)$/i, '')
+      .trim();
   };
 
   // 过滤产品
@@ -1248,8 +1326,8 @@ const MachinesPage: React.FC = () => {
           : {
               part_number: (product as MachineAccessory).part_number || (product as MachineAccessory).model || `ACCESSORY-${product.id}`,
               model: (product as MachineAccessory).model || '',
-              name_zh: (product as MachineAccessory).title_zh || (product as MachineAccessory).title || '',
-              name_en: (product as MachineAccessory).title_en || (product as MachineAccessory).title || '',
+              name_zh: getAccessoryName(product as MachineAccessory),
+              name_en: getAccessoryName(product as MachineAccessory),
               voltage: (product as MachineAccessory).voltage || (product as MachineAccessory).parts?.[0]?.specs?.voltage || '',
               frequency: (product as MachineAccessory).frequency || (product as MachineAccessory).parts?.[0]?.specs?.frequency || '',
               spec: (product as MachineAccessory).parts?.[0]?.spec || '',
@@ -1274,7 +1352,7 @@ const MachinesPage: React.FC = () => {
         partNumber: product.part_number || product.model || `${productType.toUpperCase()}-${product.id}`,
         productName: productType === 'machine'
           ? getMachineName(product as MachinePart)
-          : (product as MachineAccessory).title_zh || (product as MachineAccessory).title,
+          : getAccessoryName(product as MachineAccessory),
         price: productType === 'machine'
           ? (product as MachinePart).prices?.[0]?.tiers?.[0]?.base_price || 0
           : (product as MachineAccessory).parts?.[0]?.prices?.base || 0,
@@ -1300,7 +1378,7 @@ const MachinesPage: React.FC = () => {
         part_number: product.part_number || product.model || `${productType.toUpperCase()}-${product.id}`,
         name: productType === 'machine'
           ? getMachineName(product as MachinePart)
-          : (product as MachineAccessory).title_zh || (product as MachineAccessory).title,
+          : getAccessoryName(product as MachineAccessory),
         image_url: product.image_url || '',
         unit_price: productType === 'machine'
           ? (product as MachinePart).prices?.[0]?.tiers?.[0]?.base_price || 0
@@ -1328,12 +1406,18 @@ const MachinesPage: React.FC = () => {
       // 显示成功提示
       const productName = productType === 'machine' 
         ? getMachineName(product as MachinePart) 
-        : (product as MachineAccessory).title_zh || (product as MachineAccessory).title;
+        : getAccessoryName(product as MachineAccessory);
         
-      setNotificationProduct(productName);
-      setNotificationQuantity(quantity);
-      setShowNotification(true);
-      setTimeout(hideCartNotification, 3000);
+      // 2. 在handleAddToCart成功后触发动画
+      // 获取购物车icon元素
+      const cartIcon = document.querySelector('.anticon-shopping-cart') || document.querySelector('.shopping-cart-icon');
+      setCartAnimation({
+        isActive: true,
+        startElement: null, // 可根据实际传递按钮ref
+        targetElement: cartIcon,
+        productImage: product.image_url || '',
+        productName: productType === 'machine' ? getMachineName(product as MachinePart) : getAccessoryName(product as MachineAccessory)
+      });
       success(t('messages.addedToCart'));
 
     } catch (err: any) {
@@ -1383,6 +1467,16 @@ const MachinesPage: React.FC = () => {
     setAutoLoadedAccessories(false); // Reset auto-load flag
     previousMachineRef.current = ''; // Reset previous machine reference
     
+    // ✅ 新增：显示主机选择成功提示
+    const selectedMachineData = machines.find(m => m.id.toString() === currentMachineIdStr);
+    if (selectedMachineData) {
+      const machineName = getMachineName(selectedMachineData);
+      success(
+        t('messages.machineSelected') || '已选择主机',
+        t('messages.machineSelectedDesc', { name: machineName }) || `已选择主机: ${machineName}，正在加载配件选项...`
+      );
+    }
+    
     // The rest of the accessory loading is now handled by the useEffect hook that watches selectedMachine
   };
 
@@ -1403,7 +1497,7 @@ const MachinesPage: React.FC = () => {
         selectedAccessory: selectedAccessory ? {
           id: selectedAccessory.id,
           part_number: selectedAccessory.part_number,
-          title: selectedAccessory.title,
+          title: getAccessoryName(selectedAccessory),
           level: selectedAccessory.level,
           hasChildren: selectedAccessory.children?.length > 0,
           childrenCount: selectedAccessory.children?.length || 0,
@@ -1463,36 +1557,103 @@ const MachinesPage: React.FC = () => {
         return newState;
       });
 
-      // Update context message
+      // Clear higher level accessory states
       const nextLevel = level + 1;
+      if (nextLevel === 2) setLevel2Accessories([]);
+      if (nextLevel === 3) setLevel3Accessories([]);
+      if (nextLevel === 4) setLevel4Accessories([]);
+      if (nextLevel === 5) setLevel5Accessories([]);
+      
+      // Also clear any subsequent levels
+      for (let i = nextLevel + 1; i <= 5; i++) {
+        if (i === 2) setLevel2Accessories([]);
+        if (i === 3) setLevel3Accessories([]);
+        if (i === 4) setLevel4Accessories([]);
+        if (i === 5) setLevel5Accessories([]);
+      }
+
+      // Update context message
       if (nextLevel <= 5) {
         const contextMessage = document.getElementById(`level${nextLevel}-context-message`);
         if (contextMessage) {
-          let contextText = `${accessoryName} ${t('accessories.compatible')}`;
+          let contextText = `${accessoryName} ${t('accessories.compatible') || '兼容配件'}`;
           if (level > 1) {
-            contextText = `${t('accessories.level')} ${level} ${accessoryName} ${t('accessories.subCompatible')}`;
+            contextText = `${t('accessories.level') || '第'} ${level} ${t('accessories.levelUnit') || '级'} ${accessoryName} ${t('accessories.subCompatible') || '的子配件'}`;
           }
           contextMessage.textContent = contextText;
         }
       }
 
-      // ✅ 增强子配件数据处理逻辑
-      if (selectedAccessory?.children?.length > 0) {
+      // ✅ 修复：增强子配件数据处理逻辑
+      console.log(`🔍 [handleAccessorySelection] Checking children for accessory ${accessoryId}:`, {
+        hasChildren: selectedAccessory?.children?.length > 0,
+        childrenCount: selectedAccessory?.children?.length || 0,
+        childrenType: typeof selectedAccessory?.children,
+        childrenIsArray: Array.isArray(selectedAccessory?.children),
+        actualChildren: selectedAccessory?.children
+      });
+
+      if (selectedAccessory?.children && Array.isArray(selectedAccessory.children) && selectedAccessory.children.length > 0) {
         console.log(`🔍 [handleAccessorySelection] Processing ${selectedAccessory.children.length} children for next level ${nextLevel}:`, selectedAccessory.children);
         
+        // ✅ 修复：确保子配件数据完整性
         const nextLevelAccessories = selectedAccessory.children.map((child, index) => {
           console.log(`🔍 [handleAccessorySelection] Mapping child ${index}:`, {
             id: child.id,
             part_number: child.part_number,
-            title: child.title,
+            title: child.title || child.name_zh || child.name_en,
             originalLevel: child.level,
-            newLevel: nextLevel
+            newLevel: nextLevel,
+            hasChildren: child.children?.length > 0,
+            childrenCount: child.children?.length || 0
           });
           
-          return {
+          // ✅ 修复：确保子配件具有完整的MachineAccessory接口
+          const processedChild: MachineAccessory = {
             ...child,
-            level: nextLevel // ✅ 确保子配件有正确的层级
+            id: String(child.id || child.part_number || `child-${index}`),
+            title: child.title || child.name_zh || child.name_en || '',
+            title_zh: child.title_zh || child.name_zh || '',
+            title_en: child.title_en || child.name_en || '',
+            name_zh: child.name_zh || child.title || '',
+            name_en: child.name_en || child.title || '',
+            part_number: child.part_number || '',
+            model: child.model || '',
+            brand: child.brand || '',
+            level: nextLevel, // ✅ 确保子配件有正确的层级
+            children: child.children || [], // ✅ 保持子配件的children数据
+            parts: child.parts || [],
+            parent_id: selectedAccessory.id,
+            compatible_machines: child.compatible_machines || [],
+            child_accessories: child.child_accessories || [],
+            image_url: child.image_url || '/images/placeholder.jpg',
+            status: child.status || 'publish',
+            unit: child.unit || 'pcs',
+            is_required: child.is_required || false,
+            product_line_id: child.product_line_id || selectedAccessory.product_line_id,
+            spec: child.spec || '',
+            spec_imperial: child.spec_imperial || '',
+            voltage: child.voltage || '',
+            frequency: child.frequency || '',
+            package_size_cm: child.package_size_cm || '',
+            package_size_inch: child.package_size_inch || '',
+            net_weight_kg: child.net_weight_kg,
+            net_weight_lbs: child.net_weight_lbs,
+            gross_weight_kg: child.gross_weight_kg,
+            gross_weight_lbs: child.gross_weight_lbs,
+            pcs_per_box: child.pcs_per_box,
+            pallet_size_cm: child.pallet_size_cm || '',
+            pallet_size_inch: child.pallet_size_inch || '',
+            pcs_per_pallet: child.pcs_per_pallet,
+            pallet_height_cm: child.pallet_height_cm,
+            pallet_height_inch: child.pallet_height_inch,
+            pallet_gross_weight_kg: child.pallet_gross_weight_kg,
+            pallet_gross_weight_lbs: child.pallet_gross_weight_lbs,
+            created_at: child.created_at,
+            updated_at: child.updated_at
           };
+          
+          return processedChild;
         });
         
         console.log(`✅ [handleAccessorySelection] Processed next level accessories:`, nextLevelAccessories.map(a => ({
@@ -1500,34 +1661,46 @@ const MachinesPage: React.FC = () => {
           part_number: a.part_number,
           title: a.title,
           level: a.level,
-          hasChildren: a.children?.length > 0
+          hasChildren: a.children?.length > 0,
+          childrenCount: a.children?.length || 0
         })));
         
+        // ✅ 修复：确保状态正确更新
         switch (nextLevel) {
           case 2:
+            console.log(`🔄 [handleAccessorySelection] Setting ${nextLevelAccessories.length} level 2 accessories`);
             setLevel2Accessories(nextLevelAccessories);
-            console.log(`✅ [handleAccessorySelection] Set ${nextLevelAccessories.length} level 2 accessories`);
             break;
           case 3:
+            console.log(`🔄 [handleAccessorySelection] Setting ${nextLevelAccessories.length} level 3 accessories`);
             setLevel3Accessories(nextLevelAccessories);
-            console.log(`✅ [handleAccessorySelection] Set ${nextLevelAccessories.length} level 3 accessories`);
             break;
           case 4:
+            console.log(`🔄 [handleAccessorySelection] Setting ${nextLevelAccessories.length} level 4 accessories`);
             setLevel4Accessories(nextLevelAccessories);
-            console.log(`✅ [handleAccessorySelection] Set ${nextLevelAccessories.length} level 4 accessories`);
             break;
           case 5:
+            console.log(`🔄 [handleAccessorySelection] Setting ${nextLevelAccessories.length} level 5 accessories`);
             setLevel5Accessories(nextLevelAccessories);
-            console.log(`✅ [handleAccessorySelection] Set ${nextLevelAccessories.length} level 5 accessories`);
             break;
         }
         
-        // Show next level accessory area
-        const nextLevelDiv = document.getElementById(`accessory-level-${nextLevel}`);
-        if (nextLevelDiv) {
-          nextLevelDiv.style.display = 'block';
-          console.log(`✅ [handleAccessorySelection] Showed level ${nextLevel} accessory area`);
-        }
+        // ✅ 修复：确保下一级区域显示
+        setTimeout(() => {
+          const nextLevelDiv = document.getElementById(`accessory-level-${nextLevel}`);
+          if (nextLevelDiv) {
+            nextLevelDiv.style.display = 'block';
+            console.log(`✅ [handleAccessorySelection] Showed level ${nextLevel} accessory area`);
+            
+            // 滚动到新显示的区域
+            nextLevelDiv.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'start' 
+            });
+          } else {
+            console.error(`❌ [handleAccessorySelection] Could not find accessory-level-${nextLevel} div`);
+          }
+        }, 100); // 小延迟确保状态更新完成
         
         // 显示成功加载下一级配件的提示
         success(
@@ -1535,10 +1708,17 @@ const MachinesPage: React.FC = () => {
           t('accessories.nextLevelLoadedDesc', { 
             level: nextLevel, 
             count: nextLevelAccessories.length 
-          }) || `已为您加载了 ${nextLevelAccessories.length} 个${nextLevel}级配件选项`
+          }) || `已为您加载了 ${nextLevelAccessories.length} 个第${nextLevel}级配件选项`
         );
+        
+        console.log(`✅ [handleAccessorySelection] Successfully processed level ${nextLevel} with ${nextLevelAccessories.length} accessories`);
       } else {
-        console.log(`⚠️ [handleAccessorySelection] No children found for accessory ${accessoryId} (${accessoryName})`);
+        console.log(`⚠️ [handleAccessorySelection] No children found for accessory ${accessoryId} (${accessoryName}):`, {
+          hasSelectedAccessory: !!selectedAccessory,
+          childrenProperty: selectedAccessory?.children,
+          isArray: Array.isArray(selectedAccessory?.children),
+          length: selectedAccessory?.children?.length
+        });
         
         // 当没有下一级配件时的提醒消息
         if (nextLevel <= 5) {
@@ -1547,7 +1727,7 @@ const MachinesPage: React.FC = () => {
             t('accessories.noNextLevelDesc', { 
               name: accessoryName,
               level: level 
-            }) || `${accessoryName} 没有更多子级配件，您已完成所有必要的配件选择。`
+            }) || `${accessoryName} 没有更多子级配件，您已完成第${level}级的配件选择。`
           );
         } else {
           success(
@@ -1559,8 +1739,8 @@ const MachinesPage: React.FC = () => {
     } catch (err: any) {
       console.error(`❌ [handleAccessorySelection] Failed to process level ${level} accessories:`, err);
       showErrorToast(
-        t('errors.processingFailed'),
-        err.message || t('errors.unknownError')
+        t('errors.processingFailed') || '处理失败',
+        err.message || t('errors.unknownError') || '未知错误'
       );
     }
   };
@@ -1638,8 +1818,8 @@ const MachinesPage: React.FC = () => {
                       <span className="text-gray-800 font-medium">{machine.model}</span>
                     </div>
                     <div className="flex items-center">
-                      <strong className="w-24 text-gray-600 font-medium">{t('tableHeaders.voltage')}:</strong>
-                      <span className="text-gray-800 font-medium">{machine.voltage ? t('voltages.' + machine.voltage) : 'N/A'}</span>
+                      <strong className="w-24 text-gray-600 font-medium">{getFieldWithUnit('voltage', 'voltage')}:</strong>
+                      <span className="text-gray-800 font-medium">{machine.voltage ? removeUnitFromValue(machine.voltage) : 'N/A'}</span>
                     </div>
                     <div className="flex items-center">
                       <strong className="w-24 text-gray-600 font-medium">{t('tableHeaders.pcsPerBox')}:</strong>
@@ -1650,20 +1830,20 @@ const MachinesPage: React.FC = () => {
                       <span className="text-gray-800 font-medium">{machine.pcs_per_pallet !== null && machine.pcs_per_pallet !== undefined ? machine.pcs_per_pallet : 'N/A'}</span>
                     </div>
                     <div className="flex items-center">
-                      <strong className="w-24 text-gray-600 font-medium">{t('tableHeaders.palletSize')}:</strong>
+                      <strong className="w-24 text-gray-600 font-medium">{getFieldWithUnit('palletSize', 'size')}:</strong>
                       <span className="text-gray-800 font-medium">
                         {unitSystem === 'metric' 
-                          ? (machine.pallet_size_cm || 'N/A')
-                          : (machine.pallet_size_inch || 'N/A')
+                          ? removeUnitFromValue(machine.pallet_size_cm)
+                          : removeUnitFromValue(machine.pallet_size_inch)
                         }
                       </span>
                     </div>
                     <div className="flex items-center">
-                      <strong className="w-24 text-gray-600 font-medium">{t('tableHeaders.packSize')}:</strong>
+                      <strong className="w-24 text-gray-600 font-medium">{getFieldWithUnit('packageSize', 'size')}:</strong>
                       <span className="text-gray-800 font-medium">
                         {unitSystem === 'metric' 
-                          ? (machine.package_size_cm || 'N/A')
-                          : (machine.package_size_inch || 'N/A')
+                          ? removeUnitFromValue(machine.package_size_cm)
+                          : removeUnitFromValue(machine.package_size_inch)
                         }
                       </span>
                     </div>
@@ -1955,48 +2135,48 @@ const MachinesPage: React.FC = () => {
                         <div className="space-y-2">
                           <div className="flex justify-between items-center py-1">
                             <span className="text-gray-600 font-medium text-xs">
-                              包装尺寸 {unitSystem === 'metric' ? 'cm' : 'inch'}:
+                              {getFieldWithUnit('packageSize', 'size')}:
                             </span>
                             <span className="text-gray-800 font-semibold text-xs bg-blue-50 px-2 py-1 rounded">
-                              {unitSystem === 'metric' ? (machine.package_size_cm || t('pending')) : (machine.package_size_inch || t('pending'))}
+                              {unitSystem === 'metric' ? removeUnitFromValue(machine.package_size_cm) : removeUnitFromValue(machine.package_size_inch)}
                             </span>
                           </div>
                           <div className="flex justify-between items-center py-1">
                             <span className="text-gray-600 font-medium text-xs">
-                              单件净重 {unitSystem === 'metric' ? 'kg' : 'lbs'}:
+                              {getFieldWithUnit('netWeight', 'weight')}:
                             </span>
                             <span className="text-gray-800 font-semibold text-xs bg-green-50 px-2 py-1 rounded">
                               {unitSystem === 'metric' 
-                                ? (machine.net_weight_kg !== null && machine.net_weight_kg !== undefined ? `${machine.net_weight_kg} kg` : t('pending'))
-                                : (machine.net_weight_lbs !== null && machine.net_weight_lbs !== undefined ? `${machine.net_weight_lbs} lbs` : t('pending'))
+                                ? (machine.net_weight_kg !== null && machine.net_weight_kg !== undefined ? machine.net_weight_kg : t('pending'))
+                                : (machine.net_weight_lbs !== null && machine.net_weight_lbs !== undefined ? machine.net_weight_lbs : t('pending'))
                               }
                             </span>
                           </div>
                           <div className="flex justify-between items-center py-1">
                             <span className="text-gray-600 font-medium text-xs">
-                              打托高度 {unitSystem === 'metric' ? 'cm' : 'inch'}:
+                              {getFieldWithUnit('palletHeight', 'size')}:
                             </span>
                             <span className="text-gray-800 font-semibold text-xs bg-yellow-50 px-2 py-1 rounded">
                               {unitSystem === 'metric' 
-                                ? (machine.pallet_height_cm !== null && machine.pallet_height_cm !== undefined ? `${machine.pallet_height_cm} cm` : t('pending'))
-                                : (machine.pallet_height_inch !== null && machine.pallet_height_inch !== undefined ? `${machine.pallet_height_inch} inch` : t('pending'))
+                                ? (machine.pallet_height_cm !== null && machine.pallet_height_cm !== undefined ? machine.pallet_height_cm : t('pending'))
+                                : (machine.pallet_height_inch !== null && machine.pallet_height_inch !== undefined ? machine.pallet_height_inch : t('pending'))
                               }
                             </span>
                           </div>
                           <div className="flex justify-between items-center py-1">
                             <span className="text-gray-600 font-medium text-xs">
-                              整托毛重 {unitSystem === 'metric' ? 'kg' : 'lbs'}:
+                              {getFieldWithUnit('palletGrossWeight', 'weight')}:
                             </span>
                             <span className="text-gray-800 font-semibold text-xs bg-purple-50 px-2 py-1 rounded">
                               {unitSystem === 'metric' 
-                                ? (machine.pallet_gross_weight_kg !== null && machine.pallet_gross_weight_kg !== undefined ? `${machine.pallet_gross_weight_kg} kg` : t('pending'))
-                                : (machine.pallet_gross_weight_lbs !== null && machine.pallet_gross_weight_lbs !== undefined ? `${machine.pallet_gross_weight_lbs} lbs` : t('pending'))
+                                ? (machine.pallet_gross_weight_kg !== null && machine.pallet_gross_weight_kg !== undefined ? machine.pallet_gross_weight_kg : t('pending'))
+                                : (machine.pallet_gross_weight_lbs !== null && machine.pallet_gross_weight_lbs !== undefined ? machine.pallet_gross_weight_lbs : t('pending'))
                               }
                             </span>
                           </div>
                         </div>
                         <div className="mt-3 pt-2 border-t border-gray-100 text-center">
-                          <span className="text-xs text-gray-500">{t('hoverDetails')}</span>
+                          <span className="text-xs text-gray-500">{t('tooltip.hoverInfo') || '💡 悬停查看详细规格信息'}</span>
                         </div>
                       </div>
                     }
@@ -2023,32 +2203,12 @@ const MachinesPage: React.FC = () => {
               <div className="w-full md:w-1/5 md:pl-6 mt-6 md:mt-0 border-t md:border-t-0 md:border-l border-gray-200 pt-6 md:pt-0">
                 <div className="mb-4">
                   <div className="font-medium text-sm text-gray-600 mb-2">
-                    {t('tableHeaders.price')} ({getCurrencySymbol(userRegion)}):
+                    {t('fields.price') || '价格'}:
                   </div>
                   
-                  {/* 主显示最低价 */}
                   <div className="text-2xl font-bold text-blue-600 mb-2">
-                    {getCurrencySymbol(userRegion)}
-                    {machine.prices && machine.prices.length > 0 && machine.prices[0].tiers && machine.prices[0].tiers.length > 0
-                      ? formatPrice(
-                          Math.min(...machine.prices[0].tiers.map(tier => tier.base_price || 0))
-                        )
-                      : 0}
-                    <span className="text-base text-gray-500 font-normal ml-2">
-                      {t('pricing.from')}
-                    </span>
+                    {getCurrencySymbol(userRegion)}{formatPrice(machine.prices?.[0]?.tiers?.[0]?.base_price || 0)}
                   </div>
-                  
-                  {/* 梯度价格列表 */}
-                  {machine.prices && machine.prices.length > 0 && machine.prices[0].tiers && machine.prices[0].tiers.length > 0 && (
-                    <div className="text-xs text-gray-500">
-                      {machine.prices[0].tiers.map((tier, index) => (
-                        <div key={`machine-${machine.id}-price-tier-${index}-${tier.min_quantity}-${tier.max_quantity}`} className="mb-1">
-                          {getCurrencySymbol(userRegion)}{formatPrice(tier.base_price)}（{tier.min_quantity}-{tier.max_quantity || '+'}{t('pricing.pieces')}）
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
                 
                 {isSales && (
@@ -2227,7 +2387,7 @@ const MachinesPage: React.FC = () => {
     level: number
   ) => {
     console.log('📋 [addRequiredPartsToCartForAccessory] Starting for:', {
-      accessory: mainAccessory.title,
+      accessory: getAccessoryName(mainAccessory),
       accessoryId: mainAccessory.id,
       level,
       mainQuantity
@@ -2250,6 +2410,7 @@ const MachinesPage: React.FC = () => {
       accessory,
       accessoryPart,
       partSpecs,
+      partInventory, // ✅ 新增：显示库存数据
       level,
       index
     });
@@ -2313,7 +2474,7 @@ const MachinesPage: React.FC = () => {
             <div className="relative mb-4">
               <img 
                 src={accessory.image_url || '/images/placeholder.jpg'} 
-                alt={accessory.title}
+                alt={getAccessoryName(accessory)}
                 className="w-32 h-32 object-contain border-2 border-gray-200 rounded-lg bg-gray-50 p-2 shadow-sm hover:shadow-md transition-shadow duration-200"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = '/images/placeholder.jpg';
@@ -2326,7 +2487,7 @@ const MachinesPage: React.FC = () => {
                 name={`accessory-level-${level}`}
                 className="form-radio text-blue-500 mr-2"
                 checked={selectedAccessories[`level${level}`] === accessory.id.toString()}
-                onChange={() => handleAccessorySelection(level, accessory.id.toString(), accessory.title)}
+                onChange={() => handleAccessorySelection(level, accessory.id.toString(), getAccessoryName(accessory))}
               />
               <span className="text-sm font-medium">{t('actions.selectAccessory') || '选择配件'}</span>
             </label>
@@ -2336,53 +2497,53 @@ const MachinesPage: React.FC = () => {
           <div className="w-full md:w-3/5 md:px-6">
             <div className="mb-4">
               <span className="inline-block bg-blue-500 text-white px-3 py-1 text-sm font-bold rounded-lg shadow-sm">{getPartNumber()}</span>
-              <h3 className="text-xl font-bold text-gray-800 mt-2 leading-tight">{accessory.title}</h3>
+              <h3 className="text-xl font-bold text-gray-800 mt-2 leading-tight">{getAccessoryName(accessory)}</h3>
             </div>
 
             <div className="bg-gray-50 rounded-lg p-4 mt-3 shadow-sm">
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="flex items-center">
-                  <strong className="w-24 text-gray-600 font-medium">型号:</strong>
+                  <strong className="w-24 text-gray-600 font-medium">{t('fields.model') || '型号'}:</strong>
                   <span className="text-gray-800 font-medium">{accessory.model || getFieldValue('model')}</span>
                 </div>
                 {/* 只有当电气配件时才显示电压 */}
                 {isElectricalAccessory() && getFieldValue('voltage') !== 'N/A' && (
                   <div className="flex items-center">
-                    <strong className="w-24 text-gray-600 font-medium">电压(V):</strong>
-                    <span className="text-gray-800 font-medium">{getFieldValue('voltage')}</span>
+                    <strong className="w-24 text-gray-600 font-medium">{getFieldWithUnit('voltage', 'voltage')}:</strong>
+                    <span className="text-gray-800 font-medium">{removeUnitFromValue(getFieldValue('voltage'))}</span>
                   </div>
                 )}
                 {/* 频率字段强调显示，只有当电气配件时才显示 */}
                 {isElectricalAccessory() && getFieldValue('frequency') !== 'N/A' && (
                   <div className="flex items-center frequency-highlight px-3 py-2 rounded-lg border-l-4 border-yellow-400 col-span-2">
-                    <strong className="w-24 text-gray-600 font-bold text-yellow-800">⚡ 频率(Hz):</strong>
-                    <span className="text-yellow-900 font-bold text-lg ml-2">{getFieldValue('frequency')}</span>
+                    <strong className="w-24 text-gray-600 font-bold text-yellow-800">⚡ {getFieldWithUnit('frequency', 'frequency')}:</strong>
+                    <span className="text-yellow-900 font-bold text-lg ml-2">{removeUnitFromValue(getFieldValue('frequency'))}</span>
                   </div>
                 )}
                 <div className="flex items-center">
-                  <strong className="w-24 text-gray-600 font-medium">包装尺寸:</strong>
+                  <strong className="w-24 text-gray-600 font-medium">{getFieldWithUnit('packageSize', 'size')}:</strong>
                   <span className="text-gray-800 font-medium">
                     {unitSystem === 'metric' 
-                      ? getFieldValue('package_size_cm')
-                      : getFieldValue('package_size_inch')
+                      ? removeUnitFromValue(getFieldValue('package_size_cm'))
+                      : removeUnitFromValue(getFieldValue('package_size_inch'))
                     }
                   </span>
                 </div>
                 <div className="flex items-center">
-                  <strong className="w-24 text-gray-600 font-medium">单箱数量:</strong>
+                  <strong className="w-24 text-gray-600 font-medium">{t('fields.pcsPerBox') || '单箱数量'}:</strong>
                   <span className="text-gray-800 font-medium">{getFieldValue('pcs_per_box')}</span>
                 </div>
                 <div className="flex items-center">
-                  <strong className="w-24 text-gray-600 font-medium">托盘尺寸:</strong>
+                  <strong className="w-24 text-gray-600 font-medium">{getFieldWithUnit('palletSize', 'size')}:</strong>
                   <span className="text-gray-800 font-medium">
                     {unitSystem === 'metric' 
-                      ? getFieldValue('pallet_size_cm')
-                      : getFieldValue('pallet_size_inch')
+                      ? removeUnitFromValue(getFieldValue('pallet_size_cm'))
+                      : removeUnitFromValue(getFieldValue('pallet_size_inch'))
                     }
                   </span>
                 </div>
                 <div className="flex items-center">
-                  <strong className="w-24 text-gray-600 font-medium">一托数量:</strong>
+                  <strong className="w-24 text-gray-600 font-medium">{t('fields.pcsPerPallet') || '一托数量'}:</strong>
                   <span className="text-gray-800 font-medium">{getFieldValue('pcs_per_pallet')}</span>
                 </div>
               </div>
@@ -2405,7 +2566,7 @@ const MachinesPage: React.FC = () => {
                   console.log('🔍 [Accessory PDF Debug] Looking for accessory PDF:', {
                     accessory_id: accessory.id,
                     accessory_part_number: getPartNumber(),
-                    accessory_title: accessory.title,
+                    accessory_title: getAccessoryName(accessory),
                     accessory_model: accessory.model,
                     pdf_sources: {
                       accessoryPart_spec_pdf: (accessoryPart as any)?.spec_pdf,
@@ -2462,7 +2623,7 @@ const MachinesPage: React.FC = () => {
                     showInfoToast('暂无该配件的规格说明文档');
                     console.warn('🔍 [Accessory PDF Debug] No valid PDF found for accessory:', {
                       accessory_part_number: getPartNumber(),
-                      accessory_title: accessory.title,
+                      accessory_title: getAccessoryName(accessory),
                       accessory_model: accessory.model,
                       pdf_url: accessoryPdfUrl
                     });
@@ -2482,50 +2643,50 @@ const MachinesPage: React.FC = () => {
                     </div>
                     <div className="space-y-2">
                       <div className="flex justify-between items-center py-1">
-                        <span className="text-gray-600 font-medium text-xs">📦 包装尺寸:</span>
+                        <span className="text-gray-600 font-medium text-xs">📦 {getFieldWithUnit('packageSize', 'size')}:</span>
                         <span className="text-gray-800 font-semibold text-xs bg-blue-50 px-2 py-1 rounded">
-                          {unitSystem === 'metric' ? getFieldValue('package_size_cm') : getFieldValue('package_size_inch')}
+                          {unitSystem === 'metric' ? removeUnitFromValue(getFieldValue('package_size_cm')) : removeUnitFromValue(getFieldValue('package_size_inch'))}
                         </span>
                       </div>
                       <div className="flex justify-between items-center py-1">
-                        <span className="text-gray-600 font-medium text-xs">⚖️ 单件净重:</span>
+                        <span className="text-gray-600 font-medium text-xs">⚖️ {getFieldWithUnit('netWeight', 'weight')}:</span>
                         <span className="text-gray-800 font-semibold text-xs bg-green-50 px-2 py-1 rounded">
                           {unitSystem === 'metric' 
-                            ? (getFieldValue('net_weight_kg') !== 'N/A' ? `${getFieldValue('net_weight_kg')} kg` : 'N/A')
-                            : (getFieldValue('net_weight_lbs') !== 'N/A' ? `${getFieldValue('net_weight_lbs')} lbs` : 'N/A')
+                            ? (getFieldValue('net_weight_kg') !== 'N/A' ? getFieldValue('net_weight_kg') : 'N/A')
+                            : (getFieldValue('net_weight_lbs') !== 'N/A' ? getFieldValue('net_weight_lbs') : 'N/A')
                           }
                         </span>
                       </div>
                       <div className="flex justify-between items-center py-1">
-                        <span className="text-gray-600 font-medium text-xs">📊 单件毛重:</span>
+                        <span className="text-gray-600 font-medium text-xs">📊 {getFieldWithUnit('grossWeight', 'weight')}:</span>
                         <span className="text-gray-800 font-semibold text-xs bg-orange-50 px-2 py-1 rounded">
                           {unitSystem === 'metric' 
-                            ? (getFieldValue('gross_weight_kg') !== 'N/A' ? `${getFieldValue('gross_weight_kg')} kg` : 'N/A')
-                            : (getFieldValue('gross_weight_lbs') !== 'N/A' ? `${getFieldValue('gross_weight_lbs')} lbs` : 'N/A')
+                            ? (getFieldValue('gross_weight_kg') !== 'N/A' ? getFieldValue('gross_weight_kg') : 'N/A')
+                            : (getFieldValue('gross_weight_lbs') !== 'N/A' ? getFieldValue('gross_weight_lbs') : 'N/A')
                           }
                         </span>
                       </div>
                       <div className="flex justify-between items-center py-1">
-                        <span className="text-gray-600 font-medium text-xs">📏 打托高度:</span>
+                        <span className="text-gray-600 font-medium text-xs">📏 {getFieldWithUnit('palletHeight', 'size')}:</span>
                         <span className="text-gray-800 font-semibold text-xs bg-yellow-50 px-2 py-1 rounded">
                           {unitSystem === 'metric' 
-                            ? (getFieldValue('pallet_height_cm') !== 'N/A' ? `${getFieldValue('pallet_height_cm')} cm` : 'N/A')
-                            : (getFieldValue('pallet_height_inch') !== 'N/A' ? `${getFieldValue('pallet_height_inch')} inch` : 'N/A')
+                            ? (getFieldValue('pallet_height_cm') !== 'N/A' ? getFieldValue('pallet_height_cm') : 'N/A')
+                            : (getFieldValue('pallet_height_inch') !== 'N/A' ? getFieldValue('pallet_height_inch') : 'N/A')
                           }
                         </span>
                       </div>
                       <div className="flex justify-between items-center py-1">
-                        <span className="text-gray-600 font-medium text-xs">🏗️ 整托毛重:</span>
+                        <span className="text-gray-600 font-medium text-xs">🏗️ {getFieldWithUnit('palletGrossWeight', 'weight')}:</span>
                         <span className="text-gray-800 font-semibold text-xs bg-purple-50 px-2 py-1 rounded">
                           {unitSystem === 'metric' 
-                            ? (getFieldValue('pallet_gross_weight_kg') !== 'N/A' ? `${getFieldValue('pallet_gross_weight_kg')} kg` : 'N/A')
-                            : (getFieldValue('pallet_gross_weight_lbs') !== 'N/A' ? `${getFieldValue('pallet_gross_weight_lbs')} lbs` : 'N/A')
+                            ? (getFieldValue('pallet_gross_weight_kg') !== 'N/A' ? getFieldValue('pallet_gross_weight_kg') : 'N/A')
+                            : (getFieldValue('pallet_gross_weight_lbs') !== 'N/A' ? getFieldValue('pallet_gross_weight_lbs') : 'N/A')
                           }
                         </span>
                       </div>
                     </div>
                     <div className="mt-3 pt-2 border-t border-gray-100 text-center">
-                      <span className="text-xs text-gray-500">💡 悬停查看详细规格信息</span>
+                      <span className="text-xs text-gray-500">{t('tooltip.hoverInfo') || '💡 悬停查看详细规格信息'}</span>
                     </div>
                   </div>
                 }
@@ -2553,7 +2714,7 @@ const MachinesPage: React.FC = () => {
             {/* Price */}
             <div className="mb-4">
               <div className="font-medium text-sm text-gray-600 mb-2">
-                价格:
+                {t('fields.price') || '价格'}:
               </div>
               
               <div className="text-2xl font-bold text-blue-600 mb-2">
@@ -2562,21 +2723,41 @@ const MachinesPage: React.FC = () => {
             </div>
             
             {/* Inventory (Sales View) */}
-            {isSales && partInventory && partInventory.length > 0 && (
+            {isSales && (
               <div className="mb-4">
                 <div className="font-medium text-sm text-gray-600 mb-2">
-                  库存:
+                  {t('tableHeaders.stock') || '库存'}:
                 </div>
                 <div className="flex flex-wrap gap-1">
-                  {partInventory.map((inv, invIndex) => (
-                    <Tag 
-                      key={`accessory-${accessory.id}-level-${level}-index-${index}-inventory-${inv.region}-${invIndex}`}
-                      color={getStockStatus(inv.amount).color}
-                      className="text-xs"
-                    >
-                      {inv.region}: {inv.amount}
-                    </Tag>
-                  ))}
+                  {/* 优先显示accessoryPart的inventory */}
+                  {partInventory && partInventory.length > 0 ? (
+                    partInventory.map((inv, invIndex) => {
+                      const stockStatus = getStockStatus(inv.amount || 0);
+                      return (
+                        <Tag 
+                          key={`accessory-${accessory.id}-level-${level}-index-${index}-part-inventory-${inv.region}-${invIndex}`}
+                          color={stockStatus.color}
+                          className="text-xs"
+                        >
+                          {inv.region}: {inv.amount || 0}
+                        </Tag>
+                      );
+                    })
+                  ) : (
+                    /* 如果没有库存数据，显示默认区域库存 */
+                    (Object.keys(REGIONS) as Array<keyof typeof REGIONS>).map((regionKey) => {
+                      const stockStatus = getStockStatus(0); // 默认为0库存
+                      return (
+                        <Tag 
+                          key={`accessory-${accessory.id}-level-${level}-index-${index}-default-inventory-${regionKey}`}
+                          color={stockStatus.color}
+                          className="text-xs"
+                        >
+                          {REGIONS[regionKey].nameCn}: 0
+                        </Tag>
+                      );
+                    })
+                  )}
                 </div>
               </div>
             )}
@@ -2741,6 +2922,47 @@ const MachinesPage: React.FC = () => {
               options={modelOptions}
             />
           </div>
+
+          {/* Debug Button - Development Only */}
+          {import.meta.env.DEV && (
+            <div className="flex flex-col">
+              <label className="mb-1 text-sm font-medium text-gray-600">调试工具</label>
+              <Button
+                onClick={() => {
+                  console.log('=== 配件状态调试信息 ===');
+                  console.log('Level 1 Accessories:', accessories.length, accessories.map(a => ({
+                    part_number: a.part_number,
+                    title: a.title,
+                    children_count: a.children?.length || 0
+                  })));
+                  console.log('Level 2 Accessories:', level2Accessories.length, level2Accessories.map(a => ({
+                    part_number: a.part_number,
+                    title: a.title,
+                    children_count: a.children?.length || 0
+                  })));
+                  console.log('Level 3 Accessories:', level3Accessories.length, level3Accessories.map(a => ({
+                    part_number: a.part_number,
+                    title: a.title,
+                    children_count: a.children?.length || 0
+                  })));
+                  console.log('Level 4 Accessories:', level4Accessories.length);
+                  console.log('Level 5 Accessories:', level5Accessories.length);
+                  console.log('Selected Accessories:', selectedAccessories);
+                  console.log('DOM Visibility:');
+                  for (let i = 1; i <= 5; i++) {
+                    const div = document.getElementById(`accessory-level-${i}`);
+                    console.log(`  Level ${i}: ${div ? div.style.display : 'not found'}`);
+                  }
+                  alert('调试信息已输出到控制台，请查看Console面板');
+                }}
+                type="dashed"
+                size="small"
+                className="bg-yellow-50 border-yellow-200 text-yellow-600 hover:bg-yellow-100"
+              >
+                调试配件状态
+              </Button>
+            </div>
+          )}
         </div>
       </div>
       
@@ -2808,7 +3030,7 @@ const MachinesPage: React.FC = () => {
                     accessoryVoltage: accVoltage,
                     selectedVoltage: selectedVoltage,
                     shouldShow: shouldShow,
-                    title: accessory.title
+                    title: getAccessoryName(accessory)
                   });
                   
                   return shouldShow;
@@ -3034,50 +3256,17 @@ const MachinesPage: React.FC = () => {
       </div>
 
       {/* 购物车通知浮层 */}
-      {showNotification && (
-        <div className="fixed top-4 right-4 z-[9999] transform transition-all duration-300 ease-out">
-          <div className="bg-white rounded-xl shadow-2xl border border-gray-200 p-6 max-w-sm">
-            <div className="flex items-start space-x-3">
-              <div className="flex-shrink-0">
-                <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-                  <ShoppingCartOutlined className="text-white text-lg" />
-                </div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 mb-1">
-                  添加成功！
-                </p>
-                <p className="text-sm text-gray-600 leading-5">
-                  {notificationProduct} × {notificationQuantity} 已添加到购物车
-                </p>
-              </div>
-              <button
-                onClick={hideCartNotification}
-                className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors duration-200"
-              >
-                <DeleteOutlined className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="mt-4 flex space-x-3">
-              <button
-                onClick={() => {
-                  hideCartNotification();
-                  // 可以添加跳转到购物车的逻辑
-                }}
-                className="flex-1 bg-blue-500 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors duration-200"
-              >
-                查看购物车
-              </button>
-              <button
-                onClick={hideCartNotification}
-                className="flex-1 bg-gray-100 text-gray-700 text-sm font-medium py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors duration-200"
-              >
-                继续购物
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* {showNotification && ( ... )} */}
+
+      {/* 3. 页面底部渲染<CartAnimation /> */}
+      <CartAnimation
+        isActive={cartAnimation.isActive}
+        startElement={cartAnimation.startElement}
+        targetElement={cartAnimation.targetElement}
+        productImage={cartAnimation.productImage}
+        productName={cartAnimation.productName}
+        onComplete={() => setCartAnimation({ ...cartAnimation, isActive: false })}
+      />
     </div>
   );
 };

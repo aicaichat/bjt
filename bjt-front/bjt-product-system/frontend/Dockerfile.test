@@ -1,0 +1,30 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# 安装测试所需的工具
+RUN apk add --no-cache python3 make g++ curl jq
+
+COPY package*.json ./
+
+# 安装依赖，包括测试依赖
+RUN npm cache clean --force && \
+    rm -rf node_modules && \
+    npm install
+
+COPY . .
+
+# 创建测试结果目录
+RUN mkdir -p /app/test-results
+
+EXPOSE 5173
+
+ENV VITE_HOST=0.0.0.0
+ENV NODE_ENV=test
+
+# 添加测试脚本
+COPY docker/test/test-scripts /app/test-scripts
+RUN chmod +x /app/test-scripts/*.sh
+
+# 默认启动测试模式
+CMD ["sh", "-c", "npm run dev -- --host ${VITE_HOST} --port 5173"] 

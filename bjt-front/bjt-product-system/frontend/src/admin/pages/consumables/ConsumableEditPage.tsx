@@ -49,6 +49,10 @@ const ConsumableEditPage: React.FC = () => {
   const [bagTypeOptions, setBagTypeOptions] = useState<Array<{code: string, name: string}>>([]);
   const [bagTypeLoading, setBagTypeLoading] = useState(false);
 
+  // 适配机型选项状态
+  const [compatibleModelOptions, setCompatibleModelOptions] = useState<Array<{value: string, label: string}>>([]);
+  const [compatibleModelLoading, setCompatibleModelLoading] = useState(false);
+
   const isEdit = !!id;
   const productLineFromUrl = searchParams.get('product_line_id');
 
@@ -158,6 +162,91 @@ const ConsumableEditPage: React.FC = () => {
     }
   }, []);
 
+  // 获取适配机型数据 - 参考备件的实现方式
+  const fetchCompatibleModels = useCallback(async (productLineId: number) => {
+    try {
+      setCompatibleModelLoading(true);
+      console.log('[ConsumableEditPage] 获取适配机型选项, 产品线ID:', productLineId);
+      
+      // 直接调用筛选选项API端点
+      const token = localStorage.getItem('admin_token');
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/wp-json/bjt/v1';
+      
+      const response = await fetch(`${baseUrl}/consumables/filter-options?lang=zh&product_line_id=${productLineId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        }
+      });
+      
+      console.log('[ConsumableEditPage] 筛选选项API响应状态', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`API请求失败: ${response.status}`);
+      }
+      
+      const jsonData = await response.json();
+      console.log('[ConsumableEditPage] 筛选选项API响应数据', jsonData);
+      
+      if (jsonData.success && jsonData.data) {
+        const { hostModels = [], accessoryModels = [] } = jsonData.data;
+        
+        // 合并主机型号和配件型号，并添加标识前缀
+        const modelOptions = [
+          // 主机型号
+          ...hostModels.map((model: string) => ({
+            value: model,
+            label: `${model} (主机)`
+          })),
+          // 配件型号
+          ...accessoryModels.map((model: string) => ({
+            value: model,
+            label: `${model} (配件)`
+          }))
+        ].sort((a, b) => a.label.localeCompare(b.label));
+        
+        console.log('[ConsumableEditPage] 处理后的适配机型选项', {
+          总数: modelOptions.length,
+          主机型号数: hostModels.length,
+          配件型号数: accessoryModels.length
+        });
+        
+        setCompatibleModelOptions(modelOptions);
+      } else {
+        console.warn('[ConsumableEditPage] 筛选选项API返回空数据，使用备用选项');
+        // 使用备用的适配机型选项 - 基于产品线提供不同的选项
+        const fallbackOptions = productLineId === 1 ? [
+          { value: 'LA-E4C', label: 'LA-E4C (主机)' },
+          { value: 'LA-E4S V2.0', label: 'LA-E4S V2.0 (主机)' },
+          { value: 'LA-E5P', label: 'LA-E5P (主机)' },
+          { value: 'LA-F2', label: 'LA-F2 (主机)' },
+          { value: 'LA-E4S(paper)', label: 'LA-E4S(paper) (配件)' },
+        ] : [
+          { value: 'HOST-001', label: 'HOST-001 (主机)' },
+          { value: 'HOST-002', label: 'HOST-002 (主机)' },
+          { value: 'ACC-001', label: 'ACC-001 (配件)' },
+        ];
+        
+        setCompatibleModelOptions(fallbackOptions);
+      }
+    } catch (error) {
+      console.error('[ConsumableEditPage] 获取适配机型选项失败:', error);
+      // 失败时使用备用选项
+      const fallbackOptions = [
+        { value: 'LA-E4C', label: 'LA-E4C (主机)' },
+        { value: 'LA-E4S V2.0', label: 'LA-E4S V2.0 (主机)' },
+        { value: 'LA-E5P', label: 'LA-E5P (主机)' },
+        { value: 'LA-F2', label: 'LA-F2 (主机)' },
+        { value: 'LA-E4S(paper)', label: 'LA-E4S(paper) (配件)' },
+      ];
+      setCompatibleModelOptions(fallbackOptions);
+    } finally {
+      setCompatibleModelLoading(false);
+    }
+  }, []);
+
   // 使用useCallback定义handleProductLineChange函数
   const handleProductLineChange = useCallback((productLineId: number) => {
     console.log('[ConsumableEditPage] 产品线变化', { productLineId });
@@ -166,6 +255,7 @@ const ConsumableEditPage: React.FC = () => {
     // 清空相关字段
     form.setFieldValue('model', '');
     form.setFieldValue('part_number', '');
+    form.setFieldValue('app_model', []);  // 清空适配机型为空数组
     
     // 清空所有智能提示选项
     setConsumablePartOptions([]);
@@ -173,10 +263,13 @@ const ConsumableEditPage: React.FC = () => {
     setConsumableSpecImperialOptions([]);
     setConsumableBrandOptions([]);
     setConsumableMaterialOptions([]);
+    setCompatibleModelOptions([]);  // 清空适配机型选项
     
     // 加载产品线级别的数据
     fetchConsumableContextData(productLineId);
-  }, [fetchConsumableContextData, form]);
+    // 加载适配机型数据
+    fetchCompatibleModels(productLineId);
+  }, [fetchConsumableContextData, fetchCompatibleModels, form]);
 
   // 使用useCallback定义handleSpecChange函数
   const handleSpecChange = useCallback((spec: string) => {
@@ -203,16 +296,23 @@ const ConsumableEditPage: React.FC = () => {
       const response = await adminDictionaryService.general.getBagTypes('zh');
       console.log('[ConsumableEditPage] 袋型数据响应:', response);
       
-      setBagTypeOptions(response);
+      // 转换数据格式，根据语言显示适当的名称
+      const bagTypeOptions = response.map(item => ({
+        code: item.code,
+        name: `${item.name_zh || item.name_en || item.name || item.code} (${item.code})`
+      }));
+      
+      setBagTypeOptions(bagTypeOptions);
     } catch (error) {
       console.error('[ConsumableEditPage] 获取袋型数据失败:', error);
-      // 降级到硬编码选项
+      // 降级到硬编码选项 - 使用真实的袋型值
       setBagTypeOptions([
-        { code: 'FB', name: '平口袋 (Flat Bag)' },
-        { code: 'GB', name: '风琴袋 (Gusseted Bag)' },
-        { code: 'SB', name: '自立袋 (Stand-up Bag)' },
-        { code: 'BB', name: '气泡袋 (Bubble Bag)' },
-        { code: 'VB', name: '真空袋 (Vacuum Bag)' }
+        { code: 'Pillow', name: '气泡枕 (Pillow)' },
+        { code: 'Bubble', name: '葫芦膜 (Bubble)' },
+        { code: 'Tube', name: '气枕膜 (Tube)' },
+        { code: 'Precut Air Pillow', name: '开口气泡枕 (Precut Air Pillow)' },
+        { code: 'paper air Pillow', name: '纸塑气泡枕 (Paper Air Pillow)' },
+        { code: 'paper Bubble', name: '纸塑葫芦膜 (Paper Bubble)' }
       ]);
     } finally {
       setBagTypeLoading(false);
@@ -230,7 +330,11 @@ const ConsumableEditPage: React.FC = () => {
         spec: consumableData.spec || '',
         spec_imperial: consumableData.spec_imperial || '',
         brand: consumableData.brand || '',
-        app_model: consumableData.app_model || '',
+        app_model: consumableData.app_model ? 
+          (typeof consumableData.app_model === 'string' ? 
+            consumableData.app_model.split(',').map(model => model.trim()).filter(model => model) : 
+            (Array.isArray(consumableData.app_model) ? consumableData.app_model : [])
+          ) : [],
         bag_type: consumableData.bag_type || '',
         material: consumableData.material || '',
         thickness_met: consumableData.thickness_met || 0,
@@ -296,8 +400,9 @@ const ConsumableEditPage: React.FC = () => {
   useEffect(() => {
     if (selectedProductLineId) {
       fetchConsumableContextData(selectedProductLineId);
+      fetchCompatibleModels(selectedProductLineId);
     }
-  }, [selectedProductLineId, fetchConsumableContextData]);
+  }, [selectedProductLineId, fetchConsumableContextData, fetchCompatibleModels]);
 
   // 初始化时获取袋型数据
   useEffect(() => {
@@ -360,7 +465,7 @@ const ConsumableEditPage: React.FC = () => {
         spec: values.spec || '',
         spec_imperial: values.spec_imperial || '',
         brand: values.brand || '',
-        app_model: values.app_model || '',
+        app_model: Array.isArray(values.app_model) ? values.app_model.join(', ') : (values.app_model || ''),
         bag_type: values.bag_type || '',
         material: values.material || '',
         thickness_met: Number(values.thickness_met) || 0,
@@ -713,7 +818,23 @@ const ConsumableEditPage: React.FC = () => {
                           name="app_model"
                           label="适配机型 (Compatible Models)"
                         >
-                          <Input placeholder="请输入适配机型" />
+                          <Select
+                            mode="multiple"
+                            placeholder="请选择适配机型"
+                            allowClear
+                            loading={compatibleModelLoading}
+                            showSearch
+                            filterOption={(input, option) =>
+                              (option?.children as string)?.toLowerCase().includes(input.toLowerCase())
+                            }
+                            optionLabelProp="children"
+                          >
+                            {compatibleModelOptions.map((option) => (
+                              <Option key={option.value} value={option.value}>
+                                {option.label}
+                              </Option>
+                            ))}
+                          </Select>
                         </Form.Item>
                       </Col>
                       <Col span={6}>

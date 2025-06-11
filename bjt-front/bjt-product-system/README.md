@@ -565,6 +565,7 @@ docker-compose -f docker/prod/docker-compose.prod.yml up -d
 - [📁 文件上传系统](docs/FILE_UPLOAD_SYSTEM.md)
 - [📄 PDF上传功能](PDF_UPLOAD_IMPLEMENTATION.md) - 152行功能实现文档
 - [📝 **数据输入规范指南**](DATA_INPUT_GUIDELINES.md) - **完整的数据质量规范**
+- [🔗 **关联关系系统设计**](#-关联关系系统设计文档) - **核心业务逻辑设计与注意事项**
 
 ### 📋 操作人员文档
 - [👥 **数据录入操作手册**](数据录入操作手册.md) - **给非技术人员的简明操作指南**
@@ -734,6 +735,312 @@ docker-compose -f docker/prod/docker-compose.prod.yml exec mysql mysql -u root -
 - **资源使用** - CPU、内存、磁盘使用率
 - **数据库性能** - 查询时间和连接数
 - **错误率** - 应用错误和HTTP错误
+
+## 🔗 关联关系系统设计文档
+
+### 📋 系统概述
+
+关联关系系统是BJT产品管理系统的核心业务模块，用于管理主机设备与配件、备件之间的层级关系。系统支持最多6层的树形结构（Level 0-5），能够准确表达复杂的产品组装关系。
+
+### 🏗️ 数据结构设计
+
+#### 核心字段说明
+```sql
+wp_bjt_relations 表结构：
+├── host_part_number     # 根节点主机料号 (必填)
+├── parent_part_number   # 当前节点的父级料号 (NULL表示直接连接主机)
+├── part_number         # 当前节点的料号 (必填)
+├── child_part_number   # 当前节点的子级料号 (必填)
+├── child_type          # 子级类型：accessory(配件) | spare_part(必选备件)
+├── level              # 层级：0(主机) 1-5(子级)
+├── quantity           # 数量
+└── required_parts     # 必选备件依赖 (逗号分隔)
+```
+
+#### 关系表达逻辑
+每条记录表达：**当前节点(part_number) → 子级节点(child_part_number)**
+
+```
+记录示例：
+host_part_number: "60A01149"    # 整棵树的根节点
+parent_part_number: "60A04039"   # 60A04024的父级
+part_number: "60A04024"         # 当前节点
+child_part_number: "60A10001"   # 60A04024的子级
+level: 4                        # 60A10001在Level 4
+
+路径表达：60A01149 → ... → 60A04039 → 60A04024 → 60A10001
+```
+
+### 📊 层级架构设计
+
+#### 标准层级结构
+```
+Level 0: 主机设备 (60A01149)
+├── Level 1: 直接配件/备件
+    ├── Level 2: 二级配件
+        ├── Level 3: 三级配件
+            ├── Level 4: 四级配件
+                └── Level 5: 五级配件 (最深层级)
+```
+
+#### 层级限制规则
+- **最大深度**: 6层结构 (Level 0-5)
+- **Level 5限制**: Level 5节点不能再添加子级
+- **备件特殊性**: 必选备件(spare_part)通常为Level 1，不支持嵌套
+- **配件灵活性**: 配件(accessory)支持多层嵌套
+
+### 🎯 路径上下文系统
+
+#### 核心问题
+同一料号可能出现在多个路径中，如：
+```
+路径1: 60A01149 → 60A04038 → 60A04039 → 60A04024
+路径2: 60A01149 → 08A0105796 → 60A04039 → 60A04024
+```
+
+#### 解决方案：路径上下文
+```typescript
+interface PathContext {
+  hostPartNumber: string;           // 根节点主机料号
+  parentPartNumber: string | null;  // 直接父级料号
+  relationId?: number;              // 关系记录ID
+  fullPath: string[];               // 完整路径数组
+  level: number;                    // 当前层级
+}
+```
+
+#### 关键函数
+```typescript
+// 🔧 带路径上下文的添加子级函数
+handleAddChildWithContext(
+  childType: 'accessory' | 'spare_part',
+  clickedPartNumber: string,
+  pathContext: PathContext
+)
+```
+
+### 🔍 数据质量检查体系
+
+#### 自动检查项目
+
+1. **🔗 孤儿父级关系检测**
+   ```typescript
+   // 检测：作为父级存在但本身不是任何关系的子级
+   const orphanParents = parentPartNumbers.filter(partNumber => 
+     !childPartNumbers.has(partNumber)
+   );
+   ```
+
+2. **🔄 重复关系检查**
+   ```typescript
+   // 检测：完全相同的关系记录
+   const key = `${host}-${parent}-${part}-${child}`;
+   ```
+
+3. **📊 层级异常检测**
+   ```typescript
+   // 检测：备件层级错误、主机子级层级异常
+   if (relation.child_type === 'spare_part' && relation.level !== 1) {
+     // 备件应该是Level 1
+   }
+   ```
+
+4. **🌀 循环引用检查**
+   ```typescript
+   // 检测：节点指向自己
+   if (relation.part_number === relation.child_part_number) {
+     // 循环引用错误
+   }
+   ```
+
+### 🛡️ 多层防护机制
+
+#### 层级限制防护
+```typescript
+// 1. 界面层限制
+const canAddChildren = currentNodeLevel < 5;
+
+// 2. 业务逻辑限制  
+const nextLevel = Math.min(pathContext.level + 1, 5);
+
+// 3. 表单验证限制
+<InputNumber min={1} max={5} />
+
+// 4. 提交验证限制
+if (finalData.level > 5) {
+  message.error(`层级不能超过5层`);
+  return;
+}
+```
+
+#### 路径上下文保护
+```typescript
+// 确保在正确的路径上下文中操作
+const isCurrentNodeRelation = 
+  relation.part_number === currentPartNumber && 
+  relation.parent_part_number === currentParentPartNumber;
+```
+
+### 🌳 前端树构建逻辑
+
+#### 核心算法：buildTreeNodes
+
+```typescript
+const buildTreeNodes = (
+  relations: Relation[],
+  currentPartNumber: string,
+  currentParentPartNumber: string | null,
+  visitedNodes: Set<string> = new Set(),
+  currentPath: string[] = []
+): RelationTreeNode[] => {
+  
+  // 🔧 循环检测
+  if (visitedNodes.has(currentPartNumber)) {
+    console.warn(`Detected cycle at ${currentPartNumber}`);
+    return [];
+  }
+  
+  // 🔧 路径上下文查找
+  const childRelations = relations.filter(relation => {
+    if (currentPartNumber === selectedHostPartNumber) {
+      // 主机节点：查找直接子级
+      return relation.parent_part_number === null && 
+             relation.part_number === selectedHostPartNumber;
+    } else {
+      // 配件节点：精确匹配路径上下文
+      return relation.part_number === currentPartNumber && 
+             relation.parent_part_number === currentParentPartNumber;
+    }
+  });
+  
+  // 递归构建子树...
+};
+```
+
+#### 关键特性
+- **循环检测**: 防止无限递归
+- **路径精确匹配**: 避免路径混淆
+- **完整路径追踪**: 支持路径上下文调试
+
+### ⚠️ 重要注意事项
+
+#### 🚨 数据创建规范
+
+1. **路径上下文必须正确**
+   ```typescript
+   // ✅ 正确：使用路径上下文
+   handleAddChildWithContext('accessory', partNumber, {
+     hostPartNumber: '60A01149',
+     parentPartNumber: '60A04039',  // 明确的父级
+     fullPath: ['60A01149', '08A0105796', '60A04039', '60A04024'],
+     level: 4
+   });
+   
+   // ❌ 错误：使用模糊查找
+   handleAddChild('accessory', partNumber); // 可能路径歧义
+   ```
+
+2. **层级计算必须准确**
+   ```typescript
+   // ✅ 正确：基于路径上下文
+   const nextLevel = Math.min(pathContext.level + 1, 5);
+   
+   // ❌ 错误：基于模糊查找
+   const nextLevel = relationsList.find(r => r.child_part_number === part)?.level + 1;
+   ```
+
+3. **必选备件特殊处理**
+   ```typescript
+   // 必选备件通常为Level 1，不支持嵌套
+   const nextLevel = childType === 'spare_part' ? 1 : Math.min(pathContext.level + 1, 5);
+   ```
+
+#### 🔧 数据清理建议
+
+1. **定期运行数据质量检查**
+   ```typescript
+   // 使用内置的数据质量检查工具
+   const { qualityIssues } = useDataQualityCheck(relationsList, hostPartNumber);
+   ```
+
+2. **处理孤儿关系**
+   ```sql
+   -- 查找孤儿父级
+   SELECT DISTINCT parent_part_number 
+   FROM wp_bjt_relations 
+   WHERE parent_part_number NOT IN (
+     SELECT DISTINCT child_part_number FROM wp_bjt_relations
+   ) AND parent_part_number IS NOT NULL;
+   ```
+
+3. **清理重复关系**
+   ```sql
+   -- 查找重复关系
+   SELECT host_part_number, parent_part_number, part_number, child_part_number, COUNT(*) 
+   FROM wp_bjt_relations 
+   GROUP BY host_part_number, parent_part_number, part_number, child_part_number 
+   HAVING COUNT(*) > 1;
+   ```
+
+#### 🎯 最佳实践
+
+1. **使用路径上下文函数**
+   - 优先使用 `handleAddChildWithContext`
+   - 避免使用 `handleAddChild` (已标记为遗留函数)
+
+2. **验证数据完整性**
+   - 创建关系前检查父级节点存在性
+   - 确保路径连续性
+
+3. **层级设计合理性**
+   - Level 0: 主机
+   - Level 1: 主要配件和必选备件
+   - Level 2-5: 配件的递归嵌套
+
+4. **错误处理和用户提示**
+   - 明确的错误信息
+   - 路径上下文提示
+   - 智能修复建议
+
+### 🔄 版本更新历史
+
+#### v2.0 - 路径上下文系统 (2025-01)
+- ✅ 实现路径上下文保护机制
+- ✅ 修复同料号多路径问题
+- ✅ 增强数据质量检查
+- ✅ 完善层级限制体系
+
+#### v1.0 - 基础关系系统 (2024)
+- ✅ 基础树形关系建立
+- ✅ 层级管理功能
+- ✅ 前端树形展示
+
+### 📊 性能考虑
+
+#### 查询优化
+```sql
+-- 高效的子级查询（使用索引）
+SELECT * FROM wp_bjt_relations 
+WHERE host_part_number = ? 
+  AND part_number = ? 
+  AND parent_part_number = ?
+ORDER BY sort_order;
+
+-- 建议索引
+CREATE INDEX idx_relations_context ON wp_bjt_relations 
+(host_part_number, part_number, parent_part_number);
+```
+
+#### 内存优化
+- 使用循环检测避免无限递归
+- 实现增量树构建
+- 优化大数据量展示
+
+---
+
+> 💡 **开发提示**: 关联关系系统是业务核心，修改时务必考虑路径上下文的准确性和数据完整性。建议在开发环境充分测试后再部署到生产环境。
+
+> 🚨 **运维提示**: 定期运行数据质量检查，及时发现和修复数据异常。关注孤儿关系和重复关系问题。
 
 ## 📄 许可证
 

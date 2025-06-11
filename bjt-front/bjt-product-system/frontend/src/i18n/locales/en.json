@@ -551,6 +551,11 @@
     "techParams": "Technical Parameters",
     "cartonPack": "Carton Package",
     "apiError": "API call failed, showing basic information",
+    "units": {
+      "rolls": "Rolls",
+      "weight": "Weight",
+      "height": "Height"
+    },
     "thickness": {
       "metric": "Thickness(μm)",
       "imperial": "Thickness(mil)"

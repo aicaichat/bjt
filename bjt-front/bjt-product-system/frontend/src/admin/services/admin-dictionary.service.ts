@@ -257,6 +257,8 @@ export interface DictionaryItem {
   name_en?: string;
   id?: number;
   sort_order?: number;
+  type?: string;  // 添加type字段用于区分主机和配件
+  category?: string;  // 添加category字段用于显示分组
   [key: string]: any; // 允许额外属性
 }
 
@@ -358,6 +360,151 @@ class AdminGeneralDictionaryService extends BaseService {
   async getProductTypes(lang: string = 'zh'): Promise<DictionaryItem[]> {
     const response = await this.getDictionaryItems('product_types', { lang });
     return response.data.items;
+  }
+
+  // 获取适配机型 - 主机型号
+  async getHostModels(productLineId: number, lang: string = 'zh'): Promise<DictionaryItem[]> {
+    try {
+      console.log('[getHostModels] 获取主机型号, 产品线ID:', productLineId, '语言:', lang);
+      
+      const response = await this.get<any>(`/host-models?product_line_id=${productLineId}&lang=${lang}&status=publish`);
+      console.log('[getHostModels] API响应:', response);
+      
+      let items = [];
+      if (response.success && response.data && Array.isArray(response.data)) {
+        items = response.data;
+      } else if (response.success && response.data && Array.isArray(response.data.items)) {
+        items = response.data.items;
+      } else if (Array.isArray(response.data)) {
+        items = response.data;
+      } else if (Array.isArray(response.items)) {
+        items = response.items;
+      } else if (Array.isArray(response)) {
+        items = response;
+      }
+      
+      const hostModels = items.map((item: any) => ({
+        code: item.model || item.code,
+        name: lang === 'en' ? 
+          `${item.title_en || item.name_en || item.model || item.code}` : 
+          `${item.title_zh || item.name_zh || item.model || item.code}`,
+        name_zh: item.title_zh || item.name_zh,
+        name_en: item.title_en || item.name_en,
+        id: item.id,
+        type: 'host',
+        sort_order: item.sort_order || 0
+      }));
+      
+      console.log('[getHostModels] 处理后的主机型号:', hostModels);
+      return hostModels;
+    } catch (error) {
+      console.error('[getHostModels] 获取主机型号失败:', error);
+      return [];
+    }
+  }
+
+  // 获取适配机型 - 配件型号
+  async getAccessoryModels(productLineId: number, lang: string = 'zh'): Promise<DictionaryItem[]> {
+    try {
+      console.log('[getAccessoryModels] 获取配件型号, 产品线ID:', productLineId, '语言:', lang);
+      
+      const response = await this.get<any>(`/accessory-models?product_line_id=${productLineId}&lang=${lang}&status=publish`);
+      console.log('[getAccessoryModels] API响应:', response);
+      
+      let items = [];
+      if (response.success && response.data && Array.isArray(response.data)) {
+        items = response.data;
+      } else if (response.success && response.data && Array.isArray(response.data.items)) {
+        items = response.data.items;
+      } else if (Array.isArray(response.data)) {
+        items = response.data;
+      } else if (Array.isArray(response.items)) {
+        items = response.items;
+      } else if (Array.isArray(response)) {
+        items = response;
+      }
+      
+      const accessoryModels = items.map((item: any) => ({
+        code: item.model || item.code,
+        name: lang === 'en' ? 
+          `${item.title_en || item.name_en || item.model || item.code}` : 
+          `${item.title_zh || item.name_zh || item.model || item.code}`,
+        name_zh: item.title_zh || item.name_zh,
+        name_en: item.title_en || item.name_en,
+        id: item.id,
+        type: 'accessory',
+        sort_order: item.sort_order || 0
+      }));
+      
+      console.log('[getAccessoryModels] 处理后的配件型号:', accessoryModels);
+      return accessoryModels;
+    } catch (error) {
+      console.error('[getAccessoryModels] 获取配件型号失败:', error);
+      return [];
+    }
+  }
+
+  // 获取完整的适配机型列表（主机+配件）
+  async getCompatibleModels(productLineId: number, lang: string = 'zh'): Promise<DictionaryItem[]> {
+    try {
+      console.log('[getCompatibleModels] 获取适配机型, 产品线ID:', productLineId, '语言:', lang);
+      
+      const [hostModels, accessoryModels] = await Promise.all([
+        this.getHostModels(productLineId, lang),
+        this.getAccessoryModels(productLineId, lang)
+      ]);
+      
+      let allModels = [
+        ...hostModels.map(model => ({ ...model, category: '主机 (Host)' })),
+        ...accessoryModels.map(model => ({ ...model, category: '配件 (Accessory)' }))
+      ];
+      
+      // 如果API没有返回数据，提供一些基于产品线的模拟数据
+      if (allModels.length === 0) {
+        console.log('[getCompatibleModels] API无数据，提供模拟数据');
+        
+        // 基于产品线ID提供相应的模拟数据
+        if (productLineId === 1) {
+          allModels = [
+            // 主机型号
+            { code: 'LA-E4C', name: '气垫机 LA-E4C', category: '主机 (Host)', type: 'host', sort_order: 1 },
+            { code: 'LA-E4S', name: '气垫机 LA-E4S', category: '主机 (Host)', type: 'host', sort_order: 2 },
+            { code: 'LA-E4S V2.0', name: '气垫机 LA-E4S V2.0', category: '主机 (Host)', type: 'host', sort_order: 3 },
+            { code: 'LA-E5P', name: '气垫机 LA-E5P', category: '主机 (Host)', type: 'host', sort_order: 4 },
+            { code: 'LA-F2', name: '气垫机 LA-F2', category: '主机 (Host)', type: 'host', sort_order: 5 },
+            // 配件型号
+            { code: 'LA-E4S(paper)', name: '纸塑配件 LA-E4S(paper)', category: '配件 (Accessory)', type: 'accessory', sort_order: 6 },
+          ];
+        } else {
+          // 其他产品线的通用模拟数据
+          allModels = [
+            { code: 'HOST-001', name: '主机型号 001', category: '主机 (Host)', type: 'host', sort_order: 1 },
+            { code: 'HOST-002', name: '主机型号 002', category: '主机 (Host)', type: 'host', sort_order: 2 },
+            { code: 'ACC-001', name: '配件型号 001', category: '配件 (Accessory)', type: 'accessory', sort_order: 3 },
+          ];
+        }
+      }
+      
+      // 按类型和排序排序
+      allModels.sort((a, b) => {
+        // 先按类型排序（主机在前），再按sort_order排序
+        if (a.type !== b.type) {
+          return a.type === 'host' ? -1 : 1;
+        }
+        return (a.sort_order || 0) - (b.sort_order || 0);
+      });
+      
+      console.log('[getCompatibleModels] 最终适配机型列表:', allModels);
+      return allModels;
+    } catch (error) {
+      console.error('[getCompatibleModels] 获取适配机型失败:', error);
+      
+      // 发生错误时也提供模拟数据
+      return [
+        { code: 'LA-E4C', name: '气垫机 LA-E4C', category: '主机 (Host)', type: 'host', sort_order: 1 },
+        { code: 'LA-E4S', name: '气垫机 LA-E4S', category: '主机 (Host)', type: 'host', sort_order: 2 },
+      ];
+    }
   }
 }
 

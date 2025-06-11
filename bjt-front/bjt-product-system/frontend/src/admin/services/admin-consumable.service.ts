@@ -255,12 +255,12 @@ class AdminConsumableService extends BaseService {
         product_line_id: item.product_line_id,
         model: item.model || item.name,
         model_imperial: item.model_imperial,
-        part_number: item.code, // 重要：code字段映射到part_number
-        spec: item.specs ? this.buildSpecString(item.specs) : undefined,
-        spec_imperial: item.specs ? this.buildSpecImperialString(item.specs, item.model_imperial) : undefined,
+        part_number: item.part_number || item.code, // 优先使用part_number，回退到code
+        spec: item.spec || undefined, // 直接使用API返回的原始spec值
+        spec_imperial: item.spec_imperial || undefined, // 直接使用API返回的原始spec_imperial值
         brand: item.brand,
         app_model: item.specs?.compatibility,
-        bag_type: item.specs?.shape, // specs.shape映射到bag_type
+        bag_type: item.bag_type || item.specs?.shape, // 优先使用bag_type，回退到specs.shape
         material: item.specs?.material, // specs.material映射到material
         thickness_met: item.specs?.thickness ? this.parseNumericValue(item.specs.thickness) : undefined,
         thickness_imp: item.specs?.thickness ? this.convertToImperial(item.specs.thickness, 'thickness') : undefined,
@@ -387,12 +387,12 @@ class AdminConsumableService extends BaseService {
       product_line_id: itemToTransform.product_line_id,
       model: itemToTransform.model || itemToTransform.name,
       model_imperial: itemToTransform.model_imperial,
-      part_number: itemToTransform.code, // 重要：code字段映射到part_number
-      spec: itemToTransform.specs ? this.buildSpecString(itemToTransform.specs) : undefined,
-      spec_imperial: itemToTransform.specs ? this.buildSpecImperialString(itemToTransform.specs, itemToTransform.model_imperial) : undefined,
+      part_number: itemToTransform.part_number || itemToTransform.code, // 优先使用part_number，回退到code
+      spec: itemToTransform.spec || undefined, // 直接使用API返回的原始spec值
+      spec_imperial: itemToTransform.spec_imperial || undefined, // 直接使用API返回的原始spec_imperial值
       brand: itemToTransform.brand,
       app_model: itemToTransform.specs?.compatibility,
-      bag_type: itemToTransform.specs?.shape, // specs.shape映射到bag_type
+      bag_type: itemToTransform.bag_type || itemToTransform.specs?.shape, // 优先使用bag_type，回退到specs.shape
       material: itemToTransform.specs?.material, // specs.material映射到material
       thickness_met: itemToTransform.specs?.thickness ? this.parseNumericValue(itemToTransform.specs.thickness) : undefined,
       thickness_imp: itemToTransform.specs?.thickness ? this.convertToImperial(itemToTransform.specs.thickness, 'thickness') : undefined,

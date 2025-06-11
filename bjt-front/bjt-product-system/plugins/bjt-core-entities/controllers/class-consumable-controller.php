@@ -175,6 +175,27 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
                 ]
             ]
         ]);
+
+        // === 新增：耗材筛选选项API ===
+        register_rest_route($this->namespace, '/' . $this->resource_name . '/filter-options', [
+            [
+                'methods' => WP_REST_Server::READABLE,
+                'callback' => [$this, 'get_filter_options'],
+                'permission_callback' => [$this, 'check_read_permission'],
+                'args' => [
+                    'lang' => [
+                        'type' => 'string',
+                        'enum' => ['zh', 'en'],
+                        'default' => 'zh',
+                        'description' => '语言代码'
+                    ],
+                    'product_line_id' => [
+                        'type' => 'integer',
+                        'description' => '产品线ID'
+                    ]
+                ]
+            ]
+        ]);
     }
 
     public function get_item_schema() {
@@ -412,6 +433,7 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
         'part_number' => $item_db_object->part_number ?? null,
         'app_model' => $item_db_object->app_model ?? null,
         'shape' => $item_db_object->bag_type ?? null,  // 关键映射！
+        'bag_type' => $item_db_object->bag_type ?? null,  // 前端service层期待的字段！
         'material' => $item_db_object->material ?? null,
         
         // 规格数值字段（纯数值，不加单位）
@@ -861,10 +883,47 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
     }
     
     /**
+     * 🔥 新增方法：映射bag_type到字典code
+     * 解决consumables表的bag_type字段与字典表code字段不一致的问题
+     */
+    private function map_bag_type_to_dictionary_code($bag_type) {
+        $mapping = [
+            'Pillow' => 'MEX',
+            'Precut Air Pillow' => 'MEY', // 🔥 修复：使用正确的字典code
+            'Bubble' => 'MFF', 
+            'Tube' => 'MFC',
+            'paper Bubble' => 'MFB',
+            'paper air Pillow' => 'MEX_PAPER' // 🔥 修复：使用独立的字典记录
+        ];
+        
+        return isset($mapping[$bag_type]) ? $mapping[$bag_type] : $bag_type;
+    }
+
+    /**
      * 🔥 新增方法：动态生成筛选项（从实际数据）
      * 解决静态字典配置与实际数据不匹配的问题
      */
     private function generate_dynamic_filter_options($wpdb) {
+        // 🔥 改进：先从 wp_bjt_shapes 表获取所有shape配置
+        $shapes_table = $wpdb->prefix . 'bjt_shapes';
+        $shapes_configs_raw = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT code, name_zh, name_en, image_url, image_url2, sort_order 
+                 FROM {$shapes_table} 
+                 WHERE product_line_id = %d AND status = 'publish' 
+                 ORDER BY sort_order ASC",
+                1 // 假设product_line_id = 1
+            )
+        );
+        
+        // 转换为以code为key的关联数组
+        $shapes_configs = [];
+        if ($shapes_configs_raw) {
+            foreach ($shapes_configs_raw as $config) {
+                $shapes_configs[$config->code] = $config;
+            }
+        }
+        
         // 获取所有已发布的耗材数据用于生成筛选项
         $all_items_query = "SELECT bag_type, material, app_model, thickness_met, width_met, length_met, bubble_diameter_met FROM {$this->table_name} WHERE status = 'publish'";
         $all_items = $wpdb->get_results($all_items_query);
@@ -888,25 +947,55 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
         $length_set = [];
         
         foreach ($all_items as $item) {
-            // 1. 处理形状（bag_type）
+            // 1. 🔥 改进：处理形状（bag_type）- 从数据库配置中获取信息
             if (!empty($item->bag_type) && !isset($shapes_set[$item->bag_type])) {
                 $shapes_set[$item->bag_type] = true;
-                $filter_options['shapes'][] = [
-                    'id' => $item->bag_type,
-                    'code' => $item->bag_type,
-                    'name' => $this->get_shape_display_name($item->bag_type),
-                    'image_url' => $this->get_shape_image_url($item->bag_type),
-                    'sort_order' => count($filter_options['shapes']) * 10
-                ];
+                
+                // 🔥 映射bag_type到字典code
+                $dictionary_code = $this->map_bag_type_to_dictionary_code($item->bag_type);
+                $shape_config = null;
+                if (isset($shapes_configs[$dictionary_code])) {
+                    $shape_config = $shapes_configs[$dictionary_code];
+                }
+                
+                if ($shape_config) {
+                    // 从数据库配置中获取
+                    $filter_options['shapes'][] = [
+                        'id' => $item->bag_type,
+                        'code' => $item->bag_type,
+                        'name' => $shape_config->name_zh ?: $shape_config->name_en, // 保持向后兼容
+                        'name_zh' => $shape_config->name_zh,
+                        'name_en' => $shape_config->name_en,
+                        'image_url' => $shape_config->image_url ?: $this->get_shape_image_url($item->bag_type),
+                        'image_url2' => $shape_config->image_url2 ?: $this->get_shape_demo_image_url($item->bag_type),
+                        'sort_order' => $shape_config->sort_order ?: count($filter_options['shapes']) * 10
+                    ];
+                } else {
+                    // 回退到硬编码映射（用于向后兼容）
+                    $display_name = $this->get_shape_display_name($item->bag_type);
+                    $filter_options['shapes'][] = [
+                        'id' => $item->bag_type,
+                        'code' => $item->bag_type,
+                        'name' => $display_name, // 保持向后兼容
+                        'name_zh' => $display_name,
+                        'name_en' => $item->bag_type,
+                        'image_url' => $this->get_shape_image_url($item->bag_type),
+                        'image_url2' => $this->get_shape_demo_image_url($item->bag_type),
+                        'sort_order' => count($filter_options['shapes']) * 10
+                    ];
+                }
             }
             
             // 2. 处理材质
             if (!empty($item->material) && !isset($materials_set[$item->material])) {
                 $materials_set[$item->material] = true;
+                $material_display_name = $this->get_material_display_name($item->material);
                 $filter_options['materials'][] = [
                     'id' => $item->material,
                     'code' => $item->material,
-                    'name' => $this->get_material_display_name($item->material),
+                    'name' => $material_display_name, // 保持向后兼容
+                    'name_zh' => $material_display_name,
+                    'name_en' => $item->material,
                     'sort_order' => count($filter_options['materials']) * 10
                 ];
             }
@@ -919,10 +1008,13 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
                     $model = trim($model);
                     if (!empty($model) && !isset($models_set[$model])) {
                         $models_set[$model] = true;
+                        $model_display_name = $this->get_model_display_name($model);
                         $filter_options['models'][] = [
                             'id' => $model,
                             'code' => $model,
-                            'name' => $this->get_model_display_name($model),
+                            'name' => $model_display_name, // 保持向后兼容
+                            'name_zh' => $model_display_name,
+                            'name_en' => $model,
                             'sort_order' => count($filter_options['models']) * 10
                         ];
                     }
@@ -1049,6 +1141,22 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
         ];
         
         return isset($shape_images[$shape]) ? $shape_images[$shape] : '/images/default/shape.png';
+    }
+    
+    /**
+     * 🔥 新增方法：获取形状示意图片URL (image_url2)
+     */
+    private function get_shape_demo_image_url($shape) {
+        $shape_demo_images = [
+            'Pillow' => '/images/MEX/values/MEX-2.png',
+            'Precut Air Pillow' => '/images/MEX/values/MEX-2.png',
+            'Bubble' => '/images/MFF/values/MFF-2.png',
+            'Tube' => '/images/MFC/values/MFC-2.png',
+            'paper Bubble' => '/images/MFB/values/MFB-2.png',
+            'paper air Pillow' => '/images/MEX/values/MEX-2.png'
+        ];
+        
+        return isset($shape_demo_images[$shape]) ? $shape_demo_images[$shape] : '/images/default/shape-demo.png';
     }
     
     /**
@@ -1299,5 +1407,130 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
         ];
         
         return '(' . implode(' OR ', $conditions) . ')';
+    }
+
+    /**
+     * 获取耗材筛选选项
+     * 返回所有可用的主机型号、配件型号等筛选选项
+     *
+     * @param WP_REST_Request $request 请求对象
+     * @return WP_REST_Response 筛选选项响应
+     */
+    public function get_filter_options($request) {
+        global $wpdb;
+        
+        // 获取请求参数
+        $lang = $request->get_param('lang') ?: 'zh';
+        $product_line_id = $request->get_param('product_line_id');
+        
+        // 查询所有已发布的耗材，获取适用型号信息
+        $where_clause = "status = 'publish' AND app_model IS NOT NULL AND app_model != ''";
+        $where_params = [];
+        
+        if ($product_line_id) {
+            $where_clause .= " AND product_line_id = %d";
+            $where_params[] = $product_line_id;
+        }
+        
+        $consumables = $wpdb->get_results($wpdb->prepare(
+            "SELECT DISTINCT app_model 
+             FROM {$this->table_name} 
+             WHERE {$where_clause}",
+            ...$where_params
+        ));
+        
+        // 获取主机型号和配件型号
+        $host_models_table = $wpdb->prefix . 'bjt_host_models';
+        $accessory_models_table = $wpdb->prefix . 'bjt_accessory_models';
+        $title_column = $lang === 'en' ? 'title_en' : 'title_zh';
+        
+        // 查询主机型号
+        $host_query = "SELECT model, {$title_column} as title 
+                       FROM {$host_models_table} 
+                       WHERE status = 'publish'";
+        $host_params = [];
+        
+        if ($product_line_id) {
+            $host_query .= " AND product_line_id = %d";
+            $host_params[] = $product_line_id;
+        }
+        
+        $host_query .= " ORDER BY sort_order ASC, model ASC";
+        
+        $host_models_raw = $wpdb->get_results($wpdb->prepare($host_query, ...$host_params));
+        
+        // 查询配件型号
+        $accessory_query = "SELECT model, {$title_column} as title 
+                            FROM {$accessory_models_table} 
+                            WHERE status = 'publish'";
+        $accessory_params = [];
+        
+        if ($product_line_id) {
+            $accessory_query .= " AND product_line_id = %d";
+            $accessory_params[] = $product_line_id;
+        }
+        
+        $accessory_query .= " ORDER BY sort_order ASC, model ASC";
+        
+        $accessory_models_raw = $wpdb->get_results($wpdb->prepare($accessory_query, ...$accessory_params));
+        
+        // 构建主机型号列表（返回字符串数组）
+        $host_models = [];
+        if ($host_models_raw) {
+            foreach ($host_models_raw as $model) {
+                $host_models[] = $model->model;
+            }
+        }
+        
+        // 构建配件型号列表
+        $accessory_models = [];
+        if ($accessory_models_raw) {
+            foreach ($accessory_models_raw as $model) {
+                $accessory_models[] = $model->model;
+            }
+        }
+        
+        // 如果没有从专门的型号表获取到数据，从耗材的app_model字段中提取
+        if (empty($host_models) && empty($accessory_models) && $consumables) {
+            $all_models = [];
+            foreach ($consumables as $consumable) {
+                if (!empty($consumable->app_model)) {
+                    // 清理并分割模型字符串
+                    $clean_models = str_replace(['"', "'"], '', $consumable->app_model); // 移除引号
+                    $models_array = array_map('trim', explode(',', $clean_models));
+                    foreach ($models_array as $model) {
+                        $model = trim($model);
+                        if (!empty($model) && !in_array($model, $all_models)) {
+                            $all_models[] = $model;
+                        }
+                    }
+                }
+            }
+            
+            // 简单分类：LA-开头的归为主机型号，其他归为配件型号
+            sort($all_models);
+            foreach ($all_models as $model) {
+                // 检查是否为主机型号（以LA-开头）
+                if (preg_match('/^LA-/i', $model)) {
+                    $host_models[] = $model;
+                } else {
+                    $accessory_models[] = $model;
+                }
+            }
+        }
+        
+        // 对模型列表进行去重和排序
+        $host_models = array_unique($host_models);
+        $accessory_models = array_unique($accessory_models);
+        sort($host_models);
+        sort($accessory_models);
+        
+        // 构建响应数据（与备件格式保持一致）
+        $response_data = [
+            'hostModels' => $host_models,
+            'accessoryModels' => $accessory_models
+        ];
+        
+        return $this->format_response($response_data, '筛选选项获取成功');
     }
 } 

@@ -44,6 +44,73 @@ class BJT_Dictionary_Controller extends BJT_API_Controller {
                     ],
                 ],
             ],
+            [
+                'methods' => WP_REST_Server::CREATABLE,
+                'callback' => [$this, 'create_dictionary_item'],
+                'permission_callback' => [$this, 'create_items_permissions_check'],
+                'args' => [
+                    'type' => [
+                        'description' => __('Dictionary type'),
+                        'type' => 'string',
+                        'required' => true,
+                    ],
+                ],
+            ],
+        ]);
+        
+        // 单个字典项的操作（获取、更新、删除）
+        register_rest_route($this->namespace, '/' . $this->rest_base . '/(?P<type>[a-zA-Z0-9_-]+)/(?P<id>[\d]+)', [
+            [
+                'methods' => WP_REST_Server::READABLE,
+                'callback' => [$this, 'get_dictionary_item'],
+                'permission_callback' => [$this, 'get_items_permissions_check'],
+                'args' => [
+                    'type' => [
+                        'description' => __('Dictionary type'),
+                        'type' => 'string',
+                        'required' => true,
+                    ],
+                    'id' => [
+                        'description' => __('Item ID'),
+                        'type' => 'integer',
+                        'required' => true,
+                    ],
+                ],
+            ],
+            [
+                'methods' => WP_REST_Server::EDITABLE,
+                'callback' => [$this, 'update_dictionary_item'],
+                'permission_callback' => [$this, 'update_items_permissions_check'],
+                'args' => [
+                    'type' => [
+                        'description' => __('Dictionary type'),
+                        'type' => 'string',
+                        'required' => true,
+                    ],
+                    'id' => [
+                        'description' => __('Item ID'),
+                        'type' => 'integer',
+                        'required' => true,
+                    ],
+                ],
+            ],
+            [
+                'methods' => WP_REST_Server::DELETABLE,
+                'callback' => [$this, 'delete_dictionary_item'],
+                'permission_callback' => [$this, 'delete_items_permissions_check'],
+                'args' => [
+                    'type' => [
+                        'description' => __('Dictionary type'),
+                        'type' => 'string',
+                        'required' => true,
+                    ],
+                    'id' => [
+                        'description' => __('Item ID'),
+                        'type' => 'integer',
+                        'required' => true,
+                    ],
+                ],
+            ],
         ]);
     }
     
@@ -336,17 +403,57 @@ class BJT_Dictionary_Controller extends BJT_API_Controller {
                 break;
 
             case 'bag_types':
-                // 基于CSV文件中的袋型数据
-                $items = [
-                    ['code' => 'MEX', 'name_zh' => 'MEX型', 'name_en' => 'MEX Type'],
-                    ['code' => 'B4', 'name_zh' => 'B4型', 'name_en' => 'B4 Type'],
-                    ['code' => 'MEE', 'name_zh' => 'MEE型', 'name_en' => 'MEE Type'],
-                    ['code' => 'MEB', 'name_zh' => 'MEB型', 'name_en' => 'MEB Type'],
-                    ['code' => 'QMF', 'name_zh' => 'QMF型', 'name_en' => 'QMF Type'],
-                    ['code' => 'GVFX', 'name_zh' => 'GVFX型', 'name_en' => 'GVFX Type'],
-                    ['code' => 'EXPRESS', 'name_zh' => 'EXPRESS型', 'name_en' => 'EXPRESS Type'],
-                    ['code' => 'EXPRESS-A4', 'name_zh' => 'EXPRESS-A4型', 'name_en' => 'EXPRESS-A4 Type'],
-                ];
+                // 从数据库中获取真实的袋型数据
+                $table_name = $wpdb->prefix . 'bjt_consumables';
+                $query = "
+                    SELECT DISTINCT bag_type 
+                    FROM {$table_name} 
+                    WHERE bag_type IS NOT NULL 
+                    AND bag_type != '' 
+                    AND status = 'publish'
+                    ORDER BY bag_type ASC
+                ";
+                
+                $results = $wpdb->get_results($query);
+                
+                if ($results) {
+                    foreach ($results as $row) {
+                        $bag_type = trim($row->bag_type);
+                        // 创建中英文对照
+                        $name_zh = '';
+                        $name_en = $bag_type;
+                        
+                        switch ($bag_type) {
+                            case 'Pillow':
+                                $name_zh = '气泡枕';
+                                break;
+                            case 'Bubble':
+                                $name_zh = '葫芦膜';
+                                break;
+                            case 'Tube':
+                                $name_zh = '气枕膜';
+                                break;
+                            case 'Precut Air Pillow':
+                                $name_zh = '开口气泡枕';
+                                break;
+                            case 'paper air Pillow':
+                                $name_zh = '纸塑气泡枕';
+                                break;
+                            case 'paper Bubble':
+                                $name_zh = '纸塑葫芦膜';
+                                break;
+                            default:
+                                $name_zh = $bag_type;
+                                break;
+                        }
+                        
+                        $items[] = [
+                            'code' => $bag_type,
+                            'name_zh' => $name_zh,
+                            'name_en' => $name_en
+                        ];
+                    }
+                }
                 break;
 
             case 'brands':
@@ -456,5 +563,633 @@ class BJT_Dictionary_Controller extends BJT_API_Controller {
     protected function format_response($data = null, $message = '', $success = true, $status_code = 200) {
         // 调用父类的format_response方法
         return parent::format_response($data, $message, $success, $status_code);
+    }
+    
+    /**
+     * 获取单个字典项
+     */
+    public function get_dictionary_item($request) {
+        global $wpdb;
+        $type = $request['type'];
+        $id = $request['id'];
+        
+        if (!$this->is_editable_type($type)) {
+            return new WP_Error(
+                'dictionary_type_not_editable',
+                __('Dictionary type is not editable'),
+                ['status' => 400]
+            );
+        }
+        
+        $table_name = $this->get_table_name($type);
+        if (!$table_name) {
+            return new WP_Error(
+                'dictionary_type_not_found',
+                __('Dictionary type not found'),
+                ['status' => 404]
+            );
+        }
+        
+        $query = $wpdb->prepare("SELECT * FROM {$table_name} WHERE id = %d", $id);
+        $item = $wpdb->get_row($query);
+        
+        if (!$item) {
+            return new WP_Error(
+                'dictionary_item_not_found',
+                __('Dictionary item not found'),
+                ['status' => 404]
+            );
+        }
+        
+        $formatted_item = $this->format_item($item, $type);
+        
+        return $this->format_response([
+            'item' => $formatted_item
+        ]);
+    }
+    
+    /**
+     * 创建字典项
+     */
+    public function create_dictionary_item($request) {
+        global $wpdb;
+        $type = $request['type'];
+        $data = $request->get_json_params();
+        
+        if (!$this->is_editable_type($type)) {
+            return new WP_Error(
+                'dictionary_type_not_editable',
+                __('Dictionary type is not editable'),
+                ['status' => 400]
+            );
+        }
+        
+        $table_name = $this->get_table_name($type);
+        if (!$table_name) {
+            return new WP_Error(
+                'dictionary_type_not_found',
+                __('Dictionary type not found'),
+                ['status' => 404]
+            );
+        }
+        
+        // 验证必填字段
+        $validation_result = $this->validate_item_data($data, $type);
+        if (is_wp_error($validation_result)) {
+            return $validation_result;
+        }
+        
+        // 准备插入数据
+        $insert_data = $this->prepare_item_data($data, $type);
+        $insert_data['created_at'] = current_time('mysql');
+        $insert_data['updated_at'] = current_time('mysql');
+        
+        $result = $wpdb->insert($table_name, $insert_data);
+        
+        if ($result === false) {
+            return new WP_Error(
+                'dictionary_item_create_failed',
+                __('Failed to create dictionary item'),
+                ['status' => 500]
+            );
+        }
+        
+        $item_id = $wpdb->insert_id;
+        
+        // 获取创建的项目并返回
+        $query = $wpdb->prepare("SELECT * FROM {$table_name} WHERE id = %d", $item_id);
+        $created_item = $wpdb->get_row($query);
+        
+        $formatted_item = $this->format_item($created_item, $type);
+        
+        return $this->format_response([
+            'item' => $formatted_item
+        ], __('Dictionary item created successfully'));
+    }
+    
+    /**
+     * 更新字典项
+     */
+    public function update_dictionary_item($request) {
+        global $wpdb;
+        $type = $request['type'];
+        $id = $request['id'];
+        $data = $request->get_json_params();
+        
+        if (!$this->is_editable_type($type)) {
+            return new WP_Error(
+                'dictionary_type_not_editable',
+                __('Dictionary type is not editable'),
+                ['status' => 400]
+            );
+        }
+        
+        $table_name = $this->get_table_name($type);
+        if (!$table_name) {
+            return new WP_Error(
+                'dictionary_type_not_found',
+                __('Dictionary type not found'),
+                ['status' => 404]
+            );
+        }
+        
+        // 检查项目是否存在
+        $query = $wpdb->prepare("SELECT * FROM {$table_name} WHERE id = %d", $id);
+        $existing_item = $wpdb->get_row($query);
+        
+        if (!$existing_item) {
+            return new WP_Error(
+                'dictionary_item_not_found',
+                __('Dictionary item not found'),
+                ['status' => 404]
+            );
+        }
+        
+        // 验证必填字段
+        $validation_result = $this->validate_item_data($data, $type, true);
+        if (is_wp_error($validation_result)) {
+            return $validation_result;
+        }
+        
+        // 准备更新数据
+        $update_data = $this->prepare_item_data($data, $type, true);
+        $update_data['updated_at'] = current_time('mysql');
+        
+        $result = $wpdb->update(
+            $table_name,
+            $update_data,
+            ['id' => $id],
+            null,
+            ['%d']
+        );
+        
+        if ($result === false) {
+            return new WP_Error(
+                'dictionary_item_update_failed',
+                __('Failed to update dictionary item'),
+                ['status' => 500]
+            );
+        }
+        
+        // 获取更新后的项目并返回
+        $query = $wpdb->prepare("SELECT * FROM {$table_name} WHERE id = %d", $id);
+        $updated_item = $wpdb->get_row($query);
+        
+        $formatted_item = $this->format_item($updated_item, $type);
+        
+        return $this->format_response([
+            'item' => $formatted_item
+        ], __('Dictionary item updated successfully'));
+    }
+    
+    /**
+     * 删除字典项
+     */
+    public function delete_dictionary_item($request) {
+        global $wpdb;
+        $type = $request['type'];
+        $id = $request['id'];
+        
+        if (!$this->is_editable_type($type)) {
+            return new WP_Error(
+                'dictionary_type_not_editable',
+                __('Dictionary type is not editable'),
+                ['status' => 400]
+            );
+        }
+        
+        $table_name = $this->get_table_name($type);
+        if (!$table_name) {
+            return new WP_Error(
+                'dictionary_type_not_found',
+                __('Dictionary type not found'),
+                ['status' => 404]
+            );
+        }
+        
+        // 检查项目是否存在
+        $query = $wpdb->prepare("SELECT * FROM {$table_name} WHERE id = %d", $id);
+        $existing_item = $wpdb->get_row($query);
+        
+        if (!$existing_item) {
+            return new WP_Error(
+                'dictionary_item_not_found',
+                __('Dictionary item not found'),
+                ['status' => 404]
+            );
+        }
+        
+        $result = $wpdb->delete(
+            $table_name,
+            ['id' => $id],
+            ['%d']
+        );
+        
+        if ($result === false) {
+            return new WP_Error(
+                'dictionary_item_delete_failed',
+                __('Failed to delete dictionary item'),
+                ['status' => 500]
+            );
+        }
+        
+        return $this->format_response(
+            null,
+            __('Dictionary item deleted successfully')
+        );
+    }
+    
+    /**
+     * 权限检查 - 创建
+     */
+    public function create_items_permissions_check($request) {
+        error_log('[BJT_Dictionary_Controller] Checking create permission');
+        
+        // Using BJT Auth Controller instead of WordPress capabilities
+        if (!class_exists('BJT_Auth_Controller')) {
+            $auth_controller_path = dirname(__FILE__) . '/class-auth-controller.php';
+            if (file_exists($auth_controller_path)) {
+                require_once $auth_controller_path;
+            } else {
+                error_log('[BJT_Dictionary_Controller] BJT_Auth_Controller class file not found at: ' . $auth_controller_path);
+                return new WP_Error('rest_controller_not_found', 'Authentication controller not found.', ['status' => 500]);
+            }
+        }
+        
+        if (!class_exists('BJT_Auth_Controller')) {
+            error_log('[BJT_Dictionary_Controller] BJT_Auth_Controller class still not found after include attempt');
+            return new WP_Error('rest_controller_not_loadable', 'Authentication controller class not loadable.', ['status' => 500]);
+        }
+
+        $auth_controller = new BJT_Auth_Controller();
+        $is_authenticated = $auth_controller->check_auth($request);
+
+        if (true !== $is_authenticated && is_wp_error($is_authenticated)) {
+            error_log('[BJT_Dictionary_Controller] Authentication failed: ' . $is_authenticated->get_error_message());
+            return $is_authenticated;
+        }
+        
+        if (!$is_authenticated) {
+            error_log('[BJT_Dictionary_Controller] User not authenticated');
+            return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
+        }
+
+        // 使用BJT用户角色系统检查权限
+        $user = $GLOBALS['bjt_current_user'];
+        if (!$user) {
+            error_log('[BJT_Dictionary_Controller] No current user found in globals');
+            return new WP_Error('rest_forbidden', __('User information not available.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户状态
+        if ($user->status !== 'active') {
+            error_log('[BJT_Dictionary_Controller] User account is not active: ' . $user->status);
+            return new WP_Error('rest_user_inactive', __('用户账户未激活。', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户角色权限 - 管理员和销售可以创建字典项
+        if (!in_array($user->role, ['admin', 'sales'])) {
+            error_log('[BJT_Dictionary_Controller] User does not have permission to create dictionary items. User role: ' . $user->role);
+            return new WP_Error('rest_forbidden', __('您没有权限执行此操作。', 'bjt'), ['status' => 403]);
+        }
+
+        error_log('[BJT_Dictionary_Controller] Create permission granted for user: ' . $user->email . ' with role: ' . $user->role);
+        return true;
+    }
+    
+    /**
+     * 权限检查 - 更新
+     */
+    public function update_items_permissions_check($request) {
+        error_log('[BJT_Dictionary_Controller] Checking update permission');
+        
+        // Using BJT Auth Controller instead of WordPress capabilities
+        if (!class_exists('BJT_Auth_Controller')) {
+            $auth_controller_path = dirname(__FILE__) . '/class-auth-controller.php';
+            if (file_exists($auth_controller_path)) {
+                require_once $auth_controller_path;
+            } else {
+                error_log('[BJT_Dictionary_Controller] BJT_Auth_Controller class file not found at: ' . $auth_controller_path);
+                return new WP_Error('rest_controller_not_found', 'Authentication controller not found.', ['status' => 500]);
+            }
+        }
+        
+        if (!class_exists('BJT_Auth_Controller')) {
+            error_log('[BJT_Dictionary_Controller] BJT_Auth_Controller class still not found after include attempt');
+            return new WP_Error('rest_controller_not_loadable', 'Authentication controller class not loadable.', ['status' => 500]);
+        }
+
+        $auth_controller = new BJT_Auth_Controller();
+        $is_authenticated = $auth_controller->check_auth($request);
+
+        if (true !== $is_authenticated && is_wp_error($is_authenticated)) {
+            error_log('[BJT_Dictionary_Controller] Authentication failed: ' . $is_authenticated->get_error_message());
+            return $is_authenticated;
+        }
+        
+        if (!$is_authenticated) {
+            error_log('[BJT_Dictionary_Controller] User not authenticated');
+            return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
+        }
+
+        // 使用BJT用户角色系统检查权限
+        $user = $GLOBALS['bjt_current_user'];
+        if (!$user) {
+            error_log('[BJT_Dictionary_Controller] No current user found in globals');
+            return new WP_Error('rest_forbidden', __('User information not available.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户状态
+        if ($user->status !== 'active') {
+            error_log('[BJT_Dictionary_Controller] User account is not active: ' . $user->status);
+            return new WP_Error('rest_user_inactive', __('用户账户未激活。', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户角色权限 - 管理员和销售可以更新字典项
+        if (!in_array($user->role, ['admin', 'sales'])) {
+            error_log('[BJT_Dictionary_Controller] User does not have permission to update dictionary items. User role: ' . $user->role);
+            return new WP_Error('rest_forbidden', __('您没有权限执行此操作。', 'bjt'), ['status' => 403]);
+        }
+
+        error_log('[BJT_Dictionary_Controller] Update permission granted for user: ' . $user->email . ' with role: ' . $user->role);
+        return true;
+    }
+    
+    /**
+     * 权限检查 - 删除
+     */
+    public function delete_items_permissions_check($request) {
+        error_log('[BJT_Dictionary_Controller] Checking delete permission');
+        
+        // Using BJT Auth Controller instead of WordPress capabilities
+        if (!class_exists('BJT_Auth_Controller')) {
+            $auth_controller_path = dirname(__FILE__) . '/class-auth-controller.php';
+            if (file_exists($auth_controller_path)) {
+                require_once $auth_controller_path;
+            } else {
+                error_log('[BJT_Dictionary_Controller] BJT_Auth_Controller class file not found at: ' . $auth_controller_path);
+                return new WP_Error('rest_controller_not_found', 'Authentication controller not found.', ['status' => 500]);
+            }
+        }
+        
+        if (!class_exists('BJT_Auth_Controller')) {
+            error_log('[BJT_Dictionary_Controller] BJT_Auth_Controller class still not found after include attempt');
+            return new WP_Error('rest_controller_not_loadable', 'Authentication controller class not loadable.', ['status' => 500]);
+        }
+
+        $auth_controller = new BJT_Auth_Controller();
+        $is_authenticated = $auth_controller->check_auth($request);
+
+        if (true !== $is_authenticated && is_wp_error($is_authenticated)) {
+            error_log('[BJT_Dictionary_Controller] Authentication failed: ' . $is_authenticated->get_error_message());
+            return $is_authenticated;
+        }
+        
+        if (!$is_authenticated) {
+            error_log('[BJT_Dictionary_Controller] User not authenticated');
+            return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
+        }
+
+        // 使用BJT用户角色系统检查权限
+        $user = $GLOBALS['bjt_current_user'];
+        if (!$user) {
+            error_log('[BJT_Dictionary_Controller] No current user found in globals');
+            return new WP_Error('rest_forbidden', __('User information not available.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户状态
+        if ($user->status !== 'active') {
+            error_log('[BJT_Dictionary_Controller] User account is not active: ' . $user->status);
+            return new WP_Error('rest_user_inactive', __('用户账户未激活。', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户角色权限 - 只有管理员可以删除字典项
+        if ($user->role !== 'admin') {
+            error_log('[BJT_Dictionary_Controller] User does not have permission to delete dictionary items. User role: ' . $user->role);
+            return new WP_Error('rest_forbidden', __('您没有权限执行此操作。', 'bjt'), ['status' => 403]);
+        }
+
+        error_log('[BJT_Dictionary_Controller] Delete permission granted for user: ' . $user->email . ' with role: ' . $user->role);
+        return true;
+    }
+    
+    /**
+     * 检查字典类型是否可编辑
+     */
+    private function is_editable_type($type) {
+        $editable_types = ['shapes', 'materials', 'specifications'];
+        return in_array($type, $editable_types);
+    }
+    
+    /**
+     * 获取数据表名
+     */
+    private function get_table_name($type) {
+        global $wpdb;
+        
+        $table_map = [
+            'shapes' => $wpdb->prefix . 'bjt_shapes',
+            'materials' => $wpdb->prefix . 'bjt_materials',
+            'specifications' => $wpdb->prefix . 'bjt_specifications'
+        ];
+        
+        return isset($table_map[$type]) ? $table_map[$type] : null;
+    }
+    
+    /**
+     * 验证数据
+     */
+    private function validate_item_data($data, $type, $is_update = false) {
+        switch ($type) {
+            case 'shapes':
+                if (!$is_update || isset($data['code'])) {
+                    if (empty($data['code'])) {
+                        return new WP_Error('missing_code', __('Code is required'));
+                    }
+                }
+                if (!$is_update || isset($data['name_zh'])) {
+                    if (empty($data['name_zh'])) {
+                        return new WP_Error('missing_name_zh', __('Chinese name is required'));
+                    }
+                }
+                if (!$is_update || isset($data['name_en'])) {
+                    if (empty($data['name_en'])) {
+                        return new WP_Error('missing_name_en', __('English name is required'));
+                    }
+                }
+                break;
+                
+            case 'materials':
+                if (!$is_update || isset($data['code'])) {
+                    if (empty($data['code'])) {
+                        return new WP_Error('missing_code', __('Code is required'));
+                    }
+                }
+                if (!$is_update || isset($data['name_zh'])) {
+                    if (empty($data['name_zh'])) {
+                        return new WP_Error('missing_name_zh', __('Chinese name is required'));
+                    }
+                }
+                if (!$is_update || isset($data['name_en'])) {
+                    if (empty($data['name_en'])) {
+                        return new WP_Error('missing_name_en', __('English name is required'));
+                    }
+                }
+                break;
+                
+            case 'specifications':
+                if (!$is_update || isset($data['code'])) {
+                    if (empty($data['code'])) {
+                        return new WP_Error('missing_code', __('Specification type is required'));
+                    }
+                }
+                if (!$is_update || isset($data['metric_value'])) {
+                    if (!isset($data['metric_value']) || !is_numeric($data['metric_value'])) {
+                        return new WP_Error('missing_metric_value', __('Metric value is required and must be numeric'));
+                    }
+                }
+                if (!$is_update || isset($data['metric_unit'])) {
+                    if (empty($data['metric_unit'])) {
+                        return new WP_Error('missing_metric_unit', __('Metric unit is required'));
+                    }
+                }
+                if (!$is_update || isset($data['imperial_value'])) {
+                    if (!isset($data['imperial_value']) || !is_numeric($data['imperial_value'])) {
+                        return new WP_Error('missing_imperial_value', __('Imperial value is required and must be numeric'));
+                    }
+                }
+                if (!$is_update || isset($data['imperial_unit'])) {
+                    if (empty($data['imperial_unit'])) {
+                        return new WP_Error('missing_imperial_unit', __('Imperial unit is required'));
+                    }
+                }
+                break;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * 准备数据
+     */
+    private function prepare_item_data($data, $type, $is_update = false) {
+        $prepared = [];
+        
+        // 公共字段
+        if (isset($data['product_line_id'])) {
+            $prepared['product_line_id'] = (int) $data['product_line_id'];
+        } elseif (!$is_update) {
+            $prepared['product_line_id'] = 1; // 默认产品线ID
+        }
+        
+        if (isset($data['status'])) {
+            $prepared['status'] = sanitize_text_field($data['status']);
+        } elseif (!$is_update) {
+            $prepared['status'] = 'publish';
+        }
+        
+        if (isset($data['sort_order'])) {
+            $prepared['sort_order'] = (int) $data['sort_order'];
+        } elseif (!$is_update) {
+            $prepared['sort_order'] = 0;
+        }
+        
+        // 类型特定字段
+        switch ($type) {
+            case 'shapes':
+                if (isset($data['code'])) {
+                    $prepared['code'] = sanitize_text_field($data['code']);
+                }
+                if (isset($data['name_zh'])) {
+                    $prepared['name_zh'] = sanitize_text_field($data['name_zh']);
+                }
+                if (isset($data['name_en'])) {
+                    $prepared['name_en'] = sanitize_text_field($data['name_en']);
+                }
+                if (isset($data['image_url'])) {
+                    $prepared['image_url'] = esc_url_raw($data['image_url']);
+                }
+                if (isset($data['image_url2'])) {
+                    $prepared['image_url2'] = esc_url_raw($data['image_url2']);
+                }
+                break;
+                
+            case 'materials':
+                if (isset($data['code'])) {
+                    $prepared['code'] = sanitize_text_field($data['code']);
+                }
+                if (isset($data['name_zh'])) {
+                    $prepared['name_zh'] = sanitize_text_field($data['name_zh']);
+                }
+                if (isset($data['name_en'])) {
+                    $prepared['name_en'] = sanitize_text_field($data['name_en']);
+                }
+                if (isset($data['base_material'])) {
+                    $prepared['base_material'] = sanitize_text_field($data['base_material']);
+                }
+                break;
+                
+            case 'specifications':
+                if (isset($data['code'])) {
+                    $prepared['spec_type'] = sanitize_text_field($data['code']);
+                }
+                if (isset($data['metric_value'])) {
+                    $prepared['metric_value'] = (float) $data['metric_value'];
+                }
+                if (isset($data['metric_unit'])) {
+                    $prepared['metric_unit'] = sanitize_text_field($data['metric_unit']);
+                }
+                if (isset($data['imperial_value'])) {
+                    $prepared['imperial_value'] = (float) $data['imperial_value'];
+                }
+                if (isset($data['imperial_unit'])) {
+                    $prepared['imperial_unit'] = sanitize_text_field($data['imperial_unit']);
+                }
+                break;
+        }
+        
+        return $prepared;
+    }
+    
+    /**
+     * 格式化单个项目
+     */
+    private function format_item($item, $type) {
+        $formatted = [];
+        
+        foreach ($item as $key => $value) {
+            // 清理可能的引号
+            if (is_string($value)) {
+                $value = trim($value, '"\'');
+            }
+            $formatted[$key] = $value;
+        }
+        
+        // 类型转换
+        if (isset($formatted['id'])) {
+            $formatted['id'] = (int) $formatted['id'];
+        }
+        if (isset($formatted['product_line_id'])) {
+            $formatted['product_line_id'] = (int) $formatted['product_line_id'];
+        }
+        if (isset($formatted['sort_order'])) {
+            $formatted['sort_order'] = (int) $formatted['sort_order'];
+        }
+        
+        // 规格特殊处理
+        if ($type === 'specifications') {
+            if (isset($formatted['metric_value'])) {
+                $formatted['metric_value'] = (float) $formatted['metric_value'];
+            }
+            if (isset($formatted['imperial_value'])) {
+                $formatted['imperial_value'] = (float) $formatted['imperial_value'];
+            }
+            // 为了兼容前端，将spec_type映射为code
+            if (isset($formatted['spec_type'])) {
+                $formatted['code'] = $formatted['spec_type'];
+            }
+        }
+        
+        return $formatted;
     }
 } 

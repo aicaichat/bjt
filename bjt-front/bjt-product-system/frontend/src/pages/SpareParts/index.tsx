@@ -44,6 +44,8 @@ import { SparePart } from '../../types/spareParts';
 import AuthContext from '../../contexts/AuthContext';
 import { CartContext, ExtendedCartItem } from '../../contexts/CartContext';
 import { getUserRegionFromEmail, isVipUser, getCurrencySymbol, PRICING } from '../../config/appConfig';
+// 导入 useAuth hook
+import { useAuth } from '../../contexts/AuthContext';
 import './SpareParts.css';
 
 // 定义 Timeout 类型，避免使用 NodeJS.Timeout
@@ -96,6 +98,28 @@ const SparePartsPage = () => {
   
   // 现代化UI组件hooks
   const { success, error: showErrorToast, warning, info } = useToastNotifications();
+  
+  // 使用 useAuth hook 获取用户偏好单位制
+  const { user, getPreferredUnit } = useAuth();
+  
+  // 创建兼容的 currentUser 对象，基于 useAuth 的 user
+  const currentUser = user ? {
+    id: user.id || 'guest',
+    username: user.username || 'Guest User',
+    role: user.role || 'customer',
+    discount: user.role === 'partner' ? 0.85 : user.role === 'admin' ? 0.8 : 0.9,
+    name: user.username || 'Guest User',
+    email: user.email || '',
+    region: user.region || 'cn'
+  } : {
+    id: 'guest',
+    username: 'Guest User',
+    role: 'customer',
+    discount: 0.9,
+    name: 'Guest User',
+    email: '',
+    region: 'cn'
+  };
   
   // 使用useCallback稳定回调函数引用
   const handleSparePartsSuccess = useCallback((data: any) => {
@@ -162,15 +186,15 @@ const SparePartsPage = () => {
   });
   
   // 用户数据状态
-  const [currentUser, setCurrentUser] = useState({
-    id: '',
-    username: '',
-    role: 'customer',
-    discount: 0.9,
-    name: '',
-    email: '',
-    region: 'cn'
-  });
+  // const [currentUser, setCurrentUser] = useState({
+  //   id: '',
+  //   username: '',
+  //   role: 'customer',
+  //   discount: 0.9,
+  //   name: '',
+  //   email: '',
+  //   region: 'cn'
+  // });
   
   // API数据状态
   const [spareParts, setSpareParts] = useState<SparePart[]>([]);
@@ -214,8 +238,8 @@ const SparePartsPage = () => {
   
   const authContext = useContext(AuthContext);
   // Handle the case where context might be undefined
-  const user = authContext?.user || null;
-  // 增强userRole获取逻辑，优先从authContext获取，如果不存在则从localStorage获取
+  // const user = authContext?.user || null; // 删除这行，使用useAuth hook的user
+  // 增强userRole获取逻辑，优先从useAuth hook获取
   let userRole = user?.role || 'customer';
   const userRegion = user?.region || 'EU';
   
@@ -251,17 +275,8 @@ const SparePartsPage = () => {
       const userEmail = userData.email || '';
       const isVip = isVipUser(userEmail);
       
-      // 设置用户数据
-      setCurrentUser({
-        id: userData.id || 'guest',
-        username: userData.username || userData.name || 'Guest User',
-        role: userData.role || 'customer',
-        // VIP用户有更高的折扣, 伙伴关系次之
-        discount: isVip ? 0.8 : userData.role === 'partner' ? 0.85 : 0.9,
-        name: userData.name || userData.displayName || 'Guest User',
-        email: userEmail,
-        region: getUserRegionFromEmail(userEmail)
-      });
+      // 用户数据现在由 useAuth hook 管理，这里只做验证
+      console.log('✅ User data validated from localStorage');
     } catch (err) {
       console.error('Error parsing auth data:', err);
       navigate('/login');
@@ -1660,8 +1675,8 @@ const SparePartsPage = () => {
                         <strong className="w-28 text-label font-medium flex-shrink-0 mr-3">{String(t('fields.specifications', { ns: 'spareParts' }) || 'Spec.')}:</strong>
                         <span className="text-content font-medium line-clamp-2 flex-1">
                           {(() => {
-                            // 根据用户区域确定单位制：北美和澳洲使用英制，其他地区使用公制
-                            const unitSystem = (userRegion === 'na' || userRegion === 'au') ? 'imperial' : 'metric';
+                            // 使用 AuthContext 的 getPreferredUnit() 方法
+                            const unitSystem = getPreferredUnit();
                             
                             if (unitSystem === 'metric') {
                               // 优先显示公制规格，如果为空则fallback到英制
@@ -1776,7 +1791,8 @@ const SparePartsPage = () => {
                               <div className="flex justify-between items-center py-1">
                                 <span className="text-gray-600 font-medium text-xs">
                                   📦 {(() => {
-                                    const unitSystem = (userRegion === 'na' || userRegion === 'au') ? 'imperial' : 'metric';
+                                    // 使用 AuthContext 的 getPreferredUnit() 方法
+                                    const unitSystem = getPreferredUnit();
                                     if (unitSystem === 'metric') {
                                       return String(t('details.properties.packageSizeCm', { ns: 'spareParts' }) || (currentLanguage === 'zh' ? '包装尺寸(cm)' : 'Package Size(cm)'));
                                     } else {
@@ -1786,7 +1802,8 @@ const SparePartsPage = () => {
                                 </span>
                                 <span className="text-gray-800 font-semibold text-xs bg-green-50 px-2 py-1 rounded">
                                   {(() => {
-                                    const unitSystem = (userRegion === 'na' || userRegion === 'au') ? 'imperial' : 'metric';
+                                    // 使用 AuthContext 的 getPreferredUnit() 方法
+                                    const unitSystem = getPreferredUnit();
                                     if (unitSystem === 'metric') {
                                       return formatCompositeDimension(part.package_size_cm) || 
                                              formatCompositeDimension(part.package_size_inch) || 
@@ -1804,7 +1821,8 @@ const SparePartsPage = () => {
                               <div className="flex justify-between items-center py-1">
                                 <span className="text-gray-600 font-medium text-xs">
                                   ⚖️ {(() => {
-                                    const unitSystem = (userRegion === 'na' || userRegion === 'au') ? 'imperial' : 'metric';
+                                    // 使用 AuthContext 的 getPreferredUnit() 方法
+                                    const unitSystem = getPreferredUnit();
                                     if (unitSystem === 'metric') {
                                       return String(t('details.properties.netWeightKg', { ns: 'spareParts' }) || (currentLanguage === 'zh' ? '净重(kg)' : 'Net Weight(kg)'));
                                     } else {
@@ -1814,7 +1832,8 @@ const SparePartsPage = () => {
                                 </span>
                                 <span className="text-gray-800 font-semibold text-xs bg-yellow-50 px-2 py-1 rounded">
                                   {(() => {
-                                    const unitSystem = (userRegion === 'na' || userRegion === 'au') ? 'imperial' : 'metric';
+                                    // 使用 AuthContext 的 getPreferredUnit() 方法
+                                    const unitSystem = getPreferredUnit();
                                     if (unitSystem === 'metric') {
                                       return formatWeight(part.net_weight_kg) || 
                                              formatWeight(part.net_weight_lbs) || 

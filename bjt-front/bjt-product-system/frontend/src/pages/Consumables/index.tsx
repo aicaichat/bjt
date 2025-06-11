@@ -65,7 +65,7 @@ const shapePlaceholderImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGh
 const dimensionGuidePlaceholder = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgwIiBoZWlnaHQ9IjIyMCIgdmlld0JveD0iMCAwIDQ4MCAyMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0ODAiIGhlaWdodD0iMjIwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yMDAgMTEwSDI4MFYxMzBIMjAwVjExMFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
 const infoIconPlaceholder = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiIGZpbGw9IiM2QjdCODQiLz4KPHBhdGggZD0iTTEyIDhIMTJWMTZIMTJWOFoiIGZpbGw9IndoaXRlIi8+CjxjaXJjbGUgY3g9IjEyIiBjeT0iNiIgcj0iMSIgZmlsbD0id2hpdGUiLz4KPC9zdmc+';
 
-// 根据登录账号确定用户区域
+// 根据登录账号确定用户区域 (保留作为备用，但不用于单位制判断)
 const getUserRegionFromEmail = (email: string) => {
   if (email.includes('eu')) return 'eu';
   if (email.includes('au')) return 'au';
@@ -187,6 +187,17 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
   
   // 原有的Tooltip逻辑保持不变 (向后兼容)
   const { t, i18n } = useTranslation(['consumables', 'common']);
+  const { getPreferredUnit } = useAuth(); // 🔥 新增：获取用户偏好单位制
+  
+  // 🔥 新增：获取用户偏好单位制，替换基于区域的单位制判断
+  const preferredUnit = getPreferredUnit(); // 'metric' | 'imperial'
+  const isImperialUnit = preferredUnit === 'imperial';
+  
+  console.log('🌍 [Tooltip单位制] 用户偏好设置:', {
+    userRegion, // 仅用于货币显示
+    preferredUnit, // 用于单位制判断
+    isImperialUnit
+  });
   
   // 🔥 强制设置英语显示
   React.useEffect(() => {
@@ -516,14 +527,14 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
               </div>
               <div className="spec-item">
                 <span className="spec-label">
-                  {userRegion === 'na' || userRegion === 'au' ? 
+                  {isImperialUnit ? 
                     t('tooltip.thickness.imperial', 'Thickness(mil)') : 
                     t('tooltip.thickness.metric', 'Thickness(μm)')
                   }
                 </span>
                 <span className="spec-value">
                   {(() => {
-                    if (userRegion === 'na' || userRegion === 'au') {
+                    if (isImperialUnit) {
                       const thicknessImp = safeGet('thickness_imp', '');
                       const thickness = safeGet('thickness', '');
                       return thicknessImp !== 'N/A' && thicknessImp !== '' ? thicknessImp : 
@@ -539,17 +550,17 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
               </div>
               <div className="spec-item">
                 <span className="spec-label">
-                  {userRegion === 'na' || userRegion === 'au' ? 
+                  {isImperialUnit ? 
                     t('tooltip.dimensions.imperial', 'Dimensions(inch)') : 
                     t('tooltip.dimensions.metric', 'Dimensions(cm)')
                   }
                 </span>
                 <span className="spec-value">
                   {(() => {
-                    const width = userRegion === 'na' || userRegion === 'au' ? 
+                    const width = isImperialUnit ? 
                       safeGet('width_imp', safeGet('width', '')) : 
                       safeGet('width_met', safeGet('width', ''));
-                    const length = userRegion === 'na' || userRegion === 'au' ? 
+                    const length = isImperialUnit ? 
                       safeGet('length_imp', safeGet('length', '')) : 
                       safeGet('length_met', safeGet('length', ''));
                     
@@ -567,14 +578,14 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
               {shouldShowBubbleDiameter() && (
                 <div className="spec-item">
                   <span className="spec-label">
-                    {userRegion === 'na' || userRegion === 'au' ? 
+                    {isImperialUnit ? 
                       t('tooltip.bubbleDiameter.imperial', 'Bubble Diameter(inch)') : 
                       t('tooltip.bubbleDiameter.metric', 'Bubble Diameter(cm)')
                     }
                   </span>
                   <span className="spec-value">
                     {(() => {
-                      if (userRegion === 'na' || userRegion === 'au') {
+                      if (isImperialUnit) {
                         const bubbleDiameterImp = safeGet('bubble_diameter_imp', '');
                         const bubbleDiameter = safeGet('bubble_diameter', '');
                         return bubbleDiameterImp !== 'N/A' && bubbleDiameterImp !== '' ? bubbleDiameterImp : 
@@ -602,13 +613,55 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
               {/* 配置A */}
               {(() => {
                 const pcsA = safeGet('pcs_per_pallet_a', '');
-                const weightA = safeGet(userRegion === 'na' || userRegion === 'au' ? 'pallet_gross_weight_a_lbs' : 'pallet_gross_weight_a_kg', '');
+                const weightA = safeGet(isImperialUnit ? 'pallet_gross_weight_a_lbs' : 'pallet_gross_weight_a_kg', '');
+                const heightA = safeGet(isImperialUnit ? 'pallet_height_a_inch' : 'pallet_height_a_cm', '');
+                
+                // 🔥 调试日志
+                console.log('🔄 [托盘配置A] 数据显示:', {
+                  isImperialUnit,
+                  pcsA,
+                  weightField: isImperialUnit ? 'pallet_gross_weight_a_lbs' : 'pallet_gross_weight_a_kg',
+                  weightA,
+                  heightField: isImperialUnit ? 'pallet_height_a_inch' : 'pallet_height_a_cm',
+                  heightA,
+                  itemData: {
+                    pallet_gross_weight_a_kg: item?.pallet_gross_weight_a_kg,
+                    pallet_gross_weight_a_lbs: item?.pallet_gross_weight_a_lbs,
+                    pallet_height_a_cm: item?.pallet_height_a_cm,
+                    pallet_height_a_inch: item?.pallet_height_a_inch
+                  }
+                });
                 
                 if (pcsA !== 'N/A' && pcsA !== '' && weightA !== 'N/A' && weightA !== '') {
+                  const rollsLabel = t('tooltip.units.rolls', isImperialUnit ? 'Rolls' : '卷');
+                  const weightLabel = t('tooltip.units.weight', isImperialUnit ? 'Weight' : '重量');
+                  const heightLabel = t('tooltip.units.height', isImperialUnit ? 'Height' : '高度');
+                  const weightUnit = isImperialUnit ? 'lbs' : 'kg';
+                  const heightUnit = isImperialUnit ? 'inch' : 'cm';
+                  
+                  // 格式化数值
+                  const formattedWeight = weightA ? parseFloat(weightA).toFixed(2) : 'N/A';
+                  const formattedHeight = heightA ? parseFloat(heightA).toFixed(2) : 'N/A';
+                  
                   return (
                     <div className="pallet-config-row">
                       <span className="config-label">{t('tooltip.configA', 'Configuration A')}</span>
-                      <span className="config-value">{pcsA}卷 | {weightA}{userRegion === 'na' || userRegion === 'au' ? 'lbs' : 'kg'}</span>
+                      <div className="config-values">
+                        <span className="config-item">
+                          <span className="unit-label">{rollsLabel}:</span>
+                          <span className="unit-value">{pcsA}</span>
+                        </span>
+                        <span className="config-item">
+                          <span className="unit-label">{weightUnit}:</span>
+                          <span className="unit-value">{formattedWeight}</span>
+                        </span>
+                        {heightA !== 'N/A' && heightA !== '' && (
+                          <span className="config-item">
+                            <span className="unit-label">{heightUnit}:</span>
+                            <span className="unit-value">{formattedHeight}</span>
+                          </span>
+                        )}
+                      </div>
                     </div>
                   );
                 }
@@ -618,13 +671,39 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
               {/* 配置B */}
               {(() => {
                 const pcsB = safeGet('pcs_per_pallet_b', '');
-                const weightB = safeGet(userRegion === 'na' || userRegion === 'au' ? 'pallet_gross_weight_b_lbs' : 'pallet_gross_weight_b_kg', '');
+                const weightB = safeGet(isImperialUnit ? 'pallet_gross_weight_b_lbs' : 'pallet_gross_weight_b_kg', '');
+                const heightB = safeGet(isImperialUnit ? 'pallet_height_b_inch' : 'pallet_height_b_cm', '');
                 
                 if (pcsB !== 'N/A' && pcsB !== '' && weightB !== 'N/A' && weightB !== '') {
+                  const rollsLabel = t('tooltip.units.rolls', isImperialUnit ? 'Rolls' : '卷');
+                  const weightLabel = t('tooltip.units.weight', isImperialUnit ? 'Weight' : '重量');
+                  const heightLabel = t('tooltip.units.height', isImperialUnit ? 'Height' : '高度');
+                  const weightUnit = isImperialUnit ? 'lbs' : 'kg';
+                  const heightUnit = isImperialUnit ? 'inch' : 'cm';
+                  
+                  // 格式化数值
+                  const formattedWeight = weightB ? parseFloat(weightB).toFixed(2) : 'N/A';
+                  const formattedHeight = heightB ? parseFloat(heightB).toFixed(2) : 'N/A';
+                  
                   return (
                     <div className="pallet-config-row">
                       <span className="config-label">{t('tooltip.configB', 'Configuration B')}</span>
-                      <span className="config-value">{pcsB}卷 | {weightB}{userRegion === 'na' || userRegion === 'au' ? 'lbs' : 'kg'}</span>
+                      <div className="config-values">
+                        <span className="config-item">
+                          <span className="unit-label">{rollsLabel}:</span>
+                          <span className="unit-value">{pcsB}</span>
+                        </span>
+                        <span className="config-item">
+                          <span className="unit-label">{weightUnit}:</span>
+                          <span className="unit-value">{formattedWeight}</span>
+                        </span>
+                        {heightB !== 'N/A' && heightB !== '' && (
+                          <span className="config-item">
+                            <span className="unit-label">{heightUnit}:</span>
+                            <span className="unit-value">{formattedHeight}</span>
+                          </span>
+                        )}
+                      </div>
                     </div>
                   );
                 }
@@ -634,13 +713,39 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
               {/* 配置C */}
               {(() => {
                 const pcsC = safeGet('pcs_per_pallet_c', '');
-                const weightC = safeGet(userRegion === 'na' || userRegion === 'au' ? 'pallet_gross_weight_c_lbs' : 'pallet_gross_weight_c_kg', '');
+                const weightC = safeGet(isImperialUnit ? 'pallet_gross_weight_c_lbs' : 'pallet_gross_weight_c_kg', '');
+                const heightC = safeGet(isImperialUnit ? 'pallet_height_c_inch' : 'pallet_height_c_cm', '');
                 
                 if (pcsC !== 'N/A' && pcsC !== '' && weightC !== 'N/A' && weightC !== '') {
+                  const rollsLabel = t('tooltip.units.rolls', isImperialUnit ? 'Rolls' : '卷');
+                  const weightLabel = t('tooltip.units.weight', isImperialUnit ? 'Weight' : '重量');
+                  const heightLabel = t('tooltip.units.height', isImperialUnit ? 'Height' : '高度');
+                  const weightUnit = isImperialUnit ? 'lbs' : 'kg';
+                  const heightUnit = isImperialUnit ? 'inch' : 'cm';
+                  
+                  // 格式化数值
+                  const formattedWeight = weightC ? parseFloat(weightC).toFixed(2) : 'N/A';
+                  const formattedHeight = heightC ? parseFloat(heightC).toFixed(2) : 'N/A';
+                  
                   return (
                     <div className="pallet-config-row">
                       <span className="config-label">{t('tooltip.configC', 'Configuration C')}</span>
-                      <span className="config-value">{pcsC}卷 | {weightC}{userRegion === 'na' || userRegion === 'au' ? 'lbs' : 'kg'}</span>
+                      <div className="config-values">
+                        <span className="config-item">
+                          <span className="unit-label">{rollsLabel}:</span>
+                          <span className="unit-value">{pcsC}</span>
+                        </span>
+                        <span className="config-item">
+                          <span className="unit-label">{weightUnit}:</span>
+                          <span className="unit-value">{formattedWeight}</span>
+                        </span>
+                        {heightC !== 'N/A' && heightC !== '' && (
+                          <span className="config-item">
+                            <span className="unit-label">{heightUnit}:</span>
+                            <span className="unit-value">{formattedHeight}</span>
+                          </span>
+                        )}
+                      </div>
                     </div>
                   );
                 }
@@ -649,12 +754,20 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
               
               {/* 托盘尺寸 */}
               {(() => {
-                const palletSize = safeGet(userRegion === 'na' || userRegion === 'au' ? 'pallet_size_inch' : 'pallet_size_cm', '');
+                const palletSize = safeGet(isImperialUnit ? 'pallet_size_inch' : 'pallet_size_cm', '');
                 if (palletSize !== 'N/A' && palletSize !== '') {
+                  const sizeUnit = isImperialUnit ? 'inch' : 'cm';
+                  const sizeLabel = t('tooltip.palletSize', 'Pallet Size');
+                  
                   return (
                     <div className="pallet-config-row">
-                      <span className="config-label">{t('tooltip.palletSize', 'Pallet Size')}</span>
-                      <span className="config-value">{palletSize}</span>
+                      <span className="config-label">{sizeLabel}</span>
+                      <div className="config-values">
+                        <span className="config-item">
+                          <span className="unit-label">{sizeUnit}:</span>
+                          <span className="unit-value">{palletSize}</span>
+                        </span>
+                      </div>
                     </div>
                   );
                 }
@@ -699,14 +812,14 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
               </div>
               <div className="package-row">
                 <span className="package-label">
-                  {userRegion === 'na' || userRegion === 'au' ? 
+                  {isImperialUnit ? 
                     t('tooltip.unitWeight.imperial', 'Unit Weight(lbs)') : 
                     t('tooltip.unitWeight.metric', 'Unit Weight(kg)')
                   }
                 </span>
                 <span className="package-value">
                   {(() => {
-                    const weightField = userRegion === 'na' || userRegion === 'au' ? 'net_weight_lbs' : 'net_weight_kg';
+                    const weightField = isImperialUnit ? 'net_weight_lbs' : 'net_weight_kg';
                     const weight = safeGet(weightField, '');
                     return weight !== 'N/A' && weight !== '' ? weight : t('common.toBeFilled', 'To be filled');
                   })()}
@@ -714,14 +827,14 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
               </div>
               <div className="package-row">
                 <span className="package-label">
-                  {userRegion === 'na' || userRegion === 'au' ? 
+                  {isImperialUnit ? 
                     t('tooltip.totalLength.imperial', 'Total Length(ft)') : 
                     t('tooltip.totalLength.metric', 'Total Length(m)')
                   }
                 </span>
                 <span className="package-value">
                   {(() => {
-                    if (userRegion === 'na' || userRegion === 'au') {
+                    if (isImperialUnit) {
                       const totalLengthFt = safeGet('total_length_ft', '');
                       const rollLengthFt = safeGet('roll_length_ft', '');
                       const rollLength = safeGet('rollLength', '');
@@ -760,15 +873,15 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
             </h5>
             <div className="tech-params-compact">
               {(() => {
-                const tubeField = userRegion === 'na' || userRegion === 'au' ? 'tube_inner_diameter_inch' : 'tube_inner_diameter_cm';
+                const tubeField = isImperialUnit ? 'tube_inner_diameter_inch' : 'tube_inner_diameter_cm';
                 const tubeDiameter = safeGet(tubeField, '');
-                const packageSize = safeGet(userRegion === 'na' || userRegion === 'au' ? 'package_size_inch' : 'package_size_cm', '');
+                const packageSize = safeGet(isImperialUnit ? 'package_size_inch' : 'package_size_cm', '');
                 
                 if (tubeDiameter !== 'N/A' && tubeDiameter !== '') {
                   return (
                     <div className="tech-param-row">
                       <span className="param-label">
-                        {userRegion === 'na' || userRegion === 'au' ? 
+                        {isImperialUnit ? 
                           t('tooltip.tubeInnerDiameter.imperial', 'Core Diameter(inch)') : 
                           t('tooltip.tubeInnerDiameter.metric', 'Core Diameter(cm)')
                         }
@@ -781,12 +894,12 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
               })()}
               
               {(() => {
-                const packageSize = safeGet(userRegion === 'na' || userRegion === 'au' ? 'package_size_inch' : 'package_size_cm', '');
+                const packageSize = safeGet(isImperialUnit ? 'package_size_inch' : 'package_size_cm', '');
                 if (packageSize !== 'N/A' && packageSize !== '') {
                   return (
                     <div className="tech-param-row">
                       <span className="param-label">
-                        {userRegion === 'na' || userRegion === 'au' ? 
+                        {isImperialUnit ? 
                           t('tooltip.packageSize.imperial', 'Package Size(inch)') : 
                           t('tooltip.packageSize.metric', 'Package Size(cm)')
                         }
@@ -1170,8 +1283,10 @@ interface FilterCache {
 const normalize = (v: any) => (v ?? '').toString().toLowerCase().replace(/\s+/g, '').replace(/%/g, '');
 
 const extractNumber = (value: string | number | undefined | null): number | undefined => {
-  if (typeof value === 'number') return value;
-  if (typeof value === 'string') {
+  if (typeof value === 'number') {
+    return value;
+  }
+  if (typeof value === 'string' && value.length > 0) {
     const num = parseFloat(value.replace(/[^\d.-]/g, ''));
     return isNaN(num) ? undefined : num;
   }
@@ -1179,9 +1294,13 @@ const extractNumber = (value: string | number | undefined | null): number | unde
 };
 
 // 获取本地化选项名称
-const getLocalizedOptionName = (option: FilterOptionItem): string => {
-  // 简化处理，直接返回中文名称
-  return option.name_zh || option.name_en || '';
+const getLocalizedOptionName = (option: FilterOptionItem, language: string = 'zh'): string => {
+  // 🔥 修复：根据传入的语言参数返回对应的名称
+  if (language.startsWith('zh')) {
+    return option.name_zh || option.name_en || option.name || '';
+  } else {
+    return option.name_en || option.name_zh || option.name || '';
+  }
 };
 
 // 智能筛选配置
@@ -1333,7 +1452,7 @@ const ConsumablesPage: React.FC = () => {
   // 基础hooks - 顺序固定，不能变化
   const { t, i18n } = useTranslation('consumables');
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, getPreferredUnit } = useAuth();
   const { addItem } = useCart();
   const [searchParams] = useSearchParams();
   
@@ -1423,7 +1542,18 @@ const ConsumablesPage: React.FC = () => {
   // 8. UI辅助状态
   const cartButtonRef = useRef<HTMLButtonElement>(null);
   const currentLanguage = i18n.language;
-  const userRegion = getUserRegionFromEmail(user?.email || '');
+  const userRegion = getUserRegionFromEmail(user?.email || ''); // 保留用于货币显示等非单位制功能
+  
+  // 🔥 新增：获取用户偏好单位制，替换基于区域的单位制判断
+  const preferredUnit = getPreferredUnit(); // 'metric' | 'imperial'
+  const isImperialUnit = preferredUnit === 'imperial';
+  
+  console.log('🌍 [单位制设置] 用户偏好:', {
+    userRegion, // 仅用于货币显示
+    preferredUnit, // 用于单位制判断
+    isImperialUnit,
+    userEmail: user?.email
+  });
   
   // 9. 性能缓存状态
   const [filterCache, setFilterCache] = useState<Map<string, FilterCache>>(new Map());
@@ -1434,7 +1564,8 @@ const ConsumablesPage: React.FC = () => {
     if (selectedShape === 'all') return shapePlaceholderImage;
     
     const shapeData = filterOptions?.shapes?.find(s => s.id === selectedShape);
-    return shapeData?.image_url || shapePlaceholderImage;
+    // 🔥 修复：Dimension Guide区域应该显示示意图片（image_url2）
+    return shapeData?.image_url2 || shapeData?.image_url || shapePlaceholderImage;
   }, [selectedShape, filterOptions?.shapes]);
   
   // 筛选后的耗材数据
@@ -1685,7 +1816,9 @@ const ConsumablesPage: React.FC = () => {
             shapeConfig.name_en, 
             shapeConfig.name_zh,
             shapeConfig.shape_name,
-            shapeConfig.category_name
+            shapeConfig.category_name,
+            shapeConfig.code,
+            shapeConfig.name
           ].filter(Boolean);
           
           console.log('🔧 [Shape筛选] 处理形状配置:', {
@@ -1693,30 +1826,38 @@ const ConsumablesPage: React.FC = () => {
             possibleIds
           });
           
-          // 🔥 修复：智能匹配形状数量，支持中英文名称
+          // 🔥 修复：智能匹配形状数量，支持模糊匹配
           let matchedCount = 0;
           let matchedShapeId = '';
           
+          // 首先尝试精确匹配
           for (const id of possibleIds) {
             if (shapeCountMap.has(id)) {
               matchedCount = shapeCountMap.get(id) || 0;
               matchedShapeId = id;
+              console.log('🔧 [Shape筛选] 精确匹配成功:', { id, count: matchedCount });
               break;
             }
           }
           
-          // 如果没有直接匹配，尝试模糊匹配
+          // 如果没有精确匹配，尝试包含匹配（如 "Pillow" 匹配 "paper air Pillow"）
           if (matchedCount === 0) {
             for (const [dbShape, count] of shapeCountMap.entries()) {
               for (const configId of possibleIds) {
                 const normalizedDbShape = dbShape.toLowerCase().replace(/\s+/g, '');
                 const normalizedConfigId = configId.toLowerCase().replace(/\s+/g, '');
                 
+                // 双向包含匹配：配置ID包含在数据库shape中，或数据库shape包含配置ID
                 if (normalizedDbShape.includes(normalizedConfigId) || 
                     normalizedConfigId.includes(normalizedDbShape)) {
                   matchedCount = count;
-                  matchedShapeId = dbShape;
-                  console.log('🔧 [Shape筛选] 模糊匹配成功:', { dbShape, configId, count });
+                  matchedShapeId = dbShape; // 使用数据库中的真实shape值作为ID
+                  console.log('🔧 [Shape筛选] 包含匹配成功:', { 
+                    dbShape, 
+                    configId, 
+                    count,
+                    使用ID: matchedShapeId 
+                  });
                   break;
                 }
               }
@@ -1724,29 +1865,33 @@ const ConsumablesPage: React.FC = () => {
             }
           }
           
-          const finalShapeId = matchedShapeId || possibleIds[0] || shapeConfig.id;
+          // 🔥 修复：如果仍然没有匹配，但API配置存在，则显示为0计数（但不禁用，用户可能想查看）
+          const finalShapeId = matchedShapeId || shapeConfig.id;
+          const finalShapeName = shapeConfig.name_zh || shapeConfig.name_en || shapeConfig.name || finalShapeId;
           
           if (finalShapeId && !processedShapes.has(finalShapeId)) {
-            // 🔥 修复：正确使用数据库中的图片URL
-            const imageUrl = cleanImageUrl(shapeConfig.image_url || shapeConfig.featured_image);
+            // 🔥 修复：Shape筛选器使用基础图片（image_url）便于快速识别
+            const imageUrl = cleanImageUrl(shapeConfig.image_url || shapeConfig.featured_image || shapePlaceholderImage);
             
             console.log('🔧 [Shape筛选] 添加形状选项:', {
               id: finalShapeId,
-              name: shapeConfig.name_zh || shapeConfig.name_en || finalShapeId,
+              name: finalShapeName,
               count: matchedCount,
               imageUrl: imageUrl,
-              originalImageUrl: shapeConfig.image_url
+              originalImageUrl: shapeConfig.image_url,
+              使用基础图: !!shapeConfig.image_url
             });
             
             shapeOptions.push({
               id: finalShapeId,
-              name: shapeConfig.name_zh || shapeConfig.name_en || finalShapeId,
+              name: finalShapeName,
               count: matchedCount,
-              disabled: matchedCount === 0,
+              disabled: matchedCount === 0, // 如果没有匹配数据则禁用
               originalData: {
                 ...shapeConfig,
-                // 🔥 修复：直接使用数据库中的图片URL
-                image_url: imageUrl
+                // 🔥 修复：保持原始的image_url字段用于筛选器，image_url2用于尺寸指导图
+                image_url: shapeConfig.image_url,
+                image_url2: shapeConfig.image_url2
               }
             });
             processedShapes.add(finalShapeId);
@@ -1780,6 +1925,16 @@ const ConsumablesPage: React.FC = () => {
       shapeOptions.sort((a, b) => b.count - a.count);
 
       console.log('🔧 [Shape筛选] 最终生成的形状选项:', shapeOptions);
+      
+      // 🔧 调试：验证image_url字段
+      shapeOptions.forEach(option => {
+        console.log(`🖼️ [Shape图片] ${option.name}:`, {
+          image_url: option.originalData?.image_url,
+          image_url2: option.originalData?.image_url2,
+          筛选器将使用: option.originalData?.image_url
+        });
+      });
+      
       return shapeOptions;
     };
     
@@ -2913,13 +3068,14 @@ const ConsumablesPage: React.FC = () => {
   };
   
   // 获取筛选选项，确保过滤掉无效数据
-  const shapes = (filterOptions?.shapes || []).filter(item => item && item.id && item.name_zh);
-  const materials = (filterOptions?.materials || []).filter(item => item && item.id && item.name_zh);
-  const models = (filterOptions?.models || []).filter(item => item && item.id && item.name_zh);
-  const thicknesses = (filterOptions?.thicknesses || []).filter(item => item && item.id && item.name_zh);
-  const weights = (filterOptions?.weights || []).filter(item => item && item.id && item.name_zh);
-  const widths = (filterOptions?.widths || []).filter(item => item && item.id && item.name_zh);
-  const lengths = (filterOptions?.lengths || []).filter(item => item && item.id && item.name_zh);
+  // 🔥 修复：兼容API数据字段（name_zh或name）
+  const shapes = (filterOptions?.shapes || []).filter(item => item && item.id && (item.name_zh || item.name));
+  const materials = (filterOptions?.materials || []).filter(item => item && item.id && (item.name_zh || item.name));
+  const models = (filterOptions?.models || []).filter(item => item && item.id && (item.name_zh || item.name));
+  const thicknesses = (filterOptions?.thicknesses || []).filter(item => item && item.id && (item.name_zh || item.name));
+  const weights = (filterOptions?.weights || []).filter(item => item && item.id && (item.name_zh || item.name));
+  const widths = (filterOptions?.widths || []).filter(item => item && item.id && (item.name_zh || item.name));
+  const lengths = (filterOptions?.lengths || []).filter(item => item && item.id && (item.name_zh || item.name));
   const modelExplodedViews = filterOptions?.modelExplodedViews || {};
   
   // 调试日志
@@ -2929,7 +3085,7 @@ const ConsumablesPage: React.FC = () => {
       id: shape.id,
       name_zh: shape.name_zh,
       name_en: shape.name_en,
-      localized_name: getLocalizedOptionName(shape),
+      localized_name: getLocalizedOptionName(shape, i18n.language),
       image_url: shape.image_url,
       hasImageUrl: !!shape.image_url
     });
@@ -3162,13 +3318,42 @@ const ConsumablesPage: React.FC = () => {
                     >
                       <div className="mb-4 flex justify-center">
                         <img
-                          src={shape.originalData?.image_url || shapePlaceholderImage}
+                          src={(() => {
+                            // 🔥 修复：Shape筛选器应该显示基础图片（image_url）便于快速识别
+                            const debugImageSrc = shape.originalData?.image_url || shapePlaceholderImage;
+                            // 🔥 添加缓存清除参数
+                            const cacheBusterSrc = debugImageSrc + '?v=' + Date.now();
+                            console.log(`🖼️ [Shape渲染实时] ${shape.name}:`, {
+                              即将使用的图片: debugImageSrc,
+                              带缓存清除的图片: cacheBusterSrc,
+                              image_url: shape.originalData?.image_url,
+                              image_url2: shape.originalData?.image_url2,
+                              完整originalData: shape.originalData
+                            });
+                            return cacheBusterSrc;
+                          })()}
                           alt={shape.name}
                           className="h-28 w-32 object-contain"
+                          id={`shape-image-${shape.id}`}
+                          data-shape-id={shape.id}
+                          data-image-type="basic"
+                          data-original-url={shape.originalData?.image_url}
+                          onLoad={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            console.log(`✅ [Shape渲染] ${shape.name} 图片加载成功！基础图正确显示`);
+                            console.log(`🔧 [DOM验证] 元素ID: ${target.id}, 实际src: ${target.src}`);
+                            console.log(`🔧 [DOM验证] 元素位置:`, target.getBoundingClientRect());
+                            // 🔥 强制高亮显示加载成功的图片
+                            target.style.border = '2px solid green';
+                            setTimeout(() => {
+                              target.style.border = '';
+                            }, 2000);
+                          }}
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
-                            if (!target.src.startsWith('data:')) {
-                              console.warn('🖼️ [Shape Image] 加载失败，使用占位图片:', shape.originalData?.image_url);
+                            console.error(`❌ [Shape渲染] ${shape.name} 图片加载失败:`, target.src);
+                            console.error('❌ [Shape渲染] 尝试加载备用图片...');
+                            if (!target.src.includes('placeholder')) {
                               target.src = shapePlaceholderImage;
                             }
                           }}
@@ -3179,7 +3364,12 @@ const ConsumablesPage: React.FC = () => {
                         ${selectedShape === shape.id ? 'text-blue-700' : 'text-gray-700'}
                         ${shape.disabled ? 'text-gray-400' : ''}
                       `}>
-                        <span className={shape.disabled ? 'line-through' : ''}>{shape.name}</span>
+                        <span className={shape.disabled ? 'line-through' : ''}>
+                          {i18n.language.startsWith('zh') 
+                            ? (shape.originalData?.name_zh || shape.name)
+                            : (shape.originalData?.name_en || shape.name)
+                          }
+                        </span>
                         {smartFilterConfig.showCount && (
                           <span className={`text-xs mt-1 ${shape.disabled ? 'text-gray-300' : 'text-blue-500'}`}>
                             ({shape.count})

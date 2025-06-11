@@ -644,6 +644,11 @@
     "techParams": "技术参数",
     "cartonPack": "纸箱装",
     "apiError": "API调用失败，显示基础信息",
+    "units": {
+      "rolls": "卷",
+      "weight": "重量",
+      "height": "高度"
+    },
     "thickness": {
       "metric": "厚度(μm)",
       "imperial": "厚度(mil)"

@@ -128,6 +128,8 @@ export interface FilterOptionItem {
   id: string;
   name_zh: string;
   name_en?: string;
+  code?: string;              // 添加code字段
+  name?: string;              // 添加name字段
   image_url?: string;
   image_url2?: string;
   shape_name?: string;        // 添加缺失字段

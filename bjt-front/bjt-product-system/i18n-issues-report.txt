@@ -1,0 +1,12 @@
+🔍 前端页面多语言和单位显示问题扫描报告
+扫描时间: 2025-06-11 19:53:57
+扫描目录: frontend/src/components
+================================================
+【1. 硬编码中文文本问题】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 模式: 型号:
+frontend/src/components/SparePartList.tsx:138:                  <p>型号: {model.model_name}</p>
+
+📍 模式: 电压:
+frontend/src/components/ProductInfo/ProductCard.tsx:119:            {productInfo.voltage && <span>电压: {productInfo.voltage}</span>}
+
