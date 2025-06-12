@@ -150,6 +150,8 @@
     "imperial": "英制"
   },
   "noSpecPdf": "暂无规格说明文档",
+  "noAccessorySpecPdf": "暂无该配件的规格说明文档",
+  "noSpecDetailsPdf": "暂无规格详情PDF文件",
   "priceInquiry": "需要询价",
   "specDetails": "规格说明",
   "moreInfo": "更多信息",

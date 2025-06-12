@@ -202,16 +202,16 @@ export const MACHINE_DISPLAY_SCENARIOS: Record<string, MachineDisplayScenario> =
  */
 export const MACHINE_FEATURE_FLAGS = {
   // 是否启用新的标准化字段显示
-  ENABLE_STANDARDIZED_DISPLAY: process.env.REACT_APP_ENABLE_MACHINE_STANDARD_DISPLAY === 'true',
+  ENABLE_STANDARDIZED_DISPLAY: import.meta.env.VITE_ENABLE_MACHINE_STANDARD_DISPLAY === 'true',
   
   // 是否启用智能单位制切换
-  ENABLE_SMART_UNIT_SYSTEM: process.env.REACT_APP_ENABLE_SMART_UNIT_SYSTEM !== 'false',
+  ENABLE_SMART_UNIT_SYSTEM: import.meta.env.VITE_ENABLE_SMART_UNIT_SYSTEM !== 'false',
   
   // 是否显示调试信息
-  ENABLE_DEBUG_INFO: process.env.NODE_ENV === 'development',
+  ENABLE_DEBUG_INFO: import.meta.env.DEV,
   
   // 是否启用性能监控
-  ENABLE_PERFORMANCE_MONITORING: process.env.REACT_APP_ENABLE_PERF_MONITORING === 'true'
+  ENABLE_PERFORMANCE_MONITORING: import.meta.env.VITE_ENABLE_PERF_MONITORING === 'true'
 };
 
 /**

@@ -10,6 +10,7 @@ import hostModelsData from './data/hostModels.data.json';
 import rawMachinePartsData from './data/machineParts.data.json';
 import pricesData from './data/prices.data.json';
 import inventoryData from './data/inventory.data.json';
+import { ASSETS } from '../../config/appConfig';
 // TODO: Update import paths if PriceTier/InventoryData are elsewhere
 
 // --- Mock Data based on mockup.sql ---
@@ -338,7 +339,7 @@ export const getMockMachineAccessories = (parentPartNumber: string): MachineAcce
         model: accessoryModelData.model,
         title: accessoryModelData.title_en, // Adjust based on locale
         level: relation.level,
-        image_url: accessoryModelData.image1_url || '/images/placeholder.jpg',
+        image_url: accessoryModelData.image1_url || ASSETS.DEFAULT_IMAGE,
         parts: [],
         parent_id: parentPartNumber,
       };

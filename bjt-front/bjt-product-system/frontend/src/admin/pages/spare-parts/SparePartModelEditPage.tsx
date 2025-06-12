@@ -456,7 +456,7 @@ const SparePartModelEditPage: React.FC = () => {
           <Divider orientation="left">图片资料 (Images & Documents)</Divider>
           
           <Row gutter={16}>
-            <Col span={8}>
+            <Col span={6}>
               <Form.Item
                 label="主图 (Main Image)"
                 name="image1_url"
@@ -468,7 +468,7 @@ const SparePartModelEditPage: React.FC = () => {
               </Form.Item>
             </Col>
 
-            <Col span={8}>
+            <Col span={6}>
               <Form.Item
                 label="副图 (Secondary Image)"
                 name="image2_url"
@@ -480,10 +480,23 @@ const SparePartModelEditPage: React.FC = () => {
               </Form.Item>
             </Col>
 
-            <Col span={8}>
+            <Col span={6}>
               <Form.Item
                 label="爆炸图PDF (Explosion Diagram PDF)"
                 name="explosion_diagram_pdf"
+              >
+                <FileUrlInput
+                  placeholder="请输入PDF URL或点击上传"
+                  uploadPath="/uploads/spare-parts/pdfs/"
+                  accept=".pdf"
+                />
+              </Form.Item>
+            </Col>
+
+            <Col span={6}>
+              <Form.Item
+                label="规格PDF (Specification PDF)"
+                name="spec_pdf"
               >
                 <FileUrlInput
                   placeholder="请输入PDF URL或点击上传"

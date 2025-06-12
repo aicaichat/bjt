@@ -3,6 +3,7 @@ import { ASSETS } from '../config/appConfig';
 import { getMockConsumables as getBaseMockConsumables, getMockConsumableById as getBaseMockConsumableById } from './mocks/consumables.mocks';
 import { Consumable as CentralConsumable, ConsumablePriceTier as CentralConsumablePriceTier, ConsumableInventoryDetail as CentralConsumableInventory, ConsumableFilterOptions as CentralConsumableFilterOptions } from '../types/consumables';
 import { delay } from '../utils/delay';
+import { API_BASE_URL } from '../api/config';
 
 // 耗材接口定义 (LOCAL TO THIS SERVICE) - 基于CSV文件要求完整重构
 export interface ConsumableProduct {
@@ -344,7 +345,7 @@ const mockGetConsumables_local = async (filters: ConsumableFilters): Promise<Con
       
       // 兼容字段
       bag_type: product.specs?.shape || (product as any).shape || null,
-      image_url: ASSETS.getUrl(product.image_url || '/images/placeholder.jpg'), 
+      image_url: ASSETS.getUrl(product.image_url || ASSETS.DEFAULT_IMAGE), 
       
       specs: {
         material: product.specs?.material || (product as any).material || 'HDPE',
@@ -532,7 +533,7 @@ const apiGetConsumables_local = async (filters: ConsumableFilters): Promise<Cons
       
       // 兼容字段
       bag_type: centralItem.specs?.shape || (centralItem as any).shape || null,
-      image_url: ASSETS.getUrl(centralItem.image_url || '/images/placeholder.jpg'),
+      image_url: ASSETS.getUrl(centralItem.image_url || ASSETS.DEFAULT_IMAGE),
       
       specs: {
         material: centralItem.specs?.material || (centralItem as any).material || 'HDPE',
@@ -681,7 +682,7 @@ const transformCentralConsumableToLocal = (product?: CentralConsumable): Consuma
       
       // 兼容字段
       bag_type: product.specs?.shape || (product as any).shape || null,
-      image_url: ASSETS.getUrl(product.image_url || '/images/placeholder.jpg'),
+      image_url: ASSETS.getUrl(product.image_url || ASSETS.DEFAULT_IMAGE),
       
       specs: {
         material: product.specs?.material || (product as any).material || 'HDPE',

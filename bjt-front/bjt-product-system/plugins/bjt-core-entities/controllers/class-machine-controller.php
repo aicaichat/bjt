@@ -137,7 +137,16 @@ class BJT_Machine_Controller extends BJT_API_Controller {
                 'methods' => WP_REST_Server::READABLE,
                 'callback' => [$this, 'get_items'],
                 'permission_callback' => [$this, 'check_read_permission'],
-                'args' => $this->get_pagination_arg_definitions(),
+                'args' => array_merge(
+                    $this->get_pagination_arg_definitions(),
+                    [
+                        'status' => [
+                            'description' => 'Filter by status (publish/draft). If not specified, shows all non-deleted statuses.',
+                            'type'        => 'string',
+                            'enum'        => ['publish', 'draft'],
+                        ],
+                    ]
+                ),
             ],
             [
                 'methods' => WP_REST_Server::CREATABLE,
@@ -197,17 +206,28 @@ class BJT_Machine_Controller extends BJT_API_Controller {
         $per_page = $request->get_param('per_page');
         $offset = ($page - 1) * $per_page;
 
+        // 添加状态过滤逻辑 - 支持传递status参数，默认为所有状态（管理后台需要）
+        $status_filter = $request->get_param('status');
+        $where_clause = '';
+        $query_params = [];
+        
+        if ($status_filter) {
+            $where_clause = "WHERE status = %s";
+            $query_params[] = $status_filter;
+        } else {
+            // 如果没有指定状态，显示所有非删除状态的记录（包括publish和draft）
+            $where_clause = "WHERE status IN ('publish', 'draft')";
+        }
+
         // Fetch items
         $items_query = $wpdb->prepare(
-            "SELECT * FROM {$this->table_name} WHERE status = %s ORDER BY id ASC LIMIT %d OFFSET %d", // Use $this->table_name
-            'publish',
-            $per_page,
-            $offset
+            "SELECT * FROM {$this->table_name} {$where_clause} ORDER BY id ASC LIMIT %d OFFSET %d", // Use $this->table_name
+            array_merge($query_params, [$per_page, $offset])
         );
         $items = $wpdb->get_results($items_query);
 
         // Fetch total count
-        $total_items_query = $wpdb->prepare("SELECT COUNT(*) FROM {$this->table_name} WHERE status = %s", 'publish'); // Use $this->table_name
+        $total_items_query = $wpdb->prepare("SELECT COUNT(*) FROM {$this->table_name} {$where_clause}", $query_params); // Use $this->table_name
         $total_items = (int) $wpdb->get_var($total_items_query);
         $total_pages = ceil($total_items / $per_page);
 
@@ -700,6 +720,7 @@ class BJT_Machine_Controller extends BJT_API_Controller {
         return [
             'id' => (int) $item_db_object->id,
             'code' => trim($item_db_object->model, "'\""),
+            'model' => trim($item_db_object->model, "'\""),
             'title_zh' => trim($item_db_object->title_zh, "'\""),
             'title_en' => trim($item_db_object->title_en, "'\""),
             'description_zh' => trim($item_db_object->description_zh, "'\""),

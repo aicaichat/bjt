@@ -1,6 +1,7 @@
 import React from 'react';
 import { ExtendedCartItem } from '../../contexts/CartContext';
 import { useTranslation } from 'react-i18next';
+import { ASSETS } from '../../config/appConfig';
 
 interface RequiredPartCartItemProps {
   item: ExtendedCartItem & { is_required: true };
@@ -93,11 +94,15 @@ export const RequiredPartCartItem: React.FC<RequiredPartCartItemProps> = ({
         {/* 产品图片 */}
         <div className="w-16 h-16 flex-shrink-0">
           <img
-            src={item.image || '/images/placeholder.jpg'}
+            src={item.image || ASSETS.DEFAULT_IMAGE}
             alt={displayName}
             className="w-full h-full object-cover rounded border"
             onError={(e) => {
-              e.currentTarget.src = '/images/placeholder.jpg';
+              const target = e.currentTarget;
+              // 避免无限循环：只有当前不是DEFAULT_IMAGE时才设置为DEFAULT_IMAGE
+              if (target.src !== ASSETS.DEFAULT_IMAGE) {
+                target.src = ASSETS.DEFAULT_IMAGE;
+              }
             }}
           />
         </div>

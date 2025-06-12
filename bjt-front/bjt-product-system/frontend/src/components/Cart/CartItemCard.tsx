@@ -5,6 +5,7 @@ import { CartItem } from '../../api/services/cart.service';
 import { formatCurrency } from '../../utils/priceUtils';
 import './CartItemCard.css';
 import { useTranslation } from 'react-i18next';
+import { ASSETS } from '../../config/appConfig';
 
 const { Text, Title } = Typography;
 
@@ -42,7 +43,7 @@ const CartItemCard: React.FC<CartItemCardProps> = ({ item, onUpdateQuantity, onR
 
   // 优先从 properties 取字段
   const props = (item as any).properties || {};
-  const imageUrl = props.image_url || item.image_url || (item as any).image || '/images/placeholder.jpg';
+  const imageUrl = props.image_url || item.image_url || (item as any).image || ASSETS.DEFAULT_IMAGE;
   
   // 根据当前语言选择正确的商品名称
   const language = i18n.language;

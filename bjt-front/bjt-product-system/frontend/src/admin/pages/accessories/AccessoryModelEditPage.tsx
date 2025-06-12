@@ -328,7 +328,7 @@ const AccessoryModelEditPage: React.FC = () => {
 
           {/* 副图和PDF */}
           <Row gutter={16}>
-            <Col span={12}>
+            <Col span={8}>
               <Form.Item
                 name="image2_url"
                 label="副图 (Secondary Image)"
@@ -343,10 +343,24 @@ const AccessoryModelEditPage: React.FC = () => {
                 />
               </Form.Item>
             </Col>
-            <Col span={12}>
+            <Col span={8}>
               <Form.Item
                 name="explosion_diagram_pdf"
                 label="爆炸图PDF (Explosion Diagram PDF)"
+                extra="支持上传PDF文件或输入PDF URL地址，文件大小不超过 20MB"
+              >
+                <FileUrlInput
+                  placeholder="请输入PDF URL地址或点击上传"
+                  fileType="pdf"
+                  maxSize={20}
+                  uploadPath="/uploads/accessories/pdfs/"
+                />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                name="spec_pdf"
+                label="规格PDF (Specification PDF)"
                 extra="支持上传PDF文件或输入PDF URL地址，文件大小不超过 20MB"
               >
                 <FileUrlInput

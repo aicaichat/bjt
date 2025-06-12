@@ -7,6 +7,8 @@
     "pending": "待定",
     "unknownMachine": "未知设备",
     "noSpecPdf": "暂无规格说明书",
+    "noAccessorySpecPdf": "暂无该配件的规格说明文档",
+    "noSpecDetailsPdf": "暂无规格详情PDF文件",
     "specDetails": "规格详情",
     "moreInfo": "更多信息",
     "hoverDetails": "悬停查看详情",
@@ -91,5 +93,22 @@
     "authExpired": "认证已过期",
     "invalidRequest": "无效请求",
     "addToCartFailed": "添加到购物车失败"
+  },
+  "accessories": {
+    "title": "配件",
+    "level1": "一级配件",
+    "level2": "二级配件",
+    "level3": "三级配件",
+    "level4": "四级配件",
+    "level5": "五级配件",
+    "level": "级别",
+    "compatible": "兼容配件",
+    "subCompatible": "兼容配件"
+  },
+  "filters": {
+    "voltage": "电压",
+    "model": "型号",
+    "all": "全部",
+    "allModels": "所有型号"
   }
 } 

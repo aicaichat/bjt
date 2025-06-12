@@ -7,6 +7,8 @@
     "pending": "Pending",
     "unknownMachine": "Unknown Machine",
     "noSpecPdf": "No Specification PDF Available",
+    "noAccessorySpecPdf": "No specification document available for this accessory",
+    "noSpecDetailsPdf": "No specification details PDF file available",
     "specDetails": "Specification Details",
     "moreInfo": "More Info",
     "hoverDetails": "Hover for Details",
@@ -91,5 +93,22 @@
     "authExpired": "Authentication Expired",
     "invalidRequest": "Invalid Request",
     "addToCartFailed": "Failed to Add to Cart"
+  },
+  "accessories": {
+    "title": "Accessories",
+    "level1": "Level 1",
+    "level2": "Level 2",
+    "level3": "Level 3",
+    "level4": "Level 4",
+    "level5": "Level 5",
+    "level": "Level",
+    "compatible": "Compatible Accessories",
+    "subCompatible": "Compatible Accessories"
+  },
+  "filters": {
+    "voltage": "Voltage",
+    "model": "Model",
+    "all": "All",
+    "allModels": "All Models"
   }
 } 

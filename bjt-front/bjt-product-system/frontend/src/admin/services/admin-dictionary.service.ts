@@ -338,6 +338,12 @@ class AdminGeneralDictionaryService extends BaseService {
     return response.data.items;
   }
 
+  // 便捷方法：获取材料选项
+  async getMaterials(lang: string = 'zh'): Promise<DictionaryItem[]> {
+    const response = await this.getDictionaryItems('materials', { lang });
+    return response.data.items;
+  }
+
   // 便捷方法：获取品牌选项
   async getBrands(lang: string = 'zh'): Promise<DictionaryItem[]> {
     const response = await this.getDictionaryItems('brands', { lang });

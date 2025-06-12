@@ -11,6 +11,7 @@ import { InfoCircleOutlined } from '@ant-design/icons';
 import { MachinePart } from '../types/machines';
 import { useMachineFieldDisplay, MachineFieldDisplayResult } from '../hooks/useMachineFieldDisplay';
 import { MACHINE_FEATURE_FLAGS } from '../config/machine-display-config';
+import { ASSETS } from '../config/appConfig';
 
 // 单个字段显示组件属性
 interface MachineFieldProps {
@@ -87,7 +88,7 @@ export const MachineImage: React.FC<MachineImageProps> = ({
   machine,
   size = 'medium',
   className = '',
-  fallbackImage = '/images/placeholder.jpg'
+  fallbackImage = ASSETS.DEFAULT_IMAGE
 }) => {
   const sizeClasses = {
     small: 'w-16 h-16',

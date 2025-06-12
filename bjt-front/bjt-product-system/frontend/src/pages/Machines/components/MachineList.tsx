@@ -3,6 +3,9 @@ import { Button, InputNumber, Popover, Tag, message } from 'antd';
 import { ShoppingCartOutlined, InfoCircleOutlined, PlusOutlined, MinusOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { MachinePart } from '../../../types/machines';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useCart } from '../../../contexts/CartContext';
+import { ASSETS } from '../../../config/appConfig';
 
 interface MachineListProps {
   machines: MachinePart[];
@@ -72,7 +75,9 @@ export const MachineList: React.FC<MachineListProps> = ({
             alt={getMachineName(machine)}
             onError={(e) => {
               const target = e.target as HTMLImageElement;
-              target.src = '/images/placeholder.jpg';
+              if (target.src !== ASSETS.DEFAULT_IMAGE) {
+                target.src = ASSETS.DEFAULT_IMAGE;
+              }
             }}
           />
         ) : (
@@ -178,7 +183,9 @@ export const MachineList: React.FC<MachineListProps> = ({
                     className="machine-thumbnail"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
-                      target.src = '/images/placeholder.jpg';
+                      if (target.src !== ASSETS.DEFAULT_IMAGE) {
+                        target.src = ASSETS.DEFAULT_IMAGE;
+                      }
                     }}
                   />
                 ) : (

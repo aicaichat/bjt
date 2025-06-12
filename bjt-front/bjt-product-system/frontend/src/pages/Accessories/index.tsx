@@ -6,6 +6,10 @@ import { AccessoryProduct } from '../../types/accessories';
 import { RequiredPartsDisplay } from '../../components/RequiredPartsDisplay';
 import { useCart } from '../../contexts/CartContext';
 import { fetchRequiredPartsFullInfo, createRequiredPartCartItem, parseRequiredParts } from '../../utils/requiredPartsUtils';
+
+// 🎯 导入智能购物车组件
+import { SmartAddToCartButton } from '../../components/Cart/SmartAddToCartButton';
+
 import './styles.less';
 
 const { Option } = Select;
@@ -292,9 +296,15 @@ const AccessoriesPage: React.FC = () => {
       key: 'action',
       render: (_: any, record: AccessoryProduct) => (
         <Space>
-          <Button type="primary" onClick={() => handleAddToCart(record)}>
+          <SmartAddToCartButton
+            product={record}
+            productType="accessories"
+            onAddToCart={() => handleAddToCart(record)}
+            className="ant-btn ant-btn-primary"
+          >
+            <ShoppingCartOutlined className="mr-2" />
             Add to Cart
-          </Button>
+          </SmartAddToCartButton>
           <Button type="primary" onClick={() => handleViewDetails(record)}>
             View Details
           </Button>

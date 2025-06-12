@@ -106,17 +106,59 @@ chmod +x deploy-with-db-init.sh
 cp env.production.example .env.production
 # 设置DOMAIN_NAME为你的域名
 
-# 3. 申请SSL证书（可选）
+# 3. 部署前配置验证（推荐）
+chmod +x scripts/validate-deployment-config.sh
+./scripts/validate-deployment-config.sh
+
+# 4. 使用改进版部署脚本（推荐）
+chmod +x deploy-production-improved.sh
+./deploy-production-improved.sh
+
+# 或者使用标准部署脚本
+chmod +x deploy-production.sh
+./deploy-production.sh
+
+# 5. 申请SSL证书（可选）
 chmod +x scripts/setup-ssl.sh
 ./scripts/setup-ssl.sh your-domain.com
 
-# 4. 部署前检查（推荐）
+# 6. 部署前检查（标准脚本推荐）
 chmod +x scripts/pre-deploy-check.sh
 ./scripts/pre-deploy-check.sh
+```
 
-# 5. 执行部署
-chmod +x deploy-production.sh
+### 🎯 **部署脚本选择指南**
+
+| 脚本名称 | 适用场景 | 特点 |
+|---------|----------|------|
+| `deploy-production-improved.sh` | **推荐用于生产环境** | ✅ 全面配置验证<br>✅ SSL证书管理<br>✅ 智能健康检查<br>✅ 详细错误处理 |
+| `deploy-production.sh` | 标准生产部署 | ✅ 稳定可靠<br>✅ 基础功能完整 |
+| `scripts/validate-deployment-config.sh` | 部署前验证 | ✅ 配置文件验证<br>✅ 环境一致性检查 |
+
+### 📋 **推荐部署流程**
+
+#### **🔥 最佳实践（推荐）**
+```bash
+# 1. 配置验证
+./scripts/validate-deployment-config.sh
+
+# 2. 改进版部署
+./deploy-production-improved.sh
+
+# 3. 健康监控
+./scripts/health-monitor.sh --report
+```
+
+#### **标准流程**
+```bash
+# 1. 部署前检查
+./scripts/pre-deploy-check.sh
+
+# 2. 执行部署
 ./deploy-production.sh
+
+# 3. 设置监控
+./scripts/health-monitor.sh
 ```
 
 ### 🖥️ 方法三：IP地址部署（无域名）

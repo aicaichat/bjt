@@ -62,6 +62,8 @@ export interface MachineProduct {
     pallet_gross_weight_kg?: number;
     pallet_gross_weight_lbs?: number;
     image_url: string;
+    explosion_diagram_pdf?: string;
+    spec_pdf?: string;
     level: number;
     parts: AccessoryPart[];
     parent_id?: string;

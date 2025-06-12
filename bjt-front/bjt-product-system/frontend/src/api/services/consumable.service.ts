@@ -254,7 +254,7 @@ export class ConsumableService extends BaseService<ConsumableListData> {
       model: item.model,
       status: item.status,
       part_number: item.part_number,
-      image_url: item.image_url || ASSETS.getUrl('/images/placeholder.jpg'),
+      image_url: item.image_url || ASSETS.getUrl(ASSETS.DEFAULT_IMAGE),
       specs: {
         material: item.specs?.material,
         shape: item.specs?.shape,

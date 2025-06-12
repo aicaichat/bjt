@@ -85,7 +85,7 @@ export const testMachinePartsApi = async (): Promise<ApiTestResult> => {
 
     console.log('🔐 [测试API] 使用token:', token.substring(0, 15) + '...');
 
-    const response = await fetch('http://localhost:8080/wp-json/bjt/v1/machineparts?page=1&per_page=5', {
+    const response = await fetch('http://localhost:8080/wp-json/bjt/v1/machineparts?page=1&per_page=5&status=publish', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,

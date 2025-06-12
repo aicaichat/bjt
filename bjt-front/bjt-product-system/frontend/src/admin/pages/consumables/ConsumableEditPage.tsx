@@ -49,6 +49,10 @@ const ConsumableEditPage: React.FC = () => {
   const [bagTypeOptions, setBagTypeOptions] = useState<Array<{code: string, name: string}>>([]);
   const [bagTypeLoading, setBagTypeLoading] = useState(false);
 
+  // 材料选项状态
+  const [materialOptions, setMaterialOptions] = useState<Array<{code: string, name: string}>>([]);
+  const [materialLoading, setMaterialLoading] = useState(false);
+
   // 适配机型选项状态
   const [compatibleModelOptions, setCompatibleModelOptions] = useState<Array<{value: string, label: string}>>([]);
   const [compatibleModelLoading, setCompatibleModelLoading] = useState(false);
@@ -296,26 +300,59 @@ const ConsumableEditPage: React.FC = () => {
       const response = await adminDictionaryService.general.getBagTypes('zh');
       console.log('[ConsumableEditPage] 袋型数据响应:', response);
       
-      // 转换数据格式，根据语言显示适当的名称
+      // 🔥 修复：显示code字段和英文名称，格式为 "Code - English Name"
       const bagTypeOptions = response.map(item => ({
         code: item.code,
-        name: `${item.name_zh || item.name_en || item.name || item.code} (${item.code})`
+        name: `${item.code} - ${item.name_en || item.name || item.code}`
       }));
       
       setBagTypeOptions(bagTypeOptions);
     } catch (error) {
       console.error('[ConsumableEditPage] 获取袋型数据失败:', error);
-      // 降级到硬编码选项 - 使用真实的袋型值
+      // 降级到硬编码选项 - 使用形状表的code字段和英文名称
       setBagTypeOptions([
-        { code: 'Pillow', name: '气泡枕 (Pillow)' },
-        { code: 'Bubble', name: '葫芦膜 (Bubble)' },
-        { code: 'Tube', name: '气枕膜 (Tube)' },
-        { code: 'Precut Air Pillow', name: '开口气泡枕 (Precut Air Pillow)' },
-        { code: 'paper air Pillow', name: '纸塑气泡枕 (Paper Air Pillow)' },
-        { code: 'paper Bubble', name: '纸塑葫芦膜 (Paper Bubble)' }
+        { code: 'MEX', name: 'MEX - Air Pillow' },
+        { code: 'MEY', name: 'MEY - Precut Air Pillow' },
+        { code: 'MFB', name: 'MFB - Bubble' },
+        { code: 'MFC', name: 'MFC - Tube' },
+        { code: 'MFF', name: 'MFF - Bubble' },
+        { code: 'MEX_PAPER', name: 'MEX_PAPER - Paper Air Pillow' }
       ]);
     } finally {
       setBagTypeLoading(false);
+    }
+  }, []);
+
+  // 获取材料数据
+  const fetchMaterials = useCallback(async () => {
+    try {
+      setMaterialLoading(true);
+      console.log('[ConsumableEditPage] 获取材料数据');
+      
+      const response = await adminDictionaryService.general.getMaterials('zh');
+      console.log('[ConsumableEditPage] 材料数据响应:', response);
+      
+      // 🔥 修复：显示code字段，格式为 "Code"
+      const materialOptions = response.map(item => ({
+        code: item.code,
+        name: item.code // 直接显示code字段
+      }));
+      
+      setMaterialOptions(materialOptions);
+    } catch (error) {
+      console.error('[ConsumableEditPage] 获取材料数据失败:', error);
+      // 降级到硬编码选项 - 使用材料表的code字段
+      setMaterialOptions([
+        { code: '30% HDPE', name: '30% HDPE' },
+        { code: '50% HDPE', name: '50% HDPE' },
+        { code: 'HDPE', name: 'HDPE' },
+        { code: '50% LDPE', name: '50% LDPE' },
+        { code: 'LDPE', name: 'LDPE' },
+        { code: 'PAPE', name: 'PAPE' },
+        { code: 'PAPER', name: 'PAPER' }
+      ]);
+    } finally {
+      setMaterialLoading(false);
     }
   }, []);
 
@@ -337,45 +374,45 @@ const ConsumableEditPage: React.FC = () => {
           ) : [],
         bag_type: consumableData.bag_type || '',
         material: consumableData.material || '',
-        thickness_met: consumableData.thickness_met || 0,
-        thickness_imp: consumableData.thickness_imp || 0,
-        width_met: consumableData.width_met || 0,
-        width_imp: consumableData.width_imp || 0,
-        length_met: consumableData.length_met || 0,
-        length_imp: consumableData.length_imp || 0,
-        bubble_diameter_met: consumableData.bubble_diameter_met || 0,
-        bubble_diameter_imp: consumableData.bubble_diameter_imp || 0,
-        total_length_met: consumableData.total_length_met || 0,
-        total_length_imp: consumableData.total_length_imp || 0,
+        thickness_met: Number(consumableData.thickness_met) || 0,
+        thickness_imp: Number(consumableData.thickness_imp) || 0,
+        width_met: Number(consumableData.width_met) || 0,
+        width_imp: Number(consumableData.width_imp) || 0,
+        length_met: Number(consumableData.length_met) || 0,
+        length_imp: Number(consumableData.length_imp) || 0,
+        bubble_diameter_met: Number(consumableData.bubble_diameter_met) || 0,
+        bubble_diameter_imp: Number(consumableData.bubble_diameter_imp) || 0,
+        total_length_met: Number(consumableData.total_length_met) || 0,
+        total_length_imp: Number(consumableData.total_length_imp) || 0,
         package_type: consumableData.package_type || '',
         package_size_cm: consumableData.package_size_cm || '',
         package_size_inch: consumableData.package_size_inch || '',
-        net_weight_kg: consumableData.net_weight_kg || 0,
-        net_weight_lbs: consumableData.net_weight_lbs || 0,
-        gross_weight_kg: consumableData.gross_weight_kg || 0,
-        gross_weight_lbs: consumableData.gross_weight_lbs || 0,
-        pcs_per_box: consumableData.pcs_per_box || 0,
+        net_weight_kg: Number(consumableData.net_weight_kg) || 0,
+        net_weight_lbs: Number(consumableData.net_weight_lbs) || 0,
+        gross_weight_kg: Number(consumableData.gross_weight_kg) || 0,
+        gross_weight_lbs: Number(consumableData.gross_weight_lbs) || 0,
+        pcs_per_box: Number(consumableData.pcs_per_box) || 0,
         image_url: consumableData.image_url || '',
         package_image_url: consumableData.package_image_url || '',
         pallet_size_cm: consumableData.pallet_size_cm || '',
         pallet_size_inch: consumableData.pallet_size_inch || '',
-        pcs_per_pallet_a: consumableData.pcs_per_pallet_a || 0,
-        pallet_gross_weight_a_kg: consumableData.pallet_gross_weight_a_kg || 0,
-        pallet_gross_weight_a_lbs: consumableData.pallet_gross_weight_a_lbs || 0,
-        pallet_height_a_cm: consumableData.pallet_height_a_cm || 0,
-        pallet_height_a_inch: consumableData.pallet_height_a_inch || 0,
-        pcs_per_pallet_b: consumableData.pcs_per_pallet_b || 0,
-        pallet_gross_weight_b_kg: consumableData.pallet_gross_weight_b_kg || 0,
-        pallet_gross_weight_b_lbs: consumableData.pallet_gross_weight_b_lbs || 0,
-        pallet_height_b_cm: consumableData.pallet_height_b_cm || 0,
-        pallet_height_b_inch: consumableData.pallet_height_b_inch || 0,
-        pcs_per_pallet_c: consumableData.pcs_per_pallet_c || 0,
-        pallet_gross_weight_c_kg: consumableData.pallet_gross_weight_c_kg || 0,
-        pallet_gross_weight_c_lbs: consumableData.pallet_gross_weight_c_lbs || 0,
-        pallet_height_c_cm: consumableData.pallet_height_c_cm || 0,
-        pallet_height_c_inch: consumableData.pallet_height_c_inch || 0,
-        tube_inner_diameter_cm: consumableData.tube_inner_diameter_cm || 0,
-        tube_inner_diameter_inch: consumableData.tube_inner_diameter_inch || 0,
+        pcs_per_pallet_a: Number(consumableData.pcs_per_pallet_a) || 0,
+        pallet_gross_weight_a_kg: Number(consumableData.pallet_gross_weight_a_kg) || 0,
+        pallet_gross_weight_a_lbs: Number(consumableData.pallet_gross_weight_a_lbs) || 0,
+        pallet_height_a_cm: Number(consumableData.pallet_height_a_cm) || 0,
+        pallet_height_a_inch: Number(consumableData.pallet_height_a_inch) || 0,
+        pcs_per_pallet_b: Number(consumableData.pcs_per_pallet_b) || 0,
+        pallet_gross_weight_b_kg: Number(consumableData.pallet_gross_weight_b_kg) || 0,
+        pallet_gross_weight_b_lbs: Number(consumableData.pallet_gross_weight_b_lbs) || 0,
+        pallet_height_b_cm: Number(consumableData.pallet_height_b_cm) || 0,
+        pallet_height_b_inch: Number(consumableData.pallet_height_b_inch) || 0,
+        pcs_per_pallet_c: Number(consumableData.pcs_per_pallet_c) || 0,
+        pallet_gross_weight_c_kg: Number(consumableData.pallet_gross_weight_c_kg) || 0,
+        pallet_gross_weight_c_lbs: Number(consumableData.pallet_gross_weight_c_lbs) || 0,
+        pallet_height_c_cm: Number(consumableData.pallet_height_c_cm) || 0,
+        pallet_height_c_inch: Number(consumableData.pallet_height_c_inch) || 0,
+        tube_inner_diameter_cm: Number(consumableData.tube_inner_diameter_cm) || 0,
+        tube_inner_diameter_inch: Number(consumableData.tube_inner_diameter_inch) || 0,
         status: consumableData.status,
         unit: consumableData.unit || 'roll',
       });
@@ -407,7 +444,8 @@ const ConsumableEditPage: React.FC = () => {
   // 初始化时获取袋型数据
   useEffect(() => {
     fetchBagTypes();
-  }, [fetchBagTypes]);
+    fetchMaterials();
+  }, [fetchBagTypes, fetchMaterials]);
 
   const handleSubmit = async (values: any) => {
     try {
@@ -713,31 +751,16 @@ const ConsumableEditPage: React.FC = () => {
                           name="model"
                           label="型号 (Model)"
                           rules={[{ required: true, message: '请输入型号' }]}
-                          extra={`参考该产品线下已有的耗材规格，当前共 ${consumableSpecOptions.length} 个规格`}
                         >
-                          <AutoComplete
-                            options={consumableSpecOptions}
-                            placeholder="请输入规格描述，可参考下拉提示"
-                            onSelect={handleSpecChange}
-                            filterOption={(inputValue, option) =>
-                              option?.value.toLowerCase().includes(inputValue.toLowerCase()) || false
-                            }
-                          />
+                          <Input placeholder="请输入型号" />
                         </Form.Item>
                       </Col>
                       <Col span={12}>
                         <Form.Item
                           name="model_imperial"
                           label="型号(英制) (model Imperial)"
-                          extra={`参考该产品线下已有的耗材型号英制规格，当前共 ${consumableSpecImperialOptions.length} 个规格`}
                         >
-                          <AutoComplete
-                            options={consumableSpecImperialOptions}
-                            placeholder="请输入英制规格描述，可参考下拉提示"
-                            filterOption={(inputValue, option) =>
-                              option?.value.toLowerCase().includes(inputValue.toLowerCase()) || false
-                            }
-                          />
+                          <Input placeholder="请输入英制型号" />
                         </Form.Item>
                       </Col>
                     </Row>
@@ -765,30 +788,33 @@ const ConsumableEditPage: React.FC = () => {
                         <Form.Item
                           name="material"
                           label="材质 (Material)"
-                          extra={`参考该产品线下已有的耗材材质，当前共 ${consumableMaterialOptions.length} 个材质`}
+                          extra={`材料数据库中的可选材质，当前共 ${materialOptions.length} 个材质`}
                         >
-                          <AutoComplete
-                            options={consumableMaterialOptions}
-                            placeholder="请输入材质，可参考下拉提示"
-                            filterOption={(inputValue, option) =>
-                              option?.value.toLowerCase().includes(inputValue.toLowerCase()) || false
-                            }
-                          />
+                          <Select
+                            placeholder="请选择材质"
+                            loading={materialLoading}
+                            allowClear
+                          >
+                            {materialOptions.map((option) => (
+                              <Option key={option.code} value={option.code}>
+                                {option.name}
+                              </Option>
+                            ))}
+                          </Select>
                         </Form.Item>
                       </Col>
                       <Col span={8}>
                         <Form.Item
                           name="brand"
                           label="品牌 (Brand)"
-                          extra={`参考该产品线下已有的耗材品牌，当前共 ${consumableBrandOptions.length} 个品牌`}
                         >
-                          <AutoComplete
-                            options={consumableBrandOptions}
-                            placeholder="请输入品牌，可参考下拉提示"
-                            filterOption={(inputValue, option) =>
-                              option?.value.toLowerCase().includes(inputValue.toLowerCase()) || false
-                            }
-                          />
+                          <Select
+                            placeholder="请选择品牌"
+                            allowClear
+                          >
+                            <Option value="LockedAir">LockedAir</Option>
+                            <Option value="LockedPaper">LockedPaper</Option>
+                          </Select>
                         </Form.Item>
                       </Col>
                     </Row>

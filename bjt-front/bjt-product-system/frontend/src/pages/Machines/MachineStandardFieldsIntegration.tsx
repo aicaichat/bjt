@@ -98,7 +98,7 @@ export const StandardizedMachineSpecs: React.FC<StandardizedMachineSpecsProps> =
               }
               window.open(finalPdfUrl, '_blank');
             } else {
-              showInfoToast?.('暂无规格说明文档');
+              showInfoToast?.(t('noSpecPdf') || '暂无规格说明文档');
             }
           }}
           className="bg-gray-100 text-gray-600 hover:bg-gray-600 hover:text-white border-gray-300 transition-colors duration-200"

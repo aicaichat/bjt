@@ -76,9 +76,9 @@ export const configureMockService = () => {
   }
   
   // 根据NODE_ENV环境变量配置
-  const isDevelopment = process.env.NODE_ENV === 'development';
-  const isTest = process.env.NODE_ENV === 'test';
-  const isProduction = process.env.NODE_ENV === 'production';
+  const isDevelopment = import.meta.env.DEV;
+  const isTest = import.meta.env.MODE === 'test';
+  const isProduction = import.meta.env.PROD;
   
   if (isDevelopment) {
     // 开发环境：优先使用SQL Mock数据，便于调试

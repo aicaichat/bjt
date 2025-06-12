@@ -3,6 +3,7 @@ import { ExtendedCartItem } from '../../contexts/CartContext';
 import { RequiredPartCartItem } from './RequiredPartCartItem';
 import { CartContext } from '../../contexts/CartContext';
 import { useTranslation } from 'react-i18next';
+import { ASSETS } from '../../config/appConfig';
 
 interface CartListProps {
   items: ExtendedCartItem[];
@@ -140,7 +141,7 @@ const CartItem: React.FC<{
   // 调试日志
   console.log('[CartList.CartItem] item:', item, 'props:', props);
   // 优先取 properties 里的图片和标题
-  const imageUrl = props.image_url || props.image || item.image_url || item.image || '/images/placeholder.jpg';
+  const imageUrl = props.image_url || props.image || item.image_url || item.image || ASSETS.DEFAULT_IMAGE;
   
   // 修复商品名称获取逻辑，添加更完善的兜底处理
   const getDisplayName = (): string => {
@@ -188,7 +189,11 @@ const CartItem: React.FC<{
             alt={displayName}
             className="w-full h-full object-cover rounded border"
             onError={(e) => {
-              e.currentTarget.src = '/images/placeholder.jpg';
+              const target = e.currentTarget;
+              // 避免无限循环：只有当前不是DEFAULT_IMAGE时才设置为DEFAULT_IMAGE
+              if (target.src !== ASSETS.DEFAULT_IMAGE) {
+                target.src = ASSETS.DEFAULT_IMAGE;
+              }
             }}
           />
         </div>

@@ -259,21 +259,50 @@ class AdminConsumableService extends BaseService {
         spec: item.spec || undefined, // 直接使用API返回的原始spec值
         spec_imperial: item.spec_imperial || undefined, // 直接使用API返回的原始spec_imperial值
         brand: item.brand,
-        app_model: item.specs?.compatibility,
+        app_model: item.app_model || item.specs?.compatibility,
         bag_type: item.bag_type || item.specs?.shape, // 优先使用bag_type，回退到specs.shape
-        material: item.specs?.material, // specs.material映射到material
-        thickness_met: item.specs?.thickness ? this.parseNumericValue(item.specs.thickness) : undefined,
-        thickness_imp: item.specs?.thickness ? this.convertToImperial(item.specs.thickness, 'thickness') : undefined,
-        width_met: item.specs?.width ? this.parseNumericValue(item.specs.width) : undefined,
-        width_imp: item.specs?.width ? this.convertToImperial(item.specs.width, 'width') : undefined,
-        length_met: item.specs?.length ? this.parseNumericValue(item.specs.length) : undefined,
-        length_imp: item.specs?.length ? this.convertToImperial(item.specs.length, 'length') : undefined,
-        total_length_met: item.specs?.rollLength ? this.parseNumericValue(item.specs.rollLength) : undefined,
-        total_length_imp: item.specs?.rollLength ? this.convertToImperial(item.specs.rollLength, 'rollLength') : undefined,
+        material: item.material || item.specs?.material, // 优先使用material，回退到specs.material
+        thickness_met: this.parseNumericValue(item.thickness_met),
+        thickness_imp: this.parseNumericValue(item.thickness_imp),
+        width_met: this.parseNumericValue(item.width_met),
+        width_imp: this.parseNumericValue(item.width_imp),
+        length_met: this.parseNumericValue(item.length_met),
+        length_imp: this.parseNumericValue(item.length_imp),
+        bubble_diameter_met: this.parseNumericValue(item.bubble_diameter_met),
+        bubble_diameter_imp: this.parseNumericValue(item.bubble_diameter_imp),
+        total_length_met: this.parseNumericValue(item.total_length_met),
+        total_length_imp: this.parseNumericValue(item.total_length_imp),
+        package_type: item.package_type,
+        package_size_cm: item.package_size_cm,
+        package_size_inch: item.package_size_inch,
+        net_weight_kg: this.parseNumericValue(item.net_weight_kg),
+        net_weight_lbs: this.parseNumericValue(item.net_weight_lbs),
+        gross_weight_kg: this.parseNumericValue(item.gross_weight_kg),
+        gross_weight_lbs: this.parseNumericValue(item.gross_weight_lbs),
+        pcs_per_box: this.parseNumericValue(item.pcs_per_box),
+        pallet_size_cm: item.pallet_size_cm,
+        pallet_size_inch: item.pallet_size_inch,
+        pcs_per_pallet_a: this.parseNumericValue(item.pcs_per_pallet_a),
+        pallet_gross_weight_a_kg: this.parseNumericValue(item.pallet_gross_weight_a_kg),
+        pallet_gross_weight_a_lbs: this.parseNumericValue(item.pallet_gross_weight_a_lbs),
+        pallet_height_a_cm: this.parseNumericValue(item.pallet_height_a_cm),
+        pallet_height_a_inch: this.parseNumericValue(item.pallet_height_a_inch),
+        pcs_per_pallet_b: this.parseNumericValue(item.pcs_per_pallet_b),
+        pallet_gross_weight_b_kg: this.parseNumericValue(item.pallet_gross_weight_b_kg),
+        pallet_gross_weight_b_lbs: this.parseNumericValue(item.pallet_gross_weight_b_lbs),
+        pallet_height_b_cm: this.parseNumericValue(item.pallet_height_b_cm),
+        pallet_height_b_inch: this.parseNumericValue(item.pallet_height_b_inch),
+        pcs_per_pallet_c: this.parseNumericValue(item.pcs_per_pallet_c),
+        pallet_gross_weight_c_kg: this.parseNumericValue(item.pallet_gross_weight_c_kg),
+        pallet_gross_weight_c_lbs: this.parseNumericValue(item.pallet_gross_weight_c_lbs),
+        pallet_height_c_cm: this.parseNumericValue(item.pallet_height_c_cm),
+        pallet_height_c_inch: this.parseNumericValue(item.pallet_height_c_inch),
+        tube_inner_diameter_cm: this.parseNumericValue(item.tube_inner_diameter_cm),
+        tube_inner_diameter_inch: this.parseNumericValue(item.tube_inner_diameter_inch),
         image_url: item.image_url,
         package_image_url: item.package_image_url,
         status: item.status || 'publish',
-        unit: item.sales_unit || 'roll',
+        unit: item.sales_unit || item.unit || 'roll',
         created_at: item.created_at,
         updated_at: item.updated_at,
       };
@@ -296,10 +325,21 @@ class AdminConsumableService extends BaseService {
   }
 
   // 辅助方法：解析数值
-  private parseNumericValue(value: string): number | undefined {
-    if (!value) return undefined;
-    const matches = value.match(/[\d.]+/);
-    return matches ? parseFloat(matches[0]) : undefined;
+  private parseNumericValue(value: string | number | undefined | null): number | undefined {
+    if (value === undefined || value === null || value === '') return undefined;
+    
+    // 如果已经是数字，直接返回
+    if (typeof value === 'number') return value;
+    
+    // 如果是字符串，尝试转换
+    if (typeof value === 'string') {
+      // 移除非数字字符（除了小数点和负号）
+      const cleaned = value.replace(/[^\d.-]/g, '');
+      const num = parseFloat(cleaned);
+      return isNaN(num) ? undefined : num;
+    }
+    
+    return undefined;
   }
 
   // 辅助方法：转换为英制单位（简单示例）
@@ -391,21 +431,50 @@ class AdminConsumableService extends BaseService {
       spec: itemToTransform.spec || undefined, // 直接使用API返回的原始spec值
       spec_imperial: itemToTransform.spec_imperial || undefined, // 直接使用API返回的原始spec_imperial值
       brand: itemToTransform.brand,
-      app_model: itemToTransform.specs?.compatibility,
+      app_model: itemToTransform.app_model || itemToTransform.specs?.compatibility,
       bag_type: itemToTransform.bag_type || itemToTransform.specs?.shape, // 优先使用bag_type，回退到specs.shape
-      material: itemToTransform.specs?.material, // specs.material映射到material
-      thickness_met: itemToTransform.specs?.thickness ? this.parseNumericValue(itemToTransform.specs.thickness) : undefined,
-      thickness_imp: itemToTransform.specs?.thickness ? this.convertToImperial(itemToTransform.specs.thickness, 'thickness') : undefined,
-      width_met: itemToTransform.specs?.width ? this.parseNumericValue(itemToTransform.specs.width) : undefined,
-      width_imp: itemToTransform.specs?.width ? this.convertToImperial(itemToTransform.specs.width, 'width') : undefined,
-      length_met: itemToTransform.specs?.length ? this.parseNumericValue(itemToTransform.specs.length) : undefined,
-      length_imp: itemToTransform.specs?.length ? this.convertToImperial(itemToTransform.specs.length, 'length') : undefined,
-      total_length_met: itemToTransform.specs?.rollLength ? this.parseNumericValue(itemToTransform.specs.rollLength) : undefined,
-      total_length_imp: itemToTransform.specs?.rollLength ? this.convertToImperial(itemToTransform.specs.rollLength, 'rollLength') : undefined,
+      material: itemToTransform.material || itemToTransform.specs?.material, // specs.material映射到material
+      thickness_met: this.parseNumericValue(itemToTransform.thickness_met),
+      thickness_imp: this.parseNumericValue(itemToTransform.thickness_imp),
+      width_met: this.parseNumericValue(itemToTransform.width_met),
+      width_imp: this.parseNumericValue(itemToTransform.width_imp),
+      length_met: this.parseNumericValue(itemToTransform.length_met),
+      length_imp: this.parseNumericValue(itemToTransform.length_imp),
+      bubble_diameter_met: this.parseNumericValue(itemToTransform.bubble_diameter_met),
+      bubble_diameter_imp: this.parseNumericValue(itemToTransform.bubble_diameter_imp),
+      total_length_met: this.parseNumericValue(itemToTransform.total_length_met),
+      total_length_imp: this.parseNumericValue(itemToTransform.total_length_imp),
+      package_type: itemToTransform.package_type,
+      package_size_cm: itemToTransform.package_size_cm,
+      package_size_inch: itemToTransform.package_size_inch,
+      net_weight_kg: this.parseNumericValue(itemToTransform.net_weight_kg),
+      net_weight_lbs: this.parseNumericValue(itemToTransform.net_weight_lbs),
+      gross_weight_kg: this.parseNumericValue(itemToTransform.gross_weight_kg),
+      gross_weight_lbs: this.parseNumericValue(itemToTransform.gross_weight_lbs),
+      pcs_per_box: this.parseNumericValue(itemToTransform.pcs_per_box),
+      pallet_size_cm: itemToTransform.pallet_size_cm,
+      pallet_size_inch: itemToTransform.pallet_size_inch,
+      pcs_per_pallet_a: this.parseNumericValue(itemToTransform.pcs_per_pallet_a),
+      pallet_gross_weight_a_kg: this.parseNumericValue(itemToTransform.pallet_gross_weight_a_kg),
+      pallet_gross_weight_a_lbs: this.parseNumericValue(itemToTransform.pallet_gross_weight_a_lbs),
+      pallet_height_a_cm: this.parseNumericValue(itemToTransform.pallet_height_a_cm),
+      pallet_height_a_inch: this.parseNumericValue(itemToTransform.pallet_height_a_inch),
+      pcs_per_pallet_b: this.parseNumericValue(itemToTransform.pcs_per_pallet_b),
+      pallet_gross_weight_b_kg: this.parseNumericValue(itemToTransform.pallet_gross_weight_b_kg),
+      pallet_gross_weight_b_lbs: this.parseNumericValue(itemToTransform.pallet_gross_weight_b_lbs),
+      pallet_height_b_cm: this.parseNumericValue(itemToTransform.pallet_height_b_cm),
+      pallet_height_b_inch: this.parseNumericValue(itemToTransform.pallet_height_b_inch),
+      pcs_per_pallet_c: this.parseNumericValue(itemToTransform.pcs_per_pallet_c),
+      pallet_gross_weight_c_kg: this.parseNumericValue(itemToTransform.pallet_gross_weight_c_kg),
+      pallet_gross_weight_c_lbs: this.parseNumericValue(itemToTransform.pallet_gross_weight_c_lbs),
+      pallet_height_c_cm: this.parseNumericValue(itemToTransform.pallet_height_c_cm),
+      pallet_height_c_inch: this.parseNumericValue(itemToTransform.pallet_height_c_inch),
+      tube_inner_diameter_cm: this.parseNumericValue(itemToTransform.tube_inner_diameter_cm),
+      tube_inner_diameter_inch: this.parseNumericValue(itemToTransform.tube_inner_diameter_inch),
       image_url: itemToTransform.image_url,
       package_image_url: itemToTransform.package_image_url,
       status: itemToTransform.status || 'publish',
-      unit: itemToTransform.sales_unit || 'roll',
+      unit: itemToTransform.sales_unit || itemToTransform.unit || 'roll',
       created_at: itemToTransform.created_at,
       updated_at: itemToTransform.updated_at,
     };

@@ -132,6 +132,8 @@
     "imperial": "Imperial"
   },
   "noSpecPdf": "No specification PDF available",
+  "noAccessorySpecPdf": "No specification document available for this accessory",
+  "noSpecDetailsPdf": "No specification details PDF file available",
   "priceInquiry": "Price inquiry required",
   "specDetails": "Specifications",
   "moreInfo": "More Info",

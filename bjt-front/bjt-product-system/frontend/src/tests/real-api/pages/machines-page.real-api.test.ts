@@ -10,7 +10,7 @@ const BASE_URL = process.env.API_BASE || 'http://localhost/wp-json/bjt/v1';
 
 // 获取主机料号表
 async function getHostParts(token?: string) {
-  const res = await fetch(`${BASE_URL}/machineparts?page=1&per_page=10`, {
+  const res = await fetch(`${BASE_URL}/machineparts?page=1&per_page=10&status=publish`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
   return res.json();
@@ -18,7 +18,7 @@ async function getHostParts(token?: string) {
 
 // 获取主机下一级配件
 async function getMachineAccessories(hostPartNumber: string, token?: string) {
-  const res = await fetch(`${BASE_URL}/machines/${hostPartNumber}/accessories?region=CN&lang=zh`, {
+  const res = await fetch(`${BASE_URL}/machines/${hostPartNumber}/accessories?region=CN&lang=zh&status=publish`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
   return res.json();
@@ -26,7 +26,7 @@ async function getMachineAccessories(hostPartNumber: string, token?: string) {
 
 // 获取配件的下一级配件
 async function getAccessoryChildren(accessoryPartNumber: string, token?: string) {
-  const res = await fetch(`${BASE_URL}/accessories/${accessoryPartNumber}/children?region=CN&lang=zh&page=1&per_page=5`, {
+  const res = await fetch(`${BASE_URL}/accessories/${accessoryPartNumber}/children?region=CN&lang=zh&page=1&per_page=5&status=publish`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
   return res.json();

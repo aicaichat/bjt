@@ -403,56 +403,46 @@ class BJT_Dictionary_Controller extends BJT_API_Controller {
                 break;
 
             case 'bag_types':
-                // 从数据库中获取真实的袋型数据
-                $table_name = $wpdb->prefix . 'bjt_consumables';
+                // 🔥 修复：从形状表(wp_bjt_shapes)获取数据，显示code字段和英文名称
+                $shapes_table = $wpdb->prefix . 'bjt_shapes';
                 $query = "
-                    SELECT DISTINCT bag_type 
-                    FROM {$table_name} 
-                    WHERE bag_type IS NOT NULL 
-                    AND bag_type != '' 
-                    AND status = 'publish'
-                    ORDER BY bag_type ASC
+                    SELECT id, code, name_zh, name_en, image_url, image_url2, sort_order 
+                    FROM {$shapes_table} 
+                    WHERE status = 'publish'
+                    ORDER BY sort_order ASC, code ASC
                 ";
                 
                 $results = $wpdb->get_results($query);
                 
                 if ($results) {
                     foreach ($results as $row) {
-                        $bag_type = trim($row->bag_type);
-                        // 创建中英文对照
-                        $name_zh = '';
-                        $name_en = $bag_type;
-                        
-                        switch ($bag_type) {
-                            case 'Pillow':
-                                $name_zh = '气泡枕';
-                                break;
-                            case 'Bubble':
-                                $name_zh = '葫芦膜';
-                                break;
-                            case 'Tube':
-                                $name_zh = '气枕膜';
-                                break;
-                            case 'Precut Air Pillow':
-                                $name_zh = '开口气泡枕';
-                                break;
-                            case 'paper air Pillow':
-                                $name_zh = '纸塑气泡枕';
-                                break;
-                            case 'paper Bubble':
-                                $name_zh = '纸塑葫芦膜';
-                                break;
-                            default:
-                                $name_zh = $bag_type;
-                                break;
-                        }
-                        
                         $items[] = [
-                            'code' => $bag_type,
-                            'name_zh' => $name_zh,
-                            'name_en' => $name_en
+                            'id' => (int) $row->id,
+                            'code' => trim($row->code, '"\''),
+                            'name_zh' => trim($row->name_zh, '"\''),
+                            'name_en' => trim($row->name_en, '"\''),
+                            'image_url' => $row->image_url,
+                            'image_url2' => $row->image_url2,
+                            'sort_order' => (int) $row->sort_order
                         ];
                     }
+                } else {
+                    // 如果形状表没有数据，提供默认选项
+                    $items[] = [
+                        'code' => 'MEX',
+                        'name_zh' => '气泡枕',
+                        'name_en' => 'Air Pillow'
+                    ];
+                    $items[] = [
+                        'code' => 'MFB',
+                        'name_zh' => '葫芦膜',
+                        'name_en' => 'Bubble'
+                    ];
+                    $items[] = [
+                        'code' => 'MFC',
+                        'name_zh' => '气枕膜',
+                        'name_en' => 'Tube'
+                    ];
                 }
                 break;
 

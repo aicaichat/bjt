@@ -24,6 +24,7 @@ const AccessoriesPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('models');
   const [selectedLanguage, setSelectedLanguage] = useState<'zh' | 'en'>('zh');
   const [selectedRegion, setSelectedRegion] = useState<'CN' | 'EU' | 'NA' | 'AU' | undefined>(undefined);
+  const [selectedStatus, setSelectedStatus] = useState<'publish' | 'draft' | undefined>(undefined);
   
   // 获取产品线列表
   const {
@@ -50,8 +51,9 @@ const AccessoriesPage: React.FC = () => {
     page: 1,
     per_page: 10,
     lang: selectedLanguage,
-    region: selectedRegion
-  }), [selectedLanguage, selectedRegion]);
+    region: selectedRegion,
+    status: selectedStatus
+  }), [selectedLanguage, selectedRegion, selectedStatus]);
   
   // 获取配件型号列表
   const {
@@ -85,6 +87,11 @@ const AccessoriesPage: React.FC = () => {
   // 处理区域切换
   const handleRegionChange = (value: 'CN' | 'EU' | 'NA' | 'AU' | undefined) => {
     setSelectedRegion(value);
+  };
+  
+  // 处理状态切换
+  const handleStatusChange = (value: 'publish' | 'draft' | undefined) => {
+    setSelectedStatus(value);
   };
   
   // 处理配件型号表格分页
@@ -423,6 +430,16 @@ const AccessoriesPage: React.FC = () => {
               <Option value="EU">欧洲</Option>
               <Option value="NA">北美</Option>
               <Option value="AU">澳洲</Option>
+            </Select>
+            <Select
+              placeholder="选择状态"
+              allowClear
+              value={selectedStatus}
+              style={{ width: 120 }}
+              onChange={handleStatusChange}
+            >
+              <Option value="publish">已发布</Option>
+              <Option value="draft">草稿</Option>
             </Select>
           </Space>
           <Space>

@@ -31,8 +31,39 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
         'total_length_imp',
         'package_type',     // For sales_unit (e.g., pcs, roll, box)
         'image_url',
-        'status'
-        // Other fields like package_*, pallet_*, pcs_per_*, weights can be added later
+        'status',
+        // 🔥 新增：包装信息字段 (Packaging Information)
+        'package_size_cm',
+        'package_size_inch', 
+        'net_weight_kg',
+        'net_weight_lbs',
+        'gross_weight_kg',
+        'gross_weight_lbs',
+        'pcs_per_box',
+        'package_image_url',
+        // 🔥 新增：托盘信息字段 (Pallet Information)
+        'pallet_size_cm',
+        'pallet_size_inch',
+        'pcs_per_pallet_a',
+        'pallet_gross_weight_a_kg',
+        'pallet_gross_weight_a_lbs',
+        'pallet_height_a_cm',
+        'pallet_height_a_inch',
+        'pcs_per_pallet_b',
+        'pallet_gross_weight_b_kg',
+        'pallet_gross_weight_b_lbs',
+        'pallet_height_b_cm',
+        'pallet_height_b_inch',
+        'pcs_per_pallet_c',
+        'pallet_gross_weight_c_kg',
+        'pallet_gross_weight_c_lbs',
+        'pallet_height_c_cm',
+        'pallet_height_c_inch',
+        // 🔥 新增：管径信息字段 (Tube Diameter)
+        'tube_inner_diameter_cm',
+        'tube_inner_diameter_inch',
+        // 🔥 新增：单位字段 (Unit)
+        'unit'
     ];
 
     // Fields required when creating an item via API
@@ -260,7 +291,22 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
             // Numerical fields for specs
             'thickness_met', 'thickness_imp', 'width_met', 'width_imp', 
             'length_met', 'length_imp', 'bubble_diameter_met', 'bubble_diameter_imp',
-            'total_length_met', 'total_length_imp'
+            'total_length_met', 'total_length_imp',
+            // 🔥 新增：包装信息字段 (Packaging Information)
+            'package_size_cm', 'package_size_inch', 'package_image_url',
+            'net_weight_kg', 'net_weight_lbs', 'gross_weight_kg', 'gross_weight_lbs', 'pcs_per_box',
+            // 🔥 新增：托盘信息字段 (Pallet Information)  
+            'pallet_size_cm', 'pallet_size_inch',
+            'pcs_per_pallet_a', 'pallet_gross_weight_a_kg', 'pallet_gross_weight_a_lbs',
+            'pallet_height_a_cm', 'pallet_height_a_inch',
+            'pcs_per_pallet_b', 'pallet_gross_weight_b_kg', 'pallet_gross_weight_b_lbs',
+            'pallet_height_b_cm', 'pallet_height_b_inch',
+            'pcs_per_pallet_c', 'pallet_gross_weight_c_kg', 'pallet_gross_weight_c_lbs',
+            'pallet_height_c_cm', 'pallet_height_c_inch',
+            // 🔥 新增：管径信息字段 (Tube Diameter)
+            'tube_inner_diameter_cm', 'tube_inner_diameter_inch',
+            // 🔥 新增：单位字段 (Unit)
+            'unit'
         ];
 
         // Check for alternative spec value keys from schema like 'thickness_met_val'
@@ -294,6 +340,19 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
                     case 'length_met':    case 'length_imp':
                     case 'bubble_diameter_met': case 'bubble_diameter_imp':
                     case 'total_length_met': case 'total_length_imp':
+                    // 🔥 新增：数值型包装字段 (Numeric Packaging Fields)
+                    case 'net_weight_kg': case 'net_weight_lbs':
+                    case 'gross_weight_kg': case 'gross_weight_lbs':
+                    case 'pcs_per_box':
+                    // 🔥 新增：数值型托盘字段 (Numeric Pallet Fields)
+                    case 'pcs_per_pallet_a': case 'pallet_gross_weight_a_kg': case 'pallet_gross_weight_a_lbs':
+                    case 'pallet_height_a_cm': case 'pallet_height_a_inch':
+                    case 'pcs_per_pallet_b': case 'pallet_gross_weight_b_kg': case 'pallet_gross_weight_b_lbs':
+                    case 'pallet_height_b_cm': case 'pallet_height_b_inch':
+                    case 'pcs_per_pallet_c': case 'pallet_gross_weight_c_kg': case 'pallet_gross_weight_c_lbs':
+                    case 'pallet_height_c_cm': case 'pallet_height_c_inch':
+                    // 🔥 新增：数值型管径字段 (Numeric Tube Fields)
+                    case 'tube_inner_diameter_cm': case 'tube_inner_diameter_inch':
                         if (is_numeric($value)) {
                             $data[$db_column] = floatval($value); // Or number_format if specific decimal places needed
                         } elseif ($is_update && ($value === null || $value === '')) {
@@ -301,9 +360,10 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
                         }
                         break;
                     case 'image_url':
+                    case 'package_image_url': // 🔥 新增：包装图片URL
                         $data[$db_column] = esc_url_raw($value);
                         break;
-                    default: // For text fields like model_imperial, spec, brand, app_model, bag_type, material, status, package_type
+                    default: // For text fields like model_imperial, spec, brand, app_model, bag_type, material, status, package_type, unit, package_size_cm, package_size_inch, pallet_size_cm, pallet_size_inch
                         $data[$db_column] = sanitize_text_field($value);
                         break;
                 }
@@ -491,6 +551,9 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
         // 纸筒字段
         'tube_inner_diameter_cm' => $item_db_object->tube_inner_diameter_cm ?? null,
         'tube_inner_diameter_inch' => $item_db_object->tube_inner_diameter_inch ?? null,
+        
+        // 🔥 新增：单位字段
+        'unit' => $item_db_object->unit ?? 'roll',
         
         // === 保持现有specs结构（向后兼容） ===
         'specs' => [

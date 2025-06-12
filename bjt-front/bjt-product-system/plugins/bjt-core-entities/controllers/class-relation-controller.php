@@ -1143,15 +1143,18 @@ class BJT_Relation_Controller extends BJT_API_Controller {
                 error_log("🎯 BJT Relations: [14A01246 DEBUG] Processing child: {$child_part_number} (relation ID: {$relation->id})");
             }
             
-            // 🔧 查询配件基础信息
-            $accessory_query = "SELECT id, model, part_number, {$name_column} as name, spec, spec_imperial, 
-                                       voltage, frequency, image_url, status, unit, product_line_id,
-                                       package_size_cm, package_size_inch, net_weight_kg, net_weight_lbs,
-                                       gross_weight_kg, gross_weight_lbs, pcs_per_box,
-                                       pallet_size_cm, pallet_size_inch, pcs_per_pallet,
-                                       pallet_height_cm, pallet_height_inch, pallet_gross_weight_kg, pallet_gross_weight_lbs
-                                FROM {$accessories_table} 
-                                WHERE part_number = %s AND status = 'publish'";
+            // 🔧 查询配件基础信息，需要JOIN accessory_models表来获取PDF字段
+            $accessory_models_table = $wpdb->prefix . 'bjt_accessory_models';
+            $accessory_query = "SELECT a.id, a.model, a.part_number, a.{$name_column} as name, a.spec, a.spec_imperial, 
+                                       a.voltage, a.frequency, a.image_url, a.status, a.unit, a.product_line_id,
+                                       a.package_size_cm, a.package_size_inch, a.net_weight_kg, a.net_weight_lbs,
+                                       a.gross_weight_kg, a.gross_weight_lbs, a.pcs_per_box,
+                                       a.pallet_size_cm, a.pallet_size_inch, a.pcs_per_pallet,
+                                       a.pallet_height_cm, a.pallet_height_inch, a.pallet_gross_weight_kg, a.pallet_gross_weight_lbs,
+                                       am.explosion_diagram_pdf, am.spec_pdf
+                                FROM {$accessories_table} a
+                                LEFT JOIN {$accessory_models_table} am ON a.product_line_id = am.product_line_id AND a.model = am.model
+                                WHERE a.part_number = %s AND a.status = 'publish'";
             
             $accessory = $wpdb->get_row(
                 $wpdb->prepare($accessory_query, $child_part_number)
@@ -1174,6 +1177,8 @@ class BJT_Relation_Controller extends BJT_API_Controller {
                     'voltage' => $accessory->voltage,
                     'frequency' => $accessory->frequency,
                     'image_url' => $accessory->image_url,
+                    'explosion_diagram_pdf' => $accessory->explosion_diagram_pdf,
+                    'spec_pdf' => $accessory->spec_pdf,
                     'unit' => $accessory->unit,
                     'product_line_id' => $accessory->product_line_id,
                     'level' => $current_level,
@@ -1218,6 +1223,8 @@ class BJT_Relation_Controller extends BJT_API_Controller {
                     'voltage' => null,
                     'frequency' => null,
                     'image_url' => '/images/placeholder-missing.jpg',
+                    'explosion_diagram_pdf' => null,
+                    'spec_pdf' => null,
                     'unit' => 'pcs',
                     'product_line_id' => 1,
                     'level' => $current_level,

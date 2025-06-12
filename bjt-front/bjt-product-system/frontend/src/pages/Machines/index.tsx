@@ -15,6 +15,9 @@ import {
   useToastNotifications 
 } from '../../components/ui';
 
+// 🎯 导入智能购物车组件
+import { SmartAddToCartButton } from '../../components/Cart/SmartAddToCartButton';
+
 // 导入类型定义
 import { MachineProduct, MachineListData, MachineAccessory, MachinePart, MachinePartListData } from '../../types/machines';
 import { PriceTier, InventoryData } from '../../types/common';
@@ -204,6 +207,10 @@ const MachinesPage: React.FC = () => {
     if (!category) return;
     
     setHostModelsLoading(true);
+    
+    // ✅ 强制清理主机型号状态，防止显示缓存的旧数据
+    setHostModels([]);
+    
     try {
       console.log('🔍 [fetchHostModels] Fetching host models for product line:', category);
       
@@ -285,28 +292,25 @@ const MachinesPage: React.FC = () => {
           setHostModels(transformedHostModels);
           return;
         } else {
-          console.log('⚠️ [fetchHostModels] API returned empty data, trying mock data');
+          console.log('⚠️ [fetchHostModels] API returned empty data or no published models found');
         }
+      } else {
+        console.log('⚠️ [fetchHostModels] API request failed:', response.status, response.statusText);
       }
-      
-      // 如果API失败或返回空数据，使用Mock数据
-      console.log('⚠️ [fetchHostModels] API failed or returned empty data, using mock data');
-      const mockHostModels = [
-          { id: 1, model: 'LA-E4S', title_zh: '气垫机E4S', title_en: 'Air Cushion E4S', type: '小型' },
-          { id: 2, model: 'LA-E5P', title_zh: '气垫机E5P', title_en: 'Air Cushion E5P', type: '中型' },
-          { id: 3, model: 'LA-E6L', title_zh: '气垫机E6L', title_en: 'Air Cushion E6L', type: '大型' }
-        ];
-      setHostModels(mockHostModels);
+
+      // API失败或无数据时，显示空列表而非Mock数据
+      // 这确保只显示真实的、已发布状态的主机型号
+      if (!hostModels || hostModels.length === 0) {
+        console.log('📋 [fetchHostModels] No published host models available, showing empty list');
+        setHostModels([]);
+      }
     } catch (error) {
       console.error('❌ [fetchHostModels] Failed to fetch host models:', error);
       
-      // 使用默认Mock数据
-      const defaultMockHostModels = [
-        { id: 1, model: 'LA-E4S', title_zh: '气垫机E4S', title_en: 'Air Cushion E4S', type: '小型' },
-        { id: 2, model: 'LA-E5P', title_zh: '气垫机E5P', title_en: 'Air Cushion E5P', type: '中型' },
-        { id: 3, model: 'LA-E6L', title_zh: '气垫机E6L', title_en: 'Air Cushion E6L', type: '大型' }
-      ];
-      setHostModels(defaultMockHostModels);
+      // 错误时也显示空列表，不使用Mock数据
+      // 这确保用户只看到真实的、已发布的主机型号
+      console.log('📋 [fetchHostModels] Error occurred, showing empty list to ensure data integrity');
+      setHostModels([]);
     } finally {
       setHostModelsLoading(false);
     }
@@ -325,6 +329,12 @@ const MachinesPage: React.FC = () => {
     
     setLoading(true);
     setError(null);
+    
+    // ✅ 强制清理状态，防止显示缓存的旧数据
+    setMachines([]);
+    setTotal(0);
+    setCurrentPage(1);
+    setTotalPages(1);
     
     try {
       // Get token from localStorage
@@ -354,7 +364,7 @@ const MachinesPage: React.FC = () => {
       const fetchWithRetry = async (retryCount = 0) => {
         try {
           const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1';
-          const apiUrl = `${baseUrl}/machineparts?page=${currentPage}&per_page=${pageSize}&product_line_id=${category}&lang=${currentLanguage}`;
+          const apiUrl = `${baseUrl}/machineparts?page=${currentPage}&per_page=${pageSize}&product_line_id=${category}&lang=${currentLanguage}&status=publish`;
           
           console.log('🌐 [fetchWithRetry] Making API request:', {
             apiUrl,
@@ -760,7 +770,7 @@ const MachinesPage: React.FC = () => {
           
           // 使用与其他API一致的WordPress API URL格式
           const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1';
-          const apiUrl = `${baseUrl}/relations/${machinePartNumber}/accessories?lang=${currentLanguage}&region=${filterRegion}&max_levels=5`;
+          const apiUrl = `${baseUrl}/relations/${machinePartNumber}/accessories?lang=${currentLanguage}&region=${filterRegion}&max_levels=5&status=publish`;
           
           console.log('🔍 [loadAccessories] API URL:', apiUrl);
           
@@ -781,6 +791,38 @@ const MachinesPage: React.FC = () => {
           
           if (jsonData.success && jsonData.data && jsonData.data.accessories) {
             const accessoriesData = jsonData.data.accessories;
+            
+            // ✅ 新增：过滤掉占位符数据（missing开头的数据）
+            const filterMissingData = (items: any[]): any[] => {
+              if (!Array.isArray(items)) return [];
+              
+              return items
+                .filter(item => {
+                  // 过滤掉ID或part_number以"missing"开头的占位符数据
+                  const isMissingData = 
+                    (item.id && String(item.id).toLowerCase().startsWith('missing')) ||
+                    (item.part_number && String(item.part_number).toLowerCase().startsWith('missing'));
+                  
+                  if (isMissingData) {
+                    console.log('🚫 [filterMissingData] 过滤掉占位符数据:', {
+                      id: item.id,
+                      part_number: item.part_number,
+                      name: item.name
+                    });
+                    return false;
+                  }
+                  return true;
+                })
+                .map(item => ({
+                  ...item,
+                  // 递归过滤子配件中的占位符数据
+                  children: item.children ? filterMissingData(item.children) : []
+                }));
+            };
+            
+            // 应用过滤器
+            const filteredAccessoriesData = filterMissingData(accessoriesData);
+            console.log('✅ [loadAccessories] 已过滤占位符数据，剩余配件数量:', filteredAccessoriesData.length);
             
             // ✅ 新增：专门的层级结构分析函数
             const analyzeAccessoryHierarchy = (items: any[], depth: number = 0) => {
@@ -821,7 +863,7 @@ const MachinesPage: React.FC = () => {
             };
             
             console.log('🔍 [loadAccessories] Starting complete hierarchy analysis:');
-            analyzeAccessoryHierarchy(accessoriesData);
+            analyzeAccessoryHierarchy(filteredAccessoriesData);
             
             // ✅ 新增：查找14A01246在所有层级中的位置
             const findItemInHierarchy = (items: any[], targetPartNumber: string, path: string[] = []): any => {
@@ -847,7 +889,7 @@ const MachinesPage: React.FC = () => {
               return null;
             };
             
-            const found14A01246 = findItemInHierarchy(accessoriesData, '14A01246');
+            const found14A01246 = findItemInHierarchy(filteredAccessoriesData, '14A01246');
             if (found14A01246) {
               console.log('🎯 [loadAccessories] 14A01246 location analysis:', found14A01246);
             } else {
@@ -970,7 +1012,9 @@ const MachinesPage: React.FC = () => {
                           pallet_height_inch: child.pallet_height_inch ? parseFloat(child.pallet_height_inch) : undefined,
                           pallet_gross_weight_kg: child.pallet_gross_weight_kg ? parseFloat(child.pallet_gross_weight_kg) : undefined,
                           pallet_gross_weight_lbs: child.pallet_gross_weight_lbs ? parseFloat(child.pallet_gross_weight_lbs) : undefined,
-                          image_url: child.image_url || '/images/placeholder.jpg',
+                          image_url: child.image_url || DEFAULT_IMAGE,
+                          explosion_diagram_pdf: child.explosion_diagram_pdf || '',
+                          spec_pdf: child.spec_pdf || '',
                           level: child.level || (targetLevel + 1),
                           parts: [],
                           parent_id: item.id || item.part_number,
@@ -1026,7 +1070,9 @@ const MachinesPage: React.FC = () => {
                       pallet_height_inch: item.pallet_height_inch ? parseFloat(item.pallet_height_inch) : undefined,
                       pallet_gross_weight_kg: item.pallet_gross_weight_kg ? parseFloat(item.pallet_gross_weight_kg) : undefined,
                       pallet_gross_weight_lbs: item.pallet_gross_weight_lbs ? parseFloat(item.pallet_gross_weight_lbs) : undefined,
-                      image_url: item.image_url || '/images/placeholder.jpg',
+                      image_url: item.image_url || DEFAULT_IMAGE,
+                      explosion_diagram_pdf: item.explosion_diagram_pdf || '',
+                      spec_pdf: item.spec_pdf || '',
                       level: item.level || targetLevel,
                       parts: [], // 初始化为空数组
                       parent_id: parentId,
@@ -1094,7 +1140,7 @@ const MachinesPage: React.FC = () => {
             };
             
             // 提取Level 1配件
-            const level1Accessories = flattenAccessoriesByLevel(accessoriesData, 1);
+            const level1Accessories = flattenAccessoriesByLevel(filteredAccessoriesData, 1);
             console.log('🔍 [loadAccessories] Level 1 accessories extracted:', level1Accessories);
             console.log('🔍 [loadAccessories] Level 1 accessories count:', level1Accessories.length);
             console.log('🔍 [loadAccessories] Level 1 accessories part numbers:', level1Accessories.map(a => a.part_number));
@@ -1241,15 +1287,31 @@ const MachinesPage: React.FC = () => {
   }, [machines, filterType, selectedVoltage]);
 
   const modelOptions = React.useMemo(() => {
+    console.log('🔍 [DEBUG] Computing modelOptions:', {
+      machinesIsArray: Array.isArray(machines),
+      machinesLength: machines.length,
+      machinesData: machines.slice(0, 3) // 显示前3个机器数据
+    });
+    
     if (!Array.isArray(machines)) return [];
     const uniqueModels = Array.from(new Set(machines.map(m => m.model).filter(Boolean)));
-    return [
+    
+    const options = [
       { value: 'all', label: t('filters.allModels') },
       ...uniqueModels.map(model => ({
         value: model,
         label: model
       }))
     ];
+    
+    console.log('🔍 [DEBUG] Generated modelOptions:', {
+      optionsCount: options.length,
+      uniqueModelsCount: uniqueModels.length,
+      uniqueModels: uniqueModels,
+      finalOptions: options
+    });
+    
+    return options;
   }, [machines, t]);
 
   // 添加到购物车
@@ -1321,7 +1383,7 @@ const MachinesPage: React.FC = () => {
               net_weight_lbs: (product as MachinePart).net_weight_lbs?.toString() || '',
               gross_weight_kg: (product as MachinePart).gross_weight_kg?.toString() || '',
               gross_weight_lbs: (product as MachinePart).gross_weight_lbs?.toString() || '',
-              image_url: product.image_url || ''
+              image_url: product.image_url || DEFAULT_IMAGE
             }
           : {
               part_number: (product as MachineAccessory).part_number || (product as MachineAccessory).model || `ACCESSORY-${product.id}`,
@@ -1342,7 +1404,7 @@ const MachinesPage: React.FC = () => {
               net_weight_lbs: (product as MachineAccessory).net_weight_lbs?.toString() || (product as MachineAccessory).parts?.[0]?.specs?.net_weight_lbs || '',
               gross_weight_kg: (product as MachineAccessory).gross_weight_kg?.toString() || (product as MachineAccessory).parts?.[0]?.specs?.gross_weight_kg || '',
               gross_weight_lbs: (product as MachineAccessory).gross_weight_lbs?.toString() || (product as MachineAccessory).parts?.[0]?.specs?.gross_weight_lbs || '',
-              image_url: product.image_url || ''
+              image_url: product.image_url || DEFAULT_IMAGE
             },
         id: product.id.toString(),
         quantity,
@@ -1357,7 +1419,7 @@ const MachinesPage: React.FC = () => {
           ? (product as MachinePart).prices?.[0]?.tiers?.[0]?.base_price || 0
           : (product as MachineAccessory).parts?.[0]?.prices?.base || 0,
         code: product.part_number || product.model || `${productType.toUpperCase()}-${product.id}`,
-        image: product.image_url || '',
+        image: product.image_url || DEFAULT_IMAGE,
         category: productType === 'machine' ? t('categories.machine') : t('categories.accessory'),
         productId: Number(product.id),
         priceTiers: productType === 'machine'
@@ -1379,7 +1441,7 @@ const MachinesPage: React.FC = () => {
         name: productType === 'machine'
           ? getMachineName(product as MachinePart)
           : getAccessoryName(product as MachineAccessory),
-        image_url: product.image_url || '',
+        image_url: product.image_url || DEFAULT_IMAGE,
         unit_price: productType === 'machine'
           ? (product as MachinePart).prices?.[0]?.tiers?.[0]?.base_price || 0
           : (product as MachineAccessory).parts?.[0]?.prices?.base || 0,
@@ -1415,7 +1477,7 @@ const MachinesPage: React.FC = () => {
         isActive: true,
         startElement: null, // 可根据实际传递按钮ref
         targetElement: cartIcon,
-        productImage: product.image_url || '',
+        productImage: product.image_url || DEFAULT_IMAGE,
         productName: productType === 'machine' ? getMachineName(product as MachinePart) : getAccessoryName(product as MachineAccessory)
       });
       success(t('messages.addedToCart'));
@@ -1626,7 +1688,7 @@ const MachinesPage: React.FC = () => {
             parent_id: selectedAccessory.id,
             compatible_machines: child.compatible_machines || [],
             child_accessories: child.child_accessories || [],
-            image_url: child.image_url || '/images/placeholder.jpg',
+            image_url: child.image_url || DEFAULT_IMAGE,
             status: child.status || 'publish',
             unit: child.unit || 'pcs',
             is_required: child.is_required || false,
@@ -2110,7 +2172,7 @@ const MachinesPage: React.FC = () => {
                         // 尝试打开PDF
                         window.open(finalPdfUrl, '_blank');
                       } else {
-                        showInfoToast('暂无规格说明文档');
+                        showInfoToast(t('noSpecPdf') || '暂无规格说明文档');
                         console.warn('🔍 [Machine PDF Debug] No valid PDF found:', {
                           machine_part_number: machine.part_number,
                           machine_model: machine.model,
@@ -2257,19 +2319,17 @@ const MachinesPage: React.FC = () => {
                     />
                   </div>
                   
-                  <Button
-                    type="primary"
-                    icon={<ShoppingCartOutlined />}
-                    onClick={() => {
-                      console.log('🛒 [Button Click] Add to cart button clicked for machine:', machine.id, machine.part_number);
-                      handleAddToCart(machine, 'machine');
-                    }}
+                  {/* 🎯 智能购物车按钮 - 替换原有按钮 */}
+                  <SmartAddToCartButton
+                    product={machine}
+                    productType="machines"
+                    onAddToCart={() => handleAddToCart(machine, 'machine')}
                     disabled={!canAddToCart}
                     className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 h-10 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
-                    size="large"
                   >
+                    <ShoppingCartOutlined className="mr-2" />
                     {canAddToCart ? t('addToCart') : t('noPermissionAdd')}
-                  </Button>
+                  </SmartAddToCartButton>
                 </div>
               </div>
             </div>
@@ -2473,11 +2533,15 @@ const MachinesPage: React.FC = () => {
           <div className="w-full md:w-1/5 flex flex-col items-center md:items-start mb-6 md:mb-0 md:pr-6">
             <div className="relative mb-4">
               <img 
-                src={accessory.image_url || '/images/placeholder.jpg'} 
+                src={accessory.image_url || DEFAULT_IMAGE} 
                 alt={getAccessoryName(accessory)}
                 className="w-32 h-32 object-contain border-2 border-gray-200 rounded-lg bg-gray-50 p-2 shadow-sm hover:shadow-md transition-shadow duration-200"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/images/placeholder.jpg';
+                  const target = e.target as HTMLImageElement;
+                  // 避免无限循环：只有当前不是DEFAULT_IMAGE时才设置为DEFAULT_IMAGE
+                  if (target.src !== DEFAULT_IMAGE) {
+                    target.src = DEFAULT_IMAGE;
+                  }
                 }}
               />
             </div>
@@ -2620,7 +2684,7 @@ const MachinesPage: React.FC = () => {
                     
                     window.open(absolutePdfUrl, '_blank');
                   } else {
-                    showInfoToast('暂无该配件的规格说明文档');
+                    showInfoToast(t('noAccessorySpecPdf') || '暂无该配件的规格说明文档');
                     console.warn('🔍 [Accessory PDF Debug] No valid PDF found for accessory:', {
                       accessory_part_number: getPartNumber(),
                       accessory_title: getAccessoryName(accessory),
@@ -2802,15 +2866,16 @@ const MachinesPage: React.FC = () => {
                 />
               </div>
               
-              <Button
-                type="primary"
-                icon={<ShoppingCartOutlined />}
-                onClick={() => handleAddToCart(accessory, 'accessory')}
+              {/* 🎯 智能购物车按钮 - 替换配件按钮 */}
+              <SmartAddToCartButton
+                product={accessory}
+                productType="accessories"
+                onAddToCart={() => handleAddToCart(accessory, 'accessory')}
                 className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 h-10 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
-                size="large"
               >
+                <ShoppingCartOutlined className="mr-2" />
                 {t('buttons.addToCart') || '添加到购物车'}
-              </Button>
+              </SmartAddToCartButton>
             </div>
           </div>
         </div>
@@ -2880,6 +2945,28 @@ const MachinesPage: React.FC = () => {
     return flattened;
   }, []);
 
+  // ✅ 调试用：监听状态变化
+  useEffect(() => {
+    console.log('🔍 [DEBUG] Machines state changed:', {
+      machinesCount: machines.length,
+      machinesData: machines.slice(0, 2), // 显示前2个
+      timestamp: new Date().toISOString()
+    });
+  }, [machines]);
+
+  useEffect(() => {
+    console.log('🔍 [DEBUG] HostModels state changed:', {
+      hostModelsCount: hostModels.length,
+      hostModelsData: hostModels.slice(0, 3), // 显示前3个
+      timestamp: new Date().toISOString()
+    });
+  }, [hostModels]);
+
+  useEffect(() => {
+    fetchMachines();
+    fetchHostModels();
+  }, [category, currentLanguage, filterRegion, selectedVoltage]);
+
   // Return the main component JSX
   return (
     <div className="machines-page min-h-screen bg-gray-50 text-gray-900">
@@ -2922,47 +3009,6 @@ const MachinesPage: React.FC = () => {
               options={modelOptions}
             />
           </div>
-
-          {/* Debug Button - Development Only */}
-          {import.meta.env.DEV && (
-            <div className="flex flex-col">
-              <label className="mb-1 text-sm font-medium text-gray-600">调试工具</label>
-              <Button
-                onClick={() => {
-                  console.log('=== 配件状态调试信息 ===');
-                  console.log('Level 1 Accessories:', accessories.length, accessories.map(a => ({
-                    part_number: a.part_number,
-                    title: a.title,
-                    children_count: a.children?.length || 0
-                  })));
-                  console.log('Level 2 Accessories:', level2Accessories.length, level2Accessories.map(a => ({
-                    part_number: a.part_number,
-                    title: a.title,
-                    children_count: a.children?.length || 0
-                  })));
-                  console.log('Level 3 Accessories:', level3Accessories.length, level3Accessories.map(a => ({
-                    part_number: a.part_number,
-                    title: a.title,
-                    children_count: a.children?.length || 0
-                  })));
-                  console.log('Level 4 Accessories:', level4Accessories.length);
-                  console.log('Level 5 Accessories:', level5Accessories.length);
-                  console.log('Selected Accessories:', selectedAccessories);
-                  console.log('DOM Visibility:');
-                  for (let i = 1; i <= 5; i++) {
-                    const div = document.getElementById(`accessory-level-${i}`);
-                    console.log(`  Level ${i}: ${div ? div.style.display : 'not found'}`);
-                  }
-                  alert('调试信息已输出到控制台，请查看Console面板');
-                }}
-                type="dashed"
-                size="small"
-                className="bg-yellow-50 border-yellow-200 text-yellow-600 hover:bg-yellow-100"
-              >
-                调试配件状态
-              </Button>
-            </div>
-          )}
         </div>
       </div>
       

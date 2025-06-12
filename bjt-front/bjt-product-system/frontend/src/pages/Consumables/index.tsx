@@ -12,6 +12,9 @@ import {
   useToastNotifications
 } from '../../components/ui';
 
+// 🎯 导入智能购物车组件
+import { SmartAddToCartButton } from '../../components/Cart/SmartAddToCartButton';
+
 // 新增：导入标准化字段显示组件
 import { 
   ConsumableProductList, 
@@ -1170,15 +1173,17 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
               )}
               
               <div className="action-buttons">
-                <Button
-                  type="primary"
-                  onClick={(e) => onAddToCart(item.id, e.currentTarget)}
+                {/* 🎯 智能购物车按钮 - 替换耗材按钮 */}
+                <SmartAddToCartButton
+                  product={item}
+                  productType="consumables"
+                  onAddToCart={() => onAddToCart(item.id)}
                   disabled={stockStatus === 'out'}
                   className={`add-to-cart-btn ${stockStatus === 'out' ? 'unavailable' : 'available'}`}
-                  icon={<ShoppingCartOutlined />}
                 >
+                  <ShoppingCartOutlined className="mr-2" />
                   {stockStatus === 'out' ? String(t('ui.stockStatus.out') || '暂时缺货') : String(t('ui.addToCart') || '加入购物车')}
-                </Button>
+                </SmartAddToCartButton>
                 
                 {/* 快速购买按钮 */}
                 {stockStatus !== 'out' && (
@@ -2106,7 +2111,8 @@ const ConsumablesPage: React.FC = () => {
         // 直接调用WordPress API，绕过服务层的mock判断
         const token = localStorage.getItem('auth_token');
         const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1';
-        const apiUrl = `${baseUrl}/consumables?page=1&per_page=1000`;
+        // ✅ 修复：添加status=publish参数过滤下线耗材
+        const apiUrl = `${baseUrl}/consumables?page=1&per_page=1000&status=publish`;
         
         console.log('🔍 API URL:', apiUrl);
         
@@ -3025,9 +3031,11 @@ const ConsumablesPage: React.FC = () => {
                       )}
                       
                       <div className="space-y-2">
-                        <Button
-                          type="primary"
-                          onClick={(e) => addToCart(item.id, e.currentTarget)}
+                        {/* 🎯 智能购物车按钮 - 替换第二个购物车按钮 */}
+                        <SmartAddToCartButton
+                          product={item}
+                          productType="consumables"
+                          onAddToCart={() => addToCart(item.id)}
                           disabled={stockStatus === 'out'}
                           className={`
                             w-full h-12 font-medium text-base shadow-lg hover:shadow-xl transition-all duration-300
@@ -3036,10 +3044,10 @@ const ConsumablesPage: React.FC = () => {
                               : 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700'
                             }
                           `}
-                          icon={<ShoppingCartOutlined />}
                         >
+                          <ShoppingCartOutlined className="mr-2" />
                           {stockStatus === 'out' ? String(t('ui.stockStatus.out') || '暂时缺货') : String(t('ui.addToCart') || '加入购物车')}
-                        </Button>
+                        </SmartAddToCartButton>
                         
                         {/* 快速购买按钮 */}
                         {stockStatus !== 'out' && (
@@ -3582,17 +3590,19 @@ const ConsumablesPage: React.FC = () => {
             {String(t('ui.close') || '关闭')}
           </Button>,
           selectedProduct && (
-            <Button 
-              key="addToCart" 
-              type="primary" 
-              icon={<ShoppingCartOutlined />}
-              onClick={() => {
+            <SmartAddToCartButton
+              key="addToCart"
+              product={selectedProduct}
+              productType="consumables"
+              onAddToCart={() => {
                 addToCart(selectedProduct.id);
                 closeDetailModal();
               }}
+              className="ant-btn ant-btn-primary"
             >
+              <ShoppingCartOutlined className="mr-2" />
               {String(t('ui.addToCart') || '加入购物车')}
-            </Button>
+            </SmartAddToCartButton>
           )
         ]}
         width={800}

@@ -309,60 +309,25 @@ const MachinesPage: React.FC = () => {
           console.log('✅ [fetchHostModels] Using API data (alternative structure):', data.data);
           setHostModels(data.data);
           return;
+        } else {
+          console.log('⚠️ [fetchHostModels] API returned empty data or no published models found');
         }
+      } else {
+        console.log('⚠️ [fetchHostModels] API request failed:', response.status, response.statusText);
       }
       
-      // 如果API失败，使用与数据库一致的Mock数据
-      console.log('⚠️ [fetchHostModels] API failed, using database-consistent mock data');
-      
-      // 根据产品线ID返回对应的主机型号（与数据库wp_bjt_host_models表一致）
-      let mockHostModels: Array<{ id: number; model: string; title_zh: string; title_en: string; type?: string }> = [];
-      
-      if (category === '1') {
-        // 产品线1：气垫系列（基于真实数据库数据）
-        mockHostModels = [
-          { id: 1, model: 'LA-E4S', title_zh: '气垫机E4S', title_en: 'Air Cushion E4S', type: '小型' },
-          { id: 2, model: 'LA-E5P', title_zh: '气垫机E5P', title_en: 'Air Cushion E5P', type: '中型' },
-          { id: 3, model: 'LA-E6L', title_zh: '气垫机E6L', title_en: 'Air Cushion E6L', type: '大型' }
-        ];
-      } else if (category === '2') {
-        // 产品线2：纸包装系列
-        mockHostModels = [
-          { id: 4, model: 'PM-100', title_zh: '纸机100', title_en: 'Paper Machine 100', type: '基础型' },
-          { id: 5, model: 'PM-200', title_zh: '纸机200', title_en: 'Paper Machine 200', type: '标准型' },
-          { id: 6, model: 'PM-300', title_zh: '纸机300', title_en: 'Paper Machine 300', type: '高级型' }
-        ];
-      } else if (category === '3') {
-        // 产品线3：胶带系列
-        mockHostModels = [
-          { id: 7, model: 'TM-200', title_zh: '胶带机200', title_en: 'Tape Machine 200', type: '标准型' },
-          { id: 8, model: 'TM-300', title_zh: '胶带机300', title_en: 'Tape Machine 300', type: '高速型' },
-          { id: 9, model: 'TM-400', title_zh: '胶带机400', title_en: 'Tape Machine 400', type: '自动型' }
-        ];
-      } else if (category === '4') {
-        // 产品线4：气柱袋系列
-        mockHostModels = [
-          { id: 10, model: 'ACB-100', title_zh: '气柱袋100', title_en: 'Air Column Bag 100', type: '小型' },
-          { id: 11, model: 'ACB-200', title_zh: '气柱袋200', title_en: 'Air Column Bag 200', type: '中型' },
-          { id: 12, model: 'ACB-300', title_zh: '气柱袋300', title_en: 'Air Column Bag 300', type: '大型' }
-        ];
-      }
-      
-      console.log('✅ [fetchHostModels] Using mock data for product line', category, ':', mockHostModels);
-      setHostModels(mockHostModels);
+      // API失败或无数据时，显示空列表而非Mock数据
+      // 这确保只显示真实的、已发布状态的主机型号
+      console.log('📋 [fetchHostModels] No published host models available, showing empty list');
+      setHostModels([]);
       
     } catch (error) {
       console.error('❌ [fetchHostModels] Failed to fetch host models:', error);
       
-      // 使用默认Mock数据（产品线1的数据）
-      const defaultMockHostModels = [
-        { id: 1, model: 'LA-E4S', title_zh: '气垫机E4S', title_en: 'Air Cushion E4S', type: '小型' },
-        { id: 2, model: 'LA-E5P', title_zh: '气垫机E5P', title_en: 'Air Cushion E5P', type: '中型' },
-        { id: 3, model: 'LA-E6L', title_zh: '气垫机E6L', title_en: 'Air Cushion E6L', type: '大型' }
-      ];
-      
-      console.log('✅ [fetchHostModels] Using default mock data:', defaultMockHostModels);
-      setHostModels(defaultMockHostModels);
+      // 错误时也显示空列表，不使用Mock数据
+      // 这确保用户只看到真实的、已发布的主机型号
+      console.log('📋 [fetchHostModels] Error occurred, showing empty list to ensure data integrity');
+      setHostModels([]);
     } finally {
       setHostModelsLoading(false);
     }
@@ -399,7 +364,7 @@ const MachinesPage: React.FC = () => {
       // Fetch machines with retry logic
       const fetchWithRetry = async (retryCount = 0) => {
         try {
-          const response = await fetch(`${API_BASE_URL}/machineparts?page=1&per_page=10`, {
+          const response = await fetch(`${API_BASE_URL}/machineparts?page=1&per_page=10&status=publish`, {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('token')}`,
             },
@@ -491,7 +456,7 @@ const MachinesPage: React.FC = () => {
           
           // 使用与其他API一致的WordPress API URL格式
           const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1';
-          const apiUrl = `${baseUrl}/relations/${machinePartNumber}/accessories?lang=${currentLanguage}&region=${filterRegion}&max_levels=5`;
+          const apiUrl = `${baseUrl}/relations/${machinePartNumber}/accessories?lang=${currentLanguage}&region=${filterRegion}&max_levels=5&status=publish`;
           
           console.log('🔍 [loadAccessories] API URL:', apiUrl);
           
@@ -1325,7 +1290,7 @@ const MachinesPage: React.FC = () => {
                       if (machine.model_explosion_diagram_pdf) {
                         window.open(machine.model_explosion_diagram_pdf, '_blank');
                       } else {
-                        info('暂无规格详情PDF文件');
+                        info(t('noSpecDetailsPdf') || '暂无规格详情PDF文件');
                       }
                     }}
                     className="bg-secondary-light text-secondary hover:bg-secondary hover:text-white border-secondary transition-colors duration-200"

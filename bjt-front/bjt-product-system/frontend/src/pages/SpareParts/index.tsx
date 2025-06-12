@@ -1,10 +1,14 @@
-import React, { useState, useEffect, ChangeEvent, createRef, useRef, useContext, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useRef, useContext } from 'react';
+import { Button, Input, Select, Spin, Alert, Card, Row, Col, Tag, Space, Tooltip } from 'antd';
+import { SearchOutlined, ReloadOutlined, ShoppingCartOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { Tooltip } from 'antd';
-import { InfoCircleOutlined } from '@ant-design/icons';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import { useCart } from '../../contexts/CartContext';
+import { ASSETS } from '../../config/appConfig';
 import { API_BASE_URL } from '../../api/config';
 import { parseRequiredParts } from '../../utils/requiredPartsUtils';
+
 // 导入现代化UI组件
 import { 
   LoadingState, 
@@ -12,6 +16,9 @@ import {
   CartAnimation, 
   useToastNotifications 
 } from '../../components/ui';
+
+// 🎯 导入智能购物车组件
+import { SmartAddToCartButton } from '../../components/Cart/SmartAddToCartButton';
 
 // 导入必选备件显示组件
 import { RequiredPartsDisplay } from '../../components/RequiredPartsDisplay';
@@ -44,8 +51,6 @@ import { SparePart } from '../../types/spareParts';
 import AuthContext from '../../contexts/AuthContext';
 import { CartContext, ExtendedCartItem } from '../../contexts/CartContext';
 import { getUserRegionFromEmail, isVipUser, getCurrencySymbol, PRICING } from '../../config/appConfig';
-// 导入 useAuth hook
-import { useAuth } from '../../contexts/AuthContext';
 import './SpareParts.css';
 
 // 定义 Timeout 类型，避免使用 NodeJS.Timeout
@@ -1621,7 +1626,7 @@ const SparePartsPage = () => {
                 <div className="w-full md:w-1/5 flex flex-col items-center md:items-start mb-6 md:mb-0 md:pr-6">
                   <div className="relative mb-4">
                     <img 
-                      src={part.image_url || '/images/placeholder.jpg'} 
+                      src={part.image_url || ASSETS.DEFAULT_IMAGE} 
                       alt={part.name_en || part.part_number}
                       className="w-32 h-32 object-contain border-2 border-border rounded-lg bg-card-alt p-2 shadow-sm hover:shadow-md transition-shadow duration-200"
                       onError={handleImageError}
@@ -2021,19 +2026,18 @@ const SparePartsPage = () => {
                       language={currentLanguage as 'zh' | 'en'}
                     />
                     
-                    <button
-                      onClick={(e) => { 
-                        e.stopPropagation(); 
-                        console.log('🛒 [Button Click] Add to cart button clicked for spare part:', part.id, part.part_number);
-                        addToCart(part, quantities[String(part.id)] || 1); 
-                      }}
+                    {/* 🎯 智能购物车按钮 - 替换备件按钮 */}
+                    <SmartAddToCartButton
+                      product={part}
+                      productType="spareParts"
+                      onAddToCart={() => addToCart(part, quantities[String(part.id)] || 1)}
                       className="w-full bg-primary hover:bg-primary-dark text-white font-medium py-2 h-10 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
                       {String(t('actions.addToCart', { ns: 'spareParts' }) || '加入购物车')}
-                    </button>
+                    </SmartAddToCartButton>
                   </div>
                 </div>
               </div>

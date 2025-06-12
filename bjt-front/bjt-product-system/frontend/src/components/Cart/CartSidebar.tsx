@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
+import { ASSETS } from '../../config/appConfig';
 import './CartSidebar.css';
 
 interface CartSidebarProps {
@@ -492,7 +493,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
                                item.image_url || 
                                props.image || 
                                item.image || 
-                               '/images/placeholder.jpg';
+                               ASSETS.DEFAULT_IMAGE;
                       })()} alt={(() => {
                         // 获取商品名称用于 alt 属性
                         const props = item.properties || {};

@@ -55,6 +55,11 @@ class BJT_Accessory_Controller extends BJT_API_Controller {
                             'description' => 'Filter by product line ID.',
                             'type'        => 'integer',
                         ],
+                        'status' => [
+                            'description' => 'Filter by status (publish/draft). If not specified, shows all non-deleted statuses.',
+                            'type'        => 'string',
+                            'enum'        => ['publish', 'draft'],
+                        ],
                     ]
                 ),
             ],
@@ -246,16 +251,19 @@ class BJT_Accessory_Controller extends BJT_API_Controller {
         // Determine name column based on language
         $name_column = ($lang === 'en') ? 'name_en' : 'name_zh';
         
-        // Build WHERE clauses (start with status = publish)
-        $where_clauses = ["status = 'publish'"];
+        // Build WHERE clauses - 修改状态过滤逻辑以支持管理后台查看所有状态
+        $where_clauses = [];
         $params = [];
 
-        // TODO: Add filters based on request params if needed (e.g., model, product_line_id)
-        // Example: 
-        // if ($request->get_param('model')) {
-        //     $where_clauses[] = "model = %s";
-        //     $params[] = $request->get_param('model');
-        // }
+        // 添加状态过滤 - 支持传递status参数，默认为所有状态（管理后台需要）
+        $status_filter = $request->get_param('status');
+        if ($status_filter) {
+            $where_clauses[] = "status = %s";
+            $params[] = $status_filter;
+        } else {
+            // 如果没有指定状态，显示所有非删除状态的记录（包括publish和draft）
+            $where_clauses[] = "status IN ('publish', 'draft')";
+        }
 
         // Add part_number filter
         if ($request->get_param('part_number')) {
@@ -294,7 +302,8 @@ class BJT_Accessory_Controller extends BJT_API_Controller {
                 model, 
                 brand, 
                 part_number, 
-                {$name_column} as name, 
+                name_zh,
+                name_en,
                 spec, 
                 spec_imperial, 
                 voltage, 
@@ -463,7 +472,6 @@ class BJT_Accessory_Controller extends BJT_API_Controller {
         
         // Get language parameter
         $lang = $request->get_param('lang') ?: 'zh';
-        $name_column = ($lang === 'en') ? 'name_en' : 'name_zh';
         
         // Fetch accessory data with join to accessory_models to get additional details
         $accessory = $wpdb->get_row(
@@ -474,7 +482,8 @@ class BJT_Accessory_Controller extends BJT_API_Controller {
                     a.model,
                     a.brand,
                     a.part_number,
-                    a.{$name_column} AS name,
+                    a.name_zh,
+                    a.name_en,
                     a.spec,
                     a.spec_imperial,
                     a.voltage,
@@ -525,6 +534,9 @@ class BJT_Accessory_Controller extends BJT_API_Controller {
                 404
             );
         }
+
+        // Add a dynamic 'name' field for backward compatibility based on language preference
+        $accessory['name'] = ($lang === 'en' && !empty($accessory['name_en'])) ? $accessory['name_en'] : $accessory['name_zh'];
 
         // Format model info based on language
         $model_title = ($lang === 'en') ? $accessory['model_title_en'] : $accessory['model_title_zh'];
@@ -1323,7 +1335,9 @@ class BJT_Accessory_Controller extends BJT_API_Controller {
             'model' => $item_db_object->model,
             'brand' => $item_db_object->brand,
             'part_number' => $item_db_object->part_number,
-            'name' => $item_db_object->name,
+            'name_zh' => isset($item_db_object->name_zh) ? $item_db_object->name_zh : '',
+            'name_en' => isset($item_db_object->name_en) ? $item_db_object->name_en : '',
+            'name' => isset($item_db_object->name_zh) ? $item_db_object->name_zh : '', // 向后兼容的name字段，默认使用中文
             'spec' => $item_db_object->spec,
             'spec_imperial' => $item_db_object->spec_imperial,
             'voltage' => $item_db_object->voltage,
