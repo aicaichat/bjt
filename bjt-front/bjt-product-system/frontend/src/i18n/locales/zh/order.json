@@ -17,10 +17,21 @@
       "company": "公司名称",
       "companyPlaceholder": "请输入公司名称",
       "country": "国家/地区",
+      "countryPlaceholder": "请选择国家/地区",
       "address": "详细地址",
       "addressPlaceholder": "请输入详细地址",
       "notes": "备注",
       "notesPlaceholder": "选填：添加订单备注"
+    },
+    "validation": {
+      "contactNameRequired": "请输入联系人姓名",
+      "phoneRequired": "请输入联系电话",
+      "phoneInvalid": "请输入有效的电话号码",
+      "emailRequired": "请输入邮箱地址",
+      "emailInvalid": "请输入有效的邮箱地址",
+      "companyRequired": "请输入公司名称",
+      "countryRequired": "请选择国家/地区",
+      "addressRequired": "请输入详细地址"
     },
     "details": {
       "title": "订单明细"
@@ -39,7 +50,8 @@
     },
     "actions": {
       "backToCart": "返回购物车",
-      "confirmSubmit": "确认并提交"
+      "confirmSubmit": "确认并提交",
+      "submitting": "提交中..."
     },
     "errors": {
       "loadingData": "加载订单数据出错",

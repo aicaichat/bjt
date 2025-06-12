@@ -269,6 +269,18 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
         $params = $request->get_params();
         $data = [];
         
+        // 🔥 添加调试日志
+        if ($is_update) {
+            error_log('[BJT_Consumable] Update operation - received params count: ' . count($params));
+            error_log('[BJT_Consumable] Packaging/Pallet fields in request: ' . json_encode([
+                'package_type' => isset($params['package_type']) ? $params['package_type'] : 'NOT_SET',
+                'package_size_cm' => isset($params['package_size_cm']) ? $params['package_size_cm'] : 'NOT_SET',
+                'net_weight_kg' => isset($params['net_weight_kg']) ? $params['net_weight_kg'] : 'NOT_SET',
+                'pallet_size_cm' => isset($params['pallet_size_cm']) ? $params['pallet_size_cm'] : 'NOT_SET',
+                'pcs_per_pallet_a' => isset($params['pcs_per_pallet_a']) ? $params['pcs_per_pallet_a'] : 'NOT_SET',
+            ]));
+        }
+        
         // Map API field 'code' to DB 'part_number'
         if (isset($params['code'])) {
             $data['part_number'] = sanitize_text_field($params['code']);
@@ -353,11 +365,14 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
                     case 'pallet_height_c_cm': case 'pallet_height_c_inch':
                     // 🔥 新增：数值型管径字段 (Numeric Tube Fields)
                     case 'tube_inner_diameter_cm': case 'tube_inner_diameter_inch':
+                        // 🔥 修复：正确处理数字字段，允许0值，跳过undefined值
                         if (is_numeric($value)) {
-                            $data[$db_column] = floatval($value); // Or number_format if specific decimal places needed
+                            $data[$db_column] = floatval($value);
                         } elseif ($is_update && ($value === null || $value === '')) {
-                             $data[$db_column] = null;
+                            // 只有在明确传递null或空字符串时才设置为null
+                            $data[$db_column] = null;
                         }
+                        // 🔥 修复：如果值是undefined或其他非数字类型，不进行任何更新（保持原值）
                         break;
                     case 'image_url':
                     case 'package_image_url': // 🔥 新增：包装图片URL
@@ -372,6 +387,33 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
                  $data[$db_column] = null;
             }
         }
+        
+        // 🔥 添加详细的调试日志，特别关注包装和托盘字段
+        if ($is_update) {
+            error_log('[BJT_Consumable] Final data to update: ' . json_encode([
+                'total_fields' => count($data),
+                'packaging_fields' => [
+                    'package_type' => isset($data['package_type']) ? $data['package_type'] : 'NOT_IN_UPDATE',
+                    'package_size_cm' => isset($data['package_size_cm']) ? $data['package_size_cm'] : 'NOT_IN_UPDATE',
+                    'package_size_inch' => isset($data['package_size_inch']) ? $data['package_size_inch'] : 'NOT_IN_UPDATE',
+                    'net_weight_kg' => isset($data['net_weight_kg']) ? $data['net_weight_kg'] : 'NOT_IN_UPDATE',
+                    'net_weight_lbs' => isset($data['net_weight_lbs']) ? $data['net_weight_lbs'] : 'NOT_IN_UPDATE',
+                    'gross_weight_kg' => isset($data['gross_weight_kg']) ? $data['gross_weight_kg'] : 'NOT_IN_UPDATE',
+                    'gross_weight_lbs' => isset($data['gross_weight_lbs']) ? $data['gross_weight_lbs'] : 'NOT_IN_UPDATE',
+                    'pcs_per_box' => isset($data['pcs_per_box']) ? $data['pcs_per_box'] : 'NOT_IN_UPDATE',
+                ],
+                'pallet_fields' => [
+                    'pallet_size_cm' => isset($data['pallet_size_cm']) ? $data['pallet_size_cm'] : 'NOT_IN_UPDATE',
+                    'pallet_size_inch' => isset($data['pallet_size_inch']) ? $data['pallet_size_inch'] : 'NOT_IN_UPDATE',
+                    'pcs_per_pallet_a' => isset($data['pcs_per_pallet_a']) ? $data['pcs_per_pallet_a'] : 'NOT_IN_UPDATE',
+                    'pallet_gross_weight_a_kg' => isset($data['pallet_gross_weight_a_kg']) ? $data['pallet_gross_weight_a_kg'] : 'NOT_IN_UPDATE',
+                    'pallet_gross_weight_a_lbs' => isset($data['pallet_gross_weight_a_lbs']) ? $data['pallet_gross_weight_a_lbs'] : 'NOT_IN_UPDATE',
+                    'pallet_height_a_cm' => isset($data['pallet_height_a_cm']) ? $data['pallet_height_a_cm'] : 'NOT_IN_UPDATE',
+                    'pallet_height_a_inch' => isset($data['pallet_height_a_inch']) ? $data['pallet_height_a_inch'] : 'NOT_IN_UPDATE',
+                ]
+            ]));
+        }
+        
         return $data;
     }
 
@@ -705,6 +747,21 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
             return $this->error_response("Consumable with ID {$id} not found to update.", 'not_found', 404);
         }
 
+        // 🔥 记录更新前的关键字段值
+        $before_update_log = [
+            'id' => $id,
+            'package_type' => $existing_item_db->package_type ?? 'NULL',
+            'package_size_cm' => $existing_item_db->package_size_cm ?? 'NULL',
+            'net_weight_kg' => $existing_item_db->net_weight_kg ?? 'NULL',
+            'gross_weight_kg' => $existing_item_db->gross_weight_kg ?? 'NULL',
+            'pcs_per_box' => $existing_item_db->pcs_per_box ?? 'NULL',
+            'pallet_size_cm' => $existing_item_db->pallet_size_cm ?? 'NULL',
+            'pcs_per_pallet_a' => $existing_item_db->pcs_per_pallet_a ?? 'NULL',
+            'pallet_gross_weight_a_kg' => $existing_item_db->pallet_gross_weight_a_kg ?? 'NULL',
+            'pallet_height_a_cm' => $existing_item_db->pallet_height_a_cm ?? 'NULL',
+        ];
+        error_log('[BJT_Consumable] BEFORE UPDATE - ID ' . $id . ': ' . json_encode($before_update_log));
+
         $data_to_update = $this->map_request_to_db($request, true /* is_update */);
 
         if (empty($data_to_update)) {
@@ -741,6 +798,32 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
         }
         
         if (!empty($data_to_update)) {
+            // 🔥 新增：数据保护机制 - 防止有值字段被错误清零
+            $protected_fields = [
+                'package_size_cm', 'package_size_inch', 'net_weight_kg', 'net_weight_lbs',
+                'gross_weight_kg', 'gross_weight_lbs', 'pcs_per_box',
+                'pallet_size_cm', 'pallet_size_inch',
+                'pcs_per_pallet_a', 'pallet_gross_weight_a_kg', 'pallet_gross_weight_a_lbs',
+                'pallet_height_a_cm', 'pallet_height_a_inch',
+                'pcs_per_pallet_b', 'pallet_gross_weight_b_kg', 'pallet_gross_weight_b_lbs',
+                'pallet_height_b_cm', 'pallet_height_b_inch',
+                'pcs_per_pallet_c', 'pallet_gross_weight_c_kg', 'pallet_gross_weight_c_lbs',
+                'pallet_height_c_cm', 'pallet_height_c_inch'
+            ];
+            
+            foreach ($protected_fields as $field) {
+                if (isset($data_to_update[$field])) {
+                    $new_value = $data_to_update[$field];
+                    $old_value = $existing_item_db->$field ?? null;
+                    
+                    // 如果原值不为空且不为0，但新值为0或空，则发出警告并跳过更新
+                    if (!empty($old_value) && $old_value != 0 && ($new_value === 0 || $new_value === '0' || empty($new_value))) {
+                        error_log("[BJT_Consumable] ⚠️  PROTECTION: Preventing field '{$field}' from being cleared. Old value: '{$old_value}', attempted new value: '{$new_value}' for ID {$id}");
+                        unset($data_to_update[$field]); // 移除这个字段的更新
+                    }
+                }
+            }
+            
             $data_to_update['updated_at'] = current_time('mysql', 1);
             $result = $wpdb->update($this->table_name, $data_to_update, array('id' => $id));
 
@@ -748,11 +831,51 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
                 error_log($this->resource_name . ' DB Update Error: ' . $wpdb->last_error);
                 return $this->error_response('Failed to update consumable. DB Error: ' . $wpdb->last_error, 'db_error', 500);
             }
+            
+            // 🔥 记录实际执行的更新操作
+            error_log('[BJT_Consumable] Database update executed for ID ' . $id . ' with ' . count($data_to_update) . ' fields');
+            error_log('[BJT_Consumable] Updated fields: ' . json_encode($data_to_update));
         }
         
         $updated_item_db = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->table_name} WHERE id = %d", $id));
         if (!$updated_item_db) {
             return $this->error_response('Failed to retrieve consumable after update.', 'retrieve_after_update_error', 500);
+        }
+
+        // 🔥 记录更新后的关键字段值并与更新前对比
+        $after_update_log = [
+            'id' => $id,
+            'package_type' => $updated_item_db->package_type ?? 'NULL',
+            'package_size_cm' => $updated_item_db->package_size_cm ?? 'NULL',
+            'net_weight_kg' => $updated_item_db->net_weight_kg ?? 'NULL',
+            'gross_weight_kg' => $updated_item_db->gross_weight_kg ?? 'NULL',
+            'pcs_per_box' => $updated_item_db->pcs_per_box ?? 'NULL',
+            'pallet_size_cm' => $updated_item_db->pallet_size_cm ?? 'NULL',
+            'pcs_per_pallet_a' => $updated_item_db->pcs_per_pallet_a ?? 'NULL',
+            'pallet_gross_weight_a_kg' => $updated_item_db->pallet_gross_weight_a_kg ?? 'NULL',
+            'pallet_height_a_cm' => $updated_item_db->pallet_height_a_cm ?? 'NULL',
+        ];
+        error_log('[BJT_Consumable] AFTER UPDATE - ID ' . $id . ': ' . json_encode($after_update_log));
+        
+        // 🔥 检测哪些字段发生了意外变化（从非零值变为零）
+        $unexpected_changes = [];
+        foreach ($before_update_log as $field => $before_value) {
+            if ($field === 'id') continue;
+            $after_value = $after_update_log[$field];
+            
+            // 检测从有值变为NULL或0的情况
+            if ($before_value !== 'NULL' && $before_value !== '0' && $before_value !== 0 && 
+                ($after_value === 'NULL' || $after_value === '0' || $after_value === 0)) {
+                $unexpected_changes[$field] = [
+                    'before' => $before_value,
+                    'after' => $after_value,
+                    'was_in_update_data' => isset($data_to_update[$field])
+                ];
+            }
+        }
+        
+        if (!empty($unexpected_changes)) {
+            error_log('[BJT_Consumable] ⚠️  DETECTED UNEXPECTED DATA LOSS for ID ' . $id . ': ' . json_encode($unexpected_changes));
         }
 
         $formatted_item = $this->format_item_for_response($updated_item_db);

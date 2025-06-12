@@ -17,10 +17,21 @@
       "company": "Company Name",
       "companyPlaceholder": "Please enter company name",
       "country": "Country/Region",
+      "countryPlaceholder": "Please select country/region",
       "address": "Detailed Address",
       "addressPlaceholder": "Please enter detailed address",
       "notes": "Notes",
       "notesPlaceholder": "Optional: Add order notes"
+    },
+    "validation": {
+      "contactNameRequired": "Contact name is required",
+      "phoneRequired": "Phone number is required",
+      "phoneInvalid": "Please enter a valid phone number",
+      "emailRequired": "Email address is required",
+      "emailInvalid": "Please enter a valid email address",
+      "companyRequired": "Company name is required",
+      "countryRequired": "Please select a country/region",
+      "addressRequired": "Detailed address is required"
     },
     "details": {
       "title": "Order Details"
@@ -39,7 +50,8 @@
     },
     "actions": {
       "backToCart": "Back to Cart",
-      "confirmSubmit": "Confirm & Submit"
+      "confirmSubmit": "Confirm & Submit",
+      "submitting": "Submitting..."
     },
     "errors": {
       "loadingData": "Error loading order data",

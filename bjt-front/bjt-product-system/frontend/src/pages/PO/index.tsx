@@ -274,35 +274,160 @@ const POPage: React.FC = () => {
       // 2. 获取第一个sheet（假设为PO信息页）
       const sheetName = workbook.SheetNames[0];
       const ws = workbook.Sheets[sheetName];
+      
+      // 2.0. 🔍 分析模板结构（调试用）
+      console.log('🔍 [Excel Export] 分析模板结构...');
+      console.log('🔍 [Excel Export] Sheet名称:', sheetName);
+      
+      // 输出模板中前20行的所有单元格内容
+      for (let row = 1; row <= 20; row++) {
+        const rowData: any = {};
+        for (let colCode = 65; colCode <= 90; colCode++) { // A到Z列
+          const col = String.fromCharCode(colCode);
+          const cellRef = `${col}${row}`;
+          if (ws[cellRef] && ws[cellRef].v) {
+            rowData[col] = ws[cellRef].v;
+          }
+        }
+        if (Object.keys(rowData).length > 0) {
+          console.log(`🔍 Row ${row}:`, rowData);
+        }
+      }
+      
+      // 2.1. 🔧 清除模板中所有可能的示例数据和提示文字
+      console.log('🔧 [Excel Export] 开始清除模板中的示例数据和提示文字...');
+      let clearedCells = 0;
+      
+      // 清除商品明细区域（从第14行到第50行，A到H列，包含模板示例数据）
+      for (let row = 14; row <= 50; row++) {
+        for (let colCode = 65; colCode <= 72; colCode++) { // A到H列
+          const col = String.fromCharCode(colCode);
+          const cellRef = `${col}${row}`;
+          if (ws[cellRef]) {
+            delete ws[cellRef];
+            clearedCells++;
+          }
+        }
+      }
+      
+      // 清除模板提示文字
+      const templateTextCells = [
+        'A1', // LOGO提示文字
+        'D7', // Vendor区域可能的提示文字
+        'D8', // 可能的重复vendor信息
+        'D9', // 可能的重复vendor信息
+        'D10', // 可能的重复vendor信息
+        'H8', // Ship to区域可能的提示文字
+        'H9', // Ship to区域可能的提示文字
+        'H10', // Ship to区域可能的提示文字
+        'H11', // Ship to区域可能的提示文字
+        'G8', // Ship to区域可能的提示文字
+        'G9', // Ship to区域可能的提示文字
+        'G10', // Ship to区域可能的提示文字
+        'G11'  // Ship to区域可能的提示文字
+      ];
+      
+      templateTextCells.forEach(cellAddr => {
+        if (ws[cellAddr] && ws[cellAddr].v && typeof ws[cellAddr].v === 'string') {
+          const cellValue = ws[cellAddr].v;
+          // 检查是否是模板提示文字
+          if (cellValue.includes('这里用于显示') || 
+              cellValue.includes('这里对应填') || 
+              cellValue.includes('二期开发') ||
+              cellValue.includes('用户账号管理') ||
+              cellValue.includes('LOGO') ||
+              cellValue.includes('公司名字') ||
+              cellValue.includes('地址') ||
+              cellValue.includes('联系人') ||
+              cellValue.includes('电话') ||
+              cellValue.includes('备注') ||
+              cellValue.includes('发货特殊要求')) {
+            delete ws[cellAddr];
+            clearedCells++;
+          }
+        }
+      });
+      
+      console.log(`🔧 [Excel Export] 已清除 ${clearedCells} 个模板示例数据和提示文字单元格`);
+      console.log(`🔧 [Excel Export] 将填充 ${products.length} 个实际商品记录`);
 
-      // 3. 填充右侧信息（Purchase Order Number、Date、Payment Method）
-      ws['D1'] = { t: 's', v: `${t('header.purchaseOrderNumber')}${poNumber}` };
-      ws['D2'] = { t: 's', v: `${t('header.date')}${poDate}` };
-      ws['D3'] = { t: 's', v: `${t('header.paymentMethod')}${paymentMethod}` };
+      // 2.2. 获取供应商地址信息
+      const currentVendorAddress = getVendorAddress();
+      
+      // 3. 🔧 可配置的字段映射（根据实际Excel截图重新调整）
+      const fieldMapping = {
+        // 右上角信息区域 - 基于截图确认位置正确
+        poNumber: 'H2',       // Purchase Order Number
+        date: 'H3',           // Date
+        paymentMethod: 'H4',  // Payment Method
+        page: 'H5',           // Page
+        
+        // Buyer信息区域 - 从截图看，需要覆盖D2和D3的占位文字
+        buyerCompany: 'D2',   // 覆盖"这里对应填买方公司地址抬头电话"
+        buyerAddress: 'D3',   // 可能需要额外的地址行
+        
+        // Vendor信息区域 - 保持不变，看起来位置正确
+        vendorCompany: 'A8',  // BJT Pack, Inc.
+        vendorAddress: 'A9',  // 5275 Naiman Parkway, Suite B
+        vendorCity: 'A10',    // Solon, Ohio 44139
+        
+        // Ship to信息区域 - 从截图看，需要覆盖H7的占位文字
+        shipToInfo: 'H7',     // 覆盖"这里对应填收货地址，联系人，电话，发货特殊要求"
+        shipToCompany: 'H8',  // 公司名称
+        shipToAddress: 'H9',  // 地址
+        shipToContact: 'H10', // 联系人/电话
+        shipToNotes: 'H11'    // 备注
+      };
+      
+      // 如果需要修改字段位置，您可以在这里调整fieldMapping对象
+      console.log('🔧 [Excel Export] 使用的字段映射:', fieldMapping);
+      
+      // 3. 🔧 根据配置填充字段
+      ws[fieldMapping.poNumber] = { t: 's', v: poNumber };
+      ws[fieldMapping.date] = { t: 's', v: poDate };
+      ws[fieldMapping.paymentMethod] = { t: 's', v: paymentMethod };
+      ws[fieldMapping.page] = { t: 's', v: '1 of 1' };
 
-      // 4. 填充Buyer信息
-      ws['A5'] = { t: 's', v: t('fields.companyName') };
-      ws['B5'] = { t: 's', v: customerInfo.companyName };
-      ws['A6'] = { t: 's', v: t('fields.address') };
-      ws['B6'] = { t: 's', v: customerInfo.address };
+      // 4. 🔧 填充Buyer信息 - 格式化显示
+      const buyerInfo = [
+        customerInfo.companyName || '',
+        customerInfo.contactName || '',
+        customerInfo.address || '',
+        `Tel: ${customerInfo.phone || ''}`
+      ].filter(item => item && item !== 'Tel: ').join('\n') || '-';
+      ws[fieldMapping.buyerCompany] = { t: 's', v: buyerInfo };
+      
+      // 5. 🔧 填充Vendor信息 - 覆盖模板占位文字
+      ws[fieldMapping.vendorCompany] = { t: 's', v: currentVendorAddress.companyName };
+      ws[fieldMapping.vendorAddress] = { t: 's', v: currentVendorAddress.address };
+      ws[fieldMapping.vendorCity] = { t: 's', v: currentVendorAddress.city };
+      
+      // 同时覆盖Vendor区域的占位文字
+      ws['D7'] = { t: 's', v: `${currentVendorAddress.companyName}\n${currentVendorAddress.address}\n${currentVendorAddress.city}` };
 
-      // 5. 填充Vendor信息
-      ws['A8'] = { t: 's', v: vendorAddress.companyName };
-      ws['A9'] = { t: 's', v: vendorAddress.address };
-      ws['A10'] = { t: 's', v: vendorAddress.city };
+      // 6. 🔧 填充Ship to信息 - 优化格式
+      const shipToInfo = [
+        `Company: ${customerInfo.companyName || '-'}`,
+        `Address: ${customerInfo.address || '-'}`,
+        `Contact: ${customerInfo.contactName || '-'}`,
+        `Tel: ${customerInfo.phone || '-'}`,
+        shippingInfo.notes ? `Notes: ${shippingInfo.notes}` : ''
+      ].filter(Boolean).join('\n');
+      ws[fieldMapping.shipToInfo] = { t: 's', v: shipToInfo };
+      
+      // 6.1. 🔧 添加调试信息
+      console.log('🔧 [Excel Export] 填充的数据：', {
+        poNumber,
+        poDate,
+        paymentMethod,
+        customerInfo,
+        vendorAddress: currentVendorAddress,
+        shippingInfo,
+        productsCount: products.length
+      });
 
-      // 6. 填充Ship to信息
-      ws['D5'] = { t: 's', v: t('fields.contactName') };
-      ws['D6'] = { t: 's', v: shippingInfo.contactName };
-      ws['D7'] = { t: 's', v: t('fields.phone') };
-      ws['D8'] = { t: 's', v: shippingInfo.phone };
-      ws['D9'] = { t: 's', v: t('fields.address') };
-      ws['D10'] = { t: 's', v: shippingInfo.address };
-      ws['D11'] = { t: 's', v: t('fields.notes') };
-      ws['D12'] = { t: 's', v: shippingInfo.notes };
-
-      // 7. 填充商品明细（假设明细从第15行开始，A15:H15）
-      let startRow = 15;
+      // 7. 填充商品明细（从第14行开始，A14:H14）
+      let startRow = 14;
       products.forEach((item, idx) => {
         const row = startRow + idx;
         ws[`A${row}`] = { t: 's', v: item.code || item.sku || '-' };

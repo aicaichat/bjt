@@ -201,7 +201,7 @@ body {
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 14px;
-    min-height: 100px;
+    min-height: 80px;
     resize: vertical;
 }
 
@@ -212,6 +212,60 @@ body {
 
 .form-col {
     flex: 1;
+}
+
+/* 🔧 添加表单验证样式 */
+.form-input-error,
+.form-select-error,
+.form-textarea-error {
+    border-color: #e74c3c !important;
+    box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.1);
+}
+
+.form-input-error:focus,
+.form-select-error:focus,
+.form-textarea-error:focus {
+    border-color: #e74c3c !important;
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
+    outline: none;
+}
+
+.form-error {
+    color: #e74c3c;
+    font-size: 12px;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.form-error::before {
+    content: "⚠";
+    font-size: 12px;
+}
+
+/* 改进禁用按钮样式 */
+.btn-disabled {
+    background-color: #bdc3c7 !important;
+    border-color: #bdc3c7 !important;
+    color: #7f8c8d !important;
+    cursor: not-allowed !important;
+    opacity: 0.6;
+}
+
+.btn-disabled:hover {
+    background-color: #bdc3c7 !important;
+    border-color: #bdc3c7 !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* 提交中状态 */
+.btn-primary:disabled {
+    background-color: #bdc3c7;
+    border-color: #bdc3c7;
+    color: #7f8c8d;
+    cursor: not-allowed;
 }
 
 /* 右侧订单摘要 */

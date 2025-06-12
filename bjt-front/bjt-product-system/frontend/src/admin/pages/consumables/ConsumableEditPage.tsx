@@ -495,6 +495,31 @@ const ConsumableEditPage: React.FC = () => {
 
       console.log('[ConsumableEditPage] 最小化测试数据:', minimalFormData);
 
+      // 🔥 修复：只有当值确实存在且有效时才转换为数字，否则保持undefined以避免错误的0值
+      const processNumericField = (value: any, fieldName: string) => {
+        // 如果值为undefined、null、空字符串，返回undefined（不更新字段）
+        if (value === undefined || value === null || value === '') {
+          console.log(`[ConsumableEditPage] 字段 ${fieldName} 为空，跳过更新`);
+          return undefined;
+        }
+        
+        // 如果值为0，需要确认这是用户的真实意图
+        if (value === 0 || value === '0') {
+          console.log(`[ConsumableEditPage] 字段 ${fieldName} 为0，保持0值`);
+          return 0;
+        }
+        
+        // 尝试转换为数字
+        const numValue = Number(value);
+        if (isNaN(numValue)) {
+          console.log(`[ConsumableEditPage] 字段 ${fieldName} 无法转换为数字: ${value}，跳过更新`);
+          return undefined;
+        }
+        
+        console.log(`[ConsumableEditPage] 字段 ${fieldName} 转换为数字: ${value} -> ${numValue}`);
+        return numValue;
+      };
+
       const formData: ConsumableFormData = {
         product_line_id: values.product_line_id,
         model: values.model || '',
@@ -506,45 +531,46 @@ const ConsumableEditPage: React.FC = () => {
         app_model: Array.isArray(values.app_model) ? values.app_model.join(', ') : (values.app_model || ''),
         bag_type: values.bag_type || '',
         material: values.material || '',
-        thickness_met: Number(values.thickness_met) || 0,
-        thickness_imp: Number(values.thickness_imp) || 0,
-        width_met: Number(values.width_met) || 0,
-        width_imp: Number(values.width_imp) || 0,
-        length_met: Number(values.length_met) || 0,
-        length_imp: Number(values.length_imp) || 0,
-        bubble_diameter_met: Number(values.bubble_diameter_met) || 0,
-        bubble_diameter_imp: Number(values.bubble_diameter_imp) || 0,
-        total_length_met: Number(values.total_length_met) || 0,
-        total_length_imp: Number(values.total_length_imp) || 0,
+        // 🔥 修复：使用新的数字字段处理函数
+        thickness_met: processNumericField(values.thickness_met, 'thickness_met'),
+        thickness_imp: processNumericField(values.thickness_imp, 'thickness_imp'),
+        width_met: processNumericField(values.width_met, 'width_met'),
+        width_imp: processNumericField(values.width_imp, 'width_imp'),
+        length_met: processNumericField(values.length_met, 'length_met'),
+        length_imp: processNumericField(values.length_imp, 'length_imp'),
+        bubble_diameter_met: processNumericField(values.bubble_diameter_met, 'bubble_diameter_met'),
+        bubble_diameter_imp: processNumericField(values.bubble_diameter_imp, 'bubble_diameter_imp'),
+        total_length_met: processNumericField(values.total_length_met, 'total_length_met'),
+        total_length_imp: processNumericField(values.total_length_imp, 'total_length_imp'),
         package_type: values.package_type || '',
         package_size_cm: values.package_size_cm || '',
         package_size_inch: values.package_size_inch || '',
-        net_weight_kg: Number(values.net_weight_kg) || 0,
-        net_weight_lbs: Number(values.net_weight_lbs) || 0,
-        gross_weight_kg: Number(values.gross_weight_kg) || 0,
-        gross_weight_lbs: Number(values.gross_weight_lbs) || 0,
-        pcs_per_box: Number(values.pcs_per_box) || 0,
+        net_weight_kg: processNumericField(values.net_weight_kg, 'net_weight_kg'),
+        net_weight_lbs: processNumericField(values.net_weight_lbs, 'net_weight_lbs'),
+        gross_weight_kg: processNumericField(values.gross_weight_kg, 'gross_weight_kg'),
+        gross_weight_lbs: processNumericField(values.gross_weight_lbs, 'gross_weight_lbs'),
+        pcs_per_box: processNumericField(values.pcs_per_box, 'pcs_per_box'),
         image_url: values.image_url || '',
         package_image_url: values.package_image_url || '',
         pallet_size_cm: values.pallet_size_cm || '',
         pallet_size_inch: values.pallet_size_inch || '',
-        pcs_per_pallet_a: Number(values.pcs_per_pallet_a) || 0,
-        pallet_gross_weight_a_kg: Number(values.pallet_gross_weight_a_kg) || 0,
-        pallet_gross_weight_a_lbs: Number(values.pallet_gross_weight_a_lbs) || 0,
-        pallet_height_a_cm: Number(values.pallet_height_a_cm) || 0,
-        pallet_height_a_inch: Number(values.pallet_height_a_inch) || 0,
-        pcs_per_pallet_b: Number(values.pcs_per_pallet_b) || 0,
-        pallet_gross_weight_b_kg: Number(values.pallet_gross_weight_b_kg) || 0,
-        pallet_gross_weight_b_lbs: Number(values.pallet_gross_weight_b_lbs) || 0,
-        pallet_height_b_cm: Number(values.pallet_height_b_cm) || 0,
-        pallet_height_b_inch: Number(values.pallet_height_b_inch) || 0,
-        pcs_per_pallet_c: Number(values.pcs_per_pallet_c) || 0,
-        pallet_gross_weight_c_kg: Number(values.pallet_gross_weight_c_kg) || 0,
-        pallet_gross_weight_c_lbs: Number(values.pallet_gross_weight_c_lbs) || 0,
-        pallet_height_c_cm: Number(values.pallet_height_c_cm) || 0,
-        pallet_height_c_inch: Number(values.pallet_height_c_inch) || 0,
-        tube_inner_diameter_cm: Number(values.tube_inner_diameter_cm) || 0,
-        tube_inner_diameter_inch: Number(values.tube_inner_diameter_inch) || 0,
+        pcs_per_pallet_a: processNumericField(values.pcs_per_pallet_a, 'pcs_per_pallet_a'),
+        pallet_gross_weight_a_kg: processNumericField(values.pallet_gross_weight_a_kg, 'pallet_gross_weight_a_kg'),
+        pallet_gross_weight_a_lbs: processNumericField(values.pallet_gross_weight_a_lbs, 'pallet_gross_weight_a_lbs'),
+        pallet_height_a_cm: processNumericField(values.pallet_height_a_cm, 'pallet_height_a_cm'),
+        pallet_height_a_inch: processNumericField(values.pallet_height_a_inch, 'pallet_height_a_inch'),
+        pcs_per_pallet_b: processNumericField(values.pcs_per_pallet_b, 'pcs_per_pallet_b'),
+        pallet_gross_weight_b_kg: processNumericField(values.pallet_gross_weight_b_kg, 'pallet_gross_weight_b_kg'),
+        pallet_gross_weight_b_lbs: processNumericField(values.pallet_gross_weight_b_lbs, 'pallet_gross_weight_b_lbs'),
+        pallet_height_b_cm: processNumericField(values.pallet_height_b_cm, 'pallet_height_b_cm'),
+        pallet_height_b_inch: processNumericField(values.pallet_height_b_inch, 'pallet_height_b_inch'),
+        pcs_per_pallet_c: processNumericField(values.pcs_per_pallet_c, 'pcs_per_pallet_c'),
+        pallet_gross_weight_c_kg: processNumericField(values.pallet_gross_weight_c_kg, 'pallet_gross_weight_c_kg'),
+        pallet_gross_weight_c_lbs: processNumericField(values.pallet_gross_weight_c_lbs, 'pallet_gross_weight_c_lbs'),
+        pallet_height_c_cm: processNumericField(values.pallet_height_c_cm, 'pallet_height_c_cm'),
+        pallet_height_c_inch: processNumericField(values.pallet_height_c_inch, 'pallet_height_c_inch'),
+        tube_inner_diameter_cm: processNumericField(values.tube_inner_diameter_cm, 'tube_inner_diameter_cm'),
+        tube_inner_diameter_inch: processNumericField(values.tube_inner_diameter_inch, 'tube_inner_diameter_inch'),
         status: values.status,
         unit: values.unit,
       };

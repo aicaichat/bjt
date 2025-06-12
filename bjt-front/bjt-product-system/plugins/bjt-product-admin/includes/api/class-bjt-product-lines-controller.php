@@ -315,6 +315,12 @@ class BJT_Product_Lines_Controller extends WP_REST_Controller {
             'title_en' => $request->get_param('name_en'),
             'description_zh' => $request->get_param('description_cn'),
             'description_en' => $request->get_param('description_en'),
+            'subitem1_zh' => $request->get_param('subitem1_zh'),
+            'subitem1_en' => $request->get_param('subitem1_en'),
+            'subitem2_zh' => $request->get_param('subitem2_zh'),
+            'subitem2_en' => $request->get_param('subitem2_en'),
+            'subitem3_zh' => $request->get_param('subitem3_zh'),
+            'subitem3_en' => $request->get_param('subitem3_en'),
             'image_url' => $request->get_param('image_url'),
             'status' => $request->get_param('status'),
             'sort_order' => $request->get_param('menu_order')

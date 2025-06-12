@@ -234,18 +234,18 @@ const AccessoryEditPage: React.FC = () => {
         frequency: accessoryData.frequency || '',
         package_size_cm: accessoryData.package_size_cm || '',
         package_size_inch: accessoryData.package_size_inch || '',
-        net_weight_kg: accessoryData.net_weight_kg || 0,
-        net_weight_lbs: accessoryData.net_weight_lbs || 0,
-        gross_weight_kg: accessoryData.gross_weight_kg || 0,
-        gross_weight_lbs: accessoryData.gross_weight_lbs || 0,
-        pcs_per_box: accessoryData.pcs_per_box || 0,
+        net_weight_kg: accessoryData.net_weight_kg ?? null,
+        net_weight_lbs: accessoryData.net_weight_lbs ?? null,
+        gross_weight_kg: accessoryData.gross_weight_kg ?? null,
+        gross_weight_lbs: accessoryData.gross_weight_lbs ?? null,
+        pcs_per_box: accessoryData.pcs_per_box ?? null,
         pallet_size_cm: accessoryData.pallet_size_cm || '',
         pallet_size_inch: accessoryData.pallet_size_inch || '',
-        pcs_per_pallet: accessoryData.pcs_per_pallet || 0,
-        pallet_height_cm: accessoryData.pallet_height_cm || 0,
-        pallet_height_inch: accessoryData.pallet_height_inch || 0,
-        pallet_gross_weight_kg: accessoryData.pallet_gross_weight_kg || 0,
-        pallet_gross_weight_lbs: accessoryData.pallet_gross_weight_lbs || 0,
+        pcs_per_pallet: accessoryData.pcs_per_pallet ?? null,
+        pallet_height_cm: accessoryData.pallet_height_cm ?? null,
+        pallet_height_inch: accessoryData.pallet_height_inch ?? null,
+        pallet_gross_weight_kg: accessoryData.pallet_gross_weight_kg ?? null,
+        pallet_gross_weight_lbs: accessoryData.pallet_gross_weight_lbs ?? null,
         image_url: accessoryData.image_url || '',
         status: accessoryData.status,
         unit: accessoryData.unit || 'pcs',
@@ -297,11 +297,30 @@ const AccessoryEditPage: React.FC = () => {
         return;
       }
 
+      // 处理数字字段，确保空值被正确处理为 null 而不是 undefined
+      const processedValues: AccessoryFormData = {
+        ...values,
+        // 包装信息数字字段
+        net_weight_kg: values.net_weight_kg ?? null,
+        net_weight_lbs: values.net_weight_lbs ?? null,
+        gross_weight_kg: values.gross_weight_kg ?? null,
+        gross_weight_lbs: values.gross_weight_lbs ?? null,
+        pcs_per_box: values.pcs_per_box ?? null,
+        // 托盘信息数字字段
+        pcs_per_pallet: values.pcs_per_pallet ?? null,
+        pallet_height_cm: values.pallet_height_cm ?? null,
+        pallet_height_inch: values.pallet_height_inch ?? null,
+        pallet_gross_weight_kg: values.pallet_gross_weight_kg ?? null,
+        pallet_gross_weight_lbs: values.pallet_gross_weight_lbs ?? null,
+      };
+
+      console.log('[AccessoryEditPage] 处理后的提交数据', processedValues);
+
       if (isEdit) {
-        await accessoryService.updateAccessory(parseInt(id!), values);
+        await accessoryService.updateAccessory(parseInt(id!), processedValues);
         message.success(t('message.updateSuccess', { ns: 'accessories' }));
       } else {
-        await accessoryService.createAccessory(values);
+        await accessoryService.createAccessory(processedValues);
         message.success(t('message.createSuccess', { ns: 'accessories' }));
       }
       navigate('/admin/accessories');
@@ -351,16 +370,7 @@ const AccessoryEditPage: React.FC = () => {
             product_line_id: 1,
             status: 'publish',
             unit: 'pcs',
-            net_weight_kg: 0,
-            net_weight_lbs: 0,
-            gross_weight_kg: 0,
-            gross_weight_lbs: 0,
-            pcs_per_box: 0,
-            pcs_per_pallet: 0,
-            pallet_height_cm: 0,
-            pallet_height_inch: 0,
-            pallet_gross_weight_kg: 0,
-            pallet_gross_weight_lbs: 0,
+            // 不设置数字字段的默认值，让它们为 undefined
           }}
         >
           {/* 基本信息 */}

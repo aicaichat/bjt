@@ -1,0 +1,111 @@
+{
+  "order": {
+    "title": "注文確認",
+    "steps": {
+      "cart": "カート",
+      "confirmOrder": "注文確認",
+      "complete": "完了"
+    },
+    "shipping": {
+      "title": "配送情報",
+      "contactName": "連絡先名",
+      "contactNamePlaceholder": "連絡先名を入力してください",
+      "phone": "電話番号",
+      "phonePlaceholder": "電話番号を入力してください",
+      "email": "メールアドレス",
+      "emailPlaceholder": "メールアドレスを入力してください",
+      "company": "会社名",
+      "companyPlaceholder": "会社名を入力してください",
+      "country": "国・地域",
+      "countryPlaceholder": "国・地域を選択してください",
+      "address": "詳細住所",
+      "addressPlaceholder": "詳細住所を入力してください",
+      "notes": "備考",
+      "notesPlaceholder": "任意：注文の備考を追加"
+    },
+    "validation": {
+      "contactNameRequired": "連絡先名が必要です",
+      "phoneRequired": "電話番号が必要です",
+      "phoneInvalid": "有効な電話番号を入力してください",
+      "emailRequired": "メールアドレスが必要です",
+      "emailInvalid": "有効なメールアドレスを入力してください",
+      "companyRequired": "会社名が必要です",
+      "countryRequired": "国・地域を選択してください",
+      "addressRequired": "詳細住所が必要です"
+    },
+    "details": {
+      "title": "注文詳細"
+    },
+    "note": {
+      "inventory": "* 在庫切れの商品はPO注文のみ対応",
+      "po": "* PO注文はPDFファイルとして生成され、営業担当者との連絡に使用できます"
+    },
+    "summary": {
+      "title": "価格集計",
+      "subtotal": "小計",
+      "tax": "税金",
+      "shipping": "送料",
+      "discount": "割引",
+      "total": "合計"
+    },
+    "actions": {
+      "backToCart": "カートに戻る",
+      "confirmSubmit": "確認して送信",
+      "submitting": "送信中..."
+    },
+    "errors": {
+      "loadingData": "注文データの読み込みエラー",
+      "submitFailed": "注文の送信に失敗しました",
+      "submitAlert": "注文の送信に失敗しました。再試行してください。"
+    },
+    "noItems": "注文に商品がありません。まずカートに商品を追加してください。",
+    "common": {
+      "loading": "読み込み中..."
+    },
+    "countries": {
+      "china": "中国",
+      "usa": "アメリカ合衆国",
+      "uk": "イギリス",
+      "germany": "ドイツ",
+      "japan": "日本",
+      "australia": "オーストラリア"
+    }
+  },
+  "products": {
+    "types": {
+      "machine": "機械",
+      "accessory": "アクセサリー",
+      "consumable": "消耗品",
+      "spare_part": "スペアパーツ",
+      "product": "製品"
+    },
+    "properties": {
+      "partNumber": "部品番号",
+      "part_number": "部品番号",
+      "model": "モデル",
+      "voltage": "電圧",
+      "frequency": "周波数",
+      "spec": "仕様",
+      "specImperial": "インペリアル仕様",
+      "spec_imperial": "インペリアル仕様",
+      "pcsPerBox": "1箱あたりの個数",
+      "pcs_per_box": "1箱あたりの個数",
+      "pcsPerPallet": "1パレットあたりの個数",
+      "pcs_per_pallet": "1パレットあたりの個数",
+      "packageSize": "パッケージサイズ",
+      "package_size_cm": "パッケージサイズ (cm)",
+      "palletSize": "パレットサイズ",
+      "pallet_size_cm": "パレットサイズ (cm)",
+      "netWeight": "正味重量",
+      "net_weight_kg": "正味重量 (kg)",
+      "grossWeight": "総重量",
+      "gross_weight_kg": "総重量 (kg)",
+      "brand": "ブランド",
+      "unit": "単位"
+    },
+    "defaultValues": {
+      "notAvailable": "利用不可"
+    },
+    "quantity": "数量"
+  }
+} 

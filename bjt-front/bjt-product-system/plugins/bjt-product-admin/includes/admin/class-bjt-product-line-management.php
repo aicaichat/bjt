@@ -254,10 +254,12 @@ class BJT_Product_Line_Management {
             'title_en' => $data['title_en'],
             'description_zh' => isset($data['description_zh']) ? $data['description_zh'] : null,
             'description_en' => isset($data['description_en']) ? $data['description_en'] : null,
-            // 'consumables_zh' => isset($data['consumables_zh']) ? $data['consumables_zh'] : null, // Commented out
-            // 'consumables_en' => isset($data['consumables_en']) ? $data['consumables_en'] : null, // Commented out
-            // 'parts_zh' => isset($data['parts_zh']) ? $data['parts_zh'] : null,                   // Commented out
-            // 'parts_en' => isset($data['parts_en']) ? $data['parts_en'] : null,                   // Commented out
+            'subitem1_zh' => isset($data['subitem1_zh']) ? $data['subitem1_zh'] : null,
+            'subitem1_en' => isset($data['subitem1_en']) ? $data['subitem1_en'] : null,
+            'subitem2_zh' => isset($data['subitem2_zh']) ? $data['subitem2_zh'] : null,
+            'subitem2_en' => isset($data['subitem2_en']) ? $data['subitem2_en'] : null,
+            'subitem3_zh' => isset($data['subitem3_zh']) ? $data['subitem3_zh'] : null,
+            'subitem3_en' => isset($data['subitem3_en']) ? $data['subitem3_en'] : null,
             'image_url' => isset($data['image_url']) ? $data['image_url'] : null,
             'status' => isset($data['status']) ? $data['status'] : 'draft',
             'sort_order' => isset($data['sort_order']) ? intval($data['sort_order']) : 0,
@@ -269,14 +271,14 @@ class BJT_Product_Line_Management {
                 $this->table_name,
                 $db_data,
                 array('id' => absint($data['id'])),
-                array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d'),
+                array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d'),
                 array('%d')
             );
         } else {
             $result = $wpdb->insert(
                 $this->table_name,
                 $db_data,
-                array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d')
+                array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d')
             );
         }
 

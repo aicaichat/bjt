@@ -154,6 +154,13 @@ const ProductLineEditPage: React.FC = () => {
         name_en: values.title?.en || '',           // API期望name_en，映射到数据库title_en
         description_cn: values.description?.zh || '', // API期望description_cn，映射到数据库description_zh
         description_en: values.description?.en || '',
+        // 子项字段映射
+        subitem1_zh: values.subitem1?.zh || '',
+        subitem1_en: values.subitem1?.en || '',
+        subitem2_zh: values.subitem2?.zh || '',
+        subitem2_en: values.subitem2?.en || '',
+        subitem3_zh: values.subitem3?.zh || '',
+        subitem3_en: values.subitem3?.en || '',
         image_url: values.image_url || '',
         status: values.status || 'publish',        // 默认为publish而不是draft
         menu_order: values.sort_order || 1,       // API期望menu_order，映射到数据库sort_order

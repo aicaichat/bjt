@@ -667,10 +667,37 @@ class BJT_Accessory_Controller extends BJT_API_Controller {
         
         // Build update data from request params
         $update_data = [];
+        
+        // Define numeric fields that should be properly handled
+        $numeric_fields = [
+            'net_weight_kg', 'net_weight_lbs', 'gross_weight_kg', 'gross_weight_lbs',
+            'pcs_per_box', 'pcs_per_pallet', 'pallet_height_cm', 'pallet_height_inch',
+            'pallet_gross_weight_kg', 'pallet_gross_weight_lbs'
+        ];
+        
         foreach ($updatable_fields as $field) {
             $value = $request->get_param($field);
-            if ($value !== null) {
-                $update_data[$field] = $value;
+            
+            // Handle numeric fields specially
+            if (in_array($field, $numeric_fields)) {
+                // For numeric fields, convert empty string or null to actual null
+                if ($value === '' || $value === null || $value === 'null') {
+                    $update_data[$field] = null;
+                } else {
+                    // Convert to appropriate numeric type
+                    if (strpos($field, 'pcs_per_') === 0) {
+                        // Integer fields for piece counts
+                        $update_data[$field] = (int) $value;
+                    } else {
+                        // Float fields for weights and dimensions  
+                        $update_data[$field] = (float) $value;
+                    }
+                }
+            } else {
+                // For non-numeric fields, use original logic
+                if ($value !== null) {
+                    $update_data[$field] = $value;
+                }
             }
         }
         

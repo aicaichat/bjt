@@ -13,6 +13,7 @@ export interface AccessoryModel {
   image1_url?: string;
   image2_url?: string;
   explosion_diagram_pdf?: string;
+  spec_pdf?: string;
   status: string;
   sort_order?: number;
   created_at?: string;
@@ -65,6 +66,7 @@ export interface AccessoryModelFormData {
   image1_url?: string;
   image2_url?: string;
   explosion_diagram_pdf?: string;
+  spec_pdf?: string;
   status: string;
   sort_order?: number;
 }

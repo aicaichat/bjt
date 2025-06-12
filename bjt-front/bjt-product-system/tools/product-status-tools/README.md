@@ -16,7 +16,7 @@ cd tools/product-status-tools
 
 # 4. 验证修复结果
 ./simple-status-check.sh
-```
+``` 
 
 ## 📁 工具包结构
 

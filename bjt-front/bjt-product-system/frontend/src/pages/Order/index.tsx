@@ -74,7 +74,7 @@ const OrderPage: React.FC = () => {
     phone: '',
     email: '',
     company: '',
-    country: 'CN',
+    country: '',
     address: '',
     notes: ''
   });
@@ -87,6 +87,79 @@ const OrderPage: React.FC = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [fromCart, setFromCart] = useState(false);
+  
+  // 🔧 添加表单验证状态
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 🔧 定义必选字段
+  const requiredFields = ['contactName', 'phone', 'email', 'company', 'country', 'address'];
+
+  // 🔧 验证单个字段
+  const validateField = (name: string, value: string): string => {
+    if (requiredFields.includes(name)) {
+      if (!value || value.trim() === '') {
+        return t(`order.validation.${name}Required`, `${name} is required`);
+      }
+    }
+    
+    // 特殊验证规则
+    switch (name) {
+      case 'email':
+        if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          return t('order.validation.emailInvalid', 'Please enter a valid email address');
+        }
+        break;
+      case 'phone':
+        if (value && !/^[\d\s\-\+\(\)]{10,}$/.test(value.replace(/\s/g, ''))) {
+          return t('order.validation.phoneInvalid', 'Please enter a valid phone number');
+        }
+        break;
+    }
+    
+    return '';
+  };
+
+  // 🔧 验证所有必选字段
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+    let isValid = true;
+    
+    requiredFields.forEach(field => {
+      const value = shippingInfo[field as keyof ShippingInfo];
+      const error = validateField(field, value);
+      if (error) {
+        errors[field] = error;
+        isValid = false;
+      }
+    });
+    
+    setFormErrors(errors);
+    return isValid;
+  };
+
+  // 🔧 检查是否所有必选字段都已填写
+  const isFormValid = (): boolean => {
+    // 检查所有必选字段是否都有值
+    const allFieldsFilled = requiredFields.every(field => {
+      const value = shippingInfo[field as keyof ShippingInfo];
+      return value && value.trim() !== '';
+    });
+    
+    // 检查是否有任何非空的错误信息
+    const hasErrors = Object.values(formErrors).some(error => error && error.trim() !== '');
+    
+    // 🔧 添加调试信息
+    console.log('🔍 [isFormValid] Checking form validity:', {
+      allFieldsFilled,
+      hasErrors,
+      shippingInfo,
+      formErrors,
+      requiredFields
+    });
+    
+    return allFieldsFilled && !hasErrors;
+  };
 
   // 安全的数据提取函数 - 移到组件内部以访问i18n
   const safeExtractString = (value: any, fallback: string = ''): string => {
@@ -289,7 +362,7 @@ const OrderPage: React.FC = () => {
           phone: defaultShipping.phone || '',
           email: defaultShipping.email || '',
           company: defaultShipping.company || '',
-          country: defaultShipping.country || 'CN',
+          country: defaultShipping.country || '',
           address: defaultShipping.address || '',
           notes: ''
         });
@@ -321,84 +394,153 @@ const OrderPage: React.FC = () => {
     loadOrderData();
   }, [t, location.state]);
 
+  // 处理表单字段更新
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setShippingInfo(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // 🔧 实时验证字段
+    const error = validateField(name, value);
+    setFormErrors(prev => {
+      const newErrors = { ...prev };
+      if (error) {
+        newErrors[name] = error;
+      } else {
+        // 如果没有错误，移除该字段的错误信息
+        delete newErrors[name];
+      }
+      return newErrors;
+    });
+  };
+
+  // 🔧 处理字段失去焦点
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    const error = validateField(name, value);
+    setFormErrors(prev => {
+      const newErrors = { ...prev };
+      if (error) {
+        newErrors[name] = error;
+      } else {
+        // 如果没有错误，移除该字段的错误信息
+        delete newErrors[name];
+      }
+      return newErrors;
+    });
+  };
+
   // 处理提交订单
   const handleSubmitOrder = async () => {
+    // 🔧 提交前验证表单
+    if (!validateForm()) {
+      // 滚动到第一个错误字段
+      const firstErrorField = Object.keys(formErrors)[0];
+      if (firstErrorField) {
+        const element = document.querySelector(`[name="${firstErrorField}"]`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          (element as HTMLElement).focus();
+        }
+      }
+      return;
+    }
+
+    if (isSubmitting) return; // 避免重复提交
+    
     try {
-      // 🔧 处理订单项目数据，确保产品名称正确
-      const processedOrderItems = orderItems.map(item => {
-        const itemData = item as any;
-        
-        // 📝 安全提取商品名称 - 支持多语言和多字段回退
-        let productName = '';
-        
-        // 🔧 优先从properties提取多语言名称，根据当前语言选择
-        if (itemData.properties) {
-          const currentLang = i18n.language;
-          if (currentLang.startsWith('zh')) {
-            productName = itemData.properties.name_zh || '';
-          } else if (currentLang.startsWith('ja')) {
-            productName = itemData.properties.name_ja || '';
-          } else {
-            productName = itemData.properties.name_en || '';
+      setIsSubmitting(true);
+      
+              // 🔧 处理订单项目数据，确保产品名称正确
+        const processedOrderItems = orderItems.map(item => {
+          const itemData = item as any;
+          
+          // 📝 安全提取商品名称 - 支持多语言和多字段回退
+          let productName = '';
+          
+          // 🔧 优先从properties提取多语言名称，根据当前语言选择
+          if (itemData.properties) {
+            const currentLang = i18n.language;
+            if (currentLang.startsWith('zh')) {
+              productName = itemData.properties.name_zh || '';
+            } else if (currentLang.startsWith('ja')) {
+              productName = itemData.properties.name_ja || '';
+            } else {
+              productName = itemData.properties.name_en || '';
+            }
+            
+            // 如果当前语言的名称为空，则按优先级回退
+            if (!productName) {
+              productName = itemData.properties.name_zh || itemData.properties.name_en || itemData.properties.productName || '';
+            }
           }
           
-          // 如果当前语言的名称为空，则按优先级回退
+          // 如果多语言名称为空，尝试从item.name字段提取
           if (!productName) {
-            productName = itemData.properties.name_zh || itemData.properties.name_en || itemData.properties.productName || '';
+            productName = safeExtractString(item.name);
           }
-        }
-        
-        // 如果多语言名称为空，尝试从item.name字段提取
-        if (!productName) {
-          productName = safeExtractString(item.name);
-        }
-        
-        // 最终回退到基础字段
-        if (!productName) {
-          productName = itemData.model || itemData.part_number || itemData.sku || 'Unknown Product';
-        }
-        
-        // 返回处理后的商品项目，确保name字段包含正确的产品名称
-        return {
-          ...item,
-          name: productName, // 🔧 使用处理后的产品名称
-          // 保留原始的多语言名称数据供PO页面使用
-          displayName: {
-            'zh-CN': itemData.properties?.name_zh || productName,
-            'en-US': itemData.properties?.name_en || productName,
-            'ja-JP': itemData.properties?.name_ja || productName
-          },
-          // 确保code/sku字段用于料号显示
-          code: itemData.part_number || itemData.sku || itemData.code,
-          sku: itemData.part_number || itemData.sku
-        };
-      });
+          
+          // 最终回退到基础字段
+          if (!productName) {
+            productName = itemData.model || itemData.part_number || itemData.sku || 'Unknown Product';
+          }
+          
+          // 返回处理后的商品项目，确保name字段包含正确的产品名称
+          return {
+            ...item,
+            name: productName, // 🔧 使用处理后的产品名称
+            // 保留原始的多语言名称数据供PO页面使用
+            displayName: {
+              'zh-CN': itemData.properties?.name_zh || productName,
+              'en-US': itemData.properties?.name_en || productName,
+              'ja-JP': itemData.properties?.name_ja || productName
+            },
+            // 确保code/sku字段用于料号显示
+            code: itemData.part_number || itemData.sku || itemData.code,
+            sku: itemData.part_number || itemData.sku
+          };
+        });
 
-      // 使用 OrderService 提交订单
-      const result = await orderService.submitOrder({
-        shipping: shippingInfo,
-        payment: {
-          method: 'transfer' // 默认使用转账支付
-        },
-        items: processedOrderItems, // 🔧 使用处理后的订单项目
-        summary: orderSummary,
-        note: shippingInfo.notes
-      });
-      
-      // 导航到 PO 页面并传递订单数据
-      navigate('/po', { 
-        state: { 
-          poData: {
-            orderId: result.data?.orderId,
-            orderItems: processedOrderItems, // 🔧 传递处理后的订单项目
-            shippingInfo,
-            summary: orderSummary
+        // 🔧 构建完整的客户信息对象
+        const customerInfo = {
+          companyName: shippingInfo.company || '',
+          contactName: shippingInfo.contactName || '',
+          address: shippingInfo.address || '',
+          phone: shippingInfo.phone || '',
+          email: shippingInfo.email || '',
+          country: shippingInfo.country || ''
+        };
+
+        // 使用 OrderService 提交订单
+        const result = await orderService.submitOrder({
+          shipping: shippingInfo,
+          payment: {
+            method: 'transfer' // 默认使用转账支付
+          },
+          items: processedOrderItems, // 🔧 使用处理后的订单项目
+          summary: orderSummary,
+          note: shippingInfo.notes
+        });
+        
+        // 导航到 PO 页面并传递订单数据
+        navigate('/po', { 
+          state: { 
+            poData: {
+              orderId: result.data?.orderId,
+              orderItems: processedOrderItems, // 🔧 传递处理后的订单项目
+              customerInfo, // 🔧 使用构建的完整客户信息
+              shippingInfo,
+              summary: orderSummary
+            } 
           } 
-        } 
-      });
+        });
     } catch (error) {
       console.error(t('order.errors.submitFailed', 'Error submitting order'), error);
       alert(t('order.errors.submitAlert', 'Failed to submit order. Please try again.'));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -423,15 +565,6 @@ const OrderPage: React.FC = () => {
         returnedItems: serializableItems
       }
     });
-  };
-
-  // 处理表单字段更新
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setShippingInfo(prev => ({
-      ...prev,
-      [name]: value
-    }));
   };
 
   // Format the currency based on current locale
@@ -534,12 +667,16 @@ const OrderPage: React.FC = () => {
                   <label className="form-label required">{t('order.shipping.contactName', 'Contact Name')}</label>
                   <input 
                     type="text" 
-                    className="form-input" 
+                    className={`form-input ${formErrors.contactName ? 'form-input-error' : ''}`}
                     placeholder={t('order.shipping.contactNamePlaceholder', 'Please enter contact name')}
                     name="contactName"
                     value={shippingInfo.contactName}
                     onChange={handleInputChange}
+                    onBlur={handleBlur}
                   />
+                  {formErrors.contactName && (
+                    <div className="form-error">{formErrors.contactName}</div>
+                  )}
                 </div>
               </div>
               <div className="form-col">
@@ -547,12 +684,16 @@ const OrderPage: React.FC = () => {
                   <label className="form-label required">{t('order.shipping.phone', 'Phone')}</label>
                   <input 
                     type="tel" 
-                    className="form-input" 
+                    className={`form-input ${formErrors.phone ? 'form-input-error' : ''}`}
                     placeholder={t('order.shipping.phonePlaceholder', 'Please enter contact phone')}
                     name="phone"
                     value={shippingInfo.phone}
                     onChange={handleInputChange}
+                    onBlur={handleBlur}
                   />
+                  {formErrors.phone && (
+                    <div className="form-error">{formErrors.phone}</div>
+                  )}
                 </div>
               </div>
             </div>
@@ -561,34 +702,44 @@ const OrderPage: React.FC = () => {
               <label className="form-label required">{t('order.shipping.email', 'Email')}</label>
               <input 
                 type="email" 
-                className="form-input" 
+                className={`form-input ${formErrors.email ? 'form-input-error' : ''}`}
                 placeholder={t('order.shipping.emailPlaceholder', 'Please enter email address')}
                 name="email"
                 value={shippingInfo.email}
                 onChange={handleInputChange}
+                onBlur={handleBlur}
               />
+              {formErrors.email && (
+                <div className="form-error">{formErrors.email}</div>
+              )}
             </div>
             
             <div className="form-group">
               <label className="form-label required">{t('order.shipping.company', 'Company Name')}</label>
               <input 
                 type="text" 
-                className="form-input" 
+                className={`form-input ${formErrors.company ? 'form-input-error' : ''}`}
                 placeholder={t('order.shipping.companyPlaceholder', 'Please enter company name')}
                 name="company"
                 value={shippingInfo.company}
                 onChange={handleInputChange}
+                onBlur={handleBlur}
               />
+              {formErrors.company && (
+                <div className="form-error">{formErrors.company}</div>
+              )}
             </div>
             
             <div className="form-group">
               <label className="form-label required">{t('order.shipping.country', 'Country/Region')}</label>
               <select 
-                className="form-select"
+                className={`form-select ${formErrors.country ? 'form-input-error' : ''}`}
                 name="country"
                 value={shippingInfo.country}
                 onChange={handleInputChange}
+                onBlur={handleBlur}
               >
+                <option value="">{t('order.shipping.countryPlaceholder', 'Please select country/region')}</option>
                 <option value="CN">{t('order.countries.china', 'China')}</option>
                 <option value="US">{t('order.countries.usa', 'United States')}</option>
                 <option value="GB">{t('order.countries.uk', 'United Kingdom')}</option>
@@ -596,17 +747,24 @@ const OrderPage: React.FC = () => {
                 <option value="JP">{t('order.countries.japan', 'Japan')}</option>
                 <option value="AU">{t('order.countries.australia', 'Australia')}</option>
               </select>
+              {formErrors.country && (
+                <div className="form-error">{formErrors.country}</div>
+              )}
             </div>
             
             <div className="form-group">
               <label className="form-label required">{t('order.shipping.address', 'Detailed Address')}</label>
               <textarea 
-                className="form-textarea" 
+                className={`form-textarea ${formErrors.address ? 'form-input-error' : ''}`}
                 placeholder={t('order.shipping.addressPlaceholder', 'Please enter detailed address')}
                 name="address"
                 value={shippingInfo.address}
                 onChange={handleInputChange}
+                onBlur={handleBlur}
               ></textarea>
+              {formErrors.address && (
+                <div className="form-error">{formErrors.address}</div>
+              )}
             </div>
             
             <div className="form-group">
@@ -826,8 +984,15 @@ const OrderPage: React.FC = () => {
             <button className="btn btn-secondary" onClick={handleBackToCart}>
               {t('order.actions.backToCart', 'Back to Cart')}
             </button>
-            <button className="btn btn-primary" onClick={handleSubmitOrder}>
-              {t('order.actions.confirmSubmit', 'Confirm & Submit')}
+            <button 
+              className={`btn btn-primary ${!isFormValid() || isSubmitting ? 'btn-disabled' : ''}`}
+              onClick={handleSubmitOrder}
+              disabled={!isFormValid() || isSubmitting}
+            >
+              {isSubmitting 
+                ? t('order.actions.submitting', 'Submitting...')
+                : t('order.actions.confirmSubmit', 'Confirm & Submit')
+              }
             </button>
           </div>
         </div>

@@ -51,8 +51,6 @@ const SparePartEditPage: React.FC = () => {
 
   // 智能提示功能状态
   const [selectedProductLineId, setSelectedProductLineId] = useState<number>(1);
-  const [selectedModel, setSelectedModel] = useState<string>('');
-  const [sparePartModelOptions, setSparePartModelOptions] = useState<Array<{value: string}>>([]);
   const [sparePartOptions, setSparePartOptions] = useState<Array<{value: string}>>([]);
   const [sparePartNameZhOptions, setSparePartNameZhOptions] = useState<Array<{value: string}>>([]);
   const [sparePartNameEnOptions, setSparePartNameEnOptions] = useState<Array<{value: string}>>([]);
@@ -73,39 +71,10 @@ const SparePartEditPage: React.FC = () => {
     CM_TO_INCH: 0.393701,
   };
 
-  // 获取备件型号选项
-  const fetchSparePartModels = async (productLineId: number) => {
-    try {
-      console.log('[SparePartEditPage] 获取备件型号', { productLineId });
-      
-      const response = await sparePartModelService.getSparePartModels({
-        page: 1,
-        page_size: 100,
-        product_line_id: productLineId,
-        status: 'publish'
-      });
-      
-      console.log('[SparePartEditPage] 备件型号API响应', response);
-      
-      const models = response.items || [];
-      const modelOptions = models.map(model => ({
-        value: model.model
-      }));
-      
-      console.log('[SparePartEditPage] 处理后的型号选项', { modelOptions: modelOptions.length });
-      
-      setSparePartModelOptions(modelOptions);
-      
-    } catch (error) {
-      console.error('[SparePartEditPage] 获取备件型号失败:', error);
-      setSparePartModelOptions([]);
-    }
-  };
-
   // 获取备件上下文数据用于智能提示
-  const fetchSparePartContextData = async (productLineId: number, model?: string) => {
+  const fetchSparePartContextData = async (productLineId: number) => {
     try {
-      console.log('[SparePartEditPage] 获取备件上下文数据', { productLineId, model });
+      console.log('[SparePartEditPage] 获取备件上下文数据', { productLineId });
       
       const queryParams: any = {
         page: 1,
@@ -113,11 +82,6 @@ const SparePartEditPage: React.FC = () => {
         product_line_id: productLineId,
         status: 'publish'
       };
-      
-      // 如果有指定的型号，添加到查询参数中进行过滤
-      if (model) {
-        queryParams.model = model;
-      }
       
       const response = await sparePartService.getSpareParts(queryParams);
       
@@ -269,14 +233,11 @@ const SparePartEditPage: React.FC = () => {
     
     // 清空相关字段 - 备件表确实有model字段
     form.setFieldsValue({
-      model: undefined,
       part_number: '',
       app_model: undefined
     });
     
     // 清空选项
-    setSelectedModel(undefined);
-    setSparePartModelOptions([]);
     setSparePartOptions([]);
     setSparePartNameZhOptions([]);
     setSparePartNameEnOptions([]);
@@ -286,35 +247,10 @@ const SparePartEditPage: React.FC = () => {
     
     // 重新加载数据
     if (productLineId) {
-      fetchSparePartModels(productLineId);
       fetchSparePartContextData(productLineId); // 获取备件上下文数据
       fetchAppModelOptions(productLineId); // 获取适配机型选项
     }
   };
-
-  // 型号变化处理
-  const handleModelChange = (model: string) => {
-    console.log('[SparePartEditPage] 型号变化', { model });
-    setSelectedModel(model);
-    
-    // 清空料号字段
-    form.setFieldValue('part_number', '');
-    
-    // 清空料号相关的智能提示选项
-    setSparePartOptions([]);
-    
-    // 重新加载该型号下的数据
-    if (selectedProductLineId && model) {
-      fetchSparePartContextData(selectedProductLineId, model);
-    }
-  };
-
-  // 配件型号选项
-  const modelOptions = [
-    { value: 'SP-001', label: 'SP-001 标准备件' },
-    { value: 'SP-002', label: 'SP-002 易损备件' },
-    { value: 'SP-003', label: 'SP-003 关键备件' },
-  ];
 
   // 初始化钩子 - 组件加载时的逻辑
   useEffect(() => {
@@ -343,7 +279,6 @@ const SparePartEditPage: React.FC = () => {
       }
       
       // 加载智能提示数据
-      fetchSparePartModels(defaultProductLineId);
       fetchSparePartContextData(defaultProductLineId);
       fetchAppModelOptions(defaultProductLineId);
     };
@@ -355,19 +290,10 @@ const SparePartEditPage: React.FC = () => {
   useEffect(() => {
     if (selectedProductLineId) {
       console.log('[SparePartEditPage] 产品线变化，更新智能提示', selectedProductLineId);
-      fetchSparePartModels(selectedProductLineId);
-      fetchSparePartContextData(selectedProductLineId, selectedModel);
+      fetchSparePartContextData(selectedProductLineId);
       fetchAppModelOptions(selectedProductLineId);
     }
   }, [selectedProductLineId]);
-
-  // 型号变化时的智能提示数据更新
-  useEffect(() => {
-    if (selectedProductLineId && selectedModel) {
-      console.log('[SparePartEditPage] 型号变化，更新智能提示', { selectedProductLineId, selectedModel });
-      fetchSparePartContextData(selectedProductLineId, selectedModel);
-    }
-  }, [selectedProductLineId, selectedModel]);
 
   const loadProductLines = async () => {
     try {
@@ -772,12 +698,12 @@ const SparePartEditPage: React.FC = () => {
                         </Form.Item>
                       </Col>
 
-                      <Col span={8}>
+                      <Col span={12}>
                         <Form.Item
                           label="料号 (Part Number)"
                           name="part_number"
                           rules={[{ required: true, message: '请输入料号' }]}
-                          extra={`参考该产品线下${selectedModel ? '同型号' : ''}的备件料号，当前共 ${sparePartOptions.length} 个料号`}
+                          extra={`参考该产品线下的备件料号，当前共 ${sparePartOptions.length} 个料号`}
                         >
                           <div style={{ display: 'flex', gap: 8 }}>
                             <AutoComplete
@@ -800,23 +726,8 @@ const SparePartEditPage: React.FC = () => {
                         </Form.Item>
                       </Col>
 
-                      <Col span={8}>
-                        <Form.Item
-                          label="配件型号 (Model)"
-                          name="model"
-                          extra={`可选字段。参考该产品线下的备件型号，当前共 ${sparePartModelOptions.length} 个型号`}
-                        >
-                          <AutoComplete
-                            options={sparePartModelOptions}
-                            placeholder="请选择配件型号，可参考下拉提示"
-                            value={form.getFieldValue('model')}
-                            onChange={(value) => form.setFieldValue('model', value)}
-                            onSelect={handleModelChange}
-                            filterOption={(inputValue, option) =>
-                              option?.value.toLowerCase().includes(inputValue.toLowerCase()) || false
-                            }
-                          />
-                        </Form.Item>
+                      <Col span={4}>
+                        {/* 空列用于布局平衡 */}
                       </Col>
 
                       <Col span={12}>
@@ -824,7 +735,7 @@ const SparePartEditPage: React.FC = () => {
                           label="中文名称 (Chinese Name)"
                           name="name_zh"
                           rules={[{ required: true, message: '请输入中文名称' }]}
-                          extra={`参考该产品线下${selectedModel ? '同型号' : ''}的备件中文名称，当前共 ${sparePartNameZhOptions.length} 个名称`}
+                          extra={`参考该产品线下的备件中文名称，当前共 ${sparePartNameZhOptions.length} 个名称`}
                         >
                           <AutoComplete
                             options={sparePartNameZhOptions}
@@ -843,7 +754,7 @@ const SparePartEditPage: React.FC = () => {
                           label="英文名称 (English Name)"
                           name="name_en"
                           rules={[{ required: true, message: '请输入英文名称' }]}
-                          extra={`参考该产品线下${selectedModel ? '同型号' : ''}的备件英文名称，当前共 ${sparePartNameEnOptions.length} 个名称`}
+                          extra={`参考该产品线下的备件英文名称，当前共 ${sparePartNameEnOptions.length} 个名称`}
                         >
                           <AutoComplete
                             options={sparePartNameEnOptions}
@@ -933,7 +844,7 @@ const SparePartEditPage: React.FC = () => {
                         <Form.Item
                           label="规格参数(公制) (Specification - Metric)"
                           name="spec"
-                          extra={`参考该产品线下${selectedModel ? '同型号' : ''}的备件规格，当前共 ${sparePartSpecOptions.length} 个规格`}
+                          extra={`参考该产品线下的备件规格，当前共 ${sparePartSpecOptions.length} 个规格`}
                         >
                           <AutoComplete
                             options={sparePartSpecOptions}
@@ -951,7 +862,7 @@ const SparePartEditPage: React.FC = () => {
                         <Form.Item
                           label="规格参数(英制) (Specification - Imperial)"
                           name="spec_imperial"
-                          extra={`参考该产品线下${selectedModel ? '同型号' : ''}的备件英制规格，当前共 ${sparePartSpecImperialOptions.length} 个规格`}
+                          extra={`参考该产品线下的备件英制规格，当前共 ${sparePartSpecImperialOptions.length} 个规格`}
                         >
                           <AutoComplete
                             options={sparePartSpecImperialOptions}

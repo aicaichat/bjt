@@ -84,6 +84,7 @@ const AccessoryModelEditPage: React.FC = () => {
         image1_url: modelData.image1_url || '',
         image2_url: modelData.image2_url || '',
         explosion_diagram_pdf: modelData.explosion_diagram_pdf || '',
+        spec_pdf: modelData.spec_pdf || '',
         status: modelData.status,
         sort_order: modelData.sort_order || 0,
       });
@@ -154,6 +155,7 @@ const AccessoryModelEditPage: React.FC = () => {
         image1_url: values.image1_url || '',
         image2_url: values.image2_url || '',
         explosion_diagram_pdf: values.explosion_diagram_pdf || '',
+        spec_pdf: values.spec_pdf || '',
         status: values.status || 'publish',
         sort_order: values.sort_order || 0,
       };
