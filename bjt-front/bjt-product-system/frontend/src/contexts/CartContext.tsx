@@ -3,6 +3,7 @@ import { CartItem as OriginalCartItem } from '../api/services/cart.service';
 import cartService from '../api/services/cart.service'; // 导入默认导出的cartService实例
 import { useMockData } from '../config/env';
 import { mergeNoEmpty } from '../utils/mergeUtils';
+import { useAuth } from './AuthContext'; // 导入用户认证上下文
 
 // 定义价格层级接口
 export interface PriceTier {
@@ -309,8 +310,14 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [syncError, setSyncError] = useState<string | null>(null);
   
+  // 获取用户认证状态
+  const { user, isAuthenticated } = useAuth();
+  
   // 本地 properties 缓存，part_number 为 key
   const cartPropertiesMap = React.useRef<Record<string, any>>({});
+  
+  // 用于跟踪当前用户ID，检测用户切换
+  const currentUserIdRef = React.useRef<number | null>(null);
   
   // 从API加载购物车数据
   const fetchCart = async () => {
@@ -349,8 +356,40 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
   // 初始加载购物车
   useEffect(() => {
-    fetchCart();
-  }, []);
+    if (isAuthenticated) {
+      fetchCart();
+    } else {
+      // 用户未认证时清空购物车
+      setItems([]);
+      setSelectedItemIds(new Set());
+      cartPropertiesMap.current = {};
+      setLoading(false);
+    }
+  }, [isAuthenticated]);
+
+  // 监听用户切换，当用户ID变化时清空购物车
+  useEffect(() => {
+    const newUserId = user?.id || null;
+    
+    // 如果这不是第一次加载，且用户ID发生了变化
+    if (currentUserIdRef.current !== null && currentUserIdRef.current !== newUserId) {
+      console.log('🔄 [CartContext] User changed from', currentUserIdRef.current, 'to', newUserId, '- clearing cart');
+      
+      // 清空购物车状态
+      setItems([]);
+      setSelectedItemIds(new Set());
+      cartPropertiesMap.current = {};
+      setSyncError(null);
+      
+      // 如果新用户已认证，重新加载购物车
+      if (isAuthenticated && newUserId) {
+        fetchCart();
+      }
+    }
+    
+    // 更新当前用户ID引用
+    currentUserIdRef.current = newUserId;
+  }, [user?.id, isAuthenticated]);
   
   // 添加商品到购物车
   const addItem = async (newItem: ExtendedCartItem) => {

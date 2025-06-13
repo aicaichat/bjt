@@ -2,6 +2,11 @@ import React from 'react';
 import { ExtendedCartItem } from '../../contexts/CartContext';
 import { useTranslation } from 'react-i18next';
 import { ASSETS } from '../../config/appConfig';
+import { SmartFieldValue } from '../SmartFieldValue';
+import { SmartFieldLabel } from '../SmartFieldLabel';
+import { SmartFieldRow } from '../SmartFieldRow';
+import { useSmartFieldMapping } from '../../hooks/useSmartFieldMapping';
+import { useSmartFieldLabels } from '../../hooks/useSmartFieldLabels';
 
 interface RequiredPartCartItemProps {
   item: ExtendedCartItem & { is_required: true };
@@ -77,6 +82,8 @@ export const RequiredPartCartItem: React.FC<RequiredPartCartItemProps> = ({
   const getLabel = (key: string, t: any) => t(`products.properties.${propertyKeyMap[key] || key}`, key);
   const getValue = (value: any, t: any) => value && value !== 'N/A' && value !== 'Not Specified' ? value : t('products.defaultValues.notAvailable');
   
+
+  
   return (
     <div className="required-part-cart-item border-l-4 border-orange-400 bg-orange-50 p-4 rounded-lg mb-3">
       {/* 必选备件标识 */}
@@ -132,14 +139,14 @@ export const RequiredPartCartItem: React.FC<RequiredPartCartItemProps> = ({
             </div>
             
             {/* 规格 */}
-            {(item.spec || item.spec_imperial) && (
-              <div className="text-sm">
-                <span className="text-gray-600">{getLabel('spec', t)}:</span>
-                <span className="ml-2">
-                  {isImperial ? (item.spec_imperial || item.spec) : (item.spec || item.spec_imperial)}
-                </span>
-              </div>
-            )}
+            <div className="text-sm">
+              <span className="text-gray-600">
+                <SmartFieldLabel fieldKey="spec" />:
+              </span>
+              <span className="ml-2">
+                <SmartFieldValue product={item} fieldKey="spec" />
+              </span>
+            </div>
             
             {/* 适配序列号 */}
             {item.app_sn && (
@@ -158,38 +165,28 @@ export const RequiredPartCartItem: React.FC<RequiredPartCartItemProps> = ({
             )}
           </div>
 
-          {/* 包装信息 - 严格按照展示逻辑 */}
+          {/* 包装信息 - 智能单位制 */}
           <div className="mt-3 pt-3 border-t border-gray-200">
             <div className="grid grid-cols-2 gap-4 text-sm">
               {/* 包装尺寸 */}
-              {(item.package_size_cm || item.package_size_inch) && (
-                <div>
-                  <span className="text-gray-600">
-                    {getLabel('packageSize', t)}:
-                  </span>
-                  <div className="font-medium">
-                    {isImperial 
-                      ? `${getValue(item.package_size_inch, t) || 'N/A'} inch`
-                      : `${getValue(item.package_size_cm, t) || 'N/A'} cm`
-                    }
-                  </div>
+              <div>
+                <span className="text-gray-600">
+                  <SmartFieldLabel fieldKey="package_size" />:
+                </span>
+                <div className="font-medium">
+                  <SmartFieldValue product={item} fieldKey="package_size" />
                 </div>
-              )}
+              </div>
               
               {/* 单件净重 */}
-              {(item.net_weight_kg || item.net_weight_lbs) && (
-                <div>
-                  <span className="text-gray-600">
-                    {getLabel('netWeight', t)}:
-                  </span>
-                  <div className="font-medium">
-                    {isImperial 
-                      ? `${getValue(item.net_weight_lbs, t) || 'N/A'} lbs`
-                      : `${getValue(item.net_weight_kg, t) || 'N/A'} kg`
-                    }
-                  </div>
+              <div>
+                <span className="text-gray-600">
+                  <SmartFieldLabel fieldKey="net_weight" />:
+                </span>
+                <div className="font-medium">
+                  <SmartFieldValue product={item} fieldKey="net_weight" />
                 </div>
-              )}
+              </div>
             </div>
           </div>
 

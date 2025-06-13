@@ -1,7 +1,6 @@
 import React from 'react';
 import Header, { HeaderProps } from './Header';
 import Footer, { FooterProps } from './Footer';
-import ThemeSwitcher from '../ThemeSwitcher';
 import '../../styles/global.css';
 
 interface MainLayoutProps {
@@ -28,10 +27,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
       </main>
       
       {showFooter && (
-        <>
-          <ThemeSwitcher className="my-6" />
-          <Footer {...footerProps} />
-        </>
+        <Footer {...footerProps} />
       )}
     </div>
   );

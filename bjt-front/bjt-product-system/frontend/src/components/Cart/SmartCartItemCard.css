@@ -1,0 +1,267 @@
+/* SmartCartItemCard 智能购物车项目卡片样式 */
+
+.smart-cart-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 16px;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  background: #fff;
+  transition: all 0.3s ease;
+}
+
+.smart-cart-item:hover {
+  border-color: #40a9ff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.smart-cart-item.selected {
+  border-color: #1890ff;
+  background-color: #f6ffed;
+}
+
+/* 选择框 */
+.selection-checkbox {
+  margin-right: 12px;
+  padding-top: 4px;
+}
+
+.selection-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* 商品图片 */
+.product-image {
+  width: 80px;
+  height: 80px;
+  margin-right: 16px;
+  flex-shrink: 0;
+}
+
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #f0f0f0;
+}
+
+/* 商品信息 */
+.product-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.basic-info {
+  margin-bottom: 12px;
+}
+
+.product-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #262626;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.part-number,
+.applicable-machine,
+.voltage {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.part-number .label,
+.applicable-machine .label,
+.voltage .label {
+  color: #8c8c8c;
+  margin-right: 8px;
+  min-width: 60px;
+}
+
+.part-number .value,
+.applicable-machine .value,
+.voltage .value {
+  color: #595959;
+  font-weight: 500;
+}
+
+/* 智能字段 */
+.smart-fields {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.smart-field-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.smart-field-row .field-label {
+  color: #8c8c8c;
+  margin-right: 8px;
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+.smart-field-row .field-value {
+  color: #595959;
+  font-weight: 500;
+}
+
+.unit-override-indicator {
+  margin-top: 8px;
+  text-align: center;
+}
+
+.unit-override-indicator .text-muted {
+  color: #faad14;
+  font-style: italic;
+}
+
+/* 数量控制 */
+.quantity-controls {
+  display: flex;
+  align-items: center;
+  margin-right: 16px;
+  flex-shrink: 0;
+}
+
+.quantity-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #d9d9d9;
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.quantity-btn:hover:not(:disabled) {
+  border-color: #40a9ff;
+  color: #40a9ff;
+}
+
+.quantity-btn:disabled {
+  background: #f5f5f5;
+  color: #bfbfbf;
+  cursor: not-allowed;
+}
+
+.quantity-btn.decrease {
+  border-radius: 4px 0 0 4px;
+}
+
+.quantity-btn.increase {
+  border-radius: 0 4px 4px 0;
+}
+
+.quantity-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 32px;
+  border-top: 1px solid #d9d9d9;
+  border-bottom: 1px solid #d9d9d9;
+  background: #fafafa;
+  font-size: 14px;
+  font-weight: 600;
+  color: #262626;
+}
+
+/* 操作按钮 */
+.item-actions {
+  flex-shrink: 0;
+}
+
+.remove-btn {
+  padding: 8px 16px;
+  border: 1px solid #ff4d4f;
+  background: #fff;
+  color: #ff4d4f;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.remove-btn:hover {
+  background: #ff4d4f;
+  color: #fff;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .smart-cart-item {
+    flex-wrap: wrap;
+    padding: 12px;
+  }
+  
+  .product-image {
+    width: 60px;
+    height: 60px;
+    margin-right: 12px;
+  }
+  
+  .product-info {
+    flex: 1;
+    min-width: 200px;
+  }
+  
+  .quantity-controls {
+    margin-right: 8px;
+    margin-top: 8px;
+  }
+  
+  .item-actions {
+    margin-top: 8px;
+  }
+  
+  .smart-field-row .field-label {
+    min-width: 70px;
+  }
+}
+
+@media (max-width: 480px) {
+  .smart-cart-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .product-image {
+    width: 100%;
+    height: 120px;
+    margin-right: 0;
+    margin-bottom: 12px;
+  }
+  
+  .quantity-controls,
+  .item-actions {
+    margin-top: 12px;
+    margin-right: 0;
+    justify-content: center;
+  }
+  
+  .smart-field-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .smart-field-row .field-label {
+    margin-bottom: 2px;
+    min-width: auto;
+  }
+} 

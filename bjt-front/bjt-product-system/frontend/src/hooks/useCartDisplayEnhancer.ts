@@ -1,12 +1,19 @@
 import { useMemo } from 'react';
 import { useSmartUnitSystem } from './useSmartUnitSystem';
+import { useSmartFieldMapping, FIELD_UNIT_MAPPINGS } from './useSmartFieldMapping';
 import { useTranslation } from 'react-i18next';
 
 export type ProductType = 'machines' | 'consumables' | 'spareParts' | 'accessories';
 
 export const useCartDisplayEnhancer = (originalData: any, productType: ProductType) => {
-  const { preferredUnitSystem, getSmartFieldKey, getFieldUnit } = useSmartUnitSystem();
+  const { preferredUnitSystem } = useSmartUnitSystem();
+  const { getSmartFieldMapping } = useSmartFieldMapping();
   const { t } = useTranslation(['cart', 'products']);
+  
+  // 获取字段对应的单位
+  const getFieldUnit = (fieldName: string): string => {
+    return FIELD_UNIT_MAPPINGS[fieldName as keyof typeof FIELD_UNIT_MAPPINGS] || '';
+  };
   
   // 产品类型字段配置 - 基于字段映射标准
   const fieldConfigs = useMemo(() => ({
@@ -41,13 +48,13 @@ export const useCartDisplayEnhancer = (originalData: any, productType: ProductTy
     enhanced._display = {};
     
     config.smartFields.forEach(baseField => {
-      const smartKey = getSmartFieldKey(baseField);
+      const smartKey = getSmartFieldMapping(baseField, originalData);
       const value = originalData[smartKey];
       
       if (value !== undefined && value !== null && value !== '') {
         enhanced._display[baseField] = {
           value,
-          unit: getFieldUnit(baseField),
+          unit: getFieldUnit(smartKey),
           formatted: formatFieldValue(value, baseField, preferredUnitSystem),
           originalKey: smartKey
         };
@@ -67,7 +74,7 @@ export const useCartDisplayEnhancer = (originalData: any, productType: ProductTy
     };
     
     return enhanced;
-  }, [originalData, productType, preferredUnitSystem]);
+  }, [originalData, productType, preferredUnitSystem, getSmartFieldMapping]);
   
   return enhancedData;
 };

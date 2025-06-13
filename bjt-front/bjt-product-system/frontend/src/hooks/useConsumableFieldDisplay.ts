@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { CONSUMABLE_DISPLAY_CONFIG } from '../config/consumable-display-config';
+import { useMaterials } from './useMockData';
 
 /**
  * Consumable字段显示Hook
@@ -10,6 +11,7 @@ import { CONSUMABLE_DISPLAY_CONFIG } from '../config/consumable-display-config';
 export const useConsumableFieldDisplay = () => {
   const { getPreferredUnit } = useAuth(); // 获取用户单位制偏好
   const { t, i18n } = useTranslation();
+  const { data: materialsData } = useMaterials(); // 获取材料数据
   
   const preferred_unit = getPreferredUnit(); // 获取偏好单位制
   
@@ -57,6 +59,31 @@ export const useConsumableFieldDisplay = () => {
       // 根据接口，使用name字段（这是英文名称新增需求对应的字段）
       const value = item.name || item[`name_${locale}`];
       return value ? String(value) : '';
+    }
+    
+    // 🔥 新增：材料字段的多语言处理
+    if (fieldKey === 'material') {
+      const materialCode = item.material;
+      if (!materialCode || !materialsData) {
+        return materialCode ? String(materialCode) : '';
+      }
+      
+      // 根据材料code查找对应的材料数据
+      const materialInfo = materialsData.find((material: any) => 
+        material.code === materialCode || material.id === materialCode
+      );
+      
+      if (materialInfo) {
+        // 根据当前语言返回对应的名称
+        if (i18n.language.startsWith('zh')) {
+          return materialInfo.name_zh || materialInfo.name_en || materialCode;
+        } else {
+          return materialInfo.name_en || materialInfo.name_zh || materialCode;
+        }
+      }
+      
+      // 如果没找到材料信息，返回原始code
+      return String(materialCode);
     }
     
     // 智能单位制字段处理 - 只返回纯数值

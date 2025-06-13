@@ -3,6 +3,7 @@ import { useCartDisplayEnhancer, ProductType, getSmartFieldValue } from '../../h
 import { useSmartUnitSystem } from '../../hooks/useSmartUnitSystem';
 import { useTranslation } from 'react-i18next';
 import { FEATURE_FLAGS, debugLog } from '../../config/feature-flags';
+import './SmartCartItemCard.css';
 
 interface CartItem {
   id: string;

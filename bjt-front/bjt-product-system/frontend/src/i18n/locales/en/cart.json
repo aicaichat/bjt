@@ -95,6 +95,7 @@
   "emptyCartWarning": "Cart is empty, cannot checkout",
   "unitPrice": "Unit Price",
   "subtotal": "Subtotal",
+  "quantity": "Quantity",
   "remove": "Remove",
   "total": "Total",
   "mainItems": "Main Items",
@@ -104,5 +105,30 @@
     "cancel": "Cancel",
     "confirm": "Confirm",
     "emptyCartMessage": "Your cart is empty, start shopping now!"
+  },
+  "fields": {
+    "partNumber": "Part Number",
+    "model": "Model",
+    "voltage": "Voltage",
+    "frequency": "Frequency",
+    "spec": "Spec.",
+    "specImperial": "Spec.(Imperial)",
+    "pcsPerBox": "Pcs per Box",
+    "pcsPerPallet": "Pcs per Pallet",
+    "packageSize": "Package Size",
+    "palletSize": "Pallet Size",
+    "netWeight": "Net Weight",
+    "grossWeight": "Gross Weight",
+    "brand": "Brand",
+    "unit": "Unit",
+    "compatibleModel": "Compatible Model",
+    "applicableSN": "Applicable S.N.",
+    "filmWidth": "Film Width",
+    "bubbleDiameter": "Bubble Diameter"
+  },
+  "productNames": {
+    "LA-E4S(paper) Host-Standard": "LA-E4S(paper) Host-Standard",
+    "LA-E4S(paper)": "LA-E4S(paper)",
+    "Host-Standard": "Host-Standard"
   }
 } 

@@ -62,12 +62,23 @@ export abstract class BaseService<T, R = any> {
    * @returns 添加通用参数后的参数
    */
   protected addCommonParams(params: Record<string, any> = {}): Record<string, any> {
-    // 获取当前语言
-    const currentLang = document.documentElement.lang || 'zh';
-    
     // 如果参数中没有指定语言，则添加当前语言
     if (!params.lang) {
-      params.lang = currentLang === 'zh' ? 'zh' : 'en';
+      // 优先使用i18next的当前语言设置
+      let currentLang = 'en'; // 默认英文
+      
+      try {
+        // 尝试从i18next获取当前语言
+        const i18nextLang = localStorage.getItem('i18nextLng') || 'en';
+        currentLang = i18nextLang.startsWith('zh') ? 'zh' : 'en';
+      } catch (e) {
+        // 如果获取失败，尝试从document.documentElement.lang获取
+        const docLang = document.documentElement.lang || 'en';
+        currentLang = docLang.startsWith('zh') || docLang === 'zh-CN' ? 'zh' : 'en';
+      }
+      
+      params.lang = currentLang;
+      console.log('🌐 [BaseService] 设置API语言参数:', currentLang);
     }
     
     return params;

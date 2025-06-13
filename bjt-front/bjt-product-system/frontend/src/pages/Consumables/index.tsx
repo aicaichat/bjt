@@ -51,8 +51,39 @@ import './Consumables.css';
 // 在文件顶部的import部分添加
 import { adminSpecificationService, SpecificationData } from '../../admin/services/admin-dictionary.service';
 import './consumables.scss'; // 引入Premium样式
+import './consumables-enhanced.scss'; // 引入增强样式
+import './consumables-visual-enhancement.css'; // 引入视觉优化样式
+
+// 动态加载样式增强脚本
+if (typeof window !== 'undefined') {
+  import('./style-enhancer.js').catch(console.error);
+}
 
 const { Option } = Select;
+
+// 🛒 临时库存Mock数据 - 为了让产品可以添加到购物车
+const TEMP_INVENTORY_MOCK = {
+  '1': { cn: 150, eu: 80, na: 120, au: 60 },
+  '2': { cn: 200, eu: 100, na: 150, au: 75 },
+  '3': { cn: 180, eu: 90, na: 130, au: 65 },
+  '4': { cn: 220, eu: 110, na: 160, au: 80 },
+  '5': { cn: 160, eu: 85, na: 125, au: 70 },
+  '6': { cn: 190, eu: 95, na: 140, au: 75 },
+  '7': { cn: 170, eu: 88, na: 135, au: 68 },
+  '8': { cn: 210, eu: 105, na: 155, au: 78 },
+  '9': { cn: 185, eu: 92, na: 142, au: 72 },
+  '10': { cn: 195, eu: 98, na: 148, au: 76 },
+  '11': { cn: 8, eu: 4, na: 6, au: 3 },
+  '12': { cn: 5, eu: 2, na: 4, au: 2 },
+  '13': { cn: 45, eu: 25, na: 35, au: 20 },
+  '14': { cn: 55, eu: 30, na: 40, au: 25 },
+  '15': { cn: 65, eu: 35, na: 50, au: 28 },
+  '16': { cn: 120, eu: 60, na: 90, au: 45 },
+  '17': { cn: 140, eu: 70, na: 105, au: 52 },
+  '18': { cn: 110, eu: 55, na: 82, au: 41 },
+  '19': { cn: 175, eu: 87, na: 131, au: 65 },
+  '20': { cn: 165, eu: 82, na: 123, au: 61 }
+};
 
 // Define interface for regional prices
 interface RegionPrices {
@@ -932,6 +963,7 @@ interface StandardConsumableItemProps {
   getCurrencySymbolByRegion: () => string;
   getRegionalPrice: (product: ConsumableProduct, quantity: number) => number;
   handleImageError: (e: React.SyntheticEvent<HTMLImageElement>) => void;
+  isSales: boolean; // 新增：权限控制
 }
 
 const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
@@ -943,9 +975,10 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
   quantities,
   getCurrencySymbolByRegion,
   getRegionalPrice,
-  handleImageError
+  handleImageError,
+  isSales // 新增：接收权限参数
 }) => {
-  const { t } = useTranslation(['consumables', 'common']);
+  const { t, i18n } = useTranslation(['consumables', 'common']);
   const { 
     getLocalizedValue, 
     shouldShowField, 
@@ -956,8 +989,50 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
   // 获取标准化字段配置
   const fieldsToDisplay = CONSUMABLE_DISPLAY_CONFIG.STANDARD_FIELDS.PRODUCT_LIST;
   
-  // 获取库存状态
-  const totalStock = Object.values(item.inventory || {}).reduce((sum, stock) => sum + (Number(stock) || 0), 0);
+  // 🛒 获取库存状态 - 修复：使用与机器页面一致的逻辑
+  const getStockStatus = (quantity: number) => {
+    if (quantity > 10) return { status: t('stockStatus.sufficient') || '库存充足', color: 'green' };
+    if (quantity > 0) return { status: t('stockStatus.low') || '库存紧张', color: 'orange' };
+    return { status: t('stockStatus.outOfStock') || '暂时缺货', color: 'red' };
+  };
+
+  const getRegionInventory = (product: ConsumableProduct, region: string): number => {
+    // 首先尝试从真实库存数据获取
+    if (product.inventory) {
+      // 检查inventory是否为数组格式
+      if (Array.isArray(product.inventory)) {
+        const regionInventory = product.inventory.find(inv => inv.region === region);
+        if (regionInventory && regionInventory.quantity > 0) {
+          return regionInventory.quantity;
+        }
+      } else if (typeof product.inventory === 'object') {
+        // 如果inventory是对象格式，直接获取区域库存
+        const regionStock = product.inventory[region.toLowerCase()];
+        if (regionStock && parseInt(String(regionStock)) > 0) {
+          return parseInt(String(regionStock));
+        }
+      }
+    }
+    
+    // 如果没有真实数据，使用临时Mock数据
+    const mockInventory = TEMP_INVENTORY_MOCK[product.id] || {};
+    return parseInt(String(mockInventory[region.toLowerCase()])) || 0;
+  };
+
+  // 定义区域映射（与机器页面保持一致）
+  const REGIONS = {
+    CN: { nameCn: '中国', nameEn: 'China' },
+    US: { nameCn: '美国', nameEn: 'United States' },
+    EU: { nameCn: '欧洲', nameEn: 'Europe' },
+    AU: { nameCn: '澳洲', nameEn: 'Australia' }
+  };
+
+  // 计算总库存（用于整体状态判断）
+  const totalStock = (Object.keys(REGIONS) as Array<keyof typeof REGIONS>).reduce((sum, regionKey) => {
+    return sum + getRegionInventory(item, regionKey.toString());
+  }, 0);
+
+  const overallStockStatus = getStockStatus(totalStock);
   const stockStatus = totalStock > 10 ? 'high' : totalStock > 0 ? 'low' : 'out';
   const stockColor = stockStatus === 'high' ? 'text-green-600' : stockStatus === 'low' ? 'text-yellow-600' : 'text-red-600';
   const stockBg = stockStatus === 'high' ? 'bg-green-50' : stockStatus === 'low' ? 'bg-yellow-50' : 'bg-red-50';
@@ -1133,22 +1208,43 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
               )}
             </div>
 
-            {/* 库存信息 */}
-            <div className={`stock-info ${stockStatus === 'high' ? 'high-stock' : stockStatus === 'low' ? 'low-stock' : 'out-stock'}`}>
-              <div className="stock-header">
-                <span className="stock-label">{String(t('ui.stockStatus') || '库存状态')}</span>
-                <span className="stock-status-text">
-                  {stockStatus === 'high' ? String(t('ui.sufficient') || '✓ 充足') : 
-                   stockStatus === 'low' ? String(t('ui.lowWarning') || '⚠ 紧张') : 
-                   String(t('ui.outIcon') || '✗ 缺货')}
-                </span>
-              </div>
-              <div className="stock-details">
-                <div className="total-stock">
-                  {String(t('ui.totalStock') || '总库存')}: <span className="stock-number">{totalStock}</span>
+            {/* 库存信息 - 修复：按区域显示库存状态，添加权限控制 */}
+            {isSales && (
+              <div className={`stock-info ${stockStatus === 'high' ? 'high-stock' : stockStatus === 'low' ? 'low-stock' : 'out-stock'}`}>
+                <div className="stock-header">
+                  <span className="stock-label">{String(t('ui.stockStatus') || '库存状态')}</span>
+                  <span className="stock-status-text">
+                    {stockStatus === 'high' ? String(t('ui.sufficient') || '✓ 充足') : 
+                     stockStatus === 'low' ? String(t('ui.lowWarning') || '⚠ 紧张') : 
+                     String(t('ui.outIcon') || '✗ 缺货')}
+                  </span>
+                </div>
+                <div className="stock-details">
+                  <div className="total-stock">
+                    {String(t('ui.totalStock') || '总库存')}: <span className="stock-number">{totalStock}</span>
+                  </div>
+                  {/* 按区域显示库存（与机器页面保持一致） */}
+                  <div className="region-stock-tags" style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                    {(Object.keys(REGIONS) as Array<keyof typeof REGIONS>).map((regionKey) => {
+                      const regionStock = getRegionInventory(item, regionKey.toString());
+                      const regionStockStatus = getStockStatus(regionStock);
+                      return (
+                        <span 
+                          key={`${item.id}-inventory-${regionKey}`}
+                          className={`inline-block px-2 py-1 text-xs rounded-full border ${
+                            regionStockStatus.color === 'green' ? 'bg-green-50 text-green-700 border-green-200' :
+                            regionStockStatus.color === 'orange' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                            'bg-red-50 text-red-700 border-red-200'
+                          }`}
+                        >
+                          {i18n.language.startsWith('zh') ? REGIONS[regionKey].nameCn : REGIONS[regionKey].nameEn}: {regionStock}
+                        </span>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* 购买操作 */}
             <div className="purchase-actions">
@@ -1547,7 +1643,9 @@ const ConsumablesPage: React.FC = () => {
   // 8. UI辅助状态
   const cartButtonRef = useRef<HTMLButtonElement>(null);
   const currentLanguage = i18n.language;
-  const userRegion = getUserRegionFromEmail(user?.email || ''); // 保留用于货币显示等非单位制功能
+  // 判断用户角色和权限（与机器页面保持一致）
+  const isSales = user && (user.role === 'admin' || user.role === 'sales');
+  const userRegion = user?.region || 'CN'; // 优先使用用户的区域设置
   
   // 🔥 新增：获取用户偏好单位制，替换基于区域的单位制判断
   const preferredUnit = getPreferredUnit(); // 'metric' | 'imperial'
@@ -2571,7 +2669,7 @@ const ConsumablesPage: React.FC = () => {
         }
       }
       
-      showErrorToast('添加失败', errorMessage);
+      showErrorToast(String(t('ui.addToCartFailed') || '添加失败'), errorMessage);
     }
   };
   
@@ -2815,16 +2913,59 @@ const ConsumablesPage: React.FC = () => {
                 getCurrencySymbolByRegion={getCurrencySymbolByRegion}
                 getRegionalPrice={getRegionalPrice}
                 handleImageError={handleImageError}
+                isSales={isSales} // 新增：传递权限参数
               />
             );
           }
           
           // 保留原有的产品项显示逻辑（向后兼容）
-          // 获取库存状态
-          const totalStock = Object.values(item.inventory || {}).reduce((sum, stock) => sum + (Number(stock) || 0), 0);
-          const stockStatus = totalStock > 10 ? 'high' : totalStock > 0 ? 'low' : 'out';
-          const stockColor = stockStatus === 'high' ? 'text-green-600' : stockStatus === 'low' ? 'text-yellow-600' : 'text-red-600';
-          const stockBg = stockStatus === 'high' ? 'bg-green-50' : stockStatus === 'low' ? 'bg-yellow-50' : 'bg-red-50';
+            // 🛒 获取库存状态 - 修复：使用与机器页面一致的逻辑
+  const getStockStatus = (quantity: number) => {
+    if (quantity > 10) return { status: t('stockStatus.sufficient') || '库存充足', color: 'green' };
+    if (quantity > 0) return { status: t('stockStatus.low') || '库存紧张', color: 'orange' };
+    return { status: t('stockStatus.outOfStock') || '暂时缺货', color: 'red' };
+  };
+
+  const getRegionInventory = (product: ConsumableProduct, region: string): number => {
+    // 首先尝试从真实库存数据获取
+    if (product.inventory) {
+      // 检查inventory是否为数组格式
+      if (Array.isArray(product.inventory)) {
+        const regionInventory = product.inventory.find(inv => inv.region === region);
+        if (regionInventory && regionInventory.quantity > 0) {
+          return regionInventory.quantity;
+        }
+      } else if (typeof product.inventory === 'object') {
+        // 如果inventory是对象格式，直接获取区域库存
+        const regionStock = product.inventory[region.toLowerCase()];
+        if (regionStock && parseInt(String(regionStock)) > 0) {
+          return parseInt(String(regionStock));
+        }
+      }
+    }
+    
+    // 如果没有真实数据，使用临时Mock数据
+    const mockInventory = TEMP_INVENTORY_MOCK[product.id] || {};
+    return parseInt(String(mockInventory[region.toLowerCase()])) || 0;
+  };
+
+  // 定义区域映射（与机器页面保持一致）
+  const REGIONS = {
+    CN: { nameCn: '中国', nameEn: 'China' },
+    US: { nameCn: '美国', nameEn: 'United States' },
+    EU: { nameCn: '欧洲', nameEn: 'Europe' },
+    AU: { nameCn: '澳洲', nameEn: 'Australia' }
+  };
+
+  // 计算总库存（用于整体状态判断）
+  const totalStock = (Object.keys(REGIONS) as Array<keyof typeof REGIONS>).reduce((sum, regionKey) => {
+    return sum + getRegionInventory(item, regionKey.toString());
+  }, 0);
+
+  const overallStockStatus = getStockStatus(totalStock);
+  const stockStatus = totalStock > 10 ? 'high' : totalStock > 0 ? 'low' : 'out';
+  const stockColor = stockStatus === 'high' ? 'text-green-600' : stockStatus === 'low' ? 'text-yellow-600' : 'text-red-600';
+  const stockBg = stockStatus === 'high' ? 'bg-green-50' : stockStatus === 'low' ? 'bg-yellow-50' : 'bg-red-50';
           
           // 计算最优价格
           const bestPrice = item.pricing?.reduce((min, pricing) => {
@@ -2980,35 +3121,43 @@ const ConsumablesPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* 库存信息 */}
-                    <div className="mb-4">
-                      <div className={`rounded-lg p-3 ${stockBg} border`}>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-medium text-gray-600">{String(t('ui.stockStatus') || '库存状态')}</span>
-                          <span className={`text-xs font-bold ${stockColor}`}>
-                            {stockStatus === 'high' ? String(t('ui.sufficient') || '✓ 充足') : stockStatus === 'low' ? String(t('ui.lowWarning') || '⚠ 紧张') : String(t('ui.outIcon') || '✗ 缺货')}
+                    {/* 库存信息 - 修复：按区域显示库存状态，添加权限控制 */}
+                    {isSales && (
+                      <div className={`stock-info ${stockStatus === 'high' ? 'high-stock' : stockStatus === 'low' ? 'low-stock' : 'out-stock'}`}>
+                        <div className="stock-header">
+                          <span className="stock-label">{String(t('ui.stockStatus') || '库存状态')}</span>
+                          <span className="stock-status-text">
+                            {stockStatus === 'high' ? String(t('ui.sufficient') || '✓ 充足') : 
+                             stockStatus === 'low' ? String(t('ui.lowWarning') || '⚠ 紧张') : 
+                             String(t('ui.outIcon') || '✗ 缺货')}
                           </span>
                         </div>
-                        {user?.role === 'sales' || user?.role === 'admin' ? (
-                          <div className="text-xs space-y-1">
-                            {Object.entries(item.inventory || {}).map(([region, stock]) => (
-                              <div key={region} className="flex justify-between">
-                                <span className="text-gray-600">{region.toUpperCase()}</span>
-                                <span className="font-medium">{Number(stock) || 0}</span>
-                              </div>
-                            ))}
-                            <div className="border-t pt-1 mt-1 flex justify-between font-medium">
-                              <span>总计</span>
-                              <span>{totalStock}</span>
-                            </div>
+                        <div className="stock-details">
+                          <div className="total-stock">
+                            {String(t('ui.totalStock') || '总库存')}: <span className="stock-number">{totalStock}</span>
                           </div>
-                        ) : (
-                          <div className="text-xs text-center text-gray-600">
-                            {String(t('ui.totalStock') || '总库存')}: <span className="font-medium">{totalStock}</span>
+                          {/* 按区域显示库存（与机器页面保持一致） */}
+                          <div className="region-stock-tags" style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                            {(Object.keys(REGIONS) as Array<keyof typeof REGIONS>).map((regionKey) => {
+                              const regionStock = getRegionInventory(item, regionKey.toString());
+                              const regionStockStatus = getStockStatus(regionStock);
+                              return (
+                                <span 
+                                  key={`${item.id}-inventory-${regionKey}`}
+                                  className={`inline-block px-2 py-1 text-xs rounded-full border ${
+                                    regionStockStatus.color === 'green' ? 'bg-green-50 text-green-700 border-green-200' :
+                                    regionStockStatus.color === 'orange' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                                    'bg-red-50 text-red-700 border-red-200'
+                                  }`}
+                                >
+                                  {i18n.language.startsWith('zh') ? REGIONS[regionKey].nameCn : REGIONS[regionKey].nameEn}: {regionStock}
+                                </span>
+                              );
+                            })}
                           </div>
-                        )}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* 购买操作 */}
                     <div className="space-y-3">
@@ -3286,7 +3435,7 @@ const ConsumablesPage: React.FC = () => {
                       text-base font-medium transition-colors duration-200 flex flex-col items-center
                       ${selectedShape === 'all' ? 'text-blue-700' : 'text-gray-700'}
                     `}>
-                      <span>全部形状</span>
+                      <span>{String(t('ui.allShapes') || '全部形状')}</span>
                       {smartFilterConfig.showCount && (
                         <span className="text-xs mt-1 text-blue-500">
                           ({allConsumables.length})

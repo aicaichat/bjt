@@ -119,7 +119,7 @@ const MachinesPage: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedMachine, setSelectedMachine] = useState<string>('');
   const [filterType, setFilterType] = useState<string>('all');
-  const [filterRegion, setFilterRegion] = useState<string>(DEFAULT_REGION);
+  const [filterRegion, setFilterRegion] = useState<string>('');
   const [selectedVoltage, setSelectedVoltage] = useState<string>('ALL');
   
   // 主机型号相关状态
@@ -159,7 +159,7 @@ const MachinesPage: React.FC = () => {
   // 判断用户角色和权限
   const isSales = user && (user.role === 'admin' || user.role === 'sales');
   const canAddToCart = true;
-  const userRegion = filterRegion || user?.region || DEFAULT_REGION;
+  const userRegion = user?.region || filterRegion || DEFAULT_REGION;
   
   const currentLanguage = i18n.language.startsWith('zh') ? 'zh' : 'en';
 

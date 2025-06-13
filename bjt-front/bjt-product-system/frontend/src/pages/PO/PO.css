@@ -259,13 +259,13 @@
 
 /* 打印样式 */
 @media print {
-  /* 页面设置 - 优化PDF生成 */
+  /* 页面设置 - 优化PDF生成，去除空白页 */
   @page {
-    margin: 0.5in;
+    margin: 0.3in;
     size: A4 portrait;
   }
 
-  /* 隐藏不需要打印的元素 */
+  /* 隐藏不需要打印的元素 - 包括购物车相关元素 */
   .action-buttons,
   .po-pagination,
   .footer,
@@ -291,15 +291,47 @@
   .page-footer,
   .bottom-info,
   [class*="footer"],
-  [class*="Footer"] {
+  [class*="Footer"],
+  /* 购物车相关元素 */
+  .cart-sidebar,
+  .cart-sidebar-overlay,
+  .cart-floating,
+  .floating-cart-btn,
+  .cart-animation-container,
+  .floating-actions,
+  .cart-button,
+  .cart-preview,
+  .cart-clear-confirm-modal,
+  [class*="cart"],
+  [class*="Cart"],
+  [class*="购物车"],
+  /* 其他浮动元素 */
+  [style*="position: fixed"],
+  [style*="position:fixed"],
+  .fixed,
+  /* 通知和弹窗 */
+  .notification,
+  .toast,
+  .modal,
+  .dialog,
+  .overlay,
+  /* 头部导航 */
+  header,
+  nav,
+  .header,
+  .navigation,
+  .navbar,
+  .site-header {
     display: none !important;
+    visibility: hidden !important;
   }
   
-  /* 基本页面重置 */
+  /* 基本页面重置 - 防止空白页 */
   * {
     -webkit-print-color-adjust: exact !important;
     color-adjust: exact !important;
     print-color-adjust: exact !important;
+    box-sizing: border-box !important;
   }
 
   html, body {
@@ -307,11 +339,16 @@
     padding: 0 !important;
     background: white !important;
     font-family: Arial, sans-serif !important;
-    font-size: 11pt !important;
-    line-height: 1.2 !important;
+    font-size: 10pt !important;
+    line-height: 1.1 !important;
     width: 100% !important;
     height: auto !important;
     overflow: visible !important;
+    /* 防止空白页 */
+    page-break-before: avoid !important;
+    page-break-after: avoid !important;
+    break-before: avoid !important;
+    break-after: avoid !important;
   }
 
   /* PO容器 */
@@ -336,31 +373,37 @@
     box-sizing: border-box !important;
   }
 
-  /* 表格基本样式 - 强制布局稳定 */
+  /* 表格基本样式 - 强制布局稳定，防止空白页 */
   .po-excel-table {
     width: 100% !important;
     max-width: 100% !important;
     border-collapse: collapse !important;
     border-spacing: 0 !important;
-    margin: 0 0 15px 0 !important;
-    font-size: 10pt !important;
+    margin: 0 0 8px 0 !important;
+    font-size: 9pt !important;
     table-layout: fixed !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
     display: table !important;
+    /* 防止表格产生空白页 */
+    page-break-before: avoid !important;
+    break-before: avoid !important;
   }
 
   .po-excel-table th,
   .po-excel-table td {
     border: 1px solid #000 !important;
-    padding: 5px !important;
+    padding: 3px !important;
     vertical-align: top !important;
-    font-size: 10pt !important;
-    line-height: 1.2 !important;
+    font-size: 9pt !important;
+    line-height: 1.1 !important;
     word-wrap: break-word !important;
     overflow: hidden !important;
     box-sizing: border-box !important;
     display: table-cell !important;
+    /* 防止单元格内容产生分页 */
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   .po-excel-table th {
@@ -382,9 +425,9 @@
 
   /* 第一个表格（基本信息）- 固定布局 */
   .po-excel-table:first-of-type {
-    margin-bottom: 25px !important;
-    page-break-after: auto !important;
-    break-after: auto !important;
+    margin-bottom: 10px !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 
   /* 为第一个表格设置固定列宽 */

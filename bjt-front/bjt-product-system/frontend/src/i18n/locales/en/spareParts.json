@@ -1,6 +1,6 @@
 {
   "title": "Spare Parts",
-  "subtitle": "Spare Parts Management",
+  "subtitle": "Spare Parts Selection",
   "properties": {
     "model": "Model",
     "partNumber": "Part Number",

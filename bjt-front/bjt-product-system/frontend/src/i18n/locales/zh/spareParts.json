@@ -1,6 +1,6 @@
 {
   "title": "备件",
-  "subtitle": "备件管理",
+  "subtitle": "备件选择",
   "properties": {
     "model": "型号",
     "partNumber": "料号",

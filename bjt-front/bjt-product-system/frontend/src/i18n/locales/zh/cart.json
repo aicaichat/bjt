@@ -95,6 +95,7 @@
   "emptyCartWarning": "购物车为空，无法结算",
   "unitPrice": "单价",
   "subtotal": "小计",
+  "quantity": "数量",
   "remove": "移除",
   "total": "总计",
   "mainItems": "主商品",
@@ -104,5 +105,30 @@
     "cancel": "取消",
     "confirm": "确认",
     "emptyCartMessage": "购物车为空，快去添加商品吧！"
+  },
+  "fields": {
+    "partNumber": "料号",
+    "model": "型号",
+    "voltage": "电压",
+    "frequency": "频率",
+    "spec": "规格",
+    "specImperial": "规格(英制)",
+    "pcsPerBox": "单箱数量",
+    "pcsPerPallet": "一托数量",
+    "packageSize": "包装尺寸",
+    "palletSize": "托盘尺寸",
+    "netWeight": "净重",
+    "grossWeight": "毛重",
+    "brand": "品牌",
+    "unit": "单位",
+    "compatibleModel": "适配机型",
+    "applicableSN": "适配序列号",
+    "filmWidth": "膜宽",
+    "bubbleDiameter": "气泡直径"
+  },
+  "productNames": {
+    "LA-E4S(paper) Host-Standard": "LA-E4S(纸质) 主机-标准版",
+    "LA-E4S(paper)": "LA-E4S(纸质)",
+    "Host-Standard": "主机-标准版"
   }
 } 

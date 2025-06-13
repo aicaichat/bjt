@@ -156,36 +156,53 @@ export class CartService extends BaseService<CartResponse> {
   private async addToCartMock(data: AddToCartRequest): Promise<CartItem> {
     await delay(300);
     
-    console.log('🛒 [CartService.addToCartMock] Processing real product data:', data);
-    
+    const properties = data.properties || {};
     const newItemId = Math.max(...mockCartItems.map(item => item.item_id), 0) + 1;
     
-    // 从properties中提取真实的产品信息
-    const properties = data.properties || {};
-    
-    // 构建真实的购物车项目
     const realItem: CartItem = {
       item_id: newItemId,
       product_type: data.product_type,
       product_id: data.product_id,
-      part_number: data.part_number || properties.part_number || `${data.product_type}-${data.product_id}`,
+      part_number: data.part_number || properties.part_number || `MOCK-${data.product_type}-${data.product_id}`,
       quantity: data.quantity,
-      name: properties.productName || properties.name || `${data.product_type} Product`,
-      image_url: properties.image_url || properties.image || `/images/${data.product_type}s/default.jpg`,
-      unit_price: properties.price || properties.unit_price || 0,
+      name: properties.productName || properties.name || properties.name_zh || properties.name_en || `模拟${data.product_type === 'machine' ? '设备' : data.product_type === 'accessory' ? '配件' : data.product_type === 'spare_part' ? '备件' : '耗材'}`,
+      image_url: properties.image_url || properties.image || `/images/${data.product_type}s/mock.jpg`,
+      unit_price: properties.price || properties.unit_price || 999.00,
       currency: properties.currency || 'CNY',
-      line_total: (properties.price || properties.unit_price || 0) * data.quantity,
+      line_total: (properties.price || properties.unit_price || 999.00) * data.quantity,
       inventory_status: 'in_stock',
       added_at: new Date().toISOString(),
       properties: properties
     };
     
+    console.log('🛒 [CartService.addToCartMock] 调试商品名称字段:');
+    console.log('  - properties.name_zh:', properties.name_zh);
+    console.log('  - properties.name_en:', properties.name_en);
+    console.log('  - properties.productName:', properties.productName);
+    console.log('  - properties.name:', properties.name);
+    console.log('  - realItem.name:', realItem.name);
+    console.log('  - realItem.properties:', JSON.stringify(realItem.properties, null, 2));
+    
     console.log('🛒 [CartService.addToCartMock] Created real cart item:', realItem);
     
-    // 检查是否已存在相同的产品
-    const existingItemIndex = mockCartItems.findIndex(
-      item => item.part_number === realItem.part_number && item.product_type === realItem.product_type
-    );
+    // 🔥 **强化去重逻辑** - 检查是否已存在相同的产品
+    // 使用多重条件确保去重准确性
+    const existingItemIndex = mockCartItems.findIndex(item => {
+      // 主要条件：料号和产品类型必须完全匹配
+      const samePartNumber = item.part_number === realItem.part_number;
+      const sameProductType = item.product_type === realItem.product_type;
+      
+      // 辅助条件：如果料号为空或默认值，则使用product_id匹配
+      const sameProductId = item.product_id === realItem.product_id;
+      
+      // 如果料号有效且不是默认生成的，优先使用料号匹配
+      if (realItem.part_number && !realItem.part_number.startsWith('MOCK-')) {
+        return samePartNumber && sameProductType;
+      }
+      
+      // 如果料号无效，使用product_id和产品类型匹配
+      return sameProductId && sameProductType;
+    });
     
     if (existingItemIndex >= 0) {
       // 如果已存在，更新数量
@@ -194,12 +211,25 @@ export class CartService extends BaseService<CartResponse> {
       existingItem.line_total = existingItem.unit_price * existingItem.quantity;
       existingItem.added_at = new Date().toISOString();
       
+      // 🔥 **更新商品信息** - 使用最新的properties信息
+      if (properties && Object.keys(properties).length > 0) {
+        existingItem.properties = { ...existingItem.properties, ...properties };
+        existingItem.name = properties.productName || properties.name || properties.name_zh || properties.name_en || existingItem.name;
+        existingItem.image_url = properties.image_url || properties.image || existingItem.image_url;
+      }
+      
       console.log('🛒 [CartService.addToCartMock] Updated existing item quantity:', existingItem);
+      console.log('🛒 [CartService.addToCartMock] Duplicate prevented for part_number:', realItem.part_number);
       return existingItem;
     } else {
       // 如果不存在，添加新项目
       mockCartItems.push(realItem);
       console.log('🛒 [CartService.addToCartMock] Added new item to cart, total items:', mockCartItems.length);
+      console.log('🛒 [CartService.addToCartMock] Current cart items:', mockCartItems.map(item => ({ 
+        part_number: item.part_number, 
+        product_type: item.product_type, 
+        quantity: item.quantity 
+      })));
       return realItem;
     }
   }

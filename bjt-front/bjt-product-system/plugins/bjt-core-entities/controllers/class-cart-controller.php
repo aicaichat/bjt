@@ -454,17 +454,60 @@ class BJT_Cart_Controller extends BJT_API_Controller {
         }
 
         $product = $wpdb->get_row($wpdb->prepare(
-            "SELECT {$name_col}, {$image_col} FROM {$table_name} WHERE part_number = %s",
+            "SELECT name_zh, name_en, {$image_col} FROM {$table_name} WHERE part_number = %s",
             $part_number
         ));
         
         if ($product) {
-             return [
-                 'name' => $product->$name_col ?? 'Name N/A', 
-                 'image_url' => $product->$image_col ?? null
-             ];
+            if ($lang === 'zh') {
+                // 中文请求：返回中文名称
+                $name = $product->name_zh ?? 'Name N/A';
+            } else {
+                // 英文请求：优先使用英文名称，如果没有或与中文相同则生成英文标题
+                if (!empty($product->name_en) && $product->name_en !== $product->name_zh) {
+                    $name = $product->name_en;
+                } else {
+                    $name = $this->get_english_title($product->name_zh ?? 'Name N/A', $product_type);
+                }
+            }
+            
+            return [
+                'name' => $name, 
+                'image_url' => $product->$image_col ?? null
+            ];
         } 
         return ['name' => 'Not Found', 'image_url' => null];
+    }
+
+    /**
+     * 生成英文标题（简化版本）
+     */
+    private function get_english_title($chinese_name, $product_type) {
+        // 基本的关键词翻译
+        $translations = [
+            '主机' => 'Host',
+            '标准版' => 'Standard',
+            '高级版' => 'Advanced',
+            '专业版' => 'Professional',
+            '气垫膜' => 'Air Bubble Film',
+            '封口机' => 'Sealing Machine',
+            '打包机' => 'Packaging Machine',
+            '配件' => 'Accessory',
+            '备件' => 'Spare Part',
+            '耗材' => 'Consumable',
+            '设备' => 'Equipment',
+            '机器' => 'Machine'
+        ];
+        
+        $english_name = $chinese_name;
+        
+        // 执行关键词替换
+        foreach ($translations as $chinese => $english) {
+            $english_name = str_replace($chinese, $english, $english_name);
+        }
+        
+        // 如果没有翻译发生，保持原名称
+        return $english_name;
     }
 
     public function add_item_to_cart(WP_REST_Request $request) {
