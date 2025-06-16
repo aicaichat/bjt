@@ -1,3 +1,6 @@
+/* Import Google Fonts first */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @import './theme.css';
 @import './component-library.css';
 @import './themes.css';
@@ -787,9 +790,6 @@ footer .social-links a:hover {
 }
 
 /* Global Styles - BJT Tech Theme */
-
-/* Import Inter font for better typography */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* === Global Reset and Base Styles === */
 *,
