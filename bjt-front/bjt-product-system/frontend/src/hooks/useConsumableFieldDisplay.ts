@@ -61,6 +61,44 @@ export const useConsumableFieldDisplay = () => {
       return value ? String(value) : '';
     }
     
+    // 🔥 新增：形状字段的多语言处理
+    if (fieldKey === 'shape') {
+      const shapeCode = item.shape || item.bag_type;
+      if (!shapeCode) {
+        return '';
+      }
+      
+      // 形状代码到多语言名称的映射
+      const shapeMapping: Record<string, { name_zh: string; name_en: string }> = {
+        'MEX': { name_zh: '气泡枕', name_en: 'Pillow' },
+        'MEY': { name_zh: '开口气泡枕', name_en: 'Precut Air Pillow' },
+        'MFB': { name_zh: '纸质气泡膜', name_en: 'paper Bubble' },
+        'MFC': { name_zh: '气枕膜', name_en: 'Tube' },
+        'MFF': { name_zh: '气泡膜', name_en: 'Bubble' },
+        'MEX-PAPER': { name_zh: '纸质气垫枕', name_en: 'paper air Pillow' },
+        // 兼容性映射（处理直接使用英文名称的情况）
+        'Pillow': { name_zh: '气泡枕', name_en: 'Pillow' },
+        'Precut Air Pillow': { name_zh: '开口气泡枕', name_en: 'Precut Air Pillow' },
+        'paper Bubble': { name_zh: '纸质气泡膜', name_en: 'paper Bubble' },
+        'Tube': { name_zh: '气枕膜', name_en: 'Tube' },
+        'Bubble': { name_zh: '气泡膜', name_en: 'Bubble' },
+        'paper air Pillow': { name_zh: '纸质气垫枕', name_en: 'paper air Pillow' }
+      };
+      
+      const shapeInfo = shapeMapping[shapeCode];
+      if (shapeInfo) {
+        // 根据当前语言返回对应的名称
+        if (i18n.language.startsWith('zh')) {
+          return shapeInfo.name_zh;
+        } else {
+          return shapeInfo.name_en;
+        }
+      }
+      
+      // 如果没找到映射，返回原始代码
+      return String(shapeCode);
+    }
+    
     // 🔥 新增：材料字段的多语言处理
     if (fieldKey === 'material') {
       const materialCode = item.material;

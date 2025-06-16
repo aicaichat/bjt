@@ -2006,7 +2006,7 @@ const SparePartsPage = () => {
                         min="1" 
                         value={quantities[String(part.id)] || 1} 
                         onChange={(e) => { e.stopPropagation(); handleQuantityChange(String(part.id), e); }}
-                        className="w-16 text-center border border-border rounded py-1 text-sm focus:ring-1 focus:ring-primary focus:border-primary bg-input text-content"
+                        className="w-20 text-center border border-border rounded py-1 text-sm focus:ring-1 focus:ring-primary focus:border-primary bg-input text-content"
                       />
                       <button 
                         onClick={() => handleQuantityChange(String(part.id), undefined, 'increase')}

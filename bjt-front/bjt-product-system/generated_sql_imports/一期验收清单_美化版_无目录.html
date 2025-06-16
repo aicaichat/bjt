@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>BJT产品管理系统 一期验收清单</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="custom_style.css" />
+</head>
+<body>
+<header id="title-block-header">
+</header>
+<h1 id="bjt产品管理系统-一期验收清单">BJT产品管理系统 一期验收清单</h1>
+<h2 id="验收概述">📋 验收概述</h2>
+<p><strong>项目名称</strong>：BJT产品管理系统<br />
+<strong>验收阶段</strong>：第一期（选型网站产品线1核心功能）<br />
+<strong>验收日期</strong>：[ ]<br />
+<strong>验收人员</strong>：[ ]<br />
+<strong>项目负责人</strong>：[ ]</p>
+<hr />
+<h2 id="验收目标与范围">🎯 验收目标与范围</h2>
+<h3 id="一期功能范围">✅ 一期功能范围</h3>
+<ul>
+<li><strong>产品线管理</strong>：产品线1完整实现，支持主机、配件、耗材、备件管理</li>
+<li><strong>用户系统</strong>：基础登录、权限控制、多用户类型支持</li>
+<li><strong>购物流程</strong>：选型→购物车→订单确认→PO单生成</li>
+<li><strong>多语言支持</strong>：中英文切换</li>
+<li><strong>基础管理</strong>：商品CRUD操作、PDF上传</li>
+</ul>
+<h3 id="二期功能不在验收范围">❌ 二期功能（不在验收范围）</h3>
+<ul>
+<li><strong>高级管理功能</strong>：分页、搜索、批量导入导出、用户管理系统</li>
+<li><strong>移动端适配</strong>：响应式设计、触屏优化</li>
+<li><strong>扩展浏览器支持</strong>：Edge、IE、Opera等</li>
+<li><strong>CRM集成</strong>：实时库存、动态价格（API接口不符合对接条件）</li>
+</ul>
+<hr />
+<h2 id="系统环境信息">🌐 系统环境信息</h2>
+<h3 id="访问地址">访问地址</h3>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>地址</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>前端系统</strong></td>
+<td>https://bjt.nh.cool</td>
+<td>用户操作界面</td>
+</tr>
+<tr>
+<td><strong>管理后台</strong></td>
+<td>https://bjt.nh.cool/admin</td>
+<td>管理员操作界面</td>
+</tr>
+<tr>
+<td><strong>API接口</strong></td>
+<td>https://bjt.nh.cool/wp-json/bjt/v1</td>
+<td>接口文档地址</td>
+</tr>
+</tbody>
+</table>
+<h3 id="浏览器支持范围">浏览器支持范围</h3>
+<ul>
+<li>✅ <strong>Chrome 90+</strong> / <strong>Firefox 88+</strong> /
+<strong>Safari 14+</strong> （桌面端）</li>
+<li>❌ <strong>移动端、Edge、IE、Opera</strong> （二期功能）</li>
+</ul>
+<h3 id="测试账号">🔐 测试账号</h3>
+<table>
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 15%" />
+<col style="width: 11%" />
+<col style="width: 19%" />
+<col style="width: 15%" />
+<col style="width: 19%" />
+</colgroup>
+<thead>
+<tr>
+<th>用户类型</th>
+<th>用户名</th>
+<th>密码</th>
+<th>国家/地区</th>
+<th>单位制</th>
+<th>货币符号</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>管理员</strong></td>
+<td>admin</td>
+<td>password123</td>
+<td>China</td>
+<td>公制</td>
+<td>¥</td>
+</tr>
+<tr>
+<td><strong>销售人员</strong></td>
+<td>sales_user</td>
+<td>password123</td>
+<td>China</td>
+<td>公制</td>
+<td>¥</td>
+</tr>
+<tr>
+<td><strong>销售经理</strong></td>
+<td>sales_manager</td>
+<td>password123</td>
+<td>Japan</td>
+<td>公制</td>
+<td>¥</td>
+</tr>
+<tr>
+<td><strong>合作伙伴</strong></td>
+<td>partner_user</td>
+<td>password123</td>
+<td>United States</td>
+<td>英制</td>
+<td>$</td>
+</tr>
+<tr>
+<td><strong>代理商</strong></td>
+<td>agent_user</td>
+<td>password123</td>
+<td>Australia</td>
+<td>公制</td>
+<td>A$</td>
+</tr>
+<tr>
+<td><strong>普通客户</strong></td>
+<td>customer_user</td>
+<td>password123</td>
+<td>Germany</td>
+<td>公制</td>
+<td>€</td>
+</tr>
+<tr>
+<td><strong>区域客户</strong></td>
+<td>regional_customer</td>
+<td>password123</td>
+<td>France</td>
+<td>公制</td>
+<td>€</td>
+</tr>
+<tr>
+<td><strong>企业客户</strong></td>
+<td>enterprise_client</td>
+<td>password123</td>
+<td>Canada</td>
+<td>英制</td>
+<td>$</td>
+</tr>
+<tr>
+<td><strong>技术支持</strong></td>
+<td>tech_support</td>
+<td>password123</td>
+<td>South Korea</td>
+<td>公制</td>
+<td>¥</td>
+</tr>
+<tr>
+<td><strong>英制测试</strong></td>
+<td>test_imperial</td>
+<td>password123</td>
+<td>United Kingdom</td>
+<td>英制</td>
+<td>€</td>
+</tr>
+</tbody>
+</table>
+<p><strong>账号使用说明</strong>： -
+<strong>权限测试</strong>：admin（管理后台）、sales_*（库存权限）、其他（客户权限）
+- <strong>单位制测试</strong>：英制用户（partner_user,
+enterprise_client, test_imperial）、公制用户（其他） -
+<strong>货币符号测试</strong>：CN(¥)、EU(€)、NA(<span
+class="math inline">)、<em>A</em><em>U</em>(<em>A</em></span>)</p>
+<hr />
+<h2 id="重要验收提醒">⚠️ 重要验收提醒</h2>
+<h3 id="数据完整性风险">🔴 数据完整性风险</h3>
+<p><strong>数据库数据存在不完整情况，验收时需注意：</strong> -
+部分产品信息可能缺失或不完整 - 产品图片链接可能失效 - 中英文数据可能不全
+- 产品关联关系可能存在错误</p>
+<h3 id="二期功能混入风险">🟡 二期功能混入风险</h3>
+<p><strong>线上环境存在未完成的二期功能：</strong> -
+后台管理的分页、搜索、导入导出等高级功能 - 移动端适配和扩展浏览器兼容性
+- 完整的用户管理和系统配置界面</p>
+<p><strong>验收策略</strong>：对二期功能报错不作为一期验收失败项</p>
+<h3 id="crm-api限制">🔄 CRM API限制</h3>
+<p><strong>由于API接口不符合对接条件，以下功能存在限制：</strong> -
+<strong>库存展示</strong>：仅验证UI权限控制，无实际数据 -
+<strong>价格管理</strong>：仅验证静态价格显示，无动态计算</p>
+<hr />
+<h2 id="功能验收清单">✅ 功能验收清单</h2>
+<h3 id="验收评分标准">📊 验收评分标准</h3>
+<ul>
+<li>✅ <strong>通过</strong>：功能完全符合需求，无问题</li>
+<li>⚠️ <strong>待优化</strong>：功能基本实现，有小问题需优化</li>
+<li>❌ <strong>不通过</strong>：功能缺失或存在严重问题</li>
+</ul>
+<hr />
+<h3 id="产品线管理">1️⃣ 产品线管理</h3>
+<table>
+<thead>
+<tr>
+<th>验收点</th>
+<th>验收标准</th>
+<th>验收结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>产品线1全面实现</td>
+<td>产品线1所有产品完整展示，功能正常</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<p><strong>验收步骤</strong>： 1. 管理员登录后台 → 产品管理 →
+检查产品线1数据完整性 2. 前台访问产品线1页面，确认所有产品正常展示 3.
+测试产品选购、耗材选购、备件选购等功能</p>
+<hr />
+<h3 id="用户账号管理">2️⃣ 用户账号管理</h3>
+<table>
+<thead>
+<tr>
+<th>验收点</th>
+<th>验收标准</th>
+<th>验收结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>多用户类型登录</td>
+<td>不同账号类型登录，权限和显示差异正确</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<p><strong>验收步骤</strong>： 1.
+使用不同类型账号登录（管理员、销售、客户等） 2.
+验证权限差异（库存显示、价格权限、后台访问等） 3.
+验证货币符号显示正确（¥€<span class="math inline"><em>A</em></span>） 4.
+验证公英制单位差异显示</p>
+<p><strong>🔴 安全规范</strong>：严禁修改用户ID/用户名等核心标识字段</p>
+<hr />
+<h3 id="多语言功能">3️⃣ 多语言功能</h3>
+<table>
+<thead>
+<tr>
+<th>验收点</th>
+<th>验收标准</th>
+<th>验收结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>中英文切换</td>
+<td>前台支持中英文切换，后台支持英文</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<p><strong>验收步骤</strong>： 1. 前台点击语言切换按钮，验证中英文翻译
+2. 登录管理后台，验证英文界面支持</p>
+<hr />
+<h3 id="商品管理">4️⃣ 商品管理</h3>
+<table>
+<thead>
+<tr>
+<th>验收点</th>
+<th>验收标准</th>
+<th>验收结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>商品CRUD操作</td>
+<td>后台可添加、编辑、删除商品，支持上架/下架</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<p><strong>验收步骤</strong>： 1. 管理员后台 → 产品管理 → 添加新产品 2.
+填写完整产品信息（中英文名称、料号、规格、价格、图片） 3.
+测试上架/下架功能，验证前台显示变化</p>
+<p><strong>🔴
+安全规范</strong>：严禁修改产品code、型号code、料号等编码字段</p>
+<hr />
+<h3 id="选型购物车">5️⃣ 选型购物车</h3>
+<table>
+<thead>
+<tr>
+<th>验收点</th>
+<th>验收标准</th>
+<th>验收结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>购物车功能</td>
+<td>各选型页可加购物车，右侧浮动购物车正常</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<p><strong>验收步骤</strong>： 1. 访问主机产品页面，选择产品加入购物车
+2. 检查右侧浮动购物车实时更新 3. 测试数量调整、移除商品功能</p>
+<hr />
+<h3 id="产品详情pdf">6️⃣ 产品详情PDF</h3>
+<table>
+<thead>
+<tr>
+<th>验收点</th>
+<th>验收标准</th>
+<th>验收结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PDF文档查看</td>
+<td>商品支持PDF上传，前台可查看</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<p><strong>验收步骤</strong>： 1. 后台产品编辑页面上传PDF文档 2.
+前台产品页面点击”产品详细信息” 3. 验证PDF文档正确打开和显示</p>
+<hr />
+<h3 id="库存展示">7️⃣ 库存展示 ⚠️</h3>
+<table>
+<thead>
+<tr>
+<th>验收点</th>
+<th>验收标准</th>
+<th>验收结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>销售账号库存权限</td>
+<td>销售账号能看到库存UI，普通用户不显示</td>
+<td>⚠️</td>
+</tr>
+</tbody>
+</table>
+<p><strong>⚠️ 一期限制</strong>：CRM API未接入，仅验证UI权限控制</p>
+<p><strong>验收步骤</strong>： 1.
+使用销售账号登录，验证能看到库存相关UI元素 2.
+使用普通客户账号登录，验证不显示库存UI</p>
+<hr />
+<h3 id="价格管理">8️⃣ 价格管理 ⚠️</h3>
+<table>
+<thead>
+<tr>
+<th>验收点</th>
+<th>验收标准</th>
+<th>验收结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>分级价格显示</td>
+<td>不同用户类型看到价格，货币符号正确</td>
+<td>⚠️</td>
+</tr>
+</tbody>
+</table>
+<p><strong>⚠️ 一期限制</strong>：CRM
+API未接入，仅验证静态价格和货币符号</p>
+<p><strong>验收步骤</strong>： 1. 使用不同账号登录验证价格显示权限 2.
+验证货币符号正确性：CN(¥)、EU(€)、NA(<span
+class="math inline">)、<em>A</em><em>U</em>(<em>A</em></span>) 3.
+验证公制/英制单位差异显示</p>
+<hr />
+<h3 id="购物车功能">9️⃣ 购物车功能</h3>
+<table>
+<thead>
+<tr>
+<th>验收点</th>
+<th>验收标准</th>
+<th>验收结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>购物车管理</td>
+<td>购物车显示详细信息，支持数量调整、删除</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<p><strong>验收步骤</strong>： 1. 添加多个产品到购物车，访问购物车页面
+2. 验证产品信息完整显示（图片、属性、价格） 3.
+测试数量调整、删除、全选等功能</p>
+<hr />
+<h3 id="提交确认页">🔟 提交确认页</h3>
+<table>
+<thead>
+<tr>
+<th>验收点</th>
+<th>验收标准</th>
+<th>验收结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>订单确认流程</td>
+<td>填写收货信息，支持9个国家，仅生成PO功能</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<p><strong>验收步骤</strong>： 1. 购物车页面点击”去结算” 2.
+填写完整收货信息，测试必填字段验证 3.
+验证收货国家下拉选择（支持9个国家）： - 🇨🇳 CN - 中国 / 🇺🇸 US - 美国 / 🇬🇧
+UK - 英国 - 🇩🇪 DE - 德国 / 🇯🇵 JP - 日本 / 🇰🇷 KR - 韩国<br />
+- 🇫🇷 FR - 法国 / 🇨🇦 CA - 加拿大 / 🇦🇺 AU - 澳大利亚 4.
+确认只显示”生成PO”按钮（无Order按钮）</p>
+<hr />
+<h3 id="po单生成">1️⃣1️⃣ PO单生成</h3>
+<table>
+<thead>
+<tr>
+<th>验收点</th>
+<th>验收标准</th>
+<th>验收结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PO单导出</td>
+<td>可生成并导出Excel格式打印PDF的PO订单文档</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<p><strong>验收步骤</strong>： 1. 点击”生成PO”按钮，跳转到PO单页面 2.
+验证PO单显示内容（单号、商品清单、价格、收货信息） 3.
+点击”导出PO文档”，验证Excel文件格式和内容完整性 4.
+确认PO单中信息显示正确</p>
+<hr />
+<h2 id="已知问题与限制">🚨 已知问题与限制</h2>
+<h3 id="问题分级标准">问题分级标准</h3>
+<ul>
+<li><strong>🔴 严重</strong>: 核心功能无法使用，影响验收</li>
+<li><strong>🟡 中等</strong>: 功能基本可用，但有明显缺陷<br />
+</li>
+<li><strong>🟢 轻微</strong>: 小问题，不影响主要功能</li>
+</ul>
+<h3 id="已知问题列表">已知问题列表</h3>
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 26%" />
+<col style="width: 26%" />
+<col style="width: 15%" />
+<col style="width: 15%" />
+</colgroup>
+<thead>
+<tr>
+<th>序号</th>
+<th>问题描述</th>
+<th>严重程度</th>
+<th>状态</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>数据库数据不完整</strong></td>
+<td>🔴 严重</td>
+<td>已知限制</td>
+<td>部分产品信息缺失，影响展示</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>CRM API未接入</strong></td>
+<td>🟡 中等</td>
+<td>已知限制</td>
+<td>库存和价格功能受限</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>二期功能混入</strong></td>
+<td>🟡 中等</td>
+<td>已知限制</td>
+<td>后台存在未完成的高级功能</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>移动端和扩展浏览器支持</strong></td>
+<td>🟡 中等</td>
+<td>已知限制</td>
+<td>仅支持桌面端主流浏览器</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>数据修改风险</strong></td>
+<td>🔴 严重</td>
+<td>风险提醒</td>
+<td>修改code编码可能破坏关联关系</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>下线型号仍在筛选项显示</strong></td>
+<td>🟡 中等</td>
+<td>已知问题</td>
+<td>主机型号和配件型号下线后，在筛选项中仍会显示有使用的料号</td>
+</tr>
+</tbody>
+</table>
+<h3 id="对业务的影响">🎯 对业务的影响</h3>
+<ul>
+<li><strong>销售团队</strong>：暂时无法查看实时库存，需依赖现有方式</li>
+<li><strong>客户体验</strong>：价格为静态数据，无个性化优惠；下线型号仍可能在筛选中出现，造成混淆</li>
+<li><strong>设备限制</strong>：客户需使用桌面端和主流浏览器</li>
+<li><strong>数据安全</strong>：后台操作需严格遵循安全规范</li>
+<li><strong>产品管理</strong>：下线型号的筛选显示问题可能影响用户选型体验</li>
+</ul>
+<hr />
+<h2 id="快速使用指南">📖 快速使用指南</h2>
+<h3 id="系统访问">系统访问</h3>
+<ol type="1">
+<li><strong>前端</strong>：https://bjt.nh.cool
+（Chrome/Firefox/Safari桌面端）</li>
+<li><strong>后台</strong>：https://bjt.nh.cool/admin （仅管理员）</li>
+</ol>
+<h3 id="主要流程">主要流程</h3>
+<ol type="1">
+<li><strong>产品浏览</strong>：首页 → 选择产品线 → 浏览产品</li>
+<li><strong>选型购买</strong>：选择产品 → 加入购物车 → 填写订单 →
+生成PO</li>
+<li><strong>后台管理</strong>：登录后台 → 产品管理 → 基础CRUD操作</li>
+</ol>
+<h3 id="常见问题">常见问题</h3>
+<ul>
+<li><strong>登录问题</strong>：检查用户名密码，清除浏览器缓存</li>
+<li><strong>显示问题</strong>：使用支持的浏览器，强制刷新页面</li>
+<li><strong>功能报错</strong>：区分一期/二期功能，二期报错不影响验收</li>
+</ul>
+<h3 id="技术支持">技术支持</h3>
+<ul>
+<li><strong>系统问题</strong>：联系技术支持团队</li>
+<li><strong>数据修改</strong>：涉及code编码需技术团队评估</li>
+<li><strong>操作培训</strong>：联系项目团队获取安全操作培训</li>
+</ul>
+<hr />
+<h2 id="验收结论">📝 验收结论</h2>
+<h3 id="验收结果">验收结果</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" /><strong>验收通过</strong> -
+所有功能满足要求，可以交付使用</label></li>
+<li><label><input type="checkbox" /><strong>条件通过</strong> -
+存在轻微问题，但不影响主要功能，可交付使用</label></li>
+<li><label><input type="checkbox" /><strong>验收不通过</strong> -
+存在严重问题，需要修复后重新验收</label></li>
+</ul>
+<h3 id="验收意见">验收意见</h3>
+<pre><code>验收意见：
+[在此填写详细的验收意见和建议]
+
+验收结论：
+[通过/条件通过/不通过]
+
+后续计划：
+[如有条件通过或不通过，说明后续改进计划]</code></pre>
+<h3 id="最终确认">最终确认</h3>
+<p><strong>验收完成日期</strong>: ____________<br />
+<strong>项目交付日期</strong>: ____________<br />
+<strong>系统上线日期</strong>: ____________</p>
+</body>
+</html>

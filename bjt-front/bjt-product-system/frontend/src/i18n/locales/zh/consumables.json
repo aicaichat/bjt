@@ -208,7 +208,8 @@
     "stockStatus": {
       "sufficient": "库存充足",
       "low": "库存紧张",
-      "out": "暂时缺货"
+      "out": "暂时缺货",
+      "outOfStock": "暂时缺货"
     },
     "partNumber": "料号",
     "compatibleModel": "适用机型",
@@ -275,6 +276,30 @@
     "toBeFilled": "待补充",
     "yes": "是",
     "no": "否"
+  },
+  "stockStatus": {
+    "sufficient": "库存充足",
+    "low": "库存紧张",
+    "out": "暂时缺货",
+    "outOfStock": "暂时缺货"
+  },
+  "consumable": {
+    "fieldsWithUnits": {
+      "metric": {
+        "app_model": "适用机型",
+        "id": "产品ID",
+        "shape": "形状",
+        "spec": "规格",
+        "pcs_per_box": "单箱数量"
+      },
+      "imperial": {
+        "app_model": "适用机型",
+        "id": "产品ID",
+        "shape": "形状", 
+        "spec": "规格",
+        "pcs_per_box": "单箱数量"
+      }
+    }
   },
   "tooltip": {
     "coreSpecs": "核心规格",
@@ -346,6 +371,11 @@
     "rollLength": {
       "metric": "总长 m",
       "imperial": "总长 ft"
+    },
+    "units": {
+      "rolls": "卷",
+      "weight": "重量",
+      "height": "高度"
     }
   }
 } 

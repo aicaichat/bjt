@@ -1,0 +1,561 @@
+/* BJT产品管理系统验收清单 - 极简大气风格 */
+
+/* 重置和基础样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    line-height: 1.75;
+    color: #1a1a1a;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 60px 30px;
+    background: #ffffff;
+    font-size: 16px;
+    font-weight: 400;
+}
+
+/* 标题系统 */
+h1 {
+    font-size: 3rem;
+    font-weight: 200;
+    color: #000000;
+    text-align: center;
+    margin-bottom: 80px;
+    letter-spacing: 3px;
+    position: relative;
+}
+
+h1::after {
+    content: '';
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 2px;
+    background: #000000;
+}
+
+h2 {
+    font-size: 1.5rem;
+    font-weight: 300;
+    color: #000000;
+    margin: 80px 0 40px 0;
+    letter-spacing: 1px;
+    position: relative;
+    padding-bottom: 20px;
+}
+
+h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: #e0e0e0;
+}
+
+h3 {
+    font-size: 1.2rem;
+    font-weight: 400;
+    color: #333333;
+    margin: 50px 0 25px 0;
+    letter-spacing: 0.5px;
+}
+
+h4 {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #333333;
+    margin: 30px 0 15px 0;
+}
+
+/* 文本样式 */
+p {
+    margin-bottom: 24px;
+    line-height: 1.8;
+    color: #333333;
+}
+
+strong {
+    font-weight: 500;
+    color: #000000;
+}
+
+/* 表格 - 极简设计 */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 40px 0;
+    background: #ffffff;
+    border: none;
+    font-size: 15px;
+}
+
+th {
+    background: #fafafa;
+    color: #000000;
+    padding: 20px 16px;
+    text-align: left;
+    font-weight: 400;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #e0e0e0;
+    text-transform: uppercase;
+}
+
+td {
+    padding: 18px 16px;
+    border-bottom: 1px solid #f5f5f5;
+    vertical-align: top;
+    color: #333333;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+tr:hover {
+    background-color: #fafafa;
+    transition: background-color 0.2s ease;
+}
+
+/* 列表 */
+ul, ol {
+    margin: 25px 0;
+    padding-left: 25px;
+}
+
+li {
+    margin-bottom: 10px;
+    line-height: 1.7;
+    color: #333333;
+}
+
+/* 代码 */
+code {
+    background: #f8f8f8;
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-family: "SF Mono", "Monaco", "Inconsolata", monospace;
+    font-size: 0.9em;
+    color: #666666;
+    border: 1px solid #eeeeee;
+}
+
+pre {
+    background: #f8f8f8;
+    border: 1px solid #eeeeee;
+    border-radius: 4px;
+    padding: 24px;
+    overflow-x: auto;
+    margin: 30px 0;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* 链接 */
+a {
+    color: #000000;
+    text-decoration: underline;
+    text-decoration-color: #cccccc;
+    transition: text-decoration-color 0.2s ease;
+}
+
+a:hover {
+    text-decoration-color: #000000;
+}
+
+/* 分隔线 */
+hr {
+    border: none;
+    height: 1px;
+    background: #e0e0e0;
+    margin: 60px 0;
+}
+
+/* 复选框 */
+input[type="checkbox"] {
+    transform: scale(1.1);
+    margin-right: 10px;
+    accent-color: #000000;
+}
+
+/* 信息区块 - 极简版 */
+.info-block {
+    margin: 40px 0;
+    padding: 30px 0;
+    border-top: 1px solid #e0e0e0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.warning-block {
+    margin: 40px 0;
+    padding: 30px 0;
+    border-top: 2px solid #ff6b35;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.danger-block {
+    margin: 40px 0;
+    padding: 30px 0;
+    border-top: 2px solid #dc3545;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+/* 项目信息区 */
+.project-header {
+    text-align: center;
+    margin-bottom: 80px;
+    padding: 40px 0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.project-header h1 {
+    margin-bottom: 30px;
+}
+
+.project-header h1::after {
+    display: none;
+}
+
+.project-meta {
+    color: #666666;
+    font-size: 14px;
+    line-height: 2;
+    letter-spacing: 0.5px;
+}
+
+/* 验收结果区域 */
+.result-section {
+    margin: 60px 0;
+    padding: 40px 0;
+    border-top: 1px solid #e0e0e0;
+}
+
+.signature-section {
+    margin: 60px 0;
+    padding: 40px;
+    border: 1px solid #e0e0e0;
+    text-align: center;
+    background: #fafafa;
+}
+
+.signature-line {
+    border-bottom: 1px solid #cccccc;
+    display: inline-block;
+    width: 180px;
+    margin: 15px 30px;
+    padding-bottom: 10px;
+    font-size: 14px;
+    color: #666666;
+}
+
+/* 状态指示 */
+.status {
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 2px 0;
+}
+
+.status-pass { color: #28a745; }
+.status-warning { color: #ffc107; }
+.status-fail { color: #dc3545; }
+
+/* 特殊内容区域 */
+.content-section {
+    margin: 50px 0;
+}
+
+.highlight-text {
+    background: #f8f8f8;
+    padding: 20px;
+    margin: 30px 0;
+    border-left: 3px solid #000000;
+    font-style: italic;
+}
+
+/* 打印优化 - 极简版 */
+@media print {
+    /* 去除页头页尾 */
+    @page {
+        margin: 15mm;
+        size: A4;
+        @top-left { content: none; }
+        @top-center { content: none; }
+        @top-right { content: none; }
+        @bottom-left { content: none; }
+        @bottom-center { content: none; }
+        @bottom-right { content: none; }
+    }
+    
+    /* 基础样式 */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    body {
+        max-width: none;
+        margin: 0;
+        padding: 0;
+        font-size: 10pt;
+        line-height: 1.5;
+        color: #000000;
+        background: #ffffff !important;
+    }
+    
+    /* 标题优化 - 避免重复 */
+    h1 {
+        font-size: 18pt;
+        font-weight: 300;
+        margin: 0 0 30pt 0;
+        padding: 0;
+        text-align: center;
+        page-break-after: avoid;
+        letter-spacing: 2pt;
+    }
+    
+    h1::after {
+        content: '';
+        display: block;
+        width: 40pt;
+        height: 1pt;
+        background: #000000;
+        margin: 15pt auto 0;
+    }
+    
+    h2 {
+        font-size: 14pt;
+        font-weight: 400;
+        margin: 30pt 0 15pt 0;
+        padding: 0;
+        page-break-after: avoid;
+        letter-spacing: 0.5pt;
+        border-bottom: 0.5pt solid #cccccc;
+        padding-bottom: 8pt;
+    }
+    
+    h2::after {
+        display: none;
+    }
+    
+    h3 {
+        font-size: 12pt;
+        font-weight: 500;
+        margin: 20pt 0 10pt 0;
+        page-break-after: avoid;
+    }
+    
+    h4 {
+        font-size: 11pt;
+        font-weight: 500;
+        margin: 15pt 0 8pt 0;
+        page-break-after: avoid;
+    }
+    
+    /* 文本优化 */
+    p {
+        margin: 0 0 12pt 0;
+        line-height: 1.4;
+        orphans: 3;
+        widows: 3;
+    }
+    
+    /* 表格优化 */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 9pt;
+        margin: 15pt 0;
+        page-break-inside: auto;
+    }
+    
+    th {
+        background: #f8f8f8 !important;
+        color: #000000 !important;
+        padding: 8pt 6pt;
+        border: 0.5pt solid #cccccc !important;
+        font-weight: 500;
+        text-align: left;
+        page-break-inside: avoid;
+    }
+    
+    td {
+        padding: 6pt;
+        border: 0.5pt solid #eeeeee !important;
+        vertical-align: top;
+        page-break-inside: avoid;
+    }
+    
+    tr {
+        page-break-inside: avoid;
+    }
+    
+    /* 列表优化 */
+    ul, ol {
+        margin: 10pt 0;
+        padding-left: 15pt;
+    }
+    
+    li {
+        margin: 3pt 0;
+        line-height: 1.3;
+    }
+    
+    /* 特殊区块 */
+    .info-block, .warning-block, .danger-block {
+        margin: 15pt 0;
+        padding: 10pt 0;
+        page-break-inside: avoid;
+        border-top: 1pt solid #cccccc !important;
+        border-bottom: 0.5pt solid #eeeeee !important;
+    }
+    
+    .signature-section {
+        margin: 20pt 0;
+        padding: 15pt;
+        border: 1pt solid #cccccc !important;
+        background: #f9f9f9 !important;
+        page-break-inside: avoid;
+        text-align: center;
+    }
+    
+    .signature-line {
+        border-bottom: 0.5pt solid #cccccc;
+        display: inline-block;
+        width: 120pt;
+        margin: 8pt 15pt;
+        padding-bottom: 5pt;
+        font-size: 9pt;
+    }
+    
+    /* 链接处理 */
+    a {
+        color: #000000 !important;
+        text-decoration: none !important;
+    }
+    
+    a[href]:after {
+        content: none !important;
+    }
+    
+    /* 代码块 */
+    code, pre {
+        background: #f5f5f5 !important;
+        border: 0.5pt solid #dddddd !important;
+        font-size: 8pt;
+        padding: 3pt;
+    }
+    
+    /* 隐藏不必要元素 */
+    .no-print {
+        display: none !important;
+    }
+    
+    /* 分页控制 */
+    .page-break-before {
+        page-break-before: always;
+    }
+    
+    .page-break-after {
+        page-break-after: always;
+    }
+    
+    .no-page-break {
+        page-break-inside: avoid;
+    }
+    
+    /* 去除阴影和装饰 */
+    * {
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+    
+    /* 确保黑白打印效果 */
+    .status-pass { color: #000000 !important; }
+    .status-warning { color: #666666 !important; }
+    .status-fail { color: #000000 !important; }
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+    body {
+        padding: 40px 20px;
+        font-size: 15px;
+    }
+    
+    h1 {
+        font-size: 2.2rem;
+        margin-bottom: 50px;
+        letter-spacing: 2px;
+    }
+    
+    h2 {
+        font-size: 1.3rem;
+        margin: 50px 0 25px 0;
+    }
+    
+    table {
+        font-size: 14px;
+    }
+    
+    th, td {
+        padding: 12px 10px;
+    }
+    
+    .signature-section {
+        padding: 25px 15px;
+    }
+    
+    .signature-line {
+        width: 150px;
+        margin: 10px 15px;
+    }
+}
+
+/* 微调细节 */
+.text-center { text-align: center; }
+.text-muted { color: #666666; }
+.text-small { font-size: 14px; }
+
+.mt-xl { margin-top: 60px; }
+.mb-xl { margin-bottom: 60px; }
+.my-xl { margin: 60px 0; }
+
+/* 去除所有不必要的装饰 */
+blockquote {
+    border-left: 2px solid #e0e0e0;
+    padding-left: 20px;
+    margin: 30px 0;
+    font-style: italic;
+    color: #666666;
+}
+
+/* 表格变体 */
+.minimal-table {
+    border: none;
+}
+
+.minimal-table th {
+    background: transparent;
+    border-bottom: 2px solid #000000;
+    font-weight: 500;
+}
+
+.minimal-table td {
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.minimal-table tr:hover {
+    background: transparent;
+} 

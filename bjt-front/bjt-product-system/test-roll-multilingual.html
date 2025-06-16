@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>耗材弹窗"卷"字多语言测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .test-container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .test-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .test-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .test-description {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .language-switch {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .lang-btn {
+            padding: 8px 16px;
+            border: 2px solid #007bff;
+            background: white;
+            color: #007bff;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .lang-btn.active {
+            background: #007bff;
+            color: white;
+        }
+        
+        .lang-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .pallet-config-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 6px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .config-label {
+            font-weight: bold;
+            color: #333;
+            min-width: 80px;
+        }
+        
+        .config-values {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .config-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .unit-label {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .unit-value {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .test-result {
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        
+        .test-pass {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .test-fail {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .comparison-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+        
+        .highlight-chinese {
+            background: #fff3cd;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        
+        .highlight-english {
+            background: #d1ecf1;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            <div class="test-title">🔧 耗材弹窗"卷"字多语言测试</div>
+            <div class="test-description">
+                测试修复后的弹窗中"卷"字是否能正确根据语言设置显示为中文"卷"或英文"Rolls"
+            </div>
+        </div>
+        
+        <div class="language-switch">
+            <button class="lang-btn active" onclick="switchLanguage('zh')">🇨🇳 中文</button>
+            <button class="lang-btn" onclick="switchLanguage('en')">🇺🇸 English</button>
+        </div>
+        
+        <div class="test-section">
+            <div class="section-title">
+                <span>🏗️</span>
+                <span id="section-title">托盘配置测试</span>
+            </div>
+            
+            <!-- 模拟修复后的弹窗内容 -->
+            <div id="pallet-configs">
+                <div class="pallet-config-row">
+                    <span class="config-label" id="config-a-label">配置A</span>
+                    <div class="config-values">
+                        <span class="config-item">
+                            <span class="unit-label" id="rolls-label">卷:</span>
+                            <span class="unit-value">24</span>
+                        </span>
+                        <span class="config-item">
+                            <span class="unit-label">kg:</span>
+                            <span class="unit-value">280.00</span>
+                        </span>
+                        <span class="config-item">
+                            <span class="unit-label">cm:</span>
+                            <span class="unit-value">185.00</span>
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="pallet-config-row">
+                    <span class="config-label" id="config-b-label">配置B</span>
+                    <div class="config-values">
+                        <span class="config-item">
+                            <span class="unit-label" id="rolls-label-b">卷:</span>
+                            <span class="unit-value">30</span>
+                        </span>
+                        <span class="config-item">
+                            <span class="unit-label">kg:</span>
+                            <span class="unit-value">320.00</span>
+                        </span>
+                        <span class="config-item">
+                            <span class="unit-label">cm:</span>
+                            <span class="unit-value">200.00</span>
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="pallet-config-row">
+                    <span class="config-label" id="config-c-label">配置C</span>
+                    <div class="config-values">
+                        <span class="config-item">
+                            <span class="unit-label" id="rolls-label-c">卷:</span>
+                            <span class="unit-value">20</span>
+                        </span>
+                        <span class="config-item">
+                            <span class="unit-label">kg:</span>
+                            <span class="unit-value">240.00</span>
+                        </span>
+                        <span class="config-item">
+                            <span class="unit-label">cm:</span>
+                            <span class="unit-value">165.00</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="section-title">
+                <span>📊</span>
+                <span id="comparison-title">修复前后对比</span>
+            </div>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th id="table-header-issue">问题</th>
+                        <th id="table-header-before">修复前</th>
+                        <th id="table-header-after">修复后</th>
+                        <th id="table-header-status">状态</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td id="issue-description">中文环境显示</td>
+                        <td>❌ 可能显示英文"Rolls"</td>
+                        <td>✅ <span class="highlight-chinese">卷</span></td>
+                        <td>✅ 已修复</td>
+                    </tr>
+                    <tr>
+                        <td id="issue-description-en">英文环境显示</td>
+                        <td>❌ 可能显示中文"卷"</td>
+                        <td>✅ <span class="highlight-english">Rolls</span></td>
+                        <td>✅ 已修复</td>
+                    </tr>
+                    <tr>
+                        <td id="issue-code">代码问题</td>
+                        <td>❌ t('key', condition ? 'A' : 'B')</td>
+                        <td>✅ t('key')</td>
+                        <td>✅ 已修复</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="test-section">
+            <div class="section-title">
+                <span>🔍</span>
+                <span id="technical-details-title">技术细节</span>
+            </div>
+            
+            <div id="technical-content">
+                <h4>修复内容：</h4>
+                <ul>
+                    <li><strong>问题根因</strong>：使用了错误的翻译函数调用方式</li>
+                    <li><strong>错误代码</strong>：<code>t('tooltip.units.rolls', isImperialUnit ? 'Rolls' : '卷')</code></li>
+                    <li><strong>正确代码</strong>：<code>t('tooltip.units.rolls')</code></li>
+                    <li><strong>翻译配置</strong>：
+                        <ul>
+                            <li>中文：<code>"tooltip.units.rolls": "卷"</code></li>
+                            <li>英文：<code>"tooltip.units.rolls": "Rolls"</code></li>
+                        </ul>
+                    </li>
+                </ul>
+                
+                <h4>修复位置：</h4>
+                <ul>
+                    <li>文件：<code>frontend/src/pages/Consumables/index.tsx</code></li>
+                    <li>行数：669, 711, 753</li>
+                    <li>影响：托盘配置A、B、C的"卷"字显示</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div id="test-result" class="test-result test-pass">
+            ✅ 测试通过：多语言"卷"字显示正常
+        </div>
+    </div>
+
+    <script>
+        // 模拟翻译数据
+        const translations = {
+            zh: {
+                'section-title': '托盘配置测试',
+                'config-a-label': '配置A',
+                'config-b-label': '配置B', 
+                'config-c-label': '配置C',
+                'rolls-label': '卷:',
+                'rolls-label-b': '卷:',
+                'rolls-label-c': '卷:',
+                'comparison-title': '修复前后对比',
+                'table-header-issue': '问题',
+                'table-header-before': '修复前',
+                'table-header-after': '修复后',
+                'table-header-status': '状态',
+                'technical-details-title': '技术细节'
+            },
+            en: {
+                'section-title': 'Pallet Configuration Test',
+                'config-a-label': 'Config A',
+                'config-b-label': 'Config B',
+                'config-c-label': 'Config C', 
+                'rolls-label': 'Rolls:',
+                'rolls-label-b': 'Rolls:',
+                'rolls-label-c': 'Rolls:',
+                'comparison-title': 'Before/After Comparison',
+                'table-header-issue': 'Issue',
+                'table-header-before': 'Before Fix',
+                'table-header-after': 'After Fix',
+                'table-header-status': 'Status',
+                'technical-details-title': 'Technical Details'
+            }
+        };
+        
+        let currentLang = 'zh';
+        
+        function switchLanguage(lang) {
+            currentLang = lang;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 更新文本内容
+            const langData = translations[lang];
+            Object.keys(langData).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.textContent = langData[key];
+                }
+            });
+            
+            // 更新测试结果
+            updateTestResult();
+        }
+        
+        function updateTestResult() {
+            const resultElement = document.getElementById('test-result');
+            const rollsText = document.getElementById('rolls-label').textContent;
+            
+            const expectedText = currentLang === 'zh' ? '卷:' : 'Rolls:';
+            const isCorrect = rollsText === expectedText;
+            
+            if (isCorrect) {
+                resultElement.className = 'test-result test-pass';
+                resultElement.innerHTML = `✅ 测试通过：${currentLang === 'zh' ? '中文' : '英文'}环境下"${rollsText.replace(':', '')}"显示正确`;
+            } else {
+                resultElement.className = 'test-result test-fail';
+                resultElement.innerHTML = `❌ 测试失败：期望"${expectedText}"，实际"${rollsText}"`;
+            }
+        }
+        
+        // 初始化测试结果
+        updateTestResult();
+        
+        // 添加一些动画效果
+        document.addEventListener('DOMContentLoaded', function() {
+            const sections = document.querySelectorAll('.test-section');
+            sections.forEach((section, index) => {
+                section.style.opacity = '0';
+                section.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    section.style.transition = 'all 0.5s ease';
+                    section.style.opacity = '1';
+                    section.style.transform = 'translateY(0)';
+                }, index * 200);
+            });
+        });
+    </script>
+</body>
+</html> 

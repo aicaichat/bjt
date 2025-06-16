@@ -208,7 +208,8 @@
     "stockStatus": {
       "sufficient": "In Stock",
       "low": "Low Stock",
-      "out": "Out of Stock"
+      "out": "Out of Stock",
+      "outOfStock": "Out of Stock"
     },
     "partNumber": "Part Number",
     "compatibleModel": "Compatible Model",
@@ -275,6 +276,30 @@
     "toBeFilled": "To be filled",
     "yes": "Yes",
     "no": "No"
+  },
+  "stockStatus": {
+    "sufficient": "In Stock",
+    "low": "Low Stock", 
+    "out": "Out of Stock",
+    "outOfStock": "Out of Stock"
+  },
+  "consumable": {
+    "fieldsWithUnits": {
+      "metric": {
+        "app_model": "Compatible Model",
+        "id": "Product ID",
+        "shape": "Shape",
+        "spec": "Specifications",
+        "pcs_per_box": "Pieces per Box"
+      },
+      "imperial": {
+        "app_model": "Compatible Model",
+        "id": "Product ID", 
+        "shape": "Shape",
+        "spec": "Specifications",
+        "pcs_per_box": "Pieces per Box"
+      }
+    }
   },
   "tooltip": {
     "coreSpecs": "Core Specifications",
@@ -346,6 +371,11 @@
     "rollLength": {
       "metric": "Total Length m",
       "imperial": "Total Length ft"
+    },
+    "units": {
+      "rolls": "Rolls",
+      "weight": "Weight",
+      "height": "Height"
     }
   }
 } 

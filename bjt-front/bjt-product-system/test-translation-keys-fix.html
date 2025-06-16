@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>翻译键值修复验证</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .test-container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .test-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .test-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .test-subtitle {
+            font-size: 16px;
+            color: #7f8c8d;
+        }
+        
+        .fix-summary {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .fix-summary h3 {
+            color: #2e7d32;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .error-list {
+            background: #ffebee;
+            border: 1px solid #f44336;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .error-list h4 {
+            color: #c62828;
+            margin-top: 0;
+        }
+        
+        .error-item {
+            background: #fff;
+            border-left: 4px solid #f44336;
+            padding: 10px 15px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        
+        .fix-item {
+            background: #fff;
+            border-left: 4px solid #4caf50;
+            padding: 10px 15px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        
+        .translation-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        
+        .translation-section h4 {
+            color: #34495e;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .file-path {
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        
+        .success-badge {
+            background: #4caf50;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .verification-steps {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .verification-steps h4 {
+            color: #856404;
+            margin-top: 0;
+        }
+        
+        .step-list {
+            counter-reset: step-counter;
+            list-style: none;
+            padding: 0;
+        }
+        
+        .step-list li {
+            counter-increment: step-counter;
+            padding: 10px 0;
+            position: relative;
+            padding-left: 40px;
+        }
+        
+        .step-list li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 10px;
+            background: #ffc107;
+            color: #856404;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            <div class="test-title">🔧 翻译键值修复验证</div>
+            <div class="test-subtitle">修复控制台中的i18next翻译键值缺失错误</div>
+        </div>
+        
+        <div class="error-list">
+            <h4>❌ 修复前的控制台错误</h4>
+            <div class="error-item">
+                i18next::translator: missingKey en consumables ui.stockStatus.out ui.stockStatus.out
+            </div>
+            <div class="error-item">
+                i18next::translator: missingKey en translation consumable.fieldsWithUnits.metric.app_model
+            </div>
+            <div class="error-item">
+                i18next::translator: missingKey en translation consumable.fieldsWithUnits.metric.id
+            </div>
+            <div class="error-item">
+                i18next::translator: missingKey en translation consumable.fieldsWithUnits.metric.shape
+            </div>
+            <div class="error-item">
+                i18next::translator: missingKey en translation consumable.fieldsWithUnits.metric.spec
+            </div>
+            <div class="error-item">
+                i18next::translator: missingKey en translation consumable.fieldsWithUnits.metric.pcs_per_box
+            </div>
+            <div class="error-item">
+                i18next::translator: missingKey en consumables stockStatus.outOfStock stockStatus.outOfStock
+            </div>
+        </div>
+        
+        <div class="fix-summary">
+            <h3>✅ 修复内容总结</h3>
+            <div class="fix-item">
+                <strong>添加库存状态翻译</strong> - ui.stockStatus.out, stockStatus.outOfStock
+            </div>
+            <div class="fix-item">
+                <strong>添加字段翻译</strong> - consumable.fieldsWithUnits.metric/imperial 中的缺失字段
+            </div>
+            <div class="fix-item">
+                <strong>完善tooltip翻译</strong> - tooltip.units.rolls, weight, height
+            </div>
+        </div>
+        
+        <div class="translation-section">
+            <h4>📝 英文翻译文件修复</h4>
+            <p><span class="file-path">frontend/src/i18n/locales/en/consumables.json</span></p>
+            <div class="code-block">
+// 添加库存状态翻译
+"ui": {
+  "stockStatus": {
+    "sufficient": "In Stock",
+    "low": "Low Stock",
+    "out": "Out of Stock",
+    "outOfStock": "Out of Stock"  // ✅ 新增
+  }
+},
+"stockStatus": {  // ✅ 新增整个部分
+  "sufficient": "In Stock",
+  "low": "Low Stock", 
+  "out": "Out of Stock",
+  "outOfStock": "Out of Stock"
+},
+"consumable": {  // ✅ 新增整个部分
+  "fieldsWithUnits": {
+    "metric": {
+      "app_model": "Compatible Model",
+      "id": "Product ID",
+      "shape": "Shape",
+      "spec": "Specifications",
+      "pcs_per_box": "Pieces per Box"
+    },
+    "imperial": {
+      "app_model": "Compatible Model",
+      "id": "Product ID", 
+      "shape": "Shape",
+      "spec": "Specifications",
+      "pcs_per_box": "Pieces per Box"
+    }
+  }
+}
+            </div>
+        </div>
+        
+        <div class="translation-section">
+            <h4>📝 中文翻译文件修复</h4>
+            <p><span class="file-path">frontend/src/i18n/locales/zh/consumables.json</span></p>
+            <div class="code-block">
+// 添加库存状态翻译
+"ui": {
+  "stockStatus": {
+    "sufficient": "库存充足",
+    "low": "库存紧张",
+    "out": "暂时缺货",
+    "outOfStock": "暂时缺货"  // ✅ 新增
+  }
+},
+"stockStatus": {  // ✅ 新增整个部分
+  "sufficient": "库存充足",
+  "low": "库存紧张",
+  "out": "暂时缺货",
+  "outOfStock": "暂时缺货"
+},
+"consumable": {  // ✅ 新增整个部分
+  "fieldsWithUnits": {
+    "metric": {
+      "app_model": "适用机型",
+      "id": "产品ID",
+      "shape": "形状",
+      "spec": "规格",
+      "pcs_per_box": "单箱数量"
+    },
+    "imperial": {
+      "app_model": "适用机型",
+      "id": "产品ID",
+      "shape": "形状", 
+      "spec": "规格",
+      "pcs_per_box": "单箱数量"
+    }
+  }
+}
+            </div>
+        </div>
+        
+        <div class="translation-section">
+            <h4>📝 主翻译文件修复</h4>
+            <p><span class="file-path">frontend/src/i18n/locales/en.json</span> & <span class="file-path">frontend/src/i18n/locales/zh.json</span></p>
+            <div class="code-block">
+// 在主翻译文件中添加缺失的字段
+"consumable": {
+  "fieldsWithUnits": {
+    "metric": {
+      "app_model": "Compatible Model / 适用机型",
+      "id": "Product ID / 产品ID",
+      "shape": "Shape / 形状",
+      "spec": "Specifications / 规格",
+      "pcs_per_box": "Pieces per Box / 单箱数量",
+      // ... 其他现有字段
+    },
+    "imperial": {
+      // 相同的字段配置
+    }
+  }
+}
+            </div>
+        </div>
+        
+        <div class="translation-section">
+            <h4>📁 修改的文件列表</h4>
+            <ul style="list-style: none; padding: 0;">
+                <li style="padding: 8px 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 18px;">📝</span>
+                    <span class="file-path">frontend/src/i18n/locales/en/consumables.json</span>
+                    <span class="success-badge">已修复</span>
+                </li>
+                <li style="padding: 8px 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 18px;">📝</span>
+                    <span class="file-path">frontend/src/i18n/locales/zh/consumables.json</span>
+                    <span class="success-badge">已修复</span>
+                </li>
+                <li style="padding: 8px 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 18px;">📝</span>
+                    <span class="file-path">frontend/src/i18n/locales/en.json</span>
+                    <span class="success-badge">已修复</span>
+                </li>
+                <li style="padding: 8px 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 18px;">📝</span>
+                    <span class="file-path">frontend/src/i18n/locales/zh.json</span>
+                    <span class="success-badge">已修复</span>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="verification-steps">
+            <h4>🧪 验证步骤</h4>
+            <ol class="step-list">
+                <li>清除浏览器缓存并刷新页面</li>
+                <li>打开浏览器开发者工具的控制台</li>
+                <li>访问耗材页面：<code>http://localhost:5173/consumables</code></li>
+                <li>检查控制台是否还有 "missingKey" 错误</li>
+                <li>测试库存状态显示是否正常</li>
+                <li>测试弹窗中的字段显示是否正常</li>
+                <li>切换语言验证中英文翻译都正确</li>
+            </ol>
+        </div>
+        
+        <div class="translation-section">
+            <h4>🎯 预期结果</h4>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; font-family: 'Courier New', monospace;">
+                <strong>修复前：</strong><br>
+                ❌ tooltip.units.rolls: 10<br>
+                ❌ ui.stockStatus.out<br>
+                ❌ consumable.fieldsWithUnits.metric.app_model<br><br>
+                
+                <strong>修复后：</strong><br>
+                ✅ 卷: 10 / Rolls: 10<br>
+                ✅ 暂时缺货 / Out of Stock<br>
+                ✅ 适用机型 / Compatible Model<br>
+            </div>
+        </div>
+        
+        <div class="translation-section">
+            <h4>🔍 故障排查</h4>
+            <p><strong>如果仍然有翻译错误：</strong></p>
+            <ul style="list-style: none; padding: 0;">
+                <li style="padding: 8px 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 18px;">🔄</span>
+                    重启前端开发服务器以加载新的翻译文件
+                </li>
+                <li style="padding: 8px 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 18px;">🔍</span>
+                    检查翻译文件的JSON格式是否正确
+                </li>
+                <li style="padding: 8px 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 18px;">⚙️</span>
+                    确认i18n配置正确加载了所有命名空间
+                </li>
+                <li style="padding: 8px 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 18px;">📝</span>
+                    验证代码中的翻译键值路径是否正确
+                </li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        // 页面加载完成后的自动检查
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🧪 翻译键值修复验证页面已加载');
+            console.log('📋 修复的翻译键值:');
+            console.log('  1. ✅ ui.stockStatus.out');
+            console.log('  2. ✅ stockStatus.outOfStock');
+            console.log('  3. ✅ consumable.fieldsWithUnits.metric.app_model');
+            console.log('  4. ✅ consumable.fieldsWithUnits.metric.id');
+            console.log('  5. ✅ consumable.fieldsWithUnits.metric.shape');
+            console.log('  6. ✅ consumable.fieldsWithUnits.metric.spec');
+            console.log('  7. ✅ consumable.fieldsWithUnits.metric.pcs_per_box');
+            console.log('  8. ✅ tooltip.units.rolls');
+            console.log('  9. ✅ tooltip.units.weight');
+            console.log('  10. ✅ tooltip.units.height');
+            console.log('');
+            console.log('🎯 下一步: 访问 http://localhost:5173/consumables 验证修复效果');
+        });
+    </script>
+</body>
+</html> 

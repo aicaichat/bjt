@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>耗材弹窗"卷"字翻译修复验证</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .test-container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .test-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .test-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .test-subtitle {
+            font-size: 16px;
+            color: #7f8c8d;
+        }
+        
+        .fix-summary {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .fix-summary h3 {
+            color: #2e7d32;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .fix-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .fix-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .fix-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .status-icon {
+            font-size: 18px;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        
+        .test-section h4 {
+            color: #34495e;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .translation-demo {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .before-after {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .before, .after {
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .before {
+            background: #ffebee;
+            border: 1px solid #f44336;
+        }
+        
+        .after {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        
+        .verification-steps {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .verification-steps h4 {
+            color: #856404;
+            margin-top: 0;
+        }
+        
+        .step-list {
+            counter-reset: step-counter;
+            list-style: none;
+            padding: 0;
+        }
+        
+        .step-list li {
+            counter-increment: step-counter;
+            padding: 10px 0;
+            position: relative;
+            padding-left: 40px;
+        }
+        
+        .step-list li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 10px;
+            background: #ffc107;
+            color: #856404;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .file-path {
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        .success-badge {
+            background: #4caf50;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .error-badge {
+            background: #f44336;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            <div class="test-title">🔧 耗材弹窗"卷"字翻译修复验证</div>
+            <div class="test-subtitle">验证tooltip.units.rolls翻译是否正确工作</div>
+        </div>
+        
+        <div class="fix-summary">
+            <h3>✅ 修复内容总结</h3>
+            <ul class="fix-list">
+                <li>
+                    <span class="status-icon">🚫</span>
+                    <strong>移除强制英语设置</strong> - 删除了强制设置i18n.language为'en'的代码
+                </li>
+                <li>
+                    <span class="status-icon">📝</span>
+                    <strong>添加中文翻译</strong> - 在zh/consumables.json中添加tooltip.units.rolls: "卷"
+                </li>
+                <li>
+                    <span class="status-icon">📝</span>
+                    <strong>添加英文翻译</strong> - 在en/consumables.json中添加tooltip.units.rolls: "Rolls"
+                </li>
+                <li>
+                    <span class="status-icon">🔧</span>
+                    <strong>修复翻译调用</strong> - 确保t('tooltip.units.rolls')正确调用
+                </li>
+            </ul>
+        </div>
+        
+        <div class="test-section">
+            <h4>🐛 问题根因分析</h4>
+            <div class="before-after">
+                <div class="before">
+                    <h5>❌ 修复前的问题</h5>
+                    <div class="translation-demo">
+                        显示: "tooltip.units.rolls: 10"<br>
+                        原因: 翻译键值未找到，显示原始键名
+                    </div>
+                </div>
+                <div class="after">
+                    <h5>✅ 修复后的效果</h5>
+                    <div class="translation-demo">
+                        中文: "卷: 10"<br>
+                        英文: "Rolls: 10"
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h4>🔧 具体修复步骤</h4>
+            
+            <h5>1. 移除强制英语设置</h5>
+            <div class="code-block">
+// ❌ 删除的问题代码
+React.useEffect(() => {
+  if (i18n.language !== 'en') {
+    i18n.changeLanguage('en');
+  }
+}, [i18n]);
+            </div>
+            
+            <h5>2. 添加翻译配置</h5>
+            <div class="code-block">
+// ✅ 在 zh/consumables.json 中添加
+"tooltip": {
+  // ... 其他配置
+  "units": {
+    "rolls": "卷",
+    "weight": "重量", 
+    "height": "高度"
+  }
+}
+
+// ✅ 在 en/consumables.json 中添加
+"tooltip": {
+  // ... 其他配置
+  "units": {
+    "rolls": "Rolls",
+    "weight": "Weight",
+    "height": "Height"
+  }
+}
+            </div>
+            
+            <h5>3. 翻译调用方式</h5>
+            <div class="code-block">
+// ✅ 正确的翻译调用
+const rollsLabel = t('tooltip.units.rolls');
+const weightLabel = t('tooltip.units.weight');
+const heightLabel = t('tooltip.units.height');
+
+// 在JSX中使用
+&lt;span className="unit-label"&gt;{rollsLabel}:&lt;/span&gt;
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h4>📁 修改的文件</h4>
+            <ul class="fix-list">
+                <li>
+                    <span class="status-icon">📝</span>
+                    <span class="file-path">frontend/src/pages/Consumables/index.tsx</span>
+                    <span class="success-badge">已修复</span>
+                </li>
+                <li>
+                    <span class="status-icon">📝</span>
+                    <span class="file-path">frontend/src/i18n/locales/zh/consumables.json</span>
+                    <span class="success-badge">已添加</span>
+                </li>
+                <li>
+                    <span class="status-icon">📝</span>
+                    <span class="file-path">frontend/src/i18n/locales/en/consumables.json</span>
+                    <span class="success-badge">已添加</span>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="verification-steps">
+            <h4>🧪 验证步骤</h4>
+            <ol class="step-list">
+                <li>启动前端开发服务器：<code>cd frontend && npm run dev</code></li>
+                <li>访问耗材页面：<code>http://localhost:5173/consumables</code></li>
+                <li>点击任意耗材产品的详细信息图标，打开弹窗</li>
+                <li>查看托盘配置部分，确认显示"卷: 10"而不是"tooltip.units.rolls: 10"</li>
+                <li>切换语言设置，验证中英文翻译都正确</li>
+                <li>检查浏览器控制台，确认没有翻译相关错误</li>
+            </ol>
+        </div>
+        
+        <div class="test-section">
+            <h4>🎯 预期结果</h4>
+            <div class="translation-demo">
+                <strong>中文环境下：</strong><br>
+                配置A<br>
+                卷: 10<br>
+                kg: 25.50<br>
+                cm: 120.00<br><br>
+                
+                <strong>英文环境下：</strong><br>
+                Configuration A<br>
+                Rolls: 10<br>
+                lbs: 56.22<br>
+                inch: 47.24
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h4>🔍 故障排查</h4>
+            <p><strong>如果翻译仍然不工作：</strong></p>
+            <ul class="fix-list">
+                <li>
+                    <span class="status-icon">🔄</span>
+                    清除浏览器缓存并刷新页面
+                </li>
+                <li>
+                    <span class="status-icon">🔍</span>
+                    检查浏览器控制台是否有i18n相关错误
+                </li>
+                <li>
+                    <span class="status-icon">⚙️</span>
+                    确认前端服务器已重启并加载了新的翻译文件
+                </li>
+                <li>
+                    <span class="status-icon">📝</span>
+                    验证翻译文件的JSON格式是否正确
+                </li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        // 页面加载完成后的自动检查
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🧪 耗材弹窗翻译修复验证页面已加载');
+            console.log('📋 修复内容:');
+            console.log('  1. ✅ 移除强制英语设置');
+            console.log('  2. ✅ 添加tooltip.units.rolls中文翻译');
+            console.log('  3. ✅ 添加tooltip.units.rolls英文翻译');
+            console.log('  4. ✅ 确保翻译调用正确');
+            console.log('');
+            console.log('🎯 下一步: 访问 http://localhost:5173/consumables 验证修复效果');
+        });
+    </script>
+</body>
+</html> 

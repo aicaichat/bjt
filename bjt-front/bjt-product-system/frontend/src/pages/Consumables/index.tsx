@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Spin, Button, Select, InputNumber, Tabs, Tag, Tooltip, Modal } from 'antd';
+import { Spin, Button, Select, Tabs, Tag, Tooltip, Modal } from 'antd';
 import { ShoppingCartOutlined, InfoCircleOutlined, FilterOutlined, ReloadOutlined, EyeOutlined } from '@ant-design/icons';
 
 // 导入现代化UI组件
@@ -210,14 +210,13 @@ const TooltipField = ({ fieldKey, label, value }: { fieldKey: string; label: str
 };
 
 // 保持向后兼容的原始Tooltip组件
+// 全局缓存，避免重复请求
+const tooltipDataCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5分钟缓存
+
 const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ item, userRegion }) => {
   // 检查是否启用Premium设计
   const usePremiumTooltip = import.meta.env.VITE_USE_PREMIUM_TOOLTIP !== 'false'; // 默认启用
-  
-  // 暂时注释掉PremiumTooltipContent，因为它未定义
-  // if (usePremiumTooltip) {
-  //   return <PremiumTooltipContent item={item} userRegion={userRegion} />;
-  // }
   
   // 原有的Tooltip逻辑保持不变 (向后兼容)
   const { t, i18n } = useTranslation(['consumables', 'common']);
@@ -227,32 +226,21 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
   const preferredUnit = getPreferredUnit(); // 'metric' | 'imperial'
   const isImperialUnit = preferredUnit === 'imperial';
   
-  console.log('🌍 [Tooltip单位制] 用户偏好设置:', {
-    userRegion, // 仅用于货币显示
-    preferredUnit, // 用于单位制判断
-    isImperialUnit
-  });
-  
-  // 🔥 强制设置英语显示
-  React.useEffect(() => {
-    if (i18n.language !== 'en') {
-      i18n.changeLanguage('en');
-    }
-  }, [i18n]);
-  
   const [detailData, setDetailData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<string>('');
   
   // 使用useRef防止重复请求
   const isRequestInProgress = useRef(false);
-  const requestTimeoutRef = useRef<NodeJS.Timeout>();
+  const hasFetched = useRef(false);
+
+  // 生成缓存键
+  const cacheKey = `${item.id}-${userRegion}`;
 
   useEffect(() => {
-    // 清理之前的超时
-    if (requestTimeoutRef.current) {
-      clearTimeout(requestTimeoutRef.current);
+    // 如果已经获取过数据，直接返回
+    if (hasFetched.current && detailData) {
+      return;
     }
 
     const fetchDetailData = async () => {
@@ -264,141 +252,149 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
       
       if (!item.id) {
         console.warn('⚠️ [ConsumableTooltipContent] No item ID found:', item);
-        setDebugInfo(`${String(t('ui.noProductId') || '无产品ID信息')}: ${JSON.stringify(item, null, 2)}`);
         return;
       }
 
-      // 添加防抖延迟
-      requestTimeoutRef.current = setTimeout(async () => {
-        isRequestInProgress.current = true;
-        setLoading(true);
-        setError(null);
-        setDebugInfo('');
+      // 检查缓存
+      const cached = tooltipDataCache.get(cacheKey);
+      if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
+        console.log('✅ [ConsumableTooltipContent] Using cached data for:', item.id);
+        setDetailData(cached.data);
+        hasFetched.current = true;
+        return;
+      }
 
-        try {
-          console.log('🔍 [ConsumableTooltipContent] Fetching details for item ID:', item.id);
-          
-          // 使用现有的WordPress API URL格式和item.id
-          const token = localStorage.getItem('auth_token');
-          const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1';
-          const apiUrl = `${baseUrl}/consumables/${item.id}?lang=${navigator.language.startsWith('zh') ? 'zh' : 'en'}&region=${userRegion}`;
-          
-          console.log('🔍 [ConsumableTooltipContent] API URL:', apiUrl);
-          setDebugInfo(`API调用: ${apiUrl}`);
-          
-          const response = await fetch(apiUrl, {
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-              ...(token && { 'Authorization': `Bearer ${token}` })
-            }
-          });
-          
-          console.log('🔍 [ConsumableTooltipContent] Response status:', response.status);
-          setDebugInfo(prev => `${prev}\nHTTP状态: ${response.status}`);
-          
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      isRequestInProgress.current = true;
+      setLoading(true);
+      setError(null);
+
+      try {
+        console.log('🔍 [ConsumableTooltipContent] Fetching details for item ID:', item.id);
+        
+        // 使用现有的WordPress API URL格式和item.id
+        const token = localStorage.getItem('auth_token');
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1';
+        const apiUrl = `${baseUrl}/consumables/${item.id}?lang=${navigator.language.startsWith('zh') ? 'zh' : 'en'}&region=${userRegion}`;
+        
+        console.log('🔍 [ConsumableTooltipContent] API URL:', apiUrl);
+        
+        const response = await fetch(apiUrl, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` })
           }
-          
-          const jsonData = await response.json();
-          console.log('✅ [ConsumableTooltipContent] Detail data loaded:', jsonData);
-          
-          // 添加详细的数据结构调试信息
-          setDebugInfo(prev => `${prev}\nAPI原始响应: ${JSON.stringify(jsonData, null, 2)}`);
-          
-          let finalData = null;
-          
-          if (jsonData.success && jsonData.data) {
-            finalData = jsonData.data;
-          } else if (jsonData.data) {
-            finalData = jsonData.data;
-          } else if (Array.isArray(jsonData) && jsonData.length > 0) {
-            finalData = jsonData[0];
-          } else if (jsonData && typeof jsonData === 'object') {
-            finalData = jsonData;
-          } else {
-            throw new Error('No valid data structure found in API response');
-          }
-          
-          console.log('🔍 [ConsumableTooltipContent] Final mapped data:', finalData);
-          setDebugInfo(prev => `${prev}\n最终数据: ${JSON.stringify(finalData, null, 2)}`);
-          setDetailData(finalData);
-          
-        } catch (err: any) {
-          console.error('❌ [ConsumableTooltipContent] Failed to fetch detail data:', err);
-          setError(err.message || 'Failed to fetch detail data');
-          setDebugInfo(prev => `${prev}\n错误信息: ${err.message}`);
-          
-          // 使用基础数据作为fallback
-          const fallbackData = {
-            // 基本信息
-            material: item.specs?.material || 'N/A',
-            thickness: item.specs?.thickness || 'N/A',
-            width: item.specs?.width || 'N/A',
-            width_cm: item.specs?.width || 'N/A',
-            width_inch: item.specs?.width || 'N/A',
-            length: item.specs?.length || 'N/A',
-            length_cm: item.specs?.length || 'N/A',
-            length_inch: item.specs?.length || 'N/A',
-            rollLength: item.specs?.rollLength || 'N/A',
-            roll_length_m: item.specs?.rollLength || 'N/A',
-            roll_length_ft: item.specs?.rollLength || 'N/A',
-            
-            // 包装属性
-            packaging_type: String(t('tooltip.cartonPack') || 'Carton Pack'),
-            package_size_cm: String(t('common.toBeFilled') || 'To be filled'),
-            package_size_inch: String(t('common.toBeFilled') || 'To be filled'),
-            unit_weight_kg: String(t('common.toBeFilled') || 'To be filled'),
-            unit_weight_lbs: String(t('common.toBeFilled') || 'To be filled'),
-            pallet_size_cm: String(t('common.toBeFilled') || 'To be filled'),
-            package_image_url: '',
-            
-            // 打托属性
-            pallet_rolls_a: String(t('common.toBeFilled') || 'To be filled'),
-            pallet_weight_a_kg: String(t('common.toBeFilled') || 'To be filled'),
-            pallet_weight_a_lbs: String(t('common.toBeFilled') || 'To be filled'),
-            pallet_height_a_cm: String(t('common.toBeFilled') || 'To be filled'),
-            pallet_height_a_inch: String(t('common.toBeFilled') || 'To be filled'),
-            pallet_rolls_b: String(t('common.toBeFilled') || 'To be filled'),
-            pallet_weight_b_kg: String(t('common.toBeFilled') || 'To be filled'),
-            pallet_weight_b_lbs: String(t('common.toBeFilled') || 'To be filled'),
-            pallet_height_b_cm: String(t('common.toBeFilled') || 'To be filled'),
-            pallet_height_b_inch: String(t('common.toBeFilled') || 'To be filled'),
-            pallet_rolls_c: String(t('common.toBeFilled') || 'To be filled'),
-            pallet_weight_c_kg: String(t('common.toBeFilled') || 'To be filled'),
-            pallet_weight_c_lbs: String(t('common.toBeFilled') || 'To be filled'),
-            pallet_height_c_cm: String(t('common.toBeFilled') || 'To be filled'),
-            pallet_height_c_inch: String(t('common.toBeFilled') || 'To be filled'),
-            core_diameter_cm: String(t('common.toBeFilled') || 'To be filled'),
-            core_diameter_inch: String(t('common.toBeFilled') || 'To be filled')
-          };
-          setDetailData(fallbackData);
-          setDebugInfo(prev => `${prev}\n使用Fallback数据: ${JSON.stringify(fallbackData, null, 2)}`);
-        } finally {
-          setLoading(false);
-          isRequestInProgress.current = false;
+        });
+        
+        console.log('🔍 [ConsumableTooltipContent] Response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
-      }, 300); // 300ms 防抖延迟
+        
+        const jsonData = await response.json();
+        console.log('✅ [ConsumableTooltipContent] Detail data loaded:', jsonData);
+        
+        let finalData = null;
+        
+        if (jsonData.success && jsonData.data) {
+          finalData = jsonData.data;
+        } else if (jsonData.data) {
+          finalData = jsonData.data;
+        } else if (Array.isArray(jsonData) && jsonData.length > 0) {
+          finalData = jsonData[0];
+        } else if (jsonData && typeof jsonData === 'object') {
+          finalData = jsonData;
+        } else {
+          throw new Error('No valid data structure found in API response');
+        }
+        
+        console.log('🔍 [ConsumableTooltipContent] Final mapped data:', finalData);
+        
+        // 缓存数据
+        tooltipDataCache.set(cacheKey, {
+          data: finalData,
+          timestamp: Date.now()
+        });
+        
+        setDetailData(finalData);
+        hasFetched.current = true;
+        
+      } catch (err: any) {
+        console.error('❌ [ConsumableTooltipContent] Failed to fetch detail data:', err);
+        setError(err.message || 'Failed to fetch detail data');
+        
+        // 使用基础数据作为fallback
+        const fallbackData = {
+          // 基本信息
+          material: item.specs?.material || item.material || 'N/A',
+          thickness: item.specs?.thickness || item.thickness_met || 'N/A',
+          width: item.specs?.width || item.width_met || 'N/A',
+          width_cm: item.specs?.width || item.width_met || 'N/A',
+          width_inch: item.specs?.width || item.width_imp || 'N/A',
+          length: item.specs?.length || item.length_met || 'N/A',
+          length_cm: item.specs?.length || item.length_met || 'N/A',
+          length_inch: item.specs?.length || item.length_imp || 'N/A',
+          rollLength: item.specs?.rollLength || item.total_length_met || 'N/A',
+          roll_length_m: item.specs?.rollLength || item.total_length_met || 'N/A',
+          roll_length_ft: item.specs?.rollLength || item.total_length_imp || 'N/A',
+          
+          // 包装属性
+          packaging_type: item.package_type || String(t('tooltip.cartonPack') || 'Carton Pack'),
+          package_size_cm: item.package_size_cm || String(t('common.toBeFilled') || 'To be filled'),
+          package_size_inch: item.package_size_inch || String(t('common.toBeFilled') || 'To be filled'),
+          unit_weight_kg: item.net_weight_kg || String(t('common.toBeFilled') || 'To be filled'),
+          unit_weight_lbs: item.net_weight_lbs || String(t('common.toBeFilled') || 'To be filled'),
+          pallet_size_cm: item.pallet_size_cm || String(t('common.toBeFilled') || 'To be filled'),
+          package_image_url: item.package_image_url || '',
+          
+          // 打托属性
+          pallet_rolls_a: item.pcs_per_pallet_a || String(t('common.toBeFilled') || 'To be filled'),
+          pallet_weight_a_kg: item.pallet_gross_weight_a_kg || String(t('common.toBeFilled') || 'To be filled'),
+          pallet_weight_a_lbs: item.pallet_gross_weight_a_lbs || String(t('common.toBeFilled') || 'To be filled'),
+          pallet_height_a_cm: item.pallet_height_a_cm || String(t('common.toBeFilled') || 'To be filled'),
+          pallet_height_a_inch: item.pallet_height_a_inch || String(t('common.toBeFilled') || 'To be filled'),
+          pallet_rolls_b: item.pcs_per_pallet_b || String(t('common.toBeFilled') || 'To be filled'),
+          pallet_weight_b_kg: item.pallet_gross_weight_b_kg || String(t('common.toBeFilled') || 'To be filled'),
+          pallet_weight_b_lbs: item.pallet_gross_weight_b_lbs || String(t('common.toBeFilled') || 'To be filled'),
+          pallet_height_b_cm: item.pallet_height_b_cm || String(t('common.toBeFilled') || 'To be filled'),
+          pallet_height_b_inch: item.pallet_height_b_inch || String(t('common.toBeFilled') || 'To be filled'),
+          pallet_rolls_c: item.pcs_per_pallet_c || String(t('common.toBeFilled') || 'To be filled'),
+          pallet_weight_c_kg: item.pallet_gross_weight_c_kg || String(t('common.toBeFilled') || 'To be filled'),
+          pallet_weight_c_lbs: item.pallet_gross_weight_c_lbs || String(t('common.toBeFilled') || 'To be filled'),
+          pallet_height_c_cm: item.pallet_height_c_cm || String(t('common.toBeFilled') || 'To be filled'),
+          pallet_height_c_inch: item.pallet_height_c_inch || String(t('common.toBeFilled') || 'To be filled'),
+          core_diameter_cm: item.tube_inner_diameter_cm || String(t('common.toBeFilled') || 'To be filled'),
+          core_diameter_inch: item.tube_inner_diameter_inch || String(t('common.toBeFilled') || 'To be filled')
+        };
+        
+        // 缓存fallback数据
+        tooltipDataCache.set(cacheKey, {
+          data: fallbackData,
+          timestamp: Date.now()
+        });
+        
+        setDetailData(fallbackData);
+        hasFetched.current = true;
+      } finally {
+        setLoading(false);
+        isRequestInProgress.current = false;
+      }
     };
 
+    // 立即执行，不使用防抖延迟
     fetchDetailData();
     
-    // 清理函数
-    return () => {
-      if (requestTimeoutRef.current) {
-        clearTimeout(requestTimeoutRef.current);
-      }
-      isRequestInProgress.current = false;
-    };
-  }, [item.id]); // 移除userRegion依赖，避免频繁重复请求
+  }, [item.id, cacheKey]); // 只依赖item.id和cacheKey
 
-  if (loading) {
+  if (loading && !detailData) {
     return (
-      <div className="p-4 bg-white rounded-lg shadow-lg border border-gray-200">
-        <div className="flex items-center justify-center py-8">
-          <Spin size="small" />
-          <span className="ml-2 text-gray-600">{String(t('ui.loadingDetails') || '加载详细信息中...')}</span>
+      <div className="p-4 bg-white rounded-lg shadow-lg border border-gray-200 min-w-[400px]">
+        <div className="flex items-center justify-center py-6">
+          <div className="flex items-center space-x-3">
+            <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-500 border-t-transparent"></div>
+            <span className="text-gray-600 text-sm">{String(t('ui.loadingDetails') || '加载详细信息中...')}</span>
+          </div>
         </div>
       </div>
     );
@@ -667,9 +663,9 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
                 });
                 
                 if (pcsA !== 'N/A' && pcsA !== '' && weightA !== 'N/A' && weightA !== '') {
-                  const rollsLabel = t('tooltip.units.rolls', isImperialUnit ? 'Rolls' : '卷');
-                  const weightLabel = t('tooltip.units.weight', isImperialUnit ? 'Weight' : '重量');
-                  const heightLabel = t('tooltip.units.height', isImperialUnit ? 'Height' : '高度');
+                  const rollsLabel = t('tooltip.units.rolls');
+                  const weightLabel = t('tooltip.units.weight');
+                  const heightLabel = t('tooltip.units.height');
                   const weightUnit = isImperialUnit ? 'lbs' : 'kg';
                   const heightUnit = isImperialUnit ? 'inch' : 'cm';
                   
@@ -709,9 +705,9 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
                 const heightB = safeGet(isImperialUnit ? 'pallet_height_b_inch' : 'pallet_height_b_cm', '');
                 
                 if (pcsB !== 'N/A' && pcsB !== '' && weightB !== 'N/A' && weightB !== '') {
-                  const rollsLabel = t('tooltip.units.rolls', isImperialUnit ? 'Rolls' : '卷');
-                  const weightLabel = t('tooltip.units.weight', isImperialUnit ? 'Weight' : '重量');
-                  const heightLabel = t('tooltip.units.height', isImperialUnit ? 'Height' : '高度');
+                  const rollsLabel = t('tooltip.units.rolls');
+                  const weightLabel = t('tooltip.units.weight');
+                  const heightLabel = t('tooltip.units.height');
                   const weightUnit = isImperialUnit ? 'lbs' : 'kg';
                   const heightUnit = isImperialUnit ? 'inch' : 'cm';
                   
@@ -751,9 +747,9 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
                 const heightC = safeGet(isImperialUnit ? 'pallet_height_c_inch' : 'pallet_height_c_cm', '');
                 
                 if (pcsC !== 'N/A' && pcsC !== '' && weightC !== 'N/A' && weightC !== '') {
-                  const rollsLabel = t('tooltip.units.rolls', isImperialUnit ? 'Rolls' : '卷');
-                  const weightLabel = t('tooltip.units.weight', isImperialUnit ? 'Weight' : '重量');
-                  const heightLabel = t('tooltip.units.height', isImperialUnit ? 'Height' : '高度');
+                  const rollsLabel = t('tooltip.units.rolls');
+                  const weightLabel = t('tooltip.units.weight');
+                  const heightLabel = t('tooltip.units.height');
                   const weightUnit = isImperialUnit ? 'lbs' : 'kg';
                   const heightUnit = isImperialUnit ? 'inch' : 'cm';
                   
@@ -1048,9 +1044,9 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
     <div className="consumable-product-card slide-up" style={{ animationDelay: `${index * 0.1}s` }}>
       {/* 库存状态标签 */}
       <div className={`stock-status-badge ${stockStatus === 'high' ? 'high-stock' : stockStatus === 'low' ? 'low-stock' : 'out-stock'}`}>
-        {stockStatus === 'high' ? String(t('ui.stockStatus.sufficient') || '库存充足') : 
-         stockStatus === 'low' ? String(t('ui.stockStatus.low') || '库存紧张') : 
-         String(t('ui.stockStatus.out') || '暂时缺货')}
+        {stockStatus === 'high' ? String(t('stockStatus.sufficient') || '库存充足') : 
+         stockStatus === 'low' ? String(t('stockStatus.low') || '库存紧张') : 
+         String(t('stockStatus.out') || '暂时缺货')}
       </div>
 
       <div className="product-card-content">
@@ -1158,8 +1154,10 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
                 color="white"
                 arrow={false}
                 trigger="hover"
-                destroyTooltipOnHide={true}
-                fresh={true}
+                destroyTooltipOnHide={false}
+                fresh={false}
+                mouseEnterDelay={0.1}
+                mouseLeaveDelay={0.1}
                 overlayStyle={{
                   maxWidth: 'min(600px, 90vw)',
                   zIndex: 10000
@@ -1249,14 +1247,34 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
             {/* 购买操作 */}
             <div className="purchase-actions">
               <div className="quantity-selector">
-                <InputNumber
-                  min={1}
-                  value={quantities[item.id] || 1}
-                  onChange={(value) => onQuantityChange(item.id, value || 1)}
-                  className="quantity-input"
-                  size="large"
-                  disabled={stockStatus === 'out'}
-                />
+                <div className="flex items-center gap-0 border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm">
+                  <button 
+                    onClick={() => onQuantityChange(item.id, Math.max(1, (quantities[item.id] || 1) - 1))}
+                    disabled={(quantities[item.id] || 1) <= 1 || stockStatus === 'out'}
+                    className="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-600 border-r border-gray-300 hover:bg-blue-50 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                    </svg>
+                  </button>
+                  <input 
+                    type="number" 
+                    min="1" 
+                    value={quantities[item.id] || 1} 
+                    onChange={(e) => onQuantityChange(item.id, parseInt(e.target.value) || 1)}
+                    disabled={stockStatus === 'out'}
+                    className="w-20 text-center border-0 py-1 text-sm focus:ring-0 focus:outline-none bg-white text-gray-900 disabled:opacity-50 disabled:bg-gray-50"
+                  />
+                  <button 
+                    onClick={() => onQuantityChange(item.id, (quantities[item.id] || 1) + 1)}
+                    disabled={stockStatus === 'out'}
+                    className="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-600 border-l border-gray-300 hover:bg-blue-50 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m-6h6m-6 0H6" />
+                    </svg>
+                  </button>
+                </div>
               </div>
               
               {/* 库存警告 */}
@@ -1278,22 +1296,10 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
                   className={`add-to-cart-btn ${stockStatus === 'out' ? 'unavailable' : 'available'}`}
                 >
                   <ShoppingCartOutlined className="mr-2" />
-                  {stockStatus === 'out' ? String(t('ui.stockStatus.out') || '暂时缺货') : String(t('ui.addToCart') || '加入购物车')}
+                  {stockStatus === 'out' ? String(t('stockStatus.out') || '暂时缺货') : String(t('ui.addToCart') || '加入购物车')}
                 </SmartAddToCartButton>
                 
-                {/* 快速购买按钮 */}
-                {stockStatus !== 'out' && (
-                  <Button
-                    className="quick-buy-btn"
-                    onClick={() => {
-                      onAddToCart(item.id);
-                      // 这里可以添加跳转到结算页面的逻辑
-                      // success(String(t('ui.addedToCart') || '商品已添加，点击购物车进行结算'));
-                    }}
-                  >
-                    {String(t('ui.buyNow') || '立即购买')}
-                  </Button>
-                )}
+
               </div>
             </div>
           </div>
@@ -1907,104 +1913,82 @@ const ConsumablesPage: React.FC = () => {
       // 动态生成形状选项，优先使用API返回的形状配置
       const shapeOptions: SmartFilterOption[] = [];
       const processedShapes = new Set<string>();
+      const matchedDbShapes = new Set<string>(); // 🔥 新增：跟踪已匹配的数据库形状，防止重复匹配
 
-      // 1. 🔥 修复：处理API返回的形状配置，正确映射数据库记录
+      // 1. 🔥 修复：处理API返回的形状配置，防止bubble等形状的多重匹配
       if (filterOptions?.shapes && Array.isArray(filterOptions.shapes)) {
         console.log('🔧 [Shape筛选] 开始处理API形状配置...');
         
         filterOptions.shapes.forEach(shapeConfig => {
-          // 🔥 优化：支持多种形状标识方式
-          const possibleIds = [
-            shapeConfig.id,
-            shapeConfig.name_en, 
-            shapeConfig.name_zh,
-            shapeConfig.shape_name,
-            shapeConfig.category_name,
-            shapeConfig.code,
-            shapeConfig.name
-          ].filter(Boolean);
-          
           console.log('🔧 [Shape筛选] 处理形状配置:', {
-            config: shapeConfig,
-            possibleIds
+            configId: shapeConfig.id,
+            name_en: shapeConfig.name_en,
+            name_zh: shapeConfig.name_zh
           });
           
-          // 🔥 修复：智能匹配形状数量，支持模糊匹配
-          let matchedCount = 0;
-          let matchedShapeId = '';
-          
-          // 首先尝试精确匹配
-          for (const id of possibleIds) {
-            if (shapeCountMap.has(id)) {
-              matchedCount = shapeCountMap.get(id) || 0;
-              matchedShapeId = id;
-              console.log('🔧 [Shape筛选] 精确匹配成功:', { id, count: matchedCount });
-              break;
-            }
-          }
-          
-          // 如果没有精确匹配，尝试包含匹配（如 "Pillow" 匹配 "paper air Pillow"）
-          if (matchedCount === 0) {
-            for (const [dbShape, count] of shapeCountMap.entries()) {
-              for (const configId of possibleIds) {
-                const normalizedDbShape = dbShape.toLowerCase().replace(/\s+/g, '');
-                const normalizedConfigId = configId.toLowerCase().replace(/\s+/g, '');
-                
-                // 双向包含匹配：配置ID包含在数据库shape中，或数据库shape包含配置ID
-                if (normalizedDbShape.includes(normalizedConfigId) || 
-                    normalizedConfigId.includes(normalizedDbShape)) {
-                  matchedCount = count;
-                  matchedShapeId = dbShape; // 使用数据库中的真实shape值作为ID
-                  console.log('🔧 [Shape筛选] 包含匹配成功:', { 
-                    dbShape, 
-                    configId, 
-                    count,
-                    使用ID: matchedShapeId 
-                  });
-                  break;
-                }
-              }
-              if (matchedCount > 0) break;
-            }
-          }
-          
-          // 🔥 修复：如果仍然没有匹配，但API配置存在，则显示为0计数（但不禁用，用户可能想查看）
-          const finalShapeId = matchedShapeId || shapeConfig.id;
-          const finalShapeName = shapeConfig.name_zh || shapeConfig.name_en || shapeConfig.name || finalShapeId;
-          
-          if (finalShapeId && !processedShapes.has(finalShapeId)) {
-            // 🔥 修复：Shape筛选器使用基础图片（image_url）便于快速识别
-            const imageUrl = cleanImageUrl(shapeConfig.image_url || shapeConfig.featured_image || shapePlaceholderImage);
-            
-            console.log('🔧 [Shape筛选] 添加形状选项:', {
-              id: finalShapeId,
-              name: finalShapeName,
-              count: matchedCount,
-              imageUrl: imageUrl,
-              originalImageUrl: shapeConfig.image_url,
-              使用基础图: !!shapeConfig.image_url
+          let exactMatch: { dbShape: string; count: number; matchType: string } | null = null;
+           
+          // 🔥 修复：只使用shapeConfig.id进行精确匹配，避免多重匹配导致重复
+          if (shapeCountMap.has(shapeConfig.id) && !matchedDbShapes.has(shapeConfig.id)) {
+            exactMatch = {
+              dbShape: shapeConfig.id,
+              count: shapeCountMap.get(shapeConfig.id) || 0,
+              matchType: '精确匹配'
+            };
+            console.log('✅ [Shape筛选] 精确匹配成功:', { 
+              配置ID: shapeConfig.id, 
+              数据库形状: shapeConfig.id, 
+              产品数量: exactMatch.count 
             });
-            
-            shapeOptions.push({
-              id: finalShapeId,
-              name: finalShapeName,
-              count: matchedCount,
-              disabled: matchedCount === 0, // 如果没有匹配数据则禁用
-              originalData: {
-                ...shapeConfig,
-                // 🔥 修复：保持原始的image_url字段用于筛选器，image_url2用于尺寸指导图
-                image_url: shapeConfig.image_url,
-                image_url2: shapeConfig.image_url2
-              }
+          } else {
+            console.log('❌ [Shape筛选] 未找到匹配或已被匹配:', { 
+              配置ID: shapeConfig.id,
+              数据库存在: shapeCountMap.has(shapeConfig.id),
+              已被匹配: matchedDbShapes.has(shapeConfig.id)
             });
-            processedShapes.add(finalShapeId);
           }
+          
+                     // 🔥 严格控制：只有找到精确匹配才添加选项
+           if (exactMatch) {
+             const finalShapeId = exactMatch.dbShape;
+             const finalShapeName = shapeConfig.name_zh || shapeConfig.name_en || shapeConfig.name || finalShapeId;
+             
+             if (!processedShapes.has(finalShapeId)) {
+               console.log('🔧 [Shape筛选] 添加形状选项:', {
+                 id: finalShapeId,
+                 name: finalShapeName,
+                 count: exactMatch.count,
+                 matchType: exactMatch.matchType,
+                 config: shapeConfig.id
+               });
+               
+               shapeOptions.push({
+                 id: finalShapeId,
+                 name: finalShapeName,
+                 count: exactMatch.count,
+                 disabled: exactMatch.count === 0,
+                 originalData: {
+                   ...shapeConfig,
+                   matchType: exactMatch.matchType,
+                   image_url: shapeConfig.image_url,
+                   image_url2: shapeConfig.image_url2
+                 }
+               });
+               
+               processedShapes.add(finalShapeId);
+               matchedDbShapes.add(exactMatch.dbShape); // 标记数据库形状已被匹配
+             } else {
+               console.log(`⚠️ [Shape筛选] 跳过重复形状: ${finalShapeId} (配置: ${shapeConfig.id})`);
+             }
+           } else {
+             console.log(`⚠️ [Shape筛选] 未找到精确匹配的数据库形状: ${shapeConfig.id}`);
+           }
         });
       }
 
       // 2. 🔥 补充：处理数据库中存在但API配置中没有的形状
       shapeCountMap.forEach((count, shapeId) => {
-        if (!processedShapes.has(shapeId) && count > 0) {
+        if (!matchedDbShapes.has(shapeId) && !processedShapes.has(shapeId) && count > 0) {
           console.log('🔧 [Shape筛选] 添加API未配置的形状:', { shapeId, count });
           
           shapeOptions.push({
@@ -2016,7 +2000,7 @@ const ConsumablesPage: React.FC = () => {
               id: shapeId,
               name_zh: shapeId,
               name_en: shapeId,
-              // 对于API未配置的形状，使用占位符图片
+              source: '数据库补充',
               image_url: shapePlaceholderImage
             }
           });
@@ -2029,14 +2013,15 @@ const ConsumablesPage: React.FC = () => {
 
       console.log('🔧 [Shape筛选] 最终生成的形状选项:', shapeOptions);
       
-      // 🔧 调试：验证image_url字段
-      shapeOptions.forEach(option => {
-        console.log(`🖼️ [Shape图片] ${option.name}:`, {
-          image_url: option.originalData?.image_url,
-          image_url2: option.originalData?.image_url2,
-          筛选器将使用: option.originalData?.image_url
-        });
-      });
+      // 🔥 验证：检查是否还有bubble重复
+      const bubbleOptions = shapeOptions.filter(opt => 
+        opt.id.toLowerCase().includes('bubble') || opt.name.toLowerCase().includes('bubble')
+      );
+      if (bubbleOptions.length > 1) {
+        console.warn('⚠️ [Shape筛选] 发现多个bubble选项:', bubbleOptions);
+      } else {
+        console.log('✅ [Shape筛选] bubble选项数量正常:', bubbleOptions.length);
+      }
       
       return shapeOptions;
     };
@@ -2982,9 +2967,9 @@ const ConsumablesPage: React.FC = () => {
             >
               {/* 库存状态标签 */}
               <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-medium ${stockBg} ${stockColor} z-10`}>
-                {stockStatus === 'high' ? String(t('ui.stockStatus.sufficient') || '库存充足') : 
-                 stockStatus === 'low' ? String(t('ui.stockStatus.low') || '库存紧张') : 
-                 String(t('ui.stockStatus.out') || '暂时缺货')}
+                {stockStatus === 'high' ? String(t('stockStatus.sufficient') || '库存充足') : 
+                 stockStatus === 'low' ? String(t('stockStatus.low') || '库存紧张') : 
+                 String(t('stockStatus.out') || '暂时缺货')}
               </div>
 
               <div className="p-6">
@@ -3069,8 +3054,10 @@ const ConsumablesPage: React.FC = () => {
                         color="white"
                         arrow={false}
                         trigger="hover"
-                        destroyTooltipOnHide={true}
-                        fresh={true}
+                        destroyTooltipOnHide={false}
+                        fresh={false}
+                        mouseEnterDelay={0.1}
+                        mouseLeaveDelay={0.1}
                         overlayStyle={{
                           maxWidth: 'min(600px, 90vw)',
                           zIndex: 10000
@@ -3162,14 +3149,34 @@ const ConsumablesPage: React.FC = () => {
                     {/* 购买操作 */}
                     <div className="space-y-3">
                       <div className="flex items-center space-x-2">
-                        <InputNumber
-                          min={1}
-                          value={quantities[item.id] || 1}
-                          onChange={(value) => handleQuantityChange(item.id, value || 1)}
-                          className="flex-1"
-                          size="large"
-                          disabled={stockStatus === 'out'}
-                        />
+                        <div className="flex items-center gap-0 border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm flex-1">
+                          <button 
+                            onClick={() => handleQuantityChange(item.id, Math.max(1, (quantities[item.id] || 1) - 1))}
+                            disabled={(quantities[item.id] || 1) <= 1 || stockStatus === 'out'}
+                            className="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-600 border-r border-gray-300 hover:bg-blue-50 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                            </svg>
+                          </button>
+                          <input 
+                            type="number" 
+                            min="1" 
+                            value={quantities[item.id] || 1} 
+                            onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 1)}
+                            disabled={stockStatus === 'out'}
+                            className="flex-1 text-center border-0 py-1 text-sm focus:ring-0 focus:outline-none bg-white text-gray-900 disabled:opacity-50 disabled:bg-gray-50"
+                          />
+                          <button 
+                            onClick={() => handleQuantityChange(item.id, (quantities[item.id] || 1) + 1)}
+                            disabled={stockStatus === 'out'}
+                            className="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-600 border-l border-gray-300 hover:bg-blue-50 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                          </button>
+                        </div>
                       </div>
                       
                       {/* 库存警告 */}
@@ -3195,23 +3202,10 @@ const ConsumablesPage: React.FC = () => {
                           `}
                         >
                           <ShoppingCartOutlined className="mr-2" />
-                          {stockStatus === 'out' ? String(t('ui.stockStatus.out') || '暂时缺货') : String(t('ui.addToCart') || '加入购物车')}
+                          {stockStatus === 'out' ? String(t('stockStatus.out') || '暂时缺货') : String(t('ui.addToCart') || '加入购物车')}
                         </SmartAddToCartButton>
                         
-                        {/* 快速购买按钮 */}
-                        {stockStatus !== 'out' && (
-                          <Button
-                            type="default"
-                            onClick={() => {
-                              addToCart(item.id);
-                              // 这里可以添加跳转到结算页面的逻辑
-                              success(String(t('ui.addedToCart') || '商品已添加，点击购物车进行结算'));
-                            }}
-                            className="w-full h-10 font-medium text-sm border-blue-300 text-blue-600 hover:bg-blue-50 hover:border-blue-400 transition-all duration-200"
-                          >
-                            {String(t('ui.buyNow') || '立即购买')}
-                          </Button>
-                        )}
+
                       </div>
                     </div>
                   </div>

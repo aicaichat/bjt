@@ -1073,13 +1073,30 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
      * 解决consumables表的bag_type字段与字典表code字段不一致的问题
      */
     private function map_bag_type_to_dictionary_code($bag_type) {
+        // 🔥 修复：基于数据库实际数据的正确映射关系
+        // 数据库分析结果：
+        // - wp_bjt_shapes: MFC→"Tube888", MFF→"Bubble999", MEX→"Pillow666666", MEY→"Precut Air Pillow"
+        // - wp_bjt_consumables: bag_type有"Tube"(5个), "MFC"(2个), "MFF"(1个), "Bubble"(21个)
+        
         $mapping = [
+            // 标准映射（bag_type直接对应shapes表的code）
+            'MFC' => 'MFC',    // bag_type="MFC" → MFC配置 ("Tube888")
+            'MFF' => 'MFF',    // bag_type="MFF" → MFF配置 ("Bubble999") 
+            'MEX' => 'MEX',    // bag_type="MEX" → MEX配置 ("Pillow666666")
+            'MEY' => 'MEY',    // bag_type="MEY" → MEY配置 ("Precut Air Pillow")
+            'MFB' => 'MFB',    // bag_type="MFB" → MFB配置 ("Bubble")
+            
+            // 兼容性映射（英文名称到code）
             'Pillow' => 'MEX',
-            'Precut Air Pillow' => 'MEY', // 🔥 修复：使用正确的字典code
-            'Bubble' => 'MFF', 
-            'Tube' => 'MFC',
+            'Precut Air Pillow' => 'MEY',
             'paper Bubble' => 'MFB',
-            'paper air Pillow' => 'MEX_PAPER' // 🔥 修复：使用独立的字典记录
+            'paper air Pillow' => 'MEX_PAPER',
+            
+            // 🔥 关键修复：避免重复映射
+            // 为bag_type="Tube"和"Bubble"创建独立的形状配置
+            // 方案：直接使用bag_type作为配置ID，让系统回退到硬编码显示
+            'Tube' => 'Tube',     // 让系统使用硬编码显示名称
+            'Bubble' => 'Bubble'  // 让系统使用硬编码显示名称
         ];
         
         return isset($mapping[$bag_type]) ? $mapping[$bag_type] : $bag_type;

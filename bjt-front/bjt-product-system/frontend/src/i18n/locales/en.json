@@ -179,6 +179,11 @@
     },
     "fieldsWithUnits": {
       "metric": {
+        "app_model": "Compatible Model",
+        "id": "Product ID",
+        "shape": "Shape",
+        "spec": "Specifications",
+        "pcs_per_box": "Pieces per Box",
         "bubble_diameter": "Bubble Diameter(cm)",
         "thickness": "Thickness/Weight(μm/gsm)",
         "width": "Film Width(cm)",
@@ -196,6 +201,11 @@
         "tube_inner_diameter": "Core Diameter(cm)"
       },
       "imperial": {
+        "app_model": "Compatible Model",
+        "id": "Product ID",
+        "shape": "Shape",
+        "spec": "Specifications",
+        "pcs_per_box": "Pieces per Box",
         "bubble_diameter": "Bubble Diameter(inch)",
         "thickness": "Thickness/Weight(mil/#)",
         "width": "Film Width(inch)",

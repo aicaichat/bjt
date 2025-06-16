@@ -1426,12 +1426,13 @@ const MachinesPage: React.FC = () => {
                       min={1}
                       value={quantities[machine.id.toString()] || 1}
                       onChange={(value: number | null) => handleQuantityChange(machine.id.toString(), value as number)}
-                      className="w-16 text-center quantity-input-field"
+                      className="w-20 text-center quantity-input-field"
                       size="small"
                       style={{
                         backgroundColor: '#ffffff',
                         color: '#333333',
-                        borderColor: '#d1d5db'
+                        borderColor: '#d1d5db',
+                        width: '80px'
                       }}
                     />
                     <Button 
