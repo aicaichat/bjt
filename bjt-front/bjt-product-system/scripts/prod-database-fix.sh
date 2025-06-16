@@ -30,7 +30,7 @@ echo "📋 目标容器: $CONTAINER_NAME"
 
 # 1. 检查生产环境
 log_info "1️⃣ 检查生产环境状态..."
-if ! docker ps | grep -q "$CONTAINER_NAME.*Up.*healthy"; then
+if ! docker ps | grep -q "$CONTAINER_NAME.*Up"; then
     log_error "生产MySQL容器未正常运行"
     echo "当前容器状态："
     docker-compose -f docker/prod/docker-compose.prod.yml ps
