@@ -45,8 +45,9 @@ pre_flight_check() {
     log_info "🔍 执行预检查..."
     
     # 1. 检查服务状态
-    if ! curl -s "http://localhost:8080/wp-json/bjt/v1/consumables?limit=1" > /dev/null; then
-        log_error "API服务不可用，请先确保服务正常运行"
+    local HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8080/wp-json/bjt/v1/consumables?limit=1")
+    if [ "$HTTP_CODE" != "200" ]; then
+        log_error "API服务不可用 (HTTP $HTTP_CODE)，请先确保服务正常运行"
         exit 1
     fi
     
@@ -151,10 +152,11 @@ step_by_step_fix() {
         sleep 15
         
         # 验证服务状态
-        if curl -s "http://localhost:8080/wp-json/bjt/v1/consumables?limit=1" > /dev/null; then
-            log_success "服务重启成功"
+        local HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8080/wp-json/bjt/v1/consumables?limit=1")
+        if [ "$HTTP_CODE" = "200" ]; then
+            log_success "服务重启成功 (HTTP $HTTP_CODE)"
         else
-            log_error "服务重启后不可用，请检查"
+            log_error "服务重启后不可用 (HTTP $HTTP_CODE)，请检查"
             echo "回滚命令: cp $BACKUP_DIR/class-consumable-controller.php plugins/bjt-core-entities/controllers/"
         fi
     else
@@ -167,10 +169,11 @@ validate_fix() {
     log_info "🧪 验证修复结果..."
     
     # 基本API测试
-    if curl -s "http://localhost:8080/wp-json/bjt/v1/consumables?limit=1" > /dev/null; then
-        log_success "API基本功能正常"
+    local HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8080/wp-json/bjt/v1/consumables?limit=1")
+    if [ "$HTTP_CODE" = "200" ]; then
+        log_success "API基本功能正常 (HTTP $HTTP_CODE)"
     else
-        log_error "API不可用"
+        log_error "API不可用 (HTTP $HTTP_CODE)"
         return 1
     fi
     
