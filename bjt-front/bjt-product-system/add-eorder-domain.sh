@@ -26,13 +26,31 @@ echo "=================================================="
 
 # 第1步：检查DNS解析
 print_step "第1步：检查DNS解析"
-if nslookup eorder.lockedair.com > /dev/null 2>&1; then
-    print_success "DNS解析正常"
+EXPECTED_IP="47.90.251.35"
+CURRENT_IP=$(nslookup eorder.lockedair.com 2>/dev/null | grep "Address:" | tail -1 | awk '{print $2}' || echo "")
+
+if [ -n "$CURRENT_IP" ]; then
+    if [ "$CURRENT_IP" = "$EXPECTED_IP" ]; then
+        print_success "DNS解析正确: $CURRENT_IP"
+    else
+        print_warning "DNS解析到错误的IP: $CURRENT_IP (期望: $EXPECTED_IP)"
+        echo "请在域名管理面板更新DNS记录："
+        echo "记录类型: A"
+        echo "主机记录: eorder"
+        echo "记录值: $EXPECTED_IP"
+        echo ""
+        print_warning "是否继续执行？DNS更新可能需要时间生效 (y/N)"
+        read -r response
+        if [[ ! "$response" =~ ^[Yy]$ ]]; then
+            echo "已取消执行，请更新DNS记录后重试"
+            exit 1
+        fi
+    fi
 else
     print_error "DNS解析失败，请先配置DNS记录："
     echo "记录类型: A"
     echo "主机记录: eorder"
-    echo "记录值: $(curl -s ifconfig.me || echo '您的服务器IP')"
+    echo "记录值: $EXPECTED_IP"
     exit 1
 fi
 
