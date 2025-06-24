@@ -705,8 +705,16 @@
       
       .specs-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        /* 调整最小宽度以避免长规格描述溢出 */
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
         gap: 8px;
+        
+        /* 允许内容在单词或逗号处自动换行 */
+        .spec-badge .spec-value {
+          word-wrap: break-word; /* 兼容性更好 */
+          word-break: break-word; /* 对长单词/没有空格的文本也生效 */
+          white-space: normal;    /* 关闭 nowrap，保持正常换行 */
+        }
         
         .spec-badge {
           background: rgba(255, 255, 255, 0.8);
