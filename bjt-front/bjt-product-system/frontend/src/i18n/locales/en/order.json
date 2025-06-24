@@ -68,7 +68,9 @@
       "uk": "United Kingdom",
       "germany": "Germany",
       "japan": "Japan",
-      "australia": "Australia"
+      "australia": "Australia",
+      "searchResults": "Search Results",
+      "noResults": "No countries found"
     }
   },
   "products": {

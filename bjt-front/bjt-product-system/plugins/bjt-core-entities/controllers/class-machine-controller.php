@@ -584,8 +584,9 @@ class BJT_Machine_Controller extends BJT_API_Controller {
                 $grouped_accessories[$model_code] = [
                     'id' => $acc['model_id'] ? (int)$acc['model_id'] : null,
                     'model_code' => $model_code,
-                    'title' => isset($acc[$model_title_key]) ? $acc[$model_title_key] : ($acc['model_title_zh'] ?: $acc['model_title_en']),
-                    'description' => isset($acc[$model_description_key]) ? $acc[$model_description_key] : ($acc['model_description_zh'] ?: $acc['model_description_en']),
+                    // ✅ 修复：移除回退机制，避免语言混乱
+                    'title' => isset($acc[$model_title_key]) ? $acc[$model_title_key] : null,
+                    'description' => isset($acc[$model_description_key]) ? $acc[$model_description_key] : null,
                     'type' => $acc['model_type'],
                     'image_url' => $this->get_full_url($acc['model_image1_url']),
                     'image2_url' => $this->get_full_url($acc['model_image2_url']),
@@ -603,7 +604,8 @@ class BJT_Machine_Controller extends BJT_API_Controller {
             $part_data = [
                 'id' => (int)$acc['accessory_id'],
                 'part_number' => $part_number,
-                'name' => isset($acc[$accessory_name_key]) ? $acc[$accessory_name_key] : ($acc['accessory_name_zh'] ?: $acc['accessory_name_en']),
+                // ✅ 修复：移除回退机制，避免语言混乱
+                'name' => isset($acc[$accessory_name_key]) ? $acc[$accessory_name_key] : null,
                 'spec' => $acc[$accessory_spec_key],
                 'spec_imperial' => $acc['accessory_spec_imperial'], // Always include if available
                 'image_url' => $this->get_full_url($acc['accessory_image_url']),

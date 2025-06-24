@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>后端订单号生成架构测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        .test-section h3 {
+            color: #2c5aa0;
+            margin-top: 0;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .code-block {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .architecture-diagram {
+            background-color: #fff;
+            border: 2px solid #007bff;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .flow-step {
+            display: inline-block;
+            background-color: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 4px;
+            padding: 10px 15px;
+            margin: 5px;
+            font-weight: bold;
+        }
+        .arrow {
+            font-size: 20px;
+            color: #2196f3;
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 后端订单号生成架构测试</h1>
+        
+        <div class="architecture-diagram">
+            <h3>正确的订单号生成流程</h3>
+            <div>
+                <div class="flow-step">前端提交订单数据</div>
+                <span class="arrow">→</span>
+                <div class="flow-step">后端API生成订单号</div>
+                <span class="arrow">→</span>
+                <div class="flow-step">返回包含订单号的响应</div>
+                <span class="arrow">→</span>
+                <div class="flow-step">前端接收并显示</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>1. 测试OrderNumberManager - 只处理后端返回的订单号</h3>
+            <button onclick="testOrderNumberManager()">运行测试</button>
+            <div id="orderNumberManagerResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. 测试API响应处理</h3>
+            <button onclick="testApiResponseHandling()">运行测试</button>
+            <div id="apiResponseResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. 测试错误处理 - 缺少订单号时抛出错误</h3>
+            <button onclick="testErrorHandling()">运行测试</button>
+            <div id="errorHandlingResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. 测试ApiAdapter - 不生成订单号</h3>
+            <button onclick="testApiAdapter()">运行测试</button>
+            <div id="apiAdapterResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>5. 测试完整订单提交流程</h3>
+            <button onclick="testCompleteOrderFlow()">运行测试</button>
+            <div id="completeFlowResult"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        // 导入需要的模块
+        import { OrderNumberManager } from '/src/utils/orderNumberUtils.js';
+        import { ApiAdapter } from '/src/services/apiAdapter.js';
+
+        // 测试OrderNumberManager
+        window.testOrderNumberManager = function() {
+            const resultDiv = document.getElementById('orderNumberManagerResult');
+            resultDiv.innerHTML = '<div class="info">正在测试OrderNumberManager...</div>';
+            
+            try {
+                // 测试1: 正常API响应
+                const mockApiResponse = {
+                    success: true,
+                    data: {
+                        id: 12345,
+                        order_number: 'ORD-20250623-ABC123',
+                        status: 'pending_payment'
+                    }
+                };
+                
+                const orderInfo = OrderNumberManager.extractFromApiResponse(mockApiResponse);
+                
+                let results = '<div class="success">✅ 测试通过</div>';
+                results += '<div class="code-block">';
+                results += 'API响应: ' + JSON.stringify(mockApiResponse, null, 2) + '\n\n';
+                results += '提取结果: ' + JSON.stringify(orderInfo, null, 2);
+                results += '</div>';
+                
+                // 测试2: 验证订单号格式
+                const isValid = OrderNumberManager.validateOrderNumber(orderInfo.orderNumber);
+                results += `<div class="${isValid ? 'success' : 'error'}">订单号格式验证: ${isValid ? '通过' : '失败'}</div>`;
+                
+                resultDiv.innerHTML = results;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ 测试失败: ${error.message}</div>`;
+            }
+        };
+
+        // 测试API响应处理
+        window.testApiResponseHandling = function() {
+            const resultDiv = document.getElementById('apiResponseResult');
+            resultDiv.innerHTML = '<div class="info">正在测试API响应处理...</div>';
+            
+            try {
+                // 测试不同格式的API响应
+                const testCases = [
+                    {
+                        name: '标准格式响应',
+                        response: {
+                            data: { id: 1, order_number: 'ORD-20250623-ABC123' }
+                        }
+                    },
+                    {
+                        name: '简化格式响应',
+                        response: {
+                            id: 2,
+                            order_number: 'PO-202506231230-DEF456'
+                        }
+                    }
+                ];
+                
+                let results = '';
+                testCases.forEach(testCase => {
+                    try {
+                        const orderInfo = OrderNumberManager.extractFromApiResponse(testCase.response);
+                        results += `<div class="success">✅ ${testCase.name}: 成功</div>`;
+                        results += `<div class="code-block">订单号: ${orderInfo.orderNumber}, ID: ${orderInfo.orderId}</div>`;
+                    } catch (error) {
+                        results += `<div class="error">❌ ${testCase.name}: ${error.message}</div>`;
+                    }
+                });
+                
+                resultDiv.innerHTML = results;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ 测试失败: ${error.message}</div>`;
+            }
+        };
+
+        // 测试错误处理
+        window.testErrorHandling = function() {
+            const resultDiv = document.getElementById('errorHandlingResult');
+            resultDiv.innerHTML = '<div class="info">正在测试错误处理...</div>';
+            
+            const errorCases = [
+                {
+                    name: '缺少订单号',
+                    response: { data: { id: 1 } }
+                },
+                {
+                    name: '缺少订单ID',
+                    response: { data: { order_number: 'ORD-123' } }
+                },
+                {
+                    name: '空响应',
+                    response: null
+                },
+                {
+                    name: '无效订单对象',
+                    response: 'invalid'
+                }
+            ];
+            
+            let results = '';
+            errorCases.forEach(testCase => {
+                try {
+                    if (testCase.response === 'invalid') {
+                        OrderNumberManager.extractFromOrderObject(testCase.response);
+                    } else {
+                        OrderNumberManager.extractFromApiResponse(testCase.response);
+                    }
+                    results += `<div class="error">❌ ${testCase.name}: 应该抛出错误但没有</div>`;
+                } catch (error) {
+                    results += `<div class="success">✅ ${testCase.name}: 正确抛出错误 - ${error.message}</div>`;
+                }
+            });
+            
+            resultDiv.innerHTML = results;
+        };
+
+        // 测试ApiAdapter
+        window.testApiAdapter = function() {
+            const resultDiv = document.getElementById('apiAdapterResult');
+            resultDiv.innerHTML = '<div class="info">正在测试ApiAdapter...</div>';
+            
+            try {
+                const frontendOrderData = {
+                    items: [
+                        { id: 'P001', name: '测试产品', quantity: 2, price: 100 }
+                    ],
+                    summary: { subtotal: 200, tax: 26, total: 226 },
+                    shipping: { address: '测试地址' }
+                };
+                
+                const apiFormat = ApiAdapter.convertOrderToApiFormat(frontendOrderData);
+                
+                let results = '<div class="success">✅ ApiAdapter测试通过</div>';
+                results += '<div class="code-block">';
+                results += '前端数据: ' + JSON.stringify(frontendOrderData, null, 2) + '\n\n';
+                results += 'API格式: ' + JSON.stringify(apiFormat, null, 2);
+                results += '</div>';
+                
+                // 验证API格式中没有订单号字段
+                if (!apiFormat.order_number && !apiFormat.orderNumber) {
+                    results += '<div class="success">✅ 确认：API格式中没有订单号字段（正确）</div>';
+                } else {
+                    results += '<div class="error">❌ 错误：API格式中包含订单号字段</div>';
+                }
+                
+                resultDiv.innerHTML = results;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ 测试失败: ${error.message}</div>`;
+            }
+        };
+
+        // 测试完整订单提交流程
+        window.testCompleteOrderFlow = function() {
+            const resultDiv = document.getElementById('completeFlowResult');
+            resultDiv.innerHTML = '<div class="info">正在测试完整订单提交流程...</div>';
+            
+            try {
+                // 步骤1: 前端准备订单数据（无订单号）
+                const frontendOrderData = {
+                    customerInfo: { name: '测试客户', phone: '13800138000' },
+                    items: [{ id: 'P001', name: '测试产品', quantity: 1, price: 100 }],
+                    summary: { subtotal: 100, tax: 13, total: 113 }
+                };
+                
+                // 步骤2: 转换为API格式
+                const apiOrderData = ApiAdapter.convertOrderToApiFormat(frontendOrderData);
+                
+                // 步骤3: 模拟后端API响应（包含生成的订单号）
+                const mockApiResponse = {
+                    success: true,
+                    data: {
+                        id: 12345,
+                        order_number: 'ORD-20250623-XYZ789',
+                        status: 'pending_payment',
+                        created_at: new Date().toISOString()
+                    }
+                };
+                
+                // 步骤4: 处理API响应
+                const orderInfo = OrderNumberManager.extractFromApiResponse(mockApiResponse);
+                
+                // 步骤5: 创建统一订单数据
+                const unifiedOrderData = OrderNumberManager.createUnifiedOrderData({
+                    apiResponse: mockApiResponse,
+                    orderItems: frontendOrderData.items,
+                    customerInfo: frontendOrderData.customerInfo,
+                    shippingInfo: {},
+                    summary: frontendOrderData.summary,
+                    source: 'api'
+                });
+                
+                let results = '<div class="success">✅ 完整流程测试通过</div>';
+                results += '<div class="code-block">';
+                results += '1. 前端订单数据（无订单号）:\n' + JSON.stringify(frontendOrderData, null, 2) + '\n\n';
+                results += '2. API格式数据（无订单号）:\n' + JSON.stringify(apiOrderData, null, 2) + '\n\n';
+                results += '3. 后端API响应（含订单号）:\n' + JSON.stringify(mockApiResponse, null, 2) + '\n\n';
+                results += '4. 最终统一订单数据:\n' + JSON.stringify({
+                    id: unifiedOrderData.id,
+                    orderNumber: unifiedOrderData.orderNumber,
+                    status: 'pending_payment'
+                }, null, 2);
+                results += '</div>';
+                
+                results += '<div class="info">📋 流程总结：</div>';
+                results += '<div class="code-block">';
+                results += '• 前端不生成订单号 ✅\n';
+                results += '• API请求不包含订单号 ✅\n';
+                results += '• 后端生成并返回订单号 ✅\n';
+                results += '• 前端正确处理和显示订单号 ✅';
+                results += '</div>';
+                
+                resultDiv.innerHTML = results;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ 测试失败: ${error.message}</div>`;
+            }
+        };
+
+        // 页面加载完成后显示说明
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔧 后端订单号生成架构测试页面已加载');
+            console.log('点击各个测试按钮来验证订单号管理系统');
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spec 公制英制智能切换演示</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .demo-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .unit-switch {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 6px;
+        }
+        .unit-btn {
+            padding: 8px 16px;
+            border: 1px solid #2196f3;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .unit-btn.active {
+            background: #2196f3;
+            color: white;
+        }
+        .spec-display {
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #f9f9f9;
+        }
+        .spec-label {
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 8px;
+        }
+        .spec-value {
+            font-family: 'Courier New', monospace;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+        }
+        .database-info {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            border-left: 4px solid #ff9800;
+        }
+        .highlight {
+            background: #ffeb3b;
+            padding: 2px 4px;
+            border-radius: 2px;
+        }
+        .success {
+            background: #c8e6c9;
+            color: #2e7d32;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 Spec 公制英制智能切换演示</h1>
+    
+    <div class="database-info">
+        <h3>📊 数据库字段结构</h3>
+        <code>
+            `spec` varchar(255) COMMENT '规格参数(公制)',<br>
+            `spec_imperial` varchar(255) COMMENT '规格参数(英制)',
+        </code>
+    </div>
+
+    <div class="demo-container">
+        <h2>🔄 智能切换控制</h2>
+        <div class="unit-switch">
+            <button class="unit-btn active" onclick="switchUnit('metric')">
+                📏 公制 (Metric)
+            </button>
+            <button class="unit-btn" onclick="switchUnit('imperial')">
+                📐 英制 (Imperial)
+            </button>
+        </div>
+        
+        <div class="success">
+            ✅ 当前模式: <span id="current-mode">公制 (从数据库 spec 字段获取)</span>
+        </div>
+    </div>
+
+    <div class="demo-container">
+        <h2>🧴 耗材规格显示</h2>
+        <div class="spec-display">
+            <div class="spec-label">MEX:Air pillow film 规格参数:</div>
+            <div class="spec-value" id="consumable-spec">
+                13um 30%HDPE Pillow, 20cmx13cm,1000m,150R/PL
+            </div>
+        </div>
+    </div>
+
+    <div class="demo-container">
+        <h2>🔧 备件规格显示</h2>
+        <div class="spec-display">
+            <div class="spec-label">备件 09A0101107 规格参数:</div>
+            <div class="spec-value" id="spare-part-spec">
+                13um 30%HDPE Pillow, 20cmx13cm,1000m,150R/PL
+            </div>
+        </div>
+    </div>
+
+    <div class="demo-container">
+        <h2>⚙️ 配件规格显示</h2>
+        <div class="spec-display">
+            <div class="spec-label">配件规格参数:</div>
+            <div class="spec-value" id="accessory-spec">
+                110V, 50Hz, 20cm x 15cm x 30cm
+            </div>
+        </div>
+    </div>
+
+    <div class="demo-container">
+        <h2>🎯 技术实现说明</h2>
+        <div style="line-height: 1.6;">
+            <h3>1. 配置文件简化</h3>
+            <p>在 <code>cartDisplayFields.ts</code> 中只需配置 <span class="highlight">spec</span> 字段：</p>
+            <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px;">
+export const SPARE_PART_FIELDS = {
+  order_page: [
+    'part_number',
+    'name',           // 智能多语言切换
+    'spec',           // 🎯 智能公制英制切换
+    'unit',
+    'pcs_per_box',
+  ]
+};</pre>
+
+            <h3>2. 自动字段映射</h3>
+            <p><code>CartFieldUnifier.getFieldValue()</code> 自动处理：</p>
+            <ul>
+                <li><strong>公制模式</strong>: <code>spec</code> → 数据库 <code>spec</code> 字段</li>
+                <li><strong>英制模式</strong>: <code>spec</code> → 数据库 <code>spec_imperial</code> 字段</li>
+            </ul>
+
+            <h3>3. 智能回退机制</h3>
+            <p>如果 <code>spec_imperial</code> 为空，自动回退到 <code>spec</code> 字段</p>
+        </div>
+    </div>
+
+    <script>
+        // 模拟数据库数据
+        const mockData = {
+            consumable: {
+                spec: "13um 30%HDPE Pillow, 20cmx13cm,1000m,150R/PL",
+                spec_imperial: ".5mil 30%HDPE Pillow, 8\"x5.0\", 3281', 150R/PL"
+            },
+            sparePart: {
+                spec: "13um 30%HDPE Pillow, 20cmx13cm,1000m,150R/PL",
+                spec_imperial: ".5mil 30%HDPE Pillow, 8\"x5.0\", 3281', 150R/PL"
+            },
+            accessory: {
+                spec: "110V, 50Hz, 20cm x 15cm x 30cm",
+                spec_imperial: "110V, 50Hz, 7.9\" x 5.9\" x 11.8\""
+            }
+        };
+
+        let currentUnit = 'metric';
+
+        function switchUnit(unit) {
+            currentUnit = unit;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.unit-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 更新当前模式显示
+            const modeText = unit === 'metric' 
+                ? '公制 (从数据库 spec 字段获取)'
+                : '英制 (从数据库 spec_imperial 字段获取)';
+            document.getElementById('current-mode').textContent = modeText;
+            
+            // 更新所有规格显示
+            updateSpecDisplays();
+        }
+
+        function updateSpecDisplays() {
+            const fieldName = currentUnit === 'metric' ? 'spec' : 'spec_imperial';
+            
+            // 更新耗材规格
+            document.getElementById('consumable-spec').textContent = 
+                mockData.consumable[fieldName];
+            
+            // 更新备件规格
+            document.getElementById('spare-part-spec').textContent = 
+                mockData.sparePart[fieldName];
+            
+            // 更新配件规格
+            document.getElementById('accessory-spec').textContent = 
+                mockData.accessory[fieldName];
+        }
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSpecDisplays();
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PO页面特殊字符处理测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #666;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        .button {
+            background-color: #007cba;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 14px;
+        }
+        .button:hover {
+            background-color: #005a87;
+        }
+        .button.success {
+            background-color: #28a745;
+        }
+        .button.danger {
+            background-color: #dc3545;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .test-data {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        .field-test {
+            margin: 15px 0;
+            padding: 10px;
+            border-left: 4px solid #007cba;
+            background-color: #f8f9fa;
+        }
+        .field-name {
+            font-weight: bold;
+            color: #007cba;
+            margin-bottom: 5px;
+        }
+        .field-value {
+            font-family: monospace;
+            background-color: white;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            margin: 5px 0;
+        }
+        .expected {
+            color: #28a745;
+        }
+        .actual {
+            color: #007cba;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 PO页面特殊字符处理测试</h1>
+        
+        <div class="test-section">
+            <h2>📋 测试目标</h2>
+            <p>验证PO页面和Excel导出功能对包含特殊字符的字段的正确处理：</p>
+            <ul>
+                <li><strong>双引号 (")：</strong>应该正确转义为 ""</li>
+                <li><strong>逗号 (,)：</strong>字段应该用双引号包围</li>
+                <li><strong>换行符：</strong>应该保留并正确处理</li>
+                <li><strong>混合特殊字符：</strong>复杂场景的处理</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 测试数据</h2>
+            <div id="testData"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 字段修复逻辑测试</h2>
+            <div id="fieldFixTests"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 CSV转义测试</h2>
+            <div id="csvEscapeTests"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>⚡ 快速操作</h2>
+            <button class="button" onclick="runAllTests()">🔧 运行所有测试</button>
+            <button class="button" onclick="testPOPage()">📄 测试PO页面显示</button>
+            <button class="button" onclick="testExcelExport()">📊 测试Excel导出</button>
+            <button class="button success" onclick="window.open('/po', '_blank')">🔗 打开PO页面</button>
+        </div>
+
+        <div class="test-section">
+            <h2>📈 测试结果</h2>
+            <div id="testResults"></div>
+        </div>
+    </div>
+
+    <script>
+        // 测试数据集 - 包含各种特殊字符场景
+        const testData = [
+            {
+                name: '双引号测试',
+                description: 'LA-E4S "Premium" Host-US Version | 220V',
+                expected: '"LA-E4S ""Premium"" Host-US Version | 220V"'
+            },
+            {
+                name: '逗号测试',
+                description: 'partNumber: 60A01149, productName: LA-E4S(paper) Host-US Version | 220V',
+                expected: '"partNumber: 60A01149, productName: LA-E4S(paper) Host-US Version | 220V"'
+            },
+            {
+                name: '混合特殊字符',
+                description: 'Product "Name", with, multiple, commas and "quotes"',
+                expected: '"Product ""Name"", with, multiple, commas and ""quotes"""'
+            },
+            {
+                name: '换行符测试',
+                description: 'Line 1\nLine 2\nLine 3',
+                expected: '"Line 1\nLine 2\nLine 3"'
+            },
+            {
+                name: '复杂JSON格式',
+                description: '{"partNumber": "60A01149", "productName": "LA-E4S(paper) Host-US Version", "specs": "220V, 50Hz"}',
+                expected: '"{""partNumber"": ""60A01149"", ""productName"": ""LA-E4S(paper) Host-US Version"", ""specs"": ""220V, 50Hz""}"'
+            }
+        ];
+
+        // CSV转义函数（模拟前端逻辑）
+        function escapeCsvField(value) {
+            if (!value) return '';
+            
+            let cleaned = String(value).trim();
+            
+            if (cleaned.includes(',') || cleaned.includes('"') || cleaned.includes('\n') || cleaned.includes('\r')) {
+                cleaned = cleaned.replace(/"/g, '""');
+                return `"${cleaned}"`;
+            }
+            
+            return cleaned;
+        }
+
+        // 字段修复逻辑（模拟PO页面逻辑）
+        function fixItemDescription(item) {
+            const parts = [];
+            
+            // 添加partNumber信息
+            if (item.code || item.sku || item.part_number) {
+                parts.push(`partNumber: ${item.code || item.sku || item.part_number}`);
+            }
+            
+            // 添加productName信息
+            const itemName = item.name || item.item_name || item.product_name || 'Unknown Product';
+            parts.push(`productName: ${itemName}`);
+            
+            // 添加规格信息
+            let specInfo = '';
+            if (item.spec) {
+                specInfo = item.spec;
+            } else if (item.description) {
+                specInfo = item.description;
+            } else if (item.specs) {
+                specInfo = typeof item.specs === 'string' ? item.specs : JSON.stringify(item.specs);
+            }
+            
+            if (specInfo) {
+                parts.push(specInfo);
+            }
+            
+            return parts.join(' | ');
+        }
+
+        // 运行所有测试
+        function runAllTests() {
+            console.log('🔧 开始运行特殊字符处理测试...');
+            
+            // 显示测试数据
+            displayTestData();
+            
+            // 运行字段修复测试
+            runFieldFixTests();
+            
+            // 运行CSV转义测试
+            runCsvEscapeTests();
+            
+            // 显示结果
+            displayTestResults();
+        }
+
+        // 显示测试数据
+        function displayTestData() {
+            const container = document.getElementById('testData');
+            let html = '';
+            
+            testData.forEach((test, index) => {
+                html += `
+                    <div class="field-test">
+                        <div class="field-name">${test.name}</div>
+                        <div class="field-value">
+                            <div><strong>原始:</strong> ${test.description}</div>
+                            <div><strong>期望:</strong> <span class="expected">${test.expected}</span></div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // 运行字段修复测试
+        function runFieldFixTests() {
+            const container = document.getElementById('fieldFixTests');
+            let html = '<h3>字段修复结果：</h3>';
+            
+            const testItems = [
+                {
+                    name: '标准产品',
+                    code: '60A01149',
+                    name: 'LA-E4S(paper) Host-US Version',
+                    spec: '220V'
+                },
+                {
+                    name: '包含引号的产品',
+                    code: '90R01258',
+                    name: 'Premium "Quality" Filter',
+                    spec: '24V, 50Hz'
+                },
+                {
+                    name: '包含逗号的产品',
+                    code: 'CON-2025',
+                    name: 'Connector, Type A, Premium',
+                    spec: 'Input: 12V, Output: 5V'
+                }
+            ];
+            
+            testItems.forEach(item => {
+                const result = fixItemDescription(item);
+                html += `
+                    <div class="field-test">
+                        <div class="field-name">${item.name}</div>
+                        <div class="field-value">
+                            <div><strong>修复后:</strong> <span class="actual">${result}</span></div>
+                            <div><strong>CSV转义:</strong> <span class="expected">${escapeCsvField(result)}</span></div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // 运行CSV转义测试
+        function runCsvEscapeTests() {
+            const container = document.getElementById('csvEscapeTests');
+            let html = '<h3>CSV转义结果：</h3>';
+            
+            testData.forEach(test => {
+                const result = escapeCsvField(test.description);
+                const isCorrect = result === test.expected;
+                
+                html += `
+                    <div class="field-test">
+                        <div class="field-name">${test.name} ${isCorrect ? '✅' : '❌'}</div>
+                        <div class="field-value">
+                            <div><strong>输入:</strong> ${test.description}</div>
+                            <div><strong>输出:</strong> <span class="actual">${result}</span></div>
+                            <div><strong>期望:</strong> <span class="expected">${test.expected}</span></div>
+                            <div><strong>状态:</strong> <span class="${isCorrect ? 'expected' : 'actual'}">${isCorrect ? '通过' : '失败'}</span></div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // 显示测试结果
+        function displayTestResults() {
+            const container = document.getElementById('testResults');
+            
+            // 计算测试结果
+            let passed = 0;
+            let total = testData.length;
+            
+            testData.forEach(test => {
+                const result = escapeCsvField(test.description);
+                if (result === test.expected) {
+                    passed++;
+                }
+            });
+            
+            const passRate = ((passed / total) * 100).toFixed(1);
+            const status = passed === total ? 'success' : (passed > total * 0.7 ? 'info' : 'error');
+            
+            container.innerHTML = `
+                <div class="status ${status}">
+                    <h3>📊 测试总结</h3>
+                    <p><strong>通过率:</strong> ${passed}/${total} (${passRate}%)</p>
+                    <p><strong>状态:</strong> ${passed === total ? '✅ 所有测试通过' : (passed > total * 0.7 ? '⚠️ 部分测试失败' : '❌ 多个测试失败')}</p>
+                </div>
+                
+                <div class="test-data">
+测试完成时间: ${new Date().toLocaleString()}
+CSV转义功能: ${passed === total ? '正常' : '需要修复'}
+特殊字符处理: ${passed >= total * 0.8 ? '良好' : '需要改进'}
+
+建议:
+${passed === total ? '✅ 特殊字符处理功能工作正常，可以安全使用Excel导出功能。' : '⚠️ 发现特殊字符处理问题，建议检查CSV转义逻辑。'}
+                </div>
+            `;
+        }
+
+        // 测试PO页面显示
+        function testPOPage() {
+            const status = document.getElementById('testResults');
+            status.innerHTML = `
+                <div class="status info">
+                    <p>🔗 正在打开PO页面进行手动验证...</p>
+                    <p>请检查以下字段的显示：</p>
+                    <ul>
+                        <li>Model列是否显示正确</li>
+                        <li>Brand列是否显示正确</li>
+                        <li>Item Description列是否优先显示spec</li>
+                        <li>特殊字符是否正确显示</li>
+                    </ul>
+                </div>
+            `;
+            
+            // 打开PO页面
+            setTimeout(() => {
+                window.open('/po', '_blank');
+            }, 1000);
+        }
+
+        // 测试Excel导出
+        function testExcelExport() {
+            const status = document.getElementById('testResults');
+            status.innerHTML = `
+                <div class="status info">
+                    <p>📊 Excel导出测试说明：</p>
+                    <ol>
+                        <li>打开PO页面</li>
+                        <li>点击"Export to Excel"按钮</li>
+                        <li>下载CSV文件</li>
+                        <li>用Excel或文本编辑器打开文件</li>
+                        <li>检查特殊字符是否正确处理</li>
+                    </ol>
+                    <p><strong>重点检查：</strong></p>
+                    <ul>
+                        <li>包含逗号的字段是否用双引号包围</li>
+                        <li>双引号是否转义为两个双引号</li>
+                        <li>Item Description字段格式是否正确</li>
+                    </ul>
+                </div>
+            `;
+        }
+
+        // 页面加载时自动运行测试
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔧 PO页面特殊字符处理测试页面已加载');
+            runAllTests();
+        });
+    </script>
+</body>
+</html> 

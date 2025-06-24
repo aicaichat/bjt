@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API订单号格式测试</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .endpoint-info {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .json-display {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 API订单号格式测试</h1>
+        
+        <div class="endpoint-info">
+            <h3>📡 API端点信息</h3>
+            <div><strong>创建订单：</strong>POST /wp-json/bjt/v1/orders</div>
+            <div><strong>获取订单：</strong>GET /wp-json/bjt/v1/orders</div>
+            <div><strong>当前URL：</strong><span id="currentUrl"></span></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🚀 测试操作</h3>
+            <button onclick="createTestOrder()">创建测试订单</button>
+            <button onclick="getLatestOrders()">获取最新订单</button>
+            <button onclick="clearResults()">清空结果</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        let results = [];
+
+        // 显示当前URL
+        document.getElementById('currentUrl').textContent = window.location.origin;
+
+        function addResult(type, message, data = null) {
+            const timestamp = new Date().toLocaleTimeString();
+            results.push({ type, message, timestamp, data });
+            updateResultsDisplay();
+        }
+
+        function updateResultsDisplay() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = results.map(result => {
+                let content = `[${result.timestamp}] ${result.message}`;
+                if (result.data) {
+                    content += '\n' + JSON.stringify(result.data, null, 2);
+                }
+                return `<div class="test-result ${result.type}">${content}</div>`;
+            }).join('');
+        }
+
+        function clearResults() {
+            results = [];
+            updateResultsDisplay();
+        }
+
+        async function createTestOrder() {
+            addResult('info', '🚀 开始创建测试订单...');
+            
+            const testOrderData = {
+                customer_info: {
+                    name: '测试用户-' + Date.now(),
+                    email: 'test@example.com',
+                    phone: '13800138000',
+                    company: '测试公司'
+                },
+                shipping_address: {
+                    country: 'CN',
+                    state: '北京市',
+                    city: '北京市',
+                    address: '测试地址123号',
+                    postal_code: '100000'
+                },
+                billing_address: {
+                    country: 'CN',
+                    state: '北京市', 
+                    city: '北京市',
+                    address: '测试地址123号',
+                    postal_code: '100000'
+                },
+                payment_method: 'bank_transfer',
+                items: [
+                    {
+                        item_id: '90R01258',
+                        item_type: 'accessory',
+                        quantity: 1,
+                        unit_price: 100.00,
+                        currency: 'CNY',
+                        name: '测试配件',
+                        target_id: null
+                    }
+                ]
+            };
+
+            try {
+                addResult('info', '📤 发送请求到: ' + window.location.origin + '/wp-json/bjt/v1/orders');
+                addResult('info', '📋 请求数据:', testOrderData);
+
+                const response = await fetch('/wp-json/bjt/v1/orders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(testOrderData)
+                });
+
+                addResult('info', `📊 响应状态: ${response.status} ${response.statusText}`);
+                
+                const responseText = await response.text();
+                addResult('info', '📥 原始响应内容:', responseText);
+
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (parseError) {
+                    addResult('error', '❌ 响应解析失败: ' + parseError.message);
+                    return;
+                }
+                
+                if (response.ok) {
+                    const orderNumber = data.data?.order_number || data.order_number || '未知';
+                    const orderId = data.data?.id || data.id || '未知';
+                    
+                    addResult('success', `✅ 订单创建成功！`);
+                    addResult('info', `📝 订单ID: ${orderId}`);
+                    addResult('info', `📝 订单号: ${orderNumber}`);
+                    
+                    // 检查订单号格式
+                    analyzeOrderNumberFormat(orderNumber);
+                    
+                    // 显示完整响应
+                    addResult('info', '📋 完整API响应:', data);
+                } else {
+                    addResult('error', `❌ 订单创建失败: ${data.message || '未知错误'}`);
+                    addResult('error', '📋 错误响应:', data);
+                }
+            } catch (error) {
+                addResult('error', `❌ 网络错误: ${error.message}`);
+                console.error('网络错误:', error);
+            }
+        }
+
+        async function getLatestOrders() {
+            addResult('info', '🔍 获取最新订单...');
+            
+            try {
+                const response = await fetch('/wp-json/bjt/v1/orders?per_page=5&orderby=date&order=desc', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                addResult('info', `📊 响应状态: ${response.status} ${response.statusText}`);
+                
+                const responseText = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (parseError) {
+                    addResult('error', '❌ 响应解析失败: ' + parseError.message);
+                    addResult('info', '📥 原始响应:', responseText);
+                    return;
+                }
+                
+                if (response.ok) {
+                    const orders = data.data || data || [];
+                    addResult('success', `✅ 获取到 ${orders.length} 个订单`);
+                    
+                    if (orders.length > 0) {
+                        orders.forEach((order, index) => {
+                            const orderNumber = order.order_number || '未知';
+                            const orderId = order.id || '未知';
+                            const createdAt = order.created_at || '未知';
+                            
+                            addResult('info', `📝 订单 ${index + 1}: ID=${orderId}, 订单号=${orderNumber}, 创建时间=${createdAt}`);
+                            analyzeOrderNumberFormat(orderNumber, `订单${index + 1}`);
+                        });
+                        
+                        addResult('info', '📋 完整订单列表:', orders);
+                    } else {
+                        addResult('warning', '⚠️ 没有找到订单记录');
+                    }
+                } else {
+                    addResult('error', `❌ 获取订单失败: ${data.message || '未知错误'}`);
+                    addResult('error', '📋 错误响应:', data);
+                }
+            } catch (error) {
+                addResult('error', `❌ 网络错误: ${error.message}`);
+                console.error('网络错误:', error);
+            }
+        }
+
+        function analyzeOrderNumberFormat(orderNumber, prefix = '') {
+            if (!orderNumber || orderNumber === '未知') {
+                addResult('error', `❌ ${prefix} 订单号为空或未知`);
+                return;
+            }
+
+            const prefixText = prefix ? `${prefix} ` : '';
+            addResult('info', `🔍 ${prefixText}分析订单号格式: ${orderNumber}`);
+
+            // 检查PO格式: PO-YYYYMMDDHHMM-XXXXXX
+            const poPattern = /^PO-\d{12}-[A-Z0-9]{6}$/;
+            const isPOFormat = poPattern.test(orderNumber);
+            
+            // 检查ORD格式: ORD-YYYYMMDD-XXXXXX
+            const ordPattern = /^ORD-\d{8}-[A-Z0-9]{6}$/;
+            const isORDFormat = ordPattern.test(orderNumber);
+
+            if (isPOFormat) {
+                addResult('success', `✅ ${prefixText}订单号符合PO格式 (正确)`);
+                addResult('info', `📝 ${prefixText}格式分析: PO-YYYYMMDDHHMM-XXXXXX`);
+                
+                // 解析日期时间
+                const match = orderNumber.match(/^PO-(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})-([A-Z0-9]{6})$/);
+                if (match) {
+                    const [, year, month, day, hour, minute, random] = match;
+                    addResult('info', `📅 ${prefixText}日期时间: ${year}-${month}-${day} ${hour}:${minute}, 随机码: ${random}`);
+                }
+            } else if (isORDFormat) {
+                addResult('error', `❌ ${prefixText}订单号仍使用ORD格式 (需要修复)`);
+                addResult('info', `📝 ${prefixText}格式分析: ORD-YYYYMMDD-XXXXXX`);
+                addResult('warning', `🔧 ${prefixText}后端代码需要更新为PO格式`);
+                
+                // 解析日期
+                const match = orderNumber.match(/^ORD-(\d{4})(\d{2})(\d{2})-([A-Z0-9]{6})$/);
+                if (match) {
+                    const [, year, month, day, random] = match;
+                    addResult('info', `📅 ${prefixText}日期: ${year}-${month}-${day}, 随机码: ${random}`);
+                }
+            } else {
+                addResult('error', `❌ ${prefixText}订单号格式不符合预期: ${orderNumber}`);
+                addResult('info', `📝 ${prefixText}期望格式: PO-YYYYMMDDHHMM-XXXXXX 或 ORD-YYYYMMDD-XXXXXX`);
+            }
+        }
+
+        // 页面加载时的初始化
+        window.addEventListener('load', function() {
+            addResult('info', '🎯 API订单号格式测试页面已加载');
+            addResult('info', '📋 点击按钮测试API返回的订单号格式');
+            
+            // 自动获取最新订单
+            setTimeout(() => {
+                getLatestOrders();
+            }, 1000);
+        });
+    </script>
+</body>
+</html> 

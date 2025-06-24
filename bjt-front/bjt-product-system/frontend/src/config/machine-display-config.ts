@@ -224,14 +224,16 @@ export const MACHINE_FIELD_LABELS = {
     model: '型号',
     part_number: '料号',
     voltage: '电压',
+    image_url: '产品图片',  // 🔴 从"图片"改为"产品图片"
+    name: '名称',
     
-    // 重量字段（智能单位制）
+    // 重量字段（智能单位制）- 修正单位标准
     net_weight_kg: '单件净重(kg)',
-    net_weight_lbs: '单件净重(lbs)',
+    net_weight_lbs: '单件净重(lb)',  // 🔴 从"(lbs)"改为"(lb)"
     gross_weight_kg: '单件毛重(kg)',
-    gross_weight_lbs: '单件毛重(lbs)',
+    gross_weight_lbs: '单件毛重(lb)',  // 🔴 从"(lbs)"改为"(lb)"
     pallet_gross_weight_kg: '整托毛重(kg)',
-    pallet_gross_weight_lbs: '整托毛重(lbs)',
+    pallet_gross_weight_lbs: '整托毛重(lb)',  // 🔴 从"(lbs)"改为"(lb)"
     
     // 尺寸字段（智能单位制）
     package_size_cm: '包装尺寸(cm)',
@@ -243,33 +245,41 @@ export const MACHINE_FIELD_LABELS = {
     
     // 数量字段
     pcs_per_box: '单箱数量',
-    pcs_per_pallet: '一托数量'
+    pcs_per_pallet: '一托数量',
+    
+    // 配件特有字段
+    frequency: '频率'  // 🔴 从"频率Hz"改为"频率"
   },
   en: {
     // 基础字段
     model: 'Model',
     part_number: 'Part No.',
     voltage: 'Voltage',
+    image_url: 'Product Image',  // 🔴 从"Image"改为"Product Image"
+    name: 'Item',  // 🔴 从"Name"改为"Item"
     
-    // 重量字段（智能单位制）
+    // 重量字段（智能单位制）- 修正英文名称和单位标准
     net_weight_kg: 'Net Weight(kg)',
-    net_weight_lbs: 'Net Weight(lbs)',
+    net_weight_lbs: 'Net Weight(lb)',  // 🔴 从"(lbs)"改为"(lb)"
     gross_weight_kg: 'Gross Weight(kg)',
-    gross_weight_lbs: 'Gross Weight(lbs)',
-    pallet_gross_weight_kg: 'Pallet GW(kg)',
-    pallet_gross_weight_lbs: 'Pallet GW(lbs)',
+    gross_weight_lbs: 'Gross Weight(lb)',  // 🔴 从"(lbs)"改为"(lb)"
+    pallet_gross_weight_kg: 'GW per Pallet(kg)',  // 🔴 从"Pallet GW(kg)"改为"GW per Pallet(kg)"
+    pallet_gross_weight_lbs: 'GW per Pallet(lb)',  // 🔴 从"Pallet GW(lbs)"改为"GW per Pallet(lb)"
     
-    // 尺寸字段（智能单位制）
-    package_size_cm: 'Package Size(cm)',
-    package_size_inch: 'Package Size(inch)',
+    // 尺寸字段（智能单位制）- 修正英文名称
+    package_size_cm: 'Packaging Dim.(cm)',  // 🔴 从"Package Size(cm)"改为"Packaging Dim.(cm)"
+    package_size_inch: 'Packaging Dim.(inch)',  // 🔴 从"Package Size(inch)"改为"Packaging Dim.(inch)"
     pallet_size_cm: 'Pallet Size(cm)',
     pallet_size_inch: 'Pallet Size(inch)',
     pallet_height_cm: 'Pallet Height(cm)',
     pallet_height_inch: 'Pallet Height(inch)',
     
-    // 数量字段
-    pcs_per_box: 'Qty per Box',
-    pcs_per_pallet: 'Qty per Pallet'
+    // 数量字段 - 修正英文名称
+    pcs_per_box: 'Qty per Carton',  // 🔴 从"Qty per Box"改为"Qty per Carton"
+    pcs_per_pallet: 'Packs per Pallet',  // 🔴 从"Qty per Pallet"改为"Packs per Pallet"
+    
+    // 配件特有字段
+    frequency: 'Frequency'
   }
 };
 
@@ -362,7 +372,7 @@ export const MACHINE_JSON_FIELDS = {
   machineList: [
     "型号",      // model
     "电压",      // voltage  
-    "图片",      // image
+    "产品图片",   // 🔴 从"图片"改为"产品图片"
     "料号",      // part_number
     "名称",      // name
     "单箱数量",   // pcs_per_box
@@ -375,7 +385,7 @@ export const MACHINE_JSON_FIELDS = {
   machineCart: [
     "型号",      // model
     "电压",      // voltage
-    "图片",      // image
+    "产品图片",   // 🔴 从"图片"改为"产品图片"
     "料号",      // part_number
     "名称",      // name
     "单箱数量",   // pcs_per_box
@@ -389,11 +399,11 @@ export const MACHINE_JSON_FIELDS = {
     "包装尺寸cm",   // package_size_cm
     "包装尺寸inch", // package_size_inch
     "单件净重kg",   // net_weight_kg
-    "单件净重lbs",  // net_weight_lbs
+    "单件净重lb",   // net_weight_lbs - 🔴 修正显示名单位
     "打托高度cm",   // pallet_height_cm
     "打托高度inch", // pallet_height_inch
     "整托毛重kg",   // pallet_gross_weight_kg
-    "整托毛重lbs"   // pallet_gross_weight_lbs
+    "整托毛重lb"    // pallet_gross_weight_lbs - 🔴 修正显示名单位
   ]
 } as const;
 
@@ -404,9 +414,9 @@ export const ACCESSORY_JSON_FIELDS = {
     "产品图片",     // image
     "型号",        // model
     "料号",        // part_number
-    "产品名称",     // name
-    "电压V",       // voltage
-    "频率Hz",      // frequency
+    "名称",        // 🔴 从"产品名称"改为"名称"
+    "电压",        // 🔴 从"电压V"改为"电压"
+    "频率",        // 🔴 从"频率Hz"改为"频率"
     "单箱数量",     // pcs_per_box
     "托盘尺寸cm",   // pallet_size_cm
     "托盘尺寸inch", // pallet_size_inch
@@ -418,9 +428,9 @@ export const ACCESSORY_JSON_FIELDS = {
     "产品图片",     // image
     "型号",        // model
     "料号",        // part_number
-    "产品名称",     // name
-    "电压V",       // voltage
-    "频率Hz",      // frequency
+    "名称",        // 🔴 从"产品名称"改为"名称"
+    "电压",        // 🔴 从"电压V"改为"电压"
+    "频率",        // 🔴 从"频率Hz"改为"频率"
     "单箱数量"      // pcs_per_box
   ],
   
@@ -429,11 +439,11 @@ export const ACCESSORY_JSON_FIELDS = {
     "包装尺寸cm",   // package_size_cm
     "包装尺寸inch", // package_size_inch
     "单件净重kg",   // net_weight_kg
-    "单件净重lbs",  // net_weight_lbs
+    "单件净重lb",   // net_weight_lbs - 🔴 修正显示名单位
     "打托高度cm",   // pallet_height_cm
     "打托高度inch", // pallet_height_inch
     "整托毛重kg",   // pallet_gross_weight_kg
-    "整托毛重lbs"   // pallet_gross_weight_lbs
+    "整托毛重lb"    // pallet_gross_weight_lbs - 🔴 修正显示名单位
   ]
 } as const;
 

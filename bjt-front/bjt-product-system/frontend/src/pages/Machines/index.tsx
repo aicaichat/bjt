@@ -156,12 +156,38 @@ const MachinesPage: React.FC = () => {
   // 使用ref来跟踪上一次选择的机器，避免不必要的重复加载
   const previousMachineRef = useRef<string>('');
   
+  // ✅ 新增：强制重新渲染的状态
+  const [forceRender, setForceRender] = useState<number>(0);
+  
+  // ✅ 修复：将currentLanguage改为真正的状态
+  const [currentLanguage, setCurrentLanguage] = useState<'zh' | 'en'>(
+    i18n.language.startsWith('zh') ? 'zh' : 'en'
+  );
+  
+  // ✅ 新增：监听i18n语言变化并更新状态
+  useEffect(() => {
+    const newLanguage = i18n.language.startsWith('zh') ? 'zh' : 'en';
+    if (newLanguage !== currentLanguage) {
+      console.log('🌐 [Language State Update] i18n language changed:', {
+        'old_currentLanguage': currentLanguage,
+        'new_i18n.language': i18n.language,
+        'new_currentLanguage': newLanguage
+      });
+      setCurrentLanguage(newLanguage);
+    }
+  }, [i18n.language, currentLanguage]);
+  
   // 判断用户角色和权限
   const isSales = user && (user.role === 'admin' || user.role === 'sales');
   const canAddToCart = true;
   const userRegion = user?.region || filterRegion || DEFAULT_REGION;
   
-  const currentLanguage = i18n.language.startsWith('zh') ? 'zh' : 'en';
+  // ✅ 调试：监控语言变化
+  console.log('🌐 [Language Debug] Current language state:', {
+    'i18n.language': i18n.language,
+    'currentLanguage': currentLanguage,
+    'forceRender': forceRender
+  });
 
   // 现代化通知功能
   const toastNotifications = useToastNotifications();
@@ -188,17 +214,82 @@ const MachinesPage: React.FC = () => {
 
   // ✅ 新增：获取配件名称，支持多语言切换
   const getAccessoryName = (accessory: MachineAccessory): string => {
-    const name = currentLanguage === 'zh' 
-      ? (accessory.title_zh || accessory.name_zh)
-      : (accessory.title_en || accessory.name_en);
+    console.log('🔍 [getAccessoryName] Called with:', {
+      accessoryId: accessory.id,
+      currentLanguage,
+      title_zh: accessory.title_zh,
+      title_en: accessory.title_en,
+      name_zh: accessory.name_zh,
+      name_en: accessory.name_en
+    });
     
-    if (!name) {
-      // 如果没有对应语言的名称，则使用备用语言
-      const fallbackName = currentLanguage === 'zh' 
-        ? (accessory.title_en || accessory.name_en)
-        : (accessory.title_zh || accessory.name_zh);
-      return safeTextContent(fallbackName || accessory.title || accessory.model || 'N/A');
+    // ✅ 修复：根据当前语言选择对应的数据库字段
+    let name: string;
+    
+    if (currentLanguage === 'zh') {
+      // 中文模式：使用中文字段
+      name = accessory.title_zh || accessory.name_zh || '';
+    } else {
+      // 英文模式：使用英文字段
+      name = accessory.title_en || accessory.name_en || '';
     }
+    
+    // ✅ 修复：移除回退机制，避免语言混乱
+    // 如果当前语言的字段为空，显示提示信息而不是回退到另一种语言
+    if (!name) {
+      const fallbackMessage = currentLanguage === 'zh' ? '名称待翻译' : 'Name translation pending';
+      console.log('🔍 [getAccessoryName] No name found for current language, using fallback message:', fallbackMessage);
+      return safeTextContent(fallbackMessage);
+    }
+    
+    console.log('🔍 [getAccessoryName] Selected name:', {
+      name,
+      language: currentLanguage,
+      usedFallback: false
+    });
+    
+    return safeTextContent(name);
+  };
+
+  // ✅ 调试：专门的配件名称获取函数，包含更多调试信息
+  const getAccessoryNameDebug = (accessory: MachineAccessory, context: string = ''): string => {
+    console.log(`🔍 [getAccessoryNameDebug][${context}] Called with:`, {
+      accessoryId: accessory.id,
+      'i18n.language': i18n.language,
+      currentLanguage,
+      forceRender,
+      title_zh: accessory.title_zh,
+      title_en: accessory.title_en,
+      name_zh: accessory.name_zh,
+      name_en: accessory.name_en,
+      timestamp: new Date().toISOString()
+    });
+    
+    // ✅ 修复：根据当前语言选择对应的数据库字段
+    let name: string;
+    
+    if (currentLanguage === 'zh') {
+      // 中文模式：使用中文字段
+      name = accessory.title_zh || accessory.name_zh || '';
+    } else {
+      // 英文模式：使用英文字段
+      name = accessory.title_en || accessory.name_en || '';
+    }
+    
+    // ✅ 修复：移除回退机制，避免语言混乱
+    // 如果当前语言的字段为空，显示提示信息而不是回退到另一种语言
+    if (!name) {
+      const fallbackMessage = currentLanguage === 'zh' ? '名称待翻译' : 'Name translation pending';
+      console.log(`🔍 [getAccessoryNameDebug][${context}] No name found for current language, using fallback message:`, fallbackMessage);
+      return safeTextContent(fallbackMessage);
+    }
+    
+    console.log(`🔍 [getAccessoryNameDebug][${context}] Selected name:`, {
+      selectedName: name,
+      language: currentLanguage,
+      usedFallback: false
+    });
+    
     return safeTextContent(name);
   };
 
@@ -739,6 +830,26 @@ const MachinesPage: React.FC = () => {
     fetchMachines();
     fetchHostModels();
   }, [category, currentLanguage, filterRegion, selectedVoltage]);
+
+  // ✅ 新增：监听语言变化，强制重新渲染配件路径
+  useEffect(() => {
+    console.log('🔄 [Language Change] Clearing cached accessory names for language switch:', {
+      currentLanguage,
+      selectedAccessoriesCount: Object.keys(selectedAccessories).length,
+      selectedAccessoryNamesCount: Object.keys(selectedAccessoryNames).length
+    });
+    
+    // 当语言切换时，清空缓存的配件名称，但保留选择状态
+    // 这样renderAccessoryPath函数会动态重新计算配件名称
+    if (Object.keys(selectedAccessoryNames).length > 0) {
+      console.log('🔄 [Language Change] Clearing selectedAccessoryNames cache');
+      setSelectedAccessoryNames({});
+    }
+    
+    // ✅ 强制重新渲染所有组件
+    setForceRender(prev => prev + 1);
+    console.log('🔄 [Language Change] Force re-render triggered');
+  }, [currentLanguage]); // 只监听语言变化
 
   // 当选择机器变化时，自动加载配件
   useEffect(() => {
@@ -2395,15 +2506,42 @@ const MachinesPage: React.FC = () => {
     // Add accessories for each level
     for (let i = 1; i < level; i++) {
       const accessoryId = selectedAccessories[`level${i}`];
-      const accessoryName = selectedAccessoryNames[`level${i}`];
       
-      if (accessoryId && accessoryName) {
+      if (accessoryId) {
+        // ✅ 修复：动态获取配件名称而不是使用缓存的名称
+        let accessoryName = 'N/A';
+        let accessory = null;
+        
+        // 根据层级查找配件对象
+        const accessoryLists = [
+          accessories,           // level 1
+          level2Accessories,     // level 2
+          level3Accessories,     // level 3
+          level4Accessories,     // level 4
+          level5Accessories      // level 5
+        ];
+        
+        if (i >= 1 && i <= 5) {
+          const targetList = accessoryLists[i - 1];
+          accessory = targetList.find(acc => acc.id.toString() === accessoryId);
+          
+          if (accessory) {
+            // 使用getAccessoryName函数动态获取当前语言的名称
+            accessoryName = getAccessoryName(accessory);
+          }
+        }
+        
         pathItems.push(
           <div key={`accessory-level-${level}-path-${i}-${accessoryId}`} className="flex items-center">
             <span className="text-xs px-1.5 py-0.5 bg-gray-100 rounded mr-1">
               {t('accessories.level')} {i}
             </span>
-            <span className="text-gray-800">{accessoryName}</span>
+            <span 
+              key={`accessory-path-name-${accessoryId}-${currentLanguage}-${forceRender}`}
+              className="text-gray-800"
+            >
+              {accessoryName}
+            </span>
           </div>
         );
       }
@@ -2527,7 +2665,7 @@ const MachinesPage: React.FC = () => {
     };
 
     return (
-      <div key={`accessory-level-${level}-${accessory.id}-${accessoryPart?.part_number || 'no-part'}-${index}`} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 text-gray-900 mb-4 overflow-hidden">
+      <div key={`accessory-level-${level}-${accessory.id}-${accessoryPart?.part_number || 'no-part'}-${index}-${currentLanguage}-${forceRender}`} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 text-gray-900 mb-4 overflow-hidden">
         <div className="flex flex-col md:flex-row p-6">
           {/* Column 1: Image & Selection */}
           <div className="w-full md:w-1/5 flex flex-col items-center md:items-start mb-6 md:mb-0 md:pr-6">
@@ -2561,7 +2699,12 @@ const MachinesPage: React.FC = () => {
           <div className="w-full md:w-3/5 md:px-6">
             <div className="mb-4">
               <span className="inline-block bg-blue-500 text-white px-3 py-1 text-sm font-bold rounded-lg shadow-sm">{getPartNumber()}</span>
-              <h3 className="text-xl font-bold text-gray-800 mt-2 leading-tight">{getAccessoryName(accessory)}</h3>
+              <h3 
+                key={`accessory-title-${accessory.id}-${currentLanguage}-${forceRender}`}
+                className="text-xl font-bold text-gray-800 mt-2 leading-tight"
+              >
+                {getAccessoryNameDebug(accessory, 'h3-title')}
+              </h3>
             </div>
 
             <div className="bg-gray-50 rounded-lg p-4 mt-3 shadow-sm">
@@ -2967,6 +3110,230 @@ const MachinesPage: React.FC = () => {
     fetchMachines();
     fetchHostModels();
   }, [category, currentLanguage, filterRegion, selectedVoltage]);
+
+  // ✅ 监听语言变化，强制重新渲染和重新加载数据
+  useEffect(() => {
+    console.log('🔄 [Language Change] Current language changed to:', currentLanguage);
+    
+    // 清理配件相关的状态缓存
+    if (selectedAccessoryNames && Object.keys(selectedAccessoryNames).length > 0) {
+      console.log('🔄 [Language Change] Clearing selectedAccessoryNames cache');
+      setSelectedAccessoryNames({});
+    }
+    
+    // ✅ 强制重新渲染所有组件
+    setForceRender(prev => prev + 1);
+    console.log('🔄 [Language Change] Force re-render triggered');
+    
+    // ✅ 修复：语言切换时重新加载配件数据
+    if (selectedMachine && selectedMachine !== '') {
+      console.log('🔄 [Language Change] Reloading accessories data for new language');
+      
+      // 清除当前配件状态
+      setAccessories([]);
+      setLevel2Accessories([]);
+      setLevel3Accessories([]);
+      setLevel4Accessories([]);
+      setLevel5Accessories([]);
+      
+      // 重新加载配件数据
+      const reloadAccessoriesForLanguage = async () => {
+        setAccessoriesLoading(true);
+        try {
+          const token = localStorage.getItem('auth_token');
+          
+          // 获取选中机器的信息
+          const selectedMachineData = machines.find(m => m.id.toString() === selectedMachine);
+          const machinePartNumber = selectedMachineData?.part_number || selectedMachine;
+          
+          console.log('🔄 [Language Change] Reloading accessories for machine:', machinePartNumber, 'with language:', currentLanguage);
+          
+          // 使用新的语言参数调用API
+          const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1';
+          const apiUrl = `${baseUrl}/relations/${machinePartNumber}/accessories?lang=${currentLanguage}&region=${filterRegion}&max_levels=5&status=publish`;
+          
+          console.log('🔄 [Language Change] API URL with new language:', apiUrl);
+          
+          const response = await fetch(apiUrl, {
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              ...(token && { 'Authorization': `Bearer ${token}` })
+            }
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          
+          const jsonData = await response.json();
+          console.log('✅ [Language Change] Reloaded accessories data:', jsonData);
+          
+          if (jsonData.success && jsonData.data && jsonData.data.accessories) {
+            const accessoriesData = jsonData.data.accessories;
+            
+            // 应用过滤器和数据处理逻辑（复用原有逻辑）
+            const filterMissingData = (items: any[]): any[] => {
+              if (!Array.isArray(items)) return [];
+              
+              return items
+                .filter(item => {
+                  const isMissingData = 
+                    (item.id && String(item.id).toLowerCase().startsWith('missing')) ||
+                    (item.part_number && String(item.part_number).toLowerCase().startsWith('missing'));
+                  
+                  if (isMissingData) {
+                    console.log('🚫 [filterMissingData] 过滤掉占位符数据:', {
+                      id: item.id,
+                      part_number: item.part_number,
+                      name: item.name
+                    });
+                    return false;
+                  }
+                  return true;
+                })
+                .map(item => ({
+                  ...item,
+                  children: item.children ? filterMissingData(item.children) : []
+                }));
+            };
+            
+            const filteredAccessoriesData = filterMissingData(accessoriesData);
+            console.log('✅ [Language Change] Filtered accessories data, count:', filteredAccessoriesData.length);
+            
+            // 处理层级数据（复用原有逻辑）
+            const flattenAccessoriesByLevel = (items: any[], targetLevel: number = 1) => {
+              const result: MachineAccessory[] = [];
+              
+              const processItems = (itemsList: any[], parentId?: string) => {
+                itemsList.forEach((item: any, index: number) => {
+                  if (item.level === targetLevel) {
+                    const convertChildren = (childrenData: any[]): MachineAccessory[] => {
+                      if (!Array.isArray(childrenData)) return [];
+                      return childrenData.map((child: any) => ({
+                        id: child.id?.toString() || '',
+                        part_number: child.part_number || '',
+                        name_zh: child.name_zh || '',
+                        name_en: child.name_en || '',
+                        title: child.name || child.name_zh || child.name_en || '',
+                        title_zh: child.title_zh || '',
+                        title_en: child.title_en || '',
+                        model: child.model || '',
+                        spec: child.spec || '',
+                        spec_imperial: child.spec_imperial || '',
+                        voltage: child.voltage || '',
+                        frequency: child.frequency || '',
+                        image_url: child.image_url || '',
+                        explosion_diagram_pdf: child.explosion_diagram_pdf || '',
+                        spec_pdf: child.spec_pdf || '',
+                        unit: child.unit || 'pcs',
+                        product_line_id: child.product_line_id || 1,
+                        level: child.level || targetLevel,
+                        parts: [], // 添加必需的parts字段
+                        children: child.children ? convertChildren(child.children) : [],
+                        package_size_cm: child.package_size_cm || '',
+                        package_size_inch: child.package_size_inch || '',
+                        net_weight_kg: child.net_weight_kg,
+                        net_weight_lbs: child.net_weight_lbs,
+                        gross_weight_kg: child.gross_weight_kg,
+                        gross_weight_lbs: child.gross_weight_lbs,
+                        pcs_per_box: child.pcs_per_box,
+                        pallet_size_cm: child.pallet_size_cm || '',
+                        pallet_size_inch: child.pallet_size_inch || '',
+                        pcs_per_pallet: child.pcs_per_pallet,
+                        pallet_height_cm: child.pallet_height_cm,
+                        pallet_height_inch: child.pallet_height_inch,
+                        pallet_gross_weight_kg: child.pallet_gross_weight_kg,
+                        pallet_gross_weight_lbs: child.pallet_gross_weight_lbs
+                      }));
+                    };
+                    
+                    const accessoryItem: MachineAccessory = {
+                      id: item.id?.toString() || '',
+                      part_number: item.part_number || '',
+                      name_zh: item.name_zh || '',
+                      name_en: item.name_en || '',
+                      title: item.name || item.name_zh || item.name_en || '',
+                      title_zh: item.title_zh || '',
+                      title_en: item.title_en || '',
+                      model: item.model || '',
+                      spec: item.spec || '',
+                      spec_imperial: item.spec_imperial || '',
+                      voltage: item.voltage || '',
+                      frequency: item.frequency || '',
+                      image_url: item.image_url || '',
+                      explosion_diagram_pdf: item.explosion_diagram_pdf || '',
+                      spec_pdf: item.spec_pdf || '',
+                      unit: item.unit || 'pcs',
+                      product_line_id: item.product_line_id || 1,
+                      level: item.level || targetLevel,
+                      parts: [], // 添加必需的parts字段
+                      children: item.children ? convertChildren(item.children) : [],
+                      package_size_cm: item.package_size_cm || '',
+                      package_size_inch: item.package_size_inch || '',
+                      net_weight_kg: item.net_weight_kg,
+                      net_weight_lbs: item.net_weight_lbs,
+                      gross_weight_kg: item.gross_weight_kg,
+                      gross_weight_lbs: item.gross_weight_lbs,
+                      pcs_per_box: item.pcs_per_box,
+                      pallet_size_cm: item.pallet_size_cm || '',
+                      pallet_size_inch: item.pallet_size_inch || '',
+                      pcs_per_pallet: item.pcs_per_pallet,
+                      pallet_height_cm: item.pallet_height_cm,
+                      pallet_height_inch: item.pallet_height_inch,
+                      pallet_gross_weight_kg: item.pallet_gross_weight_kg,
+                      pallet_gross_weight_lbs: item.pallet_gross_weight_lbs
+                    };
+                    
+                    result.push(accessoryItem);
+                  }
+                  
+                  if (item.children && Array.isArray(item.children) && item.children.length > 0) {
+                    processItems(item.children, item.id?.toString());
+                  }
+                });
+              };
+              
+              processItems(filteredAccessoriesData);
+              return result;
+            };
+            
+            // 分别获取各个层级的配件
+            const level1Items = flattenAccessoriesByLevel(filteredAccessoriesData, 1);
+            const level2Items = flattenAccessoriesByLevel(filteredAccessoriesData, 2);
+            const level3Items = flattenAccessoriesByLevel(filteredAccessoriesData, 3);
+            const level4Items = flattenAccessoriesByLevel(filteredAccessoriesData, 4);
+            const level5Items = flattenAccessoriesByLevel(filteredAccessoriesData, 5);
+            
+            console.log('✅ [Language Change] Processed accessories by level:', {
+              level1: level1Items.length,
+              level2: level2Items.length,
+              level3: level3Items.length,
+              level4: level4Items.length,
+              level5: level5Items.length
+            });
+            
+            // 更新状态
+            setAccessories(level1Items);
+            setLevel2Accessories(level2Items);
+            setLevel3Accessories(level3Items);
+            setLevel4Accessories(level4Items);
+            setLevel5Accessories(level5Items);
+            setAutoLoadedAccessories(true);
+            
+            console.log('✅ [Language Change] Successfully reloaded accessories for new language');
+          }
+        } catch (error) {
+          console.error('❌ [Language Change] Failed to reload accessories:', error);
+        } finally {
+          setAccessoriesLoading(false);
+        }
+      };
+      
+      // 延迟执行，确保状态更新完成
+      setTimeout(reloadAccessoriesForLanguage, 100);
+    }
+  }, [currentLanguage]); // 只监听语言变化
 
   // Return the main component JSX
   return (

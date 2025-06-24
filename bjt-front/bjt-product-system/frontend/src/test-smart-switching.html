@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能切换功能测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .test-result {
+            background: #f0f0f0;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>🎯 智能切换功能测试</h1>
+    
+    <div class="test-section">
+        <h2>1. Spec 公制英制切换测试</h2>
+        <div id="spec-test-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Name 中英文切换测试</h2>
+        <div id="name-test-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. 配置字段验证</h2>
+        <div id="config-test-results"></div>
+    </div>
+
+    <script>
+        // 模拟 CartFieldUnifier 类
+        class CartFieldUnifier {
+            static getProductName(item, language = 'zh') {
+                if (!item) return '';
+                
+                const props = item.properties || {};
+                
+                if (language === 'zh') {
+                    // 中文优先级：name_zh -> name -> code -> part_number -> id
+                    const sources = [
+                        props.name_zh,
+                        item.name_zh,
+                        props.name,
+                        item.name,
+                        props.code,
+                        item.code,
+                        props.part_number,
+                        item.part_number,
+                        item.id
+                    ];
+                    
+                    for (const source of sources) {
+                        if (this.isValidValue(source)) {
+                            return String(source);
+                        }
+                    }
+                    
+                    return '商品';
+                } else {
+                    // 英文优先级：name_en -> name -> code -> part_number -> id
+                    const sources = [
+                        props.name_en,
+                        item.name_en,
+                        props.name,
+                        item.name,
+                        props.code,
+                        item.code,
+                        props.part_number,
+                        item.part_number,
+                        item.id
+                    ];
+                    
+                    for (const source of sources) {
+                        if (this.isValidValue(source)) {
+                            return String(source);
+                        }
+                    }
+                    
+                    return 'Product';
+                }
+            }
+            
+            static getSpecsDisplay(item, language = 'zh', unitSystem = 'metric') {
+                if (!item) return '';
+                
+                const props = item.properties || {};
+                const specs = item.specs || {};
+                
+                // 根据单位制选择规格
+                let specValue = '';
+                if (unitSystem === 'metric') {
+                    specValue = props.spec || specs.spec || item.spec || 
+                               props.specification || specs.specification || item.specification;
+                } else {
+                    specValue = props.spec_imperial || specs.spec_imperial || item.spec_imperial ||
+                               props.spec || specs.spec || item.spec ||
+                               props.specification || specs.specification || item.specification;
+                }
+                
+                if (this.isValidValue(specValue)) {
+                    return String(specValue);
+                }
+                
+                return language === 'zh' ? '暂无规格信息' : 'No specification available';
+            }
+            
+            static getFieldValue(item, fieldKey, language = 'zh', unitSystem = 'metric') {
+                if (!item || !fieldKey) {
+                    return language === 'zh' ? '暂无数据' : 'Not Available';
+                }
+                
+                // 🎯 特殊字段智能处理
+                // 1. name 字段 - 使用智能中英文切换
+                if (fieldKey === 'name' || fieldKey === 'name_en' || fieldKey === 'name_zh') {
+                    return this.getProductName(item, language);
+                }
+                
+                // 2. spec 字段 - 使用智能公制英制切换
+                if (fieldKey === 'spec' || fieldKey === 'specification') {
+                    return this.getSpecsDisplay(item, language, unitSystem);
+                }
+                
+                // 3. 常规字段处理
+                const value = this.extractFieldValue(item, fieldKey, unitSystem);
+                
+                // 4. 如果没有值，返回默认提示
+                if (!this.isValidValue(value)) {
+                    return language === 'zh' ? '暂无数据' : 'Not Available';
+                }
+                
+                // 5. 格式化值
+                return String(value);
+            }
+            
+            static extractFieldValue(item, fieldKey, unitSystem) {
+                const props = item.properties || {};
+                const specs = item.specs || {};
+                
+                // 尝试多个数据源
+                const sources = [
+                    item[fieldKey],
+                    props[fieldKey],
+                    specs[fieldKey],
+                    // 尝试单位制相关的字段
+                    ...(unitSystem === 'imperial' ? [
+                        item[fieldKey + '_imperial'],
+                        props[fieldKey + '_imperial'],
+                        specs[fieldKey + '_imperial']
+                    ] : [])
+                ];
+                
+                for (const source of sources) {
+                    if (this.isValidValue(source)) {
+                        return source;
+                    }
+                }
+                
+                return null;
+            }
+            
+            static isValidValue(value) {
+                return value !== null && 
+                       value !== undefined && 
+                       value !== '' && 
+                       value !== 'N/A' && 
+                       value !== 'Not Specified' && 
+                       value !== 'null' && 
+                       value !== 'undefined';
+            }
+        }
+
+        // 测试数据
+        const testItems = {
+            sparePart: {
+                id: '09A0101107',
+                part_number: '09A0101107',
+                name_zh: '备件中文名称',
+                name_en: 'Spare Part English Name',
+                spec: '13um 30%HDPE Pillow, 20cmx13cm,1000m,150R/PL',
+                spec_imperial: '.5mil 30%HDPE Pillow, 8"x5.0", 3281\', 150R/PL',
+                properties: {
+                    name_zh: '属性中文名称',
+                    name_en: '属性英文名称',
+                    spec: '公制规格描述',
+                    spec_imperial: '英制规格描述'
+                }
+            },
+            consumable: {
+                id: 'MEX001',
+                part_number: 'MEX001',
+                name: 'MEX:Air pillow film',
+                name_en: 'MEX:Air pillow film',
+                spec: '13um 30%HDPE Pillow, 20cmx13cm,1000m,150R/PL',
+                spec_imperial: '.5mil 30%HDPE Pillow, 8"x5.0", 3281\', 150R/PL'
+            }
+        };
+
+        // 运行测试
+        function runTests() {
+            // 1. Spec 公制英制切换测试
+            testSpecSwitching();
+            
+            // 2. Name 中英文切换测试
+            testNameSwitching();
+            
+            // 3. 配置字段验证
+            testConfigFields();
+        }
+
+        function testSpecSwitching() {
+            const container = document.getElementById('spec-test-results');
+            let results = '';
+            
+            // 测试公制规格
+            const metricSpec = CartFieldUnifier.getFieldValue(testItems.sparePart, 'spec', 'zh', 'metric');
+            results += `<div class="test-result ${metricSpec.includes('13um') ? 'success' : 'error'}">
+                公制规格 (中文): ${metricSpec}
+            </div>`;
+            
+            // 测试英制规格
+            const imperialSpec = CartFieldUnifier.getFieldValue(testItems.sparePart, 'spec', 'zh', 'imperial');
+            results += `<div class="test-result ${imperialSpec.includes('.5mil') ? 'success' : 'error'}">
+                英制规格 (中文): ${imperialSpec}
+            </div>`;
+            
+            // 测试英文语言
+            const englishSpec = CartFieldUnifier.getFieldValue(testItems.sparePart, 'spec', 'en', 'metric');
+            results += `<div class="test-result ${englishSpec.includes('13um') ? 'success' : 'error'}">
+                公制规格 (英文): ${englishSpec}
+            </div>`;
+            
+            container.innerHTML = results;
+        }
+
+        function testNameSwitching() {
+            const container = document.getElementById('name-test-results');
+            let results = '';
+            
+            // 测试中文名称
+            const chineseName = CartFieldUnifier.getFieldValue(testItems.sparePart, 'name', 'zh', 'metric');
+            results += `<div class="test-result ${chineseName.includes('中文') ? 'success' : 'error'}">
+                中文名称: ${chineseName}
+            </div>`;
+            
+            // 测试英文名称
+            const englishName = CartFieldUnifier.getFieldValue(testItems.sparePart, 'name', 'en', 'metric');
+            results += `<div class="test-result ${englishName.includes('English') ? 'success' : 'error'}">
+                英文名称: ${englishName}
+            </div>`;
+            
+            // 测试耗材名称
+            const consumableName = CartFieldUnifier.getFieldValue(testItems.consumable, 'name', 'en', 'metric');
+            results += `<div class="test-result ${consumableName.includes('MEX') ? 'success' : 'error'}">
+                耗材名称 (英文): ${consumableName}
+            </div>`;
+            
+            container.innerHTML = results;
+        }
+
+        function testConfigFields() {
+            const container = document.getElementById('config-test-results');
+            let results = '';
+            
+            // 模拟配置字段列表
+            const sparePartFields = [
+                'app_model',
+                'part_number',
+                'name',           // 智能多语言 (中英文切换)
+                'spec',           // 智能单位制 (公制英制切换)
+                'app_sn',
+                'package_size_cm',
+                'unit',
+                'net_weight_kg',
+                'pcs_per_box',
+            ];
+            
+            results += `<div class="test-result info">
+                备件字段配置: ${sparePartFields.join(', ')}
+            </div>`;
+            
+            // 测试字段处理
+            sparePartFields.forEach(field => {
+                const value = CartFieldUnifier.getFieldValue(testItems.sparePart, field, 'zh', 'metric');
+                const isSpecialField = field === 'name' || field === 'spec';
+                results += `<div class="test-result ${isSpecialField ? 'success' : 'info'}">
+                    ${field}: ${value} ${isSpecialField ? '(智能处理)' : ''}
+                </div>`;
+            });
+            
+            container.innerHTML = results;
+        }
+
+        // 页面加载完成后运行测试
+        document.addEventListener('DOMContentLoaded', runTests);
+    </script>
+</body>
+</html> 

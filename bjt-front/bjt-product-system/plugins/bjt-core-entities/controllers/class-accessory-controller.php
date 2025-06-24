@@ -535,8 +535,9 @@ class BJT_Accessory_Controller extends BJT_API_Controller {
             );
         }
 
+        // ✅ 修复：移除回退机制，避免语言混乱
         // Add a dynamic 'name' field for backward compatibility based on language preference
-        $accessory['name'] = ($lang === 'en' && !empty($accessory['name_en'])) ? $accessory['name_en'] : $accessory['name_zh'];
+        $accessory['name'] = ($lang === 'en') ? $accessory['name_en'] : $accessory['name_zh'];
 
         // Format model info based on language
         $model_title = ($lang === 'en') ? $accessory['model_title_en'] : $accessory['model_title_zh'];
@@ -961,13 +962,11 @@ class BJT_Accessory_Controller extends BJT_API_Controller {
                 // Initialize model group if not exists
                 if (!isset($grouped_child_accessories[$child_accessory_model_code])) {
                     $model_title_key = $lang === 'en' ? 'title_en' : 'title_zh';
-                    $model_fallback_title_key = $lang === 'en' ? 'title_zh' : 'title_en';
                     
+                    // ✅ 修复：移除回退机制，避免语言混乱
                     $model_title = ''; 
                     if (isset($child_accessory_model_detail[$model_title_key]) && !empty($child_accessory_model_detail[$model_title_key])) {
                         $model_title = $child_accessory_model_detail[$model_title_key];
-                    } elseif (isset($child_accessory_model_detail[$model_fallback_title_key]) && !empty($child_accessory_model_detail[$model_fallback_title_key])) {
-                        $model_title = $child_accessory_model_detail[$model_fallback_title_key];
                     }
 
                     $grouped_child_accessories[$child_accessory_model_code] = [
@@ -979,7 +978,8 @@ class BJT_Accessory_Controller extends BJT_API_Controller {
                     ];
                 }
                 
-                $part_name_key = ($lang === 'en' && isset($child_accessory_detail['name_en']) && !empty($child_accessory_detail['name_en'])) ? 'name_en' : 'name_zh';
+                // ✅ 修复：移除回退机制，避免语言混乱
+                $part_name_key = ($lang === 'en') ? 'name_en' : 'name_zh';
                 
                 $part_data = [
                     'id' => $child_accessory_db_id, 

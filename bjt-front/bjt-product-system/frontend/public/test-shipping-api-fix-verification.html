@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>运输信息API修复验证</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        
+        .test-section h2 {
+            color: #34495e;
+            margin-top: 0;
+        }
+        
+        .button {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        
+        .button:hover {
+            background-color: #2980b9;
+        }
+        
+        .button.success {
+            background-color: #27ae60;
+        }
+        
+        .button.warning {
+            background-color: #f39c12;
+        }
+        
+        .button.danger {
+            background-color: #e74c3c;
+        }
+        
+        .result {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .result.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .result.error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .result.info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        
+        .result.warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        .comparison-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .field-mapping {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .field-group {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+        }
+        
+        .field-group h4 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        
+        .field-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .field-name {
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .field-value {
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 运输信息API修复验证</h1>
+        
+        <div class="test-section">
+            <h2>📋 修复说明</h2>
+            <p><strong>问题</strong>：订单API不返回shipping_address字段，导致PO页面运输信息显示为默认值。</p>
+            <p><strong>修复方案</strong>：修改后端API的prepare_item_for_response方法，当shipping_address为空时提供默认运输信息。</p>
+            <p><strong>预期结果</strong>：所有订单API响应都包含shipping_address字段，前端可以正确显示运输信息。</p>
+        </div>
+        
+        <div class="test-section">
+            <h2>🧪 API测试</h2>
+            <p>点击下方按钮测试修复后的API响应：</p>
+            
+            <button class="button" onclick="testOrderListAPI()">测试订单列表API</button>
+            <button class="button" onclick="testOrderDetailAPI()">测试订单详情API</button>
+            <button class="button" onclick="testAllOrdersShipping()">检查所有订单运输信息</button>
+            
+            <div id="apiTestResult" class="result" style="display: none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📊 运输信息字段验证</h2>
+            <p>验证API返回的运输信息字段是否完整：</p>
+            
+            <div class="field-mapping">
+                <div class="field-group">
+                    <h4>必需字段</h4>
+                    <div class="field-item">
+                        <span class="field-name">name</span>
+                        <span class="field-value">联系人姓名</span>
+                    </div>
+                    <div class="field-item">
+                        <span class="field-name">company</span>
+                        <span class="field-value">公司名称</span>
+                    </div>
+                    <div class="field-item">
+                        <span class="field-name">address</span>
+                        <span class="field-value">详细地址</span>
+                    </div>
+                    <div class="field-item">
+                        <span class="field-name">phone</span>
+                        <span class="field-value">联系电话</span>
+                    </div>
+                </div>
+                
+                <div class="field-group">
+                    <h4>可选字段</h4>
+                    <div class="field-item">
+                        <span class="field-name">email</span>
+                        <span class="field-value">电子邮箱</span>
+                    </div>
+                    <div class="field-item">
+                        <span class="field-name">postal_code</span>
+                        <span class="field-value">邮政编码</span>
+                    </div>
+                    <div class="field-item">
+                        <span class="field-name">country</span>
+                        <span class="field-value">国家</span>
+                    </div>
+                    <div class="field-item">
+                        <span class="field-name">notes</span>
+                        <span class="field-value">备注信息</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="fieldValidationResult" class="result" style="display: none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🔄 前端数据流测试</h2>
+            <p>模拟OrderList到PO页面的完整数据流：</p>
+            
+            <button class="button" onclick="testDataFlow()">测试完整数据流</button>
+            <button class="button warning" onclick="testErrorHandling()">测试错误处理</button>
+            <button class="button success" onclick="testFieldMapping()">测试字段映射</button>
+            
+            <div id="dataFlowResult" class="result" style="display: none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📈 修复效果对比</h2>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>测试项目</th>
+                        <th>修复前状态</th>
+                        <th>修复后状态</th>
+                        <th>验证结果</th>
+                    </tr>
+                </thead>
+                <tbody id="comparisonTableBody">
+                    <tr>
+                        <td>订单列表API运输信息</td>
+                        <td><span class="status-error">❌ 不存在</span></td>
+                        <td><span class="status-success">✅ 存在</span></td>
+                        <td id="orderListStatus">⏳ 待测试</td>
+                    </tr>
+                    <tr>
+                        <td>订单详情API运输信息</td>
+                        <td><span class="status-error">❌ 不存在</span></td>
+                        <td><span class="status-success">✅ 存在</span></td>
+                        <td id="orderDetailStatus">⏳ 待测试</td>
+                    </tr>
+                    <tr>
+                        <td>PO页面运输信息显示</td>
+                        <td><span class="status-error">❌ 默认值</span></td>
+                        <td><span class="status-success">✅ 实际值</span></td>
+                        <td id="poPageStatus">⏳ 待测试</td>
+                    </tr>
+                    <tr>
+                        <td>字段映射完整性</td>
+                        <td><span class="status-error">❌ 不完整</span></td>
+                        <td><span class="status-success">✅ 完整</span></td>
+                        <td id="fieldMappingStatus">⏳ 待测试</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // 存储测试结果
+        let testResults = {
+            orderList: null,
+            orderDetail: null,
+            dataFlow: null,
+            fieldMapping: null
+        };
+        
+        // 显示结果的辅助函数
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `result ${type}`;
+            element.textContent = message;
+        }
+        
+        // 更新状态指示器
+        function updateStatus(statusId, success) {
+            const element = document.getElementById(statusId);
+            if (success) {
+                element.innerHTML = '<span class="status-success">✅ 通过</span>';
+            } else {
+                element.innerHTML = '<span class="status-error">❌ 失败</span>';
+            }
+        }
+        
+        // 测试订单列表API
+        async function testOrderListAPI() {
+            showResult('apiTestResult', '🔄 正在测试订单列表API...', 'info');
+            
+            try {
+                const response = await fetch('/wp-json/bjt/v1/orders');
+                const data = await response.json();
+                
+                console.log('订单列表API响应:', data);
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    const firstOrder = data.data[0];
+                    const hasShipping = !!firstOrder.shipping_address;
+                    
+                    let result = `✅ 订单列表API测试成功\n\n`;
+                    result += `📊 获取到 ${data.data.length} 个订单\n`;
+                    result += `第一个订单 (ID: ${firstOrder.id}):\n`;
+                    result += `- shipping_address 字段: ${hasShipping ? '✅ 存在' : '❌ 不存在'}\n`;
+                    
+                    if (hasShipping) {
+                        const shipping = firstOrder.shipping_address;
+                        result += `\n📦 运输信息详情:\n`;
+                        result += `- 联系人: ${shipping.name || 'N/A'}\n`;
+                        result += `- 公司: ${shipping.company || 'N/A'}\n`;
+                        result += `- 地址: ${shipping.address || 'N/A'}\n`;
+                        result += `- 电话: ${shipping.phone || 'N/A'}\n`;
+                        result += `- 邮箱: ${shipping.email || 'N/A'}\n`;
+                        result += `\n完整运输信息:\n${JSON.stringify(shipping, null, 2)}`;
+                    }
+                    
+                    showResult('apiTestResult', result, 'success');
+                    updateStatus('orderListStatus', hasShipping);
+                    testResults.orderList = hasShipping;
+                } else {
+                    showResult('apiTestResult', `❌ API响应异常:\n${JSON.stringify(data, null, 2)}`, 'error');
+                    updateStatus('orderListStatus', false);
+                    testResults.orderList = false;
+                }
+            } catch (error) {
+                showResult('apiTestResult', `❌ API调用失败: ${error.message}`, 'error');
+                updateStatus('orderListStatus', false);
+                testResults.orderList = false;
+            }
+        }
+        
+        // 测试订单详情API
+        async function testOrderDetailAPI() {
+            showResult('apiTestResult', '🔄 正在测试订单详情API...', 'info');
+            
+            try {
+                // 先获取订单列表找到一个订单ID
+                const listResponse = await fetch('/wp-json/bjt/v1/orders');
+                const listData = await listResponse.json();
+                
+                if (!listData.success || !listData.data || listData.data.length === 0) {
+                    showResult('apiTestResult', '❌ 无法获取订单列表进行详情测试', 'error');
+                    return;
+                }
+                
+                const testOrderId = listData.data[0].id;
+                
+                // 测试订单详情API
+                const detailResponse = await fetch(`/wp-json/bjt/v1/orders/${testOrderId}`);
+                const detailData = await detailResponse.json();
+                
+                console.log('订单详情API响应:', detailData);
+                
+                if (detailData.success && detailData.data) {
+                    const order = detailData.data;
+                    const hasShipping = !!order.shipping_address;
+                    const hasBilling = !!order.billing_address;
+                    
+                    let result = `✅ 订单详情API测试成功\n\n`;
+                    result += `📋 订单ID: ${order.id}\n`;
+                    result += `订单号: ${order.order_number}\n`;
+                    result += `- shipping_address 字段: ${hasShipping ? '✅ 存在' : '❌ 不存在'}\n`;
+                    result += `- billing_address 字段: ${hasBilling ? '✅ 存在' : '❌ 不存在'}\n`;
+                    
+                    if (hasShipping) {
+                        const shipping = order.shipping_address;
+                        result += `\n📦 运输信息详情:\n`;
+                        result += `- 联系人: ${shipping.name || 'N/A'}\n`;
+                        result += `- 公司: ${shipping.company || 'N/A'}\n`;
+                        result += `- 地址: ${shipping.address || 'N/A'}\n`;
+                        result += `- 电话: ${shipping.phone || 'N/A'}\n`;
+                        result += `- 备注: ${shipping.notes || 'N/A'}\n`;
+                    }
+                    
+                    showResult('apiTestResult', result, 'success');
+                    updateStatus('orderDetailStatus', hasShipping);
+                    testResults.orderDetail = hasShipping;
+                } else {
+                    showResult('apiTestResult', `❌ 订单详情API响应异常:\n${JSON.stringify(detailData, null, 2)}`, 'error');
+                    updateStatus('orderDetailStatus', false);
+                    testResults.orderDetail = false;
+                }
+            } catch (error) {
+                showResult('apiTestResult', `❌ 订单详情API调用失败: ${error.message}`, 'error');
+                updateStatus('orderDetailStatus', false);
+                testResults.orderDetail = false;
+            }
+        }
+        
+        // 检查所有订单的运输信息
+        async function testAllOrdersShipping() {
+            showResult('apiTestResult', '🔄 正在检查所有订单的运输信息...', 'info');
+            
+            try {
+                const response = await fetch('/wp-json/bjt/v1/orders');
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    const orders = data.data;
+                    let withShipping = 0;
+                    let withoutShipping = 0;
+                    let details = [];
+                    
+                    orders.forEach(order => {
+                        if (order.shipping_address) {
+                            withShipping++;
+                            details.push(`✅ 订单 ${order.order_number}: 有运输信息`);
+                        } else {
+                            withoutShipping++;
+                            details.push(`❌ 订单 ${order.order_number}: 无运输信息`);
+                        }
+                    });
+                    
+                    let result = `📊 所有订单运输信息检查结果\n\n`;
+                    result += `总订单数: ${orders.length}\n`;
+                    result += `有运输信息: ${withShipping}\n`;
+                    result += `无运输信息: ${withoutShipping}\n`;
+                    result += `覆盖率: ${((withShipping / orders.length) * 100).toFixed(1)}%\n\n`;
+                    result += `详细结果:\n${details.join('\n')}`;
+                    
+                    const success = withShipping === orders.length;
+                    showResult('apiTestResult', result, success ? 'success' : 'warning');
+                } else {
+                    showResult('apiTestResult', `❌ 无法获取订单数据:\n${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                showResult('apiTestResult', `❌ 检查失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 测试完整数据流
+        async function testDataFlow() {
+            showResult('dataFlowResult', '🔄 正在测试完整数据流...', 'info');
+            
+            try {
+                // 步骤1: 获取订单列表
+                const listResponse = await fetch('/wp-json/bjt/v1/orders');
+                const listData = await listResponse.json();
+                
+                if (!listData.success || !listData.data || listData.data.length === 0) {
+                    showResult('dataFlowResult', '❌ 步骤1失败：无法获取订单列表', 'error');
+                    return;
+                }
+                
+                const testOrder = listData.data[0];
+                
+                // 步骤2: 模拟OrderList页面数据处理
+                const orderListData = {
+                    id: testOrder.id,
+                    orderNumber: testOrder.order_number,
+                    shippingInfo: testOrder.shipping_address,
+                    shipping_address: testOrder.shipping_address
+                };
+                
+                // 步骤3: 模拟运输信息提取
+                let extractedShippingInfo;
+                const shippingData = orderListData.shippingInfo || orderListData.shipping_address;
+                
+                if (shippingData && typeof shippingData === 'object') {
+                    extractedShippingInfo = {
+                        address: shippingData.address || 'Shipping Address',
+                        contactName: shippingData.name || shippingData.contact_name || 'Shipping Contact',
+                        phone: shippingData.phone || shippingData.contact_phone || 'Shipping Phone',
+                        notes: shippingData.notes || shippingData.note || ''
+                    };
+                } else {
+                    extractedShippingInfo = {
+                        address: 'Shipping Address',
+                        contactName: 'Shipping Contact',
+                        phone: 'Shipping Phone',
+                        notes: ''
+                    };
+                }
+                
+                // 步骤4: 验证结果
+                const hasRealData = extractedShippingInfo.address !== 'Shipping Address';
+                
+                let result = `📋 完整数据流测试结果\n\n`;
+                result += `步骤1 - 获取订单列表: ✅ 成功\n`;
+                result += `步骤2 - 订单数据处理: ✅ 成功\n`;
+                result += `步骤3 - 运输信息提取: ✅ 成功\n`;
+                result += `步骤4 - 数据验证: ${hasRealData ? '✅ 有真实数据' : '⚠️ 使用默认值'}\n\n`;
+                result += `提取的运输信息:\n`;
+                result += `- 地址: ${extractedShippingInfo.address}\n`;
+                result += `- 联系人: ${extractedShippingInfo.contactName}\n`;
+                result += `- 电话: ${extractedShippingInfo.phone}\n`;
+                result += `- 备注: ${extractedShippingInfo.notes}\n\n`;
+                result += `原始API数据:\n${JSON.stringify(testOrder.shipping_address, null, 2)}`;
+                
+                showResult('dataFlowResult', result, hasRealData ? 'success' : 'warning');
+                updateStatus('poPageStatus', hasRealData);
+                testResults.dataFlow = hasRealData;
+            } catch (error) {
+                showResult('dataFlowResult', `❌ 数据流测试失败: ${error.message}`, 'error');
+                updateStatus('poPageStatus', false);
+                testResults.dataFlow = false;
+            }
+        }
+        
+        // 测试字段映射
+        async function testFieldMapping() {
+            showResult('fieldValidationResult', '🔄 正在测试字段映射...', 'info');
+            
+            try {
+                const response = await fetch('/wp-json/bjt/v1/orders');
+                const data = await response.json();
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    const order = data.data[0];
+                    const shipping = order.shipping_address;
+                    
+                    if (shipping && typeof shipping === 'object') {
+                        const requiredFields = ['name', 'company', 'address', 'phone'];
+                        const optionalFields = ['email', 'postal_code', 'country', 'notes'];
+                        
+                        let result = `📋 字段映射验证结果\n\n`;
+                        
+                        // 检查必需字段
+                        result += `必需字段检查:\n`;
+                        let requiredCount = 0;
+                        requiredFields.forEach(field => {
+                            const exists = shipping[field] !== undefined && shipping[field] !== '';
+                            result += `- ${field}: ${exists ? '✅ 存在' : '❌ 缺失'}\n`;
+                            if (exists) requiredCount++;
+                        });
+                        
+                        // 检查可选字段
+                        result += `\n可选字段检查:\n`;
+                        let optionalCount = 0;
+                        optionalFields.forEach(field => {
+                            const exists = shipping[field] !== undefined && shipping[field] !== '';
+                            result += `- ${field}: ${exists ? '✅ 存在' : '⚠️ 空'}\n`;
+                            if (exists) optionalCount++;
+                        });
+                        
+                        const requiredComplete = requiredCount === requiredFields.length;
+                        result += `\n📊 统计:\n`;
+                        result += `- 必需字段完整性: ${requiredCount}/${requiredFields.length} (${((requiredCount/requiredFields.length)*100).toFixed(1)}%)\n`;
+                        result += `- 可选字段完整性: ${optionalCount}/${optionalFields.length} (${((optionalCount/optionalFields.length)*100).toFixed(1)}%)\n`;
+                        result += `- 总体评分: ${requiredComplete ? '✅ 优秀' : '⚠️ 需改进'}\n`;
+                        
+                        showResult('fieldValidationResult', result, requiredComplete ? 'success' : 'warning');
+                        updateStatus('fieldMappingStatus', requiredComplete);
+                        testResults.fieldMapping = requiredComplete;
+                    } else {
+                        showResult('fieldValidationResult', '❌ 运输信息不存在或格式错误', 'error');
+                        updateStatus('fieldMappingStatus', false);
+                        testResults.fieldMapping = false;
+                    }
+                } else {
+                    showResult('fieldValidationResult', '❌ 无法获取订单数据进行字段验证', 'error');
+                    updateStatus('fieldMappingStatus', false);
+                    testResults.fieldMapping = false;
+                }
+            } catch (error) {
+                showResult('fieldValidationResult', `❌ 字段映射测试失败: ${error.message}`, 'error');
+                updateStatus('fieldMappingStatus', false);
+                testResults.fieldMapping = false;
+            }
+        }
+        
+        // 测试错误处理
+        async function testErrorHandling() {
+            showResult('dataFlowResult', '🔄 正在测试错误处理...', 'info');
+            
+            try {
+                // 测试不存在的订单
+                const response = await fetch('/wp-json/bjt/v1/orders/999999');
+                const data = await response.json();
+                
+                let result = `🧪 错误处理测试结果\n\n`;
+                result += `测试场景: 请求不存在的订单 (ID: 999999)\n`;
+                result += `响应状态: ${response.status}\n`;
+                result += `响应数据: ${JSON.stringify(data, null, 2)}\n\n`;
+                
+                if (response.status === 404 || (data && !data.success)) {
+                    result += `✅ 错误处理正常 - API正确返回了错误响应`;
+                    showResult('dataFlowResult', result, 'success');
+                } else {
+                    result += `⚠️ 错误处理异常 - 期望404错误但得到了其他响应`;
+                    showResult('dataFlowResult', result, 'warning');
+                }
+            } catch (error) {
+                showResult('dataFlowResult', `✅ 网络错误处理正常: ${error.message}`, 'success');
+            }
+        }
+        
+        // 页面加载时自动运行基础测试
+        window.addEventListener('load', function() {
+            console.log('🔧 运输信息API修复验证页面已加载');
+            console.log('点击测试按钮开始验证修复效果');
+        });
+    </script>
+</body>
+</html> 

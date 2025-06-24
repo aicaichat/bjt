@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>运输信息数据流追踪测试 - BJT产品系统</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        
+        .test-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-left: 4px solid #3498db;
+            border-radius: 4px;
+        }
+        
+        .step-number {
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .data-display {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            margin: 10px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        
+        .button:hover {
+            background: #2980b9;
+        }
+        
+        .button.success {
+            background: #27ae60;
+        }
+        
+        .button.warning {
+            background: #f39c12;
+        }
+        
+        .button.danger {
+            background: #e74c3c;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 运输信息数据流追踪测试</h1>
+            <p>专门用于调试OrderList到PO页面的运输信息传递问题</p>
+        </div>
+        
+        <div class="content">
+            <!-- 测试说明 -->
+            <div class="test-section">
+                <div class="test-title">📋 测试目标</div>
+                <p>通过模拟真实的数据流，找到运输信息在OrderList → PO页面传递过程中丢失的具体环节。</p>
+                
+                <div class="step">
+                    <span class="step-number">步骤1:</span> 模拟API返回的原始订单数据（包含完整运输信息）
+                </div>
+                <div class="step">
+                    <span class="step-number">步骤2:</span> 模拟OrderList页面的数据转换逻辑
+                </div>
+                <div class="step">
+                    <span class="step-number">步骤3:</span> 模拟handleViewOrderDetail函数的数据提取逻辑
+                </div>
+                <div class="step">
+                    <span class="step-number">步骤4:</span> 模拟OrderNumberManager的数据统一处理
+                </div>
+                <div class="step">
+                    <span class="step-number">步骤5:</span> 模拟PO页面的数据接收和标准化处理
+                </div>
+            </div>
+            
+            <!-- 原始API数据模拟 -->
+            <div class="test-section">
+                <div class="test-title">🔧 步骤1: 原始API数据</div>
+                <button class="button" onclick="generateMockAPIData()">生成模拟API数据</button>
+                <div id="api-data-status" class="status" style="display: none;"></div>
+                <div id="api-data-display" class="data-display" style="display: none;"></div>
+            </div>
+            
+            <!-- OrderList数据转换 -->
+            <div class="test-section">
+                <div class="test-title">🔄 步骤2: OrderList页面数据转换</div>
+                <button class="button" onclick="simulateOrderListConversion()" disabled id="convert-btn">执行OrderList转换逻辑</button>
+                <div id="orderlist-status" class="status" style="display: none;"></div>
+                <div id="orderlist-data-display" class="data-display" style="display: none;"></div>
+            </div>
+            
+            <!-- handleViewOrderDetail处理 -->
+            <div class="test-section">
+                <div class="test-title">📤 步骤3: handleViewOrderDetail数据提取</div>
+                <button class="button" onclick="simulateViewOrderDetail()" disabled id="detail-btn">执行数据提取逻辑</button>
+                <div id="detail-status" class="status" style="display: none;"></div>
+                <div id="detail-data-display" class="data-display" style="display: none;"></div>
+            </div>
+            
+            <!-- OrderNumberManager处理 -->
+            <div class="test-section">
+                <div class="test-title">🔧 步骤4: OrderNumberManager统一处理</div>
+                <button class="button" onclick="simulateOrderNumberManager()" disabled id="manager-btn">执行统一处理逻辑</button>
+                <div id="manager-status" class="status" style="display: none;"></div>
+                <div id="manager-data-display" class="data-display" style="display: none;"></div>
+            </div>
+            
+            <!-- PO页面接收处理 -->
+            <div class="test-section">
+                <div class="test-title">📥 步骤5: PO页面接收和标准化</div>
+                <button class="button" onclick="simulatePOPageProcessing()" disabled id="po-btn">执行PO页面处理逻辑</button>
+                <div id="po-status" class="status" style="display: none;"></div>
+                <div id="po-data-display" class="data-display" style="display: none;"></div>
+            </div>
+            
+            <!-- 问题诊断 -->
+            <div class="test-section">
+                <div class="test-title">🎯 问题诊断结果</div>
+                <button class="button warning" onclick="analyzeProblem()" disabled id="analyze-btn">分析问题根源</button>
+                <div id="analysis-result" class="data-display" style="display: none;"></div>
+            </div>
+            
+            <!-- 修复建议 -->
+            <div class="test-section">
+                <div class="test-title">💡 修复建议</div>
+                <div id="fix-suggestions" style="display: none;">
+                    <div class="step">
+                        <span class="step-number">建议1:</span> 在OrderList页面保持API原始数据结构完整性
+                    </div>
+                    <div class="step">
+                        <span class="step-number">建议2:</span> 在handleViewOrderDetail中增强数据提取逻辑
+                    </div>
+                    <div class="step">
+                        <span class="step-number">建议3:</span> 在PO页面增加数据验证和恢复机制
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量存储测试数据
+        let mockAPIData = null;
+        let orderListData = null;
+        let extractedData = null;
+        let unifiedData = null;
+        let finalPOData = null;
+        
+        // 步骤1: 生成模拟API数据
+        function generateMockAPIData() {
+            mockAPIData = {
+                id: "order_12345",
+                order_number: "PO-202506231430-ABC123",
+                created_at: "2025-06-23T14:30:00Z",
+                status: "processing",
+                total_amount: 1500.00,
+                payment_method: "bank_transfer",
+                // 🔧 关键：完整的运输信息对象
+                shipping_address: {
+                    name: "张三",
+                    company: "杭州某某科技有限公司",
+                    address: "浙江省杭州市西湖区文三路123号",
+                    phone: "13800138000",
+                    mobile: "13800138000",
+                    email: "zhangsan@company.com",
+                    postal_code: "310000",
+                    country: "中国",
+                    province: "浙江省",
+                    city: "杭州市",
+                    district: "西湖区",
+                    notes: "请在工作日送货，联系人：张三"
+                },
+                // 客户信息
+                customer_info: {
+                    company_name: "杭州某某科技有限公司",
+                    contact_name: "李四",
+                    phone: "0571-88888888",
+                    email: "lisi@company.com",
+                    address: "浙江省杭州市西湖区文三路123号"
+                },
+                // 账单地址
+                billing_address: {
+                    company_name: "杭州某某科技有限公司",
+                    address: "浙江省杭州市西湖区文三路123号",
+                    phone: "0571-88888888"
+                },
+                items: [
+                    {
+                        id: "item_1",
+                        product_id: "90R01258",
+                        part_number: "90R01258",
+                        name: "气垫膜",
+                        quantity: 10,
+                        unit_price: 150.00,
+                        specs: "规格：500mm x 300mm，材质：PE"
+                    }
+                ]
+            };
+            
+            document.getElementById('api-data-status').style.display = 'block';
+            document.getElementById('api-data-status').className = 'status success';
+            document.getElementById('api-data-status').textContent = '✅ 模拟API数据生成成功';
+            
+            document.getElementById('api-data-display').style.display = 'block';
+            document.getElementById('api-data-display').textContent = JSON.stringify(mockAPIData, null, 2);
+            
+            // 启用下一步
+            document.getElementById('convert-btn').disabled = false;
+        }
+        
+        // 步骤2: 模拟OrderList页面数据转换
+        function simulateOrderListConversion() {
+            if (!mockAPIData) {
+                alert('请先生成模拟API数据');
+                return;
+            }
+            
+            // 模拟OrderList页面第219行的转换逻辑
+            orderListData = {
+                id: String(mockAPIData.id || mockAPIData.order_number),
+                orderNumber: mockAPIData.order_number,
+                date: mockAPIData.created_at ? new Date(mockAPIData.created_at).toLocaleDateString() : '',
+                status: mapApiStatusToUIStatus(mockAPIData.status),
+                total: mockAPIData.total_amount || 0,
+                paymentMethod: mockAPIData.payment_method || 'other',
+                // 🔧 关键：这里保持原始运输信息对象结构
+                shippingInfo: mockAPIData.shipping_address || null,
+                // 🔧 保留原始字段名
+                shipping_address: mockAPIData.shipping_address,
+                customer_info: mockAPIData.customer_info,
+                billing_address: mockAPIData.billing_address,
+                items: (mockAPIData.items || []).map(item => ({
+                    id: item.id,
+                    part_number: item.part_number,
+                    name: item.name,
+                    quantity: item.quantity,
+                    price: item.unit_price,
+                    specs: item.specs
+                }))
+            };
+            
+            document.getElementById('orderlist-status').style.display = 'block';
+            document.getElementById('orderlist-status').className = 'status success';
+            document.getElementById('orderlist-status').textContent = '✅ OrderList转换完成，运输信息保持完整';
+            
+            document.getElementById('orderlist-data-display').style.display = 'block';
+            document.getElementById('orderlist-data-display').textContent = 
+                `转换后的订单数据:\n${JSON.stringify(orderListData, null, 2)}\n\n` +
+                `运输信息检查:\n` +
+                `- shippingInfo类型: ${typeof orderListData.shippingInfo}\n` +
+                `- 是否包含完整地址: ${orderListData.shippingInfo?.address ? '是' : '否'}\n` +
+                `- 是否包含联系人: ${orderListData.shippingInfo?.name ? '是' : '否'}\n` +
+                `- 是否包含电话: ${orderListData.shippingInfo?.phone ? '是' : '否'}`;
+            
+            // 启用下一步
+            document.getElementById('detail-btn').disabled = false;
+        }
+        
+        // 步骤3: 模拟handleViewOrderDetail数据提取
+        function simulateViewOrderDetail() {
+            if (!orderListData) {
+                alert('请先执行OrderList转换');
+                return;
+            }
+            
+            const order = orderListData;
+            
+            // 模拟handleViewOrderDetail中的数据提取逻辑
+            let extractedCustomerInfo = {
+                companyName: 'Customer Company',
+                contactName: 'Customer Contact', 
+                address: 'Customer Address',
+                phone: 'Customer Phone',
+                email: ''
+            };
+            
+            let extractedShippingInfo = {
+                address: 'Shipping Address',
+                contactName: 'Shipping Contact',
+                phone: 'Shipping Phone', 
+                notes: ''
+            };
+            
+            // 🔧 提取客户信息
+            const customerSources = [
+                order.customer_info,
+                order.user_info,
+                order.billing_address,
+                order.shippingInfo,
+                order.shipping_address
+            ];
+            
+            for (const source of customerSources) {
+                if (source && typeof source === 'object') {
+                    if (!extractedCustomerInfo.companyName && (source.companyName || source.company_name || source.company)) {
+                        extractedCustomerInfo.companyName = source.companyName || source.company_name || source.company;
+                    }
+                    if (!extractedCustomerInfo.contactName && (source.contactName || source.contact_name || source.name)) {
+                        extractedCustomerInfo.contactName = source.contactName || source.contact_name || source.name;
+                    }
+                    if (!extractedCustomerInfo.address && source.address) {
+                        extractedCustomerInfo.address = source.address;
+                    }
+                    if (!extractedCustomerInfo.phone && (source.phone || source.contact_phone)) {
+                        extractedCustomerInfo.phone = source.phone || source.contact_phone;
+                    }
+                    if (!extractedCustomerInfo.email && source.email) {
+                        extractedCustomerInfo.email = source.email;
+                    }
+                }
+            }
+            
+            // 🔧 处理运输信息
+            const shippingData = order.shippingInfo || order.shipping_address;
+            
+            if (shippingData) {
+                if (typeof shippingData === 'object') {
+                    extractedShippingInfo = {
+                        address: shippingData.address || extractedShippingInfo.address,
+                        contactName: shippingData.name || shippingData.contact_name || extractedShippingInfo.contactName,
+                        phone: shippingData.phone || shippingData.mobile || extractedShippingInfo.phone,
+                        notes: shippingData.notes || extractedShippingInfo.notes
+                    };
+                }
+            }
+            
+            extractedData = {
+                customerInfo: extractedCustomerInfo,
+                shippingInfo: extractedShippingInfo,
+                orderItems: order.items,
+                summary: {
+                    subtotal: order.total,
+                    shipping: 0,
+                    tax: 0,
+                    total: order.total
+                }
+            };
+            
+            const hasValidShipping = extractedShippingInfo.address !== 'Shipping Address';
+            
+            document.getElementById('detail-status').style.display = 'block';
+            document.getElementById('detail-status').className = hasValidShipping ? 'status success' : 'status error';
+            document.getElementById('detail-status').textContent = hasValidShipping ? 
+                '✅ 数据提取成功，运输信息完整' : 
+                '❌ 数据提取失败，运输信息丢失';
+            
+            document.getElementById('detail-data-display').style.display = 'block';
+            document.getElementById('detail-data-display').textContent = 
+                `提取的数据:\n${JSON.stringify(extractedData, null, 2)}\n\n` +
+                `运输信息状态:\n` +
+                `- 地址: ${extractedShippingInfo.address}\n` +
+                `- 联系人: ${extractedShippingInfo.contactName}\n` +
+                `- 电话: ${extractedShippingInfo.phone}\n` +
+                `- 是否为默认值: ${hasValidShipping ? '否' : '是'}`;
+            
+            // 启用下一步
+            document.getElementById('manager-btn').disabled = false;
+        }
+        
+        // 步骤4: 模拟OrderNumberManager处理
+        function simulateOrderNumberManager() {
+            if (!extractedData) {
+                alert('请先执行数据提取');
+                return;
+            }
+            
+            // 模拟OrderNumberManager.createUnifiedOrderData
+            unifiedData = {
+                id: orderListData.id,
+                orderId: orderListData.id,
+                orderNumber: orderListData.orderNumber,
+                displayNumber: orderListData.orderNumber,
+                orderItems: extractedData.orderItems || [],
+                customerInfo: extractedData.customerInfo || {},
+                shippingInfo: extractedData.shippingInfo || {},
+                summary: extractedData.summary || { subtotal: 0, shipping: 0, tax: 0, total: 0 },
+                createdAt: new Date().toISOString(),
+                source: 'order_list_detail',
+                orderNumberSource: 'api'
+            };
+            
+            const hasValidShipping = unifiedData.shippingInfo.address !== 'Shipping Address';
+            
+            document.getElementById('manager-status').style.display = 'block';
+            document.getElementById('manager-status').className = hasValidShipping ? 'status success' : 'status warning';
+            document.getElementById('manager-status').textContent = hasValidShipping ? 
+                '✅ 统一处理完成，运输信息保持完整' : 
+                '⚠️ 统一处理完成，但运输信息为默认值';
+            
+            document.getElementById('manager-data-display').style.display = 'block';
+            document.getElementById('manager-data-display').textContent = 
+                `统一处理后的数据:\n${JSON.stringify(unifiedData, null, 2)}`;
+            
+            // 启用下一步
+            document.getElementById('po-btn').disabled = false;
+        }
+        
+        // 步骤5: 模拟PO页面处理
+        function simulatePOPageProcessing() {
+            if (!unifiedData) {
+                alert('请先执行统一处理');
+                return;
+            }
+            
+            // 模拟PO页面的standardizeShippingInfo函数
+            function standardizeShippingInfo(shippingInfo) {
+                if (!shippingInfo) {
+                    return {
+                        address: 'Shipping Address',
+                        contactName: 'Shipping Contact',
+                        phone: 'Shipping Phone',
+                        notes: ''
+                    };
+                }
+                
+                if (typeof shippingInfo === 'object') {
+                    return {
+                        address: shippingInfo.address || 'Shipping Address',
+                        contactName: shippingInfo.contactName || shippingInfo.contact_name || shippingInfo.name || 'Shipping Contact',
+                        phone: shippingInfo.phone || shippingInfo.contact_phone || 'Shipping Phone',
+                        notes: shippingInfo.notes || shippingInfo.note || ''
+                    };
+                }
+                
+                return {
+                    address: 'Shipping Address',
+                    contactName: 'Shipping Contact',
+                    phone: 'Shipping Phone',
+                    notes: ''
+                };
+            }
+            
+            finalPOData = {
+                poNumber: unifiedData.orderNumber,
+                products: unifiedData.orderItems,
+                customerInfo: unifiedData.customerInfo,
+                shippingInfo: standardizeShippingInfo(unifiedData.shippingInfo),
+                summary: unifiedData.summary
+            };
+            
+            const hasValidShipping = finalPOData.shippingInfo.address !== 'Shipping Address';
+            
+            document.getElementById('po-status').style.display = 'block';
+            document.getElementById('po-status').className = hasValidShipping ? 'status success' : 'status error';
+            document.getElementById('po-status').textContent = hasValidShipping ? 
+                '✅ PO页面处理完成，运输信息正确显示' : 
+                '❌ PO页面处理完成，但运输信息显示为默认值';
+            
+            document.getElementById('po-data-display').style.display = 'block';
+            document.getElementById('po-data-display').textContent = 
+                `最终PO页面数据:\n${JSON.stringify(finalPOData, null, 2)}\n\n` +
+                `Ship to 信息:\n` +
+                `- Contact Person: ${finalPOData.shippingInfo.contactName}\n` +
+                `- Phone: ${finalPOData.shippingInfo.phone}\n` +
+                `- Address: ${finalPOData.shippingInfo.address}\n` +
+                `- Notes: ${finalPOData.shippingInfo.notes}`;
+            
+            // 启用问题分析
+            document.getElementById('analyze-btn').disabled = false;
+        }
+        
+        // 问题分析
+        function analyzeProblem() {
+            if (!finalPOData) {
+                alert('请先完成所有步骤');
+                return;
+            }
+            
+            const analysis = [];
+            
+            // 检查每个步骤的数据完整性
+            analysis.push('=== 数据流追踪分析 ===\n');
+            
+            // API数据检查
+            const apiHasShipping = mockAPIData?.shipping_address?.address;
+            analysis.push(`1. API原始数据: ${apiHasShipping ? '✅ 包含完整运输信息' : '❌ 缺少运输信息'}`);
+            
+            // OrderList转换检查
+            const orderListHasShipping = orderListData?.shippingInfo?.address;
+            analysis.push(`2. OrderList转换: ${orderListHasShipping ? '✅ 运输信息保持完整' : '❌ 运输信息在转换中丢失'}`);
+            
+            // 数据提取检查
+            const extractedHasShipping = extractedData?.shippingInfo?.address !== 'Shipping Address';
+            analysis.push(`3. 数据提取逻辑: ${extractedHasShipping ? '✅ 成功提取运输信息' : '❌ 数据提取失败'}`);
+            
+            // 统一处理检查
+            const unifiedHasShipping = unifiedData?.shippingInfo?.address !== 'Shipping Address';
+            analysis.push(`4. 统一处理: ${unifiedHasShipping ? '✅ 运输信息保持完整' : '❌ 统一处理中丢失'}`);
+            
+            // PO页面处理检查
+            const poHasShipping = finalPOData?.shippingInfo?.address !== 'Shipping Address';
+            analysis.push(`5. PO页面处理: ${poHasShipping ? '✅ 最终显示正确' : '❌ 最终显示默认值'}`);
+            
+            analysis.push('\n=== 问题根源分析 ===\n');
+            
+            if (!apiHasShipping) {
+                analysis.push('❌ 问题根源：API数据本身就缺少运输信息');
+            } else if (!orderListHasShipping) {
+                analysis.push('❌ 问题根源：OrderList页面数据转换逻辑有问题');
+            } else if (!extractedHasShipping) {
+                analysis.push('❌ 问题根源：handleViewOrderDetail函数的数据提取逻辑有问题');
+                analysis.push('   - 可能的原因：字段映射不正确');
+                analysis.push('   - 可能的原因：数据源优先级设置错误');
+            } else if (!unifiedHasShipping) {
+                analysis.push('❌ 问题根源：OrderNumberManager统一处理有问题');
+            } else if (!poHasShipping) {
+                analysis.push('❌ 问题根源：PO页面standardizeShippingInfo函数有问题');
+            } else {
+                analysis.push('✅ 数据流完整，运输信息正确传递');
+            }
+            
+            analysis.push('\n=== 具体修复建议 ===\n');
+            
+            if (!extractedHasShipping && orderListHasShipping) {
+                analysis.push('🔧 修复方案：');
+                analysis.push('1. 检查handleViewOrderDetail中的字段映射逻辑');
+                analysis.push('2. 确保shippingData变量正确获取order.shippingInfo');
+                analysis.push('3. 增强对象类型运输信息的字段提取逻辑');
+                analysis.push('4. 添加更多调试日志来追踪数据转换过程');
+            }
+            
+            document.getElementById('analysis-result').style.display = 'block';
+            document.getElementById('analysis-result').textContent = analysis.join('\n');
+            
+            document.getElementById('fix-suggestions').style.display = 'block';
+        }
+        
+        // 辅助函数
+        function mapApiStatusToUIStatus(apiStatus) {
+            const statusMap = {
+                'pending': 'pending',
+                'pending_payment': 'pending',
+                'processing': 'paid',
+                'shipped': 'shipped',
+                'delivered': 'completed',
+                'completed': 'completed',
+                'cancelled': 'cancelled'
+            };
+            return statusMap[apiStatus] || 'pending';
+        }
+    </script>
+</body>
+</html> 

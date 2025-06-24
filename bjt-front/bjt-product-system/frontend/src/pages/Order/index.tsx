@@ -2,9 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
+import { useCart } from '../../contexts/CartContext';
+import { OrderNumberManager } from '../../utils/orderNumberUtils';
 import './Order.css';
 import orderService from '../../services/orderService';
 import { safeToLocaleString } from '../../utils/priceUtils';
+import { getSortedCountries, getCountryName } from '../../utils/countries';
+import { CartFieldUnifier } from '../../utils/CartFieldUnifier';
+import { PRODUCT_TYPE_FIELD_MAP } from '../../config/cartDisplayFields';
+import { OrderPageProductDetails } from '../../components/Cart/UnifiedProductDetails';
+import '../../components/Cart/UnifiedProductDetails.css';
+import { useOrder } from '../../contexts/OrderContext';
+import OrderDataConverter from '../../utils/orderDataConverter';
+import { UnifiedOrderData } from '../../types/orderTypes';
 
 // 定义商品类型
 interface OrderItem {
@@ -66,8 +76,10 @@ const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
 const OrderPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { t, i18n } = useTranslation(['order']);
+  const { t, i18n } = useTranslation(['order', 'products']);
   const { user, isAuthenticated } = useAuth(); // 使用框架的认证状态
+  const { clearCart } = useCart(); // 获取清空购物车函数
+  const preferredUnit = user?.preferred_unit || 'metric';
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
     contactName: '',
@@ -92,8 +104,23 @@ const OrderPage: React.FC = () => {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // 🔧 添加国家搜索状态
+  const [countrySearchTerm, setCountrySearchTerm] = useState('');
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+
   // 🔧 定义必选字段
   const requiredFields = ['contactName', 'phone', 'email', 'company', 'country', 'address'];
+
+  // 🔧 获取排序后的国家列表
+  const sortedCountries = getSortedCountries(i18n.language);
+
+  // 🔧 过滤国家列表
+  const filteredCountries = countrySearchTerm
+    ? sortedCountries.filter(country => 
+        getCountryName(country.code, i18n.language).toLowerCase().includes(countrySearchTerm.toLowerCase()) ||
+        country.code.toLowerCase().includes(countrySearchTerm.toLowerCase())
+      )
+    : sortedCountries;
 
   // 🔧 验证单个字段
   const validateField = (name: string, value: string): string => {
@@ -172,6 +199,21 @@ const OrderPage: React.FC = () => {
     return fallback;
   };
 
+  // Format the currency based on current locale
+  const formatPrice = (price: number, locale: string = 'zh-CN'): string => {
+    try {
+      return new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: 'CNY',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(price);
+    } catch (error) {
+      // 回退到简单格式化
+      return `¥${price.toFixed(2)}`;
+    }
+  };
+
   // 从服务加载数据
   useEffect(() => {
     const loadOrderData = async () => {
@@ -185,11 +227,42 @@ const OrderPage: React.FC = () => {
         if (locationState && locationState.orderItems) {
           rawOrderItems = locationState.orderItems;
           setFromCart(locationState.fromCart || false);
+          console.log('📦 [Order] Loading data from cart navigation:', rawOrderItems.length, 'items');
         } else {
           // Get data from API if not from cart
+          console.log('🔍 [Order] Loading data from cart API...');
           const itemsResponse = await orderService.getCartItems();
           if (itemsResponse && itemsResponse.data) {
             rawOrderItems = Array.isArray(itemsResponse.data) ? itemsResponse.data : [];
+            console.log('📦 [Order] Loaded from cart API:', rawOrderItems.length, 'items');
+            
+            // 🔧 检查是否为mock数据
+            const isMockData = rawOrderItems.some(item => 
+              item.id?.startsWith('cart-item-') || 
+              item.sku?.includes('BJT-') ||
+              item.name === '全自动高速包装机'
+            );
+            
+            if (isMockData) {
+              console.warn('⚠️ [Order] Detected mock data - API may not be available or user not authenticated');
+              // 在页面上显示提示信息
+              if (typeof window !== 'undefined') {
+                const notification = document.createElement('div');
+                notification.innerHTML = `
+                  <div style="position: fixed; top: 20px; right: 20px; background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 12px 16px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 1000; max-width: 300px;">
+                    <strong>📝 开发提示:</strong><br/>
+                    当前显示的是演示数据。<br/>
+                    <small>请登录后查看真实订单数据</small>
+                  </div>
+                `;
+                document.body.appendChild(notification);
+                setTimeout(() => {
+                  document.body.removeChild(notification);
+                }, 5000);
+              }
+            }
+          } else {
+            console.warn('⚠️ [Order] No data received from cart API');
           }
         }
         
@@ -226,57 +299,56 @@ const OrderPage: React.FC = () => {
                 };
               }
               
+              const token = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
+              const headers = {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json',
+                  ...(token && { 'Authorization': `Bearer ${token}` })
+              };
+
               if (item.product_type === 'machine' && item.product_id) {
                 try {
-                  // 🔧 修复：使用正确的API端点和认证token
-                  const token = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
-                  const response = await fetch(`/wp-json/bjt/v1/machineparts/${item.product_id}`, {
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'Accept': 'application/json',
-                      ...(token && { 'Authorization': `Bearer ${token}` })
-                    }
-                  });
-                  
+                  const response = await fetch(`/wp-json/bjt/v1/machineparts/${item.product_id}`, { headers });
                   if (response.ok) {
                     const data = await response.json();
-                    if (data.success && data.data) {
-                      apiResponse = data.data;
-                    } else if (data.id) {
-                      // 有些接口直接返回数据而不包装在success/data中
-                      apiResponse = data;
-                    }
-                  } else {
-                    console.log(`🔍 [loadOrderData] Machine API call failed with status ${response.status}, skipping enhancement`);
+                    apiResponse = data.success ? data.data : data;
                   }
                 } catch (apiError) {
                   console.warn('⚠️ [loadOrderData] Failed to fetch machine data:', apiError);
                 }
               } else if (item.product_type === 'accessory' && item.product_id) {
                 try {
-                  // 🔧 修复：配件API端点保持不变，继续使用ID查询
-                  const token = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
-                  const response = await fetch(`/wp-json/bjt/v1/accessories/${item.product_id}`, {
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'Accept': 'application/json',
-                      ...(token && { 'Authorization': `Bearer ${token}` })
-                    }
-                  });
-                  
+                  const response = await fetch(`/wp-json/bjt/v1/accessories/${item.product_id}`, { headers });
                   if (response.ok) {
                     const data = await response.json();
-                    if (data.success && data.data) {
-                      apiResponse = data.data;
-                    } else if (data.id) {
-                      // 有些接口直接返回数据而不包装在success/data中
-                      apiResponse = data;
-                    }
-                  } else {
-                    console.log(`🔍 [loadOrderData] Accessory API call failed with status ${response.status}, skipping enhancement`);
+                    apiResponse = data.success ? data.data : data;
                   }
                 } catch (apiError) {
                   console.warn('⚠️ [loadOrderData] Failed to fetch accessory data:', apiError);
+                }
+              } else if ((item.product_type === 'spare_part' || item.product_type === 'spare') && item.product_id) {
+                try {
+                  const response = await fetch(`/wp-json/bjt/v1/spare-parts/${item.product_id}`, { headers });
+                  if (response.ok) {
+                    const data = await response.json();
+                    apiResponse = data.success ? data.data : data;
+                  } else {
+                    console.log(`🔍 [loadOrderData] Spare part API call failed with status ${response.status}, skipping enhancement`);
+                  }
+                } catch (apiError) {
+                  console.warn('⚠️ [loadOrderData] Failed to fetch spare part data:', apiError);
+                }
+              } else if (item.product_type === 'consumable' && item.product_id) {
+                try {
+                  const response = await fetch(`/wp-json/bjt/v1/consumables/${item.product_id}`, { headers });
+                  if (response.ok) {
+                    const data = await response.json();
+                    apiResponse = data.success ? data.data : data;
+                  } else {
+                    console.log(`🔍 [loadOrderData] Consumable API call failed with status ${response.status}, skipping enhancement`);
+                  }
+                } catch (apiError) {
+                  console.warn('⚠️ [loadOrderData] Failed to fetch consumable data:', apiError);
                 }
               }
               
@@ -296,13 +368,27 @@ const OrderPage: React.FC = () => {
                   // 🔧 改善名称映射：主机和配件的名称字段可能不同
                   name_zh: apiResponse.name_zh || apiResponse.name || '',
                   name_en: apiResponse.name_en || apiResponse.name || '',
+                  product_name: apiResponse.product_name || apiResponse.name || '', // 🔧 配件专用字段
                   image_url: apiResponse.image_url || item.image_url,
+                  
+                  // 🔧 修复：添加缺失的备件字段映射
+                  app_model: apiResponse.app_model || '',
+                  app_sn: apiResponse.app_sn || '',
+                  is_consumable: apiResponse.is_consumable || '',
                   
                   // 规格信息
                   voltage: apiResponse.voltage || '',
                   frequency: apiResponse.frequency || '',
                   spec: apiResponse.spec || '',
                   spec_imperial: apiResponse.spec_imperial || '',
+                  
+                  // 🔧 耗材型号字段映射（支持公英制切换）
+                  model_metric: apiResponse.model_metric || '',
+                  model_imperial: apiResponse.model_imperial || '',
+                  
+                  // 🔧 修复：添加泡径字段映射（API使用_met/_imp，配置期望_mm/_inch）
+                  bubble_diameter_mm: apiResponse.bubble_diameter_met || '',
+                  bubble_diameter_inch: apiResponse.bubble_diameter_imp || '',
                   
                   // 包装信息
                   package_size_cm: apiResponse.package_size_cm || '',
@@ -432,7 +518,46 @@ const OrderPage: React.FC = () => {
     });
   };
 
-  // 处理提交订单
+  // 🔧 处理国家选择
+  const handleCountrySelect = (countryCode: string) => {
+    setShippingInfo(prev => ({
+      ...prev,
+      country: countryCode
+    }));
+    setCountrySearchTerm('');
+    setShowCountryDropdown(false);
+    
+    // 清除国家字段的错误
+    setFormErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors.country;
+      return newErrors;
+    });
+  };
+
+  // 🔧 处理国家搜索输入
+  const handleCountrySearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setCountrySearchTerm(value);
+    setShowCountryDropdown(true);
+  };
+
+  // 🔧 处理国家输入框失去焦点
+  const handleCountryBlur = () => {
+    // 延迟隐藏下拉框，以便点击选项
+    setTimeout(() => {
+      setShowCountryDropdown(false);
+    }, 200);
+  };
+
+  // 使用订单状态管理
+  const { 
+    state, 
+    submitOrder, 
+    setPageTransferData, 
+    clearMessages 
+  } = useOrder();
+
   const handleSubmitOrder = async () => {
     // 🔧 提交前验证表单
     if (!validateForm()) {
@@ -452,93 +577,194 @@ const OrderPage: React.FC = () => {
     
     try {
       setIsSubmitting(true);
+      clearMessages(); // 清除之前的消息
       
-              // 🔧 处理订单项目数据，确保产品名称正确
-        const processedOrderItems = orderItems.map(item => {
-          const itemData = item as any;
-          
-          // 📝 安全提取商品名称 - 支持多语言和多字段回退
-          let productName = '';
-          
-          // 🔧 优先从properties提取多语言名称，根据当前语言选择
-          if (itemData.properties) {
-            const currentLang = i18n.language;
-            if (currentLang.startsWith('zh')) {
-              productName = itemData.properties.name_zh || '';
-            } else if (currentLang.startsWith('ja')) {
-              productName = itemData.properties.name_ja || '';
-            } else {
-              productName = itemData.properties.name_en || '';
-            }
-            
-            // 如果当前语言的名称为空，则按优先级回退
-            if (!productName) {
-              productName = itemData.properties.name_zh || itemData.properties.name_en || itemData.properties.productName || '';
-            }
-          }
-          
-          // 如果多语言名称为空，尝试从item.name字段提取
-          if (!productName) {
-            productName = safeExtractString(item.name);
-          }
-          
-          // 最终回退到基础字段
-          if (!productName) {
-            productName = itemData.model || itemData.part_number || itemData.sku || 'Unknown Product';
-          }
-          
-          // 返回处理后的商品项目，确保name字段包含正确的产品名称
-          return {
-            ...item,
-            name: productName, // 🔧 使用处理后的产品名称
-            // 保留原始的多语言名称数据供PO页面使用
-            displayName: {
-              'zh-CN': itemData.properties?.name_zh || productName,
-              'en-US': itemData.properties?.name_en || productName,
-              'ja-JP': itemData.properties?.name_ja || productName
-            },
-            // 确保code/sku字段用于料号显示
-            code: itemData.part_number || itemData.sku || itemData.code,
-            sku: itemData.part_number || itemData.sku
-          };
-        });
+      console.log('🔧 [Order] 开始提交订单...');
+      
+      // 🔧 构建完整的客户信息对象
+      const customerInfo = {
+        companyName: shippingInfo.company,
+        contactName: shippingInfo.contactName,
+        address: shippingInfo.address,
+        phone: shippingInfo.phone,
+        email: shippingInfo.email,
+        country: shippingInfo.country || 'CN',
+        notes: shippingInfo.notes || ''
+      };
 
-        // 🔧 构建完整的客户信息对象
-        const customerInfo = {
-          companyName: shippingInfo.company || '',
-          contactName: shippingInfo.contactName || '',
-          address: shippingInfo.address || '',
-          phone: shippingInfo.phone || '',
-          email: shippingInfo.email || '',
-          country: shippingInfo.country || ''
-        };
-
-        // 使用 OrderService 提交订单
-        const result = await orderService.submitOrder({
-          shipping: shippingInfo,
-          payment: {
-            method: 'transfer' // 默认使用转账支付
-          },
-          items: processedOrderItems, // 🔧 使用处理后的订单项目
-          summary: orderSummary,
-          note: shippingInfo.notes
-        });
+      // 🔧 处理订单项目数据，确保产品名称正确
+      const processedOrderItems = orderItems.map(item => {
+        const itemData = item as any;
         
-        // 导航到 PO 页面并传递订单数据
-        navigate('/po', { 
-          state: { 
-            poData: {
-              orderId: result.data?.orderId,
-              orderItems: processedOrderItems, // 🔧 传递处理后的订单项目
-              customerInfo, // 🔧 使用构建的完整客户信息
-              shippingInfo,
-              summary: orderSummary
-            } 
-          } 
-        });
+        // 📝 安全提取商品名称 - 支持多语言和多字段回退
+        let productName = '';
+        
+        // 🔧 优先从properties提取多语言名称，根据当前语言选择
+        if (itemData.properties) {
+          const currentLang = i18n.language;
+          if (currentLang.startsWith('zh')) {
+            productName = itemData.properties.name_zh || '';
+          } else if (currentLang.startsWith('ja')) {
+            productName = itemData.properties.name_ja || '';
+          } else {
+            productName = itemData.properties.name_en || '';
+          }
+          
+          // 如果当前语言的名称为空，则按优先级回退
+          if (!productName) {
+            productName = itemData.properties.name_zh || itemData.properties.name_en || itemData.properties.productName || '';
+          }
+        }
+        
+        // 如果多语言名称为空，尝试从item.name字段提取
+        if (!productName) {
+          productName = safeExtractString(item.name);
+        }
+        
+        // 最终回退到基础字段
+        if (!productName) {
+          productName = itemData.model || itemData.part_number || itemData.sku || 'Unknown Product';
+        }
+        
+        // 转换为统一的OrderItem格式
+        return {
+          id: itemData.id || itemData.item_id || Math.random().toString(36).substr(2, 9),
+          productId: itemData.product_id || itemData.id,
+          code: itemData.part_number || itemData.sku || itemData.code || '',
+          sku: itemData.part_number || itemData.sku || '',
+          name: productName,
+          nameZh: itemData.properties?.name_zh || productName,
+          nameEn: itemData.properties?.name_en || productName,
+          quantity: parseInt(String(item.quantity)) || 1,
+          unitPrice: parseFloat(String(item.unit_price || item.price)) || 0,
+          lineTotal: (parseFloat(String(item.unit_price || item.price)) || 0) * (parseInt(String(item.quantity)) || 1),
+          currency: 'CNY',
+          specs: itemData.specs || itemData.properties || {},
+          properties: itemData.properties || {},
+          image: itemData.image || itemData.image_url,
+          type: (itemData.product_type || itemData.type || 'machine') as any,
+          model: itemData.model,
+          brand: itemData.brand,
+          description: itemData.description,
+          category: itemData.category
+        };
+      });
+      
+      // 计算订单汇总
+      const subtotal = processedOrderItems.reduce((sum, item) => sum + item.lineTotal, 0);
+      const shipping = 0; // 运费
+      const tax = subtotal * 0.13; // 13%税率
+      const total = subtotal + shipping + tax;
+      
+      // 构建与ApiAdapter匹配的订单数据格式
+      const orderData = {
+        // 🔧 修复：使用shipping字段而不是customerInfo
+        shipping: customerInfo,
+        items: processedOrderItems,
+        summary: {
+          subtotal,
+          shipping,
+          tax,
+          discount: 0,
+          total,
+          currency: 'CNY'
+        },
+        // 🔧 修复：使用payment对象格式
+        payment: {
+          method: 'bank_transfer' // 默认银行转账
+        },
+        // 🔧 修复：使用note字段而不是notes
+        note: shippingInfo.notes || ''
+      };
+      
+      console.log('🔧 [Order] 准备提交的订单数据:', orderData);
+      
+      // 使用订单状态管理提交订单
+      const unifiedOrderData = await submitOrder(orderData);
+      
+      console.log('✅ [Order] 订单提交成功，统一数据:', unifiedOrderData);
+      
+      // 🛒 订单创建成功后清空购物车
+      console.log('🛒 [Order] 订单创建成功，准备清空购物车');
+      try {
+        await clearCart();
+        console.log('🛒 [Order] 购物车已成功清空');
+      } catch (clearError) {
+        console.error('🛒 [Order] 清空购物车失败:', clearError);
+        // 清空购物车失败不应该阻止订单流程，只记录错误
+      }
+      
+      // 创建页面传递数据
+      const transferData = OrderDataConverter.createPageTransferData(
+        'order',
+        unifiedOrderData,
+        {
+          fromPage: 'order',
+          submitTime: new Date().toISOString(),
+          customerInfo: orderData.shipping,
+          processedItems: processedOrderItems
+        }
+      );
+      
+      // 设置页面传递数据
+      setPageTransferData(transferData);
+      
+      console.log('🚀 [Order] 准备跳转到订单列表页面...');
+      
+      // 跳转到订单列表页面 - 传递新创建的订单信息
+      navigate('/orders', {
+        state: {
+          // 传递新创建的订单信息，用于在OrderList页面显示
+          newOrderData: {
+            id: unifiedOrderData.id || unifiedOrderData.orderNumber,
+            orderNumber: unifiedOrderData.orderNumber,
+            date: new Date().toISOString(),
+            status: 'pending',
+            total: orderData.summary.total,
+            paymentMethod: 'TT',
+            customerName: shippingInfo.company || shippingInfo.contactName,
+            shippingInfo: {
+              companyName: shippingInfo.company,
+              contactName: shippingInfo.contactName,
+              address: shippingInfo.address,
+              phone: shippingInfo.phone,
+              email: shippingInfo.email
+            },
+            items: processedOrderItems.map(item => ({
+              id: item.id,
+              part_number: item.code || item.sku,
+              name: item.nameZh || item.name,
+              quantity: item.quantity,
+              price: item.unitPrice,
+              specs: item.specs,
+              model: item.model,
+              brand: item.brand
+            }))
+          },
+          fromOrder: true, // 标记来自Order页面
+          source: 'order',
+          timestamp: new Date().toISOString()
+        },
+        replace: true // 使用replace避免回退到order页面
+      });
+      
     } catch (error) {
-      console.error(t('order.errors.submitFailed', 'Error submitting order'), error);
-      alert(t('order.errors.submitAlert', 'Failed to submit order. Please try again.'));
+      console.error('❌ [Order] 订单提交失败:', error);
+      
+      // 提供更详细的错误信息
+      let errorMessage = t('order.errors.submitAlert', 'Failed to submit order. Please try again.');
+      
+      if (error instanceof Error) {
+        if (error.message.includes('No authentication token')) {
+          errorMessage = t('order.errors.noAuth', 'Please login first to submit order.');
+        } else if (error.message.includes('Order submission failed')) {
+          errorMessage = t('order.errors.apiError', 'Order submission failed. Please check your network connection and try again.');
+        } else {
+          errorMessage = `${t('order.errors.submitAlert', 'Failed to submit order')}: ${error.message}`;
+        }
+      }
+      
+      alert(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -567,56 +793,6 @@ const OrderPage: React.FC = () => {
     });
   };
 
-  // Format the currency based on current locale
-  const formatPrice = (price: number, symbol: string = '¥', locale: string = 'zh-CN'): string => {
-    return `${symbol}${safeToLocaleString(price, locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
-
-  // 获取商品类型显示文本
-  const getTypeText = (type?: string) => {
-    console.log('🔍 [getTypeText] Processing type:', type);
-    
-    switch (type?.toLowerCase()) {
-      case 'machine':
-        return t('products.types.machine', 'Machine');
-      case 'accessory':
-        return t('products.types.accessory', 'Accessory');
-      case 'consumable':
-        return t('products.types.consumable', 'Consumable');
-      case 'spare':
-      case 'spare_part':
-        return t('products.types.spare_part', 'Spare Part');
-      default:
-        console.warn('⚠️ [getTypeText] Unknown product type:', type);
-        // 不返回"Invalid Type"，而是返回产品类型或默认值
-        return type || t('products.types.product', 'Product');
-    }
-  };
-
-  // 属性key到i18n key映射
-  const propertyKeyMap: Record<string, string> = {
-    'part_number': 'partNumber',
-    'model': 'model',
-    'voltage': 'voltage',
-    'frequency': 'frequency',
-    'spec': 'spec',
-    'spec_imperial': 'specImperial',
-    'pcs_per_box': 'pcsPerBox',
-    'pcs_per_pallet': 'pcsPerPallet',
-    'package_size_cm': 'packageSize',
-    'package_size_inch': 'packageSize',
-    'pallet_size_cm': 'palletSize',
-    'pallet_size_inch': 'palletSize',
-    'net_weight_kg': 'netWeight',
-    'net_weight_lbs': 'netWeight',
-    'gross_weight_kg': 'grossWeight',
-    'gross_weight_lbs': 'grossWeight',
-    'brand': 'brand',
-    'unit': 'unit'
-  };
-  const getLabel = (key: string) => t(`products.properties.${propertyKeyMap[key] || key}`, key);
-  const getValue = (value: any) => value && value !== 'N/A' && value !== 'Not Specified' ? value : t('products.defaultValues.notAvailable');
-
   if (isLoading) {
     return (
       <div className="container">
@@ -630,6 +806,9 @@ const OrderPage: React.FC = () => {
 
   return (
     <div className="container">
+      {/* 临时测试组件 - 验证OrderProvider */}
+      {/* <OrderProviderTest /> */}
+      
       <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>{t('order.title', 'Confirm Order')}</h1>
       
       {/* 进度指示器 */}
@@ -649,7 +828,7 @@ const OrderPage: React.FC = () => {
         
         <div className="progress-step">
           <div className="step-circle">3</div>
-          <div className="step-title">{t('order.steps.complete', 'Complete')}</div>
+          <div className="step-title">{t('order.steps.orderList', 'Order List')}</div>
         </div>
       </div>
       
@@ -732,21 +911,44 @@ const OrderPage: React.FC = () => {
             
             <div className="form-group">
               <label className="form-label required">{t('order.shipping.country', 'Country/Region')}</label>
-              <select 
-                className={`form-select ${formErrors.country ? 'form-input-error' : ''}`}
-                name="country"
-                value={shippingInfo.country}
-                onChange={handleInputChange}
-                onBlur={handleBlur}
-              >
-                <option value="">{t('order.shipping.countryPlaceholder', 'Please select country/region')}</option>
-                <option value="CN">{t('order.countries.china', 'China')}</option>
-                <option value="US">{t('order.countries.usa', 'United States')}</option>
-                <option value="GB">{t('order.countries.uk', 'United Kingdom')}</option>
-                <option value="DE">{t('order.countries.germany', 'Germany')}</option>
-                <option value="JP">{t('order.countries.japan', 'Japan')}</option>
-                <option value="AU">{t('order.countries.australia', 'Australia')}</option>
-              </select>
+              <div className="country-select-container">
+                <input 
+                  type="text" 
+                  className={`form-input ${formErrors.country ? 'form-input-error' : ''}`}
+                  placeholder={t('order.shipping.countryPlaceholder', 'Please select country/region')}
+                  value={countrySearchTerm || (shippingInfo.country ? getCountryName(shippingInfo.country, i18n.language) : '')}
+                  onChange={handleCountrySearchChange}
+                  onFocus={() => setShowCountryDropdown(true)}
+                  onBlur={handleCountryBlur}
+                  autoComplete="off"
+                />
+                {showCountryDropdown && (
+                  <div className="country-dropdown">
+                    <div className="country-dropdown-header">
+                      <span>{t('order.countries.searchResults', 'Search Results')}</span>
+                      <span className="country-count">({filteredCountries.length})</span>
+                    </div>
+                    <div className="country-list">
+                      {filteredCountries.length > 0 ? (
+                        filteredCountries.map(country => (
+                          <div
+                            key={country.code}
+                            className="country-option"
+                            onClick={() => handleCountrySelect(country.code)}
+                          >
+                            <span className="country-name">{getCountryName(country.code, i18n.language)}</span>
+                            <span className="country-code">({country.code})</span>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="country-no-results">
+                          {t('order.countries.noResults', 'No countries found')}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
               {formErrors.country && (
                 <div className="form-error">{formErrors.country}</div>
               )}
@@ -783,154 +985,39 @@ const OrderPage: React.FC = () => {
           <div className="order-details">
             <h2 className="form-title">{t('order.details.title', 'Order Details')}</h2>
             
-            {Array.isArray(orderItems) && orderItems.length > 0 ? orderItems.map(item => {
-              // 🔧 使用改进的数据提取逻辑
-              const itemData = item as any;
-              
-              // 🖼️ 安全提取图片URL - 优先级：image_url -> properties.image_url -> 默认fallback
-              let imageUrl = '';
-              if (itemData.image_url && typeof itemData.image_url === 'string' && itemData.image_url.trim()) {
-                imageUrl = itemData.image_url.trim();
-              } else if (itemData.properties?.image_url && typeof itemData.properties.image_url === 'string' && itemData.properties.image_url.trim()) {
-                imageUrl = itemData.properties.image_url.trim();
-              } else if (itemData.image && typeof itemData.image === 'string' && itemData.image.trim()) {
-                imageUrl = itemData.image.trim();
-              } else {
-                // 直接使用fallback SVG，避免网络请求
-                imageUrl = fallbackImageSvg;
-              }
-              
-              // 📝 安全提取商品名称 - 支持多语言和多字段回退
-              let productName = '';
-              
-              // 🔧 优先从properties提取多语言名称，根据当前语言选择
-              if (itemData.properties) {
-                const currentLang = i18n.language;
-                if (currentLang.startsWith('zh')) {
-                  productName = itemData.properties.name_zh || '';
-                } else if (currentLang.startsWith('ja')) {
-                  productName = itemData.properties.name_ja || '';
-                } else {
-                  productName = itemData.properties.name_en || '';
-                }
-                
-                // 如果当前语言的名称为空，则按优先级回退
-                if (!productName) {
-                  productName = itemData.properties.name_zh || itemData.properties.name_en || itemData.properties.productName || '';
-                }
-              }
-              
-              // 如果多语言名称为空，尝试从item.name字段提取
-              if (!productName) {
-                productName = safeExtractString(item.name);
-              }
-              
-              // 最终回退到基础字段
-              if (!productName) {
-                productName = itemData.model || itemData.part_number || itemData.sku || 'Unknown Product';
-              }
-              
-              // 🏷️ 提取商品类型
-              const productType = itemData.type || itemData.product_type || itemData.category || 'machine';
-              
-              // 📊 构建显示属性 - 改进的属性提取逻辑
-              const displayProperties: Record<string, string> = {};
-              
-              if (itemData.properties) {
-                const props = itemData.properties;
-                
-                // 基础信息（最重要的字段优先显示）
-                if (props.part_number) displayProperties['part_number'] = props.part_number;
-                if (props.model) displayProperties['model'] = props.model;
-                if (props.voltage && props.voltage !== 'N/A') displayProperties['voltage'] = props.voltage + (props.voltage.includes('V') ? '' : 'V');
-                if (props.frequency && props.frequency !== 'N/A') displayProperties['frequency'] = props.frequency + (props.frequency.includes('Hz') ? '' : 'Hz');
-                
-                // 规格信息
-                if (props.spec && props.spec !== 'N/A') displayProperties['spec'] = props.spec;
-                if (props.spec_imperial && props.spec_imperial !== 'N/A') displayProperties['spec_imperial'] = props.spec_imperial;
-                
-                // 包装信息（按重要性排序）
-                if (props.pcs_per_box && props.pcs_per_box !== '0') displayProperties['pcs_per_box'] = props.pcs_per_box + ' pcs';
-                if (props.pcs_per_pallet && props.pcs_per_pallet !== '0') displayProperties['pcs_per_pallet'] = props.pcs_per_pallet + ' pcs';
-                
-                // 尺寸信息（优先显示用户区域的单位）
-                const useImperial = ['NA', 'US'].includes(itemData.userRegion || '');
-                if (useImperial) {
-                  if (props.package_size_inch) displayProperties['package_size_inch'] = props.package_size_inch;
-                  if (props.pallet_size_inch) displayProperties['pallet_size_inch'] = props.pallet_size_inch;
-                } else {
-                  if (props.package_size_cm) displayProperties['package_size_cm'] = props.package_size_cm;
-                  if (props.pallet_size_cm) displayProperties['pallet_size_cm'] = props.pallet_size_cm;
-                }
-                
-                // 重量信息（优先显示用户区域的单位）
-                if (useImperial) {
-                  if (props.net_weight_lbs && props.net_weight_lbs !== '0') displayProperties['net_weight_lbs'] = props.net_weight_lbs + ' lbs';
-                  if (props.gross_weight_lbs && props.gross_weight_lbs !== '0') displayProperties['gross_weight_lbs'] = props.gross_weight_lbs + ' lbs';
-                } else {
-                  if (props.net_weight_kg && props.net_weight_kg !== '0') displayProperties['net_weight_kg'] = props.net_weight_kg + ' kg';
-                  if (props.gross_weight_kg && props.gross_weight_kg !== '0') displayProperties['gross_weight_kg'] = props.gross_weight_kg + ' kg';
-                }
-                
-                // 其他信息
-                if (props.brand && props.brand !== 'N/A') displayProperties['brand'] = props.brand;
-                if (props.unit && props.unit !== 'N/A') displayProperties['unit'] = props.unit;
-              }
-              
-              // 🔄 如果properties为空，从item直接字段提取
-              if (Object.keys(displayProperties).length === 0) {
-                if (itemData.part_number) displayProperties['part_number'] = itemData.part_number;
-                if (itemData.model) displayProperties['model'] = itemData.model;
-                if (itemData.sku) displayProperties['sku'] = itemData.sku;
-              }
+            {Array.isArray(orderItems) && orderItems.length > 0 ? orderItems.map((item, index) => {
+              const currentLanguage = i18n.language.startsWith('zh') ? 'zh' : 'en';
+              const productName = CartFieldUnifier.getProductName(item, currentLanguage);
 
               return (
-                <div key={item.id || itemData.part_number || Math.random()} className="order-item">
-                  <div className="item-image">
+                <div key={item.id || item.product_id || index} className="order-item-card">
+                  <div className="item-main-info">
                     <img 
-                      src={imageUrl} 
-                      alt={productName}
+                      src={item.image_url || fallbackImageSvg} 
+                      alt={productName} 
+                      className="item-image"
                       onError={handleImageError}
-                      loading="lazy"
                     />
-                  </div>
-                  <div className="item-details">
-                    <div className="item-model">
-                      {productName}
-                      <span className={`item-type-tag tag-${productType?.toLowerCase() || 'machine'}`}>
-                        {getTypeText(productType)}
-                      </span>
-                      
-                      {item.detailInfo && (
-                        <div className="info-tooltip">i
-                          <div className="tooltip-content">
-                            <div className="tooltip-title">{t('products.detailInfo', '{{name}} Detailed Information', { name: item.detailInfo.title })}</div>
-                            {item.detailInfo.sections.map((section, idx) => (
-                              <div key={idx} className="tooltip-section">
-                                {section.title && <div className="tooltip-title">{t(`products.sections.${section.title}`, section.title)}</div>}
-                                {section.properties.map((prop, propIdx) => (
-                                  <div key={propIdx} className="tooltip-property">
-                                    <span className="tooltip-property-label">{t(`products.properties.${prop.label}`, prop.label)}:</span>
-                                    <span>{prop.value}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                    <div className="item-summary">
+                      <h3 className="item-name">{productName}</h3>
+                      {/* 🚀 使用新的统一产品详情组件 */}
+                      <OrderPageProductDetails 
+                        item={item} 
+                        language={currentLanguage} 
+                        preferredUnit={preferredUnit}
+                        showEmptyFields={true}
+                      />
                     </div>
-                    
-                    {Object.entries(displayProperties).map(([key, value]) => (
-                      <div key={key} className="item-property">
-                        <span className="property-label">{getLabel(key)}:</span>
-                        <span className="property-value">{getValue(value)}</span>
-                      </div>
-                    ))}
-                    
-                    <div className="item-price-quantity">
-                      <div className="item-quantity-badge">{t('products.quantity', 'Quantity')}: {item.quantity}</div>
-                      <div className="item-price-value">{formatPrice((item.price || item.unit_price || 0) * item.quantity)}</div>
+                  </div>
+                  <div className="item-pricing-info">
+                    <div className="item-quantity">
+                      {t('quantity')}: {item.quantity}
+                    </div>
+                    <div className="item-price">
+                      {t('unitPrice')}: {formatPrice(item.unit_price || item.price)}
+                    </div>
+                    <div className="item-total">
+                      {t('total')}: {formatPrice((item.unit_price || item.price) * item.quantity)}
                     </div>
                   </div>
                 </div>

@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简化订单流程测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { border-color: #4CAF50; background-color: #f0f8f0; }
+        .error { border-color: #f44336; background-color: #fdf0f0; }
+        .warning { border-color: #ff9800; background-color: #fff8f0; }
+        .info { border-color: #2196F3; background-color: #f0f8ff; }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        
+        .flow-step {
+            background: #e3f2fd;
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #2196F3;
+            border-radius: 4px;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .comparison-table th, .comparison-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .comparison-table th {
+            background-color: #f2f2f2;
+        }
+        .old-way { background-color: #ffebee; }
+        .new-way { background-color: #e8f5e8; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 简化订单流程测试</h1>
+        <p>测试移除orderNumber和order_number重复字段后的系统一致性</p>
+        
+        <div class="test-section info">
+            <h3>📋 测试目标</h3>
+            <ul>
+                <li>✅ 统一使用数据库ID，移除orderNumber/order_number重复字段</li>
+                <li>✅ 确保Order页面 → PO页面的数据一致性</li>
+                <li>✅ 确保OrderList页面 → PO页面的数据一致性</li>
+                <li>✅ 确保Excel导出的数据与PO页面显示一致</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>🔄 简化前后对比</h3>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>方面</th>
+                        <th class="old-way">简化前（问题）</th>
+                        <th class="new-way">简化后（解决方案）</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>字段使用</strong></td>
+                        <td class="old-way">
+                            • API: order_number<br>
+                            • 前端: orderNumber<br>
+                            • 混用导致不一致
+                        </td>
+                        <td class="new-way">
+                            • 统一使用: id<br>
+                            • 简单明了，无歧义
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>订单号显示</strong></td>
+                        <td class="old-way">
+                            • ORD-20250623-D62F4B<br>
+                            • ORD-20250623-000012<br>
+                            • PO-20250623-000011<br>
+                            • 格式不统一
+                        </td>
+                        <td class="new-way">
+                            • 直接显示数据库ID<br>
+                            • 如: 123, 124, 125<br>
+                            • 简单一致
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>数据传递</strong></td>
+                        <td class="old-way">
+                            • 需要复杂的字段映射<br>
+                            • 容易丢失数据<br>
+                            • 调试困难
+                        </td>
+                        <td class="new-way">
+                            • 直接传递ID<br>
+                            • 数据不会丢失<br>
+                            • 调试简单
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 测试用例</h3>
+            <div class="flow-step">
+                <strong>测试1：模拟API响应</strong>
+                <button onclick="testApiResponse()">运行测试</button>
+                <div id="api-test-result"></div>
+            </div>
+            
+            <div class="flow-step">
+                <strong>测试2：Order页面数据处理</strong>
+                <button onclick="testOrderPageData()">运行测试</button>
+                <div id="order-test-result"></div>
+            </div>
+            
+            <div class="flow-step">
+                <strong>测试3：PO页面数据接收</strong>
+                <button onclick="testPOPageData()">运行测试</button>
+                <div id="po-test-result"></div>
+            </div>
+            
+            <div class="flow-step">
+                <strong>测试4：Excel导出数据</strong>
+                <button onclick="testExcelExport()">运行测试</button>
+                <div id="excel-test-result"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 完整流程验证</h3>
+            <button onclick="runCompleteFlow()">运行完整流程测试</button>
+            <div id="complete-flow-result"></div>
+        </div>
+    </div>
+
+    <script>
+        // 简化的OrderNumberManager
+        class OrderNumberManager {
+            static extractFromApiResponse(apiResponse) {
+                console.log('🔧 [OrderNumberManager] 从API响应提取ID:', apiResponse);
+                
+                let orderId = apiResponse?.data?.id || apiResponse?.id;
+                
+                if (!orderId) {
+                    orderId = Date.now().toString();
+                }
+
+                const result = {
+                    orderId: String(orderId),
+                    displayNumber: String(orderId),
+                    source: 'api'
+                };
+
+                console.log('🔧 [OrderNumberManager] 提取结果:', result);
+                return result;
+            }
+
+            static extractFromOrderObject(order) {
+                console.log('🔧 [OrderNumberManager] 从订单对象提取ID:', order);
+                
+                let orderId = null;
+                
+                if (order && typeof order === 'object') {
+                    orderId = order.id || order.orderId;
+                }
+
+                if (!orderId) {
+                    orderId = Date.now().toString();
+                }
+
+                const result = {
+                    orderId: String(orderId),
+                    displayNumber: String(orderId),
+                    source: 'api'
+                };
+
+                console.log('🔧 [OrderNumberManager] 提取结果:', result);
+                return result;
+            }
+
+            static createUnifiedOrderData(params) {
+                const { apiResponse, orderObject, orderItems, customerInfo, shippingInfo, summary, source } = params;
+               
+                let orderInfo;
+                if (apiResponse) {
+                    orderInfo = this.extractFromApiResponse(apiResponse);
+                } else if (orderObject) {
+                    orderInfo = this.extractFromOrderObject(orderObject);
+                } else {
+                    const generated = Date.now().toString();
+                    orderInfo = {
+                        orderId: generated,
+                        displayNumber: generated,
+                        source: 'generated'
+                    };
+                }
+
+                console.log('🔧 [OrderNumberManager] 创建统一订单数据:', {
+                    orderInfo,
+                    itemsCount: orderItems?.length || 0,
+                    source
+                });
+
+                return {
+                    id: orderInfo.orderId,
+                    orderId: orderInfo.orderId,
+                    displayNumber: orderInfo.displayNumber,
+                    orderItems: orderItems || [],
+                    customerInfo: customerInfo || {},
+                    shippingInfo: shippingInfo || {},
+                    summary: summary || { subtotal: 0, shipping: 0, tax: 0, total: 0 },
+                    createdAt: new Date().toISOString(),
+                    source,
+                    orderNumberSource: orderInfo.source
+                };
+            }
+        }
+
+        function testApiResponse() {
+            const mockApiResponse = {
+                success: true,
+                data: {
+                    id: 12345,
+                    status: 'created',
+                    total: 299.99
+                }
+            };
+
+            const result = OrderNumberManager.extractFromApiResponse(mockApiResponse);
+            
+            document.getElementById('api-test-result').innerHTML = `
+                <pre>${JSON.stringify({
+                    input: mockApiResponse,
+                    output: result,
+                    validation: {
+                        hasId: !!result.orderId,
+                        isString: typeof result.orderId === 'string',
+                        displayConsistent: result.orderId === result.displayNumber,
+                        noOrderNumber: !result.hasOwnProperty('orderNumber')
+                    }
+                }, null, 2)}</pre>
+            `;
+        }
+
+        function testOrderPageData() {
+            const mockApiResponse = {
+                success: true,
+                data: { id: 67890, status: 'created' }
+            };
+
+            const mockOrderItems = [
+                { id: 1, name: 'Product A', price: 100, quantity: 2 },
+                { id: 2, name: 'Product B', price: 99.99, quantity: 1 }
+            ];
+
+            const unifiedData = OrderNumberManager.createUnifiedOrderData({
+                apiResponse: mockApiResponse,
+                orderItems: mockOrderItems,
+                customerInfo: { companyName: 'Test Company' },
+                shippingInfo: { address: 'Test Address' },
+                summary: { total: 299.99 },
+                source: 'order_creation'
+            });
+
+            document.getElementById('order-test-result').innerHTML = `
+                <pre>${JSON.stringify({
+                    unifiedData,
+                    validation: {
+                        hasId: !!unifiedData.id,
+                        idConsistency: unifiedData.id === unifiedData.orderId,
+                        displayConsistency: unifiedData.id === unifiedData.displayNumber,
+                        noOrderNumber: !unifiedData.hasOwnProperty('orderNumber'),
+                        hasOrderItems: Array.isArray(unifiedData.orderItems),
+                        itemsCount: unifiedData.orderItems.length
+                    }
+                }, null, 2)}</pre>
+            `;
+        }
+
+        function testPOPageData() {
+            const mockPOData = {
+                id: '54321',
+                orderId: '54321',
+                displayNumber: '54321',
+                orderItems: [
+                    { id: 1, name: 'Product C', price: 150, quantity: 1 }
+                ],
+                customerInfo: { companyName: 'PO Test Company' },
+                shippingInfo: { address: 'PO Test Address' },
+                summary: { total: 150 }
+            };
+
+            const extractedInfo = OrderNumberManager.extractFromOrderObject(mockPOData);
+
+            document.getElementById('po-test-result').innerHTML = `
+                <pre>${JSON.stringify({
+                    inputData: mockPOData,
+                    extractedInfo,
+                    validation: {
+                        idExtracted: !!extractedInfo.orderId,
+                        displayMatches: extractedInfo.orderId === extractedInfo.displayNumber,
+                        matchesInput: extractedInfo.orderId === mockPOData.id,
+                        noOrderNumber: !extractedInfo.hasOwnProperty('orderNumber')
+                    }
+                }, null, 2)}</pre>
+            `;
+        }
+
+        function testExcelExport() {
+            const mockOrder = {
+                id: 98765,
+                status: 'pending',
+                total: 399.99,
+                items: [
+                    { 
+                        id: 1, 
+                        name: 'Excel Test Product', 
+                        price: 399.99, 
+                        quantity: 1,
+                        code: 'ETP001',
+                        model: 'Test Model'
+                    }
+                ],
+                shippingInfo: {
+                    companyName: 'Excel Test Company',
+                    contactName: 'Test Contact',
+                    address: 'Test Address',
+                    phone: '123-456-7890'
+                }
+            };
+
+            // 模拟ExcelExporter的convertOrderToExcelData方法
+            const excelData = {
+                poNumber: mockOrder.id.toString(),
+                date: new Date().toLocaleDateString('en-US'),
+                paymentMethod: 'Bank Transfer',
+                language: 'en',
+                customer: {
+                    companyName: mockOrder.shippingInfo.companyName,
+                    contactName: mockOrder.shippingInfo.contactName,
+                    address: mockOrder.shippingInfo.address,
+                    phone: mockOrder.shippingInfo.phone
+                },
+                items: mockOrder.items.map(item => ({
+                    partNumber: item.code,
+                    itemName: item.name,
+                    model: item.model,
+                    quantity: item.quantity,
+                    unitPrice: item.price,
+                    amount: item.price * item.quantity
+                }))
+            };
+
+            document.getElementById('excel-test-result').innerHTML = `
+                <pre>${JSON.stringify({
+                    mockOrder,
+                    excelData,
+                    validation: {
+                        poNumberIsId: excelData.poNumber === mockOrder.id.toString(),
+                        noComplexOrderNumber: !excelData.poNumber.includes('ORD-'),
+                        customerDataMapped: !!excelData.customer.companyName,
+                        itemsProcessed: excelData.items.length === mockOrder.items.length
+                    }
+                }, null, 2)}</pre>
+            `;
+        }
+
+        function runCompleteFlow() {
+            console.log('🔧 开始完整流程测试');
+            
+            // 步骤1：模拟API创建订单
+            const apiResponse = {
+                success: true,
+                data: { id: 11111, status: 'created', total: 599.99 }
+            };
+
+            // 步骤2：Order页面处理
+            const orderPageData = OrderNumberManager.createUnifiedOrderData({
+                apiResponse,
+                orderItems: [
+                    { id: 1, name: 'Flow Test Product', price: 299.99, quantity: 2 }
+                ],
+                customerInfo: { companyName: 'Flow Test Company' },
+                shippingInfo: { address: 'Flow Test Address' },
+                summary: { total: 599.99 },
+                source: 'order_creation'
+            });
+
+            // 步骤3：PO页面接收数据
+            const poPageInfo = OrderNumberManager.extractFromOrderObject(orderPageData);
+
+            // 步骤4：Excel导出处理
+            const excelData = {
+                poNumber: orderPageData.id.toString(),
+                customer: {
+                    companyName: orderPageData.customerInfo.companyName
+                }
+            };
+
+            // 验证整个流程的一致性
+            const flowValidation = {
+                step1_ApiId: apiResponse.data.id,
+                step2_OrderPageId: orderPageData.id,
+                step3_POPageId: poPageInfo.orderId,
+                step4_ExcelId: excelData.poNumber,
+                
+                // 一致性检查
+                allIdsMatch: (
+                    apiResponse.data.id.toString() === orderPageData.id &&
+                    orderPageData.id === poPageInfo.orderId &&
+                    poPageInfo.orderId === excelData.poNumber
+                ),
+                noOrderNumberFields: (
+                    !orderPageData.hasOwnProperty('orderNumber') &&
+                    !poPageInfo.hasOwnProperty('orderNumber')
+                ),
+                dataIntegrity: (
+                    orderPageData.customerInfo.companyName === excelData.customer.companyName
+                )
+            };
+
+            document.getElementById('complete-flow-result').innerHTML = `
+                <div class="${flowValidation.allIdsMatch && flowValidation.noOrderNumberFields && flowValidation.dataIntegrity ? 'success' : 'error'}">
+                    <h4>${flowValidation.allIdsMatch && flowValidation.noOrderNumberFields && flowValidation.dataIntegrity ? '✅ 流程测试通过' : '❌ 流程测试失败'}</h4>
+                    <pre>${JSON.stringify({
+                        flowSteps: {
+                            'API Response': { id: apiResponse.data.id },
+                            'Order Page': { id: orderPageData.id },
+                            'PO Page': { id: poPageInfo.orderId },
+                            'Excel Export': { id: excelData.poNumber }
+                        },
+                        validation: flowValidation
+                    }, null, 2)}</pre>
+                </div>
+            `;
+        }
+
+        // 页面加载时运行基本测试
+        window.onload = function() {
+            console.log('🔧 简化订单流程测试页面已加载');
+        };
+    </script>
+</body>
+</html> 

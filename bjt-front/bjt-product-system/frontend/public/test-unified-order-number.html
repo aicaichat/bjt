@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>统一业务订单号测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { border-color: #4CAF50; background-color: #f0f8f0; }
+        .error { border-color: #f44336; background-color: #fdf0f0; }
+        .warning { border-color: #ff9800; background-color: #fff8f0; }
+        .info { border-color: #2196F3; background-color: #f0f8ff; }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        
+        .order-number-demo {
+            background: #e8f5e8;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 2px solid #4CAF50;
+        }
+        
+        .format-example {
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            font-weight: bold;
+            color: #2e7d32;
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 统一业务订单号测试</h1>
+        <p>测试新的统一订单号格式：<code>PO-YYYYMMDDHHMM-XXXXXX</code></p>
+        
+        <div class="test-section info">
+            <h3>📋 新的订单号格式</h3>
+            <div class="order-number-demo">
+                <h4>格式说明：</h4>
+                <div class="format-example">PO-YYYYMMDDHHMM-XXXXXX</div>
+                <ul>
+                    <li><strong>PO-</strong>: 固定前缀，表示采购订单</li>
+                    <li><strong>YYYYMMDDHHMM</strong>: 12位日期时间（年月日时分）</li>
+                    <li><strong>XXXXXX</strong>: 6位随机字符串（大写字母和数字）</li>
+                </ul>
+                <h4>示例：</h4>
+                <div class="format-example" id="example-order-number">正在生成...</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 订单号生成测试</h3>
+            <button onclick="testOrderNumberGeneration()">生成测试订单号</button>
+            <div id="generation-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>✅ 订单号验证测试</h3>
+            <button onclick="testOrderNumberValidation()">验证订单号格式</button>
+            <div id="validation-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔄 完整流程测试</h3>
+            <button onclick="testCompleteFlow()">运行完整流程</button>
+            <div id="complete-flow-result"></div>
+        </div>
+    </div>
+
+    <script>
+        // 统一的OrderNumberManager
+        class OrderNumberManager {
+            /**
+             * 生成标准业务订单号
+             * 格式：PO-YYYYMMDDHHMM-XXXXXX
+             */
+            static generateOrderNumber() {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hour = String(now.getHours()).padStart(2, '0');
+                const minute = String(now.getMinutes()).padStart(2, '0');
+                
+                // 生成6位随机字符串（大写字母和数字）
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                let randomString = '';
+                for (let i = 0; i < 6; i++) {
+                    randomString += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                
+                return `PO-${year}${month}${day}${hour}${minute}-${randomString}`;
+            }
+
+            /**
+             * 验证订单号格式
+             */
+            static validateOrderNumber(orderNumber) {
+                if (!orderNumber || typeof orderNumber !== 'string') {
+                    return false;
+                }
+                // 验证格式：PO-YYYYMMDDHHMM-XXXXXX
+                const pattern = /^PO-\d{12}-[A-Z0-9]{6}$/;
+                return pattern.test(orderNumber);
+            }
+
+            /**
+             * 从API响应中提取订单号信息
+             */
+            static extractFromApiResponse(apiResponse) {
+                console.log('🔧 [OrderNumberManager] 从API响应提取订单号:', apiResponse);
+                
+                let orderId = apiResponse?.data?.id || apiResponse?.id;
+                let orderNumber = apiResponse?.data?.order_number || apiResponse?.order_number;
+                
+                // 如果API没有返回订单号，生成一个新的
+                if (!orderNumber) {
+                    orderNumber = this.generateOrderNumber();
+                }
+                
+                // 如果没有ID，使用订单号作为ID
+                if (!orderId) {
+                    orderId = orderNumber;
+                }
+
+                const result = {
+                    orderId: String(orderId),
+                    orderNumber: String(orderNumber),
+                    displayNumber: String(orderNumber),
+                    source: 'api'
+                };
+
+                console.log('🔧 [OrderNumberManager] 提取结果:', result);
+                return result;
+            }
+
+            /**
+             * 创建统一的订单数据结构
+             */
+            static createUnifiedOrderData(params) {
+                const { apiResponse, orderObject, orderItems, customerInfo, shippingInfo, summary, source } = params;
+               
+                let orderInfo;
+                if (apiResponse) {
+                    orderInfo = this.extractFromApiResponse(apiResponse);
+                } else if (orderObject) {
+                    orderInfo = this.extractFromOrderObject(orderObject);
+                } else {
+                    const generated = this.generateOrderNumber();
+                    orderInfo = {
+                        orderId: generated,
+                        orderNumber: generated,
+                        displayNumber: generated,
+                        source: 'generated'
+                    };
+                }
+
+                return {
+                    id: orderInfo.orderId,
+                    orderId: orderInfo.orderId,
+                    orderNumber: orderInfo.orderNumber,
+                    displayNumber: orderInfo.displayNumber,
+                    orderItems: orderItems || [],
+                    customerInfo: customerInfo || {},
+                    shippingInfo: shippingInfo || {},
+                    summary: summary || { subtotal: 0, shipping: 0, tax: 0, total: 0 },
+                    createdAt: new Date().toISOString(),
+                    source,
+                    orderNumberSource: orderInfo.source
+                };
+            }
+        }
+
+        function testOrderNumberGeneration() {
+            const generatedNumbers = [];
+            
+            // 生成5个测试订单号
+            for (let i = 0; i < 5; i++) {
+                const orderNumber = OrderNumberManager.generateOrderNumber();
+                const isValid = OrderNumberManager.validateOrderNumber(orderNumber);
+                generatedNumbers.push({
+                    orderNumber,
+                    isValid,
+                    timestamp: new Date().toISOString()
+                });
+                
+                // 稍微延迟以确保时间戳不同
+                if (i < 4) {
+                    const now = Date.now();
+                    while (Date.now() - now < 100) {} // 简单延迟
+                }
+            }
+
+            document.getElementById('generation-result').innerHTML = `
+                <h4>生成的订单号：</h4>
+                <pre>${JSON.stringify(generatedNumbers, null, 2)}</pre>
+                <div class="${generatedNumbers.every(n => n.isValid) ? 'success' : 'error'}" style="margin-top: 10px; padding: 10px; border-radius: 4px;">
+                    ${generatedNumbers.every(n => n.isValid) ? '✅ 所有订单号格式正确' : '❌ 存在格式错误的订单号'}
+                </div>
+            `;
+        }
+
+        function testOrderNumberValidation() {
+            const testCases = [
+                { number: 'PO-202506231425-ABC123', expected: true, description: '正确格式' },
+                { number: 'PO-202506231425-ABCD12', expected: true, description: '正确格式（字母数字混合）' },
+                { number: 'ORD-202506231425-ABC123', expected: false, description: '错误前缀' },
+                { number: 'PO-20250623142-ABC123', expected: false, description: '日期时间位数不足' },
+                { number: 'PO-202506231425-ABC12', expected: false, description: '随机字符串位数不足' },
+                { number: 'PO-202506231425-abc123', expected: false, description: '随机字符串包含小写字母' },
+                { number: 'PO-202506231425-ABC1234', expected: false, description: '随机字符串位数过多' },
+                { number: '', expected: false, description: '空字符串' },
+                { number: null, expected: false, description: 'null值' }
+            ];
+
+            const results = testCases.map(testCase => {
+                const actual = OrderNumberManager.validateOrderNumber(testCase.number);
+                return {
+                    ...testCase,
+                    actual,
+                    passed: actual === testCase.expected
+                };
+            });
+
+            const allPassed = results.every(r => r.passed);
+
+            document.getElementById('validation-result').innerHTML = `
+                <h4>验证测试结果：</h4>
+                <pre>${JSON.stringify(results, null, 2)}</pre>
+                <div class="${allPassed ? 'success' : 'error'}" style="margin-top: 10px; padding: 10px; border-radius: 4px;">
+                    ${allPassed ? '✅ 所有验证测试通过' : '❌ 存在验证测试失败'}
+                </div>
+            `;
+        }
+
+        function testCompleteFlow() {
+            console.log('🔧 开始完整流程测试');
+            
+            // 步骤1：模拟API创建订单
+            const apiResponse = {
+                success: true,
+                data: { 
+                    id: 12345, 
+                    status: 'created', 
+                    total: 599.99,
+                    // 注意：API可能不返回order_number，由前端生成
+                }
+            };
+
+            // 步骤2：Order页面处理
+            const orderPageData = OrderNumberManager.createUnifiedOrderData({
+                apiResponse,
+                orderItems: [
+                    { id: 1, name: 'Flow Test Product', price: 299.99, quantity: 2 }
+                ],
+                customerInfo: { companyName: 'Flow Test Company' },
+                shippingInfo: { address: 'Flow Test Address' },
+                summary: { total: 599.99 },
+                source: 'order_creation'
+            });
+
+            // 步骤3：PO页面接收数据
+            const poPageInfo = OrderNumberManager.extractFromApiResponse({
+                data: { 
+                    id: orderPageData.orderId,
+                    order_number: orderPageData.orderNumber 
+                }
+            });
+
+            // 步骤4：Excel导出处理
+            const excelData = {
+                poNumber: orderPageData.orderNumber,
+                customer: {
+                    companyName: orderPageData.customerInfo.companyName
+                }
+            };
+
+            // 验证整个流程的一致性
+            const flowValidation = {
+                step1_ApiId: apiResponse.data.id,
+                step2_OrderNumber: orderPageData.orderNumber,
+                step3_PONumber: poPageInfo.orderNumber,
+                step4_ExcelNumber: excelData.poNumber,
+                
+                // 一致性检查
+                allOrderNumbersMatch: (
+                    orderPageData.orderNumber === poPageInfo.orderNumber &&
+                    poPageInfo.orderNumber === excelData.poNumber
+                ),
+                orderNumberFormatValid: OrderNumberManager.validateOrderNumber(orderPageData.orderNumber),
+                hasBusinessOrderNumber: orderPageData.orderNumber.startsWith('PO-'),
+                dataIntegrity: (
+                    orderPageData.customerInfo.companyName === excelData.customer.companyName
+                )
+            };
+
+            document.getElementById('complete-flow-result').innerHTML = `
+                <div class="${flowValidation.allOrderNumbersMatch && flowValidation.orderNumberFormatValid && flowValidation.hasBusinessOrderNumber && flowValidation.dataIntegrity ? 'success' : 'error'}">
+                    <h4>${flowValidation.allOrderNumbersMatch && flowValidation.orderNumberFormatValid && flowValidation.hasBusinessOrderNumber && flowValidation.dataIntegrity ? '✅ 完整流程测试通过' : '❌ 完整流程测试失败'}</h4>
+                    <pre>${JSON.stringify({
+                        flowSteps: {
+                            'API Response': { id: apiResponse.data.id },
+                            'Order Page': { orderNumber: orderPageData.orderNumber },
+                            'PO Page': { orderNumber: poPageInfo.orderNumber },
+                            'Excel Export': { orderNumber: excelData.poNumber }
+                        },
+                        validation: flowValidation
+                    }, null, 2)}</pre>
+                </div>
+            `;
+        }
+
+        // 页面加载时显示示例订单号
+        window.onload = function() {
+            const exampleOrderNumber = OrderNumberManager.generateOrderNumber();
+            document.getElementById('example-order-number').textContent = exampleOrderNumber;
+            console.log('🔧 统一业务订单号测试页面已加载');
+        };
+    </script>
+</body>
+</html> 

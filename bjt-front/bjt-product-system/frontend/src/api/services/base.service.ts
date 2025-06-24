@@ -154,10 +154,17 @@ export abstract class BaseService<T, R = any> {
     } catch (error) {
       const apiError = error as ApiError;
       
-      // 如果是认证错误，尝试使用模拟数据
+      // 🔧 检查是否允许在认证错误时回退到Mock数据
       if (apiError.type === ApiErrorType.AUTHENTICATION) {
-        console.warn('Authentication error, falling back to mock data');
-        return this.getMockData(params);
+        const allowMockFallback = import.meta.env.VITE_ALLOW_MOCK_FALLBACK !== 'false';
+        
+        if (allowMockFallback) {
+          console.warn('Authentication error, falling back to mock data');
+          return this.getMockData(params);
+        } else {
+          console.error('Authentication error, mock fallback disabled - throwing error');
+          throw new Error('Authentication required. Please login to create orders.');
+        }
       }
       
       throw error;

@@ -1,10 +1,8 @@
-import { mockCartItems, defaultShippingInfo, generateMockOrderId } from './mocks/orders.mocks';
 import { API_CONFIG } from '../config/appConfig';
-import { orderApi } from './api';
+import { OrderApiAdapter } from './apiAdapter';
 
-// Helper functions from mockService
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-const shouldUseMockData = (): boolean => API_CONFIG.USE_MOCK_DATA;
+
 const wrapResponse = <T>(data: T, meta = {}) => {
   return {
     data,
@@ -49,239 +47,239 @@ export interface OrderListFilters {
 }
 
 /**
- * OrderService - provides methods for order related operations
- * - Works with either mock data or API data based on appConfig settings
- * - Includes methods for getting order history, cart items, shipping info
- * - Methods for calculating order summary and submitting orders
+ * 订单服务类 - 完全使用API适配器确保前后端字段映射正确
  */
 export class OrderService {
+  
   /**
-   * Get order history for the current user
-   * @param filters Filter and pagination parameters
-   * @returns Promise with paginated order list
+   * Get list of orders with filters - 使用API适配器
    */
   async getOrders(filters: OrderListFilters = {}): Promise<ApiResponse<{
     items: Array<any>;
     totalItems: number;
     totalPages: number;
   }>> {
-    if (shouldUseMockData()) {
-      await delay(800);
-      
-      // Return mock order history
-      return wrapResponse({
-        items: [
-          {
-            id: 'ord-001',
-            orderNumber: 'BJT-20231025-001',
-            date: '2023-10-25',
-            status: 'shipped',
-            total: 12500,
-            currency: 'CNY',
-            items: 3
-          },
-          {
-            id: 'ord-002',
-            orderNumber: 'BJT-20230915-002',
-            date: '2023-09-15',
-            status: 'completed',
-            total: 8300,
-            currency: 'CNY',
-            items: 2
-          },
-          {
-            id: 'ord-003',
-            orderNumber: 'BJT-20230730-003',
-            date: '2023-07-30',
-            status: 'processing',
-            total: 15700,
-            currency: 'CNY',
-            items: 4
-          }
-        ],
-        totalItems: 3,
-        totalPages: 1
-      });
-    }
-    
     try {
-      // Real API implementation would go here
-      // return await api.get('/orders', { params: filters });
+      console.log('🔧 [OrderService] 使用API适配器获取订单列表:', filters);
+      
+      // 使用API适配器
+      const result = await OrderApiAdapter.getOrders(filters);
+      
       return wrapResponse({
-        items: [],
-        totalItems: 0,
-        totalPages: 0
+        items: result.items,
+        totalItems: result.total,
+        totalPages: result.totalPages
       });
+      
     } catch (error) {
-      console.error("Error fetching orders:", error);
-      // Fallback to mock data if API fails
-      return this.getOrders(filters);
+      console.error("❌ [OrderService] 获取订单列表失败:", error);
+      throw error;
     }
   }
 
   /**
-   * Get items currently in the cart
-   * @returns Promise with cart items
+   * Get cart items - 使用API适配器
    */
   async getCartItems(): Promise<ApiResponse<any[]>> {
-    if (shouldUseMockData()) {
-      await delay(300);
-      return wrapResponse(mockCartItems);
-    }
-    
     try {
-      // In real implementation, we would fetch from the cart API
-      // return await cartApi.getCart();
-      return wrapResponse([]);
+      console.log('🔧 [OrderService] 使用API适配器获取购物车...');
+      
+      const token = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
+      if (!token) {
+        throw new Error('缺少认证token');
+      }
+      
+      // 调用购物车API
+      const response = await fetch(`${API_CONFIG.BASE_URL}/cart`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`获取购物车失败: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('✅ [OrderService] 成功获取购物车:', data);
+      
+      const cartItems = data.success ? data.data : (Array.isArray(data) ? data : []);
+      return wrapResponse(cartItems);
+      
     } catch (error) {
-      console.error("Error fetching cart items:", error);
-      // Fallback to mock data
-      return wrapResponse(mockCartItems);
+      console.error("❌ [OrderService] 获取购物车失败:", error);
+      throw error;
     }
   }
 
   /**
-   * Get user's default shipping information
-   * @returns Promise with shipping info
+   * Get user's default shipping information - 使用API适配器
    */
   async getDefaultShippingInfo(): Promise<ApiResponse<any>> {
-    if (shouldUseMockData()) {
-      await delay(200);
-      return wrapResponse(defaultShippingInfo);
-    }
-    
     try {
-      // In real implementation, we would fetch from user profile or API
-      // return await userApi.getShippingInfo();
-      return wrapResponse({});
+      console.log('🔧 [OrderService] 使用API适配器获取运输信息...');
+      
+      const token = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
+      if (!token) {
+        throw new Error('缺少认证token');
+      }
+      
+      const response = await fetch(`${API_CONFIG.BASE_URL}/user/shipping-info`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`获取运输信息失败: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('✅ [OrderService] 成功获取运输信息:', data);
+      
+      return wrapResponse(data.success ? data.data : data);
+      
     } catch (error) {
-      console.error("Error fetching shipping info:", error);
-      // Fallback to mock data
-      return wrapResponse(defaultShippingInfo);
+      console.error("❌ [OrderService] 获取运输信息失败:", error);
+      throw error;
     }
   }
 
   /**
-   * Calculate order summary based on items in cart
-   * @returns Promise with order summary including items, subtotal, shipping, tax and total
+   * Calculate order summary - 使用API适配器
    */
   async calculateOrderSummary(): Promise<ApiResponse<OrderSummary>> {
-    if (shouldUseMockData()) {
-      await delay(500);
-      return this.mockCalculateOrderSummary();
-    }
-    
     try {
-      // In real implementation, we would call API
-      // return await checkoutApi.calculateOrderSummary();
-      return this.mockCalculateOrderSummary();
+      console.log('🔧 [OrderService] 使用API适配器计算订单汇总...');
+      
+      const token = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
+      if (!token) {
+        throw new Error('缺少认证token');
+      }
+      
+      const response = await fetch(`${API_CONFIG.BASE_URL}/checkout/calculate`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`计算订单汇总失败: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('✅ [OrderService] 成功计算订单汇总:', data);
+      
+      return wrapResponse(data.success ? data.data : data);
+      
     } catch (error) {
-      console.error("Error calculating order summary:", error);
-      // Fallback to mock implementation
-      return this.mockCalculateOrderSummary();
+      console.error("❌ [OrderService] 计算订单汇总失败:", error);
+      throw error;
     }
-  }
-  
-  /**
-   * Helper method to calculate mock order summary
-   * @returns Mock order summary response
-   */
-  private async mockCalculateOrderSummary(): Promise<ApiResponse<OrderSummary>> {
-    const cartResponse = await this.getCartItems();
-    const items = cartResponse.data;
-    
-    const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0);
-    const shipping = subtotal > 5000 ? 0 : 150; // Free shipping over 5000
-    const tax = Math.round(subtotal * 0.13); // 13% tax
-    const discount = subtotal > 10000 ? Math.round(subtotal * 0.05) : 0; // 5% discount for orders over 10000
-    
-    const summary: OrderSummary = {
-      items: items.map((item: any) => ({
-        id: item.id,
-        name: typeof item.name === 'object' ? item.name['zh-CN'] : item.name,
-        price: item.price,
-        quantity: item.quantity,
-        image: item.image,
-        specs: item.specs
-      })),
-      subtotal,
-      shipping,
-      tax,
-      discount,
-      total: subtotal + shipping + tax - discount,
-      currency: 'CNY'
-    };
-    
-    return wrapResponse(summary);
   }
 
   /**
-   * Submit an order with order data
-   * @param orderData Order data including shipping info, payment method, etc.
-   * @returns Promise with order confirmation
+   * Submit an order - 使用API适配器
    */
-  async submitOrder(orderData: any): Promise<ApiResponse<{ orderId: string }>> {
-    if (shouldUseMockData()) {
-      await delay(1200);
-      // Generate mock order ID
-      const orderId = generateMockOrderId();
-      return wrapResponse({ orderId });
-    }
+  async submitOrder(orderData: any): Promise<ApiResponse<{ orderId: string; orderNumber: string }>> {
+    console.log('🔧 [OrderService] 使用API适配器提交订单:', orderData);
     
     try {
-      // In production, we would call the actual API
-      // return await orderApi.submitOrder(orderData);
-      return wrapResponse({ orderId: 'api-order-id' });
+      // 使用API适配器提交订单
+      const result = await OrderApiAdapter.submitOrder(orderData);
+      
+      console.log('✅ [OrderService] 订单提交成功:', result);
+      
+      return wrapResponse({ 
+        orderId: result.id || result.orderId,
+        orderNumber: result.orderNumber
+      });
+      
     } catch (error) {
-      console.error("Error submitting order:", error);
-      // Return mock order ID as fallback
-      return wrapResponse({ orderId: generateMockOrderId() });
+      console.error("❌ [OrderService] 订单提交失败:", error);
+      throw error;
     }
   }
   
   /**
-   * Cancel an existing order
-   * @param orderId ID of the order to cancel
-   * @returns Promise with success status
+   * Cancel an existing order - 使用API适配器
    */
   async cancelOrder(orderId: string): Promise<ApiResponse<{ success: boolean }>> {
-    if (shouldUseMockData()) {
-      await delay(800);
-      return wrapResponse({ success: true });
-    }
-    
     try {
-      // Real API implementation
-      // return await orderApi.cancelOrder(orderId);
-      return wrapResponse({ success: true });
+      console.log('🔧 [OrderService] 使用API适配器取消订单:', orderId);
+      
+      const token = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
+      if (!token) {
+        throw new Error('缺少认证token');
+      }
+      
+      const response = await fetch(`${API_CONFIG.BASE_URL}/orders/${orderId}/cancel`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`取消订单失败: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('✅ [OrderService] 成功取消订单:', data);
+      
+      return wrapResponse({ success: data.success || true });
+      
     } catch (error) {
-      console.error("Error canceling order:", error);
-      return wrapResponse({ success: false });
+      console.error("❌ [OrderService] 取消订单失败:", error);
+      throw error;
     }
   }
   
   /**
-   * Export purchase order document
-   * @param orderId ID of the order to export
-   * @returns Promise with file URL
+   * Export purchase order document - 使用API适配器
    */
   async exportPO(orderId: string): Promise<ApiResponse<{ fileUrl: string }>> {
-    if (shouldUseMockData()) {
-      await delay(1000);
-      return wrapResponse({ 
-        fileUrl: `/mock-documents/purchase-order-${orderId}.pdf` 
-      });
-    }
-    
     try {
-      // Real API implementation
-      // return await orderApi.exportPO(orderId);
-      return wrapResponse({ fileUrl: '' });
-    } catch (error) {
-      console.error("Error exporting PO:", error);
-      return wrapResponse({ 
-        fileUrl: `/mock-documents/purchase-order-${orderId}.pdf` 
+      console.log('🔧 [OrderService] 使用API适配器导出PO:', orderId);
+      
+      const token = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
+      if (!token) {
+        throw new Error('缺少认证token');
+      }
+      
+      const response = await fetch(`${API_CONFIG.BASE_URL}/orders/${orderId}/export`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
       });
+      
+      if (!response.ok) {
+        throw new Error(`导出PO失败: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('✅ [OrderService] 成功导出PO:', data);
+      
+      return wrapResponse({ 
+        fileUrl: data.success ? data.data?.fileUrl : data.fileUrl 
+      });
+      
+    } catch (error) {
+      console.error("❌ [OrderService] 导出PO失败:", error);
+      throw error;
     }
   }
 }

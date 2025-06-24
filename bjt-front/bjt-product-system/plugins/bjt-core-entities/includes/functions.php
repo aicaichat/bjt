@@ -14,18 +14,53 @@ if (!defined('ABSPATH')) {
  * @return string|null 当前令牌或null
  */
 function bjt_get_current_token() {
-    $auth_header = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : '';
+    // 添加调试日志
+    error_log("🔍 [TOKEN DEBUG] bjt_get_current_token called");
+    error_log("🔍 [TOKEN DEBUG] HTTP_AUTHORIZATION: " . (isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : 'NOT SET'));
+    error_log("🔍 [TOKEN DEBUG] Authorization: " . (isset($_SERVER['Authorization']) ? $_SERVER['Authorization'] : 'NOT SET'));
+    error_log("🔍 [TOKEN DEBUG] REDIRECT_HTTP_AUTHORIZATION: " . (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION']) ? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] : 'NOT SET'));
+    
+    // 尝试多种方式获取Authorization头
+    $auth_header = '';
+    
+    // 方法1: 标准的HTTP_AUTHORIZATION
+    if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+        $auth_header = $_SERVER['HTTP_AUTHORIZATION'];
+    }
+    // 方法2: Authorization (某些服务器配置)
+    elseif (isset($_SERVER['Authorization'])) {
+        $auth_header = $_SERVER['Authorization'];
+    }
+    // 方法3: REDIRECT_HTTP_AUTHORIZATION (Apache重定向)
+    elseif (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+        $auth_header = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+    }
+    // 方法4: getallheaders() 函数
+    elseif (function_exists('getallheaders')) {
+        $headers = getallheaders();
+        if (isset($headers['Authorization'])) {
+            $auth_header = $headers['Authorization'];
+        } elseif (isset($headers['authorization'])) {
+            $auth_header = $headers['authorization'];
+        }
+    }
+    
+    error_log("🔍 [TOKEN DEBUG] Final auth_header: " . $auth_header);
     
     // 从Authorization头获取令牌
     if (!empty($auth_header) && strpos($auth_header, 'Bearer ') === 0) {
-        return trim(substr($auth_header, 7));
+        $token = trim(substr($auth_header, 7));
+        error_log("🔍 [TOKEN DEBUG] Extracted token: " . substr($token, 0, 20) . "...");
+        return $token;
     }
     
     // 从请求参数获取令牌
     if (isset($_GET['token'])) {
+        error_log("🔍 [TOKEN DEBUG] Token from GET parameter");
         return $_GET['token'];
     }
     
+    error_log("🔍 [TOKEN DEBUG] No token found");
     return null;
 }
 

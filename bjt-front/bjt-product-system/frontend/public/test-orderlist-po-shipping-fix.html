@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OrderList到PO页面收货人地址传递测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .order-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            background: #f9f9f9;
+        }
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .order-number {
+            font-weight: bold;
+            color: #007bff;
+        }
+        .order-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            background: #28a745;
+            color: white;
+        }
+        .order-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .detail-item {
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+            border-left: 3px solid #007bff;
+        }
+        .detail-label {
+            font-weight: bold;
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        .detail-value {
+            margin-top: 5px;
+            color: #333;
+        }
+        .items-list {
+            margin-top: 15px;
+        }
+        .item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .item:last-child {
+            border-bottom: none;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn:hover {
+            opacity: 0.8;
+        }
+        .log-section {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .log-content {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .highlight {
+            background: #fff3cd;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border-left: 4px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 OrderList到PO页面收货人地址传递测试</h1>
+        
+        <div class="highlight">
+            <strong>测试目标：</strong>验证从OrderList页面点击"Back to PO"按钮跳转到PO页面时，收货人地址信息是否正确传递和显示。
+        </div>
+
+        <div class="test-section">
+            <h3>📋 模拟订单列表</h3>
+            <p>以下是模拟的订单数据，包含完整的客户信息和收货地址：</p>
+            
+            <div class="order-card">
+                <div class="order-header">
+                    <span class="order-number">订单号：PO-202506231749-BC3049</span>
+                    <span class="order-status">已确认</span>
+                </div>
+                
+                <div class="order-details">
+                    <div class="detail-item">
+                        <div class="detail-label">客户信息</div>
+                        <div class="detail-value">
+                            公司：Customer Company<br>
+                            联系人：Customer Contact<br>
+                            地址：Customer Address<br>
+                            电话：Customer Phone
+                        </div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <div class="detail-label">收货信息</div>
+                        <div class="detail-value">
+                            收货地址：浙江省杭州市西湖区文一西路1818号<br>
+                            收货人：张三<br>
+                            联系电话：138-0000-0000<br>
+                            备注：请在工作日送货
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="items-list">
+                    <div class="detail-label">订单商品</div>
+                    <div class="item">
+                        <span>09A0101107 - Panel Flexible Flat Cable</span>
+                        <span>数量：1 | 单价：¥0.00</span>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="testBackToPO()">Back to PO</button>
+                    <button class="btn btn-secondary" onclick="viewOrderData()">查看订单数据</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔍 数据处理测试</h3>
+            <p>测试OrderList页面的handleViewOrderDetail函数如何处理订单数据：</p>
+            
+            <button class="btn btn-primary" onclick="testDataProcessing()" style="margin-bottom: 15px;">
+                测试数据处理逻辑
+            </button>
+            
+            <div class="log-section">
+                <div class="detail-label">处理日志：</div>
+                <div class="log-content" id="processing-log">
+点击"测试数据处理逻辑"按钮查看数据处理过程...
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📝 预期结果</h3>
+            <div class="detail-item">
+                <div class="detail-label">PO页面应该显示</div>
+                <div class="detail-value">
+                    ✅ 客户信息：Customer Company, Customer Contact<br>
+                    ✅ 收货地址：浙江省杭州市西湖区文一西路1818号<br>
+                    ✅ 收货人：张三<br>
+                    ✅ 联系电话：138-0000-0000<br>
+                    ✅ 商品信息：09A0101107 - Panel Flexible Flat Cable
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟订单数据
+        const mockOrder = {
+            id: 'PO-202506231749-BC3049',
+            orderNumber: 'PO-202506231749-BC3049',
+            date: '2025-06-24',
+            status: 'pending',
+            total: 0.00,
+            paymentMethod: 'Bank Transfer',
+            shippingInfo: {
+                address: '浙江省杭州市西湖区文一西路1818号',
+                contactName: '张三',
+                phone: '138-0000-0000',
+                notes: '请在工作日送货'
+            },
+            items: [{
+                id: '1',
+                code: '09A0101107',
+                part_number: '09A0101107',
+                name: 'Panel Flexible Flat Cable',
+                quantity: 1,
+                price: 0.00,
+                model: 'LA-E4S V2.0,LA-E4S(paper)',
+                spec: 'Panel Flexible Flat Cable For "LA-E4S V2.0",LA-E4S(paper) AC100-240V',
+                brand: 'Lockedair'
+            }]
+        };
+
+        // 模拟OrderList页面的数据处理逻辑
+        function simulateOrderListDataProcessing(order) {
+            console.log('🔧 [测试] 开始处理订单详情跳转:', order);
+            
+            // 提取客户信息
+            let extractedCustomerInfo = {
+                companyName: 'Customer Company',
+                contactName: 'Customer Contact', 
+                address: 'Customer Address',
+                phone: 'Customer Phone',
+                email: ''
+            };
+            
+            let extractedShippingInfo = {
+                address: 'Shipping Address',
+                contactName: 'Shipping Contact',
+                phone: 'Shipping Phone', 
+                notes: ''
+            };
+            
+            // 处理运输信息
+            const shippingData = order.shippingInfo || order.shipping_address;
+            
+            console.log('🔧 [测试] 原始运输信息:', shippingData);
+            
+            if (shippingData) {
+                if (typeof shippingData === 'string') {
+                    const parts = shippingData.split('|').map(s => s.trim());
+                    extractedShippingInfo = {
+                        address: parts[0] || extractedShippingInfo.address,
+                        contactName: parts[1] || extractedShippingInfo.contactName,
+                        phone: parts[2] || extractedShippingInfo.phone,
+                        notes: parts[3] || extractedShippingInfo.notes
+                    };
+                } else if (typeof shippingData === 'object') {
+                    extractedShippingInfo = {
+                        address: shippingData.address || extractedShippingInfo.address,
+                        contactName: shippingData.contactName || shippingData.contact_name || shippingData.name || extractedShippingInfo.contactName,
+                        phone: shippingData.phone || shippingData.contact_phone || extractedShippingInfo.phone,
+                        notes: shippingData.notes || shippingData.note || extractedShippingInfo.notes
+                    };
+                }
+            }
+            
+            console.log('🔧 [测试] 提取的客户信息:', extractedCustomerInfo);
+            console.log('🔧 [测试] 提取的运输信息:', extractedShippingInfo);
+            
+            return {
+                extractedCustomerInfo,
+                extractedShippingInfo,
+                originalShippingData: shippingData
+            };
+        }
+
+        // 测试数据处理
+        function testDataProcessing() {
+            const logElement = document.getElementById('processing-log');
+            logElement.textContent = '';
+            
+            // 重定向console.log到日志区域
+            const originalLog = console.log;
+            console.log = function(...args) {
+                logElement.textContent += args.join(' ') + '\n';
+                originalLog.apply(console, args);
+            };
+            
+            try {
+                const result = simulateOrderListDataProcessing(mockOrder);
+                
+                console.log('\n📊 [测试结果] 数据处理完成');
+                console.log('✅ 原始运输数据:', JSON.stringify(result.originalShippingData, null, 2));
+                console.log('✅ 提取的客户信息:', JSON.stringify(result.extractedCustomerInfo, null, 2));
+                console.log('✅ 提取的运输信息:', JSON.stringify(result.extractedShippingInfo, null, 2));
+                
+                // 验证关键字段
+                const hasShippingAddress = result.extractedShippingInfo.address !== 'Shipping Address';
+                const hasShippingContact = result.extractedShippingInfo.contactName !== 'Shipping Contact';
+                const hasShippingPhone = result.extractedShippingInfo.phone !== 'Shipping Phone';
+                
+                console.log('\n🔍 [验证结果]');
+                console.log(hasShippingAddress ? '✅ 收货地址已正确提取' : '❌ 收货地址提取失败');
+                console.log(hasShippingContact ? '✅ 收货人已正确提取' : '❌ 收货人提取失败');
+                console.log(hasShippingPhone ? '✅ 收货电话已正确提取' : '❌ 收货电话提取失败');
+                
+            } catch (error) {
+                console.log('❌ [错误] 数据处理失败:', error.message);
+            } finally {
+                // 恢复console.log
+                console.log = originalLog;
+            }
+        }
+
+        // 模拟跳转到PO页面
+        function testBackToPO() {
+            const result = simulateOrderListDataProcessing(mockOrder);
+            
+            alert(`即将跳转到PO页面\n\n订单号: ${mockOrder.orderNumber}\n收货地址: ${result.extractedShippingInfo.address}\n收货人: ${result.extractedShippingInfo.contactName}\n\n实际应用中会通过React Router的navigate函数跳转`);
+        }
+
+        // 查看原始订单数据
+        function viewOrderData() {
+            const dataWindow = window.open('', '_blank', 'width=800,height=600');
+            dataWindow.document.write(`
+                <html>
+                <head><title>订单数据详情</title></head>
+                <body style="font-family: monospace; padding: 20px;">
+                    <h2>原始订单数据</h2>
+                    <pre>${JSON.stringify(mockOrder, null, 2)}</pre>
+                </body>
+                </html>
+            `);
+        }
+
+        // 页面加载完成后显示说明
+        window.onload = function() {
+            console.log('🔧 OrderList到PO页面收货人地址传递测试页面已加载');
+            console.log('📋 模拟订单数据已准备就绪');
+            console.log('🎯 测试目标：验证收货人地址信息的正确传递');
+        };
+    </script>
+</body>
+</html> 

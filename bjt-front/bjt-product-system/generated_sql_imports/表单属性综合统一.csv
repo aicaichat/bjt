@@ -1,0 +1,85 @@
+类型,属性,商城中该字段的中文名,商城中该字段的英文名,单位,选型商城
+,易损,,,,橙色：商城上编辑
+"物品属性
+Item Info",产品图片,产品图片,Product Image,,橙色：商城上编辑
+,型号(公制),型号,Model,,"绿色：从CRM获取，
+耗材商品：直接从CRM获取，
+设备、配件：从CRM获取后，商城进行模糊匹配出型号表中的具体型号，边上显示CRM原始文本做人工核对；"
+,型号(英制),型号,Model,,"耗材商品：直接从CRM获取，
+设备、配件：CRM中此值是空，商城用不到此属性。"
+,品牌,品牌,Brand,,
+,料号,料号,Part No.,,
+,名称(英文),名称,Item,,
+,电压,电压,Voltage,V,
+,频率,频率,Frequency,Hz,
+,Spec.(公制),规格描述,Spec.,,
+,Spec.(英制),规格描述,Spec.,,
+,适用机型,适用机型,Applicable Machine,,橙色：商城上编辑
+,适配序列号,适配序列号,Applicable SN.,,橙色：商城上编辑
+,单位,单位,Unit,,
+"额外属性
+Other Info",袋型,袋型,Film Type,,从CRM获取后，商城进行模糊匹配出型号表中的具体型号，边上显示CRM原始文本做人工核对；
+,袋型编码,袋型编码,Film Type Code,,从CRM获取后，商城进行模糊匹配出型号表中的具体型号，边上显示CRM原始文本做人工核对；
+,材质,材质,Material,,
+,泡径,泡径,Bubble Dia.,mm,
+,泡径(英制),泡径,Bubble Dia.,inch,
+,厚度/克重(公制),厚度/克重(公制),Thickness/Basis Weight,μm   / gsm,
+,厚度/克重(英制),厚度/克重(英制),Thickness/Basis Weight,mil   / lb,
+,宽度(公制),宽度,Width,cm,
+,宽度(英制),宽度,Width,inch,
+,虚线间距(公制),虚线间距,Perforation,cm,
+,虚线间距(英制),虚线间距,Perforation,inch,
+,总长(公制),总长,Length,m,
+,总长(英制),总长,Length,ft,
+,筋数,筋数,Reinforcement,,
+,层数,层数,Ply,,
+,颜色,颜色,Color,,
+,印刷,印刷,Printing,,
+,纸筒内径(公制),纸筒内径,Inner Dia.,cm,
+,纸筒内径(英制),纸筒内径,Inner Dia.,inch,
+,必选品,必选品,Necessaries,,橙色：商城上编辑
+,必选品数量,必选品数量,Qty. of necessaries,,橙色：商城上编辑
+"包装属性
+Package Info",包装方式,包装方式,Packaging Method,,
+,包装图片,包装图片,Packaging Image,,橙色：商城上编辑
+,包装尺寸,包装尺寸,Packaging Dim.,cm,橙色：商城上编辑
+,包装尺寸(英制),包装尺寸,Packaging Dim.,inch,橙色：商城上编辑
+,单件净重,单件净重,Net Weight,kg,
+,单件净重(英制),单件净重,Net Weight,lb,
+,包装毛重,包装毛重,Gross Weight,kg,橙色：商城上编辑
+,包装毛重(英制),包装毛重,Gross Weight,lb,橙色：商城上编辑
+,单箱数量,单箱数量,Qty per Carton,,橙色：商城上编辑
+"打托属性
+Pallet Info",托盘尺寸,托盘尺寸,Pallet Size,cm,橙色：商城上编辑
+,托盘尺寸(英制),托盘尺寸,Pallet Size,inch,橙色：商城上编辑
+,一托数量1,一托数量,Packs per Pallet,,橙色：商城上编辑
+,打托高度1,打托高度,Pallet Height,cm,橙色：商城上编辑
+,打托高度1(英制),打托高度1,Pallet Height,inch,橙色：商城上编辑
+,整托毛重1,整托毛重1,GW per Pallet,kg,橙色：商城上编辑
+,整托毛重1(英制),整托毛重1,GW per Pallet,lb,橙色：商城上编辑
+,一托数量2,一托数量2,Packs per Pallet,,橙色：商城上编辑
+,打托高度2,打托高度2,Pallet Height,cm,橙色：商城上编辑
+,打托高度2(英制),打托高度2,Pallet Height,inch,橙色：商城上编辑
+,整托毛重2,整托毛重2,GW per Pallet,kg,橙色：商城上编辑
+,整托毛重2(英制),整托毛重2,GW per Pallet,lb,橙色：商城上编辑
+,一托数量3,一托数量3,Packs per Pallet,,橙色：商城上编辑
+,打托高度3,打托高度3,Pallet Height,cm,橙色：商城上编辑
+,打托高度3(英制),打托高度3,Pallet Height,inch,橙色：商城上编辑
+,整托毛重3,整托毛重3,GW per Pallet,kg,橙色：商城上编辑
+,整托毛重3(英制),整托毛重3,GW per Pallet,lb,橙色：商城上编辑
+,,,,,
+,,,,,
+,,,,,
+,,,,,
+,,,,,
+,,,,,
+,,,,,
+U8特有属性,总厚度,,,,
+,厂家型号,,,,
+,内层纸,,,,
+,外层纸,,,,
+,存货名称,,,,
+,是否装箱,,,,
+,规格型号,,,,
+,工程图号,,,,
+,,,,,

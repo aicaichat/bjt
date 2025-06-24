@@ -57,7 +57,10 @@
     "exportPO": "导出PO单",
     "print": "打印订单",
     "export": "导出",
-    "delete": "删除"
+    "delete": "删除",
+    "exportExcel": "导出Excel",
+    "backToPO": "返回PO页面",
+    "printPDF": "打印PDF"
   },
   "payment": {
     "status": {

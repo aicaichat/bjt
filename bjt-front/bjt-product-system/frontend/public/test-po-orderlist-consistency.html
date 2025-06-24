@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PO-OrderList数据一致性修复验证</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .test-button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 8px;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+        }
+        .test-button:hover {
+            background-color: #0056b3;
+        }
+        .test-button.danger {
+            background-color: #dc3545;
+        }
+        .test-button.danger:hover {
+            background-color: #c82333;
+        }
+        .code-block {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .fixed {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .flow-diagram {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .flow-step {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .flow-arrow {
+            margin: 0 15px;
+            font-size: 20px;
+            color: #007bff;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .comparison-table th,
+        .comparison-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .comparison-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .before {
+            background-color: #f8d7da;
+        }
+        .after {
+            background-color: #d4edda;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 PO-OrderList数据一致性修复验证</h1>
+        
+        <h2>问题描述</h2>
+        <div class="status warning">
+            <h3>原始问题</h3>
+            <ul>
+                <li><strong>订单号不一致</strong>：PO页面显示 `PO-202506232310-6XV2NR`，OrderList显示 `PO-202506231406-CF016C`</li>
+                <li><strong>信息丢失</strong>：商品信息、价格、客户信息等在跳转后丢失</li>
+                <li><strong>状态不同步</strong>：PO确认后OrderList没有正确更新</li>
+            </ul>
+        </div>
+        
+        <h2>修复状态</h2>
+        <div class="status success">
+            ✅ PO页面completePO函数已修复 - 确保数据一致性传递
+        </div>
+        <div class="status success">
+            ✅ OrderList页面已修复 - 正确接收和显示确认的订单数据
+        </div>
+        <div class="status success">
+            ✅ 订单号管理已统一 - 使用OrderNumberManager确保一致性
+        </div>
+        <div class="status success">
+            ✅ 类型错误已修复 - handleExportExcel函数参数类型正确
+        </div>
+        
+        <h2>修复详情</h2>
+        
+        <h3>1. PO页面completePO函数修复</h3>
+        <div class="code-block fixed">
+// 🔧 修复前：只传递基本信息
+navigate('/orders', { 
+  state: { 
+    fromPO: true, 
+    poNumber: poNumber,
+    action: 'confirmed'
+  } 
+});
+
+// 🔧 修复后：传递完整订单数据
+navigate('/orders', { 
+  state: { 
+    fromPO: true, 
+    poNumber: poNumber,
+    confirmedOrderData: orderDataForList, // 完整订单数据
+    action: 'confirmed',
+    timestamp: Date.now()
+  },
+  replace: true
+});
+        </div>
+        
+        <h3>2. OrderList页面数据接收修复</h3>
+        <div class="code-block fixed">
+// 🔧 新增：接收确认的订单数据并更新本地列表
+if (state.confirmedOrderData) {
+  setOrders(prevOrders => {
+    const existingOrderIndex = prevOrders.findIndex(
+      order => order.orderNumber === state.confirmedOrderData.orderNumber
+    );
+    
+    const confirmedOrder = convertToUnifiedOrder(state.confirmedOrderData);
+    
+    if (existingOrderIndex >= 0) {
+      // 更新现有订单
+      const updatedOrders = [...prevOrders];
+      updatedOrders[existingOrderIndex] = confirmedOrder;
+      return updatedOrders;
+    } else {
+      // 添加新订单到列表顶部
+      return [confirmedOrder, ...prevOrders];
+    }
+  });
+}
+        </div>
+        
+        <h3>3. 数据流程图</h3>
+        <div class="flow-diagram">
+            <h4>修复后的数据流程</h4>
+            <div class="flow-step">
+                <div>📝 Order页面</div>
+                <div class="flow-arrow">→</div>
+                <div>📄 PO页面（显示订单号：PO-YYYYMMDDHHMM-XXXXXX）</div>
+            </div>
+            <div class="flow-step">
+                <div>📄 PO页面确认</div>
+                <div class="flow-arrow">→</div>
+                <div>🔧 构造完整订单数据（保持订单号一致）</div>
+            </div>
+            <div class="flow-step">
+                <div>🔧 完整数据传递</div>
+                <div class="flow-arrow">→</div>
+                <div>📋 OrderList页面（显示相同订单号）</div>
+            </div>
+            <div class="flow-step">
+                <div>📋 OrderList更新</div>
+                <div class="flow-arrow">→</div>
+                <div>✅ 数据一致性保证</div>
+            </div>
+        </div>
+        
+        <h3>4. 修复前后对比</h3>
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>项目</th>
+                    <th>修复前</th>
+                    <th>修复后</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>订单号一致性</strong></td>
+                    <td class="before">❌ 不一致（PO: 6XV2NR vs OrderList: CF016C）</td>
+                    <td class="after">✅ 完全一致（使用相同的订单号）</td>
+                </tr>
+                <tr>
+                    <td><strong>商品信息</strong></td>
+                    <td class="before">❌ 丢失或不完整</td>
+                    <td class="after">✅ 完整传递（名称、价格、规格等）</td>
+                </tr>
+                <tr>
+                    <td><strong>客户信息</strong></td>
+                    <td class="before">❌ 丢失</td>
+                    <td class="after">✅ 完整传递（公司、联系人、地址等）</td>
+                </tr>
+                <tr>
+                    <td><strong>订单状态</strong></td>
+                    <td class="before">❌ 不同步</td>
+                    <td class="after">✅ 实时更新（确认后状态为待支付）</td>
+                </tr>
+                <tr>
+                    <td><strong>数据传递</strong></td>
+                    <td class="before">❌ 只传递基本信息</td>
+                    <td class="after">✅ 传递完整结构化数据</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h2>测试验证</h2>
+        <p>请按照以下步骤测试修复效果：</p>
+        
+        <div style="margin: 20px 0;">
+            <a href="http://localhost:5173/order" class="test-button" target="_blank">
+                1️⃣ 开始：访问Order页面
+            </a>
+            <span style="margin: 0 10px;">→</span>
+            <a href="http://localhost:5173/po" class="test-button" target="_blank">
+                2️⃣ 提交订单到PO页面
+            </a>
+            <span style="margin: 0 10px;">→</span>
+            <a href="http://localhost:5173/orders" class="test-button" target="_blank">
+                3️⃣ 确认PO后查看OrderList
+            </a>
+        </div>
+        
+        <h3>验证清单</h3>
+        <div class="status info">
+            <h4>请验证以下功能：</h4>
+            <ul>
+                <li>✅ PO页面显示的订单号格式正确（PO-YYYYMMDDHHMM-XXXXXX）</li>
+                <li>✅ PO页面确认后跳转到OrderList页面</li>
+                <li>✅ OrderList页面显示相同的订单号</li>
+                <li>✅ OrderList页面显示完整的商品信息</li>
+                <li>✅ 客户信息和运输信息正确显示</li>
+                <li>✅ 订单状态正确更新（待支付）</li>
+                <li>✅ 从OrderList返回PO页面功能正常</li>
+                <li>✅ Excel导出功能正常工作</li>
+            </ul>
+        </div>
+        
+        <h2>技术改进</h2>
+        <div class="status info">
+            <h3>关键改进点</h3>
+            <ul>
+                <li><strong>统一数据模型</strong>：使用UnifiedOrderData确保数据结构一致</li>
+                <li><strong>完整数据传递</strong>：PO确认时传递所有必要信息</li>
+                <li><strong>实时状态更新</strong>：OrderList立即反映PO确认的变化</li>
+                <li><strong>订单号管理</strong>：使用OrderNumberManager统一管理</li>
+                <li><strong>类型安全</strong>：修复TypeScript类型错误</li>
+                <li><strong>用户体验</strong>：使用replace导航避免返回问题</li>
+            </ul>
+        </div>
+        
+        <div id="test-results"></div>
+    </div>
+
+    <script>
+        // 页面加载时显示当前状态
+        window.onload = function() {
+            console.log('PO-OrderList数据一致性修复验证页面已加载');
+            console.log('开发服务器地址: http://localhost:5173');
+            
+            // 检查页面是否可以正常访问
+            const testUrls = [
+                'http://localhost:5173/order',
+                'http://localhost:5173/po', 
+                'http://localhost:5173/orders'
+            ];
+            
+            testUrls.forEach(url => {
+                fetch(url)
+                    .then(response => {
+                        if (response.ok) {
+                            console.log(`✅ ${url} 可以正常访问`);
+                        } else {
+                            console.log(`⚠️ ${url} 访问异常，状态码:`, response.status);
+                        }
+                    })
+                    .catch(error => {
+                        console.log(`❌ ${url} 访问失败:`, error);
+                    });
+            });
+        };
+    </script>
+</body>
+</html> 

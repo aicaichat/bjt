@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>空字段显示测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .product-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            background: #fff;
+        }
+        .detail-item {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+            margin: 8px 0;
+        }
+        .detail-label {
+            font-weight: 500;
+            color: #6b7280;
+            white-space: nowrap;
+            flex-shrink: 0;
+            min-width: 120px;
+        }
+        .detail-value {
+            color: #374151;
+            word-break: break-word;
+            flex: 1;
+        }
+        .detail-value.empty-value {
+            color: #9ca3af;
+            font-style: italic;
+        }
+        .config-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .field-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .field-item {
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .field-item.has-value {
+            background: #d4edda;
+            color: #155724;
+        }
+        .field-item.empty-value {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .toggle-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 6px;
+        }
+        .toggle-btn {
+            padding: 8px 16px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .toggle-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 空字段显示测试</h1>
+    
+    <div class="config-info">
+        <h3>📋 测试配置说明</h3>
+        <p><strong>测试目标：</strong>验证当产品数据中某些字段为空时，是否能正确显示</p>
+        <p><strong>测试场景：</strong>备件产品的包装尺寸字段为空的情况</p>
+        <p><strong>预期结果：</strong>设置 <code>showEmptyFields=true</code> 时应该显示空字段</p>
+    </div>
+
+    <div class="toggle-section">
+        <h4>🎛️ 显示控制</h4>
+        <button class="toggle-btn active" id="showEmptyBtn">显示空字段</button>
+        <button class="toggle-btn" id="hideEmptyBtn">隐藏空字段</button>
+    </div>
+
+    <div class="test-container">
+        <h3>🔧 备件产品示例 - 09A0101107</h3>
+        
+        <div class="field-list">
+            <div class="field-item">Order Page 配置字段：</div>
+            <div class="field-item">app_model</div>
+            <div class="field-item">part_number</div>
+            <div class="field-item">name</div>
+            <div class="field-item">spec</div>
+            <div class="field-item">app_sn</div>
+            <div class="field-item empty-value">package_size_cm ❌</div>
+            <div class="field-item">unit</div>
+            <div class="field-item empty-value">net_weight_kg ❌</div>
+            <div class="field-item">pcs_per_box</div>
+        </div>
+
+        <div class="product-card" id="productCard">
+            <h4>产品详情显示</h4>
+            <div class="detail-item">
+                <span class="detail-label">适用机型:</span>
+                <span class="detail-value">LA-E4S V2.0</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">料号:</span>
+                <span class="detail-value">09A0101107</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">名称:</span>
+                <span class="detail-value">Keyboard</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">规格描述:</span>
+                <span class="detail-value">Keyboard For "LA-E4S V2.0",LA-E4S(paper) AC100-240V</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">适配序列号:</span>
+                <span class="detail-value empty-value">暂无</span>
+            </div>
+            <div class="detail-item empty-field">
+                <span class="detail-label">包装尺寸:</span>
+                <span class="detail-value empty-value">暂无</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">单位:</span>
+                <span class="detail-value">pcs</span>
+            </div>
+            <div class="detail-item empty-field">
+                <span class="detail-label">单件净重:</span>
+                <span class="detail-value empty-value">暂无</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">单箱数量:</span>
+                <span class="detail-value">1</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h3>🎯 测试结果分析</h3>
+        <div id="testResults">
+            <div class="field-item has-value">✅ 有值字段正常显示</div>
+            <div class="field-item empty-value">❌ 空值字段现在可以显示</div>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h3>📝 修复方案</h3>
+        <pre><code>// 在 Order 页面中设置 showEmptyFields=true
+&lt;OrderPageProductDetails 
+  item={item} 
+  language={currentLanguage} 
+  preferredUnit={preferredUnit}
+  showEmptyFields={true}  // ← 关键修复
+/&gt;
+
+// 在 OrderPageProductDetails 组件中默认显示空字段
+export const OrderPageProductDetails = (props) => (
+  &lt;UnifiedProductDetails 
+    {...props} 
+    scenario="order_page" 
+    className="order-page-details"
+    showEmptyFields={props.showEmptyFields ?? true}  // ← 默认显示空字段
+  /&gt;
+);</code></pre>
+    </div>
+
+    <script>
+        const showEmptyBtn = document.getElementById('showEmptyBtn');
+        const hideEmptyBtn = document.getElementById('hideEmptyBtn');
+        const productCard = document.getElementById('productCard');
+        const emptyFields = productCard.querySelectorAll('.empty-field');
+
+        showEmptyBtn.addEventListener('click', () => {
+            showEmptyBtn.classList.add('active');
+            hideEmptyBtn.classList.remove('active');
+            emptyFields.forEach(field => {
+                field.style.display = 'flex';
+            });
+        });
+
+        hideEmptyBtn.addEventListener('click', () => {
+            hideEmptyBtn.classList.add('active');
+            showEmptyBtn.classList.remove('active');
+            emptyFields.forEach(field => {
+                field.style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html> 

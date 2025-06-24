@@ -27,9 +27,31 @@ class ProductInfoService {
   private cacheTimestamps = new Map<string, number>();
 
   /**
+   * 将订单项类型映射到产品服务类型
+   */
+  private mapOrderTypeToProductType(orderItemType?: string): 'host' | 'accessory' | 'spare_part' | 'consumable' | null {
+    if (!orderItemType) return null;
+    
+    const typeMap: { [key: string]: 'host' | 'accessory' | 'spare_part' | 'consumable' } = {
+      'machine': 'host',
+      'host': 'host',
+      'accessory': 'accessory',
+      'spare_part': 'spare_part',
+      'consumable': 'consumable'
+    };
+    
+    return typeMap[orderItemType.toLowerCase()] || null;
+  }
+
+  /**
    * 根据料号自动识别产品类型
    */
   private identifyProductType(partNumber: string): 'host' | 'accessory' | 'spare_part' | 'consumable' {
+    // 🔧 特殊测试料号处理
+    if (partNumber === '1231313131313') {
+      return 'host'; // 测试料号，尝试在host表中查找
+    }
+    
     // 主机：60A01xxx
     if (partNumber.match(/^60A01\d{3}$/)) {
       return 'host';
@@ -57,7 +79,13 @@ class ProductInfoService {
     }
     
     // 4. 特定的耗材料号模式 (根据实际数据调整)
-    if (partNumber.match(/^[0-9]{2}[A-Z]\d{5}$/)) {
+    // 🔧 修复：备件料号模式 (如 09A0101107, 08A0105464, 13A02026)
+    if (partNumber.match(/^[0-9]{2}[A-Z]\d{6,7}$/)) {
+      return 'spare_part';
+    }
+    
+    // 5. 其他耗材料号模式 (较短的数字+字母组合)
+    if (partNumber.match(/^[0-9]{2}[A-Z]\d{4,5}$/)) {
       return 'consumable';
     }
     
@@ -95,9 +123,12 @@ class ProductInfoService {
   }
 
   /**
-   * 单个产品信息查询
+   * 单个产品信息查询（支持指定产品类型）
+   * @param partNumber 料号
+   * @param lang 语言
+   * @param orderItemType 订单项类型（来自订单的 item_type，最准确）
    */
-  async getProductInfo(partNumber: string, lang: 'zh' | 'en' = 'zh'): Promise<ProductInfo | null> {
+  async getProductInfo(partNumber: string, lang: 'zh' | 'en' = 'zh', orderItemType?: string): Promise<ProductInfo | null> {
     // 先检查缓存
     const cached = this.getFromCache(partNumber);
     if (cached) {
@@ -105,18 +136,19 @@ class ProductInfoService {
     }
 
     try {
-      // 自动识别产品类型
-      const productType = this.identifyProductType(partNumber);
+      // 🎯 优先使用订单项类型，其次自动识别
+      const productType = this.mapOrderTypeToProductType(orderItemType) || this.identifyProductType(partNumber);
       
       console.log('[ProductInfoService] 查询产品信息:', {
         partNumber,
+        orderItemType,
         identifiedType: productType,
         lang
       });
       
       // 构建API路径
       const apiPaths = {
-        host: '/wp-json/bjt/v1/host-parts',
+        host: '/wp-json/bjt/v1/host-models',
         accessory: '/wp-json/bjt/v1/accessories', 
         spare_part: '/wp-json/bjt/v1/spare-parts',
         consumable: '/wp-json/bjt/v1/consumables'
@@ -124,7 +156,7 @@ class ProductInfoService {
 
       // 查询对应的API
       const apiUrl = `${apiPaths[productType]}?part_number=${partNumber}&lang=${lang}`;
-      console.log('[ProductInfoService] API查询:', apiUrl);
+      console.log('[ProductInfoService] API查询:', apiUrl, '当前语言:', lang);
       
       const response = await fetch(apiUrl);
       
@@ -142,9 +174,36 @@ class ProductInfoService {
             const fallbackResponse = await fetch(fallbackUrl);
             if (fallbackResponse.ok) {
               const data = await fallbackResponse.json();
-              if (data.success && data.data && data.data.items && data.data.items.length > 0) {
-                console.log(`[ProductInfoService] ✅ 在 ${type} 表中找到产品:`, data.data.items[0]);
-                const item = data.data.items[0];
+              
+              // 🔧 修复：使用相同的响应格式检查逻辑，增加边界情况处理
+              let item = null;
+              
+              // 情况1: 标准格式 {success: true, data: {items: [...], total: ...}}
+              if (data.success && data.data && data.data.items && Array.isArray(data.data.items) && data.data.items.length > 0) {
+                item = data.data.items[0];
+              } 
+              // 情况2: 直接返回items数组 {items: [...], total: ...}
+              else if (data.items && Array.isArray(data.items) && data.items.length > 0) {
+                item = data.items[0];
+              } 
+              // 情况3: 单个对象格式 {success: true, data: {id: ..., name: ...}}
+              else if (data.success && data.data && data.data.id) {
+                item = data.data;
+              } 
+              // 情况4: 直接返回对象 {id: ..., name: ...}
+              else if (data.id) {
+                item = data;
+              }
+              // 处理成功但无数据的情况
+              else if (data.success && data.data && 
+                      ((data.data.items && Array.isArray(data.data.items) && data.data.items.length === 0) ||
+                       Object.keys(data.data).length === 0)) {
+                console.log(`[ProductInfoService] ⚠️ ${type} 表中无数据:`, data);
+                // 继续尝试下一个类型
+              }
+              
+              if (item) {
+                console.log(`[ProductInfoService] ✅ 在 ${type} 表中找到产品:`, item);
                 const productInfo = this.normalizeProductInfo(item, type as any);
                 this.setCache(partNumber, productInfo);
                 return productInfo;
@@ -162,19 +221,58 @@ class ProductInfoService {
       const data = await response.json();
       console.log('[ProductInfoService] API响应:', data);
       
-      if (!data.success || !data.data) {
-        console.warn('[ProductInfoService] API返回失败或无数据:', data);
+      // 🔧 修复：改进API响应格式检查逻辑，增加更详细的调试信息
+      let item = null;
+      
+      // 情况1: 标准格式 {success: true, data: {items: [...], total: ...}}
+      if (data.success && data.data && data.data.items && Array.isArray(data.data.items) && data.data.items.length > 0) {
+        item = data.data.items[0];
+        console.log('[ProductInfoService] ✅ 使用标准格式响应数据:', item);
+      }
+      // 情况2: 直接返回items数组 {items: [...], total: ...}
+      else if (data.items && Array.isArray(data.items) && data.items.length > 0) {
+        item = data.items[0];
+        console.log('[ProductInfoService] ✅ 使用直接items格式响应数据:', item);
+      }
+      // 情况3: 单个对象格式 {success: true, data: {id: ..., name: ...}}
+      else if (data.success && data.data && data.data.id) {
+        item = data.data;
+        console.log('[ProductInfoService] ✅ 使用单个对象格式响应数据:', item);
+      }
+      // 情况4: 直接返回对象 {id: ..., name: ...}
+      else if (data.id) {
+        item = data;
+        console.log('[ProductInfoService] ✅ 使用直接对象格式响应数据:', item);
+      }
+      // 情况5: 成功但无数据 {success: true, data: {items: [], total: 0}}
+      else if (data.success && data.data && data.data.items && Array.isArray(data.data.items) && data.data.items.length === 0) {
+        console.log('[ProductInfoService] ⚠️ API返回成功但无数据 (空items数组):', data);
         return null;
       }
-
-      // 处理响应数据格式
-      let item;
-      if (data.data.items && data.data.items.length > 0) {
-        item = data.data.items[0];
-      } else if (data.data.id) {
-        item = data.data;
-      } else {
-        console.warn('[ProductInfoService] 响应数据格式不正确:', data.data);
+      // 情况6: 成功但data为空对象 {success: true, data: {}}
+      else if (data.success && data.data && Object.keys(data.data).length === 0) {
+        console.log('[ProductInfoService] ⚠️ API返回成功但data为空对象:', data);
+        return null;
+      }
+      // 情况7: 成功但data为null或undefined
+      else if (data.success && (!data.data || data.data === null)) {
+        console.log('[ProductInfoService] ⚠️ API返回成功但data为null/undefined:', data);
+        return null;
+      }
+      
+      if (!item) {
+        console.warn('[ProductInfoService] ❌ 无法解析API响应数据格式:', {
+          hasSuccess: !!data.success,
+          successValue: data.success,
+          hasData: !!data.data,
+          dataType: typeof data.data,
+          dataKeys: data.data ? Object.keys(data.data) : 'N/A',
+          hasItems: !!(data.items || (data.data && data.data.items)),
+          itemsLength: data.items?.length || data.data?.items?.length || 'N/A',
+          hasDirectId: !!data.id,
+          hasDataId: !!(data.data && data.data.id),
+          fullResponse: data
+        });
         return null;
       }
 
@@ -215,6 +313,14 @@ class ProductInfoService {
    * 标准化产品信息格式
    */
   private normalizeProductInfo(item: any, productType: 'host' | 'accessory' | 'spare_part' | 'consumable'): ProductInfo {
+    console.log('[ProductInfoService] 标准化产品信息:', {
+      原始数据: item,
+      产品类型: productType,
+      name_zh: item.name_zh,
+      name_en: item.name_en,
+      name: item.name
+    });
+    
     return {
       id: String(item.id || ''),
       part_number: item.part_number || '',

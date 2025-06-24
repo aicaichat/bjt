@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order到PO页面数据一致性测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+        }
+        .test-title {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+        .info { color: #007bff; }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+        }
+        .btn:hover { background: #0056b3; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #1e7e34; }
+        .data-display {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .step {
+            margin: 15px 0;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+            background: #f8f9fa;
+        }
+        .step-number {
+            font-weight: bold;
+            color: #007bff;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 class="test-title">🔧 Order页面到PO页面数据一致性测试</h1>
+        <p class="info">测试Order页面提交订单后跳转到PO页面的数据传递和显示一致性</p>
+        
+        <div class="test-section">
+            <h2>📋 测试步骤</h2>
+            
+            <div class="step">
+                <span class="step-number">1.</span>
+                <strong>访问Order页面</strong> - 点击下面的按钮跳转到Order页面
+                <br>
+                <button class="btn" onclick="goToOrderPage()">🛒 访问Order页面</button>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2.</span>
+                <strong>填写订单信息</strong> - 在Order页面填写客户信息和商品信息
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3.</span>
+                <strong>提交订单</strong> - 点击"Submit Order"按钮提交订单
+            </div>
+            
+            <div class="step">
+                <span class="step-number">4.</span>
+                <strong>检查PO页面</strong> - 订单提交后应该自动跳转到PO页面，检查以下内容：
+                <ul>
+                    <li>✅ 订单号格式正确 (PO-YYYYMMDDHHMM-XXXXXX)</li>
+                    <li>✅ 客户信息完整显示</li>
+                    <li>✅ 商品信息完整显示</li>
+                    <li>✅ 价格计算正确</li>
+                    <li>✅ Excel导出功能正常</li>
+                    <li>✅ 打印功能正常</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🔍 数据一致性检查要点</h2>
+            
+            <h3>订单号一致性</h3>
+            <ul>
+                <li>Order页面显示的订单号 = PO页面显示的订单号</li>
+                <li>格式应为: PO-YYYYMMDDHHMM-XXXXXX</li>
+                <li>Excel导出的订单号应与页面显示一致</li>
+            </ul>
+            
+            <h3>客户信息一致性</h3>
+            <ul>
+                <li>公司名称 (Company Name)</li>
+                <li>联系人 (Contact Name)</li>
+                <li>地址 (Address)</li>
+                <li>电话 (Phone)</li>
+                <li>邮箱 (Email)</li>
+            </ul>
+            
+            <h3>商品信息一致性</h3>
+            <ul>
+                <li>商品代码 (Part Number)</li>
+                <li>商品名称 (Item)</li>
+                <li>型号 (Model)</li>
+                <li>描述 (Description)</li>
+                <li>品牌 (Brand)</li>
+                <li>数量 (Quantity)</li>
+                <li>单价 (Unit Price)</li>
+                <li>金额 (Amount)</li>
+            </ul>
+        </div>
+        
+        <div class="test-section">
+            <h2>🚀 快速测试链接</h2>
+            <button class="btn" onclick="goToOrderPage()">🛒 Order页面</button>
+            <button class="btn" onclick="goToPOPage()">📄 PO页面 (直接访问会重定向)</button>
+            <button class="btn btn-success" onclick="runFullTest()">🧪 运行完整测试</button>
+        </div>
+        
+        <div class="test-section">
+            <h2>📊 测试结果</h2>
+            <div id="testResults" class="data-display">
+                等待测试结果...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function goToOrderPage() {
+            console.log('🔧 [Test] 跳转到Order页面');
+            window.open('/order', '_blank');
+        }
+        
+        function goToPOPage() {
+            console.log('🔧 [Test] 尝试直接访问PO页面');
+            window.open('/po', '_blank');
+        }
+        
+        function runFullTest() {
+            console.log('🔧 [Test] 开始完整测试流程');
+            const results = document.getElementById('testResults');
+            results.innerHTML = `
+                <div class="info">🧪 完整测试流程启动...</div>
+                <div>1. ✅ 打开Order页面</div>
+                <div>2. ⏳ 请手动填写订单信息并提交</div>
+                <div>3. ⏳ 等待跳转到PO页面</div>
+                <div>4. ⏳ 请检查数据一致性</div>
+                <div class="info">📝 测试说明：这是一个手动测试流程，需要您按照步骤操作</div>
+            `;
+            
+            // 打开Order页面
+            goToOrderPage();
+        }
+        
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔧 [Test] Order到PO数据一致性测试页面加载完成');
+            
+            const results = document.getElementById('testResults');
+            results.innerHTML = `
+                <div class="success">✅ 测试页面准备就绪</div>
+                <div class="info">📋 请按照上面的步骤进行测试</div>
+                <div>🕐 当前时间: ${new Date().toLocaleString()}</div>
+                <div>🌐 当前URL: ${window.location.href}</div>
+            `;
+        });
+    </script>
+</body>
+</html> 

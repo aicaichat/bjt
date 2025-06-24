@@ -1,17 +1,26 @@
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { CONSUMABLE_DISPLAY_CONFIG } from '../config/consumable-display-config';
-import { useMaterials } from './useMockData';
 
 /**
  * Consumable字段显示Hook
  * 支持智能单位制切换、多语言、条件显示
  * 遵循单位处理规范：单位在标题，内容纯数值
  */
-export const useConsumableFieldDisplay = () => {
+
+// 添加Hook参数接口
+interface UseConsumableFieldDisplayProps {
+  shapesData?: any[]; // API返回的shapes数据
+  materialsData?: any[]; // API返回的materials数据
+}
+
+// 更新Hook定义以接受字典数据
+export const useConsumableFieldDisplay = ({ 
+  shapesData = [], 
+  materialsData = [] 
+}: UseConsumableFieldDisplayProps = {}) => {
   const { getPreferredUnit } = useAuth(); // 获取用户单位制偏好
-  const { t, i18n } = useTranslation();
-  const { data: materialsData } = useMaterials(); // 获取材料数据
+  const { t, i18n } = useTranslation(['consumables', 'common']);
   
   const preferred_unit = getPreferredUnit(); // 获取偏好单位制
   
@@ -61,18 +70,35 @@ export const useConsumableFieldDisplay = () => {
       return value ? String(value) : '';
     }
     
-    // 🔥 新增：形状字段的多语言处理
+    // 🔥 新增：形状字段的多语言处理 - 使用API字典数据
     if (fieldKey === 'shape') {
       const shapeCode = item.shape || item.bag_type;
       if (!shapeCode) {
         return '';
       }
       
-      // 形状代码到多语言名称的映射
-      const shapeMapping: Record<string, { name_zh: string; name_en: string }> = {
+      // 🚀 优先使用API字典数据
+      if (shapesData && shapesData.length > 0) {
+        const shapeInfo = shapesData.find((shape: any) => 
+          shape.id === shapeCode || 
+          shape.code === shapeCode
+        );
+        
+        if (shapeInfo) {
+          // 根据当前语言返回对应的名称
+          if (i18n.language.startsWith('zh')) {
+            return shapeInfo.name_zh || shapeInfo.name || shapeCode;
+          } else {
+            return shapeInfo.name_en || shapeInfo.name || shapeCode;
+          }
+        }
+      }
+      
+      // 🔙 Fallback: 硬编码映射（向后兼容）
+      const fallbackShapeMapping: Record<string, { name_zh: string; name_en: string }> = {
         'MEX': { name_zh: '气泡枕', name_en: 'Pillow' },
         'MEY': { name_zh: '开口气泡枕', name_en: 'Precut Air Pillow' },
-        'MFB': { name_zh: '纸质气泡膜', name_en: 'paper Bubble' },
+        'MFB': { name_zh: '葫芦膜', name_en: 'Bubble' }, // 🔥 修正：从API数据显示MFB应该是"Bubble"而不是"paper Bubble"
         'MFC': { name_zh: '气枕膜', name_en: 'Tube' },
         'MFF': { name_zh: '气泡膜', name_en: 'Bubble' },
         'MEX-PAPER': { name_zh: '纸质气垫枕', name_en: 'paper air Pillow' },
@@ -81,17 +107,17 @@ export const useConsumableFieldDisplay = () => {
         'Precut Air Pillow': { name_zh: '开口气泡枕', name_en: 'Precut Air Pillow' },
         'paper Bubble': { name_zh: '纸质气泡膜', name_en: 'paper Bubble' },
         'Tube': { name_zh: '气枕膜', name_en: 'Tube' },
-        'Bubble': { name_zh: '气泡膜', name_en: 'Bubble' },
+        'Bubble': { name_zh: '葫芦膜', name_en: 'Bubble' }, // 🔥 修正：统一为"Bubble"
         'paper air Pillow': { name_zh: '纸质气垫枕', name_en: 'paper air Pillow' }
       };
       
-      const shapeInfo = shapeMapping[shapeCode];
-      if (shapeInfo) {
+      const fallbackInfo = fallbackShapeMapping[shapeCode];
+      if (fallbackInfo) {
         // 根据当前语言返回对应的名称
         if (i18n.language.startsWith('zh')) {
-          return shapeInfo.name_zh;
+          return fallbackInfo.name_zh;
         } else {
-          return shapeInfo.name_en;
+          return fallbackInfo.name_en;
         }
       }
       
@@ -99,28 +125,82 @@ export const useConsumableFieldDisplay = () => {
       return String(shapeCode);
     }
     
-    // 🔥 新增：材料字段的多语言处理
+    // 🔥 新增：材料字段的多语言处理 - 使用API字典数据
     if (fieldKey === 'material') {
       const materialCode = item.material;
-      if (!materialCode || !materialsData) {
-        return materialCode ? String(materialCode) : '';
+      console.log('🔍 [Material Debug] Processing material:', {
+        materialCode,
+        materialsDataLength: materialsData?.length || 0,
+        currentLanguage: i18n.language,
+        materialsDataSample: materialsData?.slice(0, 2)
+      });
+      
+      if (!materialCode) {
+        console.log('❌ [Material Debug] No material code found');
+        return '';
       }
       
-      // 根据材料code查找对应的材料数据
-      const materialInfo = materialsData.find((material: any) => 
-        material.code === materialCode || material.id === materialCode
-      );
+      // 🚀 优先使用API字典数据
+      if (materialsData && materialsData.length > 0) {
+        const materialInfo = materialsData.find((material: any) => 
+          material.id === materialCode || 
+          material.code === materialCode
+        );
+        
+        console.log('🔍 [Material Debug] Material lookup result:', {
+          materialCode,
+          materialInfo,
+          found: !!materialInfo
+        });
+        
+        if (materialInfo) {
+          // 根据当前语言返回对应的名称
+          if (i18n.language.startsWith('zh')) {
+            const result = materialInfo.name_zh || materialInfo.name || materialCode;
+            console.log('🇨🇳 [Material Debug] Chinese result:', result);
+            return result;
+          } else {
+            const result = materialInfo.name_en || materialInfo.name || materialCode;
+            console.log('🇺🇸 [Material Debug] English result:', result);
+            return result;
+          }
+        } else {
+          console.log('❌ [Material Debug] Material not found in dictionary');
+        }
+      } else {
+        console.log('❌ [Material Debug] No materials data available');
+      }
       
-      if (materialInfo) {
+      // 🔙 Fallback: 硬编码映射（向后兼容）
+      const fallbackMaterialMapping: Record<string, { name_zh: string; name_en: string }> = {
+        'HDPE': { name_zh: 'HDPE', name_en: 'HDPE' },
+        'LDPE': { name_zh: 'LDPE', name_en: 'LDPE' },
+        'PAPER': { name_zh: '纸塑膜', name_en: 'PAPER' },
+        'PAPER+PE': { name_zh: '纸塑复合', name_en: 'PAPER+PE' },
+        'NYLON': { name_zh: '尼龙', name_en: 'NYLON' },
+        'PAPE': { name_zh: 'PAPE共挤膜', name_en: 'PAPE' },
+        '30% HDPE': { name_zh: '30% HDPE', name_en: '30% HDPE' },
+        '50% HDPE': { name_zh: '50%回料HDPE', name_en: '50% HDPE' },
+        '50% LDPE': { name_zh: '50% LDPE', name_en: '50% LDPE' }
+      };
+      
+      const fallbackInfo = fallbackMaterialMapping[materialCode];
+      if (fallbackInfo) {
+        console.log('🔙 [Material Debug] Using fallback mapping:', {
+          materialCode,
+          fallbackInfo,
+          language: i18n.language
+        });
         // 根据当前语言返回对应的名称
         if (i18n.language.startsWith('zh')) {
-          return materialInfo.name_zh || materialInfo.name_en || materialCode;
+          return fallbackInfo.name_zh;
         } else {
-          return materialInfo.name_en || materialInfo.name_zh || materialCode;
+          return fallbackInfo.name_en;
         }
       }
       
-      // 如果没找到材料信息，返回原始code
+      // 如果没找到映射，返回原始code
+      console.log('❌ [Material Debug] No mapping found, returning raw code:', materialCode);
       return String(materialCode);
     }
     

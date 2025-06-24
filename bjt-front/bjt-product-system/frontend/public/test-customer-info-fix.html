@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>客户信息修复验证 - BJT产品系统</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #3498db;
+        }
+        .test-button {
+            background: #3498db;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            transition: background 0.3s;
+            display: block;
+            width: 100%;
+            text-align: center;
+        }
+        .test-button:hover {
+            background: #2980b9;
+        }
+        .test-button.success {
+            background: #28a745;
+        }
+        .test-button.warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        .info-box {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #2196f3;
+        }
+        .warning-box {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #ffc107;
+        }
+        .success-box {
+            background: #d4edda;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #28a745;
+        }
+        .test-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #e9ecef;
+        }
+        .step {
+            background: #fff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border-left: 4px solid #28a745;
+        }
+        .step-number {
+            background: #28a745;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .result-display {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 20px 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        .checklist li {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+        .checklist li:before {
+            content: "✓";
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 15px;
+            font-size: 18px;
+        }
+        .highlight {
+            background: #ffffcc;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 客户信息修复验证测试</h1>
+        
+        <div class="info-box">
+            <strong>📋 测试目标：</strong>验证PO页面能够正确显示客户信息和运输信息，不再显示默认值如"Customer Company"、"Shipping Address"等。
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 快速测试步骤</h2>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>访问OrderList页面</strong>
+                <br>点击下面的按钮打开OrderList页面
+                <button class="test-button" onclick="openOrderList()">
+                    📋 打开OrderList页面
+                </button>
+            </div>
+
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>选择订单并跳转到PO页面</strong>
+                <br>在OrderList页面中，找到任意一个订单，点击右侧的<span class="highlight">"Back to PO"</span>按钮
+            </div>
+
+            <div class="step">
+                <span class="step-number">3</span>
+                <strong>检查PO页面显示</strong>
+                <br>在PO页面中检查以下信息是否正确显示：
+                <ul class="checklist">
+                    <li><strong>Ship to Address:</strong> 应该显示真实地址，不是"Shipping Address"</li>
+                    <li><strong>Ship to Contact:</strong> 应该显示真实联系人，不是"Shipping Contact"</li>
+                    <li><strong>Ship to Phone:</strong> 应该显示真实电话，不是"Shipping Phone"</li>
+                    <li><strong>Buyer Company:</strong> 应该显示"Hangzhou Bingjia Tech. Co., Ltd."，不是"Customer Company"</li>
+                    <li><strong>Buyer Contact:</strong> 应该显示"John Doe"，不是"Customer Contact"</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="warning-box">
+            <strong>⚠️ 重要提示：</strong>
+            <ul>
+                <li>测试时请打开浏览器开发者工具(F12)，查看Console标签页的调试日志</li>
+                <li>如果仍然看到默认值，请强制刷新页面(Ctrl+F5)</li>
+                <li>确保前端服务器正在运行在 localhost:5173</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 期望的修复效果</h2>
+            
+            <div class="success-box">
+                <strong>✅ 修复成功的标志：</strong>
+                <ul class="checklist">
+                    <li>PO页面Ship to部分显示真实的运输信息</li>
+                    <li>PO页面Buyer部分显示真实的客户信息</li>
+                    <li>Console中能看到详细的数据处理日志</li>
+                    <li>没有出现"Customer Company"、"Shipping Address"等默认值</li>
+                </ul>
+            </div>
+
+            <h3>🎯 具体期望值</h3>
+            <div class="info-box">
+                根据数据库中的真实订单数据，您应该看到：
+                <ul>
+                    <li><strong>运输信息：</strong>真实的地址、联系人姓名、电话号码</li>
+                    <li><strong>客户信息：</strong>公司名称"Hangzhou Bingjia Tech. Co., Ltd."，联系人"John Doe"</li>
+                    <li><strong>订单号：</strong>支持ORD和PO格式的订单号正常显示</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🐛 故障排除</h2>
+            
+            <h3>如果仍然看到默认值：</h3>
+            <ol>
+                <li><strong>清理缓存：</strong>
+                    <button class="test-button warning" onclick="clearCacheAndReload()">
+                        🔄 清理缓存并刷新
+                    </button>
+                </li>
+                <li><strong>检查服务状态：</strong>
+                    <button class="test-button" onclick="checkServiceStatus()">
+                        🔍 检查前端服务状态
+                    </button>
+                </li>
+                <li><strong>查看调试日志：</strong>打开开发者工具(F12) → Console标签页</li>
+                <li><strong>验证数据传递：</strong>确认OrderList到PO页面的数据传递正常</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 测试结果记录</h2>
+            <div id="testResults" class="result-display">
+                测试结果将在这里显示...
+                请按照上述步骤进行测试。
+            </div>
+        </div>
+
+        <div class="info-box">
+            <strong>💡 提示：</strong>
+            <ul>
+                <li>这个修复涉及了OrderList页面的数据提取逻辑和PO页面的数据处理逻辑</li>
+                <li>修复后的系统能够从多种数据源提取客户信息和运输信息</li>
+                <li>当客户信息为空时，系统会自动从运输信息中提取相关数据</li>
+                <li>所有的数据处理过程都有详细的调试日志记录</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let testResults = document.getElementById('testResults');
+        
+        function addTestResult(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const resultDiv = document.createElement('div');
+            resultDiv.style.marginBottom = '10px';
+            resultDiv.style.padding = '10px';
+            resultDiv.style.borderRadius = '4px';
+            
+            switch(type) {
+                case 'success':
+                    resultDiv.style.background = '#d4edda';
+                    resultDiv.style.color = '#155724';
+                    break;
+                case 'warning':
+                    resultDiv.style.background = '#fff3cd';
+                    resultDiv.style.color = '#856404';
+                    break;
+                case 'error':
+                    resultDiv.style.background = '#f8d7da';
+                    resultDiv.style.color = '#721c24';
+                    break;
+                default:
+                    resultDiv.style.background = '#e3f2fd';
+                    resultDiv.style.color = '#1565c0';
+            }
+            
+            resultDiv.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            testResults.appendChild(resultDiv);
+            testResults.scrollTop = testResults.scrollHeight;
+        }
+        
+        function openOrderList() {
+            addTestResult('正在打开OrderList页面...', 'info');
+            window.open('http://localhost:5173/orderlist', '_blank');
+            addTestResult('OrderList页面已在新标签页中打开。请在该页面中选择一个订单并点击"Back to PO"按钮。', 'success');
+        }
+        
+        function clearCacheAndReload() {
+            addTestResult('正在清理缓存并刷新页面...', 'warning');
+            
+            // 清理本地存储
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            // 强制刷新页面
+            window.location.reload(true);
+        }
+        
+        function checkServiceStatus() {
+            addTestResult('正在检查前端服务状态...', 'info');
+            
+            fetch('http://localhost:5173/')
+                .then(response => {
+                    if (response.ok) {
+                        addTestResult('✅ 前端服务运行正常 (localhost:5173)', 'success');
+                    } else {
+                        addTestResult('⚠️ 前端服务响应异常', 'warning');
+                    }
+                })
+                .catch(error => {
+                    addTestResult('❌ 前端服务连接失败：' + error.message, 'error');
+                    addTestResult('请确保前端开发服务器正在运行：cd frontend && npm run dev', 'warning');
+                });
+        }
+        
+        // 页面加载时的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            addTestResult('🧪 客户信息修复验证测试页面已加载', 'success');
+            addTestResult('请按照步骤进行测试：1) 打开OrderList页面 2) 点击订单的"Back to PO"按钮 3) 检查PO页面的信息显示', 'info');
+            
+            // 自动检查服务状态
+            setTimeout(checkServiceStatus, 1000);
+        });
+        
+        // 监听来自其他页面的消息（如果有的话）
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'test-result') {
+                addTestResult('收到测试结果：' + event.data.message, event.data.status || 'info');
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -154,7 +154,7 @@ export class CartService extends BaseService<CartResponse> {
    * @param data 添加商品请求数据
    */
   private async addToCartMock(data: AddToCartRequest): Promise<CartItem> {
-    await delay(300);
+    await delay(100); // 优化：减少延迟提升响应速度
     
     const properties = data.properties || {};
     const newItemId = Math.max(...mockCartItems.map(item => item.item_id), 0) + 1;

@@ -54,22 +54,12 @@ export class UnifiedMockManager {
   }
 
   /**
-   * 检查Mock是否启用
+   * 检查Mock是否启用 - 强制禁用Mock数据
    */
   public isEnabled(): boolean {
-    // 优先检查环境变量
-    if (import.meta.env.VITE_USE_MOCK_DATA === 'true') {
-      return true;
-    }
-    
-    // 其次检查localStorage
-    const localSetting = localStorage.getItem('USE_MOCK_DATA');
-    if (localSetting !== null) {
-      return localSetting === 'true';
-    }
-    
-    // 最后检查配置
-    return this.config.enabled;
+    // 强制禁用所有Mock数据，只使用真实API
+    console.log('🔧 [UnifiedMockManager] Mock数据已被强制禁用，只使用真实API');
+    return false;
   }
 
   /**

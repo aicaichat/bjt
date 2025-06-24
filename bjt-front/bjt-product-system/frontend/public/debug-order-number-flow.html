@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单号数据流转调试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .input-group textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            border-left: 4px solid #007bff;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-left-color: #dc3545;
+            color: #721c24;
+        }
+        .success {
+            background-color: #d4edda;
+            border-left-color: #28a745;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>订单号数据流转调试工具</h1>
+        <p>用于调试从API响应到PO页面的订单号数据流转过程</p>
+
+        <!-- 完整流程测试 -->
+        <div class="test-section">
+            <h3>完整流程测试</h3>
+            <div class="input-group">
+                <label>原始API响应:</label>
+                <textarea id="fullFlowApiResponse" placeholder='粘贴完整的API响应数据'></textarea>
+            </div>
+            <button class="btn" onclick="testFullFlow()">测试完整流程</button>
+            <div id="fullFlowResult" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟OrderNumberManager类
+        class OrderNumberManager {
+            static generateOrderNumber() {
+                const date = new Date();
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const randomString = Math.random().toString(36).substring(2, 8).toUpperCase().padStart(6, '0');
+                return `ORD-${year}${month}${day}-${randomString}`;
+            }
+
+            static extractFromApiResponse(apiResponse) {
+                console.log('🔧 [OrderNumberManager] 提取API响应中的订单号:', apiResponse);
+                
+                let orderId = null;
+                let orderNumber = null;
+                let source = 'fallback';
+
+                if (apiResponse && typeof apiResponse === 'object') {
+                    // 尝试从不同字段提取订单ID
+                    orderId = apiResponse.orderId || 
+                              apiResponse.id || 
+                              apiResponse.order_id ||
+                              apiResponse.data?.orderId ||
+                              apiResponse.data?.id;
+
+                    // 尝试从不同字段提取订单号
+                    orderNumber = apiResponse.orderNumber ||
+                                 apiResponse.order_number ||
+                                 apiResponse.data?.orderNumber ||
+                                 apiResponse.data?.order_number;
+
+                    if (orderNumber) {
+                        source = 'api';
+                    } else if (orderId) {
+                        // 如果有ID但没有订单号，生成一个基于ID的订单号
+                        orderNumber = this.generateOrderNumberFromId(orderId);
+                        source = 'generated';
+                    }
+                }
+
+                // 如果都没有，生成新的订单号
+                if (!orderNumber) {
+                    orderNumber = this.generateOrderNumber();
+                    orderId = orderNumber;
+                    source = 'generated';
+                }
+
+                // 确保orderId存在
+                if (!orderId) {
+                    orderId = orderNumber;
+                }
+
+                const result = {
+                    orderId: String(orderId),
+                    orderNumber: String(orderNumber),
+                    displayNumber: String(orderNumber),
+                    source
+                };
+
+                console.log('🔧 [OrderNumberManager] 提取结果:', result);
+                return result;
+            }
+
+            static extractFromOrderObject(order) {
+                console.log('🔧 [OrderNumberManager] 提取订单对象中的订单号:', order);
+                
+                let orderId = null;
+                let orderNumber = null;
+                let source = 'api';
+
+                if (order && typeof order === 'object') {
+                    // 优先使用order_number，然后是id
+                    orderNumber = order.order_number || order.orderNumber;
+                    orderId = order.id || order.orderId || order.order_id;
+
+                    // 如果没有订单号但有ID，使用ID作为订单号
+                    if (!orderNumber && orderId) {
+                        orderNumber = String(orderId);
+                        source = 'fallback';
+                    }
+
+                    // 如果有订单号但没有ID，使用订单号作为ID
+                    if (orderNumber && !orderId) {
+                        orderId = orderNumber;
+                    }
+                }
+
+                // 如果都没有，生成新的
+                if (!orderNumber || !orderId) {
+                    const generated = this.generateOrderNumber();
+                    orderNumber = orderNumber || generated;
+                    orderId = orderId || generated;
+                    source = 'generated';
+                }
+
+                const result = {
+                    orderId: String(orderId),
+                    orderNumber: String(orderNumber),
+                    displayNumber: String(orderNumber),
+                    source
+                };
+
+                console.log('🔧 [OrderNumberManager] 提取结果:', result);
+                return result;
+            }
+
+            static generateOrderNumberFromId(id) {
+                const date = new Date();
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const idSuffix = String(id).slice(-6).padStart(6, '0');
+                return `ORD-${year}${month}${day}-${idSuffix}`;
+            }
+
+            static createUnifiedOrderData(params) {
+                const { apiResponse, orderObject, orderItems, customerInfo, shippingInfo, summary, source } = params;
+                
+                // 提取订单号信息
+                let orderInfo;
+                if (apiResponse) {
+                    orderInfo = this.extractFromApiResponse(apiResponse);
+                } else if (orderObject) {
+                    orderInfo = this.extractFromOrderObject(orderObject);
+                } else {
+                    // 生成新的订单号
+                    const generated = this.generateOrderNumber();
+                    orderInfo = {
+                        orderId: generated,
+                        orderNumber: generated,
+                        displayNumber: generated,
+                        source: 'generated'
+                    };
+                }
+
+                console.log('🔧 [OrderNumberManager] 创建统一订单数据:', {
+                    orderInfo,
+                    itemsCount: orderItems?.length || 0,
+                    source
+                });
+
+                return {
+                    orderId: orderInfo.orderId,
+                    orderNumber: orderInfo.orderNumber,
+                    displayNumber: orderInfo.displayNumber,
+                    orderItems: orderItems || [],
+                    customerInfo: customerInfo || {},
+                    shippingInfo: shippingInfo || {},
+                    summary: summary || { subtotal: 0, shipping: 0, tax: 0, total: 0 },
+                    createdAt: new Date().toISOString(),
+                    source,
+                    orderNumberSource: orderInfo.source
+                };
+            }
+        }
+
+        function showResult(elementId, result, isError = false) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `result ${isError ? 'error' : 'success'}`;
+            element.textContent = typeof result === 'string' ? result : JSON.stringify(result, null, 2);
+        }
+
+        function testFullFlow() {
+            try {
+                const input = document.getElementById('fullFlowApiResponse').value.trim();
+                if (!input) {
+                    showResult('fullFlowResult', '请输入API响应数据', true);
+                    return;
+                }
+
+                const apiResponse = JSON.parse(input);
+                
+                // 步骤1: API响应提取
+                const step1 = OrderNumberManager.extractFromApiResponse(apiResponse);
+                
+                // 步骤2: 创建统一订单数据 (Order页面)
+                const step2 = OrderNumberManager.createUnifiedOrderData({
+                    apiResponse: apiResponse,
+                    orderItems: [
+                        {
+                            id: '60A01149',
+                            name: 'LA-E4S(paper)主机-美标版',
+                            quantity: 1,
+                            price: 100.00
+                        }
+                    ],
+                    customerInfo: {
+                        companyName: 'bless2424c',
+                        contactName: '李强呱呱呱呱',
+                        address: 'www',
+                        phone: '12313123123'
+                    },
+                    shippingInfo: {
+                        address: 'www',
+                        contactName: '李强呱呱呱呱',
+                        phone: '12313123123',
+                        notes: ''
+                    },
+                    summary: {
+                        subtotal: 100.00,
+                        shipping: 0.00,
+                        tax: 0.00,
+                        total: 100.00
+                    },
+                    source: 'order_creation'
+                });
+                
+                // 步骤3: PO页面处理
+                const step3 = OrderNumberManager.extractFromOrderObject(step2);
+                
+                showResult('fullFlowResult', {
+                    originalApiResponse: apiResponse,
+                    step1_apiExtraction: step1,
+                    step2_unifiedOrderData: step2,
+                    step3_poPageProcessing: step3,
+                    finalOrderNumber: step3.displayNumber,
+                    explanation: '完整的订单号数据流转过程',
+                    conclusion: step3.displayNumber === apiResponse.data?.order_number ? 
+                        '✅ 订单号一致性检查通过' : 
+                        `❌ 订单号不一致: API返回 ${apiResponse.data?.order_number}, PO页面显示 ${step3.displayNumber}`
+                });
+            } catch (error) {
+                showResult('fullFlowResult', `错误: ${error.message}`, true);
+            }
+        }
+
+        // 页面加载时填入示例数据
+        window.onload = function() {
+            const sampleApiResponse = {
+                "success": true,
+                "message": "Order created successfully.",
+                "data": {
+                    "id": "12",
+                    "user_id": "14",
+                    "order_number": "ORD-20250623-D62F4B",
+                    "total_amount": "100.00",
+                    "status": "pending_payment",
+                    "created_at": "2025-06-23 13:02:24",
+                    "updated_at": "2025-06-23 13:02:24",
+                    "currency": "CNY",
+                    "region": "CN",
+                    "items": [
+                        {
+                            "target_type": "machine",
+                            "target_id": "4",
+                            "quantity": "1",
+                            "price": "100.00",
+                            "item_type": "machine",
+                            "item_id": "60A01149",
+                            "item_name": "LA-E4S(paper)主机-美标版",
+                            "currency": "CNY",
+                            "spec": "Business Class Paper Air Bubble System,AC110V",
+                            "specs": "Business Class Paper Air Bubble System,AC110V",
+                            "model": "LA-E4S(paper)",
+                            "brand": "Lockdeair",
+                            "properties": "",
+                            "description": "LA-E4S(paper)主机-美标版",
+                            "category": "1",
+                            "name_zh": "LA-E4S(paper)主机-美标版",
+                            "name_en": "LA-E4S(paper) Host-US Version",
+                            "order_item_id": 50
+                        }
+                    ]
+                }
+            };
+
+            document.getElementById('fullFlowApiResponse').value = JSON.stringify(sampleApiResponse, null, 2);
+        };
+    </script>
+</body>
+</html> 

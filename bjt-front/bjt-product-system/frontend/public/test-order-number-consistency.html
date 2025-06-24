@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单号一致性测试</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .test-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 8px;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .data-display {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            background-color: #f1f3f4;
+            padding: 10px;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 8px;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .button-group {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 15px 0;
+        }
+        .comparison-item {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+        .comparison-item h4 {
+            margin-top: 0;
+            color: #495057;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 订单号一致性测试</h1>
+        <p>此页面测试订单号管理器的修复效果，确保不同流程中的订单号保持一致</p>
+
+        <div class="button-group">
+            <button onclick="testOrderNumberGeneration()">测试订单号生成</button>
+            <button onclick="testApiResponseExtraction()">测试API响应提取</button>
+            <button onclick="testOrderObjectExtraction()">测试订单对象提取</button>
+            <button onclick="testUnifiedDataCreation()">测试统一数据创建</button>
+            <button onclick="testOrderNumberValidation()">测试订单号验证</button>
+            <button onclick="runAllTests()">运行所有测试</button>
+            <button onclick="clearResults()">清空结果</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // 模拟OrderNumberManager的功能（简化版）
+        class MockOrderNumberManager {
+            static generateOrderNumber() {
+                const date = new Date();
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const randomString = Math.random().toString(36).substring(2, 8).toUpperCase().padStart(6, '0');
+                return `ORD-${year}${month}${day}-${randomString}`;
+            }
+
+            static extractFromApiResponse(apiResponse) {
+                let orderId = null;
+                let orderNumber = null;
+                let source = 'fallback';
+
+                if (apiResponse && typeof apiResponse === 'object') {
+                    orderId = apiResponse.orderId || 
+                             apiResponse.id || 
+                             apiResponse.order_id ||
+                             apiResponse.data?.orderId ||
+                             apiResponse.data?.id;
+
+                    orderNumber = apiResponse.orderNumber ||
+                                 apiResponse.order_number ||
+                                 apiResponse.data?.orderNumber ||
+                                 apiResponse.data?.order_number;
+
+                    if (orderNumber) {
+                        source = 'api';
+                    } else if (orderId) {
+                        orderNumber = this.generateOrderNumberFromId(orderId);
+                        source = 'generated';
+                    }
+                }
+
+                if (!orderNumber) {
+                    orderNumber = this.generateOrderNumber();
+                    orderId = orderNumber;
+                    source = 'generated';
+                }
+
+                if (!orderId) {
+                    orderId = orderNumber;
+                }
+
+                return {
+                    orderId: String(orderId),
+                    orderNumber: String(orderNumber),
+                    displayNumber: String(orderNumber),
+                    source
+                };
+            }
+
+            static extractFromOrderObject(order) {
+                let orderId = null;
+                let orderNumber = null;
+                let source = 'api';
+
+                if (order && typeof order === 'object') {
+                    orderNumber = order.order_number || order.orderNumber;
+                    orderId = order.id || order.orderId || order.order_id;
+
+                    if (!orderNumber && orderId) {
+                        orderNumber = String(orderId);
+                        source = 'fallback';
+                    }
+
+                    if (orderNumber && !orderId) {
+                        orderId = orderNumber;
+                    }
+                }
+
+                if (!orderNumber || !orderId) {
+                    const generated = this.generateOrderNumber();
+                    orderNumber = orderNumber || generated;
+                    orderId = orderId || generated;
+                    source = 'generated';
+                }
+
+                return {
+                    orderId: String(orderId),
+                    orderNumber: String(orderNumber),
+                    displayNumber: String(orderNumber),
+                    source
+                };
+            }
+
+            static generateOrderNumberFromId(id) {
+                const date = new Date();
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const idSuffix = String(id).slice(-6).padStart(6, '0');
+                return `ORD-${year}${month}${day}-${idSuffix}`;
+            }
+
+            static validateOrderNumber(orderNumber) {
+                if (!orderNumber || typeof orderNumber !== 'string') {
+                    return false;
+                }
+                const pattern = /^ORD-\d{8}-[A-Z0-9]{6}$/;
+                return pattern.test(orderNumber);
+            }
+
+            static createUnifiedOrderData(params) {
+                const { apiResponse, orderObject, orderItems, customerInfo, shippingInfo, summary, source } = params;
+                
+                let orderInfo;
+                if (apiResponse) {
+                    orderInfo = this.extractFromApiResponse(apiResponse);
+                } else if (orderObject) {
+                    orderInfo = this.extractFromOrderObject(orderObject);
+                } else {
+                    const generated = this.generateOrderNumber();
+                    orderInfo = {
+                        orderId: generated,
+                        orderNumber: generated,
+                        displayNumber: generated,
+                        source: 'generated'
+                    };
+                }
+
+                return {
+                    orderId: orderInfo.orderId,
+                    orderNumber: orderInfo.orderNumber,
+                    displayNumber: orderInfo.displayNumber,
+                    orderItems: orderItems || [],
+                    customerInfo: customerInfo || {},
+                    shippingInfo: shippingInfo || {},
+                    summary: summary || { subtotal: 0, shipping: 0, tax: 0, total: 0 },
+                    createdAt: new Date().toISOString(),
+                    source,
+                    orderNumberSource: orderInfo.source
+                };
+            }
+        }
+
+        function addResult(type, title, content) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-section`;
+            div.innerHTML = `
+                <div class="test-title">${title}</div>
+                <div class="test-result ${type}">${content}</div>
+            `;
+            results.appendChild(div);
+        }
+
+        function addDataDisplay(title, data) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-section`;
+            div.innerHTML = `
+                <div class="test-title">${title}</div>
+                <div class="data-display">${JSON.stringify(data, null, 2)}</div>
+            `;
+            results.appendChild(div);
+        }
+
+        function testOrderNumberGeneration() {
+            try {
+                const orderNumbers = [];
+                for (let i = 0; i < 5; i++) {
+                    orderNumbers.push(MockOrderNumberManager.generateOrderNumber());
+                }
+
+                const allUnique = orderNumbers.length === new Set(orderNumbers).size;
+                const allValidFormat = orderNumbers.every(num => MockOrderNumberManager.validateOrderNumber(num));
+
+                addResult(
+                    allUnique && allValidFormat ? 'success' : 'error',
+                    '订单号生成测试',
+                    `生成了5个订单号，全部唯一: ${allUnique}, 格式正确: ${allValidFormat}`
+                );
+
+                addDataDisplay('生成的订单号', orderNumbers);
+
+            } catch (error) {
+                addResult('error', '订单号生成测试', `测试失败: ${error.message}`);
+            }
+        }
+
+        function testApiResponseExtraction() {
+            const testCases = [
+                {
+                    name: '完整API响应',
+                    data: {
+                        data: {
+                            orderId: '12345',
+                            order_number: 'ORD-20250623-ABC123'
+                        }
+                    }
+                },
+                {
+                    name: '只有ID的API响应',
+                    data: {
+                        id: '67890'
+                    }
+                },
+                {
+                    name: '空API响应',
+                    data: {}
+                },
+                {
+                    name: 'null响应',
+                    data: null
+                }
+            ];
+
+            testCases.forEach(testCase => {
+                try {
+                    const result = MockOrderNumberManager.extractFromApiResponse(testCase.data);
+                    
+                    const isValid = result.orderId && result.orderNumber && result.displayNumber;
+                    
+                    addResult(
+                        isValid ? 'success' : 'error',
+                        `API响应提取测试 - ${testCase.name}`,
+                        `提取${isValid ? '成功' : '失败'}, 来源: ${result.source}`
+                    );
+
+                    addDataDisplay(`${testCase.name} - 提取结果`, {
+                        输入: testCase.data,
+                        输出: result
+                    });
+
+                } catch (error) {
+                    addResult('error', `API响应提取测试 - ${testCase.name}`, `测试失败: ${error.message}`);
+                }
+            });
+        }
+
+        function testOrderObjectExtraction() {
+            const testCases = [
+                {
+                    name: '完整订单对象',
+                    data: {
+                        id: '12345',
+                        order_number: 'ORD-20250623-XYZ789'
+                    }
+                },
+                {
+                    name: '只有ID的订单对象',
+                    data: {
+                        id: '54321'
+                    }
+                },
+                {
+                    name: '只有订单号的订单对象',
+                    data: {
+                        order_number: 'ORD-20250623-DEF456'
+                    }
+                },
+                {
+                    name: '空订单对象',
+                    data: {}
+                }
+            ];
+
+            testCases.forEach(testCase => {
+                try {
+                    const result = MockOrderNumberManager.extractFromOrderObject(testCase.data);
+                    
+                    const isValid = result.orderId && result.orderNumber && result.displayNumber;
+                    
+                    addResult(
+                        isValid ? 'success' : 'error',
+                        `订单对象提取测试 - ${testCase.name}`,
+                        `提取${isValid ? '成功' : '失败'}, 来源: ${result.source}`
+                    );
+
+                    addDataDisplay(`${testCase.name} - 提取结果`, {
+                        输入: testCase.data,
+                        输出: result
+                    });
+
+                } catch (error) {
+                    addResult('error', `订单对象提取测试 - ${testCase.name}`, `测试失败: ${error.message}`);
+                }
+            });
+        }
+
+        function testUnifiedDataCreation() {
+            const testCases = [
+                {
+                    name: '从API响应创建',
+                    params: {
+                        apiResponse: {
+                            data: {
+                                orderId: '12345',
+                                order_number: 'ORD-20250623-API123'
+                            }
+                        },
+                        orderItems: [{ id: 1, name: 'Test Product' }],
+                        customerInfo: { companyName: 'Test Company' },
+                        shippingInfo: { address: 'Test Address' },
+                        summary: { total: 100 },
+                        source: 'order_creation'
+                    }
+                },
+                {
+                    name: '从订单对象创建',
+                    params: {
+                        orderObject: {
+                            id: '67890',
+                            order_number: 'ORD-20250623-ORDER456'
+                        },
+                        orderItems: [{ id: 2, name: 'Test Product 2' }],
+                        customerInfo: { companyName: 'Test Company 2' },
+                        shippingInfo: { address: 'Test Address 2' },
+                        summary: { total: 200 },
+                        source: 'order_list'
+                    }
+                },
+                {
+                    name: '无数据源创建',
+                    params: {
+                        orderItems: [{ id: 3, name: 'Test Product 3' }],
+                        customerInfo: { companyName: 'Test Company 3' },
+                        shippingInfo: { address: 'Test Address 3' },
+                        summary: { total: 300 },
+                        source: 'manual'
+                    }
+                }
+            ];
+
+            testCases.forEach(testCase => {
+                try {
+                    const result = MockOrderNumberManager.createUnifiedOrderData(testCase.params);
+                    
+                    const isValid = result.orderId && result.orderNumber && result.displayNumber && 
+                                   result.orderItems && result.customerInfo && result.shippingInfo;
+                    
+                    addResult(
+                        isValid ? 'success' : 'error',
+                        `统一数据创建测试 - ${testCase.name}`,
+                        `创建${isValid ? '成功' : '失败'}, 订单号来源: ${result.orderNumberSource}`
+                    );
+
+                    addDataDisplay(`${testCase.name} - 创建结果`, {
+                        输入参数: testCase.params,
+                        输出结果: result
+                    });
+
+                } catch (error) {
+                    addResult('error', `统一数据创建测试 - ${testCase.name}`, `测试失败: ${error.message}`);
+                }
+            });
+        }
+
+        function testOrderNumberValidation() {
+            const testCases = [
+                { value: 'ORD-20250623-ABC123', expected: true, name: '有效订单号' },
+                { value: 'ORD-20250623-12345A', expected: true, name: '数字字母混合' },
+                { value: 'ORD-2025062-ABC123', expected: false, name: '日期格式错误' },
+                { value: 'ORDER-20250623-ABC123', expected: false, name: '前缀错误' },
+                { value: 'ORD-20250623-AB123', expected: false, name: '后缀长度错误' },
+                { value: '', expected: false, name: '空字符串' },
+                { value: null, expected: false, name: 'null值' },
+                { value: 12345, expected: false, name: '数字类型' }
+            ];
+
+            testCases.forEach(testCase => {
+                try {
+                    const result = MockOrderNumberManager.validateOrderNumber(testCase.value);
+                    const isCorrect = result === testCase.expected;
+                    
+                    addResult(
+                        isCorrect ? 'success' : 'error',
+                        `订单号验证测试 - ${testCase.name}`,
+                        `输入: ${testCase.value}, 期望: ${testCase.expected}, 实际: ${result}, ${isCorrect ? '正确' : '错误'}`
+                    );
+
+                } catch (error) {
+                    addResult('error', `订单号验证测试 - ${testCase.name}`, `测试失败: ${error.message}`);
+                }
+            });
+        }
+
+        function runAllTests() {
+            clearResults();
+            addResult('info', '开始运行所有测试', '正在执行完整的订单号一致性测试套件...');
+            
+            setTimeout(() => {
+                testOrderNumberGeneration();
+                testApiResponseExtraction();
+                testOrderObjectExtraction();
+                testUnifiedDataCreation();
+                testOrderNumberValidation();
+                
+                addResult('info', '所有测试完成', '请查看上述测试结果，确认订单号管理器工作正常');
+            }, 100);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        // 页面加载时显示说明
+        window.onload = function() {
+            addResult('info', '测试说明', '本测试页面验证订单号管理器的各项功能，确保在不同场景下订单号的生成和处理保持一致性。点击上方按钮开始测试。');
+        };
+    </script>
+</body>
+</html> 

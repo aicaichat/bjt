@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单权限控制测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .test-result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #005a87;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 订单权限控制测试</h1>
+        <p>测试修复后的订单API权限控制是否正常工作</p>
+
+        <div class="test-section">
+            <h3>📊 测试结果</h3>
+            <button onclick="testOrderPermissions()">开始权限测试</button>
+            <div id="test-result" class="test-result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/wp-json/bjt/v1';
+
+        async function makeAuthenticatedRequest(url) {
+            try {
+                const response = await fetch(url, {
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                return { status: response.status, data, ok: response.ok };
+            } catch (error) {
+                return { status: 0, data: { message: error.message }, ok: false };
+            }
+        }
+
+        async function testOrderPermissions() {
+            const resultDiv = document.getElementById('test-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '🔄 测试中...';
+            
+            try {
+                const result = await makeAuthenticatedRequest(`${API_BASE}/orders`);
+                
+                if (result.ok && result.data.success) {
+                    const orders = result.data.data;
+                    const userIds = [...new Set(orders.map(order => order.user_id))];
+                    
+                    let resultHTML = `📊 API响应状态: ${result.status} OK\n`;
+                    resultHTML += `📋 返回订单数量: ${orders.length}\n`;
+                    resultHTML += `👥 涉及的用户ID: [${userIds.join(', ')}]\n\n`;
+                    
+                    if (userIds.length === 1) {
+                        resultHTML += `✅ 权限控制正常！只返回单一用户的订单\n\n`;
+                        resultDiv.className = 'test-result success';
+                    } else {
+                        resultHTML += `❌ 发现多个用户的订单 - 存在权限问题！\n\n`;
+                        resultDiv.className = 'test-result error';
+                    }
+                    
+                    resultHTML += `📝 前5个订单的用户信息:\n`;
+                    orders.slice(0, 5).forEach((order, index) => {
+                        resultHTML += `订单${index + 1}: ID=${order.id}, user_id=${order.user_id}, order_number=${order.order_number}\n`;
+                    });
+                    
+                    resultHTML += `\n原始API响应:\n${JSON.stringify(result.data, null, 2)}`;
+                    
+                    resultDiv.innerHTML = resultHTML;
+                } else {
+                    resultDiv.className = 'test-result error';
+                    resultDiv.innerHTML = `❌ API请求失败: ${result.data.message || 'Unknown error'}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'test-result error';
+                resultDiv.innerHTML = `❌ 测试异常: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

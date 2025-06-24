@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>字段映射修复测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border-left: 4px solid #007bff;
+        }
+        .success { border-left-color: #28a745; background: #d4edda; }
+        .warning { border-left-color: #ffc107; background: #fff3cd; }
+        .error { border-left-color: #dc3545; background: #f8d7da; }
+        .field-test {
+            display: grid;
+            grid-template-columns: 150px 200px 200px 1fr;
+            gap: 10px;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            align-items: center;
+        }
+        .field-test:last-child {
+            border-bottom: none;
+        }
+        .field-name { font-weight: bold; }
+        .field-value { font-family: monospace; }
+        .status-ok { color: #28a745; }
+        .status-empty { color: #ffc107; }
+        .status-missing { color: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔧 字段映射修复测试</h1>
+        <p>测试备件字段映射修复后的效果</p>
+        
+        <div id="test-results"></div>
+    </div>
+
+    <script>
+        // 模拟备件数据（基于实际API结构）
+        const mockSparePartItem = {
+            id: "spare_part_123",
+            part_number: "09A0101107",
+            product_type: "spare_part",
+            quantity: 1,
+            price: 25.00,
+            // 模拟API数据被存储在properties中的情况
+            properties: {
+                part_number: "09A0101107",
+                name_zh: "去皱硅胶",
+                name_en: "Wrinkle Removal Silicone Gel",
+                app_model: '"LA-E4S V2.0",LA-E4S(paper)',
+                app_sn: "ALL",
+                spec: 'Wrinkle Removal Silicone Gel For "LA-E4S V2.0",LA-E4S(paper) AC100-240V',
+                package_size_cm: "21*21*42",
+                unit: "pcs",
+                net_weight_kg: 0.1,
+                pcs_per_box: 1
+            }
+        };
+
+        // 模拟CartFieldUnifier的getFieldValue方法
+        function mockGetFieldValue(item, fieldKey, language = 'zh') {
+            // 特殊处理name字段
+            if (fieldKey === 'name') {
+                return mockGetProductName(item, language);
+            }
+            
+            // 尝试从多个数据源获取值
+            const sources = [
+                item[fieldKey],
+                item.properties?.[fieldKey],
+                item.specs?.[fieldKey]
+            ];
+
+            for (const source of sources) {
+                if (isValidValue(source)) {
+                    return source;
+                }
+            }
+
+            return null;
+        }
+
+        // 模拟CartFieldUnifier的getProductName方法
+        function mockGetProductName(item, language = 'zh') {
+            const props = item.properties || {};
+            
+            if (language === 'zh') {
+                const sources = [
+                    item.name_zh,
+                    props.name_zh,
+                    item.name,
+                    props.name,
+                    item.part_number,
+                    props.part_number
+                ];
+                
+                for (const source of sources) {
+                    if (isValidValue(source)) {
+                        return String(source);
+                    }
+                }
+                
+                return '商品';
+            } else {
+                const sources = [
+                    item.name_en,
+                    props.name_en,
+                    item.name,
+                    props.name,
+                    item.part_number,
+                    props.part_number
+                ];
+                
+                for (const source of sources) {
+                    if (isValidValue(source)) {
+                        return String(source);
+                    }
+                }
+                
+                return 'Product';
+            }
+        }
+
+        function isValidValue(value) {
+            return value !== null && 
+                   value !== undefined && 
+                   value !== '' && 
+                   value !== 'N/A' && 
+                   value !== 'Not Specified' && 
+                   value !== 'null' && 
+                   value !== 'undefined';
+        }
+
+        // 测试字段映射
+        function runFieldMappingTest() {
+            const testFields = [
+                { key: 'name', label: '产品名称', expectedZh: '去皱硅胶', expectedEn: 'Wrinkle Removal Silicone Gel' },
+                { key: 'app_model', label: '适配机型', expected: '"LA-E4S V2.0",LA-E4S(paper)' },
+                { key: 'app_sn', label: '适配序列号', expected: 'ALL' },
+                { key: 'spec', label: '规格描述', expected: 'Wrinkle Removal Silicone Gel For "LA-E4S V2.0",LA-E4S(paper) AC100-240V' },
+                { key: 'package_size_cm', label: '包装尺寸', expected: '21*21*42' },
+                { key: 'unit', label: '单位', expected: 'pcs' },
+                { key: 'part_number', label: '料号', expected: '09A0101107' }
+            ];
+
+            let html = `
+                <div class="test-result success">
+                    <h3>✅ 字段映射测试结果</h3>
+                    <div style="display: grid; grid-template-columns: 150px 200px 200px 1fr; gap: 10px; font-weight: bold; padding: 8px; border-bottom: 2px solid #ddd;">
+                        <div>字段名</div>
+                        <div>中文值</div>
+                        <div>英文值</div>
+                        <div>状态</div>
+                    </div>
+            `;
+
+            testFields.forEach(field => {
+                let zhValue, enValue, status, statusClass;
+
+                if (field.key === 'name') {
+                    zhValue = mockGetFieldValue(mockSparePartItem, field.key, 'zh');
+                    enValue = mockGetFieldValue(mockSparePartItem, field.key, 'en');
+                    
+                    const zhMatch = zhValue === field.expectedZh;
+                    const enMatch = enValue === field.expectedEn;
+                    
+                    if (zhMatch && enMatch) {
+                        status = '✅ 完全正确';
+                        statusClass = 'status-ok';
+                    } else if (zhValue && enValue) {
+                        status = '⚠️ 值不匹配';
+                        statusClass = 'status-warning';
+                    } else {
+                        status = '❌ 值缺失';
+                        statusClass = 'status-missing';
+                    }
+                } else {
+                    const value = mockGetFieldValue(mockSparePartItem, field.key);
+                    zhValue = value || 'N/A';
+                    enValue = value || 'N/A';
+                    
+                    if (value === field.expected) {
+                        status = '✅ 正确';
+                        statusClass = 'status-ok';
+                    } else if (value) {
+                        status = '⚠️ 值不匹配';
+                        statusClass = 'status-warning';
+                    } else {
+                        status = '❌ 值缺失';
+                        statusClass = 'status-missing';
+                    }
+                }
+
+                html += `
+                    <div class="field-test">
+                        <div class="field-name">${field.label}</div>
+                        <div class="field-value">${zhValue}</div>
+                        <div class="field-value">${enValue}</div>
+                        <div class="${statusClass}">${status}</div>
+                    </div>
+                `;
+            });
+
+            html += `
+                </div>
+                <div class="test-result">
+                    <h3>📋 数据结构分析</h3>
+                    <h4>原始数据:</h4>
+                    <pre style="background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto;">${JSON.stringify(mockSparePartItem, null, 2)}</pre>
+                </div>
+            `;
+
+            document.getElementById('test-results').innerHTML = html;
+        }
+
+        // 页面加载时运行测试
+        window.onload = function() {
+            console.log('🚀 开始字段映射测试');
+            runFieldMappingTest();
+        };
+    </script>
+</body>
+</html> 

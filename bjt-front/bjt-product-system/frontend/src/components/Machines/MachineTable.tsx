@@ -1,6 +1,6 @@
 import React from 'react';
 import { Table, Button, Spin } from 'antd';
-import { ShoppingCartOutlined, InfoCircleOutlined, MinusOutlined, PlusOutlined } from '@ant-design/icons';
+import { ShoppingCartOutlined, InfoCircleOutlined, MenuOutlined, PlusOutlined } from '@ant-design/icons';
 import { MachineProduct } from '../../types/machines';
 import { useTranslation } from 'react-i18next';
 import './MachineTable.css';
@@ -140,14 +140,14 @@ const MachineTable: React.FC<MachineTableProps> = ({
         return (
           <div className="quantity-control">
             <Button
-              icon={<MinusOutlined />}
+              icon={<MenuOutlined />}
               onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
                 if (!isAtMinimum) {
                   handleQuantityChange(record.id, currentQuantity - 1);
                 }
               }}
-              disabled={isAtMinimum || inventory <= 0}
+              disabled={isAtMinimum}
               className="quantity-btn"
               aria-label={t('buttons.decreaseQuantity')}
             />
@@ -166,7 +166,7 @@ const MachineTable: React.FC<MachineTableProps> = ({
                   handleQuantityChange(record.id, currentQuantity + 1);
                 }
               }}
-              disabled={isAtMaximum || inventory <= 0}
+              disabled={isAtMaximum}
               className="quantity-btn"
               aria-label={t('buttons.increaseQuantity')}
             />
@@ -189,10 +189,10 @@ const MachineTable: React.FC<MachineTableProps> = ({
               icon={<ShoppingCartOutlined />}
               size="small"
               onClick={() => handleAddToCart(record)}
-              disabled={isOutOfStock}
+              disabled={false}
               className="add-cart-btn"
               aria-label={`${t('buttons.addToCart')} ${record.name}`}
-              aria-disabled={isOutOfStock}
+              aria-disabled={false}
             >
               {t('buttons.addToCart')}
             </Button>

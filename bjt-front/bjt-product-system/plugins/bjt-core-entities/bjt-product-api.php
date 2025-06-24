@@ -99,6 +99,11 @@ require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-upload-controller
 // Helper function to get current token from request
 if (!function_exists('bjt_get_current_token')) {
     function bjt_get_current_token() {
+        error_log("🔍 [TOKEN DEBUG] HTTP_AUTHORIZATION: " . (isset($_SERVER["HTTP_AUTHORIZATION"]) ? $_SERVER["HTTP_AUTHORIZATION"] : "not set"));
+        if (function_exists("getallheaders")) {
+            $headers = getallheaders();
+            error_log("🔍 [TOKEN DEBUG] Authorization header: " . (isset($headers["Authorization"]) ? $headers["Authorization"] : "not set"));
+        }
         $authorization_header = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : null;
         if (!$authorization_header && function_exists('getallheaders')) {
             $headers = getallheaders();
@@ -327,6 +332,7 @@ function bjt_register_debug_endpoint() {
                 'consumables' => new BJT_Consumable_Controller(),
                 'spare_parts' => new BJT_Spare_Part_Controller(),
                 'cart' => new BJT_Cart_Controller(),
+                'product_lookup' => new BJT_Product_Lookup_Controller(),
             ];
             
             // Manual route registration for debug purposes

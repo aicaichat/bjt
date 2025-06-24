@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据流程完整调试 - BJT产品系统</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #3498db;
+        }
+        .step {
+            background: #f8f9fa;
+            padding: 20px;
+            border-left: 4px solid #3498db;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .step h3 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        .test-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+        }
+        .result-box {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .error-box {
+            background: #ffebee;
+            border: 1px solid #f44336;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .warning-box {
+            background: #fff3e0;
+            border: 1px solid #ff9800;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .data-preview {
+            background: #f1f3f4;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 11px;
+        }
+        .flow-diagram {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+        }
+        .flow-step {
+            text-align: center;
+            flex: 1;
+            padding: 10px;
+        }
+        .arrow {
+            font-size: 24px;
+            color: #ffd700;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 BJT产品系统 - 数据流程完整调试</h1>
+        
+        <div class="flow-diagram">
+            <div class="flow-step">
+                <div><strong>1. API数据</strong></div>
+                <div>后端返回JSON</div>
+            </div>
+            <div class="arrow">→</div>
+            <div class="flow-step">
+                <div><strong>2. OrderList处理</strong></div>
+                <div>数据提取&标准化</div>
+            </div>
+            <div class="arrow">→</div>
+            <div class="flow-step">
+                <div><strong>3. 路由传递</strong></div>
+                <div>location.state</div>
+            </div>
+            <div class="arrow">→</div>
+            <div class="flow-step">
+                <div><strong>4. PO页面接收</strong></div>
+                <div>useEffect处理</div>
+            </div>
+            <div class="arrow">→</div>
+            <div class="flow-step">
+                <div><strong>5. 页面显示</strong></div>
+                <div>UI渲染</div>
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>📡 步骤1: 测试API数据</h3>
+            <p>首先验证后端API是否正确返回运输信息</p>
+            <button class="test-button" onclick="testAPI()">测试API数据</button>
+            <div id="api-result"></div>
+        </div>
+
+        <div class="step">
+            <h3>📋 步骤2: 测试OrderList数据处理</h3>
+            <p>验证OrderList页面如何处理API返回的数据</p>
+            <button class="test-button" onclick="testOrderListProcessing()">测试OrderList处理</button>
+            <div id="orderlist-result"></div>
+        </div>
+
+        <div class="step">
+            <h3>🚀 步骤3: 测试路由传递</h3>
+            <p>模拟从OrderList跳转到PO页面的数据传递</p>
+            <button class="test-button" onclick="testRouteTransfer()">测试路由传递</button>
+            <div id="route-result"></div>
+        </div>
+
+        <div class="step">
+            <h3>📄 步骤4: 测试PO页面处理</h3>
+            <p>验证PO页面如何接收和处理传入的数据</p>
+            <button class="test-button" onclick="testPOProcessing()">测试PO处理</button>
+            <div id="po-result"></div>
+        </div>
+
+        <div class="step">
+            <h3>🎯 步骤5: 完整流程测试</h3>
+            <p>执行完整的数据流程测试</p>
+            <button class="test-button" onclick="testCompleteFlow()">完整流程测试</button>
+            <div id="complete-result"></div>
+        </div>
+
+        <div class="warning-box">
+            <h4>⚠️ 注意事项</h4>
+            <ul>
+                <li>确保前端开发服务器正在运行 (http://localhost:5173)</li>
+                <li>确保后端WordPress服务正在运行 (http://localhost:8080)</li>
+                <li>打开浏览器开发者工具查看详细日志</li>
+                <li>如果看到默认值，检查Console中的调试信息</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // 测试API数据
+        async function testAPI() {
+            const resultDiv = document.getElementById('api-result');
+            resultDiv.innerHTML = '<div style="color: #666;">正在测试API...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:8080/wp-json/bjt/v1/orders/20');
+                const data = await response.json();
+                
+                console.log('🔧 [API测试] API返回数据:', data);
+                
+                if (data.success && data.data) {
+                    const shippingInfo = data.data.shipping_address;
+                    const billingInfo = data.data.billing_address;
+                    
+                    resultDiv.innerHTML = `
+                        <div class="result-box">
+✅ API测试成功！
+
+📋 基本信息:
+- 订单ID: ${data.data.id}
+- 订单号: ${data.data.order_number}
+- 状态: ${data.data.status}
+
+🚚 运输信息 (shipping_address):
+- 姓名: ${shippingInfo?.name || 'N/A'}
+- 公司: ${shippingInfo?.company || 'N/A'}
+- 电话: ${shippingInfo?.phone || 'N/A'}
+- 地址: ${shippingInfo?.address || 'N/A'}
+
+💳 账单信息 (billing_address):
+- 姓名: ${billingInfo?.name || 'N/A'}
+- 公司: ${billingInfo?.company || 'N/A'}
+- 电话: ${billingInfo?.phone || 'N/A'}
+- 地址: ${billingInfo?.address || 'N/A'}
+
+🛍️ 商品数量: ${data.data.items?.length || 0}
+
+原始数据:
+${JSON.stringify(data.data, null, 2)}
+                        </div>
+                    `;
+                } else {
+                    throw new Error('API返回数据格式错误');
+                }
+            } catch (error) {
+                console.error('🔧 [API测试] 失败:', error);
+                resultDiv.innerHTML = `
+                    <div class="error-box">
+❌ API测试失败: ${error.message}
+
+请检查:
+1. 后端服务是否运行 (http://localhost:8080)
+2. 订单ID=20是否存在
+3. 网络连接是否正常
+                    </div>
+                `;
+            }
+        }
+
+        // 测试OrderList数据处理
+        function testOrderListProcessing() {
+            const resultDiv = document.getElementById('orderlist-result');
+            resultDiv.innerHTML = '<div style="color: #666;">正在测试OrderList处理...</div>';
+            
+            // 模拟API返回的订单数据
+            const mockOrder = {
+                id: '20',
+                order_number: 'PO-202506231804-BC3049',
+                shipping_address: {
+                    name: 'John Doe',
+                    company: 'Hangzhou Bingjia Tech. Co., Ltd.',
+                    phone: '+86 13057101000',
+                    address: '1818-2, Wenyixi Road, Hangzhou, Zhejiang Province, China'
+                },
+                billing_address: {
+                    name: 'John Doe',
+                    company: 'Hangzhou Bingjia Tech. Co., Ltd.',
+                    phone: '+86 13057101000',
+                    address: '1818-2, Wenyixi Road, Hangzhou, Zhejiang Province, China'
+                },
+                items: [
+                    {
+                        id: '124',
+                        name: 'Panel Flexible Flat Cable',
+                        quantity: 1,
+                        price: 0,
+                        part_number: '09A0101107'
+                    }
+                ],
+                total: 0,
+                status: 'pending_payment'
+            };
+
+            console.log('🔧 [OrderList测试] 模拟订单数据:', mockOrder);
+
+            // 模拟OrderList的数据处理逻辑
+            let extractedCustomerInfo = {
+                companyName: 'Customer Company',
+                contactName: 'Customer Contact',
+                address: 'Customer Address',
+                phone: 'Customer Phone',
+                email: ''
+            };
+
+            let extractedShippingInfo = {
+                address: 'Shipping Address',
+                contactName: 'Shipping Contact',
+                phone: 'Shipping Phone',
+                notes: ''
+            };
+
+            // 提取客户信息
+            const customerSources = [
+                mockOrder.customer_info,
+                mockOrder.user_info,
+                mockOrder.billing_address,
+                mockOrder.shippingInfo,
+                mockOrder.shipping_address
+            ];
+
+            for (const source of customerSources) {
+                if (source && typeof source === 'object') {
+                    if (source.company) extractedCustomerInfo.companyName = source.company;
+                    if (source.name) extractedCustomerInfo.contactName = source.name;
+                    if (source.address) extractedCustomerInfo.address = source.address;
+                    if (source.phone) extractedCustomerInfo.phone = source.phone;
+                }
+            }
+
+            // 提取运输信息
+            const shippingData = mockOrder.shipping_address;
+            if (shippingData && typeof shippingData === 'object') {
+                extractedShippingInfo = {
+                    address: shippingData.address || extractedShippingInfo.address,
+                    contactName: shippingData.name || extractedShippingInfo.contactName,
+                    phone: shippingData.phone || extractedShippingInfo.phone,
+                    notes: shippingData.notes || extractedShippingInfo.notes
+                };
+            }
+
+            console.log('🔧 [OrderList测试] 提取的客户信息:', extractedCustomerInfo);
+            console.log('🔧 [OrderList测试] 提取的运输信息:', extractedShippingInfo);
+
+            resultDiv.innerHTML = `
+                <div class="result-box">
+✅ OrderList处理测试成功！
+
+📋 提取的客户信息:
+- 公司名称: ${extractedCustomerInfo.companyName}
+- 联系人: ${extractedCustomerInfo.contactName}
+- 地址: ${extractedCustomerInfo.address}
+- 电话: ${extractedCustomerInfo.phone}
+
+🚚 提取的运输信息:
+- 地址: ${extractedShippingInfo.address}
+- 联系人: ${extractedShippingInfo.contactName}
+- 电话: ${extractedShippingInfo.phone}
+- 备注: ${extractedShippingInfo.notes}
+
+🔍 数据源检查:
+${customerSources.map((source, index) => 
+    `源${index + 1}: ${source ? JSON.stringify(source) : 'null'}`
+).join('\\n')}
+                </div>
+            `;
+        }
+
+        // 测试路由传递
+        function testRouteTransfer() {
+            const resultDiv = document.getElementById('route-result');
+            
+            // 模拟构建的PO数据
+            const mockPOData = {
+                orderObject: {
+                    id: '20',
+                    order_number: 'PO-202506231804-BC3049'
+                },
+                orderItems: [
+                    {
+                        id: '124',
+                        name: 'Panel Flexible Flat Cable',
+                        quantity: 1,
+                        price: 0,
+                        code: '09A0101107'
+                    }
+                ],
+                customerInfo: {
+                    companyName: 'Hangzhou Bingjia Tech. Co., Ltd.',
+                    contactName: 'John Doe',
+                    address: '1818-2, Wenyixi Road, Hangzhou, Zhejiang Province, China',
+                    phone: '+86 13057101000',
+                    email: ''
+                },
+                shippingInfo: {
+                    address: '1818-2, Wenyixi Road, Hangzhou, Zhejiang Province, China',
+                    contactName: 'John Doe',
+                    phone: '+86 13057101000',
+                    notes: ''
+                },
+                summary: {
+                    subtotal: 0,
+                    shipping: 0,
+                    tax: 0,
+                    total: 0
+                },
+                source: 'order_list_detail'
+            };
+
+            console.log('🔧 [路由测试] 构建的PO数据:', mockPOData);
+
+            resultDiv.innerHTML = `
+                <div class="result-box">
+✅ 路由传递测试成功！
+
+📦 构建的PO数据结构:
+- 订单号: ${mockPOData.orderObject.order_number}
+- 商品数量: ${mockPOData.orderItems.length}
+- 数据源: ${mockPOData.source}
+
+👤 客户信息:
+- 公司: ${mockPOData.customerInfo.companyName}
+- 联系人: ${mockPOData.customerInfo.contactName}
+- 电话: ${mockPOData.customerInfo.phone}
+
+🚚 运输信息:
+- 联系人: ${mockPOData.shippingInfo.contactName}
+- 电话: ${mockPOData.shippingInfo.phone}
+- 地址: ${mockPOData.shippingInfo.address}
+
+💰 订单汇总:
+- 小计: ¥${mockPOData.summary.subtotal}
+- 运费: ¥${mockPOData.summary.shipping}
+- 总计: ¥${mockPOData.summary.total}
+
+🔗 下一步: 这些数据将通过 navigate('/po', { state: { poData, source: 'order_list_detail' } }) 传递给PO页面
+                </div>
+            `;
+        }
+
+        // 测试PO页面处理
+        function testPOProcessing() {
+            const resultDiv = document.getElementById('po-result');
+            
+            // 模拟PO页面接收到的数据
+            const mockLocationState = {
+                poData: {
+                    orderObject: {
+                        id: '20',
+                        order_number: 'PO-202506231804-BC3049'
+                    },
+                    orderItems: [
+                        {
+                            id: '124',
+                            name: 'Panel Flexible Flat Cable',
+                            quantity: 1,
+                            price: 0,
+                            code: '09A0101107'
+                        }
+                    ],
+                    customerInfo: {
+                        companyName: 'Hangzhou Bingjia Tech. Co., Ltd.',
+                        contactName: 'John Doe',
+                        address: '1818-2, Wenyixi Road, Hangzhou, Zhejiang Province, China',
+                        phone: '+86 13057101000',
+                        email: ''
+                    },
+                    shippingInfo: {
+                        address: '1818-2, Wenyixi Road, Hangzhou, Zhejiang Province, China',
+                        contactName: 'John Doe',
+                        phone: '+86 13057101000',
+                        notes: ''
+                    },
+                    summary: {
+                        subtotal: 0,
+                        shipping: 0,
+                        tax: 0,
+                        total: 0
+                    }
+                },
+                source: 'order_list_detail'
+            };
+
+            console.log('🔧 [PO测试] 模拟location.state:', mockLocationState);
+
+            // 模拟PO页面的standardizeShippingInfo函数
+            function standardizeShippingInfo(shippingInfo) {
+                console.log('🔧 [标准化] 原始运输信息:', shippingInfo);
+                
+                if (!shippingInfo) {
+                    return {
+                        address: 'Shipping Address',
+                        contactName: 'Shipping Contact',
+                        phone: 'Shipping Phone',
+                        notes: ''
+                    };
+                }
+
+                if (typeof shippingInfo === 'object') {
+                    const result = {
+                        address: shippingInfo.address || 'Shipping Address',
+                        contactName: shippingInfo.name || shippingInfo.contactName || 'Shipping Contact',
+                        phone: shippingInfo.phone || 'Shipping Phone',
+                        notes: shippingInfo.notes || ''
+                    };
+                    console.log('🔧 [标准化] 处理结果:', result);
+                    return result;
+                }
+
+                return {
+                    address: 'Shipping Address',
+                    contactName: 'Shipping Contact',
+                    phone: 'Shipping Phone',
+                    notes: ''
+                };
+            }
+
+            // 模拟PO页面的standardizeCustomerInfo函数
+            function standardizeCustomerInfo(customerInfo, shippingInfo) {
+                console.log('🔧 [标准化] 原始客户信息:', customerInfo);
+                
+                if (customerInfo && typeof customerInfo === 'object') {
+                    return {
+                        companyName: customerInfo.companyName || customerInfo.company || 'Customer Company',
+                        contactName: customerInfo.contactName || customerInfo.name || 'Customer Contact',
+                        address: customerInfo.address || 'Customer Address',
+                        phone: customerInfo.phone || 'Customer Phone',
+                        email: customerInfo.email || ''
+                    };
+                }
+
+                // 从运输信息提取
+                if (shippingInfo && typeof shippingInfo === 'object') {
+                    return {
+                        companyName: shippingInfo.company || 'Hangzhou Bingjia Tech. Co., Ltd.',
+                        contactName: shippingInfo.name || 'Customer Contact',
+                        address: shippingInfo.address || 'Customer Address',
+                        phone: shippingInfo.phone || 'Customer Phone',
+                        email: ''
+                    };
+                }
+
+                return {
+                    companyName: 'Customer Company',
+                    contactName: 'Customer Contact',
+                    address: 'Customer Address',
+                    phone: 'Customer Phone',
+                    email: ''
+                };
+            }
+
+            // 执行标准化处理
+            const standardizedCustomer = standardizeCustomerInfo(
+                mockLocationState.poData.customerInfo, 
+                mockLocationState.poData.shippingInfo
+            );
+            const standardizedShipping = standardizeShippingInfo(mockLocationState.poData.shippingInfo);
+
+            console.log('🔧 [PO测试] 标准化后的客户信息:', standardizedCustomer);
+            console.log('🔧 [PO测试] 标准化后的运输信息:', standardizedShipping);
+
+            resultDiv.innerHTML = `
+                <div class="result-box">
+✅ PO页面处理测试成功！
+
+📥 接收到的原始数据:
+- 客户信息: ${JSON.stringify(mockLocationState.poData.customerInfo)}
+- 运输信息: ${JSON.stringify(mockLocationState.poData.shippingInfo)}
+
+🔄 标准化处理后:
+
+👤 客户信息:
+- 公司名称: ${standardizedCustomer.companyName}
+- 联系人: ${standardizedCustomer.contactName}
+- 地址: ${standardizedCustomer.address}
+- 电话: ${standardizedCustomer.phone}
+
+🚚 运输信息:
+- 地址: ${standardizedShipping.address}
+- 联系人: ${standardizedShipping.contactName}
+- 电话: ${standardizedShipping.phone}
+- 备注: ${standardizedShipping.notes}
+
+✅ 预期结果: PO页面应该显示真实的客户和运输信息，而不是默认值
+                </div>
+            `;
+        }
+
+        // 完整流程测试
+        async function testCompleteFlow() {
+            const resultDiv = document.getElementById('complete-result');
+            resultDiv.innerHTML = '<div style="color: #666;">正在执行完整流程测试...</div>';
+            
+            try {
+                console.log('🔧 [完整测试] 开始完整流程测试');
+                
+                // 步骤1: 测试API
+                console.log('🔧 [完整测试] 步骤1: 获取API数据');
+                const apiResponse = await fetch('http://localhost:8080/wp-json/bjt/v1/orders/20');
+                const apiData = await apiResponse.json();
+                
+                if (!apiData.success) {
+                    throw new Error('API返回失败');
+                }
+                
+                // 步骤2: 模拟OrderList处理
+                console.log('🔧 [完整测试] 步骤2: OrderList数据处理');
+                const order = apiData.data;
+                
+                let extractedCustomerInfo = {
+                    companyName: 'Customer Company',
+                    contactName: 'Customer Contact',
+                    address: 'Customer Address',
+                    phone: 'Customer Phone',
+                    email: ''
+                };
+                
+                let extractedShippingInfo = {
+                    address: 'Shipping Address',
+                    contactName: 'Shipping Contact',
+                    phone: 'Shipping Phone',
+                    notes: ''
+                };
+                
+                // 从shipping_address提取信息
+                if (order.shipping_address) {
+                    extractedShippingInfo = {
+                        address: order.shipping_address.address || extractedShippingInfo.address,
+                        contactName: order.shipping_address.name || extractedShippingInfo.contactName,
+                        phone: order.shipping_address.phone || extractedShippingInfo.phone,
+                        notes: extractedShippingInfo.notes
+                    };
+                    
+                    extractedCustomerInfo = {
+                        companyName: order.shipping_address.company || extractedCustomerInfo.companyName,
+                        contactName: order.shipping_address.name || extractedCustomerInfo.contactName,
+                        address: order.shipping_address.address || extractedCustomerInfo.address,
+                        phone: order.shipping_address.phone || extractedCustomerInfo.phone,
+                        email: extractedCustomerInfo.email
+                    };
+                }
+                
+                // 步骤3: 构建PO数据
+                console.log('🔧 [完整测试] 步骤3: 构建PO数据');
+                const poData = {
+                    orderObject: {
+                        id: order.id,
+                        order_number: order.order_number
+                    },
+                    orderItems: order.items.map(item => ({
+                        id: item.target_id,
+                        name: item.item_name,
+                        quantity: parseInt(item.quantity),
+                        price: parseFloat(item.price),
+                        code: item.item_id
+                    })),
+                    customerInfo: extractedCustomerInfo,
+                    shippingInfo: extractedShippingInfo,
+                    summary: {
+                        subtotal: parseFloat(order.total_amount),
+                        shipping: 0,
+                        tax: 0,
+                        total: parseFloat(order.total_amount)
+                    },
+                    source: 'order_list_detail'
+                };
+                
+                // 步骤4: 模拟PO页面处理
+                console.log('🔧 [完整测试] 步骤4: PO页面数据处理');
+                
+                // 这里应该和PO页面的逻辑完全一致
+                function standardizeShippingInfo(shippingInfo) {
+                    if (!shippingInfo) {
+                        return {
+                            address: 'Shipping Address',
+                            contactName: 'Shipping Contact',
+                            phone: 'Shipping Phone',
+                            notes: ''
+                        };
+                    }
+                    
+                    if (typeof shippingInfo === 'object') {
+                        return {
+                            address: shippingInfo.address || 'Shipping Address',
+                            contactName: shippingInfo.name || shippingInfo.contactName || 'Shipping Contact',
+                            phone: shippingInfo.phone || 'Shipping Phone',
+                            notes: shippingInfo.notes || ''
+                        };
+                    }
+                    
+                    return {
+                        address: 'Shipping Address',
+                        contactName: 'Shipping Contact',
+                        phone: 'Shipping Phone',
+                        notes: ''
+                    };
+                }
+                
+                const finalShippingInfo = standardizeShippingInfo(poData.shippingInfo);
+                const finalCustomerInfo = poData.customerInfo;
+                
+                console.log('🔧 [完整测试] 最终处理结果:', {
+                    finalCustomerInfo,
+                    finalShippingInfo
+                });
+                
+                // 检查是否还有默认值
+                const hasDefaultValues = 
+                    finalShippingInfo.address === 'Shipping Address' ||
+                    finalShippingInfo.contactName === 'Shipping Contact' ||
+                    finalShippingInfo.phone === 'Shipping Phone' ||
+                    finalCustomerInfo.companyName === 'Customer Company' ||
+                    finalCustomerInfo.contactName === 'Customer Contact';
+                
+                const status = hasDefaultValues ? '⚠️ 发现默认值' : '✅ 所有数据正常';
+                
+                resultDiv.innerHTML = `
+                    <div class="${hasDefaultValues ? 'error-box' : 'result-box'}">
+${status} 完整流程测试完成！
+
+📡 API数据:
+- 订单号: ${order.order_number}
+- 运输信息: ${JSON.stringify(order.shipping_address)}
+
+📋 OrderList提取结果:
+- 客户公司: ${extractedCustomerInfo.companyName}
+- 客户联系人: ${extractedCustomerInfo.contactName}
+- 运输联系人: ${extractedShippingInfo.contactName}
+- 运输电话: ${extractedShippingInfo.phone}
+
+🔄 PO页面最终结果:
+- 客户公司: ${finalCustomerInfo.companyName}
+- 客户联系人: ${finalCustomerInfo.contactName}
+- 运输联系人: ${finalShippingInfo.contactName}
+- 运输电话: ${finalShippingInfo.phone}
+- 运输地址: ${finalShippingInfo.address}
+
+${hasDefaultValues ? `
+❌ 问题分析:
+- 仍然存在默认值，说明数据处理逻辑有问题
+- 请检查字段映射是否正确
+- 建议查看浏览器Console获取详细调试信息
+` : `
+✅ 测试通过:
+- 所有字段都显示真实数据
+- 没有发现默认值
+- 数据流程正常
+`}
+
+🔧 下一步操作:
+1. 访问 http://localhost:5173/order-list
+2. 找到订单 PO-202506231804-BC3049
+3. 点击 "Back to PO" 按钮
+4. 检查PO页面显示的信息是否与上述测试结果一致
+                    </div>
+                `;
+                
+            } catch (error) {
+                console.error('🔧 [完整测试] 失败:', error);
+                resultDiv.innerHTML = `
+                    <div class="error-box">
+❌ 完整流程测试失败: ${error.message}
+
+请检查:
+1. 后端服务状态
+2. 前端服务状态  
+3. 网络连接
+4. 数据库中订单20是否存在
+                    </div>
+                `;
+            }
+        }
+
+        // 页面加载时显示说明
+        window.onload = function() {
+            console.log('🔧 [调试页面] 数据流程调试页面已加载');
+            console.log('🔧 [调试页面] 请按顺序执行测试步骤');
+        };
+    </script>
+</body>
+</html>

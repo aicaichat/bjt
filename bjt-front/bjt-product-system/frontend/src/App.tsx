@@ -24,6 +24,8 @@ import OrderList from './pages/OrderList';
 import Profile from './pages/Profile';
 import DashboardPage from './pages/DashboardPage';
 import SqlExcelConverterPage from './pages/SqlExcelConverter';
+// 导入调试页面
+import DebugOrderPage from './pages/Order/DebugOrder';
 // 导入示例组件
 import OrderListExample from './examples/OrderListExample';
 // 导入测试页面
@@ -58,6 +60,10 @@ import SafeRenderWrapper from './components/SafeRenderWrapper';
 
 // 导入管理后台路由
 import AdminRoutes from './admin/routes';
+
+// 导入订单上下文
+import { OrderProvider } from './contexts/OrderContext';
+import UnifiedOrderListPage from './pages/OrderList/UnifiedOrderList';
 
 // 路由保护组件
 interface ProtectedRouteProps {
@@ -364,6 +370,19 @@ const AppContent: React.FC = () => {
           }
         />
         
+        {/* 统一订单管理路由 */}
+        <Route path="/unified-order-list" element={<UnifiedOrderListPage />} />
+        <Route path="/unified-po" element={
+          <ProtectedRoute>
+            <MainLayout>
+              <PO />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        
+        {/* 调试订单页面 */}
+        <Route path="/debug-order" element={<DebugOrderPage />} />
+        
         {/* 404页面 */}
         <Route
           path="*"
@@ -410,7 +429,9 @@ const App: React.FC = () => {
                 <SafeRenderWrapper>
                   <Router>
                     <CartProvider>
-                      <AppContent />
+                      <OrderProvider>
+                        <AppContent />
+                      </OrderProvider>
                     </CartProvider>
                   </Router>
                 </SafeRenderWrapper>

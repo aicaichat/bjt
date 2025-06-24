@@ -57,7 +57,10 @@
     "exportPO": "Export PO",
     "print": "Print Order",
     "export": "Export",
-    "delete": "Delete"
+    "delete": "Delete",
+    "exportExcel": "Export Excel",
+    "backToPO": "Back to PO",
+    "printPDF": "Print PDF"
   },
   "payment": {
     "status": {

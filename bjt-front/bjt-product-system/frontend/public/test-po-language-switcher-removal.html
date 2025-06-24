@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PO页面语言切换器移除验证</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .test-button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .test-button:hover {
+            background-color: #0056b3;
+        }
+        .code-block {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .removed {
+            background-color: #f8d7da;
+            color: #721c24;
+            text-decoration: line-through;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗑️ PO页面重复语言切换器移除验证</h1>
+        
+        <h2>修复状态</h2>
+        <div class="status success">
+            ✅ 已删除PO页面中重复的语言切换器组件
+        </div>
+        <div class="status success">
+            ✅ 已清理相关的导入语句
+        </div>
+        <div class="status success">
+            ✅ 保持头部导航的语言切换功能正常
+        </div>
+        
+        <h2>修复详情</h2>
+        <div class="status info">
+            <h3>问题描述</h3>
+            <p>PO页面中存在重复的语言切换器，与头部导航中的语言切换功能重复。</p>
+            
+            <h3>修复内容</h3>
+            <p><strong>删除的代码：</strong></p>
+            <div class="code-block removed">
+import LanguageSwitcher from '../../components/LanguageSwitcher';
+
+// 在操作按钮区域中删除的部分
+&lt;div style={{display: 'flex', alignItems: 'center', gap: '16px'}}&gt;
+  &lt;LanguageSwitcher size="medium" /&gt;
+&lt;/div&gt;
+            </div>
+            
+            <p><strong>保留的功能：</strong></p>
+            <ul>
+                <li>头部导航中的语言切换器继续正常工作</li>
+                <li>PO页面的所有其他功能保持不变</li>
+                <li>导出Excel和打印功能正常</li>
+            </ul>
+        </div>
+        
+        <h2>测试验证</h2>
+        <p>点击以下链接测试PO页面的功能：</p>
+        
+        <a href="http://localhost:5173/po" class="test-button" target="_blank">
+            📄 访问PO页面
+        </a>
+        
+        <a href="http://localhost:5173/unified-po" class="test-button" target="_blank">
+            📄 访问统一PO页面
+        </a>
+        
+        <a href="http://localhost:5173/order" class="test-button" target="_blank">
+            📝 测试订单提交流程
+        </a>
+        
+        <h3>验证清单</h3>
+        <div class="status">
+            <h4>请验证以下功能：</h4>
+            <ul>
+                <li>✅ PO页面不再显示重复的语言切换器</li>
+                <li>✅ 头部导航的语言切换器正常工作</li>
+                <li>✅ PO页面的导出Excel功能正常</li>
+                <li>✅ PO页面的打印功能正常</li>
+                <li>✅ 从订单页面跳转到PO页面功能正常</li>
+                <li>✅ 页面布局和样式没有异常</li>
+            </ul>
+        </div>
+        
+        <h2>预期效果</h2>
+        <div class="status info">
+            <h3>修复前</h3>
+            <p>PO页面右上角有一个独立的语言切换器按钮，与头部导航的语言切换功能重复。</p>
+            
+            <h3>修复后</h3>
+            <p>PO页面只显示导出Excel和打印PO单按钮，语言切换统一通过头部导航进行。</p>
+            
+            <h3>用户体验改进</h3>
+            <ul>
+                <li>消除了界面上的重复元素</li>
+                <li>简化了页面布局</li>
+                <li>统一了语言切换的交互方式</li>
+                <li>减少了用户的认知负担</li>
+            </ul>
+        </div>
+        
+        <div id="test-results"></div>
+    </div>
+
+    <script>
+        // 页面加载时显示当前状态
+        window.onload = function() {
+            console.log('PO页面语言切换器移除验证页面已加载');
+            console.log('开发服务器地址: http://localhost:5173');
+            
+            // 检查页面是否可以正常访问
+            fetch('http://localhost:5173/po')
+                .then(response => {
+                    if (response.ok) {
+                        console.log('✅ PO页面可以正常访问');
+                    } else {
+                        console.log('⚠️ PO页面访问异常，状态码:', response.status);
+                    }
+                })
+                .catch(error => {
+                    console.log('❌ PO页面访问失败:', error);
+                });
+        };
+    </script>
+</body>
+</html> 

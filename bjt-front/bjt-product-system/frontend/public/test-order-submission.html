@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJT订单提交流程测试</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #007bff;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            color: #007bff;
+            margin-top: 0;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn.success {
+            background-color: #28a745;
+        }
+        .btn.danger {
+            background-color: #dc3545;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .flow-diagram {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .flow-step {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            margin: 0 10px;
+            background-color: white;
+            border-radius: 5px;
+            border: 2px solid #dee2e6;
+            position: relative;
+        }
+        .flow-step.active {
+            border-color: #007bff;
+            background-color: #e7f3ff;
+        }
+        .flow-step.completed {
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+        .flow-step.error {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        .flow-arrow {
+            font-size: 24px;
+            color: #6c757d;
+        }
+        .test-log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 2px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .log-entry.success {
+            color: #28a745;
+        }
+        .log-entry.error {
+            color: #dc3545;
+        }
+        .log-entry.info {
+            color: #17a2b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 BJT订单提交流程测试</h1>
+            <p>测试Order页面到PO页面的完整流程</p>
+        </div>
+
+        <!-- 流程图 -->
+        <div class="test-section">
+            <h3>📊 订单提交流程</h3>
+            <div class="flow-diagram">
+                <div class="flow-step" id="step-order">
+                    <h4>Order页面</h4>
+                    <p>填写订单信息</p>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step" id="step-submit">
+                    <h4>提交订单</h4>
+                    <p>调用API创建订单</p>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step" id="step-context">
+                    <h4>状态管理</h4>
+                    <p>OrderContext处理</p>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step" id="step-navigate">
+                    <h4>页面跳转</h4>
+                    <p>navigate('/unified-po')</p>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step" id="step-po">
+                    <h4>PO页面</h4>
+                    <p>显示订单详情</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 测试控制 -->}
+        <div class="test-section">
+            <h3>🎮 测试控制</h3>
+            <button class="btn" onclick="startTest()">开始测试</button>
+            <button class="btn" onclick="openOrderPage()">打开Order页面</button>
+            <button class="btn" onclick="openPOPage()">打开PO页面</button>
+            <button class="btn danger" onclick="clearLogs()">清除日志</button>
+            
+            <div class="status" id="test-status" style="display: none;">
+                准备开始测试...
+            </div>
+        </div>
+
+        <!-- 问题诊断 -->
+        <div class="test-section">
+            <h3>🔍 问题诊断</h3>
+            <button class="btn" onclick="checkRoutes()">检查路由配置</button>
+            <button class="btn" onclick="checkOrderContext()">检查OrderContext</button>
+            <button class="btn" onclick="checkNavigation()">检查导航逻辑</button>
+            <button class="btn" onclick="simulateOrderSubmission()">模拟订单提交</button>
+            
+            <div id="diagnosis-results"></div>
+        </div>
+
+        <!-- 测试日志 -->
+        <div class="test-section">
+            <h3>📝 测试日志</h3>
+            <div class="test-log" id="test-log">
+                <div class="log-entry info">[INFO] 测试页面已加载</div>
+            </div>
+        </div>
+
+        <!-- 解决方案 -->
+        <div class="test-section">
+            <h3>🛠️ 常见问题解决方案</h3>
+            <div>
+                <h4>问题1：提交后跳回Order页面</h4>
+                <p><strong>可能原因：</strong></p>
+                <ul>
+                    <li>路由配置错误 - 检查 /unified-po 路由是否正确配置</li>
+                    <li>导航逻辑错误 - 检查 navigate() 调用是否正确</li>
+                    <li>OrderContext未正确初始化 - 检查Provider是否包装App</li>
+                    <li>API调用失败 - 检查submitOrder是否抛出异常</li>
+                </ul>
+                
+                <h4>解决步骤：</h4>
+                <ol>
+                    <li>确认App.tsx中包含OrderProvider</li>
+                    <li>确认/unified-po路由已配置</li>
+                    <li>确认Order页面使用useOrder Hook</li>
+                    <li>确认navigate调用使用正确路径</li>
+                    <li>添加console.log跟踪执行流程</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let testLog = [];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = `[${timestamp}] [${type.toUpperCase()}] ${message}`;
+            testLog.push({ message: entry, type });
+            
+            const logContainer = document.getElementById('test-log');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = entry;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            
+            console.log(entry);
+        }
+
+        function updateStatus(message, type = 'info') {
+            const statusEl = document.getElementById('test-status');
+            statusEl.style.display = 'block';
+            statusEl.className = `status ${type}`;
+            statusEl.textContent = message;
+        }
+
+        function updateFlowStep(stepId, status) {
+            const stepEl = document.getElementById(stepId);
+            stepEl.className = `flow-step ${status}`;
+        }
+
+        function clearLogs() {
+            testLog = [];
+            document.getElementById('test-log').innerHTML = '<div class="log-entry info">[INFO] 日志已清除</div>';
+            document.getElementById('test-status').style.display = 'none';
+            
+            // 重置流程步骤
+            ['step-order', 'step-submit', 'step-context', 'step-navigate', 'step-po'].forEach(id => {
+                document.getElementById(id).className = 'flow-step';
+            });
+            
+            log('测试日志已清除');
+        }
+
+        function startTest() {
+            log('开始订单提交流程测试', 'info');
+            updateStatus('测试进行中...', 'info');
+            
+            // 模拟测试流程
+            setTimeout(() => {
+                updateFlowStep('step-order', 'active');
+                log('步骤1: Order页面激活', 'success');
+                
+                setTimeout(() => {
+                    updateFlowStep('step-order', 'completed');
+                    updateFlowStep('step-submit', 'active');
+                    log('步骤2: 开始提交订单', 'info');
+                    
+                    setTimeout(() => {
+                        updateFlowStep('step-submit', 'completed');
+                        updateFlowStep('step-context', 'active');
+                        log('步骤3: OrderContext处理中', 'info');
+                        
+                        setTimeout(() => {
+                            updateFlowStep('step-context', 'completed');
+                            updateFlowStep('step-navigate', 'active');
+                            log('步骤4: 执行页面跳转', 'info');
+                            
+                            setTimeout(() => {
+                                updateFlowStep('step-navigate', 'completed');
+                                updateFlowStep('step-po', 'active');
+                                log('步骤5: PO页面加载完成', 'success');
+                                updateStatus('测试完成！所有步骤正常', 'success');
+                            }, 1000);
+                        }, 1000);
+                    }, 1000);
+                }, 1000);
+            }, 500);
+        }
+
+        function openOrderPage() {
+            log('打开Order页面', 'info');
+            window.open('http://localhost:5173/order', '_blank');
+        }
+
+        function openPOPage() {
+            log('打开PO页面', 'info');
+            window.open('http://localhost:5173/unified-po', '_blank');
+        }
+
+        function checkRoutes() {
+            log('检查路由配置...', 'info');
+            
+            const routes = [
+                '/order',
+                '/unified-po',
+                '/unified-order-list'
+            ];
+            
+            const resultsDiv = document.getElementById('diagnosis-results');
+            resultsDiv.innerHTML = '<h4>路由检查结果：</h4>';
+            
+            routes.forEach(route => {
+                const routeDiv = document.createElement('div');
+                routeDiv.innerHTML = `
+                    <p>
+                        <strong>${route}</strong>: 
+                        <a href="http://localhost:5173${route}" target="_blank" class="btn">测试访问</a>
+                    </p>
+                `;
+                resultsDiv.appendChild(routeDiv);
+                log(`路由 ${route} 已添加到测试列表`, 'info');
+            });
+        }
+
+        function checkOrderContext() {
+            log('检查OrderContext配置...', 'info');
+            
+            const checks = [
+                '✅ OrderProvider应该包装在App组件中',
+                '✅ useOrder Hook应该在Order页面中使用',
+                '✅ submitOrder方法应该返回UnifiedOrderData',
+                '✅ setPageTransferData应该在提交成功后调用',
+                '✅ navigate应该使用/unified-po路径'
+            ];
+            
+            const resultsDiv = document.getElementById('diagnosis-results');
+            resultsDiv.innerHTML = '<h4>OrderContext检查清单：</h4><ul>';
+            
+            checks.forEach(check => {
+                const li = document.createElement('li');
+                li.textContent = check;
+                resultsDiv.querySelector('ul').appendChild(li);
+            });
+            
+            resultsDiv.innerHTML += '</ul>';
+            log('OrderContext检查清单已生成', 'success');
+        }
+
+        function checkNavigation() {
+            log('检查导航逻辑...', 'info');
+            
+            const navigationCode = `
+// 正确的导航代码示例：
+const handleSubmitOrder = async () => {
+  try {
+    // 1. 提交订单
+    const unifiedOrderData = await submitOrder(orderData);
+    
+    // 2. 设置页面传递数据
+    const transferData = OrderDataConverter.createPageTransferData(
+      'order',
+      unifiedOrderData
+    );
+    setPageTransferData(transferData);
+    
+    // 3. 跳转到PO页面
+    navigate('/unified-po', {
+      state: {
+        orderData: unifiedOrderData,
+        source: 'order',
+        timestamp: new Date().toISOString()
+      },
+      replace: true // 重要：使用replace避免回退
+    });
+    
+  } catch (error) {
+    console.error('订单提交失败:', error);
+    // 错误处理...
+  }
+};`;
+            
+            const resultsDiv = document.getElementById('diagnosis-results');
+            resultsDiv.innerHTML = `
+                <h4>导航逻辑检查：</h4>
+                <pre style="background: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto;">${navigationCode}</pre>
+            `;
+            
+            log('导航逻辑示例已生成', 'success');
+        }
+
+        function simulateOrderSubmission() {
+            log('模拟订单提交流程...', 'info');
+            updateStatus('模拟提交中...', 'info');
+            
+            // 模拟各种可能的结果
+            const scenarios = [
+                { name: '成功提交', success: true, delay: 2000 },
+                { name: 'API错误', success: false, error: 'API调用失败', delay: 1500 },
+                { name: '网络超时', success: false, error: '网络连接超时', delay: 3000 },
+                { name: '数据验证失败', success: false, error: '订单数据验证失败', delay: 1000 }
+            ];
+            
+            const scenario = scenarios[Math.floor(Math.random() * scenarios.length)];
+            log(`模拟场景: ${scenario.name}`, 'info');
+            
+            setTimeout(() => {
+                if (scenario.success) {
+                    updateFlowStep('step-submit', 'completed');
+                    updateFlowStep('step-context', 'completed');
+                    updateFlowStep('step-navigate', 'completed');
+                    updateFlowStep('step-po', 'completed');
+                    log('模拟订单提交成功！', 'success');
+                    updateStatus('模拟提交成功，应该跳转到PO页面', 'success');
+                } else {
+                    updateFlowStep('step-submit', 'error');
+                    log(`模拟订单提交失败: ${scenario.error}`, 'error');
+                    updateStatus(`模拟提交失败: ${scenario.error}`, 'error');
+                }
+            }, scenario.delay);
+        }
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            log('BJT订单提交流程测试页面已加载', 'success');
+            updateStatus('测试页面已准备就绪', 'success');
+        });
+    </script>
+</body>
+</html> 

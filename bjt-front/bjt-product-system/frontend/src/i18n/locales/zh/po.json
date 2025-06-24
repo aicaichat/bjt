@@ -4,6 +4,8 @@
   "printPO": "打印PDF",
   "back": "返回",
   "complete": "完成",
+  "confirmPO": "确认PO单",
+  "poConfirmed": "PO单已确认",
   "logoPrompt": "这里用于显示客户LOGO，二期开发，用户账号管理也可以上传公司LOGO图片",
   "buyerPrompt": "这里对应填写买方公司地址和电话",
   "poNumberPrompt": "系统自动生成的订单号",

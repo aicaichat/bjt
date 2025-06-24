@@ -35,26 +35,22 @@ const AccessoriesPage: React.FC = () => {
     filterAccessories();
   }, [accessories, searchText, selectedType, selectedModel]);
 
-  // Function to fetch accessories (using mock data for now)
+  // Function to fetch accessories from real API
   const fetchAccessories = async () => {
     setLoading(true);
     try {
-      // Check if we should use mock data
-      if (import.meta.env.VITE_USE_MOCK_DATA === 'true') {
-        console.log('Using mock data for accessories');
-        // setAccessories(accessoriesMock);
-        setAccessories([]); // 临时使用空数组，直到mock文件可用
-      } else {
-      // In a real app, this would be an API call
-        // For now, still using mock data until API implementation
-        console.log('Using API for accessories (fallback to mock for now)');
-        setAccessories([]);
-        // TODO: Replace with actual API call when available
-        // const response = await axios.get('/api/accessories');
-        // setAccessories(response.data);
-      }
+      console.log('🔧 [AccessoriesPage] Fetching accessories from real API...');
+      // TODO: Replace with actual API call when available
+      // const response = await axios.get('/api/accessories');
+      // setAccessories(response.data);
+      
+      // 临时使用空数组，直到API实现
+      setAccessories([]);
+      console.log('⚠️ [AccessoriesPage] Using empty array until API is implemented');
+      
       setLoading(false);
     } catch (error) {
+      console.error('❌ [AccessoriesPage] Failed to fetch accessories:', error);
       message.error('Failed to fetch accessories');
       setLoading(false);
     }

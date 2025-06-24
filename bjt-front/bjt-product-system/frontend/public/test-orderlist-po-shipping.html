@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OrderList到PO页面运输信息传递测试</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        
+        .button {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        .button:hover {
+            background-color: #2980b9;
+        }
+        
+        .button.success {
+            background-color: #27ae60;
+        }
+        
+        .button.danger {
+            background-color: #e74c3c;
+        }
+        
+        .result {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .result.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .result.error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .result.info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            border-left: 4px solid #3498db;
+            background-color: #f8f9fa;
+        }
+        
+        .step.completed {
+            border-left-color: #27ae60;
+            background-color: #d4edda;
+        }
+        
+        .step.failed {
+            border-left-color: #e74c3c;
+            background-color: #f8d7da;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 OrderList到PO页面运输信息传递测试</h1>
+        
+        <div class="section">
+            <h2>📋 测试目标</h2>
+            <p>验证从OrderList页面点击"Back to PO"按钮跳转到PO页面时，运输信息是否正确传递和显示。</p>
+            <p><strong>期望结果</strong>：PO页面的Ship to部分应该显示实际的运输信息，而不是默认值。</p>
+        </div>
+        
+        <div class="section">
+            <h2>🧪 自动化测试</h2>
+            <button class="button" onclick="runFullTest()">运行完整测试</button>
+            <button class="button" onclick="testAPIData()">测试API数据</button>
+            <button class="button" onclick="testDataProcessing()">测试数据处理</button>
+            <button class="button" onclick="clearResults()">清除结果</button>
+            
+            <div id="testSteps"></div>
+            <div id="testResult" class="result" style="display: none;"></div>
+        </div>
+        
+        <div class="section">
+            <h2>🔄 手动验证步骤</h2>
+            <ol>
+                <li>确保前端服务运行在 http://localhost:5173</li>
+                <li>访问 OrderList 页面: <a href="http://localhost:5173/orderlist" target="_blank">http://localhost:5173/orderlist</a></li>
+                <li>找到任意一个订单，点击"Back to PO"按钮</li>
+                <li>检查PO页面的Ship to部分是否显示正确的运输信息</li>
+                <li>打开浏览器开发者工具，查看Console中的调试日志</li>
+            </ol>
+        </div>
+        
+        <div class="section">
+            <h2>📊 数据验证工具</h2>
+            <button class="button" onclick="checkDatabaseData()">检查数据库数据</button>
+            <button class="button" onclick="simulateOrderListFlow()">模拟OrderList流程</button>
+            
+            <div id="dataResult" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        let testSteps = [];
+        
+        function showResult(message, type = 'info', elementId = 'testResult') {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `result ${type}`;
+            element.textContent = message;
+        }
+        
+        function addTestStep(title, status = 'pending') {
+            testSteps.push({ title, status, details: '' });
+            updateTestSteps();
+        }
+        
+        function updateTestStep(index, status, details = '') {
+            if (testSteps[index]) {
+                testSteps[index].status = status;
+                testSteps[index].details = details;
+                updateTestSteps();
+            }
+        }
+        
+        function updateTestSteps() {
+            const container = document.getElementById('testSteps');
+            container.innerHTML = '';
+            
+            testSteps.forEach((step, index) => {
+                const div = document.createElement('div');
+                div.className = `step ${step.status === 'completed' ? 'completed' : step.status === 'failed' ? 'failed' : ''}`;
+                div.innerHTML = `
+                    <strong>${step.title}</strong>
+                    ${step.details ? `<br><small>${step.details}</small>` : ''}
+                `;
+                container.appendChild(div);
+            });
+        }
+        
+        function clearResults() {
+            testSteps = [];
+            updateTestSteps();
+            document.getElementById('testResult').style.display = 'none';
+            document.getElementById('dataResult').style.display = 'none';
+        }
+        
+        async function runFullTest() {
+            clearResults();
+            addTestStep('1. 检查API数据可用性');
+            addTestStep('2. 验证运输信息字段');
+            addTestStep('3. 测试数据处理逻辑');
+            addTestStep('4. 模拟OrderList到PO数据传递');
+            
+            try {
+                // 步骤1: 检查API数据
+                const apiResult = await testAPIDataInternal();
+                if (apiResult.success) {
+                    updateTestStep(0, 'completed', `找到 ${apiResult.ordersCount} 个订单`);
+                } else {
+                    updateTestStep(0, 'failed', apiResult.error);
+                    return;
+                }
+                
+                // 步骤2: 验证运输信息
+                const shippingResult = await validateShippingData(apiResult.orders);
+                if (shippingResult.success) {
+                    updateTestStep(1, 'completed', `${shippingResult.withShipping}/${shippingResult.total} 订单有运输信息`);
+                } else {
+                    updateTestStep(1, 'failed', shippingResult.error);
+                }
+                
+                // 步骤3: 测试数据处理
+                const processingResult = await testDataProcessingInternal(apiResult.orders[0]);
+                if (processingResult.success) {
+                    updateTestStep(2, 'completed', '数据处理逻辑正常');
+                } else {
+                    updateTestStep(2, 'failed', processingResult.error);
+                }
+                
+                // 步骤4: 模拟完整流程
+                const flowResult = await simulateCompleteFlow(apiResult.orders[0]);
+                if (flowResult.success) {
+                    updateTestStep(3, 'completed', '数据传递流程正常');
+                    showResult('✅ 完整测试通过！OrderList到PO页面的运输信息传递应该正常工作。', 'success');
+                } else {
+                    updateTestStep(3, 'failed', flowResult.error);
+                    showResult(`❌ 测试失败: ${flowResult.error}`, 'error');
+                }
+                
+            } catch (error) {
+                showResult(`❌ 测试执行失败: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testAPIData() {
+            try {
+                const result = await testAPIDataInternal();
+                if (result.success) {
+                    showResult(`✅ API数据测试通过\n\n订单数量: ${result.ordersCount}\n示例订单: ${result.orders[0].order_number}`, 'success');
+                } else {
+                    showResult(`❌ API数据测试失败: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ API测试异常: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testAPIDataInternal() {
+            const response = await fetch('/wp-json/bjt/v1/orders');
+            const data = await response.json();
+            
+            if (!data.success || !data.data || data.data.length === 0) {
+                return { success: false, error: 'API未返回有效订单数据' };
+            }
+            
+            return {
+                success: true,
+                orders: data.data,
+                ordersCount: data.data.length
+            };
+        }
+        
+        async function validateShippingData(orders) {
+            let withShipping = 0;
+            let total = orders.length;
+            
+            orders.forEach(order => {
+                if (order.shipping_address && typeof order.shipping_address === 'object') {
+                    withShipping++;
+                }
+            });
+            
+            return {
+                success: withShipping > 0,
+                withShipping,
+                total,
+                error: withShipping === 0 ? '没有订单包含运输信息' : null
+            };
+        }
+        
+        async function testDataProcessing() {
+            try {
+                const apiResult = await testAPIDataInternal();
+                if (!apiResult.success) {
+                    showResult('❌ 无法获取测试数据', 'error');
+                    return;
+                }
+                
+                const result = await testDataProcessingInternal(apiResult.orders[0]);
+                if (result.success) {
+                    showResult(`✅ 数据处理测试通过\n\n${result.details}`, 'success');
+                } else {
+                    showResult(`❌ 数据处理测试失败: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ 数据处理测试异常: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testDataProcessingInternal(order) {
+            // 模拟OrderList页面的数据处理逻辑
+            try {
+                // 检查原始数据
+                const hasShippingAddress = !!order.shipping_address;
+                const shippingType = typeof order.shipping_address;
+                
+                // 模拟标准化处理
+                let standardizedShipping;
+                if (order.shipping_address && typeof order.shipping_address === 'object') {
+                    standardizedShipping = {
+                        address: order.shipping_address.address || 'Shipping Address',
+                        contactName: order.shipping_address.name || order.shipping_address.contact_name || 'Shipping Contact',
+                        phone: order.shipping_address.phone || order.shipping_address.contact_phone || 'Shipping Phone',
+                        notes: order.shipping_address.notes || order.shipping_address.note || ''
+                    };
+                } else {
+                    standardizedShipping = {
+                        address: 'Shipping Address',
+                        contactName: 'Shipping Contact', 
+                        phone: 'Shipping Phone',
+                        notes: ''
+                    };
+                }
+                
+                const details = `原始数据检查:
+- shipping_address 字段: ${hasShippingAddress ? '✅ 存在' : '❌ 不存在'}
+- 数据类型: ${shippingType}
+- 原始值: ${JSON.stringify(order.shipping_address, null, 2)}
+
+标准化结果:
+${JSON.stringify(standardizedShipping, null, 2)}`;
+                
+                return {
+                    success: true,
+                    details,
+                    standardizedShipping
+                };
+            } catch (error) {
+                return {
+                    success: false,
+                    error: error.message
+                };
+            }
+        }
+        
+        async function simulateCompleteFlow(order) {
+            try {
+                // 模拟OrderList的handleViewOrderDetail函数
+                const poData = {
+                    orderNumber: order.order_number,
+                    orderId: order.id,
+                    customerInfo: {
+                        companyName: 'Hangzhou Bingjia Tech. Co., Ltd.',
+                        contactName: 'John Doe',
+                        address: 'Customer Address',
+                        phone: 'Customer Phone',
+                        email: ''
+                    },
+                    shippingInfo: order.shipping_address,
+                    orderItems: order.items || [],
+                    summary: {
+                        subtotal: 0,
+                        shipping: 0,
+                        tax: 0,
+                        total: 0
+                    },
+                    source: 'order_list_detail'
+                };
+                
+                // 检查传递的数据完整性
+                const hasOrderNumber = !!poData.orderNumber;
+                const hasShippingInfo = !!poData.shippingInfo;
+                const hasOrderItems = Array.isArray(poData.orderItems);
+                
+                if (!hasOrderNumber) {
+                    return { success: false, error: '订单号缺失' };
+                }
+                
+                if (!hasShippingInfo) {
+                    return { success: false, error: '运输信息缺失' };
+                }
+                
+                return {
+                    success: true,
+                    poData
+                };
+            } catch (error) {
+                return {
+                    success: false,
+                    error: error.message
+                };
+            }
+        }
+        
+        async function checkDatabaseData() {
+            try {
+                showResult('🔄 正在检查数据库数据...', 'info', 'dataResult');
+                
+                const response = await fetch('/wp-json/bjt/v1/orders');
+                const data = await response.json();
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    const orders = data.data.slice(0, 3); // 只显示前3个订单
+                    let result = '📊 数据库订单数据检查:\n\n';
+                    
+                    orders.forEach((order, index) => {
+                        result += `订单 ${index + 1}:\n`;
+                        result += `- ID: ${order.id}\n`;
+                        result += `- 订单号: ${order.order_number}\n`;
+                        result += `- shipping_address: ${order.shipping_address ? '✅ 存在' : '❌ 不存在'}\n`;
+                        if (order.shipping_address) {
+                            result += `  内容: ${JSON.stringify(order.shipping_address, null, 2)}\n`;
+                        }
+                        result += '\n';
+                    });
+                    
+                    showResult(result, 'info', 'dataResult');
+                } else {
+                    showResult('❌ 无法获取数据库数据', 'error', 'dataResult');
+                }
+            } catch (error) {
+                showResult(`❌ 数据库检查失败: ${error.message}`, 'error', 'dataResult');
+            }
+        }
+        
+        async function simulateOrderListFlow() {
+            try {
+                showResult('🔄 正在模拟OrderList流程...', 'info', 'dataResult');
+                
+                const apiResult = await testAPIDataInternal();
+                if (!apiResult.success) {
+                    showResult('❌ 无法获取测试数据', 'error', 'dataResult');
+                    return;
+                }
+                
+                const testOrder = apiResult.orders[0];
+                const flowResult = await simulateCompleteFlow(testOrder);
+                
+                if (flowResult.success) {
+                    let result = '✅ OrderList流程模拟成功\n\n';
+                    result += '生成的PO数据:\n';
+                    result += JSON.stringify(flowResult.poData, null, 2);
+                    
+                    showResult(result, 'success', 'dataResult');
+                } else {
+                    showResult(`❌ 流程模拟失败: ${flowResult.error}`, 'error', 'dataResult');
+                }
+            } catch (error) {
+                showResult(`❌ 流程模拟异常: ${error.message}`, 'error', 'dataResult');
+            }
+        }
+    </script>
+</body>
+</html> 

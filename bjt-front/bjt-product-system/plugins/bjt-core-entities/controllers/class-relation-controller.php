@@ -1131,7 +1131,8 @@ class BJT_Relation_Controller extends BJT_API_Controller {
         
         $accessories = [];
         $accessories_table = $wpdb->prefix . 'bjt_accessories';
-        $name_column = ($lang === 'en') ? 'name_en' : 'name_zh';
+        // ✅ 修复：同时查询中英文字段，而不是根据语言参数选择单一字段
+        // $name_column = ($lang === 'en') ? 'name_en' : 'name_zh';
         
         // 🔧 为每个子关系创建节点
         foreach ($relations as $relation) {
@@ -1145,7 +1146,10 @@ class BJT_Relation_Controller extends BJT_API_Controller {
             
             // 🔧 查询配件基础信息，需要JOIN accessory_models表来获取PDF字段
             $accessory_models_table = $wpdb->prefix . 'bjt_accessory_models';
-            $accessory_query = "SELECT a.id, a.model, a.part_number, a.{$name_column} as name, a.spec, a.spec_imperial, 
+            // ✅ 修复：同时查询中英文字段，让前端可以动态切换语言
+            $accessory_query = "SELECT a.id, a.model, a.part_number, 
+                                       a.name_zh, a.name_en, a.title_zh, a.title_en,
+                                       a.spec, a.spec_imperial, 
                                        a.voltage, a.frequency, a.image_url, a.status, a.unit, a.product_line_id,
                                        a.package_size_cm, a.package_size_inch, a.net_weight_kg, a.net_weight_lbs,
                                        a.gross_weight_kg, a.gross_weight_lbs, a.pcs_per_box,
@@ -1171,7 +1175,12 @@ class BJT_Relation_Controller extends BJT_API_Controller {
                     'id' => $accessory->id,
                     'part_number' => $accessory->part_number,
                     'model' => $accessory->model,
-                    'name' => $accessory->name,
+                    'name_zh' => $accessory->name_zh,
+                    'name_en' => $accessory->name_en,
+                    'title_zh' => $accessory->title_zh,
+                    'title_en' => $accessory->title_en,
+                    // ✅ 修复：移除回退机制，避免语言混乱
+                    'name' => ($lang === 'en') ? $accessory->name_en : $accessory->name_zh,
                     'spec' => $accessory->spec,
                     'spec_imperial' => $accessory->spec_imperial,
                     'voltage' => $accessory->voltage,
@@ -1217,6 +1226,10 @@ class BJT_Relation_Controller extends BJT_API_Controller {
                     'id' => "missing_" . $child_part_number,
                     'part_number' => $child_part_number,
                     'model' => null,
+                    'name_zh' => "⚠️ 配件数据缺失: {$child_part_number}",
+                    'name_en' => "⚠️ 配件数据缺失: {$child_part_number}",
+                    'title_zh' => "数据缺失 - 需要在配件表中添加此料号",
+                    'title_en' => "Data Missing - Need to add this part number to accessories table",
                     'name' => "⚠️ 配件数据缺失: {$child_part_number}",
                     'spec' => "数据缺失 - 需要在配件表中添加此料号",
                     'spec_imperial' => "Data Missing - Need to add this part number to accessories table",

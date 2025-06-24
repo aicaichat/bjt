@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>运输信息传递流程调试</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        
+        .button {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        .button:hover {
+            background-color: #2980b9;
+        }
+        
+        .button.success {
+            background-color: #27ae60;
+        }
+        
+        .button.danger {
+            background-color: #e74c3c;
+        }
+        
+        .result {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .result.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .result.error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .result.info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            border-left: 4px solid #3498db;
+            background-color: #f8f9fa;
+        }
+        
+        .step.completed {
+            border-left-color: #27ae60;
+            background-color: #d4edda;
+        }
+        
+        .step.failed {
+            border-left-color: #e74c3c;
+            background-color: #f8d7da;
+        }
+        
+        .data-box {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .comparison-item {
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .comparison-item h4 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 运输信息传递流程调试</h1>
+        
+        <div class="section">
+            <h2>📋 调试目标</h2>
+            <p>全面分析从OrderList页面到PO页面的运输信息传递流程，定位信息丢失的具体环节。</p>
+            <p><strong>期望结果</strong>：PO页面Ship to部分显示真实的运输信息，而不是默认值。</p>
+        </div>
+        
+        <div class="section">
+            <h2>🧪 完整流程测试</h2>
+            <button class="button" onclick="runCompleteTest()">运行完整测试</button>
+            <button class="button" onclick="testApiData()">测试API数据</button>
+            <button class="button" onclick="testDataTransformation()">测试数据转换</button>
+            <button class="button" onclick="testStandardization()">测试标准化</button>
+            <button class="button" onclick="clearResults()">清除结果</button>
+            
+            <div id="testResult" class="result" style="display: none;"></div>
+        </div>
+        
+        <div class="section">
+            <h2>📊 数据对比分析</h2>
+            <button class="button" onclick="compareDataFlow()">对比数据流</button>
+            
+            <div id="comparisonResult" style="display: none;">
+                <h3>数据流对比</h3>
+                <div class="comparison">
+                    <div class="comparison-item">
+                        <h4>API原始数据</h4>
+                        <div id="apiData" class="data-box"></div>
+                    </div>
+                    <div class="comparison-item">
+                        <h4>OrderList处理后</h4>
+                        <div id="orderListData" class="data-box"></div>
+                    </div>
+                </div>
+                <div class="comparison">
+                    <div class="comparison-item">
+                        <h4>PO页面接收数据</h4>
+                        <div id="poReceiveData" class="data-box"></div>
+                    </div>
+                    <div class="comparison-item">
+                        <h4>PO页面标准化后</h4>
+                        <div id="poStandardizedData" class="data-box"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>🔍 具体问题诊断</h2>
+            <button class="button" onclick="diagnoseShippingIssue()">诊断运输信息问题</button>
+            <button class="button" onclick="validateFieldMapping()">验证字段映射</button>
+            
+            <div id="diagnosisResult" class="result" style="display: none;"></div>
+        </div>
+        
+        <div class="section">
+            <h2>🛠️ 修复建议</h2>
+            <div id="fixSuggestions" style="display: none;">
+                <h3>修复建议</h3>
+                <div id="suggestionsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let apiData = null;
+        let orderListProcessedData = null;
+        let poReceiveData = null;
+        let poStandardizedData = null;
+        
+        function showResult(message, type = 'info', elementId = 'testResult') {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `result ${type}`;
+            element.textContent = message;
+        }
+        
+        function clearResults() {
+            document.getElementById('testResult').style.display = 'none';
+            document.getElementById('comparisonResult').style.display = 'none';
+            document.getElementById('diagnosisResult').style.display = 'none';
+            document.getElementById('fixSuggestions').style.display = 'none';
+        }
+        
+        async function runCompleteTest() {
+            clearResults();
+            showResult('🔄 开始完整流程测试...', 'info');
+            
+            try {
+                // 步骤1: 获取API数据
+                const apiResult = await getApiData();
+                if (!apiResult.success) {
+                    showResult(`❌ API数据获取失败: ${apiResult.error}`, 'error');
+                    return;
+                }
+                
+                // 步骤2: 模拟OrderList处理
+                const orderListResult = simulateOrderListProcessing(apiResult.data);
+                
+                // 步骤3: 模拟PO页面接收
+                const poReceiveResult = simulatePOReceive(orderListResult);
+                
+                // 步骤4: 模拟PO页面标准化
+                const poStandardizeResult = simulatePOStandardization(poReceiveResult);
+                
+                // 生成完整报告
+                let report = '✅ 完整流程测试完成\n\n';
+                report += generateFlowReport(apiResult.data, orderListResult, poReceiveResult, poStandardizeResult);
+                
+                showResult(report, 'success');
+                
+            } catch (error) {
+                showResult(`❌ 测试执行失败: ${error.message}`, 'error');
+            }
+        }
+        
+        async function getApiData() {
+            try {
+                const response = await fetch('/wp-json/bjt/v1/orders');
+                const data = await response.json();
+                
+                if (!data.success || !data.data || data.data.length === 0) {
+                    return { success: false, error: 'API未返回有效数据' };
+                }
+                
+                apiData = data.data[0]; // 使用第一个订单作为测试数据
+                return { success: true, data: apiData };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+        
+        function simulateOrderListProcessing(apiOrder) {
+            console.log('🔧 模拟OrderList处理:', apiOrder);
+            
+            // 模拟OrderList页面的数据处理逻辑
+            const processedOrder = {
+                id: String(apiOrder.id || apiOrder.order_number),
+                orderNumber: apiOrder.order_number,
+                date: apiOrder.created_at ? new Date(apiOrder.created_at).toLocaleDateString() : '',
+                status: 'pending',
+                total: apiOrder.total_amount || 0,
+                paymentMethod: apiOrder.payment_method || 'other',
+                // 保持原始运输信息对象结构
+                shippingInfo: apiOrder.shipping_address || null,
+                shipping_address: apiOrder.shipping_address,
+                customer_info: apiOrder.customer_info,
+                billing_address: apiOrder.billing_address,
+                items: (apiOrder.items || [])
+            };
+            
+            orderListProcessedData = processedOrder;
+            return processedOrder;
+        }
+        
+        function simulatePOReceive(orderListData) {
+            console.log('🔧 模拟PO页面接收数据:', orderListData);
+            
+            // 模拟OrderList的handleViewOrderDetail函数构建的poData
+            const poData = {
+                orderNumber: orderListData.orderNumber,
+                orderId: orderListData.id,
+                customerInfo: {
+                    companyName: 'Customer Company',
+                    contactName: 'Customer Contact',
+                    address: 'Customer Address',
+                    phone: 'Customer Phone',
+                    email: ''
+                },
+                shippingInfo: orderListData.shipping_address,
+                orderItems: orderListData.items || [],
+                summary: {
+                    subtotal: orderListData.total,
+                    shipping: 0,
+                    tax: 0,
+                    total: orderListData.total
+                },
+                source: 'order_list_detail'
+            };
+            
+            poReceiveData = poData;
+            return poData;
+        }
+        
+        function simulatePOStandardization(poData) {
+            console.log('🔧 模拟PO页面标准化:', poData);
+            
+            // 模拟PO页面的standardizeShippingInfo函数
+            const standardizedShipping = standardizeShippingInfo(poData.shippingInfo);
+            
+            const result = {
+                ...poData,
+                shippingInfo: standardizedShipping
+            };
+            
+            poStandardizedData = result;
+            return result;
+        }
+        
+        function standardizeShippingInfo(shippingInfo) {
+            if (!shippingInfo) {
+                return {
+                    address: 'Shipping Address',
+                    contactName: 'Shipping Contact',
+                    phone: 'Shipping Phone',
+                    notes: ''
+                };
+            }
+            
+            if (typeof shippingInfo === 'string') {
+                const parts = shippingInfo.split('|').map(s => s.trim());
+                return {
+                    address: parts[0] || 'Shipping Address',
+                    contactName: parts[1] || 'Shipping Contact',
+                    phone: parts[2] || 'Shipping Phone',
+                    notes: parts[3] || ''
+                };
+            }
+            
+            if (typeof shippingInfo === 'object') {
+                return {
+                    address: shippingInfo.address || 'Shipping Address',
+                    contactName: shippingInfo.contactName || shippingInfo.contact_name || shippingInfo.name || 'Shipping Contact',
+                    phone: shippingInfo.phone || shippingInfo.contact_phone || 'Shipping Phone',
+                    notes: shippingInfo.notes || shippingInfo.note || ''
+                };
+            }
+            
+            return {
+                address: 'Shipping Address',
+                contactName: 'Shipping Contact',
+                phone: 'Shipping Phone',
+                notes: ''
+            };
+        }
+        
+        function generateFlowReport(api, orderList, poReceive, poStandardized) {
+            let report = '';
+            
+            // API数据检查
+            report += '1. API数据检查:\n';
+            report += `   - 订单ID: ${api.id}\n`;
+            report += `   - 订单号: ${api.order_number}\n`;
+            report += `   - shipping_address存在: ${!!api.shipping_address}\n`;
+            if (api.shipping_address) {
+                report += `   - shipping_address类型: ${typeof api.shipping_address}\n`;
+                report += `   - shipping_address内容: ${JSON.stringify(api.shipping_address, null, 2)}\n`;
+            }
+            report += '\n';
+            
+            // OrderList处理检查
+            report += '2. OrderList处理检查:\n';
+            report += `   - shippingInfo保留: ${!!orderList.shippingInfo}\n`;
+            report += `   - shipping_address保留: ${!!orderList.shipping_address}\n`;
+            if (orderList.shippingInfo) {
+                report += `   - shippingInfo类型: ${typeof orderList.shippingInfo}\n`;
+            }
+            report += '\n';
+            
+            // PO页面接收检查
+            report += '3. PO页面接收检查:\n';
+            report += `   - poData.shippingInfo: ${!!poReceive.shippingInfo}\n`;
+            if (poReceive.shippingInfo) {
+                report += `   - 接收数据类型: ${typeof poReceive.shippingInfo}\n`;
+                report += `   - 接收数据内容: ${JSON.stringify(poReceive.shippingInfo, null, 2)}\n`;
+            }
+            report += '\n';
+            
+            // PO页面标准化检查
+            report += '4. PO页面标准化检查:\n';
+            const standardized = poStandardized.shippingInfo;
+            report += `   - 标准化后地址: ${standardized.address}\n`;
+            report += `   - 标准化后联系人: ${standardized.contactName}\n`;
+            report += `   - 标准化后电话: ${standardized.phone}\n`;
+            report += `   - 是否为默认值: ${standardized.address === 'Shipping Address'}\n`;
+            report += '\n';
+            
+            // 问题诊断
+            if (standardized.address === 'Shipping Address') {
+                report += '🚨 问题诊断:\n';
+                report += '   运输信息显示为默认值，可能的原因:\n';
+                if (!api.shipping_address) {
+                    report += '   - API未返回shipping_address字段\n';
+                } else if (typeof api.shipping_address !== 'object') {
+                    report += '   - API返回的shipping_address不是对象格式\n';
+                } else if (!api.shipping_address.address) {
+                    report += '   - API返回的shipping_address对象缺少address字段\n';
+                } else {
+                    report += '   - 数据传递过程中丢失或转换错误\n';
+                }
+            } else {
+                report += '✅ 运输信息传递正常\n';
+            }
+            
+            return report;
+        }
+        
+        async function testApiData() {
+            const result = await getApiData();
+            if (result.success) {
+                showResult(`✅ API数据测试通过\n\n${JSON.stringify(result.data, null, 2)}`, 'success');
+            } else {
+                showResult(`❌ API数据测试失败: ${result.error}`, 'error');
+            }
+        }
+        
+        async function testDataTransformation() {
+            try {
+                const apiResult = await getApiData();
+                if (!apiResult.success) {
+                    showResult('❌ 无法获取API数据进行转换测试', 'error');
+                    return;
+                }
+                
+                const transformed = simulateOrderListProcessing(apiResult.data);
+                showResult(`✅ 数据转换测试通过\n\n${JSON.stringify(transformed, null, 2)}`, 'success');
+            } catch (error) {
+                showResult(`❌ 数据转换测试失败: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testStandardization() {
+            try {
+                const apiResult = await getApiData();
+                if (!apiResult.success) {
+                    showResult('❌ 无法获取API数据进行标准化测试', 'error');
+                    return;
+                }
+                
+                const orderListData = simulateOrderListProcessing(apiResult.data);
+                const poData = simulatePOReceive(orderListData);
+                const standardized = simulatePOStandardization(poData);
+                
+                showResult(`✅ 标准化测试通过\n\n${JSON.stringify(standardized.shippingInfo, null, 2)}`, 'success');
+            } catch (error) {
+                showResult(`❌ 标准化测试失败: ${error.message}`, 'error');
+            }
+        }
+        
+        async function compareDataFlow() {
+            try {
+                await runCompleteTest();
+                
+                document.getElementById('comparisonResult').style.display = 'block';
+                
+                document.getElementById('apiData').textContent = JSON.stringify(apiData, null, 2);
+                document.getElementById('orderListData').textContent = JSON.stringify(orderListProcessedData, null, 2);
+                document.getElementById('poReceiveData').textContent = JSON.stringify(poReceiveData, null, 2);
+                document.getElementById('poStandardizedData').textContent = JSON.stringify(poStandardizedData, null, 2);
+                
+            } catch (error) {
+                showResult(`❌ 数据流对比失败: ${error.message}`, 'error');
+            }
+        }
+        
+        async function diagnoseShippingIssue() {
+            try {
+                const apiResult = await getApiData();
+                if (!apiResult.success) {
+                    showResult('❌ 无法获取数据进行诊断', 'error', 'diagnosisResult');
+                    return;
+                }
+                
+                let diagnosis = '🔍 运输信息问题诊断:\n\n';
+                
+                const api = apiResult.data;
+                
+                // 检查API数据
+                diagnosis += '1. API数据检查:\n';
+                diagnosis += `   - shipping_address字段: ${api.shipping_address ? '✅ 存在' : '❌ 不存在'}\n`;
+                if (api.shipping_address) {
+                    diagnosis += `   - 数据类型: ${typeof api.shipping_address}\n`;
+                    diagnosis += `   - 是否为对象: ${typeof api.shipping_address === 'object' ? '✅ 是' : '❌ 否'}\n`;
+                    
+                    if (typeof api.shipping_address === 'object') {
+                        const fields = ['address', 'name', 'contact_name', 'phone', 'contact_phone'];
+                        fields.forEach(field => {
+                            diagnosis += `   - ${field}字段: ${api.shipping_address[field] ? '✅ 存在' : '❌ 不存在'}\n`;
+                        });
+                    }
+                }
+                diagnosis += '\n';
+                
+                // 检查字段映射
+                diagnosis += '2. 字段映射检查:\n';
+                if (api.shipping_address && typeof api.shipping_address === 'object') {
+                    const mapping = {
+                        'address': api.shipping_address.address,
+                        'name': api.shipping_address.name,
+                        'contact_name': api.shipping_address.contact_name,
+                        'phone': api.shipping_address.phone,
+                        'contact_phone': api.shipping_address.contact_phone
+                    };
+                    
+                    Object.entries(mapping).forEach(([key, value]) => {
+                        diagnosis += `   - ${key} → ${value ? `"${value}"` : '空值'}\n`;
+                    });
+                }
+                diagnosis += '\n';
+                
+                // 模拟完整流程检查
+                const orderListData = simulateOrderListProcessing(api);
+                const poData = simulatePOReceive(orderListData);
+                const standardized = simulatePOStandardization(poData);
+                
+                diagnosis += '3. 流程检查:\n';
+                diagnosis += `   - OrderList保留运输信息: ${orderListData.shippingInfo ? '✅ 是' : '❌ 否'}\n`;
+                diagnosis += `   - PO接收运输信息: ${poData.shippingInfo ? '✅ 是' : '❌ 否'}\n`;
+                diagnosis += `   - 标准化后是否为默认值: ${standardized.shippingInfo.address === 'Shipping Address' ? '❌ 是' : '✅ 否'}\n`;
+                
+                showResult(diagnosis, 'info', 'diagnosisResult');
+                
+                // 生成修复建议
+                generateFixSuggestions(api, standardized);
+                
+            } catch (error) {
+                showResult(`❌ 诊断失败: ${error.message}`, 'error', 'diagnosisResult');
+            }
+        }
+        
+        function generateFixSuggestions(api, standardized) {
+            const suggestions = [];
+            
+            if (!api.shipping_address) {
+                suggestions.push({
+                    title: 'API数据缺失',
+                    description: '后端API未返回shipping_address字段',
+                    solution: '检查后端API的prepare_item_for_response方法，确保包含运输信息'
+                });
+            } else if (typeof api.shipping_address !== 'object') {
+                suggestions.push({
+                    title: 'API数据格式错误',
+                    description: 'shipping_address字段不是对象格式',
+                    solution: '检查后端API是否正确解析JSON格式的运输信息'
+                });
+            } else if (!api.shipping_address.address) {
+                suggestions.push({
+                    title: 'API数据不完整',
+                    description: 'shipping_address对象缺少address字段',
+                    solution: '检查数据库中的运输信息是否完整，或后端处理逻辑'
+                });
+            }
+            
+            if (standardized.shippingInfo.address === 'Shipping Address') {
+                suggestions.push({
+                    title: '标准化逻辑问题',
+                    description: '运输信息标准化后变成默认值',
+                    solution: '检查PO页面的standardizeShippingInfo函数字段映射逻辑'
+                });
+            }
+            
+            if (suggestions.length > 0) {
+                document.getElementById('fixSuggestions').style.display = 'block';
+                const list = document.getElementById('suggestionsList');
+                list.innerHTML = suggestions.map(s => `
+                    <div class="suggestion">
+                        <h4>${s.title}</h4>
+                        <p><strong>问题:</strong> ${s.description}</p>
+                        <p><strong>解决方案:</strong> ${s.solution}</p>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        async function validateFieldMapping() {
+            try {
+                const apiResult = await getApiData();
+                if (!apiResult.success) {
+                    showResult('❌ 无法获取数据进行字段映射验证', 'error', 'diagnosisResult');
+                    return;
+                }
+                
+                const api = apiResult.data;
+                let validation = '🔍 字段映射验证:\n\n';
+                
+                if (api.shipping_address && typeof api.shipping_address === 'object') {
+                    const fieldMappings = [
+                        { api: 'address', po: 'address', desc: '地址' },
+                        { api: 'name', po: 'contactName', desc: '联系人姓名' },
+                        { api: 'contact_name', po: 'contactName', desc: '联系人姓名(备用)' },
+                        { api: 'phone', po: 'phone', desc: '电话' },
+                        { api: 'contact_phone', po: 'phone', desc: '电话(备用)' },
+                        { api: 'notes', po: 'notes', desc: '备注' },
+                        { api: 'note', po: 'notes', desc: '备注(备用)' }
+                    ];
+                    
+                    fieldMappings.forEach(mapping => {
+                        const apiValue = api.shipping_address[mapping.api];
+                        validation += `${mapping.desc} (${mapping.api} → ${mapping.po}):\n`;
+                        validation += `   API值: ${apiValue ? `"${apiValue}"` : '空值'}\n`;
+                        validation += `   状态: ${apiValue ? '✅ 有值' : '❌ 无值'}\n\n`;
+                    });
+                } else {
+                    validation += '❌ 无法进行字段映射验证，API数据不是对象格式\n';
+                }
+                
+                showResult(validation, 'info', 'diagnosisResult');
+                
+            } catch (error) {
+                showResult(`❌ 字段映射验证失败: ${error.message}`, 'error', 'diagnosisResult');
+            }
+        }
+    </script>
+</body>
+</html> 

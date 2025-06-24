@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>运输信息传递实时调试 - BJT产品系统</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .debug-section {
+            margin-bottom: 30px;
+            border: 2px solid #e74c3c;
+            border-radius: 8px;
+            padding: 20px;
+            background: #fff5f5;
+        }
+        
+        .debug-section h3 {
+            color: #e74c3c;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+        
+        .btn-debug {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        .debug-output {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 15px;
+            white-space: pre-wrap;
+        }
+        
+        .instructions {
+            background: #e8f6fd;
+            border: 1px solid #bee5eb;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .instructions h4 {
+            color: #0c5460;
+            margin-top: 0;
+        }
+        
+        .alert {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .data-display {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 运输信息传递实时调试</h1>
+            <p>BJT产品系统 - OrderList到PO页面运输信息问题诊断</p>
+        </div>
+        
+        <div class="content">
+            <div class="alert">
+                <strong>⚠️ 注意：</strong>请确保前端开发服务器正在运行（http://localhost:5173），然后按照下面的步骤进行调试。
+            </div>
+            
+            <div class="instructions">
+                <h4>📋 调试操作步骤</h4>
+                <ol>
+                    <li>点击"打开OrderList页面"按钮，在新标签页中打开订单列表</li>
+                    <li>在OrderList页面中点击任意订单的"Back to PO"按钮</li>
+                    <li>在PO页面打开浏览器开发者工具（F12），查看Console日志</li>
+                    <li>回到此调试页面，点击"分析Console日志"查看问题</li>
+                    <li>如果需要，可以点击"模拟数据传递"进行测试</li>
+                </ol>
+            </div>
+            
+            <div class="debug-section">
+                <h3>🚀 快速操作</h3>
+                <a href="/orderlist" target="_blank" class="btn">打开OrderList页面</a>
+                <a href="/po" target="_blank" class="btn">打开PO页面</a>
+                <button class="btn btn-debug" onclick="analyzeConsoleLog()">分析Console日志</button>
+                <button class="btn" onclick="simulateDataTransfer()">模拟数据传递</button>
+                <button class="btn" onclick="clearDebugOutput()">清空输出</button>
+            </div>
+            
+            <div class="debug-section">
+                <h3>🔍 问题诊断</h3>
+                <div id="diagnosis-output" class="debug-output">
+                    等待诊断操作...
+                    
+                    📌 常见问题：
+                    1. OrderList页面中的订单数据没有运输信息
+                    2. 运输信息在数据传递过程中丢失
+                    3. PO页面的标准化函数逻辑有问题
+                    4. 数据格式不符合预期
+                </div>
+            </div>
+            
+            <div class="debug-section">
+                <h3>📊 实时数据监控</h3>
+                <div>
+                    <strong>OrderList页面数据：</strong>
+                    <div id="orderlist-data" class="data-display">暂无数据</div>
+                </div>
+                <div>
+                    <strong>PO页面接收数据：</strong>
+                    <div id="po-data" class="data-display">暂无数据</div>
+                </div>
+                <div>
+                    <strong>运输信息对比：</strong>
+                    <div id="shipping-comparison" class="data-display">暂无数据</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let debugLog = [];
+        
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            debugLog.push(logEntry);
+            updateDebugDisplay();
+        }
+        
+        function updateDebugDisplay() {
+            const outputElement = document.getElementById('diagnosis-output');
+            outputElement.textContent = debugLog.join('\n');
+            outputElement.scrollTop = outputElement.scrollHeight;
+        }
+        
+        function clearDebugOutput() {
+            debugLog = [];
+            updateDebugDisplay();
+            addLog('调试输出已清空');
+        }
+        
+        function analyzeConsoleLog() {
+            addLog('🔍 开始分析Console日志...');
+            addLog('');
+            addLog('请在浏览器开发者工具的Console中查找以下关键日志：');
+            addLog('');
+            addLog('📋 OrderList页面关键日志：');
+            addLog('  🔧 [OrderList] 开始处理订单详情跳转');
+            addLog('  🔧 [OrderList] 原始运输信息: {...}');
+            addLog('  🔧 [OrderList] 提取的运输信息: {...}');
+            addLog('  🔧 [OrderList] 构建的PO数据: {...}');
+            addLog('');
+            addLog('📋 PO页面关键日志：');
+            addLog('  🔧 [PO Page] 接收到的location.state: {...}');
+            addLog('  🔧 [PO Page] 运输信息详细检查: {...}');
+            addLog('  🔧 [标准化] 原始运输信息: {...}');
+            addLog('  🔧 [标准化] 转换结果: {...}');
+            addLog('');
+            addLog('❓ 如果看到以下情况，说明存在问题：');
+            addLog('  1. 原始运输信息为 null 或 undefined');
+            addLog('  2. 提取的运输信息都是默认值');
+            addLog('  3. PO页面接收到的数据中没有运输信息');
+            addLog('  4. 标准化后的运输信息变成了默认值');
+        }
+        
+        function simulateDataTransfer() {
+            addLog('🧪 开始模拟数据传递测试...');
+            
+            // 模拟OrderList页面的订单数据
+            const mockOrder = {
+                id: 'order_test_123',
+                orderNumber: 'PO-20250623-TEST',
+                total: 1500.00,
+                shippingInfo: {
+                    address: '上海市浦东新区张江高科技园区科苑路399号',
+                    contactName: '张三',
+                    phone: '+86-138-0013-8000',
+                    notes: '请在工作日上午送货'
+                },
+                items: [
+                    {
+                        id: 'item_1',
+                        code: '90R01258',
+                        name: 'Test Product',
+                        quantity: 1,
+                        price: 1500.00
+                    }
+                ]
+            };
+            
+            addLog('✅ 模拟订单数据创建完成');
+            addLog(`订单号: ${mockOrder.orderNumber}`);
+            addLog(`运输地址: ${mockOrder.shippingInfo.address}`);
+            addLog(`联系人: ${mockOrder.shippingInfo.contactName}`);
+            
+            // 更新数据显示
+            document.getElementById('orderlist-data').textContent = JSON.stringify(mockOrder, null, 2);
+            
+            // 模拟数据传递过程
+            setTimeout(() => {
+                addLog('🔄 模拟数据传递过程...');
+                
+                // 模拟OrderList页面的数据提取逻辑
+                const extractedShippingInfo = {
+                    address: mockOrder.shippingInfo.address,
+                    contactName: mockOrder.shippingInfo.contactName,
+                    phone: mockOrder.shippingInfo.phone,
+                    notes: mockOrder.shippingInfo.notes
+                };
+                
+                addLog('✅ 运输信息提取完成');
+                addLog(`提取结果: ${JSON.stringify(extractedShippingInfo)}`);
+                
+                // 模拟PO数据构建
+                const poData = {
+                    orderNumber: mockOrder.orderNumber,
+                    orderItems: mockOrder.items,
+                    shippingInfo: extractedShippingInfo,
+                    customerInfo: {
+                        companyName: 'Test Company',
+                        contactName: 'Test Contact',
+                        address: 'Test Address',
+                        phone: 'Test Phone',
+                        email: ''
+                    }
+                };
+                
+                document.getElementById('po-data').textContent = JSON.stringify(poData, null, 2);
+                
+                // 模拟PO页面的标准化处理
+                setTimeout(() => {
+                    addLog('🔧 模拟PO页面标准化处理...');
+                    
+                    const standardizedShipping = standardizeShippingInfo(poData.shippingInfo);
+                    
+                    const comparison = {
+                        original: extractedShippingInfo,
+                        standardized: standardizedShipping,
+                        isDefaultValue: standardizedShipping.address === 'Shipping Address'
+                    };
+                    
+                    document.getElementById('shipping-comparison').textContent = JSON.stringify(comparison, null, 2);
+                    
+                    if (comparison.isDefaultValue) {
+                        addLog('❌ 问题发现：标准化后变成了默认值');
+                        addLog('🔍 可能原因：');
+                        addLog('  1. 传入的运输信息格式不正确');
+                        addLog('  2. 标准化函数的逻辑有问题');
+                        addLog('  3. 数据在传递过程中丢失');
+                    } else {
+                        addLog('✅ 模拟测试通过：运输信息正确处理');
+                    }
+                }, 1000);
+            }, 1000);
+        }
+        
+        // 模拟PO页面的标准化函数
+        function standardizeShippingInfo(shippingInfo) {
+            if (!shippingInfo) {
+                return {
+                    address: 'Shipping Address',
+                    contactName: 'Shipping Contact',
+                    phone: 'Shipping Phone',
+                    notes: ''
+                };
+            }
+            
+            if (typeof shippingInfo === 'string') {
+                const parts = shippingInfo.split('|').map(s => s.trim());
+                return {
+                    address: parts[0] || 'Shipping Address',
+                    contactName: parts[1] || 'Shipping Contact',
+                    phone: parts[2] || 'Shipping Phone',
+                    notes: parts[3] || ''
+                };
+            }
+            
+            if (typeof shippingInfo === 'object') {
+                return {
+                    address: shippingInfo.address || 'Shipping Address',
+                    contactName: shippingInfo.contactName || shippingInfo.contact_name || shippingInfo.name || 'Shipping Contact',
+                    phone: shippingInfo.phone || shippingInfo.contact_phone || 'Shipping Phone',
+                    notes: shippingInfo.notes || shippingInfo.note || ''
+                };
+            }
+            
+            return {
+                address: 'Shipping Address',
+                contactName: 'Shipping Contact',
+                phone: 'Shipping Phone',
+                notes: ''
+            };
+        }
+        
+        // 监听来自其他页面的消息
+        window.addEventListener('message', function(event) {
+            if (event.origin !== window.location.origin) return;
+            
+            if (event.data.type === 'DEBUG_ORDER_DATA') {
+                addLog('📨 接收到OrderList页面数据');
+                document.getElementById('orderlist-data').textContent = JSON.stringify(event.data.orderData, null, 2);
+            }
+            
+            if (event.data.type === 'DEBUG_PO_DATA') {
+                addLog('📨 接收到PO页面数据');
+                document.getElementById('po-data').textContent = JSON.stringify(event.data.poData, null, 2);
+            }
+        });
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            addLog('🔧 运输信息传递实时调试工具已启动');
+            addLog('请按照操作步骤进行调试');
+        });
+    </script>
+</body>
+</html> 

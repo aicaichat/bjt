@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>备件数据结构调试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .debug-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .data-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+        .field-check {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin: 4px 0;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .field-name {
+            font-weight: bold;
+            color: #333;
+        }
+        .field-value {
+            color: #666;
+            font-family: monospace;
+        }
+        .status-ok { background: #d4edda; color: #155724; }
+        .status-missing { background: #f8d7da; color: #721c24; }
+        .status-empty { background: #fff3cd; color: #856404; }
+        .json-display {
+            background: #f1f3f4;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <h1>🔍 备件数据结构调试</h1>
+        <p>这个页面用于调试备件数据的实际结构和字段映射问题</p>
+        
+        <div class="debug-controls">
+            <button onclick="loadTestData()">加载测试数据</button>
+            <button onclick="loadApiData()">从API加载数据</button>
+            <button onclick="clearResults()">清空结果</button>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // 模拟测试数据（基于API文档的结构）
+        const testSparePartData = {
+            id: 3,
+            product_line_id: 1,
+            part_number: "01A0101038",
+            model: null,
+            name_zh: "去皱硅胶",
+            name_en: "Wrinkle Removal Silicone Gel",
+            app_model: '"LA-E4S V2.0",LA-E4S(paper)',
+            is_consumable: true,
+            image_url: "/uploads/spare_parts/01A0101038.jpg",
+            spec: 'Wrinkle Removal Silicone Gel For "LA-E4S V2.0",LA-E4S(paper) AC100-240V',
+            spec_imperial: 'Wrinkle Removal Silicone Gel For "LA-E4S V2.0",LA-E4S(paper) AC100-240V',
+            app_sn: "ALL",
+            package_size_cm: "21*21*42",
+            package_size_inch: "8.3*8.3*16.5",
+            net_weight_kg: 0.1,
+            net_weight_lbs: 0.2,
+            gross_weight_kg: null,
+            gross_weight_lbs: null,
+            pcs_per_box: 1,
+            unit: "pcs",
+            status: "publish",
+            // 模拟购物车中可能的数据结构
+            properties: {
+                // 有时数据可能在properties中
+            }
+        };
+
+        // 期望的字段映射
+        const expectedFields = {
+            'name_zh': '去皱硅胶',
+            'name_en': 'Wrinkle Removal Silicone Gel',
+            'app_model': '"LA-E4S V2.0",LA-E4S(paper)',
+            'app_sn': 'ALL',
+            'spec': 'Wrinkle Removal Silicone Gel For "LA-E4S V2.0",LA-E4S(paper) AC100-240V',
+            'package_size_cm': '21*21*42',
+            'unit': 'pcs',
+            'part_number': '01A0101038'
+        };
+
+        function loadTestData() {
+            console.log('🧪 加载测试数据');
+            analyzeData(testSparePartData, '测试数据');
+        }
+
+        async function loadApiData() {
+            console.log('🌐 从API加载数据');
+            try {
+                // 这里需要替换为实际的API调用
+                const response = await fetch('/wp-json/bjt/v1/spare-parts/3');
+                if (response.ok) {
+                    const apiData = await response.json();
+                    analyzeData(apiData.data || apiData, 'API数据');
+                } else {
+                    showError('API调用失败: ' + response.status);
+                }
+            } catch (error) {
+                showError('API调用错误: ' + error.message);
+                // 如果API调用失败，使用测试数据
+                console.log('🔄 API调用失败，使用测试数据');
+                analyzeData(testSparePartData, 'API调用失败-使用测试数据');
+            }
+        }
+
+        function analyzeData(data, source) {
+            const resultsDiv = document.getElementById('results');
+            
+            let html = `
+                <div class="data-section">
+                    <h2>📊 数据源: ${source}</h2>
+                    <h3>🔍 字段检查结果</h3>
+            `;
+
+            // 检查每个期望的字段
+            Object.entries(expectedFields).forEach(([fieldKey, expectedValue]) => {
+                const actualValue = getFieldValue(data, fieldKey);
+                const status = getFieldStatus(actualValue, expectedValue);
+                
+                html += `
+                    <div class="field-check ${status.class}">
+                        <span class="field-name">${fieldKey}</span>
+                        <span class="field-value">${status.display}</span>
+                    </div>
+                `;
+            });
+
+            html += `
+                    <h3>📋 完整数据结构</h3>
+                    <div class="json-display">${JSON.stringify(data, null, 2)}</div>
+                    
+                    <h3>🧪 CartFieldUnifier测试</h3>
+                    <div id="unifier-test-${Date.now()}"></div>
+                </div>
+            `;
+
+            resultsDiv.innerHTML = html;
+
+            // 测试CartFieldUnifier（如果可用）
+            testCartFieldUnifier(data);
+        }
+
+        function getFieldValue(data, fieldKey) {
+            // 模拟CartFieldUnifier的提取逻辑
+            const sources = [
+                data[fieldKey],
+                data.properties?.[fieldKey],
+                data.specs?.[fieldKey]
+            ];
+
+            for (const source of sources) {
+                if (isValidValue(source)) {
+                    return source;
+                }
+            }
+
+            return null;
+        }
+
+        function isValidValue(value) {
+            return value !== null && 
+                   value !== undefined && 
+                   value !== '' && 
+                   value !== 'N/A' && 
+                   value !== 'Not Specified' && 
+                   value !== 'null' && 
+                   value !== 'undefined';
+        }
+
+        function getFieldStatus(actualValue, expectedValue) {
+            if (actualValue === null || actualValue === undefined) {
+                return {
+                    class: 'status-missing',
+                    display: '❌ 字段缺失'
+                };
+            }
+            
+            if (actualValue === '' || actualValue === 'N/A') {
+                return {
+                    class: 'status-empty',
+                    display: '⚠️ 字段为空'
+                };
+            }
+            
+            return {
+                class: 'status-ok',
+                display: `✅ ${actualValue}`
+            };
+        }
+
+        function testCartFieldUnifier(data) {
+            // 这里可以测试CartFieldUnifier的方法（如果在浏览器环境中可用）
+            console.log('🧪 测试CartFieldUnifier方法');
+            console.log('数据:', data);
+            
+            // 模拟测试结果
+            const testResults = {
+                'name (中文)': getFieldValue(data, 'name_zh'),
+                'name (英文)': getFieldValue(data, 'name_en'),
+                'app_model': getFieldValue(data, 'app_model'),
+                'app_sn': getFieldValue(data, 'app_sn'),
+                'spec': getFieldValue(data, 'spec')
+            };
+
+            console.log('🎯 字段提取结果:', testResults);
+        }
+
+        function showError(message) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <div class="data-section status-missing">
+                    <h2>❌ 错误</h2>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        // 页面加载时自动加载测试数据
+        window.onload = function() {
+            console.log('🚀 页面加载完成，自动加载测试数据');
+            loadTestData();
+        };
+    </script>
+</body>
+</html> 

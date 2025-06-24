@@ -960,6 +960,7 @@ interface StandardConsumableItemProps {
   getRegionalPrice: (product: ConsumableProduct, quantity: number) => number;
   handleImageError: (e: React.SyntheticEvent<HTMLImageElement>) => void;
   isSales: boolean; // 新增：权限控制
+  filterOptions?: any; // 新增：API字典数据
 }
 
 const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
@@ -972,15 +973,25 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
   getCurrencySymbolByRegion,
   getRegionalPrice,
   handleImageError,
-  isSales // 新增：接收权限参数
+  isSales, // 新增：接收权限参数
+  filterOptions // 新增：接收API字典数据
 }) => {
   const { t, i18n } = useTranslation(['consumables', 'common']);
+  
+
+  
+  // 🚀 传递API字典数据给Hook
   const { 
     getLocalizedValue, 
     shouldShowField, 
     getFieldLabel,
     isImperial 
-  } = useConsumableFieldDisplay();
+  } = useConsumableFieldDisplay({
+    shapesData: filterOptions?.shapes || [],
+    materialsData: filterOptions?.materials || []
+  });
+  
+
   
   // 获取标准化字段配置
   const fieldsToDisplay = CONSUMABLE_DISPLAY_CONFIG.STANDARD_FIELDS.PRODUCT_LIST;
@@ -1250,7 +1261,7 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
                 <div className="flex items-center gap-0 border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm">
                   <button 
                     onClick={() => onQuantityChange(item.id, Math.max(1, (quantities[item.id] || 1) - 1))}
-                    disabled={(quantities[item.id] || 1) <= 1 || stockStatus === 'out'}
+                    disabled={(quantities[item.id] || 1) <= 1}
                     className="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-600 border-r border-gray-300 hover:bg-blue-50 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1262,12 +1273,10 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
                     min="1" 
                     value={quantities[item.id] || 1} 
                     onChange={(e) => onQuantityChange(item.id, parseInt(e.target.value) || 1)}
-                    disabled={stockStatus === 'out'}
-                    className="w-20 text-center border-0 py-1 text-sm focus:ring-0 focus:outline-none bg-white text-gray-900 disabled:opacity-50 disabled:bg-gray-50"
+                    className="w-20 text-center border-0 py-1 text-sm focus:ring-0 focus:outline-none bg-white text-gray-900"
                   />
                   <button 
                     onClick={() => onQuantityChange(item.id, (quantities[item.id] || 1) + 1)}
-                    disabled={stockStatus === 'out'}
                     className="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-600 border-l border-gray-300 hover:bg-blue-50 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1292,11 +1301,11 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
                   product={item}
                   productType="consumables"
                   onAddToCart={() => onAddToCart(item.id)}
-                  disabled={stockStatus === 'out'}
-                  className={`add-to-cart-btn ${stockStatus === 'out' ? 'unavailable' : 'available'}`}
+                  disabled={false}
+                  className="add-to-cart-btn available"
                 >
                   <ShoppingCartOutlined className="mr-2" />
-                  {stockStatus === 'out' ? String(t('stockStatus.out') || '暂时缺货') : String(t('ui.addToCart') || '加入购物车')}
+                  {String(t('ui.addToCart') || '加入购物车')}
                 </SmartAddToCartButton>
                 
 
@@ -1759,7 +1768,7 @@ const ConsumablesPage: React.FC = () => {
       return true;
     });
     
-    console.log(`🔄 [筛选计算] 筛选完成: ${filtered.length}/${allConsumables.length} 个产品符合条件`);
+
     return filtered;
   }, [
     allConsumables, selectedModel, selectedShape, selectedMaterial,
@@ -1769,22 +1778,28 @@ const ConsumablesPage: React.FC = () => {
   // ===== 智能筛选选项计算的函数 =====
   const calculateSmartFilterOptions = useCallback(() => {
     if (!allConsumables?.length) {
-      console.log('📊 [智能筛选] 没有数据，跳过计算');
+
       return;
     }
     
-    console.log('📊 [智能筛选] 开始计算智能筛选选项...');
+
     
     // 生成缓存键
     const cacheKey = `${selectedModel}-${selectedShape}-${selectedMaterial}-${selectedThickness}-${selectedWeight}-${selectedWidth}-${selectedLength}`;
     const now = Date.now();
     
-    // 检查缓存
-    const cached = filterCache.get(cacheKey);
-    if (cached && (now - cached.timestamp) < 5000) { // 5秒缓存
+        // 检查缓存（包含语言信息）
+    const cacheKeyWithLang = `${cacheKey}_${i18n.language}`;
+    const cached = filterCache.get(cacheKeyWithLang);
+    
+    // 🔥 临时禁用缓存，强制重新计算以确保映射生效
+    const shouldUseCache = false; // cached && (now - cached.timestamp) < 5000; // 5秒缓存
+    if (shouldUseCache) {
       console.log('📊 [智能筛选] 使用缓存结果');
       setSmartFilterOptions(cached.result);
       return;
+    } else {
+      console.log('🔄 [智能筛选] 跳过缓存，重新计算筛选选项');
     }
     
     // 清理过期缓存
@@ -1907,8 +1922,7 @@ const ConsumablesPage: React.FC = () => {
         }
       });
 
-      console.log('🔧 [Shape筛选] 数据库中的形状统计:', Object.fromEntries(shapeCountMap));
-      console.log('🔧 [Shape筛选] API返回的形状配置:', filterOptions?.shapes);
+
 
       // 动态生成形状选项，优先使用API返回的形状配置
       const shapeOptions: SmartFilterOption[] = [];
@@ -1917,14 +1931,10 @@ const ConsumablesPage: React.FC = () => {
 
       // 1. 🔥 修复：处理API返回的形状配置，防止bubble等形状的多重匹配
       if (filterOptions?.shapes && Array.isArray(filterOptions.shapes)) {
-        console.log('🔧 [Shape筛选] 开始处理API形状配置...');
+
         
         filterOptions.shapes.forEach(shapeConfig => {
-          console.log('🔧 [Shape筛选] 处理形状配置:', {
-            configId: shapeConfig.id,
-            name_en: shapeConfig.name_en,
-            name_zh: shapeConfig.name_zh
-          });
+
           
           let exactMatch: { dbShape: string; count: number; matchType: string } | null = null;
            
@@ -1935,17 +1945,9 @@ const ConsumablesPage: React.FC = () => {
               count: shapeCountMap.get(shapeConfig.id) || 0,
               matchType: '精确匹配'
             };
-            console.log('✅ [Shape筛选] 精确匹配成功:', { 
-              配置ID: shapeConfig.id, 
-              数据库形状: shapeConfig.id, 
-              产品数量: exactMatch.count 
-            });
+
           } else {
-            console.log('❌ [Shape筛选] 未找到匹配或已被匹配:', { 
-              配置ID: shapeConfig.id,
-              数据库存在: shapeCountMap.has(shapeConfig.id),
-              已被匹配: matchedDbShapes.has(shapeConfig.id)
-            });
+
           }
           
                      // 🔥 严格控制：只有找到精确匹配才添加选项
@@ -1954,13 +1956,7 @@ const ConsumablesPage: React.FC = () => {
              const finalShapeName = shapeConfig.name_zh || shapeConfig.name_en || shapeConfig.name || finalShapeId;
              
              if (!processedShapes.has(finalShapeId)) {
-               console.log('🔧 [Shape筛选] 添加形状选项:', {
-                 id: finalShapeId,
-                 name: finalShapeName,
-                 count: exactMatch.count,
-                 matchType: exactMatch.matchType,
-                 config: shapeConfig.id
-               });
+
                
                shapeOptions.push({
                  id: finalShapeId,
@@ -1978,10 +1974,10 @@ const ConsumablesPage: React.FC = () => {
                processedShapes.add(finalShapeId);
                matchedDbShapes.add(exactMatch.dbShape); // 标记数据库形状已被匹配
              } else {
-               console.log(`⚠️ [Shape筛选] 跳过重复形状: ${finalShapeId} (配置: ${shapeConfig.id})`);
+
              }
            } else {
-             console.log(`⚠️ [Shape筛选] 未找到精确匹配的数据库形状: ${shapeConfig.id}`);
+
            }
         });
       }
@@ -1989,7 +1985,6 @@ const ConsumablesPage: React.FC = () => {
       // 2. 🔥 补充：处理数据库中存在但API配置中没有的形状
       shapeCountMap.forEach((count, shapeId) => {
         if (!matchedDbShapes.has(shapeId) && !processedShapes.has(shapeId) && count > 0) {
-          console.log('🔧 [Shape筛选] 添加API未配置的形状:', { shapeId, count });
           
           shapeOptions.push({
             id: shapeId,
@@ -2038,24 +2033,87 @@ const ConsumablesPage: React.FC = () => {
         }
       });
       
+      // 🚨 临时调试：检查API字典数据状态
+      console.log('🔍 [材料筛选诊断] filterOptions:', filterOptions);
+      console.log('🔍 [材料筛选诊断] filterOptions?.materials:', filterOptions?.materials);
+      console.log('🔍 [材料筛选诊断] 当前语言:', i18n.language);
+      console.log('🔍 [材料筛选诊断] 材料统计:', Object.fromEntries(materialCountMap));
+      
+      // 🔍 详细检查API材料数据结构
+      if (filterOptions?.materials && filterOptions.materials.length > 0) {
+        console.log('🔍 [API材料数据详情]:');
+        filterOptions.materials.forEach((mat: any, index: number) => {
+          console.log(`  ${index + 1}. ${mat.id || mat.code} =>`, {
+            id: mat.id,
+            code: mat.code,
+            name: mat.name,
+            name_zh: mat.name_zh,
+            name_en: mat.name_en
+          });
+        });
+      }
+      
       const materialOptions: SmartFilterOption[] = [];
       
-      // 按真实数据库中的材质数量排序
+      // 🔥 硬编码材料映射作为回退方案
+      const MATERIAL_MAPPING: Record<string, { zh: string; en: string }> = {
+        'HDPE': { zh: 'HDPE', en: 'HDPE' },
+        '50% HDPE': { zh: '50%回料HDPE', en: '50% HDPE' },
+        'PAPE': { zh: 'PAPE共挤膜', en: 'PAPE' },
+        'PAPER': { zh: '纸塑膜', en: 'PAPER' },
+        '50% LDPE': { zh: '50%回料LDPE', en: '50% LDPE' },
+        '30% HDPE': { zh: '30%回料HDPE', en: '30% HDPE' },
+        'LDPE': { zh: 'LDPE', en: 'LDPE' }
+      };
+      
+      // 🔥 修复：使用API字典数据或硬编码映射提供多语言材料名称
       Array.from(materialCountMap.entries())
         .sort(([, a], [, b]) => b - a)
-        .forEach(([material, count]) => {
+        .forEach(([materialCode, count]) => {
+          // 从API字典数据中查找对应的材料信息
+          let displayName = materialCode; // 默认使用代码
+          let foundInApi = false;
+          
+          // 优先使用API字典数据
+          if (filterOptions?.materials && filterOptions.materials.length > 0) {
+            const materialInfo = filterOptions.materials.find((mat: any) => 
+              mat.id === materialCode || mat.code === materialCode
+            );
+            
+            if (materialInfo) {
+              foundInApi = true;
+              // 🔥 修复：根据当前语言正确选择显示名称
+              if (i18n.language.startsWith('zh')) {
+                // 中文环境：优先使用中文名称
+                displayName = materialInfo.name_zh || materialInfo.name || materialCode;
+                console.log(`✅ [材料筛选] 中文环境: ${materialCode} → ${displayName}`);
+              } else {
+                // 英文环境：使用英文名称，如果英文名称就是代码则使用代码
+                displayName = materialInfo.name_en || materialInfo.name || materialCode;
+                console.log(`✅ [材料筛选] 英文环境: ${materialCode} → ${displayName}`);
+              }
+            }
+          }
+          
+          // 如果API数据不可用，使用硬编码映射
+          if (!foundInApi && MATERIAL_MAPPING[materialCode]) {
+            const mapping = MATERIAL_MAPPING[materialCode];
+            displayName = i18n.language.startsWith('zh') ? mapping.zh : mapping.en;
+            console.log(`🔄 [材料筛选] 使用硬编码映射: ${materialCode} → ${displayName}`);
+          }
+          
           materialOptions.push({
-            id: material,
-            name: `${material}`,
+            id: materialCode,
+            name: displayName, // 🔥 使用多语言名称
             count: count,
             disabled: false
           });
         });
       
-      console.log('🔧 [Material筛选] 动态生成的材质选项:', materialOptions);
+      console.log('📊 [材料筛选] 最终生成的选项:', materialOptions);
       return materialOptions;
     };
-    
+
     // 生成规格选项（厚度、重量、宽度、长度）
     const generateSpecOptions = (fieldName: 'thickness' | 'weight' | 'width' | 'length'): SmartFilterOption[] => {
       const availableItems = calculateCascadingOptions('selectedSpecs');
@@ -2139,11 +2197,11 @@ const ConsumablesPage: React.FC = () => {
       bubbleDiameters: generateBubbleDiameterOptions()
     };
     
-    // 缓存结果
+    // 缓存结果（包含语言信息）
     setFilterCache(prev => {
       const newCache = new Map(prev);
-      newCache.set(cacheKey, {
-        key: cacheKey,
+      newCache.set(cacheKeyWithLang, {
+        key: cacheKeyWithLang,
         timestamp: now,
         result: newSmartFilterOptions
       });
@@ -2151,7 +2209,6 @@ const ConsumablesPage: React.FC = () => {
     });
     
     setSmartFilterOptions(newSmartFilterOptions);
-    console.log('📊 [智能筛选] 计算完成:', newSmartFilterOptions);
   }, [
     allConsumables, selectedModel, selectedShape, selectedMaterial,
     selectedThickness, selectedWeight, selectedWidth, selectedLength,
@@ -2252,9 +2309,9 @@ const ConsumablesPage: React.FC = () => {
   }, []);
   
   // 获取形状和材料数据
-  const { data: shapesData } = useShapes();
+  // const { data: shapesData } = useShapes(); // 🔥 移除：不再使用Mock数据，改用API的filterOptions
   
-  const { data: materialsData } = useMaterials();
+  // const { data: materialsData } = useMaterials(); // 🔥 移除：不再使用Mock数据，改用API的filterOptions
  
   useEffect(() => {
     console.log('当前筛选后的 consumables:', consumables);
@@ -2329,10 +2386,9 @@ const ConsumablesPage: React.FC = () => {
         }
       }
 
-      // 🔥 修复：材质筛选 - 直接使用material字段
+      // 材质筛选 - 直接使用material字段
       if (selectedMaterial !== 'all') {
         if (normalize(item.material) !== normalize(selectedMaterial)) {
-          console.log(`🔍 [材质筛选] ${item.id} 不匹配: ${item.material} vs ${selectedMaterial}`);
           return false;
         }
       }
@@ -2351,7 +2407,7 @@ const ConsumablesPage: React.FC = () => {
         const targetThickness = extractNumber(selectedThickness);
         if (itemThickness === undefined || targetThickness === undefined || 
             Math.abs(itemThickness - targetThickness) > 0.01) {
-          console.log(`🔍 [厚度筛选] ${item.id} 不匹配: ${itemThickness} vs ${targetThickness}`);
+
           return false;
         }
       }
@@ -2368,7 +2424,7 @@ const ConsumablesPage: React.FC = () => {
         const targetWeight = extractNumber(selectedWeight);
         if (itemWeight === undefined || targetWeight === undefined || 
             Math.abs(itemWeight - targetWeight) > 0.01) {
-          console.log(`🔍 [重量筛选] ${item.id} 不匹配: ${itemWeight} vs ${targetWeight}`);
+
           return false;
         }
       }
@@ -2379,7 +2435,7 @@ const ConsumablesPage: React.FC = () => {
         const targetWidth = extractNumber(selectedWidth);
         if (itemWidth === undefined || targetWidth === undefined || 
             Math.abs(itemWidth - targetWidth) > 0.01) {
-          console.log(`🔍 [宽度筛选] ${item.id} 不匹配: ${itemWidth} vs ${targetWidth}`);
+
           return false;
         }
       }
@@ -2390,7 +2446,7 @@ const ConsumablesPage: React.FC = () => {
         const targetLength = extractNumber(selectedLength);
         if (itemLength === undefined || targetLength === undefined || 
             Math.abs(itemLength - targetLength) > 0.01) {
-          console.log(`🔍 [长度筛选] ${item.id} 不匹配: ${itemLength} vs ${targetLength}`);
+
           return false;
         }
       }
@@ -2398,7 +2454,7 @@ const ConsumablesPage: React.FC = () => {
       return true;
     });
 
-    console.log(`✅ [筛选结果] 从 ${allConsumables.length} 个耗材中筛选出 ${filtered.length} 个`);
+
 
     // 分页逻辑
     const pageSize = 10;
@@ -2440,11 +2496,20 @@ const ConsumablesPage: React.FC = () => {
     return REGIONS[region]?.currencySymbol || REGIONS.CN.currencySymbol;
   };
   
-  // 获取区域价格
-  const getRegionalPrice = (product: ConsumableProduct, quantity: number = 1): number => {
+  // 价格计算缓存
+  const priceCache = useRef<Map<string, number>>(new Map());
+  
+  // 获取区域价格 (带缓存优化)
+  const getRegionalPrice = useCallback((product: ConsumableProduct, quantity: number = 1): number => {
     // 安全检查输入参数
     if (!product || !product.pricing || !Array.isArray(product.pricing) || isNaN(quantity) || quantity < 1) {
       return 0;
+    }
+    
+    // 缓存键
+    const cacheKey = `${product.id}_${quantity}_${userRegion}`;
+    if (priceCache.current.has(cacheKey)) {
+      return priceCache.current.get(cacheKey)!;
     }
 
     // 找到适用的价格区间
@@ -2473,8 +2538,12 @@ const ConsumablesPage: React.FC = () => {
     const price = pricing.regionalPrices?.[region as keyof typeof pricing.regionalPrices] || pricing.price || 0;
     
     // 确保返回有效数字
-    return isNaN(price) ? 0 : Number(price);
-  };
+    const finalPrice = isNaN(price) ? 0 : Number(price);
+    
+    // 缓存结果
+    priceCache.current.set(cacheKey, finalPrice);
+    return finalPrice;
+  }, [userRegion]);
   
   // 处理数量变更
   const handleQuantityChange = (itemId: string, value: number) => {
@@ -2486,8 +2555,8 @@ const ConsumablesPage: React.FC = () => {
     }));
   };
   
-  // 添加到购物车 - 参考备件页面的实现
-  const addToCart = async (itemId: string, buttonElement?: HTMLElement) => {
+  // 添加到购物车 - 参考备件页面的实现 (使用useCallback优化)
+  const addToCart = useCallback(async (itemId: string, buttonElement?: HTMLElement) => {
     if (!quantities[itemId] || quantities[itemId] < 1) {
       warning(t('warning.selectQuantity', 'Please select quantity'));
       return;
@@ -2521,14 +2590,16 @@ const ConsumablesPage: React.FC = () => {
         product.id || 
         'N/A';
 
-      // 调试日志：分析名称来源
-      console.log('[addToCart] 耗材名称分析:', {
-        'product.name': product.name,
-        'product.code': product.code, 
-        'product.part_number': product.part_number,
-        'product.id': product.id,
-        'resolvedName': resolvedName
-      });
+      // 调试日志：分析名称来源 (生产环境可移除)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[addToCart] 耗材名称分析:', {
+          'product.name': product.name,
+          'product.code': product.code, 
+          'product.part_number': product.part_number,
+          'product.id': product.id,
+          'resolvedName': resolvedName
+        });
+      }
 
       const properties = {
         ...product,
@@ -2604,19 +2675,11 @@ const ConsumablesPage: React.FC = () => {
         price: getRegionalPrice(product, quantity),
         properties
       };
-      // 调试日志
-      console.log('[addToCart] product:', product);
-      console.log('[addToCart] 耗材产品详细字段分析:');
-      console.log('  - product.id:', product.id, '(type:', typeof product.id, ')');
-      console.log('  - product.name:', product.name, '(type:', typeof product.name, ')');
-      console.log('  - product.code:', product.code, '(type:', typeof product.code, ')');
-      console.log('  - product.part_number:', product.part_number, '(type:', typeof product.part_number, ')');
-      console.log('  - product.image_url:', product.image_url, '(type:', typeof product.image_url, ')');
-      console.log('  - product.model:', product.model, '(type:', typeof product.model, ')');
-      console.log('  - product.brand:', product.brand, '(type:', typeof product.brand, ')');
-      console.log('  - resolvedName:', resolvedName);
-      console.log('[addToCart] cartItem:', cartItem);
-      console.log('[addToCart] cartItem.properties:', cartItem.properties);
+      // 调试日志 (生产环境自动移除)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[addToCart] product:', product);
+        console.log('[addToCart] cartItem:', cartItem);
+      }
       await addItem(cartItem);
       
       // 触发购物车动画
@@ -2656,7 +2719,7 @@ const ConsumablesPage: React.FC = () => {
       
       showErrorToast(String(t('ui.addToCartFailed') || '添加失败'), errorMessage);
     }
-  };
+  }, [quantities, consumables, userRegion, addItem, success, showErrorToast, t, warning, cartButtonRef]);
   
   // 切换购物车模态框
   const toggleCartModal = () => {
@@ -2899,6 +2962,7 @@ const ConsumablesPage: React.FC = () => {
                 getRegionalPrice={getRegionalPrice}
                 handleImageError={handleImageError}
                 isSales={isSales} // 新增：传递权限参数
+                filterOptions={filterOptions} // 新增：传递API字典数据
               />
             );
           }
@@ -3152,7 +3216,7 @@ const ConsumablesPage: React.FC = () => {
                         <div className="flex items-center gap-0 border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm flex-1">
                           <button 
                             onClick={() => handleQuantityChange(item.id, Math.max(1, (quantities[item.id] || 1) - 1))}
-                            disabled={(quantities[item.id] || 1) <= 1 || stockStatus === 'out'}
+                            disabled={(quantities[item.id] || 1) <= 1}
                             className="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-600 border-r border-gray-300 hover:bg-blue-50 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -3164,12 +3228,10 @@ const ConsumablesPage: React.FC = () => {
                             min="1" 
                             value={quantities[item.id] || 1} 
                             onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 1)}
-                            disabled={stockStatus === 'out'}
-                            className="flex-1 text-center border-0 py-1 text-sm focus:ring-0 focus:outline-none bg-white text-gray-900 disabled:opacity-50 disabled:bg-gray-50"
+                            className="flex-1 text-center border-0 py-1 text-sm focus:ring-0 focus:outline-none bg-white text-gray-900"
                           />
                           <button 
                             onClick={() => handleQuantityChange(item.id, (quantities[item.id] || 1) + 1)}
-                            disabled={stockStatus === 'out'}
                             className="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-600 border-l border-gray-300 hover:bg-blue-50 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -3192,17 +3254,11 @@ const ConsumablesPage: React.FC = () => {
                           product={item}
                           productType="consumables"
                           onAddToCart={() => addToCart(item.id)}
-                          disabled={stockStatus === 'out'}
-                          className={`
-                            w-full h-12 font-medium text-base shadow-lg hover:shadow-xl transition-all duration-300
-                            ${stockStatus === 'out' 
-                              ? 'bg-gray-300 border-gray-300 cursor-not-allowed' 
-                              : 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700'
-                            }
-                          `}
+                          disabled={false}
+                          className="w-full h-12 font-medium text-base shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
                         >
                           <ShoppingCartOutlined className="mr-2" />
-                          {stockStatus === 'out' ? String(t('stockStatus.out') || '暂时缺货') : String(t('ui.addToCart') || '加入购物车')}
+                          {String(t('ui.addToCart') || '加入购物车')}
                         </SmartAddToCartButton>
                         
 

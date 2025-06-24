@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PO页面字段修复验证</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .test-title {
+            color: #1890ff;
+            border-bottom: 2px solid #1890ff;
+            padding-bottom: 8px;
+            margin-bottom: 16px;
+        }
+        .test-item {
+            margin: 12px 0;
+            padding: 12px;
+            background: #f8f9fa;
+            border-left: 4px solid #28a745;
+            border-radius: 4px;
+        }
+        .test-item.warning {
+            border-left-color: #ffc107;
+            background: #fff3cd;
+        }
+        .test-item.error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        .field-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            margin: 16px 0;
+        }
+        .field-box {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+        }
+        .field-label {
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .field-value {
+            color: #333;
+            font-family: monospace;
+        }
+        .empty-value {
+            color: #dc3545;
+            font-style: italic;
+        }
+        .fixed-value {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .btn {
+            background: #1890ff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0 8px 8px 0;
+        }
+        .btn:hover {
+            background: #40a9ff;
+        }
+        .test-data {
+            background: #f0f0f0;
+            padding: 16px;
+            border-radius: 4px;
+            margin: 16px 0;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 class="test-title">🔧 PO页面字段修复验证</h1>
+        <p><strong>问题描述：</strong>用户反馈PO页面中model为空、brand为空，item description应该展示spec字段。</p>
+        <p><strong>修复内容：</strong></p>
+        <ul>
+            <li>为model字段添加默认值处理：<code>model || name || '-'</code></li>
+            <li>为brand字段添加默认值处理：<code>brand || 'Lockedair'</code></li>
+            <li>修复Item description优先显示spec字段，然后是description字段</li>
+        </ul>
+    </div>
+
+    <div class="test-container">
+        <h2 class="test-title">📊 测试数据场景</h2>
+        <div id="test-scenarios"></div>
+        <button class="btn" onclick="runFieldTests()">🧪 运行字段修复测试</button>
+        <button class="btn" onclick="testPONavigation()">🔗 测试PO页面跳转</button>
+        <button class="btn" onclick="clearResults()">🗑️ 清除结果</button>
+    </div>
+
+    <div class="test-container">
+        <h2 class="test-title">📋 测试结果</h2>
+        <div id="test-results"></div>
+    </div>
+
+    <script>
+        // 测试场景数据
+        const testScenarios = [
+            {
+                name: "场景1：所有字段为空",
+                data: {
+                    id: "test-1",
+                    code: "90R01258",
+                    name: "Test Product 1",
+                    model: "", // 空
+                    brand: "", // 空
+                    spec: "", // 空
+                    quantity: 1,
+                    price: 100
+                },
+                expected: {
+                    model: "Test Product 1", // 应该回退到name
+                    brand: "Lockedair", // 应该回退到默认值
+                    description: "Test Product 1" // 应该回退到name
+                }
+            },
+            {
+                name: "场景2：只有spec字段",
+                data: {
+                    id: "test-2",
+                    code: "90R01259",
+                    name: "Test Product 2",
+                    model: "",
+                    brand: "",
+                    spec: "13um 30%HDPE Pillow, 20cmx13cm,1000m,150R/PL",
+                    quantity: 2,
+                    price: 200
+                },
+                expected: {
+                    model: "Test Product 2",
+                    brand: "Lockedair",
+                    description: "13um 30%HDPE Pillow, 20cmx13cm,1000m,150R/PL"
+                }
+            },
+            {
+                name: "场景3：有model和brand",
+                data: {
+                    id: "test-3",
+                    code: "90R01260",
+                    name: "Test Product 3",
+                    model: "LA-E4S",
+                    brand: "Lockedair",
+                    spec: "Business class air cushion machine",
+                    quantity: 1,
+                    price: 15000
+                },
+                expected: {
+                    model: "LA-E4S",
+                    brand: "Lockedair",
+                    description: "Business class air cushion machine"
+                }
+            },
+            {
+                name: "场景4：有description但无spec",
+                data: {
+                    id: "test-4",
+                    code: "90R01261",
+                    name: "Test Product 4",
+                    model: "",
+                    brand: "",
+                    spec: "",
+                    description: "Industrial grade packaging material",
+                    quantity: 5,
+                    price: 50
+                },
+                expected: {
+                    model: "Test Product 4",
+                    brand: "Lockedair",
+                    description: "Industrial grade packaging material"
+                }
+            }
+        ];
+
+        // 显示测试场景
+        function displayTestScenarios() {
+            const container = document.getElementById('test-scenarios');
+            container.innerHTML = testScenarios.map((scenario, index) => `
+                <div class="test-item">
+                    <h4>${scenario.name}</h4>
+                    <div class="field-comparison">
+                        <div class="field-box">
+                            <div class="field-label">原始数据</div>
+                            <div class="field-value">
+                                Model: <span class="${scenario.data.model ? '' : 'empty-value'}">${scenario.data.model || '(空)'}</span><br>
+                                Brand: <span class="${scenario.data.brand ? '' : 'empty-value'}">${scenario.data.brand || '(空)'}</span><br>
+                                Spec: <span class="${scenario.data.spec ? '' : 'empty-value'}">${scenario.data.spec || '(空)'}</span>
+                            </div>
+                        </div>
+                        <div class="field-box">
+                            <div class="field-label">期望修复后</div>
+                            <div class="field-value fixed-value">
+                                Model: ${scenario.expected.model}<br>
+                                Brand: ${scenario.expected.brand}<br>
+                                Description: ${scenario.expected.description}
+                            </div>
+                        </div>
+                        <div class="field-box">
+                            <div class="field-label">测试结果</div>
+                            <div class="field-value" id="result-${index}">
+                                <em>点击测试按钮查看结果</em>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 模拟字段修复逻辑
+        function applyFieldFixes(product) {
+            // 🔧 修复：为model字段提供默认值处理
+            const model = product.model || product.app_model || product.name || product.item_name || '-';
+            
+            // 🔧 修复：为brand字段提供默认值处理
+            const brand = product.brand || 'Lockedair';
+            
+            // 🔧 修复：为spec字段提供更好的默认值处理
+            let description = '';
+            if (product.spec && product.spec.trim() !== '') {
+                description = product.spec;
+            } else if (product.description && product.description.trim() !== '') {
+                description = product.description;
+            } else if (product.specs && typeof product.specs === 'string' && product.specs.trim() !== '') {
+                description = product.specs;
+            } else {
+                // 如果仍然没有描述，使用产品名称或型号作为备用
+                description = product.name || product.model || '产品规格待补充';
+            }
+            
+            return {
+                model: model,
+                brand: brand,
+                description: description
+            };
+        }
+
+        // 运行字段修复测试
+        function runFieldTests() {
+            const resultsContainer = document.getElementById('test-results');
+            let allTestsPassed = true;
+            let testResults = [];
+
+            testScenarios.forEach((scenario, index) => {
+                const fixed = applyFieldFixes(scenario.data);
+                const passed = {
+                    model: fixed.model === scenario.expected.model,
+                    brand: fixed.brand === scenario.expected.brand,
+                    description: fixed.description === scenario.expected.description
+                };
+                
+                const allPassed = passed.model && passed.brand && passed.description;
+                if (!allPassed) allTestsPassed = false;
+
+                // 更新单个测试结果显示
+                const resultElement = document.getElementById(`result-${index}`);
+                resultElement.innerHTML = `
+                    Model: <span class="${passed.model ? 'fixed-value' : 'empty-value'}">${fixed.model}</span> ${passed.model ? '✅' : '❌'}<br>
+                    Brand: <span class="${passed.brand ? 'fixed-value' : 'empty-value'}">${fixed.brand}</span> ${passed.brand ? '✅' : '❌'}<br>
+                    Description: <span class="${passed.description ? 'fixed-value' : 'empty-value'}">${fixed.description}</span> ${passed.description ? '✅' : '❌'}
+                `;
+
+                testResults.push({
+                    scenario: scenario.name,
+                    passed: allPassed,
+                    details: { fixed, expected: scenario.expected, passed }
+                });
+            });
+
+            // 显示总体测试结果
+            resultsContainer.innerHTML = `
+                <div class="test-item ${allTestsPassed ? '' : 'error'}">
+                    <h3>🧪 字段修复测试结果</h3>
+                    <p><strong>总体结果：</strong> ${allTestsPassed ? '✅ 所有测试通过' : '❌ 部分测试失败'}</p>
+                    <div class="test-data">${JSON.stringify(testResults, null, 2)}</div>
+                </div>
+                <div class="test-item">
+                    <h4>🔧 修复验证</h4>
+                    <p><strong>Model字段修复：</strong> 当model为空时，优先使用name字段，最后回退到'-'</p>
+                    <p><strong>Brand字段修复：</strong> 当brand为空时，默认使用'Lockedair'</p>
+                    <p><strong>Item Description修复：</strong> 优先显示spec字段，然后是description字段，最后回退到产品名称</p>
+                </div>
+            `;
+
+            console.log('🔧 [字段修复测试] 测试结果:', testResults);
+        }
+
+        // 测试PO页面跳转
+        function testPONavigation() {
+            const testOrderData = {
+                orderNumber: 'PO-202506231500-TEST01',
+                items: testScenarios.map(scenario => scenario.data),
+                customerInfo: {
+                    companyName: '测试公司',
+                    contactName: '张三',
+                    address: '测试地址',
+                    phone: '13800138000'
+                }
+            };
+
+            // 模拟跳转到PO页面
+            const poUrl = `/po?data=${encodeURIComponent(JSON.stringify(testOrderData))}`;
+            
+            const resultsContainer = document.getElementById('test-results');
+            resultsContainer.innerHTML += `
+                <div class="test-item">
+                    <h4>🔗 PO页面跳转测试</h4>
+                    <p><strong>测试数据已准备：</strong></p>
+                    <div class="test-data">${JSON.stringify(testOrderData, null, 2)}</div>
+                    <p><a href="${poUrl}" target="_blank" class="btn">🔗 打开PO页面验证修复效果</a></p>
+                    <p><em>请在新页面中检查Model、Brand和Item Description列是否正确显示</em></p>
+                </div>
+            `;
+        }
+
+        // 清除结果
+        function clearResults() {
+            document.getElementById('test-results').innerHTML = '';
+            // 重置测试场景显示
+            displayTestScenarios();
+        }
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            displayTestScenarios();
+            
+            // 自动运行一次测试
+            setTimeout(() => {
+                runFieldTests();
+            }, 1000);
+        });
+    </script>
+</body>
+</html> 

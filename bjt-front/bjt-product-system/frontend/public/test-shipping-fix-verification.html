@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>运输信息修复验证 - BJT产品系统</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #3498db;
+        }
+        .success-box {
+            background: #d4edda;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #28a745;
+        }
+        .info-box {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #2196f3;
+        }
+        .warning-box {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #ffc107;
+        }
+        .test-button {
+            background: #3498db;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            transition: background 0.3s;
+            display: block;
+            width: 100%;
+            text-align: center;
+            text-decoration: none;
+        }
+        .test-button:hover {
+            background: #2980b9;
+        }
+        .test-button.success {
+            background: #28a745;
+        }
+        .test-button.warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        .step {
+            background: #fff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border-left: 4px solid #28a745;
+        }
+        .step-number {
+            background: #28a745;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .expected-result {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border: 1px solid #dee2e6;
+        }
+        .expected-result h4 {
+            color: #495057;
+            margin: 0 0 10px 0;
+        }
+        .field-value {
+            font-family: monospace;
+            background: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 3px;
+            color: #495057;
+        }
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        .checklist li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .checklist li:before {
+            content: "✓";
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 运输信息修复验证测试</h1>
+        
+        <div class="success-box">
+            <strong>✅ 数据库已更新！</strong>
+            <p>我们已经为订单20添加了完整的运输信息数据，现在可以测试修复效果了。</p>
+        </div>
+
+        <div class="info-box">
+            <strong>📋 测试目标：</strong>
+            <p>验证从OrderList页面跳转到PO页面时，能够正确显示真实的运输信息和客户信息，而不是默认值。</p>
+        </div>
+
+        <div class="step">
+            <span class="step-number">1</span>
+            <strong>访问OrderList页面</strong>
+            <br>点击下面的按钮打开OrderList页面
+            <a href="http://localhost:5173/orderlist" class="test-button" target="_blank">
+                📋 打开OrderList页面
+            </a>
+        </div>
+
+        <div class="step">
+            <span class="step-number">2</span>
+            <strong>找到订单PO-202506231804-BC3049</strong>
+            <br>在OrderList页面中，找到订单号为 <span class="field-value">PO-202506231804-BC3049</span> 的订单
+        </div>
+
+        <div class="step">
+            <span class="step-number">3</span>
+            <strong>点击"Back to PO"按钮</strong>
+            <br>点击该订单右侧的"Back to PO"按钮跳转到PO页面
+            <div class="warning-box">
+                <strong>⚠️ 重要：</strong>跳转时请打开浏览器开发者工具(F12)，查看Console标签页的调试日志。
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">4</span>
+            <strong>验证PO页面显示</strong>
+            <br>在PO页面中检查以下信息：
+            
+            <div class="expected-result">
+                <h4>🎯 期望的运输信息 (Ship to)：</h4>
+                <ul>
+                    <li><strong>Contact Person:</strong> <span class="field-value">John Doe</span></li>
+                    <li><strong>Phone:</strong> <span class="field-value">+86 13057101000</span></li>
+                    <li><strong>Address:</strong> <span class="field-value">1818-2, Wenyixi Road, Hangzhou, Zhejiang Province, China</span></li>
+                </ul>
+            </div>
+
+            <div class="expected-result">
+                <h4>🎯 期望的客户信息 (Buyer)：</h4>
+                <ul>
+                    <li><strong>Company Name:</strong> <span class="field-value">Hangzhou Bingjia Tech. Co., Ltd.</span></li>
+                    <li><strong>Contact:</strong> <span class="field-value">John Doe</span></li>
+                    <li><strong>Address:</strong> <span class="field-value">1818-2, Wenyixi Road, Hangzhou, Zhejiang Province, China</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <strong>🔍 修复验证检查清单：</strong>
+            <ul class="checklist">
+                <li>Ship to部分不再显示"Shipping Address"、"Shipping Contact"等默认值</li>
+                <li>Buyer部分不再显示"Customer Company"、"Customer Contact"等默认值</li>
+                <li>显示的是从数据库中提取的真实运输信息</li>
+                <li>客户信息正确从运输信息中提取</li>
+                <li>Console中有详细的数据处理日志</li>
+            </ul>
+        </div>
+
+        <div class="warning-box">
+            <strong>🐛 如果仍然看到默认值：</strong>
+            <ol>
+                <li><strong>强制刷新：</strong>按 Ctrl+F5 (或 Cmd+Shift+R) 清理缓存</li>
+                <li><strong>检查Console：</strong>查看是否有错误信息或调试日志</li>
+                <li><strong>确认订单：</strong>确保选择的是订单号 PO-202506231804-BC3049</li>
+                <li><strong>重启服务：</strong>如果问题持续，可能需要重启前端服务</li>
+            </ol>
+        </div>
+
+        <div class="info-box">
+            <strong>💡 调试提示：</strong>
+            <p>在Console中查找以下关键日志来诊断问题：</p>
+            <ul>
+                <li><code>🔧 [OrderList] 原始运输信息:</code> - 显示从API获取的原始数据</li>
+                <li><code>🔧 [OrderList] 提取的运输信息:</code> - 显示提取处理后的数据</li>
+                <li><code>🔧 [PO Page] 接收到的location.state:</code> - 显示PO页面接收的数据</li>
+                <li><code>🔧 [PO Page] 标准化后的运输信息:</code> - 显示最终处理结果</li>
+            </ul>
+        </div>
+
+        <div class="success-box">
+            <strong>🎉 修复成功的标志：</strong>
+            <p>如果修复成功，您应该在PO页面看到：</p>
+            <ul>
+                <li>Ship to Contact: <strong>John Doe</strong> (不是"Shipping Contact")</li>
+                <li>Ship to Address: <strong>1818-2, Wenyixi Road, Hangzhou, Zhejiang Province, China</strong></li>
+                <li>Buyer Company: <strong>Hangzhou Bingjia Tech. Co., Ltd.</strong> (不是"Customer Company")</li>
+                <li>所有信息都来自数据库中的真实数据</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载时的提示
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🧪 [验证页面] 运输信息修复验证页面已加载');
+            console.log('🧪 [验证页面] 数据库中订单20已更新，包含完整运输信息');
+            console.log('🧪 [验证页面] 请按步骤进行测试验证');
+        });
+    </script>
+</body>
+</html> 

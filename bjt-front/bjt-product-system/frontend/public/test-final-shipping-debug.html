@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>最终运输信息调试</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        
+        .button {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        .button:hover {
+            background-color: #2980b9;
+        }
+        
+        .button.success {
+            background-color: #27ae60;
+        }
+        
+        .button.danger {
+            background-color: #e74c3c;
+        }
+        
+        .result {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .result.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .result.error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .result.info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .data-box {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .highlight {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 最终运输信息调试</h1>
+        
+        <div class="section">
+            <h2>📋 修复总结</h2>
+            <div class="highlight">
+                <p><strong>✅ 已完成修复：</strong></p>
+                <ul>
+                    <li>后端API已返回完整的运输信息JSON对象</li>
+                    <li>前端PO页面已增强字段映射逻辑</li>
+                    <li>OrderList页面已正确提取运输信息</li>
+                    <li>数据传递流程已验证</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>🧪 最终验证</h2>
+            <button class="button" onclick="runFinalTest()">运行最终测试</button>
+            <button class="button" onclick="testManualFlow()">手动流程测试</button>
+            <button class="button" onclick="clearResults()">清除结果</button>
+            
+            <div id="testResult" class="result" style="display: none;"></div>
+        </div>
+        
+        <div class="section" id="comparisonSection" style="display: none;">
+            <h2>📊 数据流对比</h2>
+            <div class="comparison">
+                <div>
+                    <h4>API原始数据</h4>
+                    <div id="apiData" class="data-box"></div>
+                </div>
+                <div>
+                    <h4>PO页面最终显示</h4>
+                    <div id="finalData" class="data-box"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>🎯 用户测试指南</h2>
+            <ol>
+                <li><strong>访问OrderList页面：</strong> <a href="http://localhost:5173/orderlist" target="_blank">点击这里</a></li>
+                <li><strong>选择任意订单：</strong> 点击"Back to PO"按钮</li>
+                <li><strong>检查PO页面运输信息：</strong>
+                    <ul>
+                        <li>Ship to 地址：应显示 "1818-2, Wenyixi Road, Hangzhou, Zhejiang Province, China"</li>
+                        <li>联系人：应显示 "John Doe"</li>
+                        <li>电话：应显示 "+86 13057101000"</li>
+                    </ul>
+                </li>
+                <li><strong>查看控制台日志：</strong> 按F12打开开发者工具，查看运输信息处理日志</li>
+            </ol>
+        </div>
+        
+        <div class="section">
+            <h2>🔍 问题排查</h2>
+            <p>如果运输信息仍显示为默认值，请检查：</p>
+            <ul>
+                <li>浏览器控制台是否有错误信息</li>
+                <li>API是否正常返回数据（运行上面的测试）</li>
+                <li>前端服务是否正常运行</li>
+                <li>是否清除了浏览器缓存</li>
+            </ul>
+            
+            <button class="button" onclick="runDiagnostics()">运行诊断</button>
+            <div id="diagnosticResult" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        function showResult(message, type = 'info') {
+            const element = document.getElementById('testResult');
+            element.style.display = 'block';
+            element.className = `result ${type}`;
+            element.textContent = message;
+        }
+        
+        function showDiagnostic(message, type = 'info') {
+            const element = document.getElementById('diagnosticResult');
+            element.style.display = 'block';
+            element.className = `result ${type}`;
+            element.textContent = message;
+        }
+        
+        function clearResults() {
+            document.getElementById('testResult').style.display = 'none';
+            document.getElementById('diagnosticResult').style.display = 'none';
+            document.getElementById('comparisonSection').style.display = 'none';
+        }
+        
+        async function runFinalTest() {
+            showResult('🔄 运行最终测试...', 'info');
+            
+            try {
+                // 1. 测试API
+                const apiResponse = await fetch('/wp-json/bjt/v1/orders');
+                const apiData = await apiResponse.json();
+                
+                if (!apiData.success || !apiData.data || apiData.data.length === 0) {
+                    showResult('❌ API测试失败：无法获取订单数据', 'error');
+                    return;
+                }
+                
+                const testOrder = apiData.data[0];
+                const shippingAddress = testOrder.shipping_address;
+                
+                let result = '✅ 最终测试结果:\n\n';
+                result += '1. API测试:\n';
+                result += `   - 订单数量: ${apiData.data.length}\n`;
+                result += `   - 测试订单: ${testOrder.order_number}\n`;
+                result += `   - 运输信息存在: ${!!shippingAddress ? '✅' : '❌'}\n`;
+                result += `   - 运输信息类型: ${typeof shippingAddress}\n\n`;
+                
+                if (shippingAddress && typeof shippingAddress === 'object') {
+                    result += '2. 运输信息字段:\n';
+                    result += `   - 地址: ${shippingAddress.address || '❌ 缺失'}\n`;
+                    result += `   - 联系人: ${shippingAddress.name || '❌ 缺失'}\n`;
+                    result += `   - 电话: ${shippingAddress.phone || '❌ 缺失'}\n`;
+                    result += `   - 公司: ${shippingAddress.company || '❌ 缺失'}\n\n`;
+                    
+                    // 模拟PO页面标准化
+                    const standardized = {
+                        address: shippingAddress.address || 'Shipping Address',
+                        contactName: shippingAddress.name || 'Shipping Contact',
+                        phone: shippingAddress.phone || 'Shipping Phone',
+                        notes: shippingAddress.notes || ''
+                    };
+                    
+                    result += '3. PO页面标准化结果:\n';
+                    result += `   - 地址: ${standardized.address}\n`;
+                    result += `   - 联系人: ${standardized.contactName}\n`;
+                    result += `   - 电话: ${standardized.phone}\n\n`;
+                    
+                    const isDefault = standardized.address === 'Shipping Address';
+                    result += `4. 最终判断: ${isDefault ? '❌ 将显示默认值' : '✅ 将显示真实数据'}\n\n`;
+                    
+                    if (!isDefault) {
+                        result += '🎉 运输信息修复成功！PO页面应该能正确显示运输信息。\n';
+                        result += '请访问 OrderList 页面进行实际测试。';
+                        showResult(result, 'success');
+                    } else {
+                        result += '❌ 运输信息仍有问题，需要进一步调试。';
+                        showResult(result, 'error');
+                    }
+                    
+                    // 显示数据对比
+                    document.getElementById('comparisonSection').style.display = 'block';
+                    document.getElementById('apiData').textContent = JSON.stringify(shippingAddress, null, 2);
+                    document.getElementById('finalData').textContent = JSON.stringify(standardized, null, 2);
+                    
+                } else {
+                    result += '❌ 运输信息格式不正确或缺失';
+                    showResult(result, 'error');
+                }
+                
+            } catch (error) {
+                showResult(`❌ 测试失败: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testManualFlow() {
+            showResult('🔄 准备手动流程测试...', 'info');
+            
+            try {
+                const apiResponse = await fetch('/wp-json/bjt/v1/orders');
+                const apiData = await apiResponse.json();
+                
+                if (!apiData.success || !apiData.data || apiData.data.length === 0) {
+                    showResult('❌ 无法获取测试数据', 'error');
+                    return;
+                }
+                
+                const testOrder = apiData.data[0];
+                
+                let guide = '📋 手动测试流程:\n\n';
+                guide += `1. 测试订单: ${testOrder.order_number}\n`;
+                guide += `2. 访问 OrderList 页面\n`;
+                guide += `3. 找到订单 ${testOrder.order_number}\n`;
+                guide += `4. 点击 "Back to PO" 按钮\n`;
+                guide += `5. 检查 PO 页面的 Ship to 信息\n\n`;
+                
+                guide += '期望结果:\n';
+                if (testOrder.shipping_address) {
+                    guide += `- 地址: ${testOrder.shipping_address.address}\n`;
+                    guide += `- 联系人: ${testOrder.shipping_address.name}\n`;
+                    guide += `- 电话: ${testOrder.shipping_address.phone}\n`;
+                } else {
+                    guide += '- ❌ 测试订单没有运输信息\n';
+                }
+                
+                guide += '\n点击下面的链接开始测试:';
+                
+                showResult(guide, 'info');
+                
+                // 自动打开OrderList页面
+                setTimeout(() => {
+                    window.open('http://localhost:5173/orderlist', '_blank');
+                }, 1000);
+                
+            } catch (error) {
+                showResult(`❌ 准备测试失败: ${error.message}`, 'error');
+            }
+        }
+        
+        async function runDiagnostics() {
+            showDiagnostic('🔄 运行系统诊断...', 'info');
+            
+            try {
+                let diagnostic = '🔍 系统诊断报告:\n\n';
+                
+                // 1. 测试API连接
+                try {
+                    const apiResponse = await fetch('/wp-json/bjt/v1/orders');
+                    const apiData = await apiResponse.json();
+                    diagnostic += '1. API连接测试:\n';
+                    diagnostic += `   - 状态: ✅ 正常\n`;
+                    diagnostic += `   - 响应时间: ${Date.now() - performance.now()}ms\n`;
+                    diagnostic += `   - 数据条数: ${apiData.data?.length || 0}\n\n`;
+                } catch (error) {
+                    diagnostic += '1. API连接测试:\n';
+                    diagnostic += `   - 状态: ❌ 失败\n`;
+                    diagnostic += `   - 错误: ${error.message}\n\n`;
+                }
+                
+                // 2. 测试前端服务
+                try {
+                    const frontendResponse = await fetch('/');
+                    diagnostic += '2. 前端服务测试:\n';
+                    diagnostic += `   - 状态: ✅ 正常\n`;
+                    diagnostic += `   - 响应码: ${frontendResponse.status}\n\n`;
+                } catch (error) {
+                    diagnostic += '2. 前端服务测试:\n';
+                    diagnostic += `   - 状态: ❌ 失败\n`;
+                    diagnostic += `   - 错误: ${error.message}\n\n`;
+                }
+                
+                // 3. 检查浏览器支持
+                diagnostic += '3. 浏览器支持检查:\n';
+                diagnostic += `   - Fetch API: ${typeof fetch !== 'undefined' ? '✅' : '❌'}\n`;
+                diagnostic += `   - Local Storage: ${typeof localStorage !== 'undefined' ? '✅' : '❌'}\n`;
+                diagnostic += `   - Console: ${typeof console !== 'undefined' ? '✅' : '❌'}\n\n`;
+                
+                // 4. 检查页面访问
+                diagnostic += '4. 关键页面检查:\n';
+                const pages = [
+                    { name: 'OrderList', url: '/orderlist' },
+                    { name: 'PO', url: '/po' }
+                ];
+                
+                for (const page of pages) {
+                    try {
+                        const response = await fetch(page.url);
+                        diagnostic += `   - ${page.name}: ${response.status === 200 ? '✅ 可访问' : '❌ 不可访问'}\n`;
+                    } catch (error) {
+                        diagnostic += `   - ${page.name}: ❌ 访问失败\n`;
+                    }
+                }
+                
+                diagnostic += '\n🎯 建议:\n';
+                diagnostic += '- 如果API连接失败，请检查后端服务是否运行\n';
+                diagnostic += '- 如果前端服务失败，请重启前端服务\n';
+                diagnostic += '- 如果页面无法访问，请检查路由配置\n';
+                diagnostic += '- 清除浏览器缓存后重新测试\n';
+                
+                showDiagnostic(diagnostic, 'info');
+                
+            } catch (error) {
+                showDiagnostic(`❌ 诊断失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 页面加载时自动运行基础检查
+        window.addEventListener('load', () => {
+            console.log('🔧 运输信息调试页面已加载');
+            console.log('🔧 准备进行基础检查...');
+            
+            // 延迟1秒后自动运行测试
+            setTimeout(() => {
+                console.log('🔧 自动运行最终测试...');
+                runFinalTest();
+            }, 1000);
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试后端PO格式订单号生成</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+        .warning { color: #ffc107; font-weight: bold; }
+        .info { color: #17a2b8; font-weight: bold; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .order-number {
+            font-family: monospace;
+            font-size: 16px;
+            background: #f8f9fa;
+            padding: 5px 10px;
+            border-radius: 3px;
+            border: 1px solid #dee2e6;
+        }
+        .validation {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .validation.valid {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .validation.invalid {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 后端PO格式订单号生成测试</h1>
+    
+    <div class="container">
+        <h2>📋 测试说明</h2>
+        <p>验证后端API是否能正确生成 <code>PO-YYYYMMDDHHMM-XXXXXX</code> 格式的订单号</p>
+        <ul>
+            <li><strong>PO-</strong>：固定前缀</li>
+            <li><strong>YYYYMMDDHHMM</strong>：12位日期时间（年月日时分）</li>
+            <li><strong>XXXXXX</strong>：6位随机字符（大写字母和数字）</li>
+        </ul>
+    </div>
+
+    <div class="container">
+        <div class="test-section">
+            <h3>🔧 测试1：提交订单并验证订单号格式</h3>
+            <button onclick="testOrderSubmission()">提交测试订单</button>
+            <div id="orderSubmissionResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔍 测试2：批量生成订单号验证一致性</h3>
+            <button onclick="testBatchOrderGeneration()">生成5个测试订单</button>
+            <div id="batchGenerationResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 测试3：验证OrderNumberManager兼容性</h3>
+            <button onclick="testOrderNumberManager()">测试OrderNumberManager</button>
+            <div id="orderManagerResult"></div>
+        </div>
+    </div>
+
+    <script>
+        // PO格式订单号验证器
+        const PO_FORMAT_PATTERN = /^PO-\d{12}-[A-Z0-9]{6}$/;
+        
+        function validatePOFormat(orderNumber) {
+            return PO_FORMAT_PATTERN.test(orderNumber);
+        }
+
+        function formatValidationResult(orderNumber, isValid) {
+            return `
+                <div class="order-number">${orderNumber}</div>
+                <div class="validation ${isValid ? 'valid' : 'invalid'}">
+                    ${isValid ? '✅ 格式正确 - 符合PO-YYYYMMDDHHMM-XXXXXX格式' : '❌ 格式错误 - 不符合PO格式要求'}
+                </div>
+            `;
+        }
+
+        // 测试1：提交订单
+        async function testOrderSubmission() {
+            const resultDiv = document.getElementById('orderSubmissionResult');
+            resultDiv.innerHTML = '<div class="info">🔄 正在提交测试订单...</div>';
+
+            try {
+                const testOrderData = {
+                    customer_info: {
+                        name: '测试用户',
+                        email: 'test@example.com',
+                        phone: '13800138000',
+                        company: '测试公司'
+                    },
+                    shipping_address: {
+                        country: 'CN',
+                        state: '北京市',
+                        city: '北京市',
+                        address: '测试地址123号',
+                        postal_code: '100000'
+                    },
+                    billing_address: {
+                        country: 'CN',
+                        state: '北京市',
+                        city: '北京市',
+                        address: '测试地址123号',
+                        postal_code: '100000'
+                    },
+                    payment_method: 'bank_transfer',
+                    items: [
+                        {
+                            item_id: '90R01258',
+                            item_type: 'accessory',
+                            quantity: 1,
+                            unit_price: 100.00,
+                            currency: 'CNY',
+                            name: '测试配件',
+                            target_id: null
+                        }
+                    ]
+                };
+
+                const response = await fetch('/wp-json/bjt/v1/orders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testOrderData)
+                });
+
+                const result = await response.json();
+                
+                if (result.success && result.data && result.data.order_number) {
+                    const orderNumber = result.data.order_number;
+                    const isValid = validatePOFormat(orderNumber);
+                    
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ 订单创建成功！</div>
+                        ${formatValidationResult(orderNumber, isValid)}
+                        <div style="margin-top: 10px;">
+                            <strong>订单ID:</strong> ${result.data.id}<br>
+                            <strong>创建时间:</strong> ${result.data.created_at}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ 订单创建失败: ${result.message || '未知错误'}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ 请求失败: ${error.message}</div>`;
+            }
+        }
+
+        // 测试2：批量生成订单
+        async function testBatchOrderGeneration() {
+            const resultDiv = document.getElementById('batchGenerationResult');
+            resultDiv.innerHTML = '<div class="info">🔄 正在生成5个测试订单...</div>';
+
+            const results = [];
+            const testOrderData = {
+                customer_info: {
+                    name: '批量测试用户',
+                    email: 'batch@example.com',
+                    phone: '13800138000',
+                    company: '批量测试公司'
+                },
+                shipping_address: {
+                    country: 'CN',
+                    state: '北京市',
+                    city: '北京市',
+                    address: '批量测试地址',
+                    postal_code: '100000'
+                },
+                billing_address: {
+                    country: 'CN',
+                    state: '北京市',
+                    city: '北京市',
+                    address: '批量测试地址',
+                    postal_code: '100000'
+                },
+                payment_method: 'bank_transfer',
+                items: [
+                    {
+                        item_id: '90R01258',
+                        item_type: 'accessory',
+                        quantity: 1,
+                        unit_price: 50.00,
+                        currency: 'CNY',
+                        name: '批量测试配件',
+                        target_id: null
+                    }
+                ]
+            };
+
+            try {
+                for (let i = 1; i <= 5; i++) {
+                    const response = await fetch('/wp-json/bjt/v1/orders', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            ...testOrderData,
+                            customer_info: {
+                                ...testOrderData.customer_info,
+                                name: `批量测试用户${i}`
+                            }
+                        })
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success && result.data && result.data.order_number) {
+                        const orderNumber = result.data.order_number;
+                        const isValid = validatePOFormat(orderNumber);
+                        results.push({
+                            index: i,
+                            orderNumber,
+                            isValid,
+                            orderId: result.data.id,
+                            createdAt: result.data.created_at
+                        });
+                    } else {
+                        results.push({
+                            index: i,
+                            error: result.message || '创建失败'
+                        });
+                    }
+
+                    // 添加小延迟确保时间戳不同
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+
+                // 显示结果
+                let html = '<h4>📊 批量生成结果:</h4>';
+                let validCount = 0;
+                
+                results.forEach(result => {
+                    if (result.error) {
+                        html += `<div style="margin: 10px 0;"><strong>订单${result.index}:</strong> <span class="error">❌ ${result.error}</span></div>`;
+                    } else {
+                        if (result.isValid) validCount++;
+                        html += `
+                            <div style="margin: 15px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                                <strong>订单${result.index}:</strong><br>
+                                ${formatValidationResult(result.orderNumber, result.isValid)}
+                                <div style="margin-top: 5px; font-size: 12px; color: #666;">
+                                    ID: ${result.orderId} | 时间: ${result.createdAt}
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+
+                html += `
+                    <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                        <strong>📈 统计结果:</strong><br>
+                        <span class="success">✅ 格式正确: ${validCount}/5</span><br>
+                        <span class="error">❌ 格式错误: ${5 - validCount}/5</span><br>
+                        <span class="${validCount === 5 ? 'success' : 'warning'}">
+                            ${validCount === 5 ? '🎉 所有订单号格式都正确！' : '⚠️ 部分订单号格式有问题'}
+                        </span>
+                    </div>
+                `;
+
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ 批量测试失败: ${error.message}</div>`;
+            }
+        }
+
+        // 测试3：OrderNumberManager兼容性
+        function testOrderNumberManager() {
+            const resultDiv = document.getElementById('orderManagerResult');
+            
+            // 模拟OrderNumberManager的验证逻辑
+            const testCases = [
+                'PO-202406241530-ABC123',  // 正确格式
+                'PO-202406241530-abc123',  // 小写字母（应该失败）
+                'ORD-20240624-ABC123',     // 旧格式（应该失败）
+                'PO-2024062415-ABC123',    // 日期位数不对（应该失败）
+                'PO-202406241530-AB123',   // 随机字符不够（应该失败）
+                'PO-202406241530-ABC1234', // 随机字符太多（应该失败）
+            ];
+
+            let html = '<h4>🔍 OrderNumberManager兼容性测试:</h4>';
+            
+            testCases.forEach((testCase, index) => {
+                const isValid = validatePOFormat(testCase);
+                html += `
+                    <div style="margin: 10px 0;">
+                        <strong>测试${index + 1}:</strong><br>
+                        ${formatValidationResult(testCase, isValid)}
+                    </div>
+                `;
+            });
+
+            // 生成一个正确格式的示例
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hour = String(now.getHours()).padStart(2, '0');
+            const minute = String(now.getMinutes()).padStart(2, '0');
+            const randomChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let randomString = '';
+            for (let i = 0; i < 6; i++) {
+                randomString += randomChars.charAt(Math.floor(Math.random() * randomChars.length));
+            }
+            const sampleOrderNumber = `PO-${year}${month}${day}${hour}${minute}-${randomString}`;
+
+            html += `
+                <div style="margin-top: 20px; padding: 15px; background: #e7f3ff; border-radius: 5px; border: 1px solid #b3d9ff;">
+                    <strong>📝 前端生成示例（仅用于验证格式）:</strong><br>
+                    ${formatValidationResult(sampleOrderNumber, true)}
+                    <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                        注意：实际订单号应该由后端API生成，这里只是验证格式兼容性
+                    </div>
+                </div>
+            `;
+
+            resultDiv.innerHTML = html;
+        }
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🧪 后端PO格式订单号测试页面已加载');
+            console.log('📋 PO格式验证规则:', PO_FORMAT_PATTERN);
+        });
+    </script>
+</body>
+</html> 

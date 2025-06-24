@@ -68,7 +68,9 @@
       "uk": "英国",
       "germany": "德国",
       "japan": "日本",
-      "australia": "澳大利亚"
+      "australia": "澳大利亚",
+      "searchResults": "搜索结果",
+      "noResults": "未找到相关国家"
     }
   },
   "products": {

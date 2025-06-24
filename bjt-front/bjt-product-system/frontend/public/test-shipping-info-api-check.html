@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API运输信息数据结构检查</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+        }
+        .test-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section h2 {
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .api-test {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .api-test h3 {
+            margin-top: 0;
+            color: #667eea;
+        }
+        .test-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        .test-button:hover {
+            background: #5a6fd8;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .field-analysis {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .field-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+        .field-name {
+            font-weight: bold;
+            color: #667eea;
+        }
+        .field-value {
+            margin-top: 5px;
+            color: #333;
+        }
+        .field-type {
+            font-size: 12px;
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 API运输信息数据结构检查</h1>
+            <p>检查订单API实际返回的运输信息数据结构和内容</p>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 API测试</h2>
+            
+            <div class="api-test">
+                <h3>1. 获取订单列表</h3>
+                <p>检查订单列表API返回的运输信息字段</p>
+                <button class="test-button" onclick="testOrderList()">测试订单列表API</button>
+                <div id="orderListResult" class="result info" style="display: none;"></div>
+            </div>
+
+            <div class="api-test">
+                <h3>2. 获取单个订单详情</h3>
+                <p>检查单个订单API返回的详细运输信息</p>
+                <input type="text" id="orderIdInput" placeholder="输入订单ID (例如: 5)" value="5" style="padding: 8px; margin-right: 10px;">
+                <button class="test-button" onclick="testOrderDetail()">测试订单详情API</button>
+                <div id="orderDetailResult" class="result info" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 数据结构分析结果</h2>
+            <div id="dataAnalysis" class="field-analysis"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 修复建议</h2>
+            <div id="fixSuggestions"></div>
+        </div>
+    </div>
+
+    <script>
+        let orderListData = null;
+        let orderDetailData = null;
+
+        // 测试订单列表API
+        async function testOrderList() {
+            const resultDiv = document.getElementById('orderListResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = '🔄 正在获取订单列表...';
+
+            try {
+                const response = await fetch('/wp-json/bjt/v1/orders');
+                const data = await response.json();
+                
+                console.log('订单列表API响应:', data);
+                orderListData = data;
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ 成功获取 ${data.data.length} 个订单\n\n` +
+                        `第一个订单数据结构:\n${JSON.stringify(data.data[0], null, 2)}`;
+                    
+                    // 分析运输信息字段
+                    analyzeShippingInOrderList(data.data);
+                } else {
+                    resultDiv.className = 'result warning';
+                    resultDiv.textContent = `⚠️ API响应格式异常或无数据\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ API调用失败: ${error.message}`;
+                console.error('订单列表API错误:', error);
+            }
+        }
+
+        // 测试订单详情API
+        async function testOrderDetail() {
+            const orderId = document.getElementById('orderIdInput').value;
+            const resultDiv = document.getElementById('orderDetailResult');
+            
+            if (!orderId) {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ 请输入订单ID';
+                return;
+            }
+
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = `🔄 正在获取订单 ${orderId} 的详情...`;
+
+            try {
+                const response = await fetch(`/wp-json/bjt/v1/orders/${orderId}`);
+                const data = await response.json();
+                
+                console.log('订单详情API响应:', data);
+                orderDetailData = data;
+                
+                if (data.success && data.data) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ 成功获取订单详情\n\n` +
+                        `订单数据结构:\n${JSON.stringify(data.data, null, 2)}`;
+                    
+                    // 分析运输信息字段
+                    analyzeShippingInOrderDetail(data.data);
+                } else {
+                    resultDiv.className = 'result warning';
+                    resultDiv.textContent = `⚠️ API响应格式异常\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ API调用失败: ${error.message}`;
+                console.error('订单详情API错误:', error);
+            }
+        }
+
+        // 分析订单列表中的运输信息
+        function analyzeShippingInOrderList(orders) {
+            const analysisDiv = document.getElementById('dataAnalysis');
+            let html = '<h3>📋 订单列表运输信息分析</h3>';
+            
+            const shippingFieldsFound = new Set();
+            const shippingFieldTypes = {};
+            const shippingFieldSamples = {};
+            
+            orders.forEach(order => {
+                Object.keys(order).forEach(key => {
+                    if (key.toLowerCase().includes('shipping') || 
+                        key.toLowerCase().includes('delivery') || 
+                        key.toLowerCase().includes('address')) {
+                        shippingFieldsFound.add(key);
+                        shippingFieldTypes[key] = typeof order[key];
+                        if (!shippingFieldSamples[key]) {
+                            shippingFieldSamples[key] = order[key];
+                        }
+                    }
+                });
+            });
+            
+            if (shippingFieldsFound.size > 0) {
+                Array.from(shippingFieldsFound).forEach(field => {
+                    html += `
+                        <div class="field-item">
+                            <div class="field-name">${field}</div>
+                            <div class="field-type">类型: ${shippingFieldTypes[field]}</div>
+                            <div class="field-value">示例: ${JSON.stringify(shippingFieldSamples[field], null, 2)}</div>
+                        </div>
+                    `;
+                });
+            } else {
+                html += '<p class="warning">❌ 订单列表中未找到运输信息相关字段</p>';
+            }
+            
+            analysisDiv.innerHTML = html;
+        }
+
+        // 分析订单详情中的运输信息
+        function analyzeShippingInOrderDetail(order) {
+            const analysisDiv = document.getElementById('dataAnalysis');
+            let html = analysisDiv.innerHTML + '<h3>📄 订单详情运输信息分析</h3>';
+            
+            // 重点检查shipping_address字段
+            if (order.shipping_address) {
+                html += `
+                    <div class="field-item">
+                        <div class="field-name">shipping_address</div>
+                        <div class="field-type">类型: ${typeof order.shipping_address}</div>
+                        <div class="field-value">内容: ${JSON.stringify(order.shipping_address, null, 2)}</div>
+                    </div>
+                `;
+                
+                // 如果是对象，分析其子字段
+                if (typeof order.shipping_address === 'object' && order.shipping_address !== null) {
+                    Object.keys(order.shipping_address).forEach(subField => {
+                        html += `
+                            <div class="field-item">
+                                <div class="field-name">shipping_address.${subField}</div>
+                                <div class="field-type">类型: ${typeof order.shipping_address[subField]}</div>
+                                <div class="field-value">值: ${order.shipping_address[subField]}</div>
+                            </div>
+                        `;
+                    });
+                }
+            } else {
+                html += '<p class="error">❌ 订单详情中未找到 shipping_address 字段</p>';
+            }
+            
+            // 检查billing_address
+            if (order.billing_address) {
+                html += `
+                    <div class="field-item">
+                        <div class="field-name">billing_address</div>
+                        <div class="field-type">类型: ${typeof order.billing_address}</div>
+                        <div class="field-value">内容: ${JSON.stringify(order.billing_address, null, 2)}</div>
+                    </div>
+                `;
+            }
+            
+            analysisDiv.innerHTML = html;
+            
+            // 生成修复建议
+            generateFixSuggestions(order);
+        }
+
+        // 生成修复建议
+        function generateFixSuggestions(order) {
+            const suggestionsDiv = document.getElementById('fixSuggestions');
+            let html = '';
+            
+            if (order.shipping_address) {
+                const shippingAddr = order.shipping_address;
+                html += '<h3>✅ 好消息：API确实返回了运输信息！</h3>';
+                html += '<p><strong>shipping_address字段存在，包含以下信息：</strong></p>';
+                html += '<ul>';
+                
+                if (typeof shippingAddr === 'object') {
+                    Object.keys(shippingAddr).forEach(key => {
+                        html += `<li><code>${key}</code>: ${shippingAddr[key]}</li>`;
+                    });
+                } else {
+                    html += `<li>原始数据: ${shippingAddr}</li>`;
+                }
+                
+                html += '</ul>';
+                
+                html += '<h4>🔧 前端修复建议：</h4>';
+                html += '<ol>';
+                html += '<li><strong>检查字段映射</strong>：确保前端代码正确映射API返回的字段名</li>';
+                html += '<li><strong>数据转换逻辑</strong>：确保对象格式的运输信息被正确处理</li>';
+                html += '<li><strong>调试日志</strong>：在OrderList页面添加更详细的调试日志</li>';
+                html += '<li><strong>数据传递</strong>：检查从OrderList到PO页面的数据传递过程</li>';
+                html += '</ol>';
+                
+            } else {
+                html += '<h3>❌ 问题确认：API未返回运输信息</h3>';
+                html += '<p>需要检查以下几个方面：</p>';
+                html += '<ol>';
+                html += '<li><strong>数据库检查</strong>：确认订单表中确实存在运输信息</li>';
+                html += '<li><strong>API实现</strong>：检查后端API是否正确返回shipping_address字段</li>';
+                html += '<li><strong>权限问题</strong>：确认当前用户有权限查看运输信息</li>';
+                html += '<li><strong>数据完整性</strong>：检查测试订单是否包含完整的运输信息</li>';
+                html += '</ol>';
+            }
+            
+            suggestionsDiv.innerHTML = html;
+        }
+
+        // 页面加载时的提示
+        window.addEventListener('load', function() {
+            console.log('🔍 API运输信息检查工具已加载');
+            console.log('请点击测试按钮开始检查API返回的数据结构');
+        });
+    </script>
+</body>
+</html> 

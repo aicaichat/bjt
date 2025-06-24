@@ -219,10 +219,25 @@ export const i18nShippingInfo = {
 
 /**
  * 模拟订单ID生成器
- * Mock order ID generator
+ * Mock order ID generator - 生成与后端一致的格式
  */
 export const generateMockOrderId = (): string => {
-  return `ORD-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hour = String(date.getHours()).padStart(2, '0');
+  const minute = String(date.getMinutes()).padStart(2, '0');
+  
+  // 生成6位随机字符串（大写字母和数字），与后端格式一致
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let randomString = '';
+  for (let i = 0; i < 6; i++) {
+    randomString += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  
+  // 使用PO-YYYYMMDDHHMM-XXXXXX格式
+  return `PO-${year}${month}${day}${hour}${minute}-${randomString}`;
 };
 
 /**

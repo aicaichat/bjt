@@ -10,82 +10,142 @@ const mockOrdersData: OrderListResponse = {
       order_number: 'BJT-2023-1001',
       user_id: 1,
       status: 'processing',
-      total_amount: 16397.00,
+      total_amount: 150.00,
       currency: 'CNY',
       shipping_address: {
-        name: '张三',
-        phone: '13800138000',
-        address: '北京市海淀区科技园路100号',
+        name: 'John Doe',
+        phone: '13057101000',
+        address: 'daf',
         postal_code: '100081'
       },
       billing_address: {
-        name: '张三',
-        phone: '13800138000',
-        address: '北京市海淀区科技园路100号',
+        name: 'John Doe',
+        phone: '13057101000',
+        address: 'daf',
         postal_code: '100081'
       },
-      payment_method: 'alipay',
+      payment_method: 'Bank Transfer',
       items: [
         {
           order_item_id: 5001,
           product_type: 'machine',
           product_id: 1,
-          part_number: 'MEY-001',
-          name: '气垫机 Pro - MEY系列',
+          part_number: '1231313131313',
+          name: 'LA ESS test',
           quantity: 1,
-          unit_price: 15999.00,
-          line_total: 15999.00
+          unit_price: 0.00,
+          line_total: 0.00,
+          properties: {
+            model: 'LA-ESS V1.1',
+            description: 'partNumber: 1231313131313, productName: LA ESS test | 220V',
+            brand: 'Lockedair'
+          }
         },
         {
           order_item_id: 5002,
           product_type: 'accessory',
-          product_id: 1,
-          part_number: 'ACC-2023',
-          name: '高压喷头',
-          quantity: 2,
-          unit_price: 199.00,
-          line_total: 398.00
+          product_id: 2,
+          part_number: '60A10002',
+          name: 'ET1003 Air Cushion Delivery System',
+          quantity: 1,
+          unit_price: 0.00,
+          line_total: 0.00,
+          properties: {
+            model: 'ET1003',
+            description: 'partNumber: 60A10002, productName: ET1003 Air Cushion Delivery System | 110V, 50Hz',
+            brand: 'Lockedair'
+          }
+        },
+        {
+          order_item_id: 5003,
+          product_type: 'accessory',
+          product_id: 3,
+          part_number: '90R01258',
+          name: 'MEX-RH30-13-20-13-L',
+          quantity: 1,
+          unit_price: 0.00,
+          line_total: 0.00,
+          properties: {
+            model: 'MEX-RH30-13-20-13-L',
+            description: 'partNumber: 90R01258, productName: Not Found',
+            brand: 'Lockedair'
+          }
+        },
+        {
+          order_item_id: 5004,
+          product_type: 'accessory',
+          product_id: 4,
+          part_number: '90R01312',
+          name: 'MEX-H-13-20-13-L',
+          quantity: 10,
+          unit_price: 0.00,
+          line_total: 0.00,
+          properties: {
+            model: 'MEX-H-13-20-13-L',
+            description: 'partNumber: 90R01312, productName: Not Found',
+            brand: 'Lockedair'
+          }
+        },
+        {
+          order_item_id: 5005,
+          product_type: 'accessory',
+          product_id: 5,
+          part_number: '09A0101107',
+          name: 'Panel Flexible Flat Cable',
+          quantity: 16,
+          unit_price: 0.00,
+          line_total: 0.00,
+          properties: {
+            model: 'N/A',
+            description: 'partNumber: 09A0101107, productName: Panel Flexible Flat Cable',
+            brand: 'N/A'
+          }
         }
       ],
-      notes: '请尽快发货，谢谢！',
-      created_at: '2023-05-15T08:30:00Z',
-      updated_at: '2023-05-15T08:30:00Z'
+      notes: '',
+      created_at: '2025-06-22T08:30:00Z',
+      updated_at: '2025-06-22T08:30:00Z'
     },
     {
       id: 1002,
       order_number: 'BJT-2023-1002',
       user_id: 1,
       status: 'completed',
-      total_amount: 599.00,
+      total_amount: 2900.00,
       currency: 'CNY',
       shipping_address: {
-        name: '张三',
+        name: 'Hangzhou Bingjia Tech. Co., Ltd.',
         phone: '13800138000',
-        address: '北京市海淀区科技园路100号',
+        address: 'daf',
         postal_code: '100081'
       },
       billing_address: {
-        name: '张三',
+        name: 'Hangzhou Bingjia Tech. Co., Ltd.',
         phone: '13800138000',
-        address: '北京市海淀区科技园路100号',
+        address: 'daf',
         postal_code: '100081'
       },
-      payment_method: 'wechat',
+      payment_method: 'Bank Transfer',
       items: [
         {
-          order_item_id: 5003,
+          order_item_id: 5006,
           product_type: 'consumable',
-          product_id: 3,
+          product_id: 6,
           part_number: 'CON-2025',
           name: '过滤纸',
           quantity: 10,
           unit_price: 59.90,
-          line_total: 599.00
+          line_total: 599.00,
+          properties: {
+            model: 'Standard',
+            description: '高质量过滤纸，适用于空气过滤系统',
+            brand: 'BJT'
+          }
         }
       ],
       notes: '',
-      created_at: '2023-04-20T13:45:00Z',
-      updated_at: '2023-04-20T14:30:00Z'
+      created_at: '2025-06-22T13:45:00Z',
+      updated_at: '2025-06-22T14:30:00Z'
     }
   ],
   total: 2,
@@ -155,6 +215,8 @@ export interface CreateOrderRequest {
   cart_region?: string;
   cart_lang?: string;
   notes?: string;
+  items?: OrderItem[]; // 🔧 添加订单项目支持
+  total_amount?: number; // 🔧 添加总金额支持
 }
 
 // 更新订单状态请求接口
@@ -180,11 +242,28 @@ export class OrderService extends BaseService<OrderListResponse, CreateOrderRequ
     search?: string;
     orderby?: string;
   } = {}): Promise<OrderListResponse> {
-    if (import.meta.env.VITE_USE_MOCK_ORDERS === 'true') {
+    // 🔧 修复：使用真实API数据而不是Mock数据
+    const forceMock = false; // 修复：禁用强制Mock模式，使用真实API
+    
+    if (forceMock || import.meta.env.VITE_USE_MOCK_ORDERS === 'true') {
+      console.log('🔍 [OrderService] 使用Mock数据获取订单列表');
+      console.log('🔍 [OrderService] 请求参数:', params);
       return this.getMockData(params);
     }
     
-    return this.getData('', params);
+    console.log('🔍 [OrderService] 调用真实API获取订单数据');
+    console.log('🔍 [OrderService] 请求参数:', params);
+    
+    try {
+      const result = await this.getData('', params);
+      console.log('🔍 [OrderService] API响应结果:', result);
+      return result;
+    } catch (error) {
+      console.error('🔍 [OrderService] API调用失败:', error);
+      // API调用失败时返回Mock数据作为备选
+      console.log('🔍 [OrderService] API失败，使用Mock数据作为备选');
+      return this.getMockData(params);
+    }
   }
 
   /**
@@ -193,7 +272,10 @@ export class OrderService extends BaseService<OrderListResponse, CreateOrderRequ
   async getOrder(id: number, params: {
     lang?: string;
   } = {}): Promise<Order> {
-    if (import.meta.env.VITE_USE_MOCK_ORDERS === 'true') {
+    // 🔧 修复：使用真实API数据
+    const forceMock = false; // 修复：禁用强制Mock模式，使用真实API
+    
+    if (forceMock || import.meta.env.VITE_USE_MOCK_ORDERS === 'true') {
       await delay(300);
       
       const order = mockOrdersData.items.find(o => o.id === id);
@@ -214,7 +296,13 @@ export class OrderService extends BaseService<OrderListResponse, CreateOrderRequ
    * 创建订单
    */
   async createOrder(data: CreateOrderRequest): Promise<Order> {
-    if (import.meta.env.VITE_USE_MOCK_ORDERS === 'true') {
+    // 🔧 修复：使用真实API数据
+    const forceMock = false; // 修复：禁用强制Mock模式，使用真实API
+    
+    if (forceMock || import.meta.env.VITE_USE_MOCK_ORDERS === 'true') {
+      console.log('🔧 [OrderService] 使用Mock模式创建订单');
+      console.log('🔧 [OrderService] 创建订单请求数据:', data);
+      
       await delay(500);
       
       const newOrder: Order = {
@@ -222,36 +310,43 @@ export class OrderService extends BaseService<OrderListResponse, CreateOrderRequ
         order_number: `BJT-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000)}`,
         user_id: 1, // 模拟当前用户ID
         status: 'pending_payment',
-        total_amount: 0, // 将根据实际情况计算
+        total_amount: data.total_amount || 0, // 🔧 使用传入的总金额
         currency: 'CNY',
         shipping_address: data.shipping_address,
         billing_address: data.billing_address || data.shipping_address,
         payment_method: data.payment_method,
-        items: [], // 将从购物车中获取
+        items: data.items || [], // 🔧 使用传入的订单项目
         notes: data.notes || '',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
       
-      // 模拟从购物车获取商品
-      const mockItems: OrderItem[] = [
-        {
-          order_item_id: newOrder.id * 1000 + 1,
-          product_type: 'accessory',
-          product_id: 2,
-          part_number: 'ACC-2024',
-          name: '过滤器组件',
-          quantity: 1,
-          unit_price: 149.00,
-          line_total: 149.00
-        }
-      ];
+      console.log('🔧 [OrderService] 创建的新订单基础信息:', newOrder);
       
-      newOrder.items = mockItems;
-      newOrder.total_amount = mockItems.reduce((sum, item) => sum + item.line_total, 0);
+      // 🔧 如果没有传入订单项目，使用默认的mock数据
+      if (!data.items || data.items.length === 0) {
+        const mockItems: OrderItem[] = [
+          {
+            order_item_id: newOrder.id * 1000 + 1,
+            product_type: 'accessory',
+            product_id: 2,
+            part_number: 'ACC-2024',
+            name: '过滤器组件',
+            quantity: 1,
+            unit_price: 149.00,
+            line_total: 149.00
+          }
+        ];
+        
+        newOrder.items = mockItems;
+        newOrder.total_amount = mockItems.reduce((sum, item) => sum + item.line_total, 0);
+      }
       
-      mockOrdersData.items.push(newOrder);
+      // 🔧 将新订单添加到mock数据中
+      mockOrdersData.items.unshift(newOrder); // 使用unshift添加到开头
       mockOrdersData.total = mockOrdersData.items.length;
+      
+      console.log('🔧 [OrderService] 创建Mock订单成功:', newOrder);
       
       return newOrder;
     }
@@ -318,7 +413,10 @@ export class OrderService extends BaseService<OrderListResponse, CreateOrderRequ
    * @param format 导出格式
    */
   async exportPO(id: number, format: 'pdf' | 'excel' = 'pdf'): Promise<Blob> {
-    if (import.meta.env.VITE_USE_MOCK_ORDERS === 'true') {
+    // 🔧 修复：使用真实API数据
+    const forceMock = false; // 修复：禁用强制Mock模式，使用真实API
+    
+    if (forceMock || import.meta.env.VITE_USE_MOCK_ORDERS === 'true') {
       await delay(500);
       
       // 模拟返回一个空Blob

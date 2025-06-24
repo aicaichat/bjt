@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试0价格订单创建</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+        .test-result { margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 测试0价格订单创建</h1>
+        <p>测试后端API是否允许创建0价格的订单</p>
+
+        <div class="test-section">
+            <h3>测试1: 创建空购物车订单（应该成功）</h3>
+            <button onclick="testEmptyCartOrder()">测试空购物车订单</button>
+            <div id="emptyCartResult" class="test-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>测试2: 创建0价格商品订单（应该成功）</h3>
+            <button onclick="testZeroPriceOrder()">测试0价格订单</button>
+            <div id="zeroPriceResult" class="test-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>测试3: 创建包含商品数据的订单（应该成功）</h3>
+            <button onclick="testOrderWithItems()">测试包含商品的订单</button>
+            <div id="itemsOrderResult" class="test-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>测试4: 验证订单号格式</h3>
+            <button onclick="testOrderNumberFormat()">测试订单号格式</button>
+            <div id="orderNumberResult" class="test-result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/wp-json/bjt/v1';
+        
+        // 模拟用户认证
+        async function authenticateUser() {
+            try {
+                const response = await fetch('/wp-json/bjt/v1/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'test_user',
+                        password: 'test_password'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ 用户认证成功', data);
+                    return true;
+                }
+            } catch (error) {
+                console.log('⚠️ 认证失败，使用模拟认证', error);
+                // 设置模拟用户ID
+                window.bjtCurrentUserId = 1;
+                return true;
+            }
+        }
+
+        // 测试1: 空购物车订单
+        async function testEmptyCartOrder() {
+            const resultDiv = document.getElementById('emptyCartResult');
+            resultDiv.innerHTML = '<p>测试中...</p>';
+
+            try {
+                await authenticateUser();
+                
+                const response = await fetch(`${API_BASE}/orders`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        shipping_address: {
+                            name: 'Test User',
+                            address: 'Test Address',
+                            city: 'Test City',
+                            country: 'CN'
+                        },
+                        billing_address: {
+                            name: 'Test User',
+                            address: 'Test Address',
+                            city: 'Test City',
+                            country: 'CN'
+                        },
+                        payment_method: 'test',
+                        cart_region: 'CN',
+                        cart_lang: 'zh'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ 测试通过：空购物车订单创建成功</h4>
+                            <p><strong>订单号:</strong> ${data.data.order_number}</p>
+                            <p><strong>总金额:</strong> ${data.data.total_amount} ${data.data.currency}</p>
+                            <p><strong>状态:</strong> ${data.data.status}</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ 测试失败：无法创建空购物车订单</h4>
+                            <p><strong>错误:</strong> ${data.message || '未知错误'}</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ 网络错误</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 测试2: 0价格订单
+        async function testZeroPriceOrder() {
+            const resultDiv = document.getElementById('zeroPriceResult');
+            resultDiv.innerHTML = '<p>测试中...</p>';
+
+            try {
+                await authenticateUser();
+                
+                const response = await fetch(`${API_BASE}/orders`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        items: [
+                            {
+                                product_id: 1,
+                                product_type: 'machine',
+                                part_number: 'FREE-001',
+                                name: '免费测试产品',
+                                quantity: 1,
+                                unit_price: 0.0,
+                                line_total: 0.0
+                            }
+                        ],
+                        shipping_address: {
+                            name: 'Test User',
+                            address: 'Test Address',
+                            city: 'Test City',
+                            country: 'CN'
+                        },
+                        billing_address: {
+                            name: 'Test User', 
+                            address: 'Test Address',
+                            city: 'Test City',
+                            country: 'CN'
+                        },
+                        payment_method: 'free',
+                        cart_region: 'CN',
+                        cart_lang: 'zh'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ 测试通过：0价格订单创建成功</h4>
+                            <p><strong>订单号:</strong> ${data.data.order_number}</p>
+                            <p><strong>总金额:</strong> ${data.data.total_amount} ${data.data.currency}</p>
+                            <p><strong>商品数量:</strong> ${data.data.items ? data.data.items.length : 0}</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ 测试失败：无法创建0价格订单</h4>
+                            <p><strong>错误:</strong> ${data.message || '未知错误'}</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ 网络错误</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 测试3: 包含商品数据的订单
+        async function testOrderWithItems() {
+            const resultDiv = document.getElementById('itemsOrderResult');
+            resultDiv.innerHTML = '<p>测试中...</p>';
+
+            try {
+                await authenticateUser();
+                
+                const response = await fetch(`${API_BASE}/orders`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        items: [
+                            {
+                                product_id: 1,
+                                product_type: 'machine',
+                                part_number: 'TEST-001',
+                                name: '测试产品1',
+                                quantity: 2,
+                                unit_price: 100.0,
+                                line_total: 200.0
+                            },
+                            {
+                                product_id: 2,
+                                product_type: 'spare_part',
+                                part_number: 'TEST-002',
+                                name: '测试产品2',
+                                quantity: 1,
+                                unit_price: 50.0,
+                                line_total: 50.0
+                            }
+                        ],
+                        shipping_address: {
+                            name: 'Test User',
+                            address: 'Test Address',
+                            city: 'Test City',
+                            country: 'CN'
+                        },
+                        billing_address: {
+                            name: 'Test User',
+                            address: 'Test Address', 
+                            city: 'Test City',
+                            country: 'CN'
+                        },
+                        payment_method: 'credit_card',
+                        cart_region: 'CN',
+                        cart_lang: 'zh'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ 测试通过：包含商品的订单创建成功</h4>
+                            <p><strong>订单号:</strong> ${data.data.order_number}</p>
+                            <p><strong>总金额:</strong> ${data.data.total_amount} ${data.data.currency}</p>
+                            <p><strong>商品数量:</strong> ${data.data.items ? data.data.items.length : 0}</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ 测试失败：无法创建包含商品的订单</h4>
+                            <p><strong>错误:</strong> ${data.message || '未知错误'}</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ 网络错误</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 测试4: 订单号格式验证
+        async function testOrderNumberFormat() {
+            const resultDiv = document.getElementById('orderNumberResult');
+            resultDiv.innerHTML = '<p>测试中...</p>';
+
+            try {
+                await authenticateUser();
+                
+                // 创建多个订单来测试订单号格式
+                const orders = [];
+                for (let i = 0; i < 3; i++) {
+                    const response = await fetch(`${API_BASE}/orders`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            shipping_address: { name: 'Test User', address: 'Test Address', city: 'Test City', country: 'CN' },
+                            billing_address: { name: 'Test User', address: 'Test Address', city: 'Test City', country: 'CN' },
+                            payment_method: 'test',
+                            cart_region: 'CN',
+                            cart_lang: 'zh'
+                        })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success) {
+                            orders.push(data.data.order_number);
+                        }
+                    }
+                }
+
+                // 验证订单号格式
+                const validFormat = /^PO-\d{12}-[A-Z0-9]{6}$/;
+                const formatResults = orders.map(orderNumber => ({
+                    orderNumber,
+                    isValid: validFormat.test(orderNumber),
+                    format: orderNumber ? orderNumber.match(/^(PO-)?(\d{12})?-?([A-Z0-9]{6})?$/) : null
+                }));
+
+                const allValid = formatResults.every(result => result.isValid);
+
+                resultDiv.innerHTML = `
+                    <div class="${allValid ? 'success' : 'error'}">
+                        <h4>${allValid ? '✅' : '❌'} 订单号格式测试${allValid ? '通过' : '失败'}</h4>
+                        <p><strong>期望格式:</strong> PO-YYYYMMDDHHMM-XXXXXX</p>
+                        <p><strong>生成的订单号:</strong></p>
+                        <ul>
+                            ${formatResults.map(result => `
+                                <li>
+                                    <code>${result.orderNumber}</code> 
+                                    ${result.isValid ? '✅' : '❌'}
+                                </li>
+                            `).join('')}
+                        </ul>
+                        <pre>${JSON.stringify(formatResults, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ 网络错误</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 页面加载时的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🧪 0价格订单测试页面已加载');
+        });
+    </script>
+</body>
+</html> 

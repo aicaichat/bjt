@@ -75,7 +75,9 @@ export { randomDelay };
  * @returns 是否应该使用Mock数据
  */
 export const shouldUseMockData = (): boolean => {
-  return USE_MOCK_DATA;
+  // 强制禁用Mock数据，只使用真实API
+  console.log('🔧 [mockService] Mock数据已被强制禁用，只使用真实API');
+  return false;
 };
 
 /**

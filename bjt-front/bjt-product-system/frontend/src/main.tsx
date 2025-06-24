@@ -2,7 +2,6 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './styles/global.css'
-import { AuthProvider } from './contexts/AuthContext'
 import './i18n' // Import i18n configuration
 import { safeRender } from './utils/renderUtils'
 
@@ -97,9 +96,7 @@ installGlobalErrorHandler();
 const SafeApp = () => {
   return (
     <ObjectRenderGuard>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
+      <App />
     </ObjectRenderGuard>
   );
 };

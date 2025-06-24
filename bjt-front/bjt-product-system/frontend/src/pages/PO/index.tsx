@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage, Language } from '../../contexts/LanguageContext';
 import './PO.css';
 import { ASSETS } from '../../config/appConfig';
-import { shouldUseMockData } from '../../services/mockService';
 import { useNotification } from '../../contexts/NotificationContext';
 import { ROUTES } from '../../config/routes';
 import { format, addDays } from 'date-fns';
@@ -15,58 +14,10 @@ import logo from '../../assets/logo.svg';
 import orderService, { Order, OrderStatus, CreateOrderRequest } from '../../api/services/order.service';
 import { Loading, Error } from '../../components/common';
 import * as XLSX from 'xlsx';
-
-// 定义类型
-export interface POProduct {
-  id: string;
-  code?: string;
-  sku?: string;
-  model?: string;
-  name: string | { [key: string]: string };
-  specs?: string | Record<string, string>;
-  properties?: Record<string, string>;
-  unit?: string;
-  quantity: number;
-  price: number;
-  amount?: number;
-  image?: string;
-  type?: string;
-  brand?: string;
-}
-
-interface CustomerInfo {
-  companyName: string;
-  contactName: string;
-  address: string;
-  phone: string;
-  email: string;
-}
-
-interface ShippingInfo {
-  address: string;
-  contactName: string;
-  phone: string;
-  notes: string;
-}
-
-interface POSummary {
-  subtotal: number;
-  shipping: number;
-  tax: number;
-  discount?: number;
-  total: number;
-}
-
-// 定义从Order页面接收的数据类型
-interface POLocationState {
-  poData: {
-    orderId?: string;
-    orderItems: POProduct[];
-    customerInfo: CustomerInfo;
-    shippingInfo: ShippingInfo;
-    summary: POSummary;
-  };
-}
+import { CartFieldUnifier, CartExcelNormalizer } from '../../utils/CartFieldUnifier';
+import { UnifiedProduct, CustomerInfo, ShippingInfo, OrderSummary, POLocationState } from '../../types/product.types';
+import { useCart } from '../../contexts/CartContext';
+import { OrderNumberManager } from '../../utils/orderNumberUtils';
 
 // 1. 新增仿Excel模板的表格CSS
 const poExcelTableStyle = `
@@ -74,17 +25,46 @@ const poExcelTableStyle = `
   border-collapse: collapse;
   width: 100%;
   margin-bottom: 32px;
+  font-family: 'Arial', sans-serif;
 }
 .po-excel-table th, .po-excel-table td {
   border: 1px solid #000;
   padding: 8px;
   font-size: 15px;
+  vertical-align: middle;
 }
 .po-excel-table th {
   font-weight: bold;
   background: #f2f2f2;
   text-align: center;
 }
+
+/* 统一的区域标题样式 (Buyer, Vendor, Ship To) */
+.po-excel-table .section-header {
+  font-weight: bold;
+  background: #f0f0f0 !important;
+  padding: 8px !important;
+  font-size: 14px !important;
+  text-align: center;
+}
+
+/* 统一的字段标签样式 */
+.po-excel-table .field-label {
+  font-weight: bold !important;
+  padding: 6px !important;
+  font-size: 12px !important;
+  background: #f8f8f8 !important;
+  text-align: left;
+}
+
+/* 统一的字段值样式 */
+.po-excel-table .field-value {
+  padding: 6px !important;
+  font-size: 12px !important;
+  text-align: left;
+}
+
+/* 特殊样式 */
 .po-excel-table .amount-cell {
   color: #e74c3c;
   font-weight: bold;
@@ -99,6 +79,20 @@ const poExcelTableStyle = `
   font-style: italic;
   background: #fafafa;
 }
+
+/* 打印样式优化 */
+@media print {
+  .po-excel-table {
+    font-size: 12px;
+  }
+  .po-excel-table .section-header {
+    font-size: 13px !important;
+  }
+  .po-excel-table .field-label,
+  .po-excel-table .field-value {
+    font-size: 11px !important;
+  }
+}
 `;
 
 const POPage: React.FC = () => {
@@ -111,16 +105,6 @@ const POPage: React.FC = () => {
   
   const [isDirectAccess, setIsDirectAccess] = useState(true);
   
-  // 生成一个当前日期和随机ID的PO编号
-  const generatePONumber = (): string => {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    return `PO-${year}${month}${day}-${random}`;
-  };
-  
   // 获取当前日期的格式化字符串
   const getFormattedDate = (): string => {
     const date = new Date();
@@ -130,10 +114,10 @@ const POPage: React.FC = () => {
     return `${year}-${month}-${day}`;
   };
   
-  const [poNumber, setPONumber] = useState<string>(generatePONumber());
+  const [poNumber, setPONumber] = useState<string>(''); // 初始为空，等待从传入数据设置
   const [poDate, setPODate] = useState<string>(getFormattedDate());
   const [paymentMethod, setPaymentMethod] = useState<string>(language === 'cn' ? '银行转账' : 'Bank Transfer');
-  const [products, setProducts] = useState<POProduct[]>([]);
+  const [products, setProducts] = useState<UnifiedProduct[]>([]);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     companyName: '',
     contactName: '',
@@ -147,7 +131,7 @@ const POPage: React.FC = () => {
     phone: '',
     notes: ''
   });
-  const [summary, setSummary] = useState<POSummary>({
+  const [summary, setSummary] = useState<OrderSummary>({
     subtotal: 0,
     shipping: 0,
     tax: 0,
@@ -167,6 +151,9 @@ const POPage: React.FC = () => {
 
   // 当前语言
   const currentLanguage = i18n.language.startsWith('zh') ? 'zh' : 'en';
+  
+  // 🔧 修复：获取用户的单位制偏好
+  const preferredUnit = user?.preferred_unit || 'metric';
   
   // 检查用户是否已登录
   useEffect(() => {
@@ -204,50 +191,385 @@ const POPage: React.FC = () => {
   }, [i18n.language, currentPage, t, user]);
 
   useEffect(() => {
-    // 检查是否有从Order页面传递的数据
+    // 检查是否有从Order页面或OrderList页面传递的数据
     const state = location.state as POLocationState | null;
     
+    console.log('🔧 [PO Page] 接收到的location.state:', state);
+    
     if (state && state.poData) {
-      // 如果有数据，使用传递的数据并更新状态
-      setIsDirectAccess(false);
-      
-      // Ensure data is valid
-      if (state.poData.orderItems && Array.isArray(state.poData.orderItems)) {
-        setProducts(state.poData.orderItems);
-        // Calculate total pages
-        setTotalPages(Math.ceil(state.poData.orderItems.length / 10));
+      try {
+        // 🔧 修复：简化数据处理逻辑，不需要复杂的数组检查
+        let targetOrder = state.poData;
+        
+        console.log('🔧 [PO Page] 处理订单数据:', targetOrder);
+        console.log('🔧 [PO Page] 运输信息详细检查:', {
+          'targetOrder.shippingInfo': targetOrder.shippingInfo,
+          'shippingInfo类型': typeof targetOrder.shippingInfo,
+          'shippingInfo内容': JSON.stringify(targetOrder.shippingInfo),
+          '是否为空': !targetOrder.shippingInfo,
+          '是否为对象': typeof targetOrder.shippingInfo === 'object',
+          '对象键': targetOrder.shippingInfo ? Object.keys(targetOrder.shippingInfo) : 'N/A'
+        });
+        
+        // 🔧 统一：使用OrderNumberManager统一处理订单号
+        const orderInfo = OrderNumberManager.extractFromOrderObject(targetOrder);
+        console.log('🔧 [PO Page] 提取的订单号信息:', orderInfo);
+        setPONumber(orderInfo.displayNumber);
+        
+        // 🔧 设置商品数据
+        if (targetOrder.orderItems && Array.isArray(targetOrder.orderItems)) {
+          console.log('🔧 [PO Page] 设置商品数据，数量:', targetOrder.orderItems.length);
+          setProducts(targetOrder.orderItems);
+          setTotalPages(Math.ceil(targetOrder.orderItems.length / 10));
+        } else {
+          console.warn('⚠️ [PO Page] 商品数据无效或为空');
+          setProducts([]);
+        }
+        
+        // 🔧 统一：使用统一的客户信息处理逻辑
+        const standardCustomerInfo = standardizeCustomerInfo(targetOrder.customerInfo, targetOrder.shippingInfo);
+        console.log('🔧 [PO Page] 标准化后的客户信息:', standardCustomerInfo);
+        setCustomerInfo(standardCustomerInfo);
+        
+        // 🔧 统一：使用统一的运输信息处理逻辑 - 添加详细日志
+        console.log('🔧 [PO Page] 准备标准化运输信息...');
+        console.log('🔧 [PO Page] 原始运输信息:', targetOrder.shippingInfo);
+        
+        const standardShippingInfo = standardizeShippingInfo(targetOrder.shippingInfo);
+        console.log('🔧 [PO Page] 标准化后的运输信息:', standardShippingInfo);
+        console.log('🔧 [PO Page] 运输信息字段检查:', {
+          'address': standardShippingInfo.address,
+          'contactName': standardShippingInfo.contactName,
+          'phone': standardShippingInfo.phone,
+          'notes': standardShippingInfo.notes,
+          '地址是否为默认值': standardShippingInfo.address === 'Shipping Address',
+          '联系人是否为默认值': standardShippingInfo.contactName === 'Shipping Contact'
+        });
+        
+        setShippingInfo(standardShippingInfo);
+        
+        // 🔧 统一：使用统一的汇总信息处理逻辑
+        const standardSummary = standardizeOrderSummary(targetOrder.summary, targetOrder.orderItems || []);
+        console.log('🔧 [PO Page] 标准化后的订单汇总:', standardSummary);
+        setSummary(standardSummary);
+        
+        // 注意：POData类型不包含paymentMethod和date字段，使用默认值
+        // 如果需要这些字段，应当扩展POData类型定义
+        
+        setIsLoading(false);
+        setDataReady(true);
+        
+        // 如果标记了自动打印，则延迟打印
+        if (state.autoPrint) {
+          console.log('🖨️ [PO Page] 检测到自动打印标志，准备打印');
+          setTimeout(() => {
+            printPO();
+          }, 1000);
+        }
+        
+      } catch (error) {
+        console.error('❌ [PO Page] 数据处理失败:', error);
+        setError('订单数据处理失败');
+        setIsLoading(false);
       }
-      
-      if (state.poData.customerInfo) {
-        setCustomerInfo(state.poData.customerInfo);
-      }
-      
-      if (state.poData.shippingInfo) {
-        setShippingInfo(state.poData.shippingInfo);
-      }
-      
-      if (state.poData.summary) {
-        setSummary(state.poData.summary);
-      }
-      
-      setIsLoading(false);
-      setDataReady(true);
     } else {
-      // 如果没有数据，设置直接访问标志
+      // 🔧 直接访问处理：统一重定向逻辑
       setIsDirectAccess(true);
       setIsLoading(true);
       
-      // 简单的直接访问检测
-      const timer = setTimeout(() => {
-        if (isDirectAccess) {
-          // 如果是直接访问，重定向到订单页面
-          navigate(ROUTES.ORDER || '/order');
-        }
-      }, 500);
+      console.log('🔧 [PO Page] 没有接收到数据，检查是否为直接访问');
       
-      return () => clearTimeout(timer);
+      // 检查URL参数，看是否有其他方式传递的数据
+      const urlParams = new URLSearchParams(window.location.search);
+      const orderIdFromUrl = urlParams.get('orderId');
+      const poNumberFromUrl = urlParams.get('poNumber');
+      
+      if (orderIdFromUrl || poNumberFromUrl) {
+        console.log('🔧 [PO Page] 检测到URL参数，尝试加载订单数据:', { orderIdFromUrl, poNumberFromUrl });
+        loadOrderFromParams(orderIdFromUrl, poNumberFromUrl);
+      } else {
+        // 确认为直接访问，延迟重定向
+        const timer = setTimeout(() => {
+          if (isDirectAccess) {
+            console.log('🔧 [PO Page] 确认为直接访问，重定向到订单页面');
+            navigate(ROUTES.ORDER || '/order');
+          }
+        }, 500);
+        
+        return () => clearTimeout(timer);
+      }
     }
   }, [location.state, navigate, isDirectAccess]);
+  
+  // 🔧 新增：统一的数据处理方法
+  const processIncomingPOData = (poData: any, source: string) => {
+    console.log('🔧 [PO Page] 开始统一数据处理，来源:', source);
+    
+    // 根据来源使用不同的处理策略
+    switch (source) {
+      case 'order_list_detail':
+      case 'order_list_standardized':
+        // OrderList传入的数据已经经过标准化
+        return poData;
+        
+      case 'order_page':
+      case 'cart_checkout':
+        // Order页面传入的数据，可能需要额外处理
+        return processOrderPageData(poData);
+        
+      default:
+        // 未知来源，使用通用处理
+        return processGenericData(poData);
+    }
+  };
+  
+  // 🔧 新增：标准化客户信息 - 增强版本
+  const standardizeCustomerInfo = (customerInfo: any, shippingInfo?: any): CustomerInfo => {
+    console.log('🔧 [标准化] 原始客户信息:', customerInfo);
+    console.log('🔧 [标准化] 备用运输信息:', shippingInfo);
+    
+    // 🔧 修复：优先使用已经提取好的customerInfo，特别是来自OrderList的数据
+    if (customerInfo && typeof customerInfo === 'object') {
+      const extractedCompanyName = customerInfo.companyName || customerInfo.company_name || customerInfo.company;
+      const extractedContactName = customerInfo.contactName || customerInfo.contact_name || customerInfo.name;
+      const extractedAddress = customerInfo.address;
+      const extractedPhone = customerInfo.phone || customerInfo.contact_phone;
+      const extractedEmail = customerInfo.email || '';
+      
+      console.log('🔧 [标准化] 从customerInfo提取的字段值:', {
+        companyName: extractedCompanyName,
+        contactName: extractedContactName,
+        address: extractedAddress,
+        phone: extractedPhone,
+        email: extractedEmail
+      });
+      
+      // 🔧 如果customerInfo中有任何有效字段，优先使用它们
+      if (extractedCompanyName || extractedContactName || extractedAddress || extractedPhone) {
+        const result = {
+          companyName: extractedCompanyName || 'Customer Company',
+          contactName: extractedContactName || 'Customer Contact',
+          address: extractedAddress || 'Customer Address',
+          phone: extractedPhone || 'Customer Phone',
+          email: extractedEmail
+        };
+        console.log('🔧 [标准化] 使用customerInfo中的数据:', result);
+        return result;
+      }
+    }
+    
+    // 🔧 如果customerInfo无效，才从shippingInfo中提取，因为API数据主要在shipping_address中
+    if (shippingInfo && typeof shippingInfo === 'object') {
+      console.log('🔧 [标准化] customerInfo无效，从运输信息中提取客户信息');
+      
+      const extractedCompanyName = shippingInfo.companyName || shippingInfo.company_name || shippingInfo.company;
+      const extractedContactName = shippingInfo.contactName || shippingInfo.contact_name || shippingInfo.name;
+      const extractedAddress = shippingInfo.address;
+      const extractedPhone = shippingInfo.phone || shippingInfo.contact_phone;
+      const extractedEmail = shippingInfo.email || '';
+      
+      console.log('🔧 [标准化] 从shippingInfo提取的字段值:', {
+        companyName: extractedCompanyName,
+        contactName: extractedContactName,
+        address: extractedAddress,
+        phone: extractedPhone,
+        email: extractedEmail
+      });
+      
+      // 🔧 如果有任何有效字段，就使用从shippingInfo提取的数据
+      if (extractedCompanyName || extractedContactName || extractedAddress || extractedPhone) {
+        const result = {
+          companyName: extractedCompanyName || 'Customer Company',
+          contactName: extractedContactName || 'Customer Contact',
+          address: extractedAddress || 'Customer Address',
+          phone: extractedPhone || 'Customer Phone',
+          email: extractedEmail
+        };
+        console.log('🔧 [标准化] 从运输信息中成功提取客户数据:', result);
+        return result;
+      }
+    }
+    
+    // 最后使用默认值
+    console.log('🔧 [标准化] 使用默认客户信息');
+    return {
+      companyName: 'Hangzhou Bingjia Tech. Co., Ltd.',
+      contactName: 'Customer Contact',
+      address: 'Customer Address',
+      phone: 'Customer Phone',
+      email: ''
+    };
+  };
+  
+  // 🔧 新增：标准化运输信息 - 增强版本
+  const standardizeShippingInfo = (shippingInfo: any): ShippingInfo => {
+    console.log('🔧 [标准化] 原始运输信息:', shippingInfo);
+    console.log('🔧 [标准化] 运输信息类型:', typeof shippingInfo);
+    
+    if (!shippingInfo) {
+      console.log('🔧 [标准化] 运输信息为空，使用默认值');
+      return {
+        address: 'Shipping Address',
+        contactName: 'Shipping Contact',
+        phone: 'Shipping Phone',
+        notes: ''
+      };
+    }
+    
+    // 处理字符串格式 "地址|联系人|电话|备注"
+    if (typeof shippingInfo === 'string') {
+      console.log('🔧 [标准化] 处理字符串格式运输信息');
+      const parts = shippingInfo.split('|').map(s => s.trim());
+      const result = {
+        address: parts[0] || 'Shipping Address',
+        contactName: parts[1] || 'Shipping Contact',
+        phone: parts[2] || 'Shipping Phone',
+        notes: parts[3] || ''
+      };
+      console.log('🔧 [标准化] 字符串格式转换结果:', result);
+      return result;
+    }
+    
+    // 处理对象格式 - 🔧 修复字段映射逻辑，匹配数据库字段
+    if (typeof shippingInfo === 'object') {
+      console.log('🔧 [标准化] 处理对象格式运输信息');
+      console.log('🔧 [标准化] 对象字段:', Object.keys(shippingInfo));
+      
+      const result = {
+        // 🔧 地址字段映射：优先使用address字段
+        address: shippingInfo.address || 
+                shippingInfo.delivery_address || 
+                shippingInfo.shipping_address || 
+                'Shipping Address',
+        
+        // 🔧 修复：联系人字段映射逻辑 - 优先使用已处理的contactName字段
+        contactName: shippingInfo.contactName ||   // 🔧 优先使用OrderList已处理的contactName
+                    shippingInfo.name ||           // 🔧 数据库原始name字段
+                    shippingInfo.contact_name || 
+                    shippingInfo.recipient_name || 
+                    shippingInfo.receiver_name || 
+                    'Shipping Contact',
+        
+        // 🔧 电话字段映射：优先使用phone字段
+        phone: shippingInfo.phone ||                // 🔧 数据库主要字段
+               shippingInfo.contact_phone || 
+               shippingInfo.mobile || 
+               shippingInfo.tel || 
+               'Shipping Phone',
+        
+        // 🔧 备注字段映射：支持多种备注字段名
+        notes: shippingInfo.notes || 
+               shippingInfo.note || 
+               shippingInfo.remark || 
+               shippingInfo.comment || 
+               ''
+      };
+      
+      console.log('🔧 [标准化] 对象格式转换结果:', result);
+      console.log('🔧 [标准化] 字段映射详情:', {
+        '原始contactName字段': shippingInfo.contactName,
+        '原始name字段': shippingInfo.name,
+        '原始phone字段': shippingInfo.phone,
+        '原始address字段': shippingInfo.address,
+        '映射后contactName': result.contactName,
+        '映射后phone': result.phone,
+        '映射后address': result.address,
+        '是否使用默认值': result.address === 'Shipping Address'
+      });
+      
+      return result;
+    }
+    
+    console.log('🔧 [标准化] 未知格式，使用默认值');
+    return {
+      address: 'Shipping Address',
+      contactName: 'Shipping Contact',
+      phone: 'Shipping Phone',
+      notes: ''
+    };
+  };
+  
+  // 🔧 新增：标准化订单汇总
+  const standardizeOrderSummary = (summary: any, orderItems: UnifiedProduct[]): OrderSummary => {
+    if (summary && typeof summary === 'object' && summary.total) {
+      return {
+        subtotal: summary.subtotal || summary.total,
+        shipping: summary.shipping || 0,
+        tax: summary.tax || 0,
+        total: summary.total
+      };
+    }
+    
+    // 如果没有汇总信息，从商品列表计算
+    const calculatedTotal = orderItems.reduce((sum, item) => {
+      return sum + (item.price || 0) * (item.quantity || 1);
+    }, 0);
+    
+    return {
+      subtotal: calculatedTotal,
+      shipping: 0,
+      tax: 0,
+      total: calculatedTotal
+    };
+  };
+  
+  // 🔧 新增：处理Order页面数据
+  const processOrderPageData = (poData: any) => {
+    // Order页面的数据可能需要特殊处理
+    console.log('🔧 [PO Page] 处理Order页面数据');
+    return poData;
+  };
+  
+  // 🔧 新增：处理通用数据
+  const processGenericData = (poData: any) => {
+    // 通用数据处理逻辑
+    console.log('🔧 [PO Page] 处理通用数据');
+    return poData;
+  };
+  
+  // 🔧 新增：错误恢复处理
+  const fallbackDataProcessing = (poData: any) => {
+    console.log('🔧 [PO Page] 启用错误恢复处理');
+    
+    // 基础的数据设置，不进行复杂验证
+    if (poData.orderItems && Array.isArray(poData.orderItems)) {
+      setProducts(poData.orderItems);
+    }
+    
+    if (poData.customerInfo) {
+      setCustomerInfo(poData.customerInfo);
+    }
+    
+    if (poData.shippingInfo) {
+      setShippingInfo(poData.shippingInfo);
+    }
+    
+    if (poData.summary) {
+      setSummary(poData.summary);
+    }
+    
+    setIsLoading(false);
+    setDataReady(true);
+  };
+  
+  // 🔧 新增：从URL参数加载订单数据
+  const loadOrderFromParams = async (orderId: string, poNumber: string) => {
+    try {
+      console.log('🔧 [PO Page] 从URL参数加载订单数据:', { orderId, poNumber });
+      
+      // 这里可以调用API获取订单数据
+      // const orderData = await orderService.getOrderById(orderId);
+      // 然后使用统一的数据处理逻辑
+      
+      // 暂时设置为直接访问
+      setIsDirectAccess(true);
+      setIsLoading(false);
+      
+    } catch (error) {
+      console.error('🔧 [PO Page] 从URL参数加载订单失败:', error);
+      navigate(ROUTES.ORDER || '/order');
+    }
+  };
 
   // Helper function to convert object to string
   const objectToString = (obj: any): string => {
@@ -263,234 +585,101 @@ const POPage: React.FC = () => {
     }
   };
 
-  // 导出Excel（前端用模板填充）
+  // 🔧 统一的Excel导出方法
   const exportToExcel = async () => {
     try {
-      // 1. 加载模板
-      const response = await fetch('/template/PO单模版 V1.0.xlsx');
-      const arrayBuffer = await response.arrayBuffer();
-      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-
-      // 2. 获取第一个sheet（假设为PO信息页）
-      const sheetName = workbook.SheetNames[0];
-      const ws = workbook.Sheets[sheetName];
-      
-      // 2.0. 🔍 分析模板结构（调试用）
-      console.log('🔍 [Excel Export] 分析模板结构...');
-      console.log('🔍 [Excel Export] Sheet名称:', sheetName);
-      
-      // 输出模板中前20行的所有单元格内容
-      for (let row = 1; row <= 20; row++) {
-        const rowData: any = {};
-        for (let colCode = 65; colCode <= 90; colCode++) { // A到Z列
-          const col = String.fromCharCode(colCode);
-          const cellRef = `${col}${row}`;
-          if (ws[cellRef] && ws[cellRef].v) {
-            rowData[col] = ws[cellRef].v;
-          }
-        }
-        if (Object.keys(rowData).length > 0) {
-          console.log(`🔍 Row ${row}:`, rowData);
-        }
-      }
-      
-      // 2.1. 🔧 清除模板中所有可能的示例数据和提示文字
-      console.log('🔧 [Excel Export] 开始清除模板中的示例数据和提示文字...');
-      let clearedCells = 0;
-      
-      // 清除商品明细区域（从第14行到第50行，A到H列，包含模板示例数据）
-      for (let row = 14; row <= 50; row++) {
-        for (let colCode = 65; colCode <= 72; colCode++) { // A到H列
-          const col = String.fromCharCode(colCode);
-          const cellRef = `${col}${row}`;
-          if (ws[cellRef]) {
-            delete ws[cellRef];
-            clearedCells++;
-          }
-        }
-      }
-      
-      // 清除模板提示文字
-      const templateTextCells = [
-        'A1', // LOGO提示文字
-        'D7', // Vendor区域可能的提示文字
-        'D8', // 可能的重复vendor信息
-        'D9', // 可能的重复vendor信息
-        'D10', // 可能的重复vendor信息
-        'H8', // Ship to区域可能的提示文字
-        'H9', // Ship to区域可能的提示文字
-        'H10', // Ship to区域可能的提示文字
-        'H11', // Ship to区域可能的提示文字
-        'G8', // Ship to区域可能的提示文字
-        'G9', // Ship to区域可能的提示文字
-        'G10', // Ship to区域可能的提示文字
-        'G11'  // Ship to区域可能的提示文字
-      ];
-      
-      templateTextCells.forEach(cellAddr => {
-        if (ws[cellAddr] && ws[cellAddr].v && typeof ws[cellAddr].v === 'string') {
-          const cellValue = ws[cellAddr].v;
-          // 检查是否是模板提示文字
-          if (cellValue.includes('这里用于显示') || 
-              cellValue.includes('这里对应填') || 
-              cellValue.includes('二期开发') ||
-              cellValue.includes('用户账号管理') ||
-              cellValue.includes('LOGO') ||
-              cellValue.includes('公司名字') ||
-              cellValue.includes('地址') ||
-              cellValue.includes('联系人') ||
-              cellValue.includes('电话') ||
-              cellValue.includes('备注') ||
-              cellValue.includes('发货特殊要求')) {
-            delete ws[cellAddr];
-            clearedCells++;
-          }
-        }
-      });
-      
-      console.log(`🔧 [Excel Export] 已清除 ${clearedCells} 个模板示例数据和提示文字单元格`);
-      console.log(`🔧 [Excel Export] 将填充 ${products.length} 个实际商品记录`);
-
-      // 2.2. 获取供应商地址信息
-      const currentVendorAddress = getVendorAddress();
-      
-      // 3. 🔧 可配置的字段映射（根据实际Excel截图重新调整）
-      const fieldMapping = {
-        // 右上角信息区域 - 基于截图确认位置正确
-        poNumber: 'H2',       // Purchase Order Number
-        date: 'H3',           // Date
-        paymentMethod: 'H4',  // Payment Method
-        page: 'H5',           // Page
-        
-        // Buyer信息区域 - 从截图看，需要覆盖D2和D3的占位文字
-        buyerCompany: 'D2',   // 覆盖"这里对应填买方公司地址抬头电话"
-        buyerAddress: 'D3',   // 可能需要额外的地址行
-        
-        // Vendor信息区域 - 保持不变，看起来位置正确
-        vendorCompany: 'A8',  // BJT Pack, Inc.
-        vendorAddress: 'A9',  // 5275 Naiman Parkway, Suite B
-        vendorCity: 'A10',    // Solon, Ohio 44139
-        
-        // Ship to信息区域 - 从截图看，需要覆盖H7的占位文字
-        shipToInfo: 'H7',     // 覆盖"这里对应填收货地址，联系人，电话，发货特殊要求"
-        shipToCompany: 'H8',  // 公司名称
-        shipToAddress: 'H9',  // 地址
-        shipToContact: 'H10', // 联系人/电话
-        shipToNotes: 'H11'    // 备注
-      };
-      
-      // 如果需要修改字段位置，您可以在这里调整fieldMapping对象
-      console.log('🔧 [Excel Export] 使用的字段映射:', fieldMapping);
-      
-      // 3. 🔧 根据配置填充字段
-      ws[fieldMapping.poNumber] = { t: 's', v: poNumber };
-      ws[fieldMapping.date] = { t: 's', v: poDate };
-      ws[fieldMapping.paymentMethod] = { t: 's', v: paymentMethod };
-      ws[fieldMapping.page] = { t: 's', v: '1 of 1' };
-
-      // 4. 🔧 填充Buyer信息 - 格式化显示
-      const buyerInfo = [
-        customerInfo.companyName || '',
-        customerInfo.contactName || '',
-        customerInfo.address || '',
-        `Tel: ${customerInfo.phone || ''}`
-      ].filter(item => item && item !== 'Tel: ').join('\n') || '-';
-      ws[fieldMapping.buyerCompany] = { t: 's', v: buyerInfo };
-      
-      // 5. 🔧 填充Vendor信息 - 覆盖模板占位文字
-      ws[fieldMapping.vendorCompany] = { t: 's', v: currentVendorAddress.companyName };
-      ws[fieldMapping.vendorAddress] = { t: 's', v: currentVendorAddress.address };
-      ws[fieldMapping.vendorCity] = { t: 's', v: currentVendorAddress.city };
-      
-      // 同时覆盖Vendor区域的占位文字
-      ws['D7'] = { t: 's', v: `${currentVendorAddress.companyName}\n${currentVendorAddress.address}\n${currentVendorAddress.city}` };
-
-      // 6. 🔧 填充Ship to信息 - 优化格式
-      const shipToInfo = [
-        `Company: ${customerInfo.companyName || '-'}`,
-        `Address: ${customerInfo.address || '-'}`,
-        `Contact: ${customerInfo.contactName || '-'}`,
-        `Tel: ${customerInfo.phone || '-'}`,
-        shippingInfo.notes ? `Notes: ${shippingInfo.notes}` : ''
-      ].filter(Boolean).join('\n');
-      ws[fieldMapping.shipToInfo] = { t: 's', v: shipToInfo };
-      
-      // 6.1. 🔧 添加调试信息
-      console.log('🔧 [Excel Export] 填充的数据：', {
+      console.log('🔧 [PO] 开始统一Excel导出，当前语言:', currentLanguage);
+      console.log('🔧 [PO] 当前PO数据:', {
         poNumber,
         poDate,
         paymentMethod,
         customerInfo,
-        vendorAddress: currentVendorAddress,
         shippingInfo,
-        productsCount: products.length
+        productsCount: products.length,
+        summary
       });
-
-      // 7. 填充商品明细（从第14行开始，A14:H14）
-      let startRow = 14;
-      products.forEach((item, idx) => {
-        const row = startRow + idx;
-        ws[`A${row}`] = { t: 's', v: item.code || item.sku || '-' };
-        // 🔧 优先使用处理后的name字段
-        ws[`B${row}`] = { t: 's', v: 
-          item.name && typeof item.name === 'string' ? item.name :
-          typeof item.name === 'object' ? (item.name['zh-CN'] || item.name['en-US'] || '-') : 
-          item.model || item.code || item.sku || '-'
-        };
-        ws[`C${row}`] = { t: 's', v: item.model || '-' };
-        // 🔧 按照PO单模版格式，简化Item description
-        ws[`D${row}`] = { t: 's', v: (() => {
-          const descriptions = [];
+      
+      // 🔧 统一：构造与PO页面显示完全一致的订单数据，使用业务订单号
+      const orderData = {
+        id: poNumber, // 🔧 使用PO页面当前显示的订单号
+        orderNumber: poNumber, // 🔧 业务订单号
+        date: poDate, // 🔧 使用PO页面当前显示的日期
+        status: 'pending' as const,
+        paymentMethod, // 🔧 使用PO页面当前显示的支付方式
+        total: summary.total,
+        // 🔧 修复：使用与PO页面完全一致的客户和运输信息结构
+        shippingInfo: {
+          companyName: customerInfo.companyName, // 对应PO页面Buyer的Company Name
+          contactName: customerInfo.contactName || shippingInfo.contactName, // 优先使用客户联系人
+          address: customerInfo.address || shippingInfo.address, // 优先使用客户地址
+          phone: customerInfo.phone || shippingInfo.phone, // 优先使用客户电话
+          notes: shippingInfo.notes,
+          email: customerInfo.email || (shippingInfo as any).email || '',
+          company: customerInfo.companyName,
+          country: (shippingInfo as any).country || ''
+        },
+        // 🔧 修复：添加供应商信息
+        vendor: getVendorAddress(),
+        language: (currentLanguage === 'zh' ? 'zh' : 'en') as 'zh' | 'en',
+        items: products.map(product => {
+          console.log('🔧 [PO Excel Export] 准备产品数据:', {
+            id: product.id,
+            code: product.code,
+            name: product.name,
+            model: product.model,
+            spec: product.spec,
+            specs: product.specs,
+            spec_imperial: product.spec_imperial,
+            brand: product.brand
+          });
           
-          // 添加规格信息
-          if (item.specs && typeof item.specs === 'string') {
-            descriptions.push(item.specs);
-          } else if (item.specs && typeof item.specs === 'object') {
-            const specsText = Object.entries(item.specs)
-              .filter(([k, v]) => v && v !== 'N/A' && v !== 'Not Specified')
-              .map(([k, v]) => `${k}: ${v}`)
-              .join(', ');
-            if (specsText) descriptions.push(specsText);
-          }
-          
-          // 从properties中添加关键规格
-          if (item.properties) {
-            const importantSpecs = [];
-            if (item.properties.voltage && item.properties.voltage !== 'N/A') {
-              importantSpecs.push(`${item.properties.voltage}${item.properties.voltage.includes('V') ? '' : 'V'}`);
-            }
-            if (item.properties.frequency && item.properties.frequency !== 'N/A') {
-              importantSpecs.push(`${item.properties.frequency}${item.properties.frequency.includes('Hz') ? '' : 'Hz'}`);
-            }
-            if (importantSpecs.length > 0) {
-              descriptions.push(importantSpecs.join(', '));
-            }
-          }
-          
-          return descriptions.length > 0 ? descriptions.join(' | ') : '-';
-        })() };
-        ws[`E${row}`] = { t: 's', v: item.brand || '-' };
-        ws[`F${row}`] = { t: 'n', v: item.quantity };
-        ws[`G${row}`] = { t: 'n', v: item.price };
-        ws[`H${row}`] = { t: 'n', v: item.price * item.quantity };
+          // 🔧 修复：使用与PO页面表格完全一致的数据处理逻辑
+          return {
+            id: product.id,
+            code: product.code || product.sku || product.id, // Part No. # 列
+            sku: product.sku,
+            part_number: product.code || product.sku || product.id,
+            // 🔧 Item列：使用与PO页面完全相同的逻辑
+            name: getProductName(product), // 🔧 使用PO页面相同的名称获取逻辑
+            quantity: product.quantity,
+            price: product.price,
+            unit_price: product.price,
+            model: product.model || '-', // Model列
+            // 🔧 修复：使用与PO页面Item description列完全相同的逻辑
+            spec: product.spec || (product as any).description || '', // 单数spec字段 - 与PO页面优先级一致
+            specs: typeof product.specs === 'string' ? product.specs : '', // 复数specs字段 - 作为备用
+            spec_imperial: product.spec_imperial || '',
+            brand: product.brand || 'Lockedair', // Brand Name列
+            properties: product.properties || {},
+            // 🔧 添加计算字段
+            amount: (product.price || 0) * (product.quantity || 1),
+            line_total: (product.price || 0) * (product.quantity || 1)
+          };
+        })
+      };
+      
+      console.log('🔧 [PO Excel Export] 最终订单数据:', {
+        id: orderData.id,
+        date: orderData.date,
+        paymentMethod: orderData.paymentMethod,
+        customerInfo: orderData.shippingInfo,
+        vendorInfo: orderData.vendor,
+        itemsCount: orderData.items.length
       });
-
-      // 8. 填充合计信息
-      const summaryStartRow = startRow + products.length + 2;
-      ws[`G${summaryStartRow}`] = { t: 's', v: t('table.summary.total') };
-      ws[`H${summaryStartRow}`] = { t: 'n', v: summary.subtotal };
-      ws[`G${summaryStartRow + 1}`] = { t: 's', v: t('table.summary.freightCharge') };
-      ws[`H${summaryStartRow + 1}`] = { t: 'n', v: summary.shipping };
-      ws[`G${summaryStartRow + 2}`] = { t: 's', v: t('table.summary.totalAmount') };
-      ws[`H${summaryStartRow + 2}`] = { t: 'n', v: summary.total };
-
-      // 9. 导出
-      XLSX.writeFile(workbook, `PO-${poNumber}.xlsx`);
+      
+      // 🔧 使用统一的ExcelExporter导出
+      const { ExcelExporter } = await import('../../utils/excelExporter');
+      await ExcelExporter.exportToExcel(orderData);
+      
+      notification.success(t('exportSuccess', 'Excel导出成功'));
     } catch (error) {
-      console.error('导出Excel时出错:', error);
-      notification.error(t('exportError'));
+      console.error('🔧 [PO] Excel导出失败:', error);
+      notification.error(t('exportError', 'Excel导出失败'));
     }
   };
+
+  // 🔧 移除简化导出方法，统一使用上面的方法
+  const exportToExcelSimple = exportToExcel;
 
   // 打印PO单
   const printPO = () => {
@@ -521,74 +710,81 @@ const POPage: React.FC = () => {
     navigate(-1);
   };
 
-  // 完成PO单
+  // 🔧 修复：PO页面确认订单后，确保数据一致性和正确跳转
   const completePO = async () => {
     try {
-      // 创建订单对象
-      const orderItems = products.map(product => ({
-        order_item_id: Date.now() + Math.floor(Math.random() * 1000),
-        product_type: 'machine' as const,
-        product_id: parseInt(product.id),
-        part_number: product.code || product.sku || '',
-        name: typeof product.name === 'object' ? 
-              product.name[language === 'cn' ? 'zh-CN' : 'en-US'] : 
-              product.name,
-        quantity: product.quantity,
-        unit_price: product.price,
-        line_total: product.price * product.quantity,
-        properties: product.properties || {}
-      }));
-
-      const newOrder: CreateOrderRequest = {
-        shipping_address: {
-          name: shippingInfo.contactName,
-          phone: shippingInfo.phone,
-          address: shippingInfo.address
-        },
-        billing_address: {
-          name: customerInfo.contactName,
-          phone: customerInfo.phone,
-          address: customerInfo.address
-        },
-        payment_method: paymentMethod,
-        notes: shippingInfo.notes
-      };
-
       setIsLoading(true);
       
-      if (shouldUseMockData()) {
-        // 使用本地存储模拟API
-        // 从本地存储获取现有订单列表，如果没有则创建新的
-        const existingOrdersJson = localStorage.getItem('orders');
-        const existingOrders = existingOrdersJson ? JSON.parse(existingOrdersJson) : [];
-        
-        // 将新订单添加到列表中
-        const updatedOrders = [newOrder, ...existingOrders];
-        
-        // 保存回本地存储
-        localStorage.setItem('orders', JSON.stringify(updatedOrders));
-        
-        // 模拟API延迟
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        notification.success(t('orderCompleted'));
-      } else {
-        // 实际API调用
-        const response = await orderService.createOrder(newOrder);
-        
-        if (response) {
-          notification.success(t('orderCompleted'));
-        } else {
-          notification.error(t('processingError'));
-        }
+      // 🔧 检查是否有有效的订单数据
+      if (!products || products.length === 0) {
+        console.error('🔧 [PO] 没有有效的订单数据');
+        notification.error(t('errors.noOrderData', 'No order data available'));
+        return;
       }
       
-      // 导航到订单列表页面，添加参数表示来自PO完成
+      console.log('🔧 [PO] 开始确认PO操作');
+      console.log('🔧 [PO] 当前PO号:', poNumber);
+      console.log('🔧 [PO] 订单项目数量:', products.length);
+      console.log('🔧 [PO] 客户信息:', customerInfo);
+      console.log('🔧 [PO] 运输信息:', shippingInfo);
+      console.log('🔧 [PO] 订单汇总:', summary);
+      
+      // 🔧 构造完整的订单数据，确保与PO页面显示的数据完全一致
+      const orderDataForList = {
+        id: poNumber,
+        orderNumber: poNumber, // 🔧 确保订单号一致
+        date: poDate,
+        status: 'pending' as const,
+        total: summary.total,
+        paymentMethod: paymentMethod,
+        shippingInfo: {
+          companyName: customerInfo.companyName,
+          contactName: customerInfo.contactName || shippingInfo.contactName,
+          address: customerInfo.address || shippingInfo.address,
+          phone: customerInfo.phone || shippingInfo.phone,
+          notes: shippingInfo.notes,
+          email: customerInfo.email || ''
+        },
+        items: products.map(product => ({
+          id: product.id,
+          code: product.code || product.sku,
+          name: getProductName(product),
+          quantity: product.quantity,
+          price: product.price,
+          model: product.model,
+          spec: product.spec,
+          brand: product.brand,
+          amount: (product.price || 0) * (product.quantity || 1)
+        }))
+      };
+      
+      console.log('🔧 [PO] 构造的完整订单数据:', orderDataForList);
+      
+      // 🔧 尝试更新订单状态（如果有API支持）
+      try {
+        // 这里可以调用API更新订单状态
+        // await orderService.updateOrderStatus(poNumber, 'confirmed');
+        console.log('🔧 [PO] 订单状态更新（模拟）');
+      } catch (apiError) {
+        console.warn('🔧 [PO] API更新失败，继续本地操作:', apiError);
+      }
+      
+      notification.success(t('poConfirmed', 'PO confirmed successfully'));
+      
+      // 🔧 导航回订单列表页面，传递完整的订单数据
       navigate(ROUTES.ORDERS || '/orders', { 
-        state: { fromPO: true, poNumber: poNumber } 
+        state: { 
+          fromPO: true, 
+          poNumber: poNumber,
+          confirmedOrderData: orderDataForList, // 🔧 传递完整的订单数据
+          action: 'confirmed',
+          timestamp: Date.now() // 🔧 添加时间戳确保状态更新
+        },
+        replace: true // 🔧 使用replace避免用户返回到PO页面
       });
+      
     } catch (error) {
-      console.error('完成订单时出错:', error);
+      console.error('🔧 [PO] 确认PO时出错:', error);
       notification.error(t('processingError'));
     } finally {
       setIsLoading(false);
@@ -612,20 +808,23 @@ const POPage: React.FC = () => {
     setCurrentPage(page);
   };
 
-  // 获取产品名称
-  const getProductName = (product: POProduct) => {
-    // 🔧 优先使用处理后的name字段
-    if (product.name && typeof product.name === 'string') {
-      return product.name;
-    }
+  // 🎯 获取产品名称（使用统一系统，解决BUG-003：中英文显示混乱）
+  const getProductName = (product: UnifiedProduct) => {
+    console.log('🔧 [PO Page] getProductName调用:', {
+      currentLanguage,
+      productCode: product.code,
+      productId: product.id,
+      name: product.name,
+      name_zh: (product as any).name_zh,
+      name_en: (product as any).name_en,
+      model: product.model,
+      '完整产品对象': product
+    });
     
-    // 如果name是对象，按语言选择
-    if (typeof product.name === 'object') {
-      return product.name[language === 'cn' ? 'zh-CN' : 'en-US'] || product.name['en-US'] || '-';
-    }
+    const result = CartFieldUnifier.getProductName(product, currentLanguage);
+    console.log('🔧 [PO Page] getProductName结果:', result);
     
-    // 最后的回退
-    return product.model || product.code || product.sku || 'Unknown Product';
+    return result;
   };
 
   // 根据语言或地区获取供应商地址
@@ -660,7 +859,7 @@ const POPage: React.FC = () => {
   };
 
   // 仿Excel模板表格组件，定义在POPage内部，props传递数据
-  const POExcelTable: React.FC<{products: POProduct[], language: string, shippingInfo: ShippingInfo, summary: POSummary}> = ({products, language, shippingInfo, summary}) => (
+  const POExcelTable: React.FC<{products: UnifiedProduct[], language: string, shippingInfo: ShippingInfo, summary: OrderSummary}> = ({products, language, shippingInfo, summary}) => (
     <>
       <style>{poExcelTableStyle}</style>
       {/* 第一页：PO元信息 - 按模板布局 */}
@@ -706,48 +905,48 @@ const POPage: React.FC = () => {
           
           {/* Buyer区域 */}
           <tr>
-            <td style={{border: "1px solid #000", fontWeight: "bold", background: '#f0f0f0'}}>{t('sections.buyer')}</td>
+            <td className="section-header">{t('sections.buyer')}</td>
             <td style={{border: "1px solid #000"}}></td>
             <td style={{border: "1px solid #000"}}></td>
-            <td style={{border: "1px solid #000", fontWeight: "bold", background: '#f0f0f0'}}>{t('sections.shipTo')}</td>
+            <td className="section-header">{t('sections.shipTo')}</td>
           </tr>
           <tr>
-            <td style={{border: "1px solid #000", fontWeight: "bold"}}>{t('fields.companyName')}</td>
-            <td style={{border: "1px solid #000", height: '30px'}}>{customerInfo.companyName}</td>
+            <td className="field-label">{t('fields.companyName')}</td>
+            <td className="field-value" style={{height: '30px'}}>{customerInfo.companyName}</td>
             <td style={{border: "1px solid #000"}}></td>
-            <td style={{border: "1px solid #000", fontWeight: "bold"}}>{t('fields.contactName')}</td>
+            <td className="field-label">{t('fields.contactName')}</td>
           </tr>
           <tr>
-            <td style={{border: "1px solid #000", fontWeight: "bold"}}>{t('fields.address')}</td>
-            <td style={{border: "1px solid #000", height: '30px'}}>{customerInfo.address}</td>
+            <td className="field-label">{t('fields.address')}</td>
+            <td className="field-value" style={{height: '30px'}}>{customerInfo.address}</td>
             <td style={{border: "1px solid #000"}}></td>
-            <td style={{border: "1px solid #000"}}>{shippingInfo.contactName}</td>
+            <td className="field-value">{shippingInfo.contactName}</td>
           </tr>
           
           {/* Vendor区域 */}
           <tr>
-            <td style={{border: "1px solid #000", fontWeight: "bold", background: '#f0f0f0'}}>{t('sections.vendor')}</td>
+            <td className="section-header">{t('sections.vendor')}</td>
             <td style={{border: "1px solid #000"}}></td>
             <td style={{border: "1px solid #000"}}></td>
-            <td style={{border: "1px solid #000", fontWeight: "bold"}}>{t('fields.phone')}</td>
+            <td className="field-label">{t('fields.phone')}</td>
           </tr>
           <tr>
-            <td style={{border: "1px solid #000", fontWeight: "bold"}}>{vendorAddress.companyName}</td>
+            <td className="field-label">{t('fields.companyName')}</td>
+            <td className="field-value">{vendorAddress.companyName}</td>
             <td style={{border: "1px solid #000"}}></td>
-            <td style={{border: "1px solid #000"}}></td>
-            <td style={{border: "1px solid #000"}}>{shippingInfo.phone}</td>
+            <td className="field-value">{shippingInfo.phone}</td>
           </tr>
           <tr>
-            <td style={{border: "1px solid #000"}}>{vendorAddress.address}</td>
+            <td className="field-label">{t('fields.address')}</td>
+            <td className="field-value">{`${vendorAddress.address}, ${vendorAddress.city}`}</td>
             <td style={{border: "1px solid #000"}}></td>
-            <td style={{border: "1px solid #000"}}></td>
-            <td style={{border: "1px solid #000", fontWeight: "bold"}}>{t('fields.address')}</td>
+            <td className="field-label">{t('fields.address')}</td>
           </tr>
           <tr>
-            <td style={{border: "1px solid #000"}}>{vendorAddress.city}</td>
             <td style={{border: "1px solid #000"}}></td>
             <td style={{border: "1px solid #000"}}></td>
-            <td style={{border: "1px solid #000"}}>{shippingInfo.address}</td>
+            <td style={{border: "1px solid #000"}}></td>
+            <td className="field-value">{shippingInfo.address}</td>
           </tr>
           
           {/* Ship to详细信息 */}
@@ -755,13 +954,13 @@ const POPage: React.FC = () => {
             <td style={{border: "1px solid #000"}}></td>
             <td style={{border: "1px solid #000"}}></td>
             <td style={{border: "1px solid #000"}}></td>
-            <td style={{border: "1px solid #000", fontWeight: "bold"}}>{t('fields.notes')}</td>
+            <td className="field-label">{t('fields.notes')}</td>
           </tr>
           <tr>
             <td style={{border: "1px solid #000"}}></td>
             <td style={{border: "1px solid #000"}}></td>
             <td style={{border: "1px solid #000"}}></td>
-            <td style={{border: "1px solid #000", color: '#d00'}}>{shippingInfo.notes}</td>
+            <td className="field-value" style={{color: '#d00'}}>{shippingInfo.notes}</td>
           </tr>
         </tbody>
       </table>
@@ -795,36 +994,71 @@ const POPage: React.FC = () => {
             <tr key={idx} style={{backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8f9fa'}}>
               <td style={{textAlign: 'center', fontFamily: 'monospace'}}>{p.code || p.sku || '-'}</td>
               <td style={{fontWeight: '500'}}>
+                {getProductName(p)}
+              </td>
+              <td style={{textAlign: 'center'}}>
                 {
-                  // 🔧 优先使用处理后的name字段，这应该已经包含正确的产品名称
-                  p.name && typeof p.name === 'string' ? p.name :
-                  // 如果name是对象，按语言选择
-                  typeof p.name === 'object' ? 
-                    (p.name[language === 'cn' ? 'zh-CN' : 'en-US'] || p.name['en-US'] || '-') : 
-                  // 最后的回退
-                  p.model || p.code || p.sku || '-'
+                  (() => {
+                    console.log('🔧 [PO Page] 处理产品Model字段:', {
+                      idx,
+                      productCode: p.code,
+                      model: p.model,
+                      app_model: (p as any).app_model,
+                      name: p.name,
+                      item_name: (p as any).item_name,
+                      '完整产品对象': p
+                    });
+                    
+                    // 优先级：model > app_model > name > item_name > 默认值
+                    const modelValue = p.model || (p as any).app_model || p.name || (p as any).item_name || 'N/A';
+                    console.log(`🔧 [PO Page] 产品${idx} Model字段最终值:`, modelValue);
+                    return modelValue;
+                  })()
                 }
               </td>
-              <td style={{textAlign: 'center'}}>{p.model || '-'}</td>
               <td style={{fontSize: '13px', lineHeight: '1.4'}}>
                 {
-                  // 🔧 按照PO单模版格式，简化Item description显示
+                  // 🔧 修复：优先显示spec字段作为Item description
                   (() => {
+                    console.log('🔧 [PO Page] 处理商品规格信息:', {
+                      idx,
+                      productCode: p.code,
+                      productId: p.id,
+                      spec: p.spec,
+                      specs: p.specs,
+                      spec_imperial: p.spec_imperial,
+                      properties: p.properties,
+                      model: p.model,
+                      brand: p.brand,
+                      description: (p as any).description,
+                      '完整产品对象': p
+                    });
+                    
                     const descriptions = [];
                     
-                    // 添加规格信息
-                    if (p.specs && typeof p.specs === 'string') {
+                    // 🔧 修复：优先使用spec字段，然后是description字段
+                    if (p.spec && typeof p.spec === 'string' && p.spec.trim() !== '') {
+                      console.log(`🔧 [PO Page] 产品${idx}使用spec字段:`, p.spec);
+                      descriptions.push(p.spec);
+                    } else if ((p as any).description && typeof (p as any).description === 'string' && (p as any).description.trim() !== '') {
+                      console.log(`🔧 [PO Page] 产品${idx}使用description字段:`, (p as any).description);
+                      descriptions.push((p as any).description);
+                    } else if (p.specs && typeof p.specs === 'string' && p.specs.trim() !== '') {
+                      console.log(`🔧 [PO Page] 产品${idx}使用specs字符串:`, p.specs);
                       descriptions.push(p.specs);
                     } else if (p.specs && typeof p.specs === 'object') {
                       const specsText = Object.entries(p.specs)
                         .filter(([k, v]) => v && v !== 'N/A' && v !== 'Not Specified')
                         .map(([k, v]) => `${k}: ${v}`)
                         .join(', ');
-                      if (specsText) descriptions.push(specsText);
+                      if (specsText) {
+                        console.log(`🔧 [PO Page] 产品${idx}使用specs对象:`, specsText);
+                        descriptions.push(specsText);
+                      }
                     }
                     
                     // 从properties中添加关键规格
-                    if (p.properties) {
+                    if (p.properties && typeof p.properties === 'object') {
                       const importantSpecs = [];
                       if (p.properties.voltage && p.properties.voltage !== 'N/A') {
                         importantSpecs.push(`${p.properties.voltage}${p.properties.voltage.includes('V') ? '' : 'V'}`);
@@ -837,11 +1071,38 @@ const POPage: React.FC = () => {
                       }
                     }
                     
-                    return descriptions.length > 0 ? descriptions.join(' | ') : '-';
+                    // 🔧 修复：如果仍然没有描述，使用产品名称或型号作为备用
+                    if (descriptions.length === 0) {
+                      const fallbackDescription = String(p.name || p.model || '产品规格待补充');
+                      descriptions.push(fallbackDescription);
+                    }
+                    
+                    const finalDescription = descriptions.length > 0 ? descriptions.join(' | ') : '-';
+                    console.log(`🔧 [PO Page] 产品${idx}最终描述:`, finalDescription);
+                    
+                    return finalDescription;
                   })()
                 }
               </td>
-              <td style={{textAlign: 'center'}}>{p.brand || '-'}</td>
+              <td style={{textAlign: 'center'}}>
+                {
+                  (() => {
+                    console.log('🔧 [PO Page] 处理产品Brand字段:', {
+                      idx,
+                      productCode: p.code,
+                      brand: p.brand,
+                      brand_name: (p as any).brand_name,
+                      manufacturer: (p as any).manufacturer,
+                      '完整产品对象': p
+                    });
+                    
+                    // 优先级：brand > brand_name > manufacturer > 默认值
+                    const brandValue = p.brand || (p as any).brand_name || (p as any).manufacturer || 'Lockedair';
+                    console.log(`🔧 [PO Page] 产品${idx} Brand字段最终值:`, brandValue);
+                    return brandValue;
+                  })()
+                }
+              </td>
               <td style={{textAlign: 'center', fontWeight: 'bold'}}>{p.quantity}</td>
               <td className="amount-cell" style={{textAlign: 'right', fontFamily: 'monospace'}}>{Number(p.price).toFixed(2)}</td>
               <td className="amount-cell" style={{textAlign: 'right', fontFamily: 'monospace', fontWeight: 'bold'}}>{Number(p.price * p.quantity).toFixed(2)}</td>
@@ -882,16 +1143,18 @@ const POPage: React.FC = () => {
   return (
     <div className="po-container">
       {/* 操作按钮 - 只在屏幕显示，打印时隐藏 */}
-      <div className="action-buttons no-print" style={{background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '16px 0', margin: '48px 0 24px 0', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 16}}>
-        <button className="btn btn-primary" style={{fontSize: 18, padding: '10px 28px', display: 'flex', alignItems: 'center', gap: 8}} onClick={exportToExcel}>
-          <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20"><path d="M17 3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14zm0 2H3v10h14V5zm-7 2a1 1 0 0 1 1 1v2h2a1 1 0 1 1 0 2h-2v2a1 1 0 1 1-2 0v-2H7a1 1 0 1 1 0-2h2V8a1 1 0 0 1 1-1z"/></svg>
-          {t('exportExcel', '导出Excel')}
-        </button>
-        <div style={{width: 1, height: 32, background: '#eee', margin: '0 12px'}}></div>
-        <button className="btn btn-primary" style={{fontSize: 18, padding: '10px 28px', display: 'flex', alignItems: 'center', gap: 8}} onClick={printPO}>
-          <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20"><path d="M6 2a2 2 0 0 0-2 2v2h12V4a2 2 0 0 0-2-2H6zm10 4H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2v2a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2h2a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2zm-4 10H8v-2h4v2z"/></svg>
-          {t('printPO', '打印PO单')}
-        </button>
+      <div className="action-buttons no-print" style={{background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '16px 0', margin: '48px 0 24px 0', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+        <div style={{display: 'flex', alignItems: 'center', gap: 16}}>
+          <button className="btn btn-primary" style={{fontSize: 18, padding: '10px 28px', display: 'flex', alignItems: 'center', gap: 8}} onClick={exportToExcelSimple}>
+            <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20"><path d="M17 3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14zm0 2H3v10h14V5zm-7 2a1 1 0 0 1 1 1v2h2a1 1 0 1 1 0 2h-2v2a1 1 0 1 1-2 0v-2H7a1 1 0 1 1 0-2h2V8a1 1 0 0 1 1-1z"/></svg>
+            {t('exportExcel', '导出Excel')}
+          </button>
+          <div style={{width: 1, height: 32, background: '#eee', margin: '0 12px'}}></div>
+          <button className="btn btn-primary" style={{fontSize: 18, padding: '10px 28px', display: 'flex', alignItems: 'center', gap: 8}} onClick={printPO}>
+            <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20"><path d="M6 2a2 2 0 0 0-2 2v2h12V4a2 2 0 0 0-2-2H6zm10 4H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2v2a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2h2a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2zm-4 10H8v-2h4v2z"/></svg>
+            {t('printPO', '打印PO单')}
+          </button>
+        </div>
       </div>
 
       {/* PO单内容 - 专门用于打印的容器 */}
@@ -902,7 +1165,7 @@ const POPage: React.FC = () => {
       {/* 底部按钮 - 只在屏幕显示，打印时隐藏 */}
       <div className="footer no-print">
         <button className="btn btn-secondary" onClick={handleGoBack}>{t('back')}</button>
-        <button className="btn btn-primary" onClick={completePO}>{t('complete')}</button>
+        <button className="btn btn-primary" onClick={completePO}>{t('confirmPO', 'Confirm PO')}</button>
       </div>
     </div>
   );

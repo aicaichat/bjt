@@ -8,7 +8,7 @@
  */
 export const API_CONFIG = {
   BASE_URL: import.meta.env.VITE_API_URL || '/wp-json/bjt/v1',
-  USE_MOCK_DATA: import.meta.env.VITE_USE_MOCK_DATA === 'true',
+  USE_MOCK_DATA: false, // 强制禁用Mock数据，只使用真实API
   TIMEOUT: 8000, // 请求超时时间（毫秒）
   RETRY_COUNT: 2, // 请求失败重试次数
   VERSION: 'v1',  // API版本

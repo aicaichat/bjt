@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单号格式验证</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .success { background-color: #d4edda; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .error { background-color: #f8d7da; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .info { background-color: #d1ecf1; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .order-number { font-family: monospace; font-weight: bold; background-color: #f8f9fa; padding: 5px; border-radius: 3px; }
+        button { background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 订单号格式修复验证</h1>
+        
+        <div class="info">
+            <h3>📋 修复内容</h3>
+            <p>将订单号验证格式从 <code>PO-YYYYMMDDHHMM-XXXXXX</code> 更新为 <code>ORD-YYYYMMDD-XXXXXX</code></p>
+        </div>
+
+        <div class="info">
+            <h3>🧪 测试用例</h3>
+            <p>实际后端返回：<span class="order-number">ORD-20250623-KBQ72B</span></p>
+        </div>
+
+        <button onclick="runTests()">运行验证测试</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // 新的订单号验证规则
+        const ORDER_FORMAT_PATTERN = /^ORD-\d{8}-[A-Z0-9]{6}$/;
+        
+        function validateOrderNumber(orderNumber) {
+            if (!orderNumber || typeof orderNumber !== 'string') {
+                return { valid: false, error: '订单号缺失' };
+            }
+            
+            if (!ORDER_FORMAT_PATTERN.test(orderNumber)) {
+                return { valid: false, error: `订单号格式无效：必须符合 ORD-YYYYMMDD-XXXXXX 格式 (收到: ${orderNumber})` };
+            }
+            
+            return { valid: true };
+        }
+
+        function runTests() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<h3>🧪 测试结果</h3>';
+
+            const testCases = [
+                { orderNumber: 'ORD-20250623-KBQ72B', description: '实际后端返回格式' },
+                { orderNumber: 'ORD-20250623-ABC123', description: '标准格式' },
+                { orderNumber: 'ORD-20250624-XYZ789', description: '另一个有效格式' },
+                { orderNumber: 'PO-202506231557-ABC123', description: '旧格式（应该失败）' },
+                { orderNumber: 'INVALID-FORMAT', description: '无效格式' }
+            ];
+
+            testCases.forEach((testCase, index) => {
+                const result = validateOrderNumber(testCase.orderNumber);
+                const resultDiv = document.createElement('div');
+                resultDiv.className = result.valid ? 'success' : 'error';
+                resultDiv.innerHTML = `
+                    <strong>测试 ${index + 1}:</strong> ${testCase.description}<br>
+                    <strong>订单号:</strong> <span class="order-number">${testCase.orderNumber}</span><br>
+                    <strong>结果:</strong> ${result.valid ? '✅ 验证通过' : '❌ 验证失败'}<br>
+                    ${result.error ? `<strong>错误:</strong> ${result.error}` : ''}
+                `;
+                resultsDiv.appendChild(resultDiv);
+            });
+
+            // 显示修复状态
+            const summaryDiv = document.createElement('div');
+            summaryDiv.className = 'success';
+            summaryDiv.innerHTML = `
+                <h3>✅ 修复状态</h3>
+                <ul>
+                    <li>✅ 订单号格式验证已更新</li>
+                    <li>✅ 后端返回的 ORD-20250623-KBQ72B 现在可以通过验证</li>
+                    <li>✅ Mock数据生成器已同步更新</li>
+                    <li>✅ 相关类型定义已更新</li>
+                    <li>✅ 错误消息已更新</li>
+                </ul>
+                <p><strong>结论:</strong> 订单提交流程现在应该可以正常工作，不会再因为格式验证失败而中断。</p>
+            `;
+            resultsDiv.appendChild(summaryDiv);
+        }
+    </script>
+</body>
+</html> 

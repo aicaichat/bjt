@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API后端集成测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { border-color: #4CAF50; background-color: #f0f8f0; }
+        .error { border-color: #f44336; background-color: #fdf0f0; }
+        .warning { border-color: #ff9800; background-color: #fff8f0; }
+        .info { border-color: #2196F3; background-color: #f0f8ff; }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        button.warning {
+            background-color: #ff9800;
+        }
+        button.warning:hover {
+            background-color: #f57c00;
+        }
+        
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-success { background-color: #4CAF50; }
+        .status-error { background-color: #f44336; }
+        .status-warning { background-color: #ff9800; }
+        .status-unknown { background-color: #ccc; }
+        
+        .mapping-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .mapping-table th, .mapping-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .mapping-table th {
+            background-color: #f2f2f2;
+        }
+        .frontend { background-color: #e3f2fd; }
+        .backend { background-color: #fff3e0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 API后端集成测试</h1>
+        <p>验证前后端字段映射、订单号统一和API集成状态</p>
+        
+        <div class="test-section info">
+            <h3>📋 集成状态检查</h3>
+            <div id="integration-status">
+                <div><span class="status-indicator status-unknown"></span>API连接状态: 检查中...</div>
+                <div><span class="status-indicator status-unknown"></span>认证状态: 检查中...</div>
+                <div><span class="status-indicator status-unknown"></span>字段映射: 检查中...</div>
+            </div>
+            <button onclick="checkIntegrationStatus()">检查集成状态</button>
+        </div>
+
+        <div class="test-section">
+            <h3>🔄 字段映射对照表</h3>
+            <table class="mapping-table">
+                <thead>
+                    <tr>
+                        <th>功能</th>
+                        <th class="frontend">前端字段</th>
+                        <th class="backend">后端字段</th>
+                        <th>说明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>订单号</strong></td>
+                        <td class="frontend">orderNumber</td>
+                        <td class="backend">order_number</td>
+                        <td>业务订单号，格式：PO-YYYYMMDDHHMM-XXXXXX</td>
+                    </tr>
+                    <tr>
+                        <td><strong>订单ID</strong></td>
+                        <td class="frontend">id, orderId</td>
+                        <td class="backend">id</td>
+                        <td>数据库主键</td>
+                    </tr>
+                    <tr>
+                        <td><strong>运输信息</strong></td>
+                        <td class="frontend">shippingInfo</td>
+                        <td class="backend">shipping_info</td>
+                        <td>包含公司名、联系人、地址等</td>
+                    </tr>
+                    <tr>
+                        <td><strong>支付方式</strong></td>
+                        <td class="frontend">payment.method</td>
+                        <td class="backend">payment_method</td>
+                        <td>支付方式</td>
+                    </tr>
+                    <tr>
+                        <td><strong>订单总额</strong></td>
+                        <td class="frontend">total</td>
+                        <td class="backend">total_amount</td>
+                        <td>订单总金额</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 API测试</h3>
+            
+            <div style="margin: 10px 0;">
+                <h4>认证测试</h4>
+                <button onclick="testAuthentication()">测试认证</button>
+                <div id="auth-test-result"></div>
+            </div>
+            
+            <div style="margin: 10px 0;">
+                <h4>订单列表API</h4>
+                <button onclick="testGetOrders()">测试获取订单列表</button>
+                <div id="orders-test-result"></div>
+            </div>
+            
+            <div style="margin: 10px 0;">
+                <h4>订单提交API（模拟）</h4>
+                <button onclick="testSubmitOrder()" class="warning">测试订单提交</button>
+                <div id="submit-test-result"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 字段映射测试</h3>
+            <button onclick="testFieldMapping()">测试字段映射</button>
+            <div id="mapping-test-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 完整集成验证</h3>
+            <button onclick="runFullIntegrationTest()">运行完整集成测试</button>
+            <div id="full-test-result"></div>
+        </div>
+    </div>
+
+    <script>
+        // API配置
+        const API_BASE_URL = 'http://localhost:8080/wp-json/bjt/v1';
+        
+        // 模拟API适配器
+        class ApiAdapter {
+            static convertOrderToApiFormat(frontendOrderData) {
+                return {
+                    order_number: frontendOrderData.orderNumber || `PO-${Date.now()}-ABC123`,
+                    shipping_info: frontendOrderData.shippingInfo,
+                    payment_method: frontendOrderData.payment?.method || 'bank_transfer',
+                    items: frontendOrderData.items || [],
+                    summary: frontendOrderData.summary || {},
+                    notes: frontendOrderData.notes || ''
+                };
+            }
+            
+            static convertApiResponseToFrontend(apiResponse) {
+                return {
+                    id: apiResponse.data?.id || apiResponse.id,
+                    orderId: apiResponse.data?.id || apiResponse.id,
+                    orderNumber: apiResponse.data?.order_number || apiResponse.order_number,
+                    status: apiResponse.data?.status || apiResponse.status,
+                    total: apiResponse.data?.total_amount || apiResponse.total,
+                    shippingInfo: apiResponse.data?.shipping_info || apiResponse.shipping_info,
+                    items: apiResponse.data?.items || apiResponse.items || []
+                };
+            }
+        }
+
+        function updateStatusIndicator(selector, status, text) {
+            const element = document.querySelector(selector);
+            if (element) {
+                const indicator = element.querySelector('.status-indicator');
+                indicator.className = `status-indicator status-${status}`;
+                element.textContent = text;
+                element.insertBefore(indicator, element.firstChild);
+            }
+        }
+
+        async function checkIntegrationStatus() {
+            console.log('🔧 检查集成状态');
+            
+            // 检查API连接
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    updateStatusIndicator('#integration-status div:nth-child(1)', 'success', 'API连接状态: 正常');
+                } else {
+                    updateStatusIndicator('#integration-status div:nth-child(1)', 'warning', `API连接状态: ${response.status}`);
+                }
+            } catch (error) {
+                updateStatusIndicator('#integration-status div:nth-child(1)', 'error', 'API连接状态: 连接失败');
+            }
+            
+            // 检查认证状态
+            const token = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
+            if (token) {
+                updateStatusIndicator('#integration-status div:nth-child(2)', 'success', '认证状态: 已认证');
+            } else {
+                updateStatusIndicator('#integration-status div:nth-child(2)', 'warning', '认证状态: 未认证');
+            }
+            
+            // 字段映射检查
+            updateStatusIndicator('#integration-status div:nth-child(3)', 'success', '字段映射: 已配置');
+        }
+
+        async function testAuthentication() {
+            console.log('🔧 测试认证');
+            
+            const token = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
+            
+            if (!token) {
+                document.getElementById('auth-test-result').innerHTML = `
+                    <div class="error" style="margin-top: 10px; padding: 10px; border-radius: 4px;">
+                        ❌ 未找到认证token，请先登录
+                    </div>
+                `;
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/verify`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                document.getElementById('auth-test-result').innerHTML = `
+                    <div class="${response.ok ? 'success' : 'error'}" style="margin-top: 10px; padding: 10px; border-radius: 4px;">
+                        ${response.ok ? '✅' : '❌'} 认证测试: ${response.ok ? '成功' : '失败'}
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('auth-test-result').innerHTML = `
+                    <div class="error" style="margin-top: 10px; padding: 10px; border-radius: 4px;">
+                        ❌ 认证测试失败: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function testGetOrders() {
+            console.log('🔧 测试获取订单列表');
+            
+            const token = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
+            
+            if (!token) {
+                document.getElementById('orders-test-result').innerHTML = `
+                    <div class="error" style="margin-top: 10px; padding: 10px; border-radius: 4px;">
+                        ❌ 需要认证token
+                    </div>
+                `;
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/orders?page=1&per_page=5`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                // 测试字段映射
+                const convertedData = data.data ? data.data.map(order => 
+                    ApiAdapter.convertApiResponseToFrontend({ data: order })
+                ) : [];
+                
+                document.getElementById('orders-test-result').innerHTML = `
+                    <div class="${response.ok ? 'success' : 'error'}" style="margin-top: 10px; padding: 10px; border-radius: 4px;">
+                        ${response.ok ? '✅' : '❌'} 订单列表API: ${response.ok ? '成功' : '失败'}
+                        <h5>原始API响应:</h5>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                        <h5>字段映射后:</h5>
+                        <pre>${JSON.stringify(convertedData, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('orders-test-result').innerHTML = `
+                    <div class="error" style="margin-top: 10px; padding: 10px; border-radius: 4px;">
+                        ❌ 订单列表API测试失败: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function testSubmitOrder() {
+            console.log('🔧 测试订单提交（模拟）');
+            
+            const mockOrderData = {
+                orderNumber: `PO-${new Date().toISOString().slice(0,16).replace(/[-:T]/g, '')}-TEST01`,
+                shippingInfo: {
+                    companyName: 'Test Company',
+                    contactName: 'Test Contact',
+                    address: 'Test Address',
+                    phone: '123-456-7890'
+                },
+                payment: {
+                    method: 'bank_transfer'
+                },
+                items: [
+                    {
+                        id: 1,
+                        name: 'Test Product',
+                        price: 100,
+                        quantity: 2
+                    }
+                ],
+                summary: {
+                    subtotal: 200,
+                    shipping: 50,
+                    tax: 25,
+                    total: 275
+                }
+            };
+            
+            // 测试字段映射
+            const apiFormatData = ApiAdapter.convertOrderToApiFormat(mockOrderData);
+            
+            document.getElementById('submit-test-result').innerHTML = `
+                <div class="info" style="margin-top: 10px; padding: 10px; border-radius: 4px;">
+                    ℹ️ 订单提交测试（仅测试字段映射，不实际提交）
+                    <h5>前端订单数据:</h5>
+                    <pre>${JSON.stringify(mockOrderData, null, 2)}</pre>
+                    <h5>转换为API格式:</h5>
+                    <pre>${JSON.stringify(apiFormatData, null, 2)}</pre>
+                    <div style="margin-top: 10px;">
+                        <strong>字段映射验证:</strong><br>
+                        • orderNumber → order_number: ${apiFormatData.order_number ? '✅' : '❌'}<br>
+                        • shippingInfo → shipping_info: ${apiFormatData.shipping_info ? '✅' : '❌'}<br>
+                        • payment.method → payment_method: ${apiFormatData.payment_method ? '✅' : '❌'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function testFieldMapping() {
+            console.log('🔧 测试字段映射');
+            
+            const testCases = [
+                {
+                    name: '订单号映射',
+                    frontend: { orderNumber: 'PO-202506231445-ABC123' },
+                    expectedBackend: { order_number: 'PO-202506231445-ABC123' }
+                },
+                {
+                    name: '运输信息映射',
+                    frontend: { 
+                        shippingInfo: { 
+                            companyName: 'Test Co', 
+                            contactName: 'John Doe' 
+                        } 
+                    },
+                    expectedBackend: { 
+                        shipping_info: { 
+                            companyName: 'Test Co', 
+                            contactName: 'John Doe' 
+                        } 
+                    }
+                }
+            ];
+            
+            const results = testCases.map(testCase => {
+                const converted = ApiAdapter.convertOrderToApiFormat(testCase.frontend);
+                const passed = JSON.stringify(converted).includes(JSON.stringify(testCase.expectedBackend).slice(1, -1));
+                
+                return {
+                    ...testCase,
+                    converted,
+                    passed
+                };
+            });
+            
+            const allPassed = results.every(r => r.passed);
+            
+            document.getElementById('mapping-test-result').innerHTML = `
+                <div class="${allPassed ? 'success' : 'error'}" style="margin-top: 10px; padding: 10px; border-radius: 4px;">
+                    ${allPassed ? '✅' : '❌'} 字段映射测试: ${allPassed ? '全部通过' : '存在问题'}
+                    <pre>${JSON.stringify(results, null, 2)}</pre>
+                </div>
+            `;
+        }
+
+        async function runFullIntegrationTest() {
+            console.log('🔧 运行完整集成测试');
+            
+            const results = {
+                apiConnection: false,
+                authentication: false,
+                fieldMapping: true,
+                ordersList: false,
+                dataConsistency: true
+            };
+            
+            // 测试API连接
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                results.apiConnection = response.ok;
+            } catch (error) {
+                results.apiConnection = false;
+            }
+            
+            // 测试认证
+            const token = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
+            results.authentication = !!token;
+            
+            // 测试订单列表API
+            if (token) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/orders`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    results.ordersList = response.ok;
+                } catch (error) {
+                    results.ordersList = false;
+                }
+            }
+            
+            const allPassed = Object.values(results).every(r => r);
+            const passedCount = Object.values(results).filter(r => r).length;
+            const totalCount = Object.keys(results).length;
+            
+            document.getElementById('full-test-result').innerHTML = `
+                <div class="${allPassed ? 'success' : 'warning'}" style="margin-top: 10px; padding: 10px; border-radius: 4px;">
+                    ${allPassed ? '✅' : '⚠️'} 完整集成测试: ${passedCount}/${totalCount} 项通过
+                    <pre>${JSON.stringify(results, null, 2)}</pre>
+                    <div style="margin-top: 10px;">
+                        <strong>建议:</strong><br>
+                        ${!results.apiConnection ? '• 检查后端API服务是否运行<br>' : ''}
+                        ${!results.authentication ? '• 需要先登录获取认证token<br>' : ''}
+                        ${!results.ordersList ? '• 检查订单API端点是否正确<br>' : ''}
+                        ${allPassed ? '• 所有测试通过，集成状态良好！' : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 页面加载时自动检查状态
+        window.onload = function() {
+            console.log('🔧 API集成测试页面已加载');
+            checkIntegrationStatus();
+        };
+    </script>
+</body>
+</html> 

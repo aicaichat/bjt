@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './OrderList.css';
 import { useTranslation } from 'react-i18next';
@@ -10,38 +10,47 @@ import { safeToLocaleString } from '../../utils/priceUtils';
 import orderService from '../../api/services/order.service';
 import { ProductCard } from '../../components/ProductInfo';
 import { useBatchProductInfo } from '../../hooks/useProductInfo';
-
-// 订单项接口定义
-interface OrderItem {
-  id: string;
-  part_number: string; // 使用part_number作为统一标识
-  name?: string; // 保留原始名称作为fallback
-  specs?: string | any;
-  price: number;
-  quantity: number;
-}
-
-// 订单接口定义
-interface Order {
-  id: string;
-  orderNumber?: string;
-  date: string;
-  status: 'pending' | 'paid' | 'shipped' | 'completed' | 'cancelled';
-  total: number;
-  paymentMethod: string;
-  shippingInfo: string | any;
-  items: OrderItem[];
-}
+import { UnifiedProduct, UnifiedOrder, CustomerInfo, ShippingInfo, OrderSummary, POData } from '../../types/product.types';
+import { ProductDataConverter, OrderProduct, POProduct } from '../../types/unified-product.types';
+import { OrderNumberManager } from '../../utils/orderNumberUtils';
+import { useOrder } from '../../contexts/OrderContext';
+import OrderDataConverter from '../../utils/orderDataConverter';
+import { 
+  OrderListItem, 
+  OrderFilters, 
+  OrderStatus, 
+  ORDER_STATUS_LABELS 
+} from '../../types/orderTypes';
 
 const OrderListPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useTranslation(['orderList']);
+  const { t } = useTranslation(['orderList', 'common']);
   const { user } = useAuth();
   const notification = useNotification();
   
+  // 使用订单状态管理
+  const {
+    state,
+    loadOrderList,
+    setOrderListFilters,
+    refreshOrderList,
+    setPageTransferData,
+    getOrderById
+  } = useOrder();
+  
+  // 本地状态
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState<OrderStatus | ''>('');
+  const [dateRange, setDateRange] = useState({
+    startDate: '',
+    endDate: ''
+  });
+  const [sortBy, setSortBy] = useState<'createdAt' | 'totalAmount' | 'status'>('createdAt');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
   // 状态定义
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<UnifiedOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentTab, setCurrentTab] = useState('all');
   const [searchValue, setSearchValue] = useState('');
@@ -67,8 +76,137 @@ const OrderListPage: React.FC = () => {
     }
   }, [user, navigate, location]);
   
-  // 检查URL参数，看是否有新订单添加
+  // 🔧 检查location.state，看是否有新订单添加或确认
   useEffect(() => {
+    const state = location.state as any;
+    
+    // 处理来自Order页面的新订单
+    if (state?.fromOrder && state?.newOrderData) {
+      setNewOrderAdded(true);
+      
+      console.log('🔧 [OrderList] 检测到来自Order页面的新订单:', {
+        orderNumber: state.newOrderData.orderNumber,
+        newOrderData: state.newOrderData,
+        timestamp: state.timestamp
+      });
+      
+      // 转换新订单数据为UnifiedOrder格式并添加到列表
+      const newOrder: UnifiedOrder = {
+        id: state.newOrderData.id,
+        orderNumber: state.newOrderData.orderNumber,
+        date: new Date(state.newOrderData.date).toLocaleDateString(),
+        status: state.newOrderData.status as any,
+        total: state.newOrderData.total,
+        paymentMethod: state.newOrderData.paymentMethod,
+        shippingInfo: formatAddressInfo(state.newOrderData.shippingInfo),
+        items: state.newOrderData.items.map((item: any) => ({
+          id: item.id,
+          code: item.part_number,
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          model: item.model,
+          spec: item.specs,
+          specs: item.specs,
+          brand: item.brand,
+          part_number: item.part_number,
+          product_name: item.name,
+          unit_price: item.price,
+          line_total: item.price * item.quantity
+        }))
+      };
+      
+      console.log('🔧 [OrderList] 转换后的新订单:', newOrder);
+      
+      // 添加新订单到列表顶部
+      setOrders(prevOrders => [newOrder, ...prevOrders]);
+      setNotificationMsg(`新订单 ${state.newOrderData.orderNumber} 已创建`);
+      
+      // 设置自动清除通知
+      const timer = setTimeout(() => {
+        setNewOrderAdded(false);
+        setNotificationMsg('');
+      }, NOTIFICATION.AUTO_DISMISS_TIMEOUT || 5000);
+      
+      return () => clearTimeout(timer);
+    }
+    
+    // 检查来自PO页面的状态（保持原有逻辑）
+    if (state?.fromPO) {
+      setNewOrderAdded(true);
+      
+      console.log('🔧 [OrderList] 检测到来自PO页面的操作:', {
+        action: state.action,
+        poNumber: state.poNumber,
+        confirmedOrderData: state.confirmedOrderData,
+        timestamp: state.timestamp
+      });
+      
+      // 🔧 如果有确认的订单数据，立即更新本地订单列表
+      if (state.confirmedOrderData) {
+        console.log('🔧 [OrderList] 接收到确认的订单数据，更新本地列表');
+        
+        setOrders(prevOrders => {
+          // 🔧 检查是否已存在相同订单号的订单
+          const existingOrderIndex = prevOrders.findIndex(
+            order => order.orderNumber === state.confirmedOrderData.orderNumber
+          );
+          
+          // 🔧 转换确认的订单数据为UnifiedOrder格式
+          const confirmedOrder: UnifiedOrder = {
+            id: state.confirmedOrderData.id,
+            orderNumber: state.confirmedOrderData.orderNumber,
+            date: state.confirmedOrderData.date,
+            status: 'pending', // 🔧 确认后状态为待支付
+            total: state.confirmedOrderData.total,
+            paymentMethod: state.confirmedOrderData.paymentMethod,
+            shippingInfo: formatAddressInfo(state.confirmedOrderData.shippingInfo),
+            items: state.confirmedOrderData.items.map((item: any) => ({
+              id: item.id,
+              code: item.code,
+              name: item.name,
+              quantity: item.quantity,
+              price: item.price,
+              model: item.model,
+              spec: item.spec,
+              specs: item.spec,
+              brand: item.brand,
+              part_number: item.code,
+              product_name: item.name,
+              unit_price: item.price,
+              line_total: item.amount
+            }))
+          };
+          
+          console.log('🔧 [OrderList] 转换后的确认订单:', confirmedOrder);
+          
+          if (existingOrderIndex >= 0) {
+            // 🔧 更新现有订单
+            const updatedOrders = [...prevOrders];
+            updatedOrders[existingOrderIndex] = confirmedOrder;
+            console.log('🔧 [OrderList] 更新现有订单');
+            return updatedOrders;
+          } else {
+            // 🔧 添加新订单到列表顶部
+            console.log('🔧 [OrderList] 添加新确认的订单到列表顶部');
+            return [confirmedOrder, ...prevOrders];
+          }
+        });
+        
+        // 🔧 设置通知消息
+        setNotificationMsg(`订单 ${state.poNumber} 已确认`);
+      }
+      
+      // 使用配置中的时间
+      const timer = setTimeout(() => {
+        setNewOrderAdded(false);
+        setNotificationMsg('');
+      }, NOTIFICATION.AUTO_DISMISS_TIMEOUT || 5000);
+      
+      return () => clearTimeout(timer);
+    }
+    
+    // 也检查URL参数（向后兼容）
     const searchParams = new URLSearchParams(window.location.search);
     const fromPO = searchParams.get('fromPO');
     
@@ -82,7 +220,7 @@ const OrderListPage: React.FC = () => {
       
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [location.state]);
   
   // 获取订单数据
   useEffect(() => {
@@ -93,159 +231,93 @@ const OrderListPage: React.FC = () => {
         setLoading(true);
         setError('');
         
-        // 尝试从API获取订单数据
-        try {
-          const response: any = await orderService.getOrders({
-            page: currentPage,
-            perPage: 20,
-            status: currentTab === 'all' ? undefined : (currentTab as any),
-            search: searchValue || undefined
-          });
+        // 🔧 修复：只从API获取订单数据，不使用mock数据
+        const response: any = await orderService.getOrders({
+          page: currentPage,
+          perPage: 20,
+          status: currentTab === 'all' ? undefined : (currentTab as any),
+          search: searchValue || undefined
+        });
+        
+        console.log('🔍 [OrderList] API响应:', response);
+        
+        // 检查是否有API响应数据
+        let ordersData = response;
+        let convertedOrders: UnifiedOrder[] = [];
+        
+        // 处理不同的响应格式
+        if (response && typeof response === 'object') {
+          // 🔧 修复：处理真实API返回的格式 {success: true, data: [...]}
+          if ('success' in response && response.success && 'data' in response && Array.isArray(response.data)) {
+            ordersData = response.data;
+          } else if (Array.isArray(response)) {
+            ordersData = response;
+          } else if ('data' in response && response.data) {
+            ordersData = response.data;
+          }
           
-          // 检查是否有API响应数据（可能是包装在data属性中）
-          let ordersData = response;
-          
-          // 处理不同的响应格式
-          if (response && typeof response === 'object') {
-            if ('data' in response && response.data) {
-              ordersData = response.data;
-            }
-            
-            // 检查是否有items数组
-            if (ordersData && 'items' in ordersData && Array.isArray(ordersData.items)) {
-              // 转换API数据格式为组件需要的格式
-              const convertedOrders: Order[] = ordersData.items.map((apiOrder: any) => ({
+          // 检查是否有items数组
+          if (ordersData && 'items' in ordersData && Array.isArray(ordersData.items)) {
+            // 转换API数据格式为组件需要的格式
+            convertedOrders = ordersData.items.map((apiOrder: any) => {
+              console.log('🔍 [OrderList] 处理API订单:', apiOrder);
+              console.log('🔍 [OrderList] API订单运输信息:', apiOrder.shipping_address);
+              return {
                 id: String(apiOrder.id || apiOrder.order_number),
                 orderNumber: apiOrder.order_number,
                 date: apiOrder.created_at ? new Date(apiOrder.created_at).toLocaleDateString() : '',
                 status: mapApiStatusToUIStatus(apiOrder.status),
                 total: apiOrder.total_amount || 0,
                 paymentMethod: apiOrder.payment_method || t('payment.method.other'),
-                shippingInfo: formatAddressInfo(apiOrder.shipping_address),
-                items: (apiOrder.items || []).map((item: any) => ({
-                  id: String(item.order_item_id || item.id),
-                  part_number: item.part_number || `unknown-${Date.now()}`, // 确保有part_number
-                  name: item.name, // 保留原始名称作为fallback
-                  specs: item.part_number || '',
-                  price: item.unit_price || 0,
-                  quantity: item.quantity || 0
-                }))
-              }));
-              
-              setOrders(convertedOrders);
-              setIsEmptyResults(convertedOrders.length === 0);
-              setLoading(false);
-              return;
-            }
+                // 🔧 修复：保持原始运输信息对象结构，不转换为字符串
+                shippingInfo: apiOrder.shipping_address || null,
+                // 🔧 添加：保留原始字段名以备用
+                shipping_address: apiOrder.shipping_address,
+                // 🔧 添加：保留客户信息字段
+                customer_info: apiOrder.customer_info,
+                billing_address: apiOrder.billing_address,
+                items: (apiOrder.items || []).map((item: any) => {
+                  console.log('🔍 [OrderList] 处理订单项:', item);
+                  
+                  // 🔧 使用统一转换器处理订单项数据
+                  return ProductDataConverter.fromOrderItem(item);
+                })
+              };
+            });
+          } else if (Array.isArray(ordersData)) {
+            // 🔧 修复：处理API直接返回数组的情况（真实API格式）
+            convertedOrders = ordersData.map((apiOrder: any) => {
+              console.log('🔍 [OrderList] 处理数组API订单:', apiOrder);
+              console.log('🔍 [OrderList] 数组API订单运输信息:', apiOrder.shipping_address);
+              return {
+                id: String(apiOrder.id || apiOrder.order_number),
+                orderNumber: apiOrder.order_number,
+                date: apiOrder.created_at ? new Date(apiOrder.created_at).toLocaleDateString() : '',
+                status: mapApiStatusToUIStatus(apiOrder.status),
+                total: apiOrder.total_amount || 0,
+                paymentMethod: apiOrder.payment_method || t('payment.method.other'),
+                // 🔧 修复：保持原始运输信息对象结构，不转换为字符串
+                shippingInfo: apiOrder.shipping_address || null,
+                // 🔧 添加：保留原始字段名以备用
+                shipping_address: apiOrder.shipping_address,
+                // 🔧 添加：保留客户信息字段
+                customer_info: apiOrder.customer_info,
+                billing_address: apiOrder.billing_address,
+                items: (apiOrder.items || []).map((item: any) => {
+                  console.log('🔍 [OrderList] 处理数组订单项:', item);
+                  
+                  // 🔧 使用统一转换器处理订单项数据
+                  return ProductDataConverter.fromOrderItem(item);
+                })
+              };
+            });
           }
-        } catch (apiError) {
-          console.log('API调用失败，使用模拟数据', apiError);
         }
         
-        // API失败时使用本地模拟数据
-        const savedOrdersJson = localStorage.getItem('orders');
-        let savedOrders: Order[] = [];
-        
-        if (savedOrdersJson) {
-          try {
-            savedOrders = JSON.parse(savedOrdersJson);
-          } catch (e) {
-            console.error('解析本地订单数据失败:', e);
-            savedOrders = [];
-          }
-        }
-        
-        // 模拟订单数据 - 使用真实的料号
-        const mockOrders: Order[] = [
-          {
-            id: 'BJT20231015001',
-            orderNumber: 'BJT20231015001',
-            date: '2023-10-15 14:30:25',
-            status: 'shipped',
-            total: 234670,
-            paymentMethod: t('payment.method.bankTransfer'),
-            shippingInfo: '李四 | 浙江省杭州市滨江区滨盛路1508号 | 13800138000',
-            items: [
-              {
-                id: '1',
-                part_number: '60A01143', // LA-E4S V2.0主机
-                name: 'LA-E4S V2.0主机-标准版', // fallback名称
-                specs: '60A01143',
-                price: 100000,
-                quantity: 2
-              },
-              {
-                id: '2',
-                part_number: '60A04038', // ET400 自动分离器
-                name: 'ET400 自动分离器',
-                specs: '60A04038',
-                price: 8000,
-                quantity: 2
-              }
-            ]
-          },
-          {
-            id: 'BJT20231012005',
-            orderNumber: 'BJT20231012005',
-            date: '2023-10-12 09:15:10',
-            status: 'completed',
-            total: 45000,
-            paymentMethod: t('payment.method.alipay'),
-            shippingInfo: '王五 | 上海市浦东新区张江高科技园区博云路100号 | 13900139000',
-            items: [
-              {
-                id: '1',
-                part_number: '60A01141', // LA-E4S V2.0主机-美标版
-                name: 'LA-E4S V2.0主机-美标版',
-                specs: '60A01141',
-                price: 45000,
-                quantity: 1
-              }
-            ]
-          },
-          {
-            id: 'BJT20231010003',
-            orderNumber: 'BJT20231010003',
-            date: '2023-10-10 16:45:30',
-            status: 'pending',
-            total: 124000,
-            paymentMethod: t('payment.method.bankTransfer'),
-            shippingInfo: '张三 | 北京市海淀区中关村软件园2号楼 | 13700137000',
-            items: [
-              {
-                id: '1',
-                part_number: '60A01142',
-                name: 'LA-E4S V2.0主机-欧标版',
-                specs: '60A01142',
-                price: 62000,
-                quantity: 2
-              }
-            ]
-          }
-        ];
-        
-        // 合并保存的订单和模拟订单
-        const allOrders = [...savedOrders, ...mockOrders];
-        
-        // 根据状态过滤
-        let filteredOrders = allOrders;
-        if (currentTab !== 'all') {
-          filteredOrders = allOrders.filter(order => order.status === currentTab);
-        }
-        
-        // 根据搜索条件过滤
-        if (searchValue) {
-          filteredOrders = filteredOrders.filter(order => 
-            order.orderNumber?.toLowerCase().includes(searchValue.toLowerCase()) ||
-            order.items.some(item => 
-              item.name?.toLowerCase().includes(searchValue.toLowerCase()) ||
-              item.part_number?.toLowerCase().includes(searchValue.toLowerCase())
-            )
-          );
-        }
-        
-        setOrders(filteredOrders);
-        setIsEmptyResults(filteredOrders.length === 0);
+        // 🔧 修复：只显示真实API数据，如果为空就显示空状态
+        console.log('🔍 [OrderList] 处理后的订单数据:', convertedOrders);
+        setOrders(convertedOrders);
+        setIsEmptyResults(convertedOrders.length === 0);
         setLoading(false);
       } catch (error) {
         console.error('获取订单数据失败:', error);
@@ -261,6 +333,7 @@ const OrderListPage: React.FC = () => {
   const mapApiStatusToUIStatus = (apiStatus: string): 'pending' | 'paid' | 'shipped' | 'completed' | 'cancelled' => {
     const statusMap: Record<string, 'pending' | 'paid' | 'shipped' | 'completed' | 'cancelled'> = {
       'pending': 'pending',
+      'pending_payment': 'pending', // 🔧 添加pending_payment状态映射
       'processing': 'paid',
       'shipped': 'shipped',
       'delivered': 'completed',
@@ -309,56 +382,228 @@ const OrderListPage: React.FC = () => {
     }
   };
   
-  // 导出PO单
-  const handleExportPO = (orderId: string) => {
-    // 这里应该调用导出PO单的服务
-    console.log('导出PO单:', orderId);
-  };
-  
   // 查看订单详情
   const handleViewOrderDetail = (orderId: string) => {
     const order = orders.find(o => o.id === orderId);
-    if (!order) return;
+    if (!order) {
+      console.error('🔧 [OrderList] 找不到订单:', orderId);
+      return;
+    }
     
-    // 构建PO页面需要的数据格式
-    const poData = {
-      orderId: order.id,
-      orderItems: order.items.map(item => ({
-        id: item.id,
-        code: item.part_number,
-        sku: item.part_number,
-        name: item.name || item.part_number,
-        quantity: item.quantity,
-        price: item.price,
-        specs: item.specs
-      })),
-      customerInfo: {
+    console.log('🔧 [OrderList] 开始处理订单详情跳转:', order);
+    
+    try {
+      console.log('🔧 [OrderList] 开始处理订单详情跳转，使用简化逻辑');
+      
+      // 🔧 修复：初始化为空值，避免默认值阻止数据提取
+      let extractedCustomerInfo: CustomerInfo = {
         companyName: '',
-        contactName: '',
+        contactName: '', 
         address: '',
         phone: '',
         email: ''
-      },
-      shippingInfo: {
-        address: typeof order.shippingInfo === 'string' ? order.shippingInfo : formatShippingInfo(order.shippingInfo),
+      };
+      
+      let extractedShippingInfo: ShippingInfo = {
+        address: '',
         contactName: '',
-        phone: '',
+        phone: '', 
         notes: ''
-      },
-      summary: {
-        subtotal: order.total,
-        shipping: 0,
-        tax: 0,
-        total: order.total
+      };
+      
+      // 🔧 提取客户信息 - 更全面的数据源检查
+      const customerSources = [
+        (order as any).customer_info,
+        (order as any).user_info,
+        (order as any).billing_address,
+        order.shippingInfo,
+        order.shipping_address  // 🔧 这是主要的数据源
+      ];
+      
+      console.log('🔧 [OrderList] 检查客户信息来源:', customerSources);
+      console.log('🔧 [OrderList] 订单shipping_address详细信息:', order.shipping_address);
+      console.log('🔧 [OrderList] shipping_address类型:', typeof order.shipping_address);
+      console.log('🔧 [OrderList] shipping_address字段:', order.shipping_address ? Object.keys(order.shipping_address) : 'N/A');
+      
+      for (const source of customerSources) {
+        if (source && typeof source === 'object') {
+          console.log('🔧 [OrderList] 处理客户信息源:', source);
+          
+          // 🔧 修复：使用API返回的正确字段名 companyName (不是 company_name)
+          if (!extractedCustomerInfo.companyName && (source.companyName || source.company_name || source.company)) {
+            const companyName = source.companyName || source.company_name || source.company;
+            console.log('🔧 [OrderList] 提取公司名称:', companyName);
+            extractedCustomerInfo.companyName = companyName;
+          }
+          
+          // 🔧 修复：使用API返回的正确字段名 contactName (不是 contact_name)
+          if (!extractedCustomerInfo.contactName && (source.contactName || source.contact_name || source.name || source.recipient_name)) {
+            const contactName = source.contactName || source.contact_name || source.name || source.recipient_name;
+            console.log('🔧 [OrderList] 提取联系人:', contactName);
+            extractedCustomerInfo.contactName = contactName;
+          }
+          
+          if (!extractedCustomerInfo.address && source.address) {
+            console.log('🔧 [OrderList] 提取地址:', source.address);
+            extractedCustomerInfo.address = source.address;
+          }
+          
+          if (!extractedCustomerInfo.phone && (source.phone || source.contact_phone)) {
+            const phone = source.phone || source.contact_phone;
+            console.log('🔧 [OrderList] 提取电话:', phone);
+            extractedCustomerInfo.phone = phone;
+          }
+          
+          if (!extractedCustomerInfo.email && source.email) {
+            console.log('🔧 [OrderList] 提取邮箱:', source.email);
+            extractedCustomerInfo.email = source.email;
+          }
+        }
       }
-    };
-    
-    // 导航到PO页面
-    navigate('/po', { 
-      state: { 
-        poData 
-      } 
-    });
+      
+      // 🔧 设置合理的默认值（如果没有提取到数据）
+      if (!extractedCustomerInfo.companyName) extractedCustomerInfo.companyName = 'Customer Company';
+      if (!extractedCustomerInfo.contactName) extractedCustomerInfo.contactName = 'Customer Contact';
+      if (!extractedCustomerInfo.address) extractedCustomerInfo.address = 'Customer Address';
+      if (!extractedCustomerInfo.phone) extractedCustomerInfo.phone = 'Customer Phone';
+      
+      console.log('🔧 [OrderList] 最终提取的客户信息:', extractedCustomerInfo);
+      
+      // 🔧 处理运输信息 - 从多个数据源提取（API返回的字段是shipping_address）
+      const shippingData = order.shipping_address || order.shippingInfo || (order as any).delivery_info;
+      
+      console.log('🔧 [OrderList] 原始运输信息:', shippingData);
+      console.log('🔧 [OrderList] 运输信息类型:', typeof shippingData);
+      console.log('🔧 [OrderList] 完整订单对象:', order);
+      
+      if (shippingData) {
+        if (typeof shippingData === 'object' && shippingData !== null) {
+          // 🔧 API返回的是对象格式，直接映射字段
+          extractedShippingInfo = {
+            address: shippingData.address || extractedShippingInfo.address,
+            contactName: shippingData.name || shippingData.contact_name || shippingData.contactName || extractedShippingInfo.contactName,
+            phone: shippingData.phone || shippingData.contact_phone || shippingData.mobile || extractedShippingInfo.phone,
+            notes: shippingData.notes || shippingData.note || extractedShippingInfo.notes
+          };
+          console.log('🔧 [OrderList] API对象格式运输信息处理结果:', extractedShippingInfo);
+        } else if (typeof shippingData === 'string') {
+          // 字符串格式处理（备用）
+          try {
+            // 尝试JSON解析
+            const parsed = JSON.parse(shippingData);
+            extractedShippingInfo = {
+              address: parsed.address || extractedShippingInfo.address,
+              contactName: parsed.name || parsed.contact_name || extractedShippingInfo.contactName,
+              phone: parsed.phone || parsed.contact_phone || extractedShippingInfo.phone,
+              notes: parsed.notes || parsed.note || extractedShippingInfo.notes
+            };
+            console.log('🔧 [OrderList] JSON字符串解析运输信息结果:', extractedShippingInfo);
+          } catch (e) {
+            // 分隔符格式: "地址|联系人|电话|备注"
+            const parts = shippingData.split('|').map(s => s.trim());
+            extractedShippingInfo = {
+              address: parts[0] || extractedShippingInfo.address,
+              contactName: parts[1] || extractedShippingInfo.contactName,
+              phone: parts[2] || extractedShippingInfo.phone,
+              notes: parts[3] || extractedShippingInfo.notes
+            };
+            console.log('🔧 [OrderList] 分隔符格式运输信息处理结果:', extractedShippingInfo);
+          }
+        }
+      } else {
+        console.log('🔧 [OrderList] 没有找到运输信息，尝试从其他字段提取');
+        
+        // 🔧 尝试从订单的其他字段提取运输信息
+        const alternativeSources = [
+          (order as any).recipient_info,
+          (order as any).delivery_address,
+          (order as any).shipping_details,
+          (order as any).address_info
+        ];
+        
+        for (const source of alternativeSources) {
+          if (source && typeof source === 'object') {
+            console.log('🔧 [OrderList] 找到备选运输信息源:', source);
+            extractedShippingInfo = {
+              address: source.address || source.delivery_address || extractedShippingInfo.address,
+              contactName: source.name || source.contact_name || source.recipient_name || extractedShippingInfo.contactName,
+              phone: source.phone || source.mobile || source.tel || extractedShippingInfo.phone,
+              notes: source.notes || source.remark || extractedShippingInfo.notes
+            };
+            break;
+          }
+        }
+      }
+      
+      // 🔧 如果运输信息为空，尝试从客户信息中复制
+      if (extractedShippingInfo.address === 'Shipping Address' && extractedCustomerInfo.address !== 'Customer Address') {
+        extractedShippingInfo.address = extractedCustomerInfo.address;
+      }
+      if (extractedShippingInfo.contactName === 'Shipping Contact' && extractedCustomerInfo.contactName !== 'Customer Contact') {
+        extractedShippingInfo.contactName = extractedCustomerInfo.contactName;
+      }
+      if (extractedShippingInfo.phone === 'Shipping Phone' && extractedCustomerInfo.phone !== 'Customer Phone') {
+        extractedShippingInfo.phone = extractedCustomerInfo.phone;
+      }
+      
+      console.log('🔧 [OrderList] 提取的客户信息:', extractedCustomerInfo);
+      console.log('🔧 [OrderList] 提取的运输信息:', extractedShippingInfo);
+      
+      // 🔧 使用统一的订单号管理器构建PO页面需要的数据格式
+      const poData = OrderNumberManager.createUnifiedOrderData({
+        orderObject: order,
+        orderItems: order.items.map(item => ({
+          id: item.id,
+          code: item.part_number || item.code,
+          sku: item.part_number || item.code,
+          name: item.name || (item as any).product_name || item.part_number,
+          quantity: item.quantity,
+          price: item.price || item.unit_price || 0,
+          specs: item.specs || item.spec,
+          spec: item.spec || item.specs,
+          unit: '个',
+          type: 'product',
+          model: item.model || item.part_number,
+          brand: item.brand || 'Lockedair',
+          properties: typeof item.specs === 'object' ? item.specs : {},
+          amount: (item.price || item.unit_price || 0) * item.quantity
+        })),
+        customerInfo: extractedCustomerInfo,
+        shippingInfo: extractedShippingInfo,
+        summary: {
+          subtotal: order.total,
+          shipping: 0,
+          tax: 0,
+          total: order.total
+        },
+        source: 'order_list_detail'
+      });
+      
+      console.log('🔧 [OrderList] 构建的PO数据:', poData);
+      console.log('🔧 [OrderList] PO数据中的运输信息详细检查:', {
+        'poData.shippingInfo': poData.shippingInfo,
+        'shippingInfo类型': typeof poData.shippingInfo,
+        'shippingInfo内容': JSON.stringify(poData.shippingInfo),
+        '地址字段': poData.shippingInfo?.address,
+        '联系人字段': poData.shippingInfo?.contactName,
+        '电话字段': poData.shippingInfo?.phone,
+        '备注字段': poData.shippingInfo?.notes,
+        '原始extractedShippingInfo': extractedShippingInfo
+      });
+      
+      // 4. 导航到PO页面
+      navigate('/po', { 
+        state: { 
+          poData,
+          source: 'order_list_detail',
+          originalOrderId: orderId
+        } 
+      });
+      
+    } catch (error) {
+      console.error('🔧 [OrderList] 处理订单详情失败:', error);
+      notification.error('跳转到PO页面失败，请稍后重试');
+    }
   };
   
   // 格式化收货信息显示
@@ -477,7 +722,7 @@ const OrderListPage: React.FC = () => {
   };
   
   // 渲染订单卡片
-  const renderOrderCard = (order: Order) => {
+  const renderOrderCard = (order: UnifiedOrder) => {
     const isExpanded = expandedOrders[order.id] || false;
     
     return (
@@ -495,7 +740,7 @@ const OrderListPage: React.FC = () => {
           <div className="detail-row">
             <div>
               <span className="detail-label">{t('orderCard.totalAmount')}</span>
-              <span className="detail-value">¥{formatPrice(order.total)}</span>
+              <span className="detail-value">{formatPrice(order.total)}</span>
             </div>
             <div>
               <span className="detail-label">{t('orderCard.paymentMethod')}</span>
@@ -515,52 +760,11 @@ const OrderListPage: React.FC = () => {
         </div>
         <div className="order-actions">
           <button 
-            className="expand-button"
-            onClick={() => {
-              if (order.status === 'pending') {
-                // 对于待支付的订单，仅展开查看商品
-                toggleOrderExpansion(order.id);
-              } else {
-                // 对于其他状态的订单，跳转到PO页面
-                handleViewOrderDetail(order.id);
-              }
-            }}
+            className="action-button secondary-button" 
+            onClick={() => handleViewOrderDetail(order.id)}
           >
-            <span className="expand-icon">▶</span> {t('actions.viewProducts')}
+            {t('actions.backToPO', '返回PO页面')}
           </button>
-          <div>
-            {order.status === 'pending' ? (
-              <>
-                <button 
-                  className="action-button secondary-button" 
-                  onClick={() => handleCancelOrder(order.id)}
-                >
-                  {t('actions.cancel')}
-                </button>
-                <button 
-                  className="action-button primary-button"
-                  onClick={() => handleGoToPay(order.id)}
-                >
-                  {t('actions.goToPay')}
-                </button>
-              </>
-            ) : (
-              <>
-                <button 
-                  className="action-button secondary-button"
-                  onClick={() => handleExportPO(order.id)}
-                >
-                  {t('actions.exportPO')}
-                </button>
-                <button 
-                  className="action-button primary-button"
-                  onClick={() => handleViewOrderDetail(order.id)}
-                >
-                  {t('actions.viewDetails')}
-                </button>
-              </>
-            )}
-          </div>
         </div>
         <div className="order-items">
           {order.items.map(item => (

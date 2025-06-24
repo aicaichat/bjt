@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>运输信息传递完整测试 - BJT产品系统</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #3498db;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            padding-left: 10px;
+            border-left: 4px solid #3498db;
+        }
+        .test-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid #e9ecef;
+        }
+        .step {
+            background: #fff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border-left: 4px solid #28a745;
+        }
+        .step-number {
+            background: #28a745;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .button {
+            background: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        .button:hover {
+            background: #2980b9;
+        }
+        .button.success {
+            background: #28a745;
+        }
+        .button.warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        .button.danger {
+            background: #dc3545;
+        }
+        .info-box {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            border-left: 4px solid #2196f3;
+        }
+        .warning-box {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            border-left: 4px solid #ffc107;
+        }
+        .success-box {
+            background: #d4edda;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            border-left: 4px solid #28a745;
+        }
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .data-display {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        .checklist li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .checklist li:before {
+            content: "✓";
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-success { background: #28a745; }
+        .status-warning { background: #ffc107; }
+        .status-error { background: #dc3545; }
+        .status-info { background: #17a2b8; }
+        
+        .test-result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+        .test-result.pass {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .test-result.fail {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .field-mapping {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .field-mapping > div {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+        .field-mapping h4 {
+            margin: 0 0 8px 0;
+            color: #495057;
+            font-size: 14px;
+        }
+        .field-mapping code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚚 运输信息传递完整测试指南</h1>
+        
+        <div class="info-box">
+            <strong>📋 测试目标：</strong>验证从OrderList页面点击"Back to PO"按钮跳转到PO页面时，运输信息能够正确显示，不再显示默认值。
+        </div>
+
+        <h2>🔍 问题描述</h2>
+        <div class="test-section">
+            <p><strong>修复前的问题：</strong></p>
+            <ul>
+                <li>PO页面的Ship to部分显示默认值："Shipping Address"、"Shipping Contact"、"Shipping Phone"</li>
+                <li>Buyer部分显示："Customer Company"、"Customer Address"等默认值</li>
+                <li>实际的运输信息和客户信息没有正确传递和显示</li>
+            </ul>
+            
+            <p><strong>期望的修复效果：</strong></p>
+            <ul>
+                <li>Ship to显示真实的运输地址、联系人、电话</li>
+                <li>Buyer显示真实的客户公司名称、联系人信息</li>
+                <li>所有信息都来自数据库中的真实订单数据</li>
+            </ul>
+        </div>
+
+        <h2>🧪 测试步骤</h2>
+        <div class="test-section">
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>访问OrderList页面</strong>
+                <br><a href="http://localhost:5173/orderlist" class="button" target="_blank">打开OrderList页面</a>
+                <div class="info-box">
+                    确保页面加载完成，可以看到订单列表。如果没有数据，系统会自动使用Mock数据。
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>选择一个订单并点击"Back to PO"</strong>
+                <br>找到任意一个订单，点击右侧的"Back to PO"按钮
+                <div class="warning-box">
+                    <strong>⚠️ 注意观察：</strong>点击按钮时，打开浏览器开发者工具(F12)，查看Console标签页的调试日志。
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-number">3</span>
+                <strong>检查PO页面的运输信息显示</strong>
+                <br>在PO页面中，重点检查以下区域：
+                <ul>
+                    <li><strong>Ship to部分：</strong>应该显示真实的地址、联系人、电话</li>
+                    <li><strong>Buyer部分：</strong>应该显示真实的客户公司和联系人</li>
+                    <li><strong>不应该看到：</strong>"Shipping Address"、"Shipping Contact"、"Customer Company"等默认值</li>
+                </ul>
+            </div>
+
+            <div class="step">
+                <span class="step-number">4</span>
+                <strong>查看Console调试日志</strong>
+                <br>在开发者工具的Console中，查找以下关键日志：
+                <div class="code-block">🔧 [OrderList] 原始运输信息: {...}
+🔧 [OrderList] 提取的运输信息: {...}
+🔧 [PO Page] 接收到的location.state: {...}
+🔧 [PO Page] 标准化后的运输信息: {...}</div>
+            </div>
+        </div>
+
+        <h2>📊 数据流分析</h2>
+        <div class="test-section">
+            <h3>运输信息字段映射表</h3>
+            <div class="field-mapping">
+                <div>
+                    <h4>数据库字段</h4>
+                    <code>shipping_address</code><br>
+                    <code>name</code><br>
+                    <code>phone</code><br>
+                    <code>address</code><br>
+                    <code>company</code>
+                </div>
+                <div>
+                    <h4>API响应字段</h4>
+                    <code>shipping_address</code><br>
+                    <code>name</code><br>
+                    <code>phone</code><br>
+                    <code>address</code><br>
+                    <code>company</code>
+                </div>
+                <div>
+                    <h4>PO页面显示字段</h4>
+                    <code>shippingInfo.address</code><br>
+                    <code>shippingInfo.contactName</code><br>
+                    <code>shippingInfo.phone</code><br>
+                    <code>customerInfo.companyName</code><br>
+                    <code>customerInfo.contactName</code>
+                </div>
+            </div>
+
+            <h3>数据传递路径</h3>
+            <div class="info-box">
+                <strong>完整数据流：</strong>
+                <br>数据库 → API响应 → OrderList页面处理 → navigate传递 → PO页面接收 → 标准化处理 → 页面显示
+            </div>
+        </div>
+
+        <h2>🔧 修复内容详解</h2>
+        <div class="test-section">
+            <h3>1. OrderList页面修复</h3>
+            <ul class="checklist">
+                <li>增强了运输信息提取逻辑，支持多种API字段格式</li>
+                <li>添加了详细的调试日志，便于问题追踪</li>
+                <li>改进了字段映射逻辑，覆盖更多可能的字段名称</li>
+                <li>增加了备用数据源检查机制</li>
+            </ul>
+
+            <h3>2. PO页面修复</h3>
+            <ul class="checklist">
+                <li>优化了运输信息标准化函数</li>
+                <li>增强了客户信息提取逻辑</li>
+                <li>添加了从运输信息中提取客户信息的备用机制</li>
+                <li>改进了错误处理和默认值设置</li>
+            </ul>
+
+            <h3>3. 订单号格式支持</h3>
+            <ul class="checklist">
+                <li>支持PO格式：PO-YYYYMMDDHHMM-XXXXXX</li>
+                <li>支持ORD格式：ORD-YYYYMMDD-XXXXXX</li>
+                <li>通用格式验证：[A-Z]{2,4}-\d{8,12}-[A-Z0-9]{4,8}</li>
+            </ul>
+        </div>
+
+        <h2>✅ 验证检查清单</h2>
+        <div class="test-section">
+            <h3>运输信息检查</h3>
+            <ul class="checklist">
+                <li>Ship to Address不是"Shipping Address"</li>
+                <li>Ship to Contact不是"Shipping Contact"</li>
+                <li>Ship to Phone不是"Shipping Phone"</li>
+                <li>显示的是真实的运输地址信息</li>
+            </ul>
+
+            <h3>客户信息检查</h3>
+            <ul class="checklist">
+                <li>Buyer Company不是"Customer Company"</li>
+                <li>Buyer Contact不是"Customer Contact"</li>
+                <li>显示的是真实的客户信息</li>
+                <li>如果客户信息为空，能从运输信息中提取</li>
+            </ul>
+
+            <h3>调试日志检查</h3>
+            <ul class="checklist">
+                <li>Console中有完整的数据处理日志</li>
+                <li>能看到原始API数据和处理后的数据</li>
+                <li>字段映射过程清晰可见</li>
+                <li>没有错误或警告信息</li>
+            </ul>
+        </div>
+
+        <h2>🐛 故障排除</h2>
+        <div class="test-section">
+            <h3>如果仍然显示默认值</h3>
+            <div class="warning-box">
+                <strong>可能原因：</strong>
+                <ul>
+                    <li>前端服务器缓存未清理</li>
+                    <li>浏览器缓存未刷新</li>
+                    <li>API数据结构与预期不符</li>
+                    <li>字段映射逻辑需要调整</li>
+                </ul>
+            </div>
+
+            <h3>调试步骤</h3>
+            <ol>
+                <li><strong>清理缓存：</strong>强制刷新页面 (Ctrl+F5 或 Cmd+Shift+R)</li>
+                <li><strong>检查日志：</strong>在Console中查看详细的数据处理日志</li>
+                <li><strong>验证API：</strong>确认API返回的数据结构包含运输信息</li>
+                <li><strong>检查字段：</strong>确认API字段名称与代码中的映射一致</li>
+            </ol>
+        </div>
+
+        <h2>📞 技术支持</h2>
+        <div class="test-section">
+            <div class="info-box">
+                <strong>如果测试过程中遇到问题：</strong>
+                <ol>
+                    <li>截图保存PO页面的显示效果</li>
+                    <li>复制Console中的完整调试日志</li>
+                    <li>记录具体的操作步骤和期望结果</li>
+                    <li>提供给技术团队进行进一步诊断</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载完成后的检查
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🧪 [测试页面] 运输信息传递测试页面已加载');
+            console.log('🧪 [测试页面] 请按照步骤进行测试验证');
+            
+            // 检查前端服务状态
+            fetch('/api/health')
+                .then(response => {
+                    if (response.ok) {
+                        console.log('✅ [测试页面] 前端服务运行正常');
+                    }
+                })
+                .catch(error => {
+                    console.log('ℹ️ [测试页面] 前端服务检查失败，这是正常的');
+                });
+        });
+    </script>
+</body>
+</html> 

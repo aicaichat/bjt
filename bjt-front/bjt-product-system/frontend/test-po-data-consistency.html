@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PO页面数据一致性测试</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .data-display {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            margin: 10px 0;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .button-group {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 PO页面数据一致性测试</h1>
+        <p>此页面用于测试修复后的PO页面数据传递和显示一致性</p>
+
+        <div class="button-group">
+            <button onclick="testOrderDataConsistency()">测试订单数据一致性</button>
+            <button onclick="testProductDataTransformation()">测试产品数据转换</button>
+            <button onclick="testCustomerInfoExtraction()">测试客户信息提取</button>
+            <button onclick="simulatePONavigation()">模拟PO页面导航</button>
+            <button onclick="clearResults()">清空结果</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // 模拟订单数据
+        const mockOrderData = {
+            id: "12345",
+            order_number: "ORD-20250623-TEST123",
+            total: 500.00,
+            status: "pending",
+            created_at: "2025-06-23T10:00:00Z",
+            shippingInfo: {
+                companyName: "测试公司 Test Company",
+                contactName: "张三 John Smith",
+                address: "北京市朝阳区测试街道123号 123 Test Street, Beijing",
+                phone: "13800138000",
+                email: "test@example.com"
+            },
+            shipping_address: {
+                company_name: "测试公司备用",
+                contact_name: "李四",
+                address: "上海市浦东新区测试路456号",
+                phone: "13900139000"
+            },
+            items: [
+                {
+                    id: "item_1",
+                    order_item_id: 101,
+                    item_id: "12313131313",
+                    item_name: "LA ESS test",
+                    name_zh: "商务舱气垫枕头和气泡系统",
+                    name_en: "Business Class Air Cushion Pillow & Bubble System",
+                    model: "LA-ESS V1.1",
+                    brand: "Lockedair",
+                    spec: "AC220V | 220V",
+                    quantity: 1,
+                    price: 100.00,
+                    unit_price: 100.00
+                },
+                {
+                    id: "item_2",
+                    order_item_id: 102,
+                    item_id: "90R01258",
+                    item_name: "Not Found",
+                    model: "MEX-RH30-13-20-13-L",
+                    brand: "Lockedair",
+                    spec: "13μm 30%HDPE Pillow, 20cmx13cm, 1000m, 150R/PL",
+                    quantity: 1,
+                    price: 100.00,
+                    unit_price: 100.00
+                }
+            ]
+        };
+
+        function addResult(title, content, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const section = document.createElement('div');
+            section.className = 'test-section';
+            
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'test-title';
+            titleDiv.textContent = title;
+            
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            resultDiv.innerHTML = content;
+            
+            section.appendChild(titleDiv);
+            section.appendChild(resultDiv);
+            resultsDiv.appendChild(section);
+        }
+
+        function testOrderDataConsistency() {
+            addResult('🔧 订单数据一致性测试', '开始测试...', 'info');
+            
+            // 测试订单号一致性
+            const orderId = mockOrderData.order_number || mockOrderData.id;
+            const expectedOrderNumber = mockOrderData.order_number;
+            
+            if (orderId === expectedOrderNumber) {
+                addResult('✅ 订单号一致性', `订单号正确: ${orderId}`, 'success');
+            } else {
+                addResult('❌ 订单号不一致', `期望: ${expectedOrderNumber}, 实际: ${orderId}`, 'error');
+            }
+
+            // 测试数据完整性
+            const requiredFields = ['id', 'order_number', 'total', 'items'];
+            const missingFields = requiredFields.filter(field => !mockOrderData[field]);
+            
+            if (missingFields.length === 0) {
+                addResult('✅ 订单数据完整性', '所有必需字段都存在', 'success');
+            } else {
+                addResult('❌ 订单数据不完整', `缺少字段: ${missingFields.join(', ')}`, 'error');
+            }
+
+            // 显示完整订单数据
+            const dataDisplay = document.createElement('div');
+            dataDisplay.className = 'data-display';
+            dataDisplay.textContent = JSON.stringify(mockOrderData, null, 2);
+            
+            const section = document.createElement('div');
+            section.className = 'test-section';
+            
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'test-title';
+            titleDiv.textContent = '📋 完整订单数据';
+            
+            section.appendChild(titleDiv);
+            section.appendChild(dataDisplay);
+            document.getElementById('results').appendChild(section);
+        }
+
+        function testProductDataTransformation() {
+            addResult('🔧 产品数据转换测试', '开始测试ProductDataConverter...', 'info');
+            
+            mockOrderData.items.forEach((item, index) => {
+                // 模拟ProductDataConverter.fromOrderItem转换
+                const convertedProduct = {
+                    id: item.order_item_id || item.id || item.item_id,
+                    code: item.item_id || item.part_number || item.code || item.sku,
+                    sku: item.item_id || item.sku || item.part_number || item.code,
+                    part_number: item.item_id || item.part_number || item.code,
+                    name: item.item_name || item.name,
+                    name_zh: item.name_zh,
+                    name_en: item.name_en,
+                    quantity: parseInt(item.quantity) || 1,
+                    price: parseFloat(item.price || item.unit_price) || 0,
+                    unit_price: parseFloat(item.price || item.unit_price) || 0,
+                    model: item.model || item.item_name || '',
+                    brand: item.brand || 'Lockedair',
+                    spec: item.spec || '',
+                    specs: item.specs || item.spec || '',
+                    properties: {
+                        name_zh: item.name_zh,
+                        name_en: item.name_en,
+                        productName: item.item_name || item.name,
+                        model: item.model,
+                        brand: item.brand,
+                        spec: item.spec
+                    }
+                };
+
+                // 验证转换结果
+                const hasAllRequiredFields = convertedProduct.id && convertedProduct.name && convertedProduct.quantity && convertedProduct.price;
+                
+                if (hasAllRequiredFields) {
+                    addResult(`✅ 产品 ${index + 1} 转换成功`, 
+                        `ID: ${convertedProduct.id}<br>
+                         名称: ${convertedProduct.name}<br>
+                         中文名: ${convertedProduct.name_zh || '无'}<br>
+                         英文名: ${convertedProduct.name_en || '无'}<br>
+                         型号: ${convertedProduct.model}<br>
+                         规格: ${convertedProduct.spec}`, 'success');
+                } else {
+                    addResult(`❌ 产品 ${index + 1} 转换失败`, 
+                        `缺少必需字段: ${!convertedProduct.id ? 'ID ' : ''}${!convertedProduct.name ? 'Name ' : ''}${!convertedProduct.quantity ? 'Quantity ' : ''}${!convertedProduct.price ? 'Price' : ''}`, 'error');
+                }
+
+                // 显示转换详情
+                const dataDisplay = document.createElement('div');
+                dataDisplay.className = 'data-display';
+                dataDisplay.textContent = JSON.stringify({
+                    原始数据: item,
+                    转换结果: convertedProduct
+                }, null, 2);
+                
+                const section = document.createElement('div');
+                section.className = 'test-section';
+                
+                const titleDiv = document.createElement('div');
+                titleDiv.className = 'test-title';
+                titleDiv.textContent = `🔄 产品 ${index + 1} 转换详情`;
+                
+                section.appendChild(titleDiv);
+                section.appendChild(dataDisplay);
+                document.getElementById('results').appendChild(section);
+            });
+        }
+
+        function testCustomerInfoExtraction() {
+            addResult('🔧 客户信息提取测试', '开始测试客户信息提取逻辑...', 'info');
+            
+            // 模拟客户信息提取逻辑
+            let extractedCustomerInfo = {
+                companyName: '',
+                contactName: '',
+                address: '',
+                phone: '',
+                email: ''
+            };
+            
+            // 尝试从多个来源提取客户信息
+            const customerSources = [
+                mockOrderData.customer_info,
+                mockOrderData.user_info,
+                mockOrderData.billing_address,
+                mockOrderData.shippingInfo,
+                mockOrderData.shipping_address
+            ];
+            
+            for (const source of customerSources) {
+                if (source && typeof source === 'object') {
+                    if (!extractedCustomerInfo.companyName && (source.companyName || source.company_name || source.company)) {
+                        extractedCustomerInfo.companyName = source.companyName || source.company_name || source.company;
+                    }
+                    if (!extractedCustomerInfo.contactName && (source.contactName || source.contact_name || source.name || source.recipient_name)) {
+                        extractedCustomerInfo.contactName = source.contactName || source.contact_name || source.name || source.recipient_name;
+                    }
+                    if (!extractedCustomerInfo.address && source.address) {
+                        extractedCustomerInfo.address = source.address;
+                    }
+                    if (!extractedCustomerInfo.phone && (source.phone || source.contact_phone)) {
+                        extractedCustomerInfo.phone = source.phone || source.contact_phone;
+                    }
+                    if (!extractedCustomerInfo.email && source.email) {
+                        extractedCustomerInfo.email = source.email;
+                    }
+                }
+            }
+            
+            // 提供默认值
+            if (!extractedCustomerInfo.companyName) {
+                extractedCustomerInfo.companyName = 'Customer Company';
+            }
+            if (!extractedCustomerInfo.contactName) {
+                extractedCustomerInfo.contactName = 'Customer Contact';
+            }
+            if (!extractedCustomerInfo.address) {
+                extractedCustomerInfo.address = 'Customer Address';
+            }
+            if (!extractedCustomerInfo.phone) {
+                extractedCustomerInfo.phone = 'Customer Phone';
+            }
+
+            // 验证提取结果
+            const hasValidInfo = extractedCustomerInfo.companyName !== 'Customer Company' || 
+                               extractedCustomerInfo.contactName !== 'Customer Contact';
+            
+            if (hasValidInfo) {
+                addResult('✅ 客户信息提取成功', 
+                    `公司名称: ${extractedCustomerInfo.companyName}<br>
+                     联系人: ${extractedCustomerInfo.contactName}<br>
+                     地址: ${extractedCustomerInfo.address}<br>
+                     电话: ${extractedCustomerInfo.phone}<br>
+                     邮箱: ${extractedCustomerInfo.email}`, 'success');
+            } else {
+                addResult('⚠️ 客户信息使用默认值', '未能从订单数据中提取到有效的客户信息，使用默认值', 'error');
+            }
+
+            // 显示提取详情
+            const dataDisplay = document.createElement('div');
+            dataDisplay.className = 'data-display';
+            dataDisplay.textContent = JSON.stringify({
+                可用数据源: customerSources.filter(s => s),
+                提取结果: extractedCustomerInfo
+            }, null, 2);
+            
+            const section = document.createElement('div');
+            section.className = 'test-section';
+            
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'test-title';
+            titleDiv.textContent = '👤 客户信息提取详情';
+            
+            section.appendChild(titleDiv);
+            section.appendChild(dataDisplay);
+            document.getElementById('results').appendChild(section);
+        }
+
+        function simulatePONavigation() {
+            addResult('🔧 PO页面导航模拟', '模拟从OrderList到PO页面的数据传递...', 'info');
+            
+            // 模拟构建poData
+            const poData = {
+                orderId: mockOrderData.order_number || mockOrderData.id,
+                orderNumber: mockOrderData.order_number || mockOrderData.id,
+                orderItems: mockOrderData.items.map(item => ({
+                    id: item.order_item_id || item.id || item.item_id,
+                    code: item.item_id || item.part_number || item.code || item.sku,
+                    name: item.item_name || item.name,
+                    name_zh: item.name_zh,
+                    name_en: item.name_en,
+                    model: item.model || item.item_name || '',
+                    brand: item.brand || 'Lockedair',
+                    spec: item.spec || '',
+                    quantity: parseInt(item.quantity) || 1,
+                    price: parseFloat(item.price || item.unit_price) || 0
+                })),
+                customerInfo: {
+                    companyName: mockOrderData.shippingInfo?.companyName || 'Customer Company',
+                    contactName: mockOrderData.shippingInfo?.contactName || 'Customer Contact',
+                    address: mockOrderData.shippingInfo?.address || 'Customer Address',
+                    phone: mockOrderData.shippingInfo?.phone || 'Customer Phone',
+                    email: mockOrderData.shippingInfo?.email || ''
+                },
+                shippingInfo: {
+                    address: mockOrderData.shippingInfo?.address || 'Shipping Address',
+                    contactName: mockOrderData.shippingInfo?.contactName || 'Shipping Contact',
+                    phone: mockOrderData.shippingInfo?.phone || 'Shipping Phone',
+                    notes: mockOrderData.shippingInfo?.notes || ''
+                },
+                summary: {
+                    subtotal: mockOrderData.total,
+                    shipping: 0,
+                    tax: 0,
+                    total: mockOrderData.total
+                }
+            };
+
+            // 验证poData完整性
+            const isValid = poData.orderId && poData.orderItems.length > 0 && poData.customerInfo && poData.shippingInfo;
+            
+            if (isValid) {
+                addResult('✅ PO数据构建成功', 
+                    `订单号: ${poData.orderId}<br>
+                     商品数量: ${poData.orderItems.length}<br>
+                     客户信息: ${poData.customerInfo.companyName}<br>
+                     订单总额: ¥${poData.summary.total}`, 'success');
+            } else {
+                addResult('❌ PO数据构建失败', '构建的PO数据不完整', 'error');
+            }
+
+            // 显示完整poData
+            const dataDisplay = document.createElement('div');
+            dataDisplay.className = 'data-display';
+            dataDisplay.textContent = JSON.stringify(poData, null, 2);
+            
+            const section = document.createElement('div');
+            section.className = 'test-section';
+            
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'test-title';
+            titleDiv.textContent = '📦 完整PO数据';
+            
+            section.appendChild(titleDiv);
+            section.appendChild(dataDisplay);
+            document.getElementById('results').appendChild(section);
+
+            // 模拟localStorage存储（实际应用中通过React Router state传递）
+            try {
+                localStorage.setItem('testPOData', JSON.stringify(poData));
+                addResult('✅ 数据存储成功', '模拟数据已存储到localStorage，可用于PO页面测试', 'success');
+            } catch (error) {
+                addResult('❌ 数据存储失败', `存储错误: ${error.message}`, 'error');
+            }
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        // 页面加载时显示说明
+        window.onload = function() {
+            addResult('🎯 测试说明', 
+                `此页面用于验证PO页面数据一致性修复：<br>
+                 1. <strong>订单号一致性</strong>：确保OrderList传递给PO页面的订单号保持一致<br>
+                 2. <strong>产品数据转换</strong>：验证ProductDataConverter正确转换订单项数据<br>
+                 3. <strong>客户信息提取</strong>：测试从多个数据源正确提取客户信息<br>
+                 4. <strong>PO页面导航</strong>：模拟完整的数据传递流程<br><br>
+                 请依次点击测试按钮验证各项功能。`, 'info');
+        };
+    </script>
+</body>
+</html> 

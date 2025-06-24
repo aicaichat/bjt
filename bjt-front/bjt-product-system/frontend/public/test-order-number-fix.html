@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单号修复验证</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            border-left: 4px solid #007bff;
+        }
+        .success {
+            background-color: #d4edda;
+            border-left-color: #28a745;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-left-color: #dc3545;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>订单号修复验证</h1>
+        <p>验证从API响应 <code>ORD-20250623-D62F4B</code> 到PO页面显示的完整流程</p>
+
+        <div id="testResults"></div>
+    </div>
+
+    <script>
+        // 模拟API响应数据
+        const mockApiResponse = {
+            "success": true,
+            "message": "Order created successfully.",
+            "data": {
+                "id": "12",
+                "user_id": "14",
+                "order_number": "ORD-20250623-D62F4B",
+                "total_amount": "100.00",
+                "status": "pending_payment",
+                "items": [
+                    {
+                        "item_id": "60A01149",
+                        "item_name": "LA-E4S(paper)主机-美标版",
+                        "quantity": "1",
+                        "price": "100.00",
+                        "model": "LA-E4S(paper)",
+                        "brand": "Lockdeair"
+                    }
+                ]
+            }
+        };
+
+        // 模拟OrderNumberManager
+        class OrderNumberManager {
+            static extractFromApiResponse(apiResponse) {
+                let orderId = apiResponse.data?.id;
+                let orderNumber = apiResponse.data?.order_number;
+                
+                return {
+                    orderId: String(orderId),
+                    orderNumber: String(orderNumber),
+                    displayNumber: String(orderNumber),
+                    source: 'api'
+                };
+            }
+
+            static extractFromOrderObject(order) {
+                // 🔧 修复：优先使用orderNumber字段（来自createUnifiedOrderData）
+                let orderNumber = order.orderNumber || order.order_number;
+                let orderId = order.orderId || order.id;
+                
+                return {
+                    orderId: String(orderId),
+                    orderNumber: String(orderNumber),
+                    displayNumber: String(orderNumber),
+                    source: 'api'
+                };
+            }
+
+            static createUnifiedOrderData(params) {
+                const { apiResponse } = params;
+                const orderInfo = this.extractFromApiResponse(apiResponse);
+                
+                return {
+                    orderId: orderInfo.orderId,
+                    orderNumber: orderInfo.orderNumber,
+                    displayNumber: orderInfo.displayNumber,
+                    orderItems: params.orderItems || [],
+                    customerInfo: params.customerInfo || {},
+                    shippingInfo: params.shippingInfo || {},
+                    summary: params.summary || {},
+                    source: params.source
+                };
+            }
+        }
+
+        function runTest() {
+            const results = [];
+            
+            try {
+                // 步骤1: API响应处理 (Order页面)
+                const step1 = OrderNumberManager.extractFromApiResponse(mockApiResponse);
+                results.push(`步骤1 - API响应提取: ${step1.displayNumber}`);
+                
+                // 步骤2: 创建统一订单数据 (Order页面)
+                const step2 = OrderNumberManager.createUnifiedOrderData({
+                    apiResponse: mockApiResponse,
+                    orderItems: [{ id: '60A01149', name: 'Test Product', quantity: 1, price: 100 }],
+                    customerInfo: { companyName: 'Test Company' },
+                    shippingInfo: { address: 'Test Address' },
+                    summary: { total: 100 },
+                    source: 'order_creation'
+                });
+                results.push(`步骤2 - 统一订单数据: ${step2.displayNumber}`);
+                
+                // 步骤3: PO页面处理
+                const step3 = OrderNumberManager.extractFromOrderObject(step2);
+                results.push(`步骤3 - PO页面处理: ${step3.displayNumber}`);
+                
+                // 验证一致性
+                const originalOrderNumber = mockApiResponse.data.order_number;
+                const finalOrderNumber = step3.displayNumber;
+                
+                const isConsistent = originalOrderNumber === finalOrderNumber;
+                
+                results.push('');
+                results.push('=== 一致性检查 ===');
+                results.push(`原始API订单号: ${originalOrderNumber}`);
+                results.push(`最终PO页面显示: ${finalOrderNumber}`);
+                results.push(`结果: ${isConsistent ? '✅ 一致' : '❌ 不一致'}`);
+                
+                // 显示结果
+                const resultDiv = document.getElementById('testResults');
+                resultDiv.innerHTML = `<div class="test-result ${isConsistent ? 'success' : 'error'}">${results.join('\n')}</div>`;
+                
+            } catch (error) {
+                const resultDiv = document.getElementById('testResults');
+                resultDiv.innerHTML = `<div class="test-result error">测试失败: ${error.message}</div>`;
+            }
+        }
+
+        // 页面加载时运行测试
+        window.onload = runTest;
+    </script>
+</body>
+</html> 

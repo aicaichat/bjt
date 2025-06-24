@@ -715,9 +715,7 @@ export const consumablesService = {
    * 获取耗材列表
    */
   getConsumables: async (filters: ConsumableFilters): Promise<ConsumableListData> => {
-    if (import.meta.env.VITE_USE_MOCK_DATA === 'true') {
-      return mockGetConsumables_local(filters);
-    }
+    console.log('🔧 [consumablesService] Fetching consumables from real API with filters:', filters);
     return apiGetConsumables_local(filters);
   },
 
@@ -725,23 +723,21 @@ export const consumablesService = {
    * 获取单个耗材详情
    */
   getConsumable: async (consumableId: string, params: { region?: string; lang?: string; productLineId?: number | string; } = {}): Promise<ConsumableProduct | undefined> => {
-    if (import.meta.env.VITE_USE_MOCK_DATA === 'true') {
-      await delay(300);
-      const centralConsumable = getBaseMockConsumableById(consumableId); // Gets CentralConsumable
-      return transformCentralConsumableToLocal(centralConsumable); // Transform to local ConsumableProduct
-    } else {
-      try {
-        // Assuming API returns a single item that can be transformed or matches ConsumableProduct
-        // If API returns CentralConsumable, it needs transformation
-        const response: ApiResponse<CentralConsumable> = await HttpServiceInstance.get<CentralConsumable>(`/consumables/${consumableId}`, params);
-        return transformCentralConsumableToLocal(response.data);
-      } catch (error: any) {
-        if (error.response && error.response.status === 404) {
-          return undefined;
-        }
-        console.error("Error fetching consumable:", error);
-        throw error;
+    console.log('🔧 [consumablesService] Fetching consumable detail from real API:', consumableId);
+    
+    try {
+      // Assuming API returns a single item that can be transformed or matches ConsumableProduct
+      // If API returns CentralConsumable, it needs transformation
+      const response: ApiResponse<CentralConsumable> = await HttpServiceInstance.get<CentralConsumable>(`/consumables/${consumableId}`, params);
+      console.log('✅ [consumablesService] Successfully fetched consumable detail from real API');
+      return transformCentralConsumableToLocal(response.data);
+    } catch (error: any) {
+      if (error.response && error.response.status === 404) {
+        console.log('⚠️ [consumablesService] Consumable not found:', consumableId);
+        return undefined;
       }
+      console.error("❌ [consumablesService] Error fetching consumable:", error);
+      throw error;
     }
   },
 

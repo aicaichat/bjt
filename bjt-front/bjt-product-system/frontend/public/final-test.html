@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>最终测试 - BJT产品系统</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-button {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            margin: 10px;
+            width: 100%;
+            transition: background 0.3s;
+        }
+        .test-button:hover {
+            background: #219a52;
+        }
+        .step {
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .step h3 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        .expected {
+            background: #e8f5e8;
+            border-left: 4px solid #27ae60;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .expected h4 {
+            color: #27ae60;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 最终测试 - 运输信息修复验证</h1>
+        
+        <div class="step">
+            <h3>📋 测试说明</h3>
+            <p>这个测试将直接跳转到PO页面，验证运输信息和客户信息的修复效果。</p>
+            <p>我们将使用订单20的真实数据进行测试。</p>
+        </div>
+
+        <div class="expected">
+            <h4>✅ 预期结果</h4>
+            <p><strong>Ship to 部分应该显示：</strong></p>
+            <ul>
+                <li>Contact: <strong>John Doe</strong> (不是 "Shipping Contact")</li>
+                <li>Phone: <strong>+86 13057101000</strong> (不是 "Shipping Phone")</li>
+                <li>Address: <strong>1818-2, Wenyixi Road, Hangzhou, Zhejiang Province, China</strong> (不是 "Shipping Address")</li>
+            </ul>
+            
+            <p><strong>Buyer 部分应该显示：</strong></p>
+            <ul>
+                <li>Company Name: <strong>Hangzhou Bingjia Tech. Co., Ltd.</strong> (不是 "Customer Company")</li>
+                <li>Contact: <strong>John Doe</strong> (不是 "Customer Contact")</li>
+                <li>Address: <strong>1818-2, Wenyixi Road, Hangzhou, Zhejiang Province, China</strong> (不是 "Customer Address")</li>
+            </ul>
+        </div>
+
+        <button class="test-button" onclick="jumpToPOPage()">🚀 直接跳转到PO页面测试</button>
+        
+        <div class="step">
+            <h3>🔍 如何验证</h3>
+            <ol>
+                <li>点击上方按钮跳转到PO页面</li>
+                <li>检查页面右侧的"Ship to"和"Buyer"信息</li>
+                <li>如果显示真实信息（如上面的预期结果），说明修复成功</li>
+                <li>如果仍然显示默认值，说明还需要进一步修复</li>
+                <li>打开浏览器开发者工具(F12)查看Console日志获取详细信息</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h3>🔧 备用测试方法</h3>
+            <p>如果直接跳转有问题，可以：</p>
+            <ol>
+                <li>访问 <a href="http://localhost:5173/order-list" target="_blank">OrderList页面</a></li>
+                <li>找到订单号 "PO-202506231804-BC3049"</li>
+                <li>点击该订单的 "Back to PO" 按钮</li>
+                <li>检查跳转后的PO页面信息</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        async function jumpToPOPage() {
+            try {
+                console.log('🔧 [最终测试] 开始构建PO数据');
+                
+                // 获取实际的API数据
+                const response = await fetch('http://localhost:8080/wp-json/bjt/v1/orders/20');
+                const apiResponse = await response.json();
+                
+                if (!apiResponse.success) {
+                    throw new Error('API返回失败');
+                }
+                
+                const order = apiResponse.data;
+                console.log('🔧 [最终测试] API数据:', order);
+                
+                // 构建PO数据，完全模拟OrderList的处理逻辑
+                let extractedCustomerInfo = {
+                    companyName: 'Customer Company',
+                    contactName: 'Customer Contact',
+                    address: 'Customer Address',
+                    phone: 'Customer Phone',
+                    email: ''
+                };
+                
+                let extractedShippingInfo = {
+                    address: 'Shipping Address',
+                    contactName: 'Shipping Contact',
+                    phone: 'Shipping Phone',
+                    notes: ''
+                };
+                
+                // 从shipping_address提取信息
+                if (order.shipping_address) {
+                    extractedCustomerInfo = {
+                        companyName: order.shipping_address.company || extractedCustomerInfo.companyName,
+                        contactName: order.shipping_address.name || extractedCustomerInfo.contactName,
+                        address: order.shipping_address.address || extractedCustomerInfo.address,
+                        phone: order.shipping_address.phone || extractedCustomerInfo.phone,
+                        email: extractedCustomerInfo.email
+                    };
+                    
+                    extractedShippingInfo = {
+                        address: order.shipping_address.address || extractedShippingInfo.address,
+                        contactName: order.shipping_address.name || extractedShippingInfo.contactName,
+                        phone: order.shipping_address.phone || extractedShippingInfo.phone,
+                        notes: extractedShippingInfo.notes
+                    };
+                }
+                
+                console.log('🔧 [最终测试] 提取的客户信息:', extractedCustomerInfo);
+                console.log('🔧 [最终测试] 提取的运输信息:', extractedShippingInfo);
+                
+                const poData = {
+                    orderObject: {
+                        id: order.id,
+                        order_number: order.order_number
+                    },
+                    orderItems: order.items.map(item => ({
+                        id: item.target_id,
+                        name: item.item_name,
+                        quantity: parseInt(item.quantity),
+                        price: parseFloat(item.price),
+                        code: item.item_id,
+                        part_number: item.item_id,
+                        specs: item.spec,
+                        spec: item.spec,
+                        model: item.model || item.item_id,
+                        brand: item.brand || 'Lockedair',
+                        unit: '个',
+                        type: 'product',
+                        properties: {},
+                        amount: parseFloat(item.price) * parseInt(item.quantity)
+                    })),
+                    customerInfo: extractedCustomerInfo,
+                    shippingInfo: extractedShippingInfo,
+                    summary: {
+                        subtotal: parseFloat(order.total_amount),
+                        shipping: 0,
+                        tax: 0,
+                        total: parseFloat(order.total_amount)
+                    },
+                    source: 'final_test'
+                };
+                
+                console.log('🔧 [最终测试] 构建的PO数据:', poData);
+                
+                // 将数据存储到sessionStorage，然后跳转
+                sessionStorage.setItem('testPOData', JSON.stringify({
+                    poData: poData,
+                    source: 'final_test',
+                    timestamp: Date.now()
+                }));
+                
+                // 跳转到PO页面
+                window.location.href = 'http://localhost:5173/po?test=true';
+                
+            } catch (error) {
+                console.error('🔧 [最终测试] 失败:', error);
+                alert('测试失败: ' + error.message + '\\n\\n请检查后端服务是否运行，然后重试。');
+            }
+        }
+    </script>
+</body>
+</html>

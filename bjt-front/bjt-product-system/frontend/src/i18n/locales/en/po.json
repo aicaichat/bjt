@@ -4,6 +4,8 @@
   "printPO": "Print PDF",
   "back": "Back",
   "complete": "Complete",
+  "confirmPO": "Confirm PO",
+  "poConfirmed": "PO confirmed successfully",
   "logoPrompt": "This area is for customer LOGO display, will be developed in phase 2, users can upload company LOGO image in account management",
   "buyerPrompt": "Fill in buyer company address and phone here",
   "poNumberPrompt": "System generated order number",

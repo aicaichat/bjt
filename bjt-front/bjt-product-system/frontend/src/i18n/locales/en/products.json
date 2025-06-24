@@ -87,7 +87,7 @@
   },
   "properties": {
     "partNumber": "Part Number",
-    "model": "Part Model",
+    "model": "Model",
     "voltage": "Voltage",
     "frequency": "Frequency",
     "spec": "Specification",
