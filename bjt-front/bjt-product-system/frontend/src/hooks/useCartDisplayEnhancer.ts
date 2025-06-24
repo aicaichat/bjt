@@ -119,7 +119,7 @@ const getFieldLabel = (field: string, productType: string): { zh: string; en: st
     unit: { zh: '单位', en: 'Unit' },
     
     // 尺寸重量字段
-    package_size: { zh: '包装尺寸', en: 'Package Size' },
+    package_size: { zh: '包装尺寸', en: 'Packaging Dim.' },
     pallet_size: { zh: '托盘尺寸', en: 'Pallet Size' },
     net_weight: { zh: '单件净重', en: 'Net Weight' },
     pcs_per_pallet: { zh: '一托数量', en: 'Packs per Pallet' },
@@ -127,8 +127,17 @@ const getFieldLabel = (field: string, productType: string): { zh: string; en: st
     // 耗材特有字段
     app_model: { zh: '适用机型', en: 'Applicable Machine' },
     spec: { zh: '规格描述', en: 'Spec.' },
+    shape: { zh: '袋型', en: 'Film Type' },
     bubble_diameter: { zh: '泡径', en: 'Bubble Dia.' },
     product_id: { zh: '产品ID', en: 'Product ID' },
+    width: { zh: '宽度', en: 'Width' },
+    length: { zh: '虚线间距', en: 'Perforation' },
+    total_length: { zh: '总长', en: 'Length' },
+    thickness: { zh: '厚度/克重', en: 'Thickness/Basis Weight' },
+    material: { zh: '材质', en: 'Material' },
+    package_type: { zh: '包装方式', en: 'Packaging Method' },
+    package_image_url: { zh: '包装图片', en: 'Packaging Image' },
+    tube_inner_diameter: { zh: '纸筒内径', en: 'Inner Dia.' },
     
     // 备件特有字段
     app_sn: { zh: '适配序列号', en: 'Applicable SN.' },

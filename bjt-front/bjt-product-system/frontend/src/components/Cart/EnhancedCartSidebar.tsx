@@ -61,7 +61,7 @@ const CART_FIELD_CONFIGS = {
       key: 'bubble_diameter', 
       displayName: { zh: '泡径', en: 'Bubble Dia.' }, 
       priority: 5,
-      unitConfig: { metric: 'bubble_diameter_cm', imperial: 'bubble_diameter_inch' }
+      unitConfig: { metric: 'bubble_diameter_mm', imperial: 'bubble_diameter_inch' }
     },
     pcs_per_box: { key: 'pcs_per_box', displayName: { zh: '单箱数量', en: 'Qty per Carton' }, priority: 6 },
     // Tooltip字段
@@ -78,7 +78,7 @@ const CART_FIELD_CONFIGS = {
     },
     bag_length: { 
       key: 'bag_length', 
-      displayName: { zh: '袋长', en: 'Perforation' },
+      displayName: { zh: '虚线间距', en: 'Perforation' },
       unitConfig: { metric: 'bag_length_cm', imperial: 'bag_length_inch' }
     },
     total_length: { 
@@ -88,26 +88,28 @@ const CART_FIELD_CONFIGS = {
     }
   },
   
-  // 备件字段配置 - 基于官方标准
+  // 备件字段配置 - 基于官方标准 🔧 修复：使用智能单位制字段配置
   spare_parts: {
-    // 购物车显示字段 (12个)
+    // 购物车显示字段 (8个) - 智能单位制版本
     app_model: { key: 'app_model', displayName: { zh: '适用机型', en: 'Applicable Machine' }, priority: 1 },
     part_number: { key: 'part_number', displayName: { zh: '料号', en: 'Part No.' }, priority: 2 },
-    spec: { key: 'spec', displayName: { zh: '规格描述', en: 'Spec.' }, priority: 3 },
-    app_sn: { key: 'app_sn', displayName: { zh: '适配序列号', en: 'Applicable SN.' }, priority: 4 },
-    unit: { key: 'unit', displayName: { zh: '单位', en: 'Unit' }, priority: 5 },
-    pcs_per_box: { key: 'pcs_per_box', displayName: { zh: '单箱数量', en: 'Qty per Carton' }, priority: 6 },
-    // 包装信息
+    name: { key: 'name', displayName: { zh: '名称', en: 'Item' }, priority: 3 },
+    spec: { key: 'spec', displayName: { zh: '规格描述', en: 'Spec.' }, priority: 4 },
+    app_sn: { key: 'app_sn', displayName: { zh: '适配序列号', en: 'Applicable SN.' }, priority: 5 },
     package_size: { 
       key: 'package_size', 
-      displayName: { zh: '包装尺寸', en: 'Package Size' },
+      displayName: { zh: '包装尺寸', en: 'Package Size' }, 
+      priority: 6,
       unitConfig: { metric: 'package_size_cm', imperial: 'package_size_inch' }
     },
+    unit: { key: 'unit', displayName: { zh: '单位', en: 'Unit' }, priority: 7 },
     net_weight: { 
       key: 'net_weight', 
-      displayName: { zh: '单件净重', en: 'Net Weight' },
+      displayName: { zh: '单件净重', en: 'Net Weight' }, 
+      priority: 8,
       unitConfig: { metric: 'net_weight_kg', imperial: 'net_weight_lbs' }
-    }
+    },
+    pcs_per_box: { key: 'pcs_per_box', displayName: { zh: '单箱数量', en: 'Qty per Carton' }, priority: 9 }
   },
   
   // 配件字段配置 - 基于官方标准
@@ -144,7 +146,7 @@ const FIELD_UNIT_MAPPINGS = {
   'total_length_ft': 'ft',
   
   // 直径字段
-  'bubble_diameter_cm': 'mm',  // 修正：CSV中泡径单位是mm
+  'bubble_diameter_mm': 'mm',  // 修正：CSV中泡径单位是mm
   'bubble_diameter_inch': 'inch',
   
   // 厚度字段
@@ -267,7 +269,14 @@ const EnhancedCartSidebar: React.FC<EnhancedCartSidebarProps> = ({ isOpen, onClo
     const productType = getProductType(item);
     const actualField = getSmartFieldMapping(fieldKey, productType, item);
     const label = getSmartLabel(fieldKey, productType);
-    const value = item[actualField] || item.properties?.[actualField];
+    
+    // 🔧 特殊处理name字段 - 使用智能名称获取逻辑
+    let value;
+    if (fieldKey === 'name') {
+      value = getDisplayName(item);
+    } else {
+      value = item[actualField] || item.properties?.[actualField];
+    }
     
     if (!value || value === 'N/A' || value === '') return null;
     
@@ -286,11 +295,11 @@ const EnhancedCartSidebar: React.FC<EnhancedCartSidebarProps> = ({ isOpen, onClo
     
     if (!config) return null;
 
-    // 获取优先级排序的字段
+    // 获取优先级排序的字段 - 🔧 修复：显示所有字段
     const priorityFields = Object.keys(config)
       .filter(key => config[key].priority)
-      .sort((a, b) => config[a].priority - config[b].priority)
-      .slice(0, 6); // 显示前6个重要字段
+      .sort((a, b) => config[a].priority - config[b].priority);
+      // .slice(0, 6); // 🔧 移除限制：显示所有11个字段
 
     return (
       <div className="product-details">
