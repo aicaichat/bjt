@@ -21,6 +21,7 @@ import {
   OrderStatus, 
   ORDER_STATUS_LABELS 
 } from '../../types/orderTypes';
+import { CartFieldUnifier } from '../../utils/CartFieldUnifier';
 
 const OrderListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -552,22 +553,39 @@ const OrderListPage: React.FC = () => {
       // 🔧 使用统一的订单号管理器构建PO页面需要的数据格式
       const poData = OrderNumberManager.createUnifiedOrderData({
         orderObject: order,
-        orderItems: order.items.map(item => ({
-          id: item.id,
-          code: item.part_number || item.code,
-          sku: item.part_number || item.code,
-          name: item.name || (item as any).product_name || item.part_number,
-          quantity: item.quantity,
-          price: item.price || item.unit_price || 0,
-          specs: item.specs || item.spec,
-          spec: item.spec || item.specs,
-          unit: '个',
-          type: 'product',
-          model: item.model || item.part_number,
-          brand: item.brand || 'Lockedair',
-          properties: typeof item.specs === 'object' ? item.specs : {},
-          amount: (item.price || item.unit_price || 0) * item.quantity
-        })),
+        orderItems: order.items.map(item => {
+          // 🔧 修复：使用CartFieldUnifier获取统一的产品名称
+          const unifiedName = CartFieldUnifier.getProductName(item, 'zh');
+          
+          return {
+            id: item.id,
+            code: item.part_number || item.code,
+            sku: item.part_number || item.code,
+            name: unifiedName, // 🔧 使用统一的名称获取方法
+            quantity: item.quantity,
+            price: item.price || item.unit_price || 0,
+            specs: item.specs || item.spec,
+            spec: item.spec || item.specs,
+            unit: '个',
+            type: 'product',
+            model: item.model || item.part_number,
+            brand: item.brand || 'Lockedair',
+            // 🔧 增强：传递更多原始字段供CartFieldUnifier使用
+            properties: {
+              ...(typeof item.specs === 'object' ? item.specs : {}),
+              name: item.name,
+              name_zh: (item as any).name_zh,
+              name_en: (item as any).name_en,
+              product_name: (item as any).product_name,
+              code: item.code,
+              part_number: item.part_number,
+              model: item.model,
+              spec: item.spec,
+              specs: item.specs
+            },
+            amount: (item.price || item.unit_price || 0) * item.quantity
+          };
+        }),
         customerInfo: extractedCustomerInfo,
         shippingInfo: extractedShippingInfo,
         summary: {

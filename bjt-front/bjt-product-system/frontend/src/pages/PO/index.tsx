@@ -19,6 +19,7 @@ import { UnifiedProduct, CustomerInfo, ShippingInfo, OrderSummary, POLocationSta
 import { useCart } from '../../contexts/CartContext';
 import { OrderNumberManager } from '../../utils/orderNumberUtils';
 
+
 // 1. 新增仿Excel模板的表格CSS
 const poExcelTableStyle = `
 .po-excel-table {
@@ -640,7 +641,7 @@ const POPage: React.FC = () => {
             sku: product.sku,
             part_number: product.code || product.sku || product.id,
             // 🔧 Item列：使用与PO页面完全相同的逻辑
-            name: getProductName(product), // 🔧 使用PO页面相同的名称获取逻辑
+            name: CartFieldUnifier.getProductName(product, currentLanguage), // 🔧 使用统一的名称获取方法
             quantity: product.quantity,
             price: product.price,
             unit_price: product.price,
@@ -748,7 +749,7 @@ const POPage: React.FC = () => {
         items: products.map(product => ({
           id: product.id,
           code: product.code || product.sku,
-          name: getProductName(product),
+          name: CartFieldUnifier.getProductName(product, currentLanguage), // 🔧 使用统一的名称获取方法
           quantity: product.quantity,
           price: product.price,
           model: product.model,
