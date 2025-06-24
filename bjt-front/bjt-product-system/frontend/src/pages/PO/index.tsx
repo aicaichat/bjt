@@ -623,38 +623,28 @@ const POPage: React.FC = () => {
         vendor: getVendorAddress(),
         language: (currentLanguage === 'zh' ? 'zh' : 'en') as 'zh' | 'en',
         items: products.map(product => {
-          console.log('🔧 [PO Excel Export] 准备产品数据:', {
-            id: product.id,
-            code: product.code,
-            name: product.name,
-            model: product.model,
-            spec: product.spec,
-            specs: product.specs,
-            spec_imperial: product.spec_imperial,
-            brand: product.brand
-          });
+          // 🔧 只对耗材类型使用CartFieldUnifier，其他类型保持原有逻辑
+          const productType = product.product_type || product.category || product.type;
+          let productName: string;
           
-          // 🔧 修复：使用与PO页面表格完全一致的数据处理逻辑
+          if (productType === 'consumable') {
+            // 只对耗材使用CartFieldUnifier
+            productName = CartFieldUnifier.getProductName(product, currentLanguage);
+          } else {
+            // 其他产品类型保持原有逻辑
+            productName = product.name || (product as any).product_name || product.model || product.code || String(product.id);
+          }
+          
           return {
             id: product.id,
-            code: product.code || product.sku || product.id, // Part No. # 列
-            sku: product.sku,
-            part_number: product.code || product.sku || product.id,
-            // 🔧 Item列：使用与PO页面完全相同的逻辑
-            name: CartFieldUnifier.getProductName(product, currentLanguage), // 🔧 使用统一的名称获取方法
+            code: product.code || product.sku,
+            name: productName, // 🔧 使用条件性的名称获取方法
             quantity: product.quantity,
             price: product.price,
-            unit_price: product.price,
-            model: product.model || '-', // Model列
-            // 🔧 修复：使用与PO页面Item description列完全相同的逻辑
-            spec: product.spec || (product as any).description || '', // 单数spec字段 - 与PO页面优先级一致
-            specs: typeof product.specs === 'string' ? product.specs : '', // 复数specs字段 - 作为备用
-            spec_imperial: product.spec_imperial || '',
-            brand: product.brand || 'Lockedair', // Brand Name列
-            properties: product.properties || {},
-            // 🔧 添加计算字段
-            amount: (product.price || 0) * (product.quantity || 1),
-            line_total: (product.price || 0) * (product.quantity || 1)
+            model: product.model,
+            spec: product.spec,
+            brand: product.brand,
+            amount: (product.price || 0) * (product.quantity || 1)
           };
         })
       };
@@ -746,17 +736,31 @@ const POPage: React.FC = () => {
           notes: shippingInfo.notes,
           email: customerInfo.email || ''
         },
-        items: products.map(product => ({
-          id: product.id,
-          code: product.code || product.sku,
-          name: CartFieldUnifier.getProductName(product, currentLanguage), // 🔧 使用统一的名称获取方法
-          quantity: product.quantity,
-          price: product.price,
-          model: product.model,
-          spec: product.spec,
-          brand: product.brand,
-          amount: (product.price || 0) * (product.quantity || 1)
-        }))
+        items: products.map(product => {
+          // 🔧 只对耗材类型使用CartFieldUnifier，其他类型保持原有逻辑
+          const productType = product.product_type || product.category || product.type;
+          let productName: string;
+          
+          if (productType === 'consumable') {
+            // 只对耗材使用CartFieldUnifier
+            productName = CartFieldUnifier.getProductName(product, currentLanguage);
+          } else {
+            // 其他产品类型保持原有逻辑
+            productName = product.name || (product as any).product_name || product.model || product.code || String(product.id);
+          }
+          
+          return {
+            id: product.id,
+            code: product.code || product.sku,
+            name: productName, // 🔧 使用条件性的名称获取方法
+            quantity: product.quantity,
+            price: product.price,
+            model: product.model,
+            spec: product.spec,
+            brand: product.brand,
+            amount: (product.price || 0) * (product.quantity || 1)
+          };
+        })
       };
       
       console.log('🔧 [PO] 构造的完整订单数据:', orderDataForList);

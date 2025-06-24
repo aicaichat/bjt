@@ -114,28 +114,27 @@ const mapServiceCartItemToUICartItem = (item: OriginalCartItem): ExtendedCartIte
     // 根据产品类型使用不同的名称获取策略
     switch (item.product_type) {
       case 'consumable':
-        // 🔧 修复：耗材名称获取优先级，与CartFieldUnifier保持一致
-        return itemAny.name_zh || 
-               props.name_zh ||
-               item.name || 
-               props.name ||
-               itemAny.product_name ||
-               props.product_name ||
-               // 耗材特殊：优先使用model相关字段作为名称
-               itemAny.model ||
-               props.model ||
-               itemAny.model_metric ||
-               props.model_metric ||
-               itemAny.spec ||
-               props.spec ||
-               itemAny.code ||
-               props.code ||
-               item.part_number || 
-               props.part_number ||
-               `耗材-${itemAny.id || props.id || '未知'}`;
+        // 🔧 只对耗材进行特殊处理：如果name为空或"Not Found"，使用model字段
+        const name = item.name || props.name;
+        if (!name || name === 'Not Found' || name === 'N/A' || name.trim() === '') {
+          // 对于耗材，使用model相关字段作为名称回退
+          return itemAny.model ||
+                 props.model ||
+                 itemAny.model_metric ||
+                 props.model_metric ||
+                 itemAny.spec ||
+                 props.spec ||
+                 itemAny.code ||
+                 props.code ||
+                 item.part_number || 
+                 props.part_number ||
+                 '耗材';
+        }
+        // 如果name有效，直接返回
+        return name;
                
       case 'spare_part':
-        // 备件名称获取优先级
+        // 备件名称获取优先级（保持原有逻辑）
         return props.name_zh || 
                props.name_en || 
                props.productName ||
@@ -146,7 +145,7 @@ const mapServiceCartItemToUICartItem = (item: OriginalCartItem): ExtendedCartIte
                '备件';
                
       case 'accessory':
-        // 配件名称获取优先级
+        // 配件名称获取优先级（保持原有逻辑）
         return props.name_zh || 
                props.name_en || 
                item.name || 
@@ -156,7 +155,7 @@ const mapServiceCartItemToUICartItem = (item: OriginalCartItem): ExtendedCartIte
                '配件';
                
       case 'machine':
-        // 主机名称获取优先级
+        // 主机名称获取优先级（保持原有逻辑）
         return props.name_zh || 
                props.name_en || 
                item.name || 
@@ -166,7 +165,7 @@ const mapServiceCartItemToUICartItem = (item: OriginalCartItem): ExtendedCartIte
                '主机';
                
       default:
-        // 默认名称获取逻辑
+        // 默认名称获取逻辑（保持原有逻辑）
         return item.name || 
                props.name || 
                props.name_zh || 
