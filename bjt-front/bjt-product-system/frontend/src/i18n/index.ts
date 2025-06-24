@@ -76,8 +76,8 @@ i18n
         products: jaProducts
       }
     },
-    lng: 'en', // 设置默认语言为英文
-    fallbackLng: 'zh',
+    lng: 'zh', // 设置默认语言为中文
+    fallbackLng: 'en',
     debug: process.env.NODE_ENV === 'development',
     interpolation: {
       escapeValue: false // not needed for react as it escapes by default

@@ -3,8 +3,6 @@
  * 解决所有购物车显示问题：字段缺失、名称错误、中英文混乱等
  */
 
-import { ProductNameMapper } from './ProductNameMapper';
-
 export interface FieldMapping {
   type: string;
   attribute: string;
@@ -364,77 +362,80 @@ export class CartFieldUnifier {
   }
   
   /**
-   * 获取产品名称（解决BUG-003：中英文显示混乱）
-   * 🔧 新增：集成ProductNameMapper进行英中文名称智能映射
+   * 获取产品名称（修复耗材名称缺失问题）
    */
   static getProductName(item: any, language: 'zh' | 'en' = 'zh'): string {
     if (!item) return '';
     
     const props = item.properties || {};
     
+    // 🔧 修复：增强耗材名称获取逻辑
     if (language === 'zh') {
-      // 🔧 修复：中文优先级，优先从直接字段获取
+      // 中文优先级，针对耗材做特殊处理
       const sources = [
-        item.name_zh,      // 🔧 备件表直接字段
+        item.name_zh,      // 备件表直接字段
         props.name_zh,
-        item.name,
+        item.name,         // 通用名称字段
         props.name,
-        item.product_name, // 🔧 配件可能使用product_name字段
+        item.product_name, // 配件可能使用product_name字段
         props.product_name,
-        // 🔧 耗材特殊处理：使用model_metric作为名称
-        item.model_metric, // 🔧 耗材可能使用model_metric作为名称
-        props.model_metric,
-        item.model,        // 🔧 配件可能使用model作为名称
+        // 🔧 耗材特殊处理：优先使用model相关字段作为名称
+        item.model,        // 型号作为名称（耗材常用）
         props.model,
-        item.code,
+        item.model_metric, // 公制型号作为名称
+        props.model_metric,
+        item.spec,         // 规格描述作为名称
+        props.spec,
+        item.code,         // 产品代码作为名称
         props.code,
-        item.part_number,
+        item.part_number,  // 料号作为名称
         props.part_number,
-        item.id
+        // 最后回退
+        `产品-${item.id || props.id || '未知'}`
       ];
       
       for (const source of sources) {
         if (this.isValidValue(source)) {
           const nameStr = String(source);
           
-          // 🔧 新增：如果获取到的是英文名称，尝试映射为中文
-          if (nameStr && /^[A-Za-z0-9\s\-().,]+$/.test(nameStr)) {
-            const chineseName = ProductNameMapper.mapToChineseName(nameStr);
-            // 如果映射成功且不是原名称，返回中文名称
-            if (chineseName && chineseName !== nameStr) {
-              return chineseName;
-            }
+          // 🔧 简化：移除复杂的英文名称映射逻辑，直接返回名称
+          if (nameStr && nameStr.trim() !== '') {
+            return nameStr.trim();
           }
-          
-          return nameStr;
         }
       }
       
       return '商品';
     } else {
-      // 🔧 修复：英文优先级，优先从直接字段获取
+      // 英文优先级，针对耗材做特殊处理
       const sources = [
-        item.name_en,      // 🔧 备件表直接字段
+        item.name_en,      // 备件表直接字段
         props.name_en,
-        item.name,
+        item.name,         // 通用名称字段
         props.name,
-        item.product_name, // 🔧 配件可能使用product_name字段
+        item.product_name, // 配件可能使用product_name字段
         props.product_name,
-        // 🔧 耗材特殊处理：使用model_metric作为名称
-        item.model_metric, // 🔧 耗材可能使用model_metric作为名称
-        props.model_metric,
-        item.model,        // 🔧 配件可能使用model作为名称
+        // 🔧 耗材特殊处理：优先使用model相关字段作为名称
+        item.model,        // 型号作为名称（耗材常用）
         props.model,
-        item.code,
+        item.model_metric, // 公制型号作为名称
+        props.model_metric,
+        item.spec,         // 规格描述作为名称
+        props.spec,
+        item.code,         // 产品代码作为名称
         props.code,
-        item.part_number,
+        item.part_number,  // 料号作为名称
         props.part_number,
-        item.id
+        // 最后回退
+        `Product-${item.id || props.id || 'Unknown'}`
       ];
       
       for (const source of sources) {
         if (this.isValidValue(source)) {
-          return String(source);
+          const nameStr = String(source);
+          if (nameStr && nameStr.trim() !== '') {
+            return nameStr.trim();
+          }
         }
       }
       

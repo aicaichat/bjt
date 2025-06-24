@@ -22,9 +22,9 @@
     "material": "材质",
     "shape": "形状",
     "thickness": "厚度",
-    "weight": "克重",
+    "weight": "重量",
     "width": "宽度",
-    "length": "虚线间距",
+    "length": "长度",
     "weightImp": "克重(#)",
     "weightMet": "克重(gsm)",
     "thicknessImp": "厚度(mil)",
@@ -100,7 +100,7 @@
     "material": "材质",
     "shape": "形状",
     "thickness": "厚度",
-    "weight": "克重",
+    "weight": "重量",
     "width": "宽度",
     "length": "长度",
     "rollLength": "总长度",
@@ -182,7 +182,7 @@
   "width": "宽度",
   "length": "长度",
   "thickness": "厚度",
-  "weight": "克重",
+  "weight": "重量",
   "price": "价格",
   "specs": "规格",
   "inventory": "库存",
@@ -248,9 +248,9 @@
     "materialAndSpecs": "材质与规格筛选",
     "materialType": "材质类型",
     "allMaterials": "全部材质",
-    "weight": "克重",
+    "weight": "重量",
     "thickness": "厚度",
-    "selectWeight": "选择克重",
+    "selectWeight": "选择重量",
     "selectThickness": "选择厚度",
     "selectWidth": "选择宽度",
     "selectLength": "选择长度",
@@ -322,7 +322,7 @@
     },
     "unitWeight": {
       "metric": "单件净重 kg",
-      "imperial": "单位重量(lb)"
+      "imperial": "单件净重 lbs"
     },
     "totalLength": {
       "metric": "总长 m",
@@ -345,7 +345,7 @@
     "palletRolls": "一托卷数",
     "grossWeight": {
       "metric": "毛重 kg",
-      "imperial": "毛重(lb)"
+      "imperial": "毛重 lbs"
     },
     "height": {
       "metric": "高度 cm",
@@ -374,7 +374,7 @@
     },
     "units": {
       "rolls": "卷",
-      "weight": "克重",
+      "weight": "重量",
       "height": "高度"
     }
   }

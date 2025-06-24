@@ -22,9 +22,9 @@
     "material": "Material",
     "shape": "Shape",
     "thickness": "Thickness",
-    "weight": "Basis Weight",
+    "weight": "Weight",
     "width": "Width",
-    "length": "Dash Spacing",
+    "length": "Length",
     "weightImp": "Weight(#)",
     "weightMet": "Weight(gsm)",
     "thicknessImp": "Thickness(mil)",
@@ -100,7 +100,7 @@
     "material": "Material",
     "shape": "Shape",
     "thickness": "Thickness",
-    "weight": "Basis Weight",
+    "weight": "Weight",
     "width": "Width",
     "length": "Length",
     "rollLength": "Roll Length",
@@ -182,7 +182,7 @@
   "width": "Width",
   "length": "Length",
   "thickness": "Thickness",
-  "weight": "Basis Weight",
+  "weight": "Weight",
   "price": "Price",
   "specs": "Specifications",
   "inventory": "Inventory",
@@ -248,9 +248,9 @@
     "materialAndSpecs": "Material & Specifications Filter",
     "materialType": "Material Type",
     "allMaterials": "All Materials",
-    "weight": "Basis Weight",
+    "weight": "Weight",
     "thickness": "Thickness",
-    "selectWeight": "Select Basis Weight",
+    "selectWeight": "Select Weight",
     "selectThickness": "Select Thickness",
     "selectWidth": "Select Width",
     "selectLength": "Select Length",
@@ -318,11 +318,11 @@
     "palletSize": "Pallet Size",
     "packageSize": {
       "metric": "Package Size cm",
-      "imperial": "Packaging Dim.(inch)"
+      "imperial": "Package Size inch"
     },
     "unitWeight": {
       "metric": "Unit Weight kg",
-      "imperial": "Unit Weight(lb)"
+      "imperial": "Unit Weight lbs"
     },
     "totalLength": {
       "metric": "Total Length m",
@@ -345,7 +345,7 @@
     "palletRolls": "Rolls per Pallet",
     "grossWeight": {
       "metric": "Gross Weight kg",
-      "imperial": "Gross Weight(lb)"
+      "imperial": "Gross Weight lbs"
     },
     "height": {
       "metric": "Height cm",
@@ -374,7 +374,7 @@
     },
     "units": {
       "rolls": "Rolls",
-      "weight": "Basis Weight",
+      "weight": "Weight",
       "height": "Height"
     }
   }

@@ -666,7 +666,7 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
                   const rollsLabel = t('tooltip.units.rolls');
                   const weightLabel = t('tooltip.units.weight');
                   const heightLabel = t('tooltip.units.height');
-                  const weightUnit = isImperialUnit ? 'lbs' : 'kg';
+                  const weightUnit = isImperialUnit ? 'lb' : 'kg';
                   const heightUnit = isImperialUnit ? 'inch' : 'cm';
                   
                   // 格式化数值
@@ -682,12 +682,12 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
                           <span className="unit-value">{pcsA}</span>
                         </span>
                         <span className="config-item">
-                          <span className="unit-label">{weightUnit}:</span>
+                          <span className="unit-label">{weightLabel}({weightUnit}):</span>
                           <span className="unit-value">{formattedWeight}</span>
                         </span>
                         {heightA !== 'N/A' && heightA !== '' && (
                           <span className="config-item">
-                            <span className="unit-label">{heightUnit}:</span>
+                            <span className="unit-label">{heightLabel}({heightUnit}):</span>
                             <span className="unit-value">{formattedHeight}</span>
                           </span>
                         )}
@@ -708,7 +708,7 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
                   const rollsLabel = t('tooltip.units.rolls');
                   const weightLabel = t('tooltip.units.weight');
                   const heightLabel = t('tooltip.units.height');
-                  const weightUnit = isImperialUnit ? 'lbs' : 'kg';
+                  const weightUnit = isImperialUnit ? 'lb' : 'kg';
                   const heightUnit = isImperialUnit ? 'inch' : 'cm';
                   
                   // 格式化数值
@@ -724,12 +724,12 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
                           <span className="unit-value">{pcsB}</span>
                         </span>
                         <span className="config-item">
-                          <span className="unit-label">{weightUnit}:</span>
+                          <span className="unit-label">{weightLabel}({weightUnit}):</span>
                           <span className="unit-value">{formattedWeight}</span>
                         </span>
                         {heightB !== 'N/A' && heightB !== '' && (
                           <span className="config-item">
-                            <span className="unit-label">{heightUnit}:</span>
+                            <span className="unit-label">{heightLabel}({heightUnit}):</span>
                             <span className="unit-value">{formattedHeight}</span>
                           </span>
                         )}
@@ -750,7 +750,7 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
                   const rollsLabel = t('tooltip.units.rolls');
                   const weightLabel = t('tooltip.units.weight');
                   const heightLabel = t('tooltip.units.height');
-                  const weightUnit = isImperialUnit ? 'lbs' : 'kg';
+                  const weightUnit = isImperialUnit ? 'lb' : 'kg';
                   const heightUnit = isImperialUnit ? 'inch' : 'cm';
                   
                   // 格式化数值
@@ -766,12 +766,12 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
                           <span className="unit-value">{pcsC}</span>
                         </span>
                         <span className="config-item">
-                          <span className="unit-label">{weightUnit}:</span>
+                          <span className="unit-label">{weightLabel}({weightUnit}):</span>
                           <span className="unit-value">{formattedWeight}</span>
                         </span>
                         {heightC !== 'N/A' && heightC !== '' && (
                           <span className="config-item">
-                            <span className="unit-label">{heightUnit}:</span>
+                            <span className="unit-label">{heightLabel}({heightUnit}):</span>
                             <span className="unit-value">{formattedHeight}</span>
                           </span>
                         )}
@@ -794,7 +794,7 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
                       <span className="config-label">{sizeLabel}</span>
                       <div className="config-values">
                         <span className="config-item">
-                          <span className="unit-label">{sizeUnit}:</span>
+                          <span className="unit-label">{sizeLabel}({sizeUnit}):</span>
                           <span className="unit-value">{palletSize}</span>
                         </span>
                       </div>
@@ -1566,7 +1566,7 @@ const ConsumablesPage: React.FC = () => {
   // ===== 所有hooks必须在组件最顶部，不能有条件调用 =====
   
   // 基础hooks - 顺序固定，不能变化
-  const { t, i18n } = useTranslation('consumables');
+  const { t, i18n } = useTranslation(['consumables', 'common']);
   const navigate = useNavigate();
   const { user, getPreferredUnit } = useAuth();
   const { addItem } = useCart();
@@ -1791,15 +1791,9 @@ const ConsumablesPage: React.FC = () => {
         // 检查缓存（包含语言信息）
     const cacheKeyWithLang = `${cacheKey}_${i18n.language}`;
     const cached = filterCache.get(cacheKeyWithLang);
-    
-    // 🔥 临时禁用缓存，强制重新计算以确保映射生效
-    const shouldUseCache = false; // cached && (now - cached.timestamp) < 5000; // 5秒缓存
-    if (shouldUseCache) {
-      console.log('📊 [智能筛选] 使用缓存结果');
+    if (cached && (now - cached.timestamp) < 5000) { // 5秒缓存
       setSmartFilterOptions(cached.result);
       return;
-    } else {
-      console.log('🔄 [智能筛选] 跳过缓存，重新计算筛选选项');
     }
     
     // 清理过期缓存
@@ -2033,25 +2027,7 @@ const ConsumablesPage: React.FC = () => {
         }
       });
       
-      // 🚨 临时调试：检查API字典数据状态
-      console.log('🔍 [材料筛选诊断] filterOptions:', filterOptions);
-      console.log('🔍 [材料筛选诊断] filterOptions?.materials:', filterOptions?.materials);
-      console.log('🔍 [材料筛选诊断] 当前语言:', i18n.language);
-      console.log('🔍 [材料筛选诊断] 材料统计:', Object.fromEntries(materialCountMap));
-      
-      // 🔍 详细检查API材料数据结构
-      if (filterOptions?.materials && filterOptions.materials.length > 0) {
-        console.log('🔍 [API材料数据详情]:');
-        filterOptions.materials.forEach((mat: any, index: number) => {
-          console.log(`  ${index + 1}. ${mat.id || mat.code} =>`, {
-            id: mat.id,
-            code: mat.code,
-            name: mat.name,
-            name_zh: mat.name_zh,
-            name_en: mat.name_en
-          });
-        });
-      }
+
       
       const materialOptions: SmartFilterOption[] = [];
       
@@ -2086,11 +2062,9 @@ const ConsumablesPage: React.FC = () => {
               if (i18n.language.startsWith('zh')) {
                 // 中文环境：优先使用中文名称
                 displayName = materialInfo.name_zh || materialInfo.name || materialCode;
-                console.log(`✅ [材料筛选] 中文环境: ${materialCode} → ${displayName}`);
               } else {
                 // 英文环境：使用英文名称，如果英文名称就是代码则使用代码
                 displayName = materialInfo.name_en || materialInfo.name || materialCode;
-                console.log(`✅ [材料筛选] 英文环境: ${materialCode} → ${displayName}`);
               }
             }
           }
@@ -2099,7 +2073,6 @@ const ConsumablesPage: React.FC = () => {
           if (!foundInApi && MATERIAL_MAPPING[materialCode]) {
             const mapping = MATERIAL_MAPPING[materialCode];
             displayName = i18n.language.startsWith('zh') ? mapping.zh : mapping.en;
-            console.log(`🔄 [材料筛选] 使用硬编码映射: ${materialCode} → ${displayName}`);
           }
           
           materialOptions.push({
@@ -2110,7 +2083,6 @@ const ConsumablesPage: React.FC = () => {
           });
         });
       
-      console.log('📊 [材料筛选] 最终生成的选项:', materialOptions);
       return materialOptions;
     };
 
@@ -2212,7 +2184,7 @@ const ConsumablesPage: React.FC = () => {
   }, [
     allConsumables, selectedModel, selectedShape, selectedMaterial,
     selectedThickness, selectedWeight, selectedWidth, selectedLength,
-    filterOptions, userRegion, filterCache
+    filterOptions, userRegion, filterCache, i18n.language
   ]);
   
   // ===== useEffect hooks - 确保调用顺序一致 =====
@@ -2582,12 +2554,18 @@ const ConsumablesPage: React.FC = () => {
       }> = product.specs || {};
       const image_url = cleanImageUrl(product.image_url);
       
-      // 添加更详细的名称兜底逻辑
+      // 🔧 修复：增强耗材名称获取逻辑，与CartFieldUnifier保持一致
+      const productAny = product as any; // 类型转换以访问扩展字段
       const resolvedName = 
-        product.name || 
-        product.code || 
-        product.part_number ||
-        product.id || 
+        productAny.name_zh ||          // 中文名称（优先）
+        productAny.name_en ||          // 英文名称
+        product.name ||                // 通用名称字段
+        product.model ||               // 型号作为名称（耗材常用）
+        productAny.model_metric ||     // 公制型号作为名称
+        product.spec ||                // 规格描述作为名称
+        product.code ||                // 产品代码作为名称
+        product.part_number ||         // 料号作为名称
+        `耗材-${product.id}` ||        // 使用ID创建名称
         'N/A';
 
       // 调试日志：分析名称来源 (生产环境可移除)

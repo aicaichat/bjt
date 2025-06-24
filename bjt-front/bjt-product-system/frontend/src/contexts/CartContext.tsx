@@ -94,12 +94,18 @@ const mapServiceCartItemToUICartItem = (item: OriginalCartItem): ExtendedCartIte
   // 增强的名称获取逻辑，根据产品类型使用不同的策略
   const getDisplayName = (): string => {
     const props = item.properties || {};
+    const itemAny = item as any; // 类型转换以访问扩展字段
     
     // 调试日志
     console.log('[CartContext.mapServiceCartItemToUICartItem] 商品名称映射调试:', {
       product_type: item.product_type,
       'item.name': item.name,
+      'item.model': itemAny.model,
+      'item.spec': itemAny.spec,
+      'item.part_number': item.part_number,
       'props.name': props.name,
+      'props.model': props.model,
+      'props.spec': props.spec,
       'props.name_zh': props.name_zh,
       'props.name_en': props.name_en,
       'props.productName': props.productName
@@ -108,14 +114,25 @@ const mapServiceCartItemToUICartItem = (item: OriginalCartItem): ExtendedCartIte
     // 根据产品类型使用不同的名称获取策略
     switch (item.product_type) {
       case 'consumable':
-        // 耗材名称获取优先级
-        return props.name_zh || 
-               props.name_en || 
-               props.name || 
-               props.productName ||
+        // 🔧 修复：耗材名称获取优先级，与CartFieldUnifier保持一致
+        return itemAny.name_zh || 
+               props.name_zh ||
                item.name || 
+               props.name ||
+               itemAny.product_name ||
+               props.product_name ||
+               // 耗材特殊：优先使用model相关字段作为名称
+               itemAny.model ||
+               props.model ||
+               itemAny.model_metric ||
+               props.model_metric ||
+               itemAny.spec ||
+               props.spec ||
+               itemAny.code ||
+               props.code ||
                item.part_number || 
-               '耗材';
+               props.part_number ||
+               `耗材-${itemAny.id || props.id || '未知'}`;
                
       case 'spare_part':
         // 备件名称获取优先级
