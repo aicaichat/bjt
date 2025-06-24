@@ -1150,7 +1150,7 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
               )}
               
               <div className="product-id">
-                {getFieldLabel('id')}: {getLocalizedValue(item, 'id')}
+                {/* {getFieldLabel('id')}: {getLocalizedValue(item, 'id')} */}
               </div>
             </div>
 
