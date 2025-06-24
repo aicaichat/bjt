@@ -3,13 +3,13 @@
   "subtitle": "Spare Parts Selection",
   "properties": {
     "model": "Model",
-    "partNumber": "Part Number",
+    "partNumber": "Part No.",
     "voltage": "Voltage",
     "frequency": "Frequency",
-    "pcsPerBox": "Pieces per Box",
+    "pcsPerBox": "Qty per Carton",
     "pcsPerPallet": "Pieces per Pallet",
-    "packageSizeCm": "Package Size (cm)",
-    "packageSizeInch": "Package Size (inch)",
+    "packageSizeCm": "Packaging Dim.(cm)",
+    "packageSizeInch": "Packaging Dim.(inch)",
     "palletSizeCm": "Pallet Size (cm)",
     "palletSizeInch": "Pallet Size (inch)",
     "netWeight": "Net Weight",
@@ -17,7 +17,7 @@
     "brand": "Brand",
     "unit": "Unit",
     "productId": "Product ID",
-    "appModel": "Compatible Model",
+    "appModel": "Applicable Machine",
     "appSn": "Compatible Serial Number"
   },
   "filters": {
@@ -32,6 +32,9 @@
     "allTypes": "All Types",
     "consumable": "Consumable",
     "nonConsumable": "Non-Consumable",
+    "searchPlaceholder": "Search accessories...",
+    "selectType": "Select Type",
+    "selectModel": "Select Model",
     "label": {
       "productType": "Product Type",
       "model": "Applicable Machine",
@@ -67,14 +70,14 @@
   },
   "table": {
     "columns": {
-      "partNumber": "Part Number",
-      "name": "Name",
+      "partNumber": "Part No.",
+      "name": "Item",
       "model": "Model",
-      "compatibility": "Compatible Models",
+      "compatibility": "Applicable Machine",
       "spec": "Specification",
       "price": "Price",
-      "stock": "Stock",
-      "actions": "Actions"
+      "stock": "Inventory",
+      "actions": "Action"
     }
   },
   "specs": {
@@ -87,13 +90,13 @@
   "details": {
     "properties": {
       "appSn": "Compatible Serial Number",
-      "pcsPerBox": "Pieces Per Box",
-      "packageSize": "Package Size",
-      "packageSizeCm": "Package Size (cm)",
-      "packageSizeInch": "Package Size (inch)",
+      "pcsPerBox": "Qty per Carton",
+      "packageSize": "Packaging Dim.",
+      "packageSizeCm": "Packaging Dim.(cm)",
+      "packageSizeInch": "Packaging Dim.(inch)",
       "netWeight": "Net Weight",
       "netWeightKg": "Net Weight (kg)",
-      "netWeightLbs": "Net Weight (lbs)",
+      "netWeightLbs": "Net Weight(lb)",
       "unit": "Unit"
     },
     "title": "Spare Part Details",
@@ -118,7 +121,7 @@
     "nonConsumable": "Non-Consumable"
   },
   "fields": {
-    "compatibleModels": "Compatible Models",
+    "compatibleModels": "Applicable Machine",
     "partModel": "Applicable Machine",
     "partType": "Type",
     "is_consumable": "Consumable Status",
@@ -126,8 +129,8 @@
     "net_weight_kg": "Net Weight (kg)",
     "specifications": "Specifications",
     "compatibleSerialNumber": "Compatible Serial Number",
-    "pcsPerBox": "Pieces Per Box",
-    "packageSize": "Package Size",
+    "pcsPerBox": "Qty per Carton",
+    "packageSize": "Packaging Dim.",
     "productId": "Product ID"
   },
   "actions": {
@@ -190,7 +193,13 @@
     "notLoaded": "Not Loaded",
     "all": "All",
     "consumable": "Consumable",
-    "nonConsumable": "Non-Consumable"
+    "nonConsumable": "Non-Consumable",
+    "inStock": "In Stock",
+    "limitedStock": "Limited Stock",
+    "outOfStock": "Out of Stock"
+  },
+  "common": {
+    "image": "Image"
   },
   "debug": {
     "userInfo": "User Info",
@@ -265,17 +274,17 @@
   },
   "products": {
     "properties": {
-      "partNumber": "Part Number",
+      "partNumber": "Part No.",
       "model": "Model",
       "voltage": "Voltage",
       "frequency": "Frequency",
       "spec": "Specification",
       "specImperial": "Imperial Specification",
-      "pcsPerBox": "Pieces per Box",
+      "pcsPerBox": "Qty per Carton",
       "pcsPerPallet": "Pieces per Pallet",
-      "packageSize": "Package Size",
-      "packageSizeCm": "Package Size (cm)",
-      "packageSizeInch": "Package Size (inch)",
+      "packageSize": "Packaging Dim.",
+      "packageSizeCm": "Packaging Dim.(cm)",
+      "packageSizeInch": "Packaging Dim.(inch)",
       "palletSize": "Pallet Size",
       "palletSizeCm": "Pallet Size (cm)",
       "palletSizeInch": "Pallet Size (inch)",
@@ -284,7 +293,7 @@
       "brand": "Brand",
       "unit": "Unit",
       "productId": "Product ID",
-      "appModel": "Compatible Model",
+      "appModel": "Applicable Machine",
       "appSn": "Compatible Serial Number"
     },
     "defaultValues": {

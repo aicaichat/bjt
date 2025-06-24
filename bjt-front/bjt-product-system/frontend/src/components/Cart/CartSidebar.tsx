@@ -4,7 +4,7 @@ import { useCart } from '../../contexts/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { ASSETS } from '../../config/appConfig';
-import { CartFieldUnifier } from '../../utils/CartFieldUnifier';
+import { getSimpleProductName } from '../../utils/simpleProductName';
 import { CartSidebarProductDetails } from './UnifiedProductDetails';
 import './CartSidebar.css';
 import './UnifiedProductDetails.css';
@@ -131,12 +131,12 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
                                props.image || 
                                item.image || 
                                ASSETS.DEFAULT_IMAGE;
-                      })()} alt={CartFieldUnifier.getProductName(item, currentLanguage)} />
+                      })()} alt={getSimpleProductName(item, currentLanguage)} />
                     </div>
                     
                     <div className="cart-item-details">
                       <div className="cart-item-title">
-                        {CartFieldUnifier.getProductName(item, currentLanguage)}
+                        {getSimpleProductName(item, currentLanguage)}
                       </div>
                       
                       {/* 🎯 使用统一的产品详情组件 - 强制刷新 */}

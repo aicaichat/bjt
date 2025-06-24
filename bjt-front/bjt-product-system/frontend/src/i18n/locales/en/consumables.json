@@ -12,7 +12,7 @@
     "all": "All",
     "byModel": "Filter by Model",
     "byMaterial": "Filter by Material",
-    "byShape": "Filter by Shape",
+    "byShape": "Filter by Film Type",
     "byThickness": "Filter by Thickness",
     "byWeight": "Filter by Weight",
     "byWidth": "Filter by Width",
@@ -20,7 +20,7 @@
     "reset": "Reset Filters",
     "model": "Model",
     "material": "Material",
-    "shape": "Shape",
+    "shape": "Film Type",
     "thickness": "Thickness",
     "weight": "Basis Weight",
     "width": "Width",
@@ -98,7 +98,7 @@
   },
   "specs": {
     "material": "Material",
-    "shape": "Shape",
+    "shape": "Film Type",
     "thickness": "Thickness",
     "weight": "Basis Weight",
     "width": "Width",
@@ -212,12 +212,12 @@
       "outOfStock": "Out of Stock"
     },
     "partNumber": "Part Number",
-    "compatibleModel": "Compatible Model",
+    "compatibleModel": "Applicable Machine",
     "modelNumber": "Model Number",
     "brand": "Brand",
     "productId": "Product ID",
     "productSpecs": "Product Specifications",
-    "qtyPerCarton": "Quantity per Carton",
+    "qtyPerCarton": "Qty per Carton",
     "viewDetailedSpecs": "View Detailed Specifications",
     "startingPrice": "Starting Price",
     "priceInquiry": "Price Inquiry",
@@ -242,9 +242,9 @@
     "deviceModelTooltip": "Select your device model to show compatible consumables",
     "selectDeviceModelPlaceholder": "Please select device model",
     "allModels": "All Models",
-    "selectProductShape": "Select Product Shape",
-    "productShapeTooltip": "Different shapes are suitable for different packaging needs",
-    "allShapes": "All Shapes",
+    "selectProductShape": "Select Film Type",
+    "productShapeTooltip": "Different film types are suitable for different packaging needs",
+    "allShapes": "All Film Types",
     "materialAndSpecs": "Material & Specifications Filter",
     "materialType": "Material Type",
     "allMaterials": "All Materials",
@@ -286,18 +286,18 @@
   "consumable": {
     "fieldsWithUnits": {
       "metric": {
-        "app_model": "Compatible Model",
+        "app_model": "Applicable Machine",
         "id": "Product ID",
-        "shape": "Shape",
-        "spec": "Specifications",
-        "pcs_per_box": "Pieces per Box"
+        "shape": "Film Type",
+        "spec": "Spec.",
+        "pcs_per_box": "Qty per Carton"
       },
       "imperial": {
-        "app_model": "Compatible Model",
+        "app_model": "Applicable Machine",
         "id": "Product ID", 
-        "shape": "Shape",
-        "spec": "Specifications",
-        "pcs_per_box": "Pieces per Box"
+        "shape": "Film Type",
+        "spec": "Spec.",
+        "pcs_per_box": "Qty per Carton"
       }
     }
   },
@@ -311,34 +311,37 @@
     "basicSpecs": "Basic Specifications",
     "packagingMethod": "Packaging Method",
     "cartonPack": "Carton Pack",
-    "pcsPerBox": "Pieces per Box",
+    "rollPack": "Roll Pack",
+    "piecePack": "Piece Pack", 
+    "boxPack": "Box Pack",
+    "pcsPerBox": "Qty per Carton",
     "configA": "Configuration A",
     "configB": "Configuration B",
     "configC": "Configuration C",
     "palletSize": "Pallet Size",
     "packageSize": {
-      "metric": "Package Size cm",
+      "metric": "Packaging Dim.(cm)",
       "imperial": "Packaging Dim.(inch)"
     },
     "unitWeight": {
-      "metric": "Unit Weight kg",
-      "imperial": "Unit Weight(lb)"
+      "metric": "Net Weight(kg)",
+      "imperial": "Net Weight(lb)"
     },
     "totalLength": {
-      "metric": "Total Length m",
-      "imperial": "Total Length ft"
+      "metric": "Length(m)",
+      "imperial": "Length(ft)"
     },
     "tubeInnerDiameter": {
-      "metric": "Core Diameter cm",
-      "imperial": "Core Diameter inch"
+      "metric": "Inner Dia.(cm)",
+      "imperial": "Inner Dia.(inch)"
     },
     "dimensions": {
       "metric": "Dimensions(cm)",
       "imperial": "Dimensions(inch)"
     },
     "bubbleDiameter": {
-      "metric": "Bubble Diameter(cm)",
-      "imperial": "Bubble Diameter(inch)"
+      "metric": "Bubble Dia.(cm)",
+      "imperial": "Bubble Dia.(inch)"
     },
     "packageImage": "Package Image",
     "palletInfo": "Pallet Information",
@@ -352,8 +355,8 @@
       "imperial": "Height inch"
     },
     "coreDiameter": {
-      "metric": "Core Diameter cm",
-      "imperial": "Core Diameter inch"
+      "metric": "Inner Dia.(cm)",
+      "imperial": "Inner Dia.(inch)"
     },
     "hoverInfo": "Hover to view more specifications",
     "thickness": {
@@ -361,16 +364,16 @@
       "imperial": "Thickness(mil)"
     },
     "width": {
-      "metric": "Film Width cm",
-      "imperial": "Film Width inch"
+      "metric": "Width(cm)",
+      "imperial": "Width(inch)"
     },
     "length": {
-      "metric": "Bag Length cm",
-      "imperial": "Bag Length inch"
+      "metric": "Length(cm)",
+      "imperial": "Length(inch)"
     },
     "rollLength": {
-      "metric": "Total Length m",
-      "imperial": "Total Length ft"
+      "metric": "Length(m)",
+      "imperial": "Length(ft)"
     },
     "units": {
       "rolls": "Rolls",

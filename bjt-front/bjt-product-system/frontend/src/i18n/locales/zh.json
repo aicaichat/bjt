@@ -213,13 +213,13 @@
         "length": "袋长(inch)",
         "total_length": "总长(ft)",
         "package_size": "包装尺寸(inch)",
-        "net_weight": "单件净重(lbs)",
+        "net_weight": "单件净重(lb)",
         "pallet_size": "托盘尺寸(inch)",
-        "pallet_gross_weight_a": "整托毛重A(lbs)",
+        "pallet_gross_weight_a": "整托毛重A(lb)",
         "pallet_height_a": "打托高度A(inch)",
-        "pallet_gross_weight_b": "整盘毛重B(lbs)",
+        "pallet_gross_weight_b": "整盘毛重B(lb)",
         "pallet_height_b": "打托高度B(inch)",
-        "pallet_gross_weight_c": "整托毛重C(lbs)",
+        "pallet_gross_weight_c": "整托毛重C(lb)",
         "pallet_height_c": "打托高度C(inch)",
         "tube_inner_diameter": "纸筒内径(inch)"
       }
@@ -675,7 +675,7 @@
     },
     "unitWeight": {
       "metric": "单件净重(kg)",
-      "imperial": "单件净重(lbs)"
+      "imperial": "单件净重(lb)"
     },
     "totalLength": {
       "metric": "总长(m)",

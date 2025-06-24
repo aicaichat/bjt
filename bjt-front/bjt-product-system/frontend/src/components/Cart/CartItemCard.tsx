@@ -6,6 +6,7 @@ import { formatCurrency } from '../../utils/priceUtils';
 import './CartItemCard.css';
 import { useTranslation } from 'react-i18next';
 import { ASSETS } from '../../config/appConfig';
+import { getSimpleProductName } from '../../utils/simpleProductName';
 
 const { Text, Title } = Typography;
 
@@ -45,34 +46,10 @@ const CartItemCard: React.FC<CartItemCardProps> = ({ item, onUpdateQuantity, onR
   const props = (item as any).properties || {};
   const imageUrl = props.image_url || item.image_url || (item as any).image || ASSETS.DEFAULT_IMAGE;
   
-  // 根据当前语言选择正确的商品名称
-  const language = i18n.language;
-  const getDisplayName = (): string => {
-    const props = item.properties || {};
-    if (language === 'zh') {
-      return props.name_zh || 
-             (item as any).name_zh || 
-             props.name || 
-             item.name ||
-             props.code ||
-             (item as any).code ||
-             props.part_number ||
-             item.part_number ||
-             '商品';
-    } else {
-      return props.name_en || 
-             (item as any).name_en || 
-             props.name || 
-             item.name ||
-             props.code ||
-             (item as any).code ||
-             props.part_number ||
-             item.part_number ||
-             'Product';
-    }
-  };
-  
-  const displayName = getDisplayName();
+  const displayName = getSimpleProductName(
+    { ...item, ...(item as any).properties },
+    i18n.language.startsWith('zh') ? 'zh' : 'en'
+  );
   
   const partNumber = props.part_number || (item as any).part_number || '';
   const model = props.model || (item as any).model || '';

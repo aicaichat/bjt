@@ -1,17 +1,17 @@
 # 前端页面字段使用情况对比报告
 
-生成时间: 2025-06-09T04:34:51.936Z
+生成时间: 2025-06-24T14:49:41.894Z
 
 ## 📋 总体概览
 
 | 页面 | CSV字段数 | 前端字段数 | 匹配字段数 | 覆盖率 | 状态 |
 |------|-----------|------------|------------|---------|------|
-| 机器页面 | 20 | 195 | 10 | 50.0% | ⚠️ 一般 |
-| 耗材页面 | 47 | 243 | 16 | 34.0% | ❌ 需要改进 |
-| 备件页面 | 14 | 132 | 7 | 50.0% | ⚠️ 一般 |
-| 配件页面 | 21 | 19 | 1 | 4.8% | ❌ 需要改进 |
+| 机器页面 | 20 | 206 | 8 | 40.0% | ❌ 需要改进 |
+| 耗材页面 | 47 | 261 | 11 | 23.4% | ❌ 需要改进 |
+| 备件页面 | 14 | 133 | 7 | 50.0% | ⚠️ 一般 |
+| 配件页面 | 21 | 33 | 2 | 9.5% | ❌ 需要改进 |
 
-**总计**: CSV字段 102 个，前端字段 589 个，匹配 34 个
+**总计**: CSV字段 102 个，前端字段 633 个，匹配 28 个
 
 ## 📄 机器页面 详细分析
 
@@ -26,9 +26,7 @@
 | package_size_cm | 包装尺寸cm | Package Size(cm) | 🎯 english | 0.90 |
 | spec | Spec. | Spec. | ✅ contains | 0.80 |
 | voltage | 电压 | Voltage | 🎯 english | 0.90 |
-| 包装尺寸 | 包装尺寸cm | Package Size(cm) | ✅ contains | 0.80 |
 | 型号 | 型号 | Model | 🎯 exact | 1.00 |
-| 托盘尺寸 | 托盘尺寸cm | 托盘尺寸cm | ✅ contains | 0.80 |
 
 ### ❌ CSV中定义但前端未使用的字段
 
@@ -37,6 +35,7 @@
 | 图片 | Packaging Image | 包装图片 | Packaging Image | 商品列表, 购物车 |
 | 料号 | Part No. | 料号 | Part No. | 商品列表, 购物车, PO页 |
 | 单箱数量 | Qty per Carton | 单箱数量 | Qty per Carton | 商品列表, 购物车 |
+| 托盘尺寸cm | 托盘尺寸cm | 托盘尺寸cm | 托盘尺寸cm | 商品列表, 购物车 |
 | 托盘尺寸inch | 托盘尺寸inch | 托盘尺寸inch | 托盘尺寸inch | 商品列表, 购物车 |
 | 一托数量 | Packs per Pallet | 一托数量 | Packs per Pallet | 商品列表, 购物车 |
 | 包装尺寸inch | Package Size(cm) | 包装尺寸(cm) | Package Size(cm) | tooltip |
@@ -54,16 +53,20 @@
 - `accessories.compatible`
 - `accessories.level`
 - `accessories.level1`
+- `accessories.level1Loaded`
+- `accessories.level1LoadedDesc`
 - `accessories.level2`
 - `accessories.level3`
 - `accessories.level4`
 - `accessories.level5`
+- `accessories.levelUnit`
 - `accessories.nextLevelLoaded`
 - `accessories.nextLevelLoadedDesc`
 - `accessories.noNextLevel`
 - `accessories.noNextLevelDesc`
 - `accessories.subCompatible`
 - `accessories.title`
+- `accessory`
 - `accessory.description`
 - `accessory.details`
 - `accessory.level`
@@ -79,8 +82,9 @@
 - `actions.close`
 - `actions.selectAccessory`
 - `actions.selectMachine`
+- `baseLabel`
 - `baseUrl`
-- `buttons.moreInfo`
+- `buttons.addToCart`
 - `categories.accessory`
 - `categories.machine`
 - `category`
@@ -88,14 +92,18 @@
 - `common.all`
 - `common.loading`
 - `common.reset`
+- `context`
 - `created_at`
 - `currentLanguage`
 - `currentLevel`
 - `currentPage`
+- `currentPath`
+- `depth`
 - `description`
 - `description_en`
 - `description_zh`
 - `details`
+- `errors.accessoryLoadFailed`
 - `errors.addToCartFailed`
 - `errors.authExpired`
 - `errors.invalidRequest`
@@ -109,6 +117,11 @@
 - `errors.unknownError`
 - `explosion_diagram_pdf`
 - `field`
+- `fieldKey`
+- `fields.model`
+- `fields.pcsPerBox`
+- `fields.pcsPerPallet`
+- `fields.price`
 - `filterRegion`
 - `filterType`
 - `filters.allModels`
@@ -122,29 +135,29 @@
 - `filters.selectVoltage`
 - `filters.type`
 - `filters.voltage`
+- `forceRender`
 - `frequency`
 - `gross_weight_kg`
 - `gross_weight_lbs`
 - `handleVoltageChange`
+- `i18n.language`
 - `id`
 - `image1_url`
 - `image2_url`
 - `image_url`
+- `indent`
 - `invIndex`
 - `inventory`
-- `inventory.abundant`
-- `inventory.adequate`
-- `inventory.lowStock`
-- `inventory.outOfStock`
-- `inventory.status`
 - `is_required`
 - `level`
-- `levelColor`
 - `loading`
 - `loading.accessories`
+- `machine`
+- `machineName`
 - `machinePartNumber`
 - `messages.addedToCart`
-- `mockStock`
+- `messages.machineSelected`
+- `messages.machineSelectedDesc`
 - `modelOptions`
 - `model_explosion_diagram_pdf`
 - `model_image1_url`
@@ -153,8 +166,10 @@
 - `name_en`
 - `name_zh`
 - `net_weight_lbs`
+- `new_i18n.language`
 - `nextLevel`
 - `noItems`
+- `nodeKey`
 - `onFilterRegionChange`
 - `onFilterTypeChange`
 - `onRegionChange`
@@ -177,6 +192,7 @@
 - `pallet_size_cm`
 - `pallet_size_inch`
 - `parentLevel`
+- `parentPath`
 - `parent_id`
 - `part_number`
 - `parts`
@@ -187,15 +203,13 @@
 - `pcs_per_pallet`
 - `price`
 - `prices`
-- `pricing.from`
-- `pricing.pieces`
 - `product_line_id`
 - `regionKey`
-- `regionName`
 - `regions.asia`
 - `regions.china`
 - `regions.europe`
 - `regions.usa`
+- `relation_id`
 - `selectFor`
 - `selectMachine`
 - `selectedAccessoryName`
@@ -203,43 +217,41 @@
 - `spec_imperial`
 - `spec_pdf`
 - `specifications`
-- `specs.packageSize`
-- `specs.palletSize`
-- `specs.pcsPerBox`
-- `specs.pcsPerPallet`
 - `status`
 - `stockStatus.low`
 - `stockStatus.outOfStock`
 - `stockStatus.sufficient`
-- `tableHeaders.frequency`
 - `tableHeaders.model`
-- `tableHeaders.packSize`
-- `tableHeaders.palletSize`
 - `tableHeaders.pcsPerBox`
 - `tableHeaders.pcsPerPallet`
-- `tableHeaders.price`
 - `tableHeaders.stock`
-- `tableHeaders.voltage`
 - `targetLevel`
+- `targetPartNumber`
 - `title`
 - `title_en`
 - `title_zh`
 - `token`
-- `tooltip.accessoryDetailInfo`
 - `tooltip.hoverInfo`
 - `true`
 - `types.automatic`
 - `types.manual`
 - `types.semiAutomatic`
 - `unit`
+- `unitLabel`
+- `units.Hz`
+- `units.V`
+- `units.cm`
+- `units.inch`
+- `units.kg`
+- `units.lbs`
 - `updated_at`
 - `viewMode`
 
 ### 💡 改进建议
 
 - 🎯 **提高字段覆盖率**: 当前覆盖率较低，建议检查前端是否完整实现了CSV中定义的字段显示
-- 📝 **补充前端实现**: 有 12 个CSV定义的字段未在前端使用，需要确认是否需要实现
-- 📋 **完善CSV定义**: 有 185 个前端使用的字段未在CSV中定义，建议添加到标准化字段中
+- 📝 **补充前端实现**: 有 13 个CSV定义的字段未在前端使用，需要确认是否需要实现
+- 📋 **完善CSV定义**: 有 198 个前端使用的字段未在CSV中定义，建议添加到标准化字段中
 
 ## 📄 耗材页面 详细分析
 
@@ -253,15 +265,10 @@
 | material | 材质 | Material | 🎯 english | 0.90 |
 | model | 型号（公制） | Model | 🎯 english | 0.90 |
 | net_weight_kg | 单件净重kg | Net Weight(kg) | 🎯 english | 0.90 |
+| package_size_cm | 包装尺寸cm | Package Size(cm) | 🎯 english | 0.90 |
 | spec | Spec. | Spec. | ✅ contains | 0.80 |
-| ui.noProductId | productId | productid | ✅ contains | 0.80 |
-| ui.productId | productId | productid | ✅ contains | 0.80 |
-| 包装方式 | 包装方式 | 包装方式 | 🎯 exact | 1.00 |
 | 厚度 | 厚度/克重um/gsm | 厚度/克重um/gsm | ✅ contains | 0.80 |
-| 品牌 | 品牌 | Brand | 🎯 exact | 1.00 |
-| 型号 | 型号（公制） | Model | ✅ contains | 0.80 |
 | 总长 | 总长m | 总长m | ✅ contains | 0.80 |
-| 料号 | 料号 | Part No. | 🎯 exact | 1.00 |
 | 材质 | 材质 | Material | 🎯 exact | 1.00 |
 
 ### ❌ CSV中定义但前端未使用的字段
@@ -271,6 +278,7 @@
 | 适用机型 | Applicable Machine | 适用机型 | Applicable Machine | 商品列表, 购物车 |
 | 形状 | 形状 | 形状 | 形状 | 商品列表 |
 | 产品图片袋型实物 | 产品图片袋型实物 | 产品图片袋型实物 | 产品图片袋型实物 | 商品列表, 购物车 |
+| 料号 | Part No. | 料号 | Part No. | 商品列表, 购物车, PO页 |
 | 型号(英制) | Model | 型号 | Model | 商品列表, 购物车, PO页 |
 | Spec.(英制) | Spec. | 规格描述 | Spec. | 商品列表, 购物车, PO页 |
 | 泡径cm | Bubble Dia. | 泡径 | Bubble Dia. | 商品列表, 购物车 |
@@ -282,7 +290,7 @@
 | 袋长cm | 袋长cm | 袋长cm | 袋长cm | tooltip |
 | 袋长inch | 袋长inch | 袋长inch | 袋长inch | tooltip |
 | 总长ft | 总长ft | 总长ft | 总长ft | tooltip |
-| 包装尺寸cm | Package Size(cm) | 包装尺寸(cm) | Package Size(cm) | tooltip |
+| 包装方式 | 包装方式 | 包装方式 | 包装方式 | tooltip |
 | 包装尺寸inch | Package Size(cm) | 包装尺寸(cm) | Package Size(cm) | tooltip |
 | 单件净重lbs | Net Weight(kg) | 单件净重(kg) | Net Weight(kg) | tooltip |
 | 包装实物图片 | 包装实物图片 | 包装实物图片 | 包装实物图片 | tooltip |
@@ -307,28 +315,27 @@
 
 ### ⚠️ 前端使用但CSV未定义的字段
 
-- `apiUrl`
+- `addToCart`
 - `app_model`
 - `baseUrl`
-- `bubbleDiameter`
 - `bubble_diameter_met`
 - `button.cart`
+- `cacheKey`
 - `cart.added`
 - `cartButtonRef`
 - `closeDetailModal`
 - `code`
-- `common.no`
 - `common.toBeFilled`
-- `common.yes`
 - `currentDimensionImage`
 - `currentPage`
-- `debugInfo`
 - `detailModalVisible`
 - `disabled`
+- `displayValue`
 - `error`
 - `error.productNotFound`
 - `error.retry`
 - `error.title`
+- `false`
 - `filter.all`
 - `filter.length`
 - `filter.material`
@@ -336,51 +343,86 @@
 - `filter.shape`
 - `filter.thickness`
 - `filter.width`
+- `filterOptions`
 - `filterType`
+- `formattedHeight`
+- `formattedWeight`
+- `getCurrencySymbolByRegion`
+- `getRegionalPrice`
 - `handleImageError`
 - `handleLengthChange`
 - `handleModelChange`
+- `handleQuantityChange`
 - `handleRemoveFilter`
 - `handleResetFilters`
 - `handleSmartResetFilters`
 - `handleWidthChange`
+- `hasUnit`
+- `heightLabel`
+- `heightUnit`
 - `idx`
 - `image_url`
 - `inventory`
-- `itemLength`
-- `itemThickness`
-- `itemWeight`
-- `itemWidth`
-- `lengthCm`
-- `lengthInch`
+- `isEmpty`
+- `isSales`
+- `label`
+- `length_imp`
 - `length_met`
 - `loading.description`
 - `name_zh`
+- `net_weight_lbs`
 - `onChange`
 - `onClearAll`
+- `packageSize`
+- `package_image_url`
+- `package_size_inch`
+- `package_type`
 - `page`
+- `palletSize`
+- `pallet_gross_weight_a_kg`
+- `pallet_gross_weight_a_lbs`
+- `pallet_gross_weight_b_kg`
+- `pallet_gross_weight_b_lbs`
+- `pallet_gross_weight_c_kg`
+- `pallet_gross_weight_c_lbs`
+- `pallet_height_a_cm`
+- `pallet_height_a_inch`
+- `pallet_height_b_cm`
+- `pallet_height_b_inch`
+- `pallet_height_c_cm`
+- `pallet_height_c_inch`
+- `pallet_size_cm`
 - `part_number`
-- `pcsPerBox`
+- `pcsA`
+- `pcsB`
+- `pcsC`
+- `pcs_per_pallet_a`
+- `pcs_per_pallet_b`
+- `pcs_per_pallet_c`
 - `placeholder`
-- `prev`
 - `pricing`
 - `product.code`
 - `product.id`
 - `product.model`
 - `product.name`
 - `product.part_number`
+- `quantities`
+- `quantity`
 - `region`
-- `rollLength`
-- `rollLengthFt`
-- `rollLengthM`
+- `regionKey`
+- `regionStock`
+- `rollsLabel`
 - `selectedLength`
 - `selectedMaterial`
 - `selectedModel`
+- `selectedProduct`
 - `selectedShape`
 - `selectedThickness`
 - `selectedWeight`
 - `selectedWidth`
 - `shape`
+- `sizeLabel`
+- `sizeUnit`
 - `specs`
 - `specs.brand`
 - `specs.bubble_diameter_inch`
@@ -428,56 +470,46 @@
 - `specs.width_imperial`
 - `stockBg`
 - `stockColor`
-- `targetLength`
-- `targetThickness`
-- `targetWeight`
-- `targetWidth`
-- `thickness`
+- `stockStatus.low`
+- `stockStatus.out`
+- `stockStatus.outOfStock`
+- `stockStatus.sufficient`
 - `thickness_met`
 - `title`
 - `toggleCartModal`
 - `token`
 - `tooltip.apiError`
-- `tooltip.basicSpecs`
-- `tooltip.brand`
+- `tooltip.boxPack`
 - `tooltip.cartonPack`
-- `tooltip.cleanedUrl`
-- `tooltip.clickToExpand`
 - `tooltip.configA`
 - `tooltip.configB`
 - `tooltip.configC`
-- `tooltip.debugInfo`
-- `tooltip.detailInfo`
-- `tooltip.hoverInfo`
-- `tooltip.imageUrl`
-- `tooltip.model`
-- `tooltip.noPackageImage`
-- `tooltip.originalUrl`
+- `tooltip.coreSpecs`
+- `tooltip.material`
 - `tooltip.packageImage`
-- `tooltip.packageImageDebug`
 - `tooltip.packageInfo`
 - `tooltip.packagingMethod`
-- `tooltip.palletInfo`
-- `tooltip.palletRolls`
+- `tooltip.palletConfigs`
 - `tooltip.palletSize`
-- `tooltip.partNumber`
-- `tooltip.pcs`
 - `tooltip.pcsPerBox`
-- `tooltip.productInfo`
-- `tooltip.safeGetResult`
-- `tooltip.showImage`
-- `tooltip.spec`
+- `tooltip.piecePack`
+- `tooltip.rollPack`
+- `tooltip.techParams`
 - `totalItems`
 - `totalPages`
 - `totalStock`
+- `total_length_imp`
+- `total_length_met`
 - `true`
+- `tubeDiameter`
+- `tube_inner_diameter_cm`
+- `tube_inner_diameter_inch`
 - `ui.activeFilters`
 - `ui.addToCart`
 - `ui.addToCartFailed`
-- `ui.addedToCart`
 - `ui.allMaterials`
+- `ui.allShapes`
 - `ui.authExpired`
-- `ui.buyNow`
 - `ui.clearAll`
 - `ui.close`
 - `ui.compatibleModel`
@@ -527,19 +559,18 @@
 - `ui.totalStock`
 - `ui.viewDetailedSpecs`
 - `ui.weight`
-- `unit`
 - `userRegion`
 - `warning.selectQuantity`
-- `widthCm`
-- `widthInch`
+- `weightLabel`
+- `weightUnit`
+- `width_imp`
 - `width_met`
-- `规格`
 
 ### 💡 改进建议
 
 - 🎯 **提高字段覆盖率**: 当前覆盖率较低，建议检查前端是否完整实现了CSV中定义的字段显示
-- 📝 **补充前端实现**: 有 36 个CSV定义的字段未在前端使用，需要确认是否需要实现
-- 📋 **完善CSV定义**: 有 227 个前端使用的字段未在CSV中定义，建议添加到标准化字段中
+- 📝 **补充前端实现**: 有 37 个CSV定义的字段未在前端使用，需要确认是否需要实现
+- 📋 **完善CSV定义**: 有 250 个前端使用的字段未在CSV中定义，建议添加到标准化字段中
 
 ## 📄 备件页面 详细分析
 
@@ -657,6 +688,7 @@
 - `page`
 - `pagination.next`
 - `pagination.previous`
+- `part`
 - `partNumber`
 - `part_number`
 - `pcs_per_box`
@@ -699,7 +731,7 @@
 
 - 🎯 **提高字段覆盖率**: 当前覆盖率较低，建议检查前端是否完整实现了CSV中定义的字段显示
 - 📝 **补充前端实现**: 有 7 个CSV定义的字段未在前端使用，需要确认是否需要实现
-- 📋 **完善CSV定义**: 有 125 个前端使用的字段未在CSV中定义，建议添加到标准化字段中
+- 📋 **完善CSV定义**: 有 126 个前端使用的字段未在CSV中定义，建议添加到标准化字段中
 
 ## 📄 配件页面 详细分析
 
@@ -707,6 +739,7 @@
 
 | 前端字段 | CSV字段 | 标准Key | 匹配类型 | 匹配分数 |
 |----------|---------|---------|----------|----------|
+| brand | 品牌 | Brand | 🎯 english | 0.90 |
 | model | 型号 | Model | 🎯 english | 0.90 |
 
 ### ❌ CSV中定义但前端未使用的字段
@@ -730,16 +763,23 @@
 | 打托高度inch | 打托高度inch | 打托高度inch | 打托高度inch | tooltip |
 | 整托毛重kg | 整托毛重kg | 整托毛重kg | 整托毛重kg | tooltip |
 | 整托毛重lbs | 整托毛重lbs | 整托毛重lbs | 整托毛重lbs | tooltip |
-| 品牌 | Brand | 品牌 | Brand | PO页 |
 | Spec. | Spec. | 规格描述 | Spec. | PO页 |
 | Spec.(英制) | Spec. | 规格描述 | Spec. | PO页 |
 
 ### ⚠️ 前端使用但CSV未定义的字段
 
 - `action`
+- `actions.addToCart`
+- `actions.viewDetails`
+- `cart.requiredParts`
 - `code`
 - `columns`
+- `common.image`
+- `fields.type`
 - `filteredAccessories`
+- `filters.searchPlaceholder`
+- `filters.selectModel`
+- `filters.selectType`
 - `handleModelChange`
 - `handleSearch`
 - `handleTypeChange`
@@ -748,15 +788,20 @@
 - `inventory`
 - `loading`
 - `name_en`
+- `properties.brand`
+- `record`
 - `required_parts`
 - `searchText`
 - `selectedModel`
 - `selectedType`
+- `status.inStock`
+- `status.limitedStock`
+- `status.outOfStock`
 - `total`
 - `url`
 
 ### 💡 改进建议
 
 - 🎯 **提高字段覆盖率**: 当前覆盖率较低，建议检查前端是否完整实现了CSV中定义的字段显示
-- 📝 **补充前端实现**: 有 20 个CSV定义的字段未在前端使用，需要确认是否需要实现
-- 📋 **完善CSV定义**: 有 18 个前端使用的字段未在CSV中定义，建议添加到标准化字段中
+- 📝 **补充前端实现**: 有 19 个CSV定义的字段未在前端使用，需要确认是否需要实现
+- 📋 **完善CSV定义**: 有 31 个前端使用的字段未在CSV中定义，建议添加到标准化字段中

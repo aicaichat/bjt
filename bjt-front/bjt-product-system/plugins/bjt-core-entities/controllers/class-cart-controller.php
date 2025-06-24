@@ -350,7 +350,9 @@ class BJT_Cart_Controller extends BJT_API_Controller {
                 $item_name_image = $this->get_product_name_image($item_db->part_number, $item_db->product_type, $lang);
                 
                 // Update the item_data with real fetched values
-                $item_data['name'] = $item_name_image['name'] ?? 'Name N/A';
+                $item_data['name']      = $item_name_image['name']     ?? 'Name N/A';
+                $item_data['name_zh']   = $item_name_image['name_zh']  ?? '';
+                $item_data['name_en']   = $item_name_image['name_en']  ?? '';
                 $item_data['image_url'] = $item_name_image['image_url'] ?? '/images/placeholder.png';
                 $item_data['unit_price'] = $item_price_info['price'] ?? 0.0;
                 $item_data['currency'] = $item_price_info['currency'] ?? 'N/A';
@@ -459,24 +461,21 @@ class BJT_Cart_Controller extends BJT_API_Controller {
         ));
         
         if ($product) {
-            if ($lang === 'zh') {
-                // 中文请求：返回中文名称
-                $name = $product->name_zh ?? 'Name N/A';
-            } else {
-                // 英文请求：优先使用英文名称，如果没有或与中文相同则生成英文标题
-                if (!empty($product->name_en) && $product->name_en !== $product->name_zh) {
-                    $name = $product->name_en;
-                } else {
-                    $name = $this->get_english_title($product->name_zh ?? 'Name N/A', $product_type);
-                }
-            }
-            
+            $name_zh = $product->name_zh ?? '';
+            $name_en = $product->name_en ?? '';
+
+            // 兼容旧字段 name（按请求语言选择）
+            $name = ($lang === 'en') ? ($name_en ?: $this->get_english_title($name_zh ?: 'Name N/A', $product_type))
+                                     : ($name_zh ?: 'Name N/A');
+
             return [
-                'name' => $name, 
+                'name'      => $name,
+                'name_zh'   => $name_zh,
+                'name_en'   => $name_en,
                 'image_url' => $product->$image_col ?? null
             ];
         } 
-        return ['name' => 'Not Found', 'image_url' => null];
+        return ['name' => 'Not Found', 'name_zh' => '', 'name_en' => '', 'image_url' => null];
     }
 
     /**
@@ -1013,10 +1012,13 @@ class BJT_Cart_Controller extends BJT_API_Controller {
         $product = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE part_number = %s", $part_number), ARRAY_A);
         if (!$product) return [];
         $fields = [
+            // 基本参数
             'model', 'voltage', 'frequency', 'spec', 'spec_imperial',
             'package_size_cm', 'package_size_inch', 'net_weight_kg', 'net_weight_lbs',
             'gross_weight_kg', 'gross_weight_lbs', 'pcs_per_box', 'pcs_per_pallet',
-            'pallet_size_cm', 'pallet_size_inch', 'brand', 'unit'
+            'pallet_size_cm', 'pallet_size_inch', 'brand', 'unit',
+            // 多语言名称字段
+            'name_zh', 'name_en'
         ];
         $result = [];
         foreach ($fields as $f) {

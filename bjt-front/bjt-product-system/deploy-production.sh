@@ -177,6 +177,19 @@ update_docker_images() {
     print_message "Docker 镜像更新完成"
 }
 
+# 数据库 schema 升级（耗材表增加 name_zh/name_en）
+run_db_migration() {
+    print_message "执行数据库 schema 升级 (wp_bjt_consumables)..."
+
+    local sql="\nALTER TABLE wp_bjt_consumables\n  ADD COLUMN IF NOT EXISTS name_zh VARCHAR(255) NOT NULL DEFAULT '' COMMENT '中文名称' AFTER part_number,\n  ADD COLUMN IF NOT EXISTS name_en VARCHAR(255) NOT NULL DEFAULT '' COMMENT '英文名称' AFTER name_zh;\n\nUPDATE wp_bjt_consumables\n   SET name_zh = IF(name_zh='', title_zh, name_zh),\n       name_en = IF(name_en='', title_en, name_en);\n"
+
+    if echo -e "$sql" | docker-compose -f docker/prod/docker-compose.prod.yml exec -T mysql mysql -u root -p${MYSQL_ROOT_PASSWORD} ${MYSQL_DATABASE}; then
+        print_message "数据库 schema 升级完成"
+    else
+        print_warning "数据库 schema 升级失败，请手动检查"
+    fi
+}
+
 # 构建和部署
 deploy() {
     print_message "开始部署..."
@@ -279,6 +292,7 @@ main() {
     
     # 健康检查
     if health_check; then
+        run_db_migration
         cleanup
         print_message "部署成功完成！"
         print_message "访问地址: https://${DOMAIN_NAME}"

@@ -14,11 +14,13 @@ import logo from '../../assets/logo.svg';
 import orderService, { Order, OrderStatus, CreateOrderRequest } from '../../api/services/order.service';
 import { Loading, Error } from '../../components/common';
 import * as XLSX from 'xlsx';
-import { CartFieldUnifier, CartExcelNormalizer } from '../../utils/CartFieldUnifier';
+import { CartExcelNormalizer } from '../../utils/CartFieldUnifier';
+import { getSimpleProductName } from '../../utils/simpleProductName';
+import { getModel, getBrand, getDescription } from '../../utils/productFieldGetters';
 import { UnifiedProduct, CustomerInfo, ShippingInfo, OrderSummary, POLocationState } from '../../types/product.types';
 import { useCart } from '../../contexts/CartContext';
 import { OrderNumberManager } from '../../utils/orderNumberUtils';
-
+import { ProductName } from '../../components/ProductName';
 
 // 1. 新增仿Excel模板的表格CSS
 const poExcelTableStyle = `
@@ -104,7 +106,8 @@ const POPage: React.FC = () => {
   const { language, setLanguage } = useLanguage();
   const notification = useNotification();
   
-  const [isDirectAccess, setIsDirectAccess] = useState(true);
+  // 若通过路由状态带入 poData，则无需再请求全部订单列表
+  const hasIncomingPOData = !!((location.state as any)?.poData);
   
   // 获取当前日期的格式化字符串
   const getFormattedDate = (): string => {
@@ -180,16 +183,17 @@ const POPage: React.FC = () => {
         setTotalPages(response.total_pages);
       } catch (error: any) {
         console.error('Failed to fetch orders:', error);
-        setError(t('errors.failedToLoadOrders'));
+        setError('Failed to load orders');
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (user) {
+    // 仅在未通过 location.state 带入详情时才请求全量列表
+    if (user && !hasIncomingPOData) {
       fetchOrders();
     }
-  }, [i18n.language, currentPage, t, user]);
+  }, [currentPage, user, hasIncomingPOData]);
 
   useEffect(() => {
     // 检查是否有从Order页面或OrderList页面传递的数据
@@ -217,11 +221,15 @@ const POPage: React.FC = () => {
         console.log('🔧 [PO Page] 提取的订单号信息:', orderInfo);
         setPONumber(orderInfo.displayNumber);
         
-        // 🔧 设置商品数据
-        if (targetOrder.orderItems && Array.isArray(targetOrder.orderItems)) {
-          console.log('🔧 [PO Page] 设置商品数据，数量:', targetOrder.orderItems.length);
-          setProducts(targetOrder.orderItems);
-          setTotalPages(Math.ceil(targetOrder.orderItems.length / 10));
+        // 🔧 设置商品数据（兼容 orderItems / items 两种字段）
+        const rawItems = Array.isArray(targetOrder.orderItems) ? targetOrder.orderItems
+                        : Array.isArray((targetOrder as any).items) ? (targetOrder as any).items
+                        : [];
+
+        if (rawItems.length > 0) {
+          console.log('🔧 [PO Page] 设置商品数据，数量:', rawItems.length);
+          setProducts(rawItems);
+          setTotalPages(Math.ceil(rawItems.length / 10));
         } else {
           console.warn('⚠️ [PO Page] 商品数据无效或为空');
           setProducts([]);
@@ -275,7 +283,6 @@ const POPage: React.FC = () => {
       }
     } else {
       // 🔧 直接访问处理：统一重定向逻辑
-      setIsDirectAccess(true);
       setIsLoading(true);
       
       console.log('🔧 [PO Page] 没有接收到数据，检查是否为直接访问');
@@ -291,7 +298,7 @@ const POPage: React.FC = () => {
       } else {
         // 确认为直接访问，延迟重定向
         const timer = setTimeout(() => {
-          if (isDirectAccess) {
+          if (!hasIncomingPOData) {
             console.log('🔧 [PO Page] 确认为直接访问，重定向到订单页面');
             navigate(ROUTES.ORDER || '/order');
           }
@@ -300,7 +307,7 @@ const POPage: React.FC = () => {
         return () => clearTimeout(timer);
       }
     }
-  }, [location.state, navigate, isDirectAccess]);
+  }, [location.state, navigate, hasIncomingPOData]);
   
   // 🔧 新增：统一的数据处理方法
   const processIncomingPOData = (poData: any, source: string) => {
@@ -563,7 +570,6 @@ const POPage: React.FC = () => {
       // 然后使用统一的数据处理逻辑
       
       // 暂时设置为直接访问
-      setIsDirectAccess(true);
       setIsLoading(false);
       
     } catch (error) {
@@ -623,28 +629,38 @@ const POPage: React.FC = () => {
         vendor: getVendorAddress(),
         language: (currentLanguage === 'zh' ? 'zh' : 'en') as 'zh' | 'en',
         items: products.map(product => {
-          // 🔧 只对耗材类型使用CartFieldUnifier，其他类型保持原有逻辑
-          const productType = product.product_type || product.category || product.type;
-          let productName: string;
-          
-          if (productType === 'consumable') {
-            // 只对耗材使用CartFieldUnifier
-            productName = CartFieldUnifier.getProductName(product, currentLanguage);
-          } else {
-            // 其他产品类型保持原有逻辑
-            productName = product.name || (product as any).product_name || product.model || product.code || String(product.id);
-          }
-          
-          return {
+          console.log('🔧 [PO Excel Export] 准备产品数据:', {
             id: product.id,
-            code: product.code || product.sku,
-            name: productName, // 🔧 使用条件性的名称获取方法
-            quantity: product.quantity,
-            price: product.price,
+            code: product.code,
+            name: product.name,
             model: product.model,
             spec: product.spec,
-            brand: product.brand,
-            amount: (product.price || 0) * (product.quantity || 1)
+            specs: product.specs,
+            spec_imperial: product.spec_imperial,
+            brand: product.brand
+          });
+          
+          // 🔧 修复：使用与PO页面表格完全一致的数据处理逻辑
+          return {
+            id: product.id,
+            code: product.code || product.sku || product.id, // Part No. # 列
+            sku: product.sku,
+            part_number: product.code || product.sku || product.id,
+            // 🔧 Item列：使用与PO页面完全相同的逻辑
+            name: getProductName(product), // 🔧 使用PO页面相同的名称获取逻辑
+            quantity: product.quantity,
+            price: product.price,
+            unit_price: product.price,
+            model: product.model || '-', // Model列
+            // 🔧 修复：使用与PO页面Item description列完全相同的逻辑
+            spec: product.spec || (product as any).description || '', // 单数spec字段 - 与PO页面优先级一致
+            specs: typeof product.specs === 'string' ? product.specs : '', // 复数specs字段 - 作为备用
+            spec_imperial: product.spec_imperial || '',
+            brand: product.brand || 'Lockedair', // Brand Name列
+            properties: product.properties || {},
+            // 🔧 添加计算字段
+            amount: (product.price || 0) * (product.quantity || 1),
+            line_total: (product.price || 0) * (product.quantity || 1)
           };
         })
       };
@@ -736,31 +752,17 @@ const POPage: React.FC = () => {
           notes: shippingInfo.notes,
           email: customerInfo.email || ''
         },
-        items: products.map(product => {
-          // 🔧 只对耗材类型使用CartFieldUnifier，其他类型保持原有逻辑
-          const productType = product.product_type || product.category || product.type;
-          let productName: string;
-          
-          if (productType === 'consumable') {
-            // 只对耗材使用CartFieldUnifier
-            productName = CartFieldUnifier.getProductName(product, currentLanguage);
-          } else {
-            // 其他产品类型保持原有逻辑
-            productName = product.name || (product as any).product_name || product.model || product.code || String(product.id);
-          }
-          
-          return {
-            id: product.id,
-            code: product.code || product.sku,
-            name: productName, // 🔧 使用条件性的名称获取方法
-            quantity: product.quantity,
-            price: product.price,
-            model: product.model,
-            spec: product.spec,
-            brand: product.brand,
-            amount: (product.price || 0) * (product.quantity || 1)
-          };
-        })
+        items: products.map(product => ({
+          id: product.id,
+          code: product.code || product.sku,
+          name: getProductName(product),
+          quantity: product.quantity,
+          price: product.price,
+          model: product.model,
+          spec: product.spec,
+          brand: product.brand,
+          amount: (product.price || 0) * (product.quantity || 1)
+        }))
       };
       
       console.log('🔧 [PO] 构造的完整订单数据:', orderDataForList);
@@ -813,7 +815,7 @@ const POPage: React.FC = () => {
     setCurrentPage(page);
   };
 
-  // 🎯 获取产品名称（使用统一系统，解决BUG-003：中英文显示混乱）
+  // 🎯 获取产品名称（智能语言检测版本）
   const getProductName = (product: UnifiedProduct) => {
     console.log('🔧 [PO Page] getProductName调用:', {
       currentLanguage,
@@ -826,9 +828,9 @@ const POPage: React.FC = () => {
       '完整产品对象': product
     });
     
-    const result = CartFieldUnifier.getProductName(product, currentLanguage);
-    console.log('🔧 [PO Page] getProductName结果:', result);
-    
+    // 使用统一的产品名称获取工具
+    const result = getSimpleProductName(product, currentLanguage);
+    console.log('🔧 [PO Page] 最终名称结果:', result);
     return result;
   };
 
@@ -999,115 +1001,11 @@ const POPage: React.FC = () => {
             <tr key={idx} style={{backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8f9fa'}}>
               <td style={{textAlign: 'center', fontFamily: 'monospace'}}>{p.code || p.sku || '-'}</td>
               <td style={{fontWeight: '500'}}>
-                {getProductName(p)}
+                <ProductName product={p} />
               </td>
-              <td style={{textAlign: 'center'}}>
-                {
-                  (() => {
-                    console.log('🔧 [PO Page] 处理产品Model字段:', {
-                      idx,
-                      productCode: p.code,
-                      model: p.model,
-                      app_model: (p as any).app_model,
-                      name: p.name,
-                      item_name: (p as any).item_name,
-                      '完整产品对象': p
-                    });
-                    
-                    // 优先级：model > app_model > name > item_name > 默认值
-                    const modelValue = p.model || (p as any).app_model || p.name || (p as any).item_name || 'N/A';
-                    console.log(`🔧 [PO Page] 产品${idx} Model字段最终值:`, modelValue);
-                    return modelValue;
-                  })()
-                }
-              </td>
-              <td style={{fontSize: '13px', lineHeight: '1.4'}}>
-                {
-                  // 🔧 修复：优先显示spec字段作为Item description
-                  (() => {
-                    console.log('🔧 [PO Page] 处理商品规格信息:', {
-                      idx,
-                      productCode: p.code,
-                      productId: p.id,
-                      spec: p.spec,
-                      specs: p.specs,
-                      spec_imperial: p.spec_imperial,
-                      properties: p.properties,
-                      model: p.model,
-                      brand: p.brand,
-                      description: (p as any).description,
-                      '完整产品对象': p
-                    });
-                    
-                    const descriptions = [];
-                    
-                    // 🔧 修复：优先使用spec字段，然后是description字段
-                    if (p.spec && typeof p.spec === 'string' && p.spec.trim() !== '') {
-                      console.log(`🔧 [PO Page] 产品${idx}使用spec字段:`, p.spec);
-                      descriptions.push(p.spec);
-                    } else if ((p as any).description && typeof (p as any).description === 'string' && (p as any).description.trim() !== '') {
-                      console.log(`🔧 [PO Page] 产品${idx}使用description字段:`, (p as any).description);
-                      descriptions.push((p as any).description);
-                    } else if (p.specs && typeof p.specs === 'string' && p.specs.trim() !== '') {
-                      console.log(`🔧 [PO Page] 产品${idx}使用specs字符串:`, p.specs);
-                      descriptions.push(p.specs);
-                    } else if (p.specs && typeof p.specs === 'object') {
-                      const specsText = Object.entries(p.specs)
-                        .filter(([k, v]) => v && v !== 'N/A' && v !== 'Not Specified')
-                        .map(([k, v]) => `${k}: ${v}`)
-                        .join(', ');
-                      if (specsText) {
-                        console.log(`🔧 [PO Page] 产品${idx}使用specs对象:`, specsText);
-                        descriptions.push(specsText);
-                      }
-                    }
-                    
-                    // 从properties中添加关键规格
-                    if (p.properties && typeof p.properties === 'object') {
-                      const importantSpecs = [];
-                      if (p.properties.voltage && p.properties.voltage !== 'N/A') {
-                        importantSpecs.push(`${p.properties.voltage}${p.properties.voltage.includes('V') ? '' : 'V'}`);
-                      }
-                      if (p.properties.frequency && p.properties.frequency !== 'N/A') {
-                        importantSpecs.push(`${p.properties.frequency}${p.properties.frequency.includes('Hz') ? '' : 'Hz'}`);
-                      }
-                      if (importantSpecs.length > 0) {
-                        descriptions.push(importantSpecs.join(', '));
-                      }
-                    }
-                    
-                    // 🔧 修复：如果仍然没有描述，使用产品名称或型号作为备用
-                    if (descriptions.length === 0) {
-                      const fallbackDescription = String(p.name || p.model || '产品规格待补充');
-                      descriptions.push(fallbackDescription);
-                    }
-                    
-                    const finalDescription = descriptions.length > 0 ? descriptions.join(' | ') : '-';
-                    console.log(`🔧 [PO Page] 产品${idx}最终描述:`, finalDescription);
-                    
-                    return finalDescription;
-                  })()
-                }
-              </td>
-              <td style={{textAlign: 'center'}}>
-                {
-                  (() => {
-                    console.log('🔧 [PO Page] 处理产品Brand字段:', {
-                      idx,
-                      productCode: p.code,
-                      brand: p.brand,
-                      brand_name: (p as any).brand_name,
-                      manufacturer: (p as any).manufacturer,
-                      '完整产品对象': p
-                    });
-                    
-                    // 优先级：brand > brand_name > manufacturer > 默认值
-                    const brandValue = p.brand || (p as any).brand_name || (p as any).manufacturer || 'Lockedair';
-                    console.log(`🔧 [PO Page] 产品${idx} Brand字段最终值:`, brandValue);
-                    return brandValue;
-                  })()
-                }
-              </td>
+              <td style={{textAlign: 'center'}}>{getModel(p)}</td>
+              <td style={{fontSize: '13px', lineHeight: '1.4'}}>{getDescription(p)}</td>
+              <td style={{textAlign: 'center'}}>{getBrand(p)}</td>
               <td style={{textAlign: 'center', fontWeight: 'bold'}}>{p.quantity}</td>
               <td className="amount-cell" style={{textAlign: 'right', fontFamily: 'monospace'}}>{Number(p.price).toFixed(2)}</td>
               <td className="amount-cell" style={{textAlign: 'right', fontFamily: 'monospace', fontWeight: 'bold'}}>{Number(p.price * p.quantity).toFixed(2)}</td>

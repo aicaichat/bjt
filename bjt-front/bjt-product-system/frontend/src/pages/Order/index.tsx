@@ -8,7 +8,7 @@ import './Order.css';
 import orderService from '../../services/orderService';
 import { safeToLocaleString } from '../../utils/priceUtils';
 import { getSortedCountries, getCountryName } from '../../utils/countries';
-import { CartFieldUnifier } from '../../utils/CartFieldUnifier';
+import { getSimpleProductName } from '../../utils/simpleProductName';
 import { PRODUCT_TYPE_FIELD_MAP } from '../../config/cartDisplayFields';
 import { OrderPageProductDetails } from '../../components/Cart/UnifiedProductDetails';
 import '../../components/Cart/UnifiedProductDetails.css';
@@ -987,7 +987,7 @@ const OrderPage: React.FC = () => {
             
             {Array.isArray(orderItems) && orderItems.length > 0 ? orderItems.map((item, index) => {
               const currentLanguage = i18n.language.startsWith('zh') ? 'zh' : 'en';
-              const productName = CartFieldUnifier.getProductName(item, currentLanguage);
+              const productName = getSimpleProductName(item, currentLanguage);
 
               return (
                 <div key={item.id || item.product_id || index} className="order-item-card">

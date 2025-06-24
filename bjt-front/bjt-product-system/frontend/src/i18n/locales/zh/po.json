@@ -43,7 +43,7 @@
   },
   "table": {
     "columns": {
-      "partNumber": "零件号",
+      "partNumber": "料号",
       "item": "项目",
       "model": "型号",
       "description": "项目描述",
@@ -149,7 +149,15 @@
   "messages": {
     "noOrders": "未找到采购订单",
     "loading": "正在加载采购订单...",
-    "error": "加载采购订单失败",
+    "error": {
+      "create": "创建采购订单失败",
+      "update": "更新采购订单失败",
+      "approve": "审批采购订单失败",
+      "reject": "驳回采购订单失败",
+      "receive": "收货失败",
+      "close": "关闭采购订单失败",
+      "delete": "删除采购订单失败"
+    },
     "deleteConfirm": "确定要删除此采购订单吗？",
     "cancelConfirm": "确定要取消此采购订单吗？",
     "success": {
@@ -160,15 +168,6 @@
       "received": "采购订单收货成功",
       "closed": "采购订单关闭成功",
       "deleted": "采购订单删除成功"
-    },
-    "error": {
-      "create": "创建采购订单失败",
-      "update": "更新采购订单失败",
-      "approve": "审批采购订单失败",
-      "reject": "驳回采购订单失败",
-      "receive": "收货失败",
-      "close": "关闭采购订单失败",
-      "delete": "删除采购订单失败"
     }
   },
   "batchActions": {
@@ -181,4 +180,4 @@
   "tips": {
     "excelStyling": "如需美化表格样式，可在Excel中选中表格区域，点击\"开始\"-\"套用为表格\"，一键加粗表头、金额变色。"
   }
-} 
+}

@@ -1,9 +1,12 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import { CartItem as OriginalCartItem } from '../api/services/cart.service';
 import cartService from '../api/services/cart.service'; // 导入默认导出的cartService实例
 import { useMockData } from '../config/env';
 import { mergeNoEmpty } from '../utils/mergeUtils';
 import { useAuth } from './AuthContext'; // 导入用户认证上下文
+import { useTranslation } from 'react-i18next';
+import { getSimpleProductName } from '../utils/simpleProductName';
+import i18n from 'i18next';
 
 // 定义价格层级接口
 export interface PriceTier {
@@ -30,6 +33,7 @@ export interface ExtendedCartItem extends OriginalCartItem {
     productName: string;
   };
   price: number;        // 对应于unit_price
+  product?: any;        // 原始产品对象，供前端展示适用机型等
   
   // 必选备件相关字段
   is_required?: boolean;
@@ -91,89 +95,12 @@ const mapServiceCartItemToUICartItem = (item: OriginalCartItem): ExtendedCartIte
       type = 'machine'; // 默认值
   }
 
-  // 增强的名称获取逻辑，根据产品类型使用不同的策略
   const getDisplayName = (): string => {
-    const props = item.properties || {};
-    const itemAny = item as any; // 类型转换以访问扩展字段
-    
-    // 调试日志
-    console.log('[CartContext.mapServiceCartItemToUICartItem] 商品名称映射调试:', {
-      product_type: item.product_type,
-      'item.name': item.name,
-      'item.model': itemAny.model,
-      'item.spec': itemAny.spec,
-      'item.part_number': item.part_number,
-      'props.name': props.name,
-      'props.model': props.model,
-      'props.spec': props.spec,
-      'props.name_zh': props.name_zh,
-      'props.name_en': props.name_en,
-      'props.productName': props.productName
-    });
-    
-    // 根据产品类型使用不同的名称获取策略
-    switch (item.product_type) {
-      case 'consumable':
-        // 🔧 只对耗材进行特殊处理：如果name为空或"Not Found"，使用model字段
-        const name = item.name || props.name;
-        if (!name || name === 'Not Found' || name === 'N/A' || name.trim() === '') {
-          // 对于耗材，使用model相关字段作为名称回退
-          return itemAny.model ||
-                 props.model ||
-                 itemAny.model_metric ||
-                 props.model_metric ||
-                 itemAny.spec ||
-                 props.spec ||
-                 itemAny.code ||
-                 props.code ||
-                 item.part_number || 
-                 props.part_number ||
-                 '耗材';
-        }
-        // 如果name有效，直接返回
-        return name;
-               
-      case 'spare_part':
-        // 备件名称获取优先级（保持原有逻辑）
-        return props.name_zh || 
-               props.name_en || 
-               props.productName ||
-               item.name || 
-               props.name || 
-               props.part_number || 
-               item.part_number || 
-               '备件';
-               
-      case 'accessory':
-        // 配件名称获取优先级（保持原有逻辑）
-        return props.name_zh || 
-               props.name_en || 
-               item.name || 
-               props.name || 
-               props.productName ||
-               item.part_number || 
-               '配件';
-               
-      case 'machine':
-        // 主机名称获取优先级（保持原有逻辑）
-        return props.name_zh || 
-               props.name_en || 
-               item.name || 
-               props.name || 
-               props.productName ||
-               item.part_number || 
-               '主机';
-               
-      default:
-        // 默认名称获取逻辑（保持原有逻辑）
-        return item.name || 
-               props.name || 
-               props.name_zh || 
-               props.name_en || 
-               props.productName ||
-               item.part_number || 
-               '商品';
-    }
+    const lang = i18n.language.startsWith('zh') ? 'zh' : 'en';
+    // 直接使用统一工具，内部已包含回退链与智能检测
+    // 将 item 与其 properties 合并，确保 name_zh/name_en 在顶层可见
+    const merged = { ...item.properties, ...item } as any;
+    return getSimpleProductName(merged, lang as 'zh' | 'en');
   };
 
   // 增强的图片获取逻辑
@@ -271,7 +198,8 @@ const mapServiceCartItemToUICartItem = (item: OriginalCartItem): ExtendedCartIte
     // 定价和库存信息
     pricing: (item as any).pricing || item.properties?.pricing || [],
     inventory: (item as any).inventory || item.properties?.inventory || [],
-    product_type: item.product_type
+    product_type: item.product_type,
+    product: item
   };
 };
 
@@ -437,6 +365,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
           thickness: (newItem.properties as any)?.thickness || (newItem as any).thickness,
           rollLength: (newItem.properties as any)?.rollLength || (newItem as any).rollLength,
           shape: (newItem.properties as any)?.shape || (newItem as any).shape,
+          app_model: (newItem.properties as any)?.app_model || (newItem as any).app_model || '',
           code: (newItem.properties as any)?.code || newItem.part_number,
           specs: (newItem.properties as any)?.specs
         }),

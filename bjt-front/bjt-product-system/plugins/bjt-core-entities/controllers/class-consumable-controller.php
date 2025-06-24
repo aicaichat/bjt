@@ -63,7 +63,10 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
         'tube_inner_diameter_cm',
         'tube_inner_diameter_inch',
         // 🔥 新增：单位字段 (Unit)
-        'unit'
+        'unit',
+        // 🆕 名称字段（中英）
+        'name_zh',
+        'name_en'
     ];
 
     // Fields required when creating an item via API
@@ -259,6 +262,8 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
                 
                 // Fields from init.sql that could be added to schema if needed for API create/update:
                 // spec, spec_imperial, thickness_imp_val, width_imp_val, length_imp_val, total_length_imp_val etc.
+                'name_zh' => ['type' => 'string', 'description' => 'Chinese display name of the consumable.'],
+                'name_en' => ['type' => 'string', 'description' => 'English display name of the consumable.'],
             ],
         ];
          // Required fields for CREATABLE are enforced by create_item method based on $required_api_fields_for_create
@@ -315,10 +320,12 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
             'pallet_height_b_cm', 'pallet_height_b_inch',
             'pcs_per_pallet_c', 'pallet_gross_weight_c_kg', 'pallet_gross_weight_c_lbs',
             'pallet_height_c_cm', 'pallet_height_c_inch',
-            // 🔥 新增：管径信息字段 (Tube Diameter)
+            // 🔥 新增：数值型管径字段 (Numeric Tube Fields)
             'tube_inner_diameter_cm', 'tube_inner_diameter_inch',
             // 🔥 新增：单位字段 (Unit)
-            'unit'
+            'unit',
+            // 🆕 名称字段（中英）
+            'name_zh', 'name_en'
         ];
 
         // Check for alternative spec value keys from schema like 'thickness_met_val'
@@ -524,6 +531,9 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
         'code' => $item_db_object->part_number ?? null, 
         'name' => $item_db_object->model ?? null,       
         'model' => $item_db_object->model ?? null,      
+        // 🆕 统一名称字段，提供中文/英文名称（若不存在则回落到模型或代码）
+        'name_zh' => !empty($item_db_object->name_zh) ? $item_db_object->name_zh : (!empty($item_db_object->title_zh) ? $item_db_object->title_zh : (!empty($item_db_object->model) ? $item_db_object->model : ($item_db_object->part_number ?? null))),
+        'name_en' => !empty($item_db_object->name_en) ? $item_db_object->name_en : (!empty($item_db_object->title_en) ? $item_db_object->title_en : ($item_db_object->part_number ?? null)),
         'model_imperial' => $item_db_object->model_imperial ?? null,
         'brand' => $item_db_object->brand ?? null,
         'sales_unit' => $item_db_object->package_type ?? null, 

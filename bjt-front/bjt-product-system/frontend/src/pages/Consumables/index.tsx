@@ -441,7 +441,8 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
       'bubble_diameter_met': ['bubble_diameter_met', 'specs.bubble_diameter_met'],
       'bubble_diameter_inch': ['bubble_diameter_inch', 'specs.bubble_diameter_inch'],
       
-      // 包装属性映射
+      // 包装属性映射 - 修复：优先使用数据库真实字段package_type
+      'package_type': ['package_type', 'packaging_type', 'sales_unit', 'specs.package_type'],
       'packaging_type': ['package_type', 'packaging_type', 'sales_unit', 'specs.package_type'],
       'package_size_cm': ['package_size_cm', 'specs.package_size_cm'],
       'package_size_inch': ['package_size_inch', 'specs.package_size_inch'],
@@ -518,7 +519,7 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
       <div className="tooltip-header">
         <div className="product-image">
           <img 
-            src={cleanImageUrl(item.image_url)} 
+            src={cleanImageUrl(safeGet('package_image_url', item.image_url))} 
             alt={String(item.name || '')}
             onError={(e) => {
               const target = e.target as HTMLImageElement;
@@ -815,24 +816,81 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
               <span className="title-icon">📦</span>
               {t('tooltip.packageInfo', 'Package Information')}
             </h5>
+            
+            {/* 包装图片展示区域 */}
+            {(() => {
+              const packageImageUrl = safeGet('package_image_url', '');
+              if (packageImageUrl !== 'N/A' && packageImageUrl !== '') {
+                return (
+                  <div className="package-image-section">
+                    <div className="package-image-container">
+                      <img 
+                        src={cleanImageUrl(packageImageUrl)} 
+                        alt={String(t('tooltip.packageImage') || '包装图片')}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          if (!target.src.startsWith('data:')) {
+                            target.src = placeholderImage;
+                          }
+                        }}
+                      />
+                      <div className="image-label">{String(t('tooltip.packageImage') || '包装图片')}</div>
+                    </div>
+                  </div>
+                );
+              }
+              return null;
+            })()}
+            
             <div className="package-details">
+              {(() => {
+                // 修复：优先使用正确的package_type字段，如果为空则不显示该行
+                const packageType = safeGet('package_type', '');
+                const packagingType = safeGet('packaging_type', '');
+                const salesUnit = safeGet('sales_unit', '');
+                
+                let displayValue = '';
+                
+                // 首先检查数据库中实际存在的package_type字段
+                if (packageType !== 'N/A' && packageType !== '') {
+                  // 根据英文值返回对应的中文翻译
+                  switch (packageType.toLowerCase()) {
+                    case 'roll':
+                      displayValue = t('tooltip.rollPack', '卷装');
+                      break;
+                    case 'piece':
+                      displayValue = t('tooltip.piecePack', '片装');
+                      break;
+                    case 'carton':
+                      displayValue = t('tooltip.cartonPack', '纸箱装');
+                      break;
+                    case 'box':
+                      displayValue = t('tooltip.boxPack', '盒装');
+                      break;
+                    default:
+                      displayValue = packageType;
+                  }
+                } else if (packagingType !== 'N/A' && packagingType !== '') {
+                  displayValue = packagingType;
+                } else if (salesUnit !== 'N/A' && salesUnit !== '') {
+                  displayValue = salesUnit === 'Carton' ? t('tooltip.cartonPack', '纸箱装') : salesUnit;
+                }
+                
+                // 只有当有真实数据时才显示包装方式行
+                if (displayValue) {
+                  return (
+                    <div className="package-row">
+                      <span className="package-label">{t('tooltip.packagingMethod', 'Packaging Method')}</span>
+                      <span className="package-value">{displayValue}</span>
+                    </div>
+                  );
+                }
+                
+                // 如果没有包装方式数据，则不显示这一行
+                return null;
+              })()}
               <div className="package-row">
-                <span className="package-label">{t('tooltip.packagingMethod', 'Packaging Method')}</span>
-                <span className="package-value">
-                  {(() => {
-                    const packagingType = safeGet('packaging_type', '');
-                    const salesUnit = safeGet('sales_unit', '');
-                    if (packagingType !== 'N/A' && packagingType !== '') {
-                      return packagingType;
-                    } else if (salesUnit !== 'N/A' && salesUnit !== '') {
-                      return salesUnit === 'Carton' ? t('tooltip.cartonPack', 'Carton Pack') : salesUnit;
-                    }
-                    return t('tooltip.cartonPack', 'Carton Pack');
-                  })()}
-                </span>
-              </div>
-              <div className="package-row">
-                <span className="package-label">{t('tooltip.pcsPerBox', 'Pieces per Box')}</span>
+                <span className="package-label">{t('tooltip.pcsPerBox', 'Qty per Carton')}</span>
                 <span className="package-value">
                   {(() => {
                     const pcsPerBox = safeGet('pcs_per_box', '');
@@ -843,8 +901,8 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
               <div className="package-row">
                 <span className="package-label">
                   {isImperialUnit ? 
-                    t('tooltip.unitWeight.imperial', 'Unit Weight(lbs)') : 
-                    t('tooltip.unitWeight.metric', 'Unit Weight(kg)')
+                    t('tooltip.unitWeight.imperial', 'Net Weight(lb)') : 
+                    t('tooltip.unitWeight.metric', 'Net Weight(kg)')
                   }
                 </span>
                 <span className="package-value">
@@ -858,8 +916,8 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
               <div className="package-row">
                 <span className="package-label">
                   {isImperialUnit ? 
-                    t('tooltip.totalLength.imperial', 'Total Length(ft)') : 
-                    t('tooltip.totalLength.metric', 'Total Length(m)')
+                    t('tooltip.totalLength.imperial', 'Length(ft)') : 
+                    t('tooltip.totalLength.metric', 'Length(m)')
                   }
                 </span>
                 <span className="package-value">
@@ -912,8 +970,8 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
                     <div className="tech-param-row">
                       <span className="param-label">
                         {isImperialUnit ? 
-                          t('tooltip.tubeInnerDiameter.imperial', 'Core Diameter(inch)') : 
-                          t('tooltip.tubeInnerDiameter.metric', 'Core Diameter(cm)')
+                          t('tooltip.tubeInnerDiameter.imperial', 'Inner Dia.(inch)') : 
+                          t('tooltip.tubeInnerDiameter.metric', 'Inner Dia.(cm)')
                         }
                       </span>
                       <span className="param-value">{tubeDiameter}</span>
@@ -930,8 +988,8 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
                     <div className="tech-param-row">
                       <span className="param-label">
                         {isImperialUnit ? 
-                          t('tooltip.packageSize.imperial', 'Package Size(inch)') : 
-                          t('tooltip.packageSize.metric', 'Package Size(cm)')
+                          t('tooltip.packageSize.imperial', 'Packaging Dim.(inch)') : 
+                          t('tooltip.packageSize.metric', 'Packaging Dim.(cm)')
                         }
                       </span>
                       <span className="param-value">{packageSize}</span>
@@ -1165,13 +1223,14 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
                 color="white"
                 arrow={false}
                 trigger="hover"
-                destroyTooltipOnHide={false}
-                fresh={false}
+                destroyOnHidden={false}
                 mouseEnterDelay={0.1}
                 mouseLeaveDelay={0.1}
-                overlayStyle={{
-                  maxWidth: 'min(600px, 90vw)',
-                  zIndex: 10000
+                styles={{
+                  root: {
+                    maxWidth: 'min(600px, 90vw)',
+                    zIndex: 10000
+                  }
                 }}
               >
                 <button className="tooltip-trigger-btn">
@@ -1280,7 +1339,7 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
                     className="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-600 border-l border-gray-300 hover:bg-blue-50 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m-6h6m-6 0H6" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v12m6-6H6" />
                     </svg>
                   </button>
                 </div>
@@ -2554,18 +2613,12 @@ const ConsumablesPage: React.FC = () => {
       }> = product.specs || {};
       const image_url = cleanImageUrl(product.image_url);
       
-      // 🔧 修复：增强耗材名称获取逻辑，与CartFieldUnifier保持一致
-      const productAny = product as any; // 类型转换以访问扩展字段
+      // 添加更详细的名称兜底逻辑
       const resolvedName = 
-        productAny.name_zh ||          // 中文名称（优先）
-        productAny.name_en ||          // 英文名称
-        product.name ||                // 通用名称字段
-        product.model ||               // 型号作为名称（耗材常用）
-        productAny.model_metric ||     // 公制型号作为名称
-        product.spec ||                // 规格描述作为名称
-        product.code ||                // 产品代码作为名称
-        product.part_number ||         // 料号作为名称
-        `耗材-${product.id}` ||        // 使用ID创建名称
+        product.name || 
+        product.code || 
+        product.part_number ||
+        product.id || 
         'N/A';
 
       // 调试日志：分析名称来源 (生产环境可移除)
@@ -2651,7 +2704,8 @@ const ConsumablesPage: React.FC = () => {
           productName: resolvedName
         },
         price: getRegionalPrice(product, quantity),
-        properties
+        properties,
+        product // 传递完整产品对象，便于购物车展示适用机型等字段
       };
       // 调试日志 (生产环境自动移除)
       if (process.env.NODE_ENV === 'development') {
@@ -3046,7 +3100,6 @@ const ConsumablesPage: React.FC = () => {
                           {String(t('ui.compatibleModel') || '适用型号')}: <span className="font-medium text-gray-800">{String(item.model || '')}</span>
                         </p>
                       )}
-                      <p className="text-xs text-gray-500">{String(t('ui.productId') || '产品ID')}: {String(item.id || '')}</p>
                     </div>
 
                     {/* 产品规格卡片 */}
@@ -3096,13 +3149,14 @@ const ConsumablesPage: React.FC = () => {
                         color="white"
                         arrow={false}
                         trigger="hover"
-                        destroyTooltipOnHide={false}
-                        fresh={false}
+                        destroyOnHidden={false}
                         mouseEnterDelay={0.1}
                         mouseLeaveDelay={0.1}
-                        overlayStyle={{
-                          maxWidth: 'min(600px, 90vw)',
-                          zIndex: 10000
+                        styles={{
+                          root: {
+                            maxWidth: 'min(600px, 90vw)',
+                            zIndex: 10000
+                          }
                         }}
                       >
                         <button className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-600 rounded-lg hover:from-blue-100 hover:to-indigo-100 transition-all duration-200 border border-blue-200 font-medium text-sm">
@@ -3213,7 +3267,7 @@ const ConsumablesPage: React.FC = () => {
                             className="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-600 border-l border-gray-300 hover:bg-blue-50 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v12m6-6H6" />
                             </svg>
                           </button>
                         </div>

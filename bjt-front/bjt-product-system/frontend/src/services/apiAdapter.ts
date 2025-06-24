@@ -119,9 +119,11 @@ export class ApiAdapter {
       code: item.part_number || item.code,
       sku: item.part_number || item.sku,
       name: item.name,
+      name_zh: item.name_zh,          // 🔑 中文名称（后端已提供）
+      name_en: item.name_en,          // 🔑 英文名称（后端已提供）
       quantity: item.quantity,
       price: item.unit_price || item.price,
-      total: item.line_total || (item.unit_price * item.quantity),
+      total: item.line_total || ((item.unit_price || item.price) * item.quantity),
       specs: item.specs || item.properties,
       type: item.product_type || 'product'
     }));

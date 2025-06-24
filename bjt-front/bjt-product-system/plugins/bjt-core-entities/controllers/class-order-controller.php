@@ -475,14 +475,25 @@ class BJT_Order_Controller extends BJT_API_Controller {
                 );
                 
                 if ($product_details) {
-                    // 添加产品详细信息，但保持订单时的价格和名称
-                    $enriched_item['spec'] = $product_details['spec'] ?? '';
-                    $enriched_item['specs'] = $product_details['specs'] ?? $product_details['spec'] ?? '';
-                    $enriched_item['model'] = $product_details['model'] ?? '';
-                    $enriched_item['brand'] = $product_details['brand'] ?? '';
-                    $enriched_item['properties'] = $product_details['properties'] ?? [];
-                    $enriched_item['description'] = $product_details['description'] ?? '';
-                    $enriched_item['category'] = $product_details['category'] ?? '';
+                    // 基础字段
+                    $enriched_item['spec']        = $product_details['spec']        ?? '';
+                    $enriched_item['specs']       = $product_details['specs']       ?? $product_details['spec'] ?? '';
+                    $enriched_item['model']       = $product_details['model']       ?? '';
+                    $enriched_item['brand']       = $product_details['brand']       ?? '';
+                    $enriched_item['properties']  = $product_details['properties']  ?? [];
+                    $enriched_item['description'] = $product_details['description'] ?? ($product_details['spec'] ?? '');
+                    $enriched_item['category']    = $product_details['category']    ?? '';
+
+                    // 🔑 多语言名称字段（前端切换语言所需）
+                    $enriched_item['name_zh'] = $product_details['name_zh'] ?? '';
+                    $enriched_item['name_en'] = $product_details['name_en'] ?? '';
+
+                    // 兼容旧字段 name (按语言优先)
+                    if (empty($enriched_item['name'])) {
+                        $lang = isset($_GET['lang']) ? strtolower(sanitize_key($_GET['lang'])) : 'zh';
+                        $enriched_item['name'] = ($lang === 'en') ? ($enriched_item['name_en'] ?: $enriched_item['model'] ?: $enriched_item['description'])
+                                                                  : ($enriched_item['name_zh'] ?: $enriched_item['model'] ?: $enriched_item['description']);
+                    }
                     
                     error_log("✅ [Order Controller - get_items] 成功丰富产品信息: " . $item->item_id . " -> Model: " . ($product_details['model'] ?? 'N/A') . ", Spec: " . ($product_details['spec'] ?? 'N/A'));
                 } else {

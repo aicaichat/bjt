@@ -1,0 +1,312 @@
+{
+  "title": "Spare Parts",
+  "subtitle": "Spare Parts Selection",
+  "properties": {
+    "model": "Model",
+    "partNumber": "Part Number",
+    "voltage": "Voltage",
+    "frequency": "Frequency",
+    "pcsPerBox": "Pieces per Box",
+    "pcsPerPallet": "Pieces per Pallet",
+    "packageSizeCm": "Package Size (cm)",
+    "packageSizeInch": "Package Size (inch)",
+    "palletSizeCm": "Pallet Size (cm)",
+    "palletSizeInch": "Pallet Size (inch)",
+    "netWeight": "Net Weight",
+    "grossWeight": "Gross Weight",
+    "brand": "Brand",
+    "unit": "Unit",
+    "productId": "Product ID",
+    "appModel": "Compatible Model",
+    "appSn": "Compatible Serial Number"
+  },
+  "filters": {
+    "title": "Filters",
+    "category": "Category",
+    "compatibility": "Compatibility",
+    "price": "Price",
+    "stock": "Stock Status",
+    "all": "All",
+    "allProductTypes": "All Product Types",
+    "allModels": "All Models",
+    "allTypes": "All Types",
+    "consumable": "Consumable",
+    "nonConsumable": "Non-Consumable",
+    "searchPlaceholder": "Search accessories...",
+    "selectType": "Select Type",
+    "selectModel": "Select Model",
+    "label": {
+      "productType": "Product Type",
+      "model": "Applicable Machine",
+      "partType": "Part Type"
+    },
+    "model": {
+      "allModels": "All Models"
+    },
+    "partType": {
+      "allTypes": "All Types",
+      "consumables": "Consumables",
+      "nonConsumables": "Non-Consumables"
+    },
+    "reset": "Reset Filters"
+  },
+  "categories": {
+    "all": "All Categories",
+    "mechanical": "Mechanical Parts",
+    "electrical": "Electrical Parts",
+    "hydraulic": "Hydraulic Parts",
+    "pneumatic": "Pneumatic Parts",
+    "consumables": "Consumable Parts"
+  },
+  "compatibility": {
+    "title": "Machine Compatibility",
+    "all": "All Machines",
+    "compatible": "Compatible",
+    "notCompatible": "Not Compatible"
+  },
+  "productTypes": {
+    "machine": "Machine",
+    "accessory": "Accessory"
+  },
+  "table": {
+    "columns": {
+      "partNumber": "Part No.",
+      "name": "Item",
+      "model": "Model",
+      "compatibility": "Compatible Models",
+      "spec": "Specification",
+      "price": "Price",
+      "stock": "Inventory",
+      "actions": "Action"
+    }
+  },
+  "specs": {
+    "spec": "Specification",
+    "specImperial": "Specification (Imperial)",
+    "material": "Material",
+    "dimensions": "Dimensions",
+    "weight": "Weight"
+  },
+  "details": {
+    "properties": {
+      "appSn": "Compatible Serial Number",
+      "pcsPerBox": "Pieces Per Box",
+      "packageSize": "Package Size",
+      "packageSizeCm": "Package Size (cm)",
+      "packageSizeInch": "Package Size (inch)",
+      "netWeight": "Net Weight",
+      "netWeightKg": "Net Weight (kg)",
+      "netWeightLbs": "Net Weight (lbs)",
+      "unit": "Unit"
+    },
+    "title": "Spare Part Details",
+    "description": "Product Description",
+    "specifications": "Technical Specifications",
+    "compatibility": "Compatibility Information"
+  },
+  "defaultValues": {
+    "defaultPartName": "Spare Part",
+    "unknown": "Universal Model",
+    "universalModel": "Universal Model",
+    "notAvailable": "Not Specified",
+    "notSpecified": "Not Specified",
+    "contactService": "Please Contact Service",
+    "contactServiceSpecs": "Please contact service for specification details",
+    "universal": "Universal",
+    "unknownError": "Unknown Error",
+    "category": "Spare Parts"
+  },
+  "partTypes": {
+    "consumable": "Consumable",
+    "nonConsumable": "Non-Consumable"
+  },
+  "fields": {
+    "compatibleModels": "Compatible Models",
+    "partModel": "Applicable Machine",
+    "partType": "Type",
+    "is_consumable": "Consumable Status",
+    "app_model": "Applicable Machine",
+    "net_weight_kg": "Net Weight (kg)",
+    "specifications": "Specifications",
+    "compatibleSerialNumber": "Compatible Serial Number",
+    "pcsPerBox": "Pieces Per Box",
+    "packageSize": "Package Size",
+    "productId": "Product ID"
+  },
+  "actions": {
+    "addToCart": "Add to Cart",
+    "viewDetails": "View Details",
+    "quickOrder": "Quick Order",
+    "compare": "Compare",
+    "favorite": "Favorite"
+  },
+  "cart": {
+    "title": "Shopping Cart",
+    "total": "Total",
+    "clear": "Clear",
+    "checkout": "Checkout",
+    "viewCart": "View Cart",
+    "empty": "Cart is empty",
+    "sku": "SKU",
+    "cartCleared": "Cart cleared",
+    "addedToCart": "Item added to cart",
+    "confirmClearTitle": "Confirm Clear Cart",
+    "confirmClearMessage": "This action will clear all items from the cart and cannot be undone. Are you sure you want to continue?",
+    "cancel": "Cancel",
+    "confirmClear": "Confirm Clear",
+    "requiredParts": "Required Parts"
+  },
+  "success": {
+    "addedToCart": "Spare part added to cart",
+    "addedToCartWithRequired": "Spare part added to cart, along with {{count}} required parts",
+    "requiredPartsAdded": "Automatically added required parts: {{parts}}"
+  },
+  "error": {
+    "loadingData": "Failed to load spare parts data: {{message}}",
+    "loadingDataGeneral": "Unable to load spare parts data, please check network connection or contact technical support",
+    "partialRequiredParts": "Some required parts failed to add",
+    "failedRequiredParts": "The following required parts could not be added: {{parts}}",
+    "requiredPartsProcessing": "Required parts processing failed",
+    "requiredPartsInfo": "Unable to get required parts information, please try again",
+    "noResults": "No matching spare parts found",
+    "tryAgain": "Please try adjusting filter conditions or reload data",
+    "retry": "Retry",
+    "addToCartFailed": "Failed to add to cart",
+    "partNumberMissing": "Product part number information missing, please refresh page and try again or contact technical support",
+    "authenticationFailed": "Authentication failed, please refresh page and log in again",
+    "parameterError": "Request parameter error, please check product information",
+    "apiConnectionFailed": "API connection failed, displaying sample data",
+    "fetchModelsFailed": "Failed to fetch models",
+    "requiredPartsInconsistent": "Required parts numbers and quantities do not match"
+  },
+  "loading": {
+    "text": "Loading...",
+    "data": "Loading data...",
+    "idle": "Idle"
+  },
+  "status": {
+    "loading": "Loading...",
+    "idle": "Idle",
+    "noError": "No Error",
+    "noSelection": "None",
+    "loaded": "Loaded",
+    "notLoaded": "Not Loaded",
+    "all": "All",
+    "consumable": "Consumable",
+    "nonConsumable": "Non-Consumable",
+    "inStock": "In Stock",
+    "limitedStock": "Limited Stock",
+    "outOfStock": "Out of Stock"
+  },
+  "common": {
+    "image": "Image"
+  },
+  "debug": {
+    "userInfo": "User Info",
+    "region": "Region",
+    "reloadData": "Reload Data",
+    "reloadFilters": "Reload Filters",
+    "consoleOutput": "Console Output Data",
+    "testPagination": "Test Pagination (Go to Page 2)",
+    "loadingStatus": "Loading Status",
+    "errorStatus": "Error Status",
+    "dataItems": "Data Items Count",
+    "paginationStatus": "Pagination Status",
+    "selectedModel": "Selected Model",
+    "currentProductType": "Current Product Type",
+    "consumableFilter": "Consumable Type Filter",
+    "filterConfig": "Filter Configuration",
+    "hostModels": "Host Models",
+    "accessoryModels": "Accessory Models",
+    "filterOptions": "Filter Options",
+    "sparePartsData": "Spare Parts Data",
+    "pageOf": "Page {{current}} of {{total}}",
+    "totalItems": "Total {{total}} items"
+  },
+  "models": {
+    "LA-E4S": "Air Cushion E4S",
+    "LA-E5P": "Air Cushion E5P",
+    "LA-E6L": "Air Cushion E6L",
+    "AC-E4-FP1": "Air Pump for E4 Series",
+    "AC-E5-FP2": "Air Pump for E5 Series",
+    "AC-E6-FP3": "Air Pump for E6 Series",
+    "AC-E4-CTR": "Controller for E4 Series",
+    "AC-E5-CTR": "Controller for E5 Series",
+    "EC402": "EC402 Big Bracket",
+    "EC401": "EC401 Small Bracket",
+    "EC403": "EC403 Accessory",
+    "EC404": "EC404 Accessory"
+  },
+  "testComments": {
+    "8AFuse": "Adding test required parts for 8A fuse",
+    "wrinkleRemover": "Adding test data for wrinkle remover",
+    "ceramicBlade": "Adding test data for ceramic blade"
+  },
+  "roles": {
+    "admin": "Admin",
+    "sales": "Sales",
+    "customer": "Customer",
+    "partner": "Partner",
+    "guest": "Guest"
+  },
+  "pricing": {
+    "tiers": " price tiers"
+  },
+  "inventory": {
+    "regions": " regions",
+    "noInfo": "No inventory information",
+    "inStock": "In Stock",
+    "lowStock": "Low Stock",
+    "outOfStock": "Out of Stock",
+    "highStock": "High Stock"
+  },
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "moreInfo": {
+    "specsDetail": "More Specifications",
+    "hoverForSpecs": "Hover to view detailed specifications"
+  },
+  "buttons": {
+    "relogin": "Re-login",
+    "onlyRetry": "Retry Only"
+  },
+  "products": {
+    "properties": {
+      "partNumber": "Part Number",
+      "model": "Model",
+      "voltage": "Voltage",
+      "frequency": "Frequency",
+      "spec": "Specification",
+      "specImperial": "Imperial Specification",
+      "pcsPerBox": "Pieces per Box",
+      "pcsPerPallet": "Pieces per Pallet",
+      "packageSize": "Package Size",
+      "packageSizeCm": "Package Size (cm)",
+      "packageSizeInch": "Package Size (inch)",
+      "palletSize": "Pallet Size",
+      "palletSizeCm": "Pallet Size (cm)",
+      "palletSizeInch": "Pallet Size (inch)",
+      "netWeight": "Net Weight",
+      "grossWeight": "Gross Weight",
+      "brand": "Brand",
+      "unit": "Unit",
+      "productId": "Product ID",
+      "appModel": "Compatible Model",
+      "appSn": "Compatible Serial Number"
+    },
+    "defaultValues": {
+      "notAvailable": "N/A",
+      "unknown": "Unknown",
+      "notSpecified": "Not Specified"
+    },
+    "types": {
+      "machine": "Machine",
+      "accessory": "Accessory",
+      "consumable": "Consumable",
+      "spare_part": "Spare Part",
+      "product": "Product"
+    }
+  }
+} 

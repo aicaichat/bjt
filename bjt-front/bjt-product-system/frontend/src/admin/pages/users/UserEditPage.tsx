@@ -223,9 +223,9 @@ const UserEditPage: React.FC = () => {
               >
                 <Select placeholder="请选择用户角色">
                   <Option value="admin">管理员</Option>
-                  <Option value="manager">管理者</Option>
-                  <Option value="user">用户</Option>
-                  <Option value="viewer">查看者</Option>
+                  <Option value="sales">销售</Option>
+                  <Option value="partner">合作伙伴</Option>
+                  <Option value="customer">客户</Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -370,7 +370,7 @@ const UserEditPage: React.FC = () => {
           onFinish={handleSubmit}
           initialValues={{
             status: 'active',
-            role: 'user',
+            role: 'customer',
             preferred_unit: 'metric',
             country: 'CN'
           }}

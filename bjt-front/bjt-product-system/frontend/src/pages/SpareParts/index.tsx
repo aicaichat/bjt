@@ -8,6 +8,8 @@ import { useCart } from '../../contexts/CartContext';
 import { ASSETS } from '../../config/appConfig';
 import { API_BASE_URL } from '../../api/config';
 import { parseRequiredParts } from '../../utils/requiredPartsUtils';
+// 🆕 统一产品名称工具
+import { getSimpleProductName } from '../../utils/simpleProductName';
 
 // 导入现代化UI组件
 import { 
@@ -100,6 +102,8 @@ const SparePartsPage = () => {
   
   // 获取当前语言
   const currentLanguage = i18n.language || 'zh';
+  
+  // 统一名称显示将在真正渲染时用 <ProductName /> 组件完成，逻辑层不再调用工具函数。
   
   // 现代化UI组件hooks
   const { success, error: showErrorToast, warning, info } = useToastNotifications();

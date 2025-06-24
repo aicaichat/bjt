@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Spin, Input, Select, Button, Row, Col, Card, Tag, Typography, Space, message, Image } from 'antd';
 import { SearchOutlined, ShoppingCartOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 // import { accessoriesMock } from '../../mock/accessoriesMock';
 import { AccessoryProduct } from '../../types/accessories';
 import { RequiredPartsDisplay } from '../../components/RequiredPartsDisplay';
@@ -15,6 +16,7 @@ import './styles.less';
 const { Option } = Select;
 
 const AccessoriesPage: React.FC = () => {
+  const { t } = useTranslation('spareParts');
   const [loading, setLoading] = useState<boolean>(true);
   const [accessories, setAccessories] = useState<AccessoryProduct[]>([]);
   const [filteredAccessories, setFilteredAccessories] = useState<AccessoryProduct[]>([]);
@@ -224,18 +226,18 @@ const AccessoriesPage: React.FC = () => {
   // Get inventory status tag
   const getInventoryTag = (inventory: number) => {
     if (inventory > 100) {
-      return <Tag color="green">In Stock</Tag>;
+      return <Tag color="green">{t('status.inStock', 'In Stock')}</Tag>;
     } else if (inventory > 0) {
-      return <Tag color="orange">Limited Stock</Tag>;
+      return <Tag color="orange">{t('status.limitedStock', 'Limited Stock')}</Tag>;
     } else {
-      return <Tag color="red">Out of Stock</Tag>;
+      return <Tag color="red">{t('status.outOfStock', 'Out of Stock')}</Tag>;
     }
   };
 
   // Table columns
   const columns = [
     {
-      title: 'Image',
+      title: t('common.image', 'Image'),
       dataIndex: 'image_url',
       key: 'image',
       width: 100,
@@ -250,27 +252,32 @@ const AccessoriesPage: React.FC = () => {
       ),
     },
     {
-      title: 'Name',
+      title: t('table.columns.name', 'Item'),
       dataIndex: 'name',
       key: 'name',
     },
     {
-      title: 'Type',
+      title: t('fields.type', 'Type'),
       dataIndex: 'type',
       key: 'type',
     },
     {
-      title: 'Model',
+      title: t('table.columns.model', 'Model'),
       dataIndex: 'model',
       key: 'model',
     },
     {
-      title: 'Code',
+      title: t('table.columns.partNumber', 'Part No.'),
       dataIndex: 'code',
       key: 'code',
     },
     {
-      title: 'Required Parts',
+      title: t('properties.brand', 'Brand'),
+      dataIndex: 'brand',
+      key: 'brand',
+    },
+    {
+      title: t('cart.requiredParts', 'Required Parts'),
       key: 'required_parts',
       width: 300,
       render: (_: any, record: AccessoryProduct) => (
@@ -282,13 +289,13 @@ const AccessoriesPage: React.FC = () => {
       ),
     },
     {
-      title: 'Inventory',
+      title: t('table.columns.stock', 'Inventory'),
       dataIndex: 'inventory',
       key: 'inventory',
       render: getInventoryTag,
     },
     {
-      title: 'Action',
+      title: t('table.columns.actions', 'Action'),
       key: 'action',
       render: (_: any, record: AccessoryProduct) => (
         <Space>
@@ -299,10 +306,10 @@ const AccessoriesPage: React.FC = () => {
             className="ant-btn ant-btn-primary"
           >
             <ShoppingCartOutlined className="mr-2" />
-            Add to Cart
+            {t('actions.addToCart', 'Add to Cart')}
           </SmartAddToCartButton>
           <Button type="primary" onClick={() => handleViewDetails(record)}>
-            View Details
+            {t('actions.viewDetails', 'View Details')}
           </Button>
         </Space>
       ),
@@ -311,14 +318,14 @@ const AccessoriesPage: React.FC = () => {
 
   return (
     <div className="accessories-page" style={{ padding: '24px' }}>
-      <Typography.Title level={2}>Accessories</Typography.Title>
+      <Typography.Title level={2}>{t('title', 'Accessories')}</Typography.Title>
       
       {/* Filters */}
       <Card style={{ marginBottom: '24px' }}>
         <Row gutter={16}>
           <Col span={8}>
             <Input
-              placeholder="Search accessories..."
+              placeholder={t('filters.searchPlaceholder', 'Search accessories...')}
               prefix={<SearchOutlined />}
               value={searchText}
               onChange={handleSearch}
@@ -326,7 +333,7 @@ const AccessoriesPage: React.FC = () => {
           </Col>
           <Col span={4}>
             <Select
-              placeholder="Select Type"
+              placeholder={t('filters.selectType', 'Select Type')}
               style={{ width: '100%' }}
               value={selectedType}
               onChange={handleTypeChange}
@@ -339,7 +346,7 @@ const AccessoriesPage: React.FC = () => {
           </Col>
           <Col span={4}>
             <Select
-              placeholder="Select Model"
+              placeholder={t('filters.selectModel', 'Select Model')}
               style={{ width: '100%' }}
               value={selectedModel}
               onChange={handleModelChange}

@@ -21,7 +21,6 @@ import {
   OrderStatus, 
   ORDER_STATUS_LABELS 
 } from '../../types/orderTypes';
-import { CartFieldUnifier } from '../../utils/CartFieldUnifier';
 
 const OrderListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -280,47 +279,8 @@ const OrderListPage: React.FC = () => {
                 items: (apiOrder.items || []).map((item: any) => {
                   console.log('🔍 [OrderList] 处理订单项:', item);
                   
-                  // 🔧 只对耗材类型使用CartFieldUnifier获取统一名称，其他类型保持原有逻辑
-                  const itemType = item.product_type || item.category || item.type;
-                  let itemName: string;
-                  
-                  if (itemType === 'consumable') {
-                    // 只对耗材使用CartFieldUnifier
-                    itemName = CartFieldUnifier.getProductName(item, 'zh');
-                  } else {
-                    // 其他产品类型保持原有逻辑
-                    itemName = item.name || (item as any).product_name || item.part_number || item.code || String(item.id);
-                  }
-                  
-                  return {
-                    id: item.id,
-                    code: item.part_number || item.code,
-                    sku: item.part_number || item.code,
-                    name: itemName, // 🔧 使用条件性的名称获取方法
-                    quantity: item.quantity,
-                    price: item.price || item.unit_price || 0,
-                    specs: item.specs || item.spec,
-                    spec: item.spec || item.specs,
-                    unit: '个',
-                    type: 'product',
-                    model: item.model || item.part_number,
-                    brand: item.brand || 'Lockedair',
-                    // 🔧 增强：传递更多原始字段供CartFieldUnifier使用
-                    properties: {
-                      ...(typeof item.specs === 'object' ? item.specs : {}),
-                      name: item.name,
-                      name_zh: (item as any).name_zh,
-                      name_en: (item as any).name_en,
-                      product_name: (item as any).product_name,
-                      code: item.code,
-                      part_number: item.part_number,
-                      model: item.model,
-                      spec: item.spec,
-                      specs: item.specs,
-                      product_type: itemType // 传递产品类型
-                    },
-                    amount: (item.price || item.unit_price || 0) * item.quantity
-                  };
+                  // 🔧 使用统一转换器处理订单项数据
+                  return ProductDataConverter.fromOrderItem(item);
                 })
               };
             });
@@ -346,47 +306,8 @@ const OrderListPage: React.FC = () => {
                 items: (apiOrder.items || []).map((item: any) => {
                   console.log('🔍 [OrderList] 处理数组订单项:', item);
                   
-                  // 🔧 只对耗材类型使用CartFieldUnifier获取统一名称，其他类型保持原有逻辑
-                  const itemType = item.product_type || item.category || item.type;
-                  let itemName: string;
-                  
-                  if (itemType === 'consumable') {
-                    // 只对耗材使用CartFieldUnifier
-                    itemName = CartFieldUnifier.getProductName(item, 'zh');
-                  } else {
-                    // 其他产品类型保持原有逻辑
-                    itemName = item.name || (item as any).product_name || item.part_number || item.code || String(item.id);
-                  }
-                  
-                  return {
-                    id: item.id,
-                    code: item.part_number || item.code,
-                    sku: item.part_number || item.code,
-                    name: itemName, // 🔧 使用条件性的名称获取方法
-                    quantity: item.quantity,
-                    price: item.price || item.unit_price || 0,
-                    specs: item.specs || item.spec,
-                    spec: item.spec || item.specs,
-                    unit: '个',
-                    type: 'product',
-                    model: item.model || item.part_number,
-                    brand: item.brand || 'Lockedair',
-                    // 🔧 增强：传递更多原始字段供CartFieldUnifier使用
-                    properties: {
-                      ...(typeof item.specs === 'object' ? item.specs : {}),
-                      name: item.name,
-                      name_zh: (item as any).name_zh,
-                      name_en: (item as any).name_en,
-                      product_name: (item as any).product_name,
-                      code: item.code,
-                      part_number: item.part_number,
-                      model: item.model,
-                      spec: item.spec,
-                      specs: item.specs,
-                      product_type: itemType // 传递产品类型
-                    },
-                    amount: (item.price || item.unit_price || 0) * item.quantity
-                  };
+                  // 🔧 使用统一转换器处理订单项数据
+                  return ProductDataConverter.fromOrderItem(item);
                 })
               };
             });
@@ -631,49 +552,24 @@ const OrderListPage: React.FC = () => {
       // 🔧 使用统一的订单号管理器构建PO页面需要的数据格式
       const poData = OrderNumberManager.createUnifiedOrderData({
         orderObject: order,
-        orderItems: order.items.map(item => {
-          // 🔧 只对耗材类型使用CartFieldUnifier获取统一名称，其他类型保持原有逻辑
-          const itemType = item.product_type || item.category || item.type;
-          let itemName: string;
-          
-          if (itemType === 'consumable') {
-            // 只对耗材使用CartFieldUnifier
-            itemName = CartFieldUnifier.getProductName(item, 'zh');
-          } else {
-            // 其他产品类型保持原有逻辑
-            itemName = item.name || (item as any).product_name || item.part_number || item.code || String(item.id);
-          }
-          
-          return {
-            id: item.id,
-            code: item.part_number || item.code,
-            sku: item.part_number || item.code,
-            name: itemName, // 🔧 使用条件性的名称获取方法
-            quantity: item.quantity,
-            price: item.price || item.unit_price || 0,
-            specs: item.specs || item.spec,
-            spec: item.spec || item.specs,
-            unit: '个',
-            type: 'product',
-            model: item.model || item.part_number,
-            brand: item.brand || 'Lockedair',
-            // 🔧 增强：传递更多原始字段供CartFieldUnifier使用
-            properties: {
-              ...(typeof item.specs === 'object' ? item.specs : {}),
-              name: item.name,
-              name_zh: (item as any).name_zh,
-              name_en: (item as any).name_en,
-              product_name: (item as any).product_name,
-              code: item.code,
-              part_number: item.part_number,
-              model: item.model,
-              spec: item.spec,
-              specs: item.specs,
-              product_type: itemType // 传递产品类型
-            },
-            amount: (item.price || item.unit_price || 0) * item.quantity
-          };
-        }),
+        orderItems: order.items.map(item => ({
+          id: item.id,
+          code: item.part_number || item.code,
+          sku: item.part_number || item.code,
+          name: item.name || (item as any).product_name || item.part_number,
+          name_zh: (item as any).name_zh,
+          name_en: (item as any).name_en,
+          quantity: item.quantity,
+          price: item.price || item.unit_price || 0,
+          specs: item.specs || item.spec,
+          spec: item.spec || item.specs,
+          unit: '个',
+          type: 'product',
+          model: item.model || item.part_number,
+          brand: item.brand || 'Lockedair',
+          properties: typeof item.specs === 'object' ? item.specs : {},
+          amount: (item.price || item.unit_price || 0) * item.quantity
+        })),
         customerInfo: extractedCustomerInfo,
         shippingInfo: extractedShippingInfo,
         summary: {

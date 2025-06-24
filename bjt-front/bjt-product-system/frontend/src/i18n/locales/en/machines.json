@@ -10,7 +10,7 @@
   "imperial": "Imperial",
   "close": "Close",
   "noAccessories": "No accessories available",
-  "allPartNumbers": "All Part Numbers",
+  "allPartNumbers": "All Part No.",
   "pageTitle": "Machine Selection",
   "addToCart": "Add to Cart",
   "noPermissionAdd": "No permission to add",
@@ -18,7 +18,7 @@
     "title": "Filters",
     "voltage": "Voltage",
     "region": "Region",
-    "partNumber": "Part Number",
+    "partNumber": "Part No.",
     "type": "Type",
     "brand": "Brand",
     "all": "All",
@@ -40,8 +40,8 @@
     "specs": "Spec.",
     "palletQty": "Packs per Pallet",
     "palletSize": "Pallet Size",
-    "packSize": "Package Size",
-    "packageSize": "Package Size",
+    "packSize": "Packaging Dim.",
+    "packageSize": "Packaging Dim.",
     "netWeight": "Net Weight",
     "grossWeight": "Gross Weight",
     "palletHeight": "Pallet Height",
@@ -55,7 +55,7 @@
   },
   "table": {
     "model": "Model",
-    "partNumber": "Part Number",
+    "partNumber": "Part No.",
     "voltage": "Voltage",
     "price": "Price",
     "inventory": "Inventory",
@@ -118,7 +118,7 @@
   },
   "packaging": {
     "title": "Packaging Information",
-    "size": "Package Size",
+    "size": "Packaging Dim.",
     "weight": "Gross Weight"
   },
   "pallet": {
@@ -137,10 +137,10 @@
   "priceInquiry": "Price inquiry required",
   "specDetails": "Specifications",
   "moreInfo": "More Info",
-  "packSize": "Package Size",
-  "boxQty": "Pieces per Box",
+  "packSize": "Packaging Dim.",
+  "boxQty": "Qty per Carton",
   "palletSize": "Pallet Size",
-  "palletQty": "Pieces per Pallet",
+  "palletQty": "Packs per Pallet",
   "netWeight": "Net Weight",
   "grossWeight": "Gross Weight",
   "palletHeight": "Pallet Height",
@@ -221,7 +221,7 @@
     "machine": "Host"
   },
   "specs": {
-    "packageSize": "Package Size",
+    "packageSize": "Packaging Dim.",
     "pcsPerBox": "PCS per Box",
     "palletSize": "Pallet Size",
     "pcsPerPallet": "PCS per Pallet",
@@ -239,8 +239,8 @@
     "frequency": "Frequency",
     "brand": "Brand",
     "model": "Model",
-    "partNumber": "Part Number",
-    "compatibility": "Compatible Models"
+    "partNumber": "Part No.",
+    "compatibility": "Applicable Machine"
   },
   "buttons": {
     "moreInfo": "More Info",
@@ -269,7 +269,7 @@
     "model": "Model",
     "voltage": "Voltage",
     "frequency": "Frequency",
-    "packageSize": "Package Size",
+    "packageSize": "Packaging Dim.",
     "pcsPerBox": "Qty per Carton",
     "palletSize": "Pallet Size",
     "pcsPerPallet": "Packs per Pallet",
@@ -282,9 +282,9 @@
     "cm": "cm",
     "inch": "inch",
     "kg": "kg",
-    "lbs": "lbs",
-    "V": "V", 
+    "lbs": "lb",
+    "V": "V",
     "Hz": "Hz"
   },
   "unknownMachine": "Unknown Machine"
-} 
+}

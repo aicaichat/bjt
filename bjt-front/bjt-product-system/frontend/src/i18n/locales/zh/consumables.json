@@ -12,7 +12,7 @@
     "all": "全部",
     "byModel": "按型号筛选",
     "byMaterial": "按材质筛选",
-    "byShape": "按形状筛选",
+    "byShape": "按袋型筛选",
     "byThickness": "按厚度筛选",
     "byWeight": "按重量筛选",
     "byWidth": "按宽度筛选",
@@ -20,7 +20,7 @@
     "reset": "重置筛选",
     "model": "型号",
     "material": "材质",
-    "shape": "形状",
+    "shape": "袋型",
     "thickness": "厚度",
     "weight": "克重",
     "width": "宽度",
@@ -98,7 +98,7 @@
   },
   "specs": {
     "material": "材质",
-    "shape": "形状",
+    "shape": "袋型",
     "thickness": "厚度",
     "weight": "克重",
     "width": "宽度",
@@ -242,9 +242,9 @@
     "deviceModelTooltip": "选择您的设备型号以显示兼容的耗材",
     "selectDeviceModelPlaceholder": "请选择设备型号",
     "allModels": "所有型号",
-    "selectProductShape": "选择产品形状",
-    "productShapeTooltip": "不同形状的耗材适用于不同的包装需求",
-    "allShapes": "全部形状",
+    "selectProductShape": "选择袋型",
+    "productShapeTooltip": "不同袋型的耗材适用于不同的包装需求", 
+    "allShapes": "全部袋型",
     "materialAndSpecs": "材质与规格筛选",
     "materialType": "材质类型",
     "allMaterials": "全部材质",
@@ -288,15 +288,15 @@
       "metric": {
         "app_model": "适用机型",
         "id": "产品ID",
-        "shape": "形状",
-        "spec": "规格",
+        "shape": "袋型",
+        "spec": "规格描述",
         "pcs_per_box": "单箱数量"
       },
       "imperial": {
         "app_model": "适用机型",
         "id": "产品ID",
-        "shape": "形状", 
-        "spec": "规格",
+        "shape": "袋型", 
+        "spec": "规格描述",
         "pcs_per_box": "单箱数量"
       }
     }
@@ -311,26 +311,29 @@
     "basicSpecs": "基本规格",
     "packagingMethod": "包装方式",
     "cartonPack": "纸箱装",
+    "rollPack": "卷装",
+    "piecePack": "片装",
+    "boxPack": "盒装",
     "pcsPerBox": "单箱数量",
     "configA": "配置A",
     "configB": "配置B",
     "configC": "配置C",
     "palletSize": "托盘尺寸",
     "packageSize": {
-      "metric": "包装尺寸 cm",
-      "imperial": "包装尺寸 inch"
+      "metric": "包装尺寸(cm)",
+      "imperial": "包装尺寸(inch)"
     },
     "unitWeight": {
-      "metric": "单件净重 kg",
-      "imperial": "单位重量(lb)"
+      "metric": "单件净重(kg)",
+      "imperial": "单件净重(lb)"
     },
     "totalLength": {
-      "metric": "总长 m",
-      "imperial": "总长 ft"
+      "metric": "总长(m)",
+      "imperial": "总长(ft)"
     },
     "tubeInnerDiameter": {
-      "metric": "纸筒内径 cm",
-      "imperial": "纸筒内径 inch"
+      "metric": "纸筒内径(cm)",
+      "imperial": "纸筒内径(inch)"
     },
     "dimensions": {
       "metric": "尺寸(cm)",
@@ -344,16 +347,16 @@
     "palletInfo": "打托属性 Pallet Info",
     "palletRolls": "一托卷数",
     "grossWeight": {
-      "metric": "毛重 kg",
+      "metric": "毛重(kg)",
       "imperial": "毛重(lb)"
     },
     "height": {
-      "metric": "高度 cm",
-      "imperial": "高度 inch"
+      "metric": "高度(cm)",
+      "imperial": "高度(inch)"
     },
     "coreDiameter": {
-      "metric": "纸筒内径 cm",
-      "imperial": "纸筒内径 inch"
+      "metric": "纸筒内径(cm)",
+      "imperial": "纸筒内径(inch)"
     },
     "hoverInfo": "悬停查看更多规格信息",
     "thickness": {
@@ -361,16 +364,16 @@
       "imperial": "厚度(mil)"
     },
     "width": {
-      "metric": "膜宽 cm",
-      "imperial": "膜宽 inch"
+      "metric": "宽度(cm)",
+      "imperial": "宽度(inch)"
     },
     "length": {
-      "metric": "袋长 cm",
-      "imperial": "袋长 inch"
+      "metric": "总长(cm)",
+      "imperial": "总长(inch)"
     },
     "rollLength": {
-      "metric": "总长 m",
-      "imperial": "总长 ft"
+      "metric": "总长(m)",
+      "imperial": "总长(ft)"
     },
     "units": {
       "rolls": "卷",

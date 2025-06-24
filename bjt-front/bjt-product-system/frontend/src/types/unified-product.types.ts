@@ -88,6 +88,16 @@ export class ProductDataConverter {
       productName = nameZh || nameEn || JSON.stringify(productName);
     }
     
+    // 自动补全 name_zh / name_en 字段（避免语言错位）
+    const isChineseText = (txt: string) => /[\u4e00-\u9fff]/.test(txt);
+
+    if (!nameZh && productName && typeof productName === 'string' && isChineseText(productName)) {
+      nameZh = productName;
+    }
+    if (!nameEn && productName && typeof productName === 'string' && !isChineseText(productName)) {
+      nameEn = productName;
+    }
+    
     // 🔧 修复：确保规格信息完整
     const specInfo = orderItem.spec || orderItem.specs || '';
     const specImperial = orderItem.spec_imperial || '';

@@ -82,20 +82,20 @@
       "product": "Product"
     },
     "properties": {
-      "partNumber": "Part Number",
-      "part_number": "Part Number",
+      "partNumber": "Part No.",
+      "part_number": "Part No.",
       "model": "Model",
       "voltage": "Voltage",
       "frequency": "Frequency",
       "spec": "Specification",
       "specImperial": "Imperial Specification",
       "spec_imperial": "Imperial Specification",
-      "pcsPerBox": "Pieces per Box",
-      "pcs_per_box": "Pieces per Box",
-      "pcsPerPallet": "Pieces per Pallet",
-      "pcs_per_pallet": "Pieces per Pallet",
-      "packageSize": "Package Size",
-      "package_size_cm": "Package Size (cm)",
+      "pcsPerBox": "Qty per Carton",
+      "pcs_per_box": "Qty per Carton",
+      "pcsPerPallet": "Packs per Pallet",
+      "pcs_per_pallet": "Packs per Pallet",
+      "packageSize": "Packaging Dim.",
+      "package_size_cm": "Packaging Dim. (cm)",
       "palletSize": "Pallet Size",
       "pallet_size_cm": "Pallet Size (cm)",
       "netWeight": "Net Weight",
@@ -110,4 +110,4 @@
     },
     "quantity": "Quantity"
   }
-} 
+}

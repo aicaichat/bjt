@@ -15,6 +15,7 @@ import {
   Tabs,
   Spin,
   AutoComplete,
+  Tag,
 } from 'antd';
 import { SaveOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import AdminPageHeader from '../../components/common/AdminPageHeader';
@@ -415,6 +416,8 @@ const ConsumableEditPage: React.FC = () => {
         tube_inner_diameter_inch: Number(consumableData.tube_inner_diameter_inch) || 0,
         status: consumableData.status,
         unit: consumableData.unit || 'roll',
+        name_zh: consumableData.name_zh || '',
+        name_en: consumableData.name_en || '',
       });
       
       // 设置产品线ID用于智能提示
@@ -491,6 +494,8 @@ const ConsumableEditPage: React.FC = () => {
         model: values.model || 'test-model',
         status: values.status,
         unit: values.unit,
+        name_zh: values.name_zh || '',
+        name_en: values.name_en || '',
       };
 
       console.log('[ConsumableEditPage] 最小化测试数据:', minimalFormData);
@@ -573,6 +578,8 @@ const ConsumableEditPage: React.FC = () => {
         tube_inner_diameter_inch: processNumericField(values.tube_inner_diameter_inch, 'tube_inner_diameter_inch'),
         status: values.status,
         unit: values.unit,
+        name_zh: values.name_zh || '',
+        name_en: values.name_en || '',
       };
 
       console.log('[ConsumableEditPage] 准备发送的formData:', formData);
@@ -791,6 +798,26 @@ const ConsumableEditPage: React.FC = () => {
                       </Col>
                     </Row>
 
+                    {/* 新增：中文/英文名称 */}
+                    <Row gutter={16}>
+                      <Col span={12}>
+                        <Form.Item
+                          name="name_zh"
+                          label="中文名称 (Name Zh)"
+                        >
+                          <Input placeholder="请输入中文名称" />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item
+                          name="name_en"
+                          label="英文名称 (Name En)"
+                        >
+                          <Input placeholder="请输入英文名称" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+
                     <Row gutter={16}>
                       <Col span={8}>
                         <Form.Item
@@ -799,7 +826,6 @@ const ConsumableEditPage: React.FC = () => {
                         >
                           <Select 
                             placeholder="请选择袋型" 
-                            allowClear
                             loading={bagTypeLoading}
                           >
                             {bagTypeOptions.map((option) => (
@@ -819,7 +845,6 @@ const ConsumableEditPage: React.FC = () => {
                           <Select
                             placeholder="请选择材质"
                             loading={materialLoading}
-                            allowClear
                           >
                             {materialOptions.map((option) => (
                               <Option key={option.code} value={option.code}>
@@ -836,7 +861,6 @@ const ConsumableEditPage: React.FC = () => {
                         >
                           <Select
                             placeholder="请选择品牌"
-                            allowClear
                           >
                             <Option value="LockedAir">LockedAir</Option>
                             <Option value="LockedPaper">LockedPaper</Option>
@@ -873,13 +897,20 @@ const ConsumableEditPage: React.FC = () => {
                           <Select
                             mode="multiple"
                             placeholder="请选择适配机型"
-                            allowClear
                             loading={compatibleModelLoading}
                             showSearch
                             filterOption={(input, option) =>
                               (option?.children as string)?.toLowerCase().includes(input.toLowerCase())
                             }
                             optionLabelProp="children"
+                            tagRender={(tagProps) => {
+                              const { label } = tagProps;
+                              return (
+                                <Tag style={{ marginRight: 3 }} closable={false} color="blue">
+                                  {label}
+                                </Tag>
+                              );
+                            }}
                           >
                             {compatibleModelOptions.map((option) => (
                               <Option key={option.value} value={option.value}>

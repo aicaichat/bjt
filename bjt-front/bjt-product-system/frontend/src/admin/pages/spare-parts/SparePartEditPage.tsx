@@ -820,6 +820,14 @@ const SparePartEditPage: React.FC = () => {
                             mode="multiple" 
                             placeholder="选择适配机型"
                             style={{ width: '100%' }}
+                            tagRender={(tagProps) => {
+                              const { label } = tagProps;
+                              return (
+                                <Tag style={{ marginRight: 3 }} closable={false} color="blue">
+                                  {label}
+                                </Tag>
+                              );
+                            }}
                           >
                             {appModelOptions.map((option) => (
                               <Option key={option.value} value={option.value}>

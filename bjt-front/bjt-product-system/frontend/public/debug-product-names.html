@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>产品名称调试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .debug-container {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .debug-title {
+            color: #1890ff;
+            font-size: 24px;
+            margin-bottom: 16px;
+            border-bottom: 2px solid #1890ff;
+            padding-bottom: 8px;
+        }
+        .product-info {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            border-left: 4px solid #28a745;
+        }
+        .field-list {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .instruction {
+            background: #fff3cd;
+            padding: 12px;
+            border-radius: 4px;
+            border-left: 4px solid #ffc107;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <h1 class="debug-title">🔍 产品名称调试工具</h1>
+        
+        <div class="instruction">
+            <strong>调试步骤：</strong><br>
+            1. 访问 <a href="http://localhost:5173/po" target="_blank">PO页面</a><br>
+            2. 切换到中文模式<br>
+            3. 打开浏览器开发者工具(F12)，查看Console标签页<br>
+            4. 寻找以下调试日志：<code>🔍 [ProductName Debug] 产品 60A01149 完整数据</code>
+        </div>
+
+        <div class="product-info">
+            <h3>🎯 重点关注的产品</h3>
+            <ul>
+                <li><strong>60A01149</strong> - 当前显示: "LA-E4S(paper) Host-US Version"</li>
+                <li><strong>13A02026</strong> - 当前显示: "LCD Screen"</li>
+            </ul>
+        </div>
+
+        <div class="product-info">
+            <h3>📋 需要查找的中文字段</h3>
+            <p>在控制台日志中查找这些可能包含中文名称的字段：</p>
+            <ul>
+                <li>name_zh</li>
+                <li>product_name_zh</li>
+                <li>title_zh</li>
+                <li>display_name_zh</li>
+                <li>properties.name_zh</li>
+                <li>properties.product_name_zh</li>
+                <li>或其他包含中文的字段</li>
+            </ul>
+        </div>
+
+        <div class="field-list" id="debugOutput">
+            等待调试数据...
+            
+            请按照上述步骤操作，然后将控制台中的调试日志复制到这里进行分析。
+            
+            特别关注：
+            - 🔍 [ProductName Debug] 产品 60A01149 完整数据
+            - 🔍 [ProductName Debug] 产品 13A02026 完整数据
+            
+            这些日志会显示产品的所有字段，帮助我们找到中文名称的存储位置。
+        </div>
+
+        <div class="instruction">
+            <strong>下一步：</strong><br>
+            找到中文名称字段后，我们将更新代码以正确读取这些字段，确保中文模式下显示正确的中文名称。
+        </div>
+    </div>
+
+    <script>
+        console.log('🔍 产品名称调试页面已加载');
+        console.log('📋 请访问PO页面并切换到中文模式查看调试日志');
+    </script>
+</body>
+</html> 

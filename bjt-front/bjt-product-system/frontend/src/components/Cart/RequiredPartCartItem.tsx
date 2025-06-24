@@ -7,6 +7,7 @@ import { SmartFieldLabel } from '../SmartFieldLabel';
 import { SmartFieldRow } from '../SmartFieldRow';
 import { useSmartFieldMapping } from '../../hooks/useSmartFieldMapping';
 import { useSmartFieldLabels } from '../../hooks/useSmartFieldLabels';
+import { getSimpleProductName } from '../../utils/simpleProductName';
 
 interface RequiredPartCartItemProps {
   item: ExtendedCartItem & { is_required: true };
@@ -25,35 +26,10 @@ export const RequiredPartCartItem: React.FC<RequiredPartCartItemProps> = ({
 }) => {
   const { t } = useTranslation(['spareParts', 'cart', 'products']);
   
-  // 修复商品名称获取逻辑，添加更完善的兜底处理
-  const getDisplayName = (): string => {
-    const props = item.properties || {};
-    if (language === 'zh') {
-      return props.name_zh || 
-             item.name_zh || 
-             props.name || 
-             item.name ||
-             props.code ||
-             item.code ||
-             props.part_number ||
-             item.part_number ||
-             item.id ||
-             '商品';
-    } else {
-      return props.name_en || 
-             item.name_en || 
-             props.name || 
-             item.name ||
-             props.code ||
-             item.code ||
-             props.part_number ||
-             item.part_number ||
-             item.id ||
-             'Product';
-    }
-  };
-  
-  const displayName = getDisplayName();
+  const displayName = getSimpleProductName(
+    { ...item, ...(item.properties ?? {}) },
+    language
+  );
   
   // 根据用户区域选择公制或英制
   const isImperial = userRegion === 'na' || userRegion === 'au';

@@ -355,6 +355,10 @@ class BJT_Spare_Part_Controller extends BJT_API_Controller {
         // 添加必选备件信息到响应中
         $formatted['required_parts'] = $required_parts_info;
 
+        // 添加统一名称字段
+        $formatted['name_zh'] = !empty($item_db_object->name_zh) ? $item_db_object->name_zh : (!empty($item_db_object->title_zh) ? $item_db_object->title_zh : (!empty($item_db_object->model) ? $item_db_object->model : $item_db_object->part_number));
+        $formatted['name_en'] = !empty($item_db_object->name_en) ? $item_db_object->name_en : (!empty($item_db_object->title_en) ? $item_db_object->title_en : $item_db_object->part_number);
+
         return $formatted;
     }
 

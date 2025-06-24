@@ -33,6 +33,8 @@ export interface Consumable {
   model: string;
   model_imperial?: string;
   part_number: string;
+  name_zh?: string;
+  name_en?: string;
   spec?: string;
   spec_imperial?: string;
   brand?: string;
@@ -90,6 +92,8 @@ export interface ConsumableFormData {
   model: string;
   model_imperial?: string;
   part_number: string;
+  name_zh?: string;
+  name_en?: string;
   spec?: string;
   spec_imperial?: string;
   brand?: string;
@@ -256,6 +260,8 @@ class AdminConsumableService extends BaseService {
         model: item.model || item.name,
         model_imperial: item.model_imperial,
         part_number: item.part_number || item.code, // 优先使用part_number，回退到code
+        name_zh: item.name_zh,
+        name_en: item.name_en,
         spec: item.spec || undefined, // 直接使用API返回的原始spec值
         spec_imperial: item.spec_imperial || undefined, // 直接使用API返回的原始spec_imperial值
         brand: item.brand,
@@ -428,6 +434,8 @@ class AdminConsumableService extends BaseService {
       model: itemToTransform.model || itemToTransform.name,
       model_imperial: itemToTransform.model_imperial,
       part_number: itemToTransform.part_number || itemToTransform.code, // 优先使用part_number，回退到code
+      name_zh: itemToTransform.name_zh,
+      name_en: itemToTransform.name_en,
       spec: itemToTransform.spec || undefined, // 直接使用API返回的原始spec值
       spec_imperial: itemToTransform.spec_imperial || undefined, // 直接使用API返回的原始spec_imperial值
       brand: itemToTransform.brand,

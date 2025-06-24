@@ -1,0 +1,287 @@
+{
+  "title": "设备列表",
+  "subtitle": "产品设备",
+  "loading": "加载中...",
+  "error": "加载失败",
+  "noData": "暂无数据",
+  "skipToMainContent": "跳转到主要内容",
+  "unitSystem": "单位制",
+  "metric": "公制",
+  "imperial": "英制",
+  "close": "关闭",
+  "noAccessories": "暂无配件",
+  "allPartNumbers": "所有型号",
+  "pageTitle": "设备选型",
+  "addToCart": "加入购物车",
+  "noPermissionAdd": "无权限添加",
+  "filters": {
+    "title": "筛选",
+    "voltage": "电压",
+    "region": "地区",
+    "partNumber": "型号",
+    "type": "类型",
+    "brand": "品牌",
+    "all": "全部",
+    "clear": "清除筛选",
+    "model": "型号",
+    "allModels": "所有型号",
+    "allVoltages": "全部电压"
+  },
+  "tableHeaders": {
+    "index": "序号",
+    "model": "型号",
+    "name": "名称",
+    "price": "价格",
+    "inventory": "库存",
+    "quantity": "数量",
+    "actions": "操作",
+    "selection": "选择",
+    "image": "产品图片",
+    "specs": "规格描述",
+    "palletQty": "一托数量",
+    "palletSize": "托盘尺寸",
+    "packSize": "包装尺寸",
+    "packageSize": "包装尺寸",
+    "netWeight": "单件净重",
+    "grossWeight": "包装毛重",
+    "palletHeight": "打托高度",
+    "palletGrossWeight": "整托毛重",
+    "stock": "库存",
+    "pcsPerBox": "单箱数量",
+    "pcsPerPallet": "一托数量",
+    "frequency": "频率",
+    "voltage": "电压",
+    "priceRange": "价格区间"
+  },
+  "table": {
+    "model": "型号",
+    "partNumber": "料号",
+    "voltage": "电压",
+    "price": "价格",
+    "inventory": "库存",
+    "actions": "操作",
+    "addToCart": "加入购物车",
+    "viewDetails": "查看详情"
+  },
+  "pricing": {
+    "from": "起价",
+    "tier": "阶梯价格",
+    "quantity": "数量",
+    "unitPrice": "单价"
+  },
+  "inventory": {
+    "title": "库存",
+    "inStock": "有库存",
+    "lowStock": "库存偏低",
+    "outOfStock": "缺货",
+    "available": "可用",
+    "status": "库存状态",
+    "total": "总库存",
+    "abundant": "库存充足",
+    "adequate": "库存充裕"
+  },
+  "actions": {
+    "addToCart": "加入购物车",
+    "viewDetails": "查看详情",
+    "selectAccessory": "选择配件",
+    "configure": "配置",
+    "selectMachine": "选择设备",
+    "close": "关闭"
+  },
+  "messages": {
+    "addedToCart": "已添加到购物车",
+    "addToCartFailed": "加入购物车失败",
+    "machineSelected": "已选择主机",
+    "machineSelectedDesc": "已选择主机: {{name}}，正在加载配件选项..."
+  },
+  "stock": {
+    "outOfStock": "缺货",
+    "lowStock": "库存偏低",
+    "mediumStock": "库存适中",
+    "highStock": "有库存"
+  },
+  "notification": {
+    "added": "已加入购物车",
+    "quantity": "数量"
+  },
+  "accessory": {
+    "title": "配件",
+    "selectFor": "为选中设备选择配件",
+    "level": "级别",
+    "path": "选择路径",
+    "details": "配件详情",
+    "description": "描述",
+    "specifications": "规格",
+    "loading": "加载配件中...",
+    "noItems": "暂无配件",
+    "selectMachine": "请先选择机器"
+  },
+  "accessories": {
+    "title": "配件选择",
+    "level1": "一级配件",
+    "level2": "二级配件",
+    "level3": "三级配件",
+    "level4": "四级配件",
+    "level5": "五级配件",
+    "compatible": "兼容配件",
+    "subCompatible": "子级兼容配件",
+    "level1Loaded": "一级配件已加载",
+    "level1LoadedDesc": "已为主机 {{machineName}} 加载了 {{count}} 个一级配件选项",
+    "nextLevelLoaded": "下一级配件已加载",
+    "nextLevelLoadedDesc": "已为您加载了 {{count}} 个{{level}}级配件选项",
+    "noNextLevel": "配件选择完成",
+    "noNextLevelDesc": "{{name}} 没有更多子级配件，您已完成所有必要的配件选择。",
+    "allLevelsComplete": "所有配件选择完成",
+    "allLevelsCompleteDesc": "您已完成全部5级配件的选择，可以添加到购物车了。"
+  },
+  "packaging": {
+    "title": "包装信息",
+    "size": "包装尺寸",
+    "weight": "毛重"
+  },
+  "pallet": {
+    "title": "卡板信息",
+    "size": "卡板尺寸",
+    "height": "卡板高度",
+    "quantity": "每卡板数量"
+  },
+  "unit": {
+    "metric": "公制",
+    "imperial": "英制"
+  },
+  "noSpecPdf": "暂无规格说明文档",
+  "noAccessorySpecPdf": "暂无该配件的规格说明文档",
+  "noSpecDetailsPdf": "暂无规格详情PDF文件",
+  "priceInquiry": "需要询价",
+  "specDetails": "规格说明",
+  "moreInfo": "更多信息",
+  "packSize": "包装尺寸",
+  "boxQty": "单箱数量",
+  "palletSize": "卡板尺寸",
+  "palletQty": "每卡板数量",
+  "netWeight": "净重",
+  "grossWeight": "毛重",
+  "palletHeight": "卡板高度",
+  "palletGrossWeight": "卡板总毛重",
+  "loadingAccessories": "加载配件中...",
+  "loadingRequiredParts": "加载必选配件信息中...",
+  "selectAccessory": "选择配件",
+  "accessoryDetails": "配件详情",
+  "priceInfo": "价格信息",
+  "basePrice": "基础价格",
+  "tier1": "5-9件",
+  "tier2": "10+件",
+  "types": {
+    "all": "全部类型",
+    "airCushion": "气垫机",
+    "packaging": "包装机",
+    "sealing": "封口机",
+    "wrapping": "包装机"
+  },
+  "status": {
+    "all": "全部状态",
+    "available": "可用",
+    "inUse": "使用中",
+    "maintenance": "维护中",
+    "retired": "已退役"
+  },
+  "categories": {
+    "all": "全部分类",
+    "standard": "标准",
+    "premium": "高级",
+    "professional": "专业",
+    "industrial": "工业",
+    "machine": "设备"
+  },
+  "price": {
+    "all": "全部价格",
+    "under50k": "5万以下",
+    "50k-100k": "5-10万",
+    "100k-200k": "10-20万",
+    "above200k": "20万以上"
+  },
+  "voltages": {
+    "220V": "220伏"
+  },
+  "regions": {
+    "china": "中国",
+    "usa": "美国",
+    "europe": "欧洲",
+    "asia": "亚洲"
+  },
+  "stockStatus": {
+    "sufficient": "库存充足",
+    "low": "库存偏低",
+    "outOfStock": "无库存"
+  },
+  "path": {
+    "machine": "主机"
+  },
+  "specs": {
+    "packageSize": "包装尺寸",
+    "pcsPerBox": "单箱数量",
+    "palletSize": "托盘尺寸",
+    "pcsPerPallet": "一托数量",
+    "netWeight": "净重",
+    "grossWeight": "毛重",
+    "palletHeight": "托盘高度",
+    "palletGrossWeight": "托盘总毛重",
+    "specifications": "规格参数",
+    "dimensions": "尺寸",
+    "weight": "重量",
+    "capacity": "容量",
+    "material": "材质",
+    "power": "功率",
+    "voltage": "电压",
+    "frequency": "频率",
+    "brand": "品牌",
+    "model": "型号",
+    "partNumber": "料号",
+    "compatibility": "兼容型号"
+  },
+  "buttons": {
+    "moreInfo": "更多信息",
+    "viewDetails": "查看详情",
+    "addToCart": "加入购物车",
+    "configure": "配置",
+    "select": "选择",
+    "cancel": "取消",
+    "confirm": "确认",
+    "close": "关闭",
+    "reset": "重置",
+    "apply": "应用"
+  },
+  "tooltip": {
+    "accessoryDetailInfo": "配件详细信息",
+    "hoverInfo": "悬停查看详细规格信息",
+    "specifications": "查看规格说明",
+    "inventory": "库存信息",
+    "pricing": "价格信息",
+    "compatibility": "兼容性信息"
+  },
+  "errors": {
+    "accessoryLoadFailed": "加载配件失败"
+  },
+  "fields": {
+    "model": "型号",
+    "voltage": "电压",
+    "frequency": "频率",
+    "packageSize": "包装尺寸",
+    "pcsPerBox": "单箱数量",
+    "palletSize": "托盘尺寸",
+    "pcsPerPallet": "一托数量",
+    "netWeight": "单件净重",
+    "grossWeight": "包装毛重",
+    "palletHeight": "打托高度",
+    "palletGrossWeight": "整托毛重"
+  },
+  "units": {
+    "cm": "cm",
+    "inch": "inch",
+    "kg": "kg",
+    "lbs": "lbs", 
+    "V": "V",
+    "Hz": "Hz"
+  },
+  "unknownMachine": "未知机器"
+} 

@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { ASSETS } from '../../config/appConfig';
 import './CartSidebar.css';
+import { getSimpleProductName } from '../../utils/simpleProductName';
 
 interface EnhancedCartSidebarProps {
   isOpen: boolean;
@@ -350,31 +351,10 @@ const EnhancedCartSidebar: React.FC<EnhancedCartSidebarProps> = ({ isOpen, onClo
 
   // 获取商品名称
   const getDisplayName = (item: any): string => {
-    const props = item.properties || {};
-    
-    if (i18n.language === 'zh') {
-      return props.name_zh || 
-             item.name_zh || 
-             props.name || 
-             item.name ||
-             props.code ||
-             item.code ||
-             props.part_number ||
-             item.part_number ||
-             String(item.id) ||
-             '商品';
-    } else {
-      return props.name_en || 
-             item.name_en || 
-             props.name || 
-             item.name ||
-             props.code ||
-             item.code ||
-             props.part_number ||
-             item.part_number ||
-             String(item.id) ||
-             'Product';
-    }
+    return getSimpleProductName(
+      { ...item, ...(item.properties ?? {}) },
+      i18n.language.startsWith('zh') ? 'zh' : 'en'
+    );
   };
 
   return (

@@ -324,8 +324,8 @@ class ProductInfoService {
     return {
       id: String(item.id || ''),
       part_number: item.part_number || '',
-      name_zh: item.name_zh || item.name || '',
-      name_en: item.name_en || item.name || '',
+      name_zh: item.name_zh || item.title_zh || item.name || item.model || item.code || '',
+      name_en: item.name_en || item.title_en || item.name || item.model || item.code || '',
       image_url: this.normalizeImageUrl(item.image_url),
       spec: item.spec || '',
       spec_imperial: item.spec_imperial || '',

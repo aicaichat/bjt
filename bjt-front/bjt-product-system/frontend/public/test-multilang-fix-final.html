@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多语言修复最终测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .test-title {
+            color: #1890ff;
+            font-size: 24px;
+            margin-bottom: 16px;
+            border-bottom: 2px solid #1890ff;
+            padding-bottom: 8px;
+        }
+        .test-section {
+            margin-bottom: 24px;
+        }
+        .test-step {
+            background: #f8f9fa;
+            padding: 16px;
+            border-left: 4px solid #28a745;
+            margin-bottom: 12px;
+        }
+        .expected-result {
+            background: #e8f5e8;
+            padding: 12px;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+        .problem-case {
+            background: #fff3cd;
+            padding: 12px;
+            border-radius: 4px;
+            margin-top: 8px;
+            border-left: 4px solid #ffc107;
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .code {
+            background: #f8f9fa;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+        }
+        .log-section {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 16px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 class="test-title">🎯 多语言修复最终测试</h1>
+        
+        <div class="test-section">
+            <h2>📋 修复内容总结</h2>
+            <div class="test-step">
+                <strong>1. 智能语言检测机制</strong>
+                <div class="expected-result">
+                    ✅ 添加了中文文本检测函数，能够识别文本中的中文字符占比<br>
+                    ✅ 中文模式下优先显示中文文本，英文模式下优先显示英文文本
+                </div>
+            </div>
+            
+            <div class="test-step">
+                <strong>2. 统一产品名称获取工具</strong>
+                <div class="expected-result">
+                    ✅ 创建了 <span class="code">getSimpleProductName</span> 函数<br>
+                    ✅ Cart、Order、PO页面都使用相同的逻辑<br>
+                    ✅ 避免了复杂的回退机制和强制映射
+                </div>
+            </div>
+            
+            <div class="test-step">
+                <strong>3. 处理数据库字段缺失问题</strong>
+                <div class="expected-result">
+                    ✅ 当 name_zh/name_en 字段缺失时，通过文本检测选择合适的显示内容<br>
+                    ✅ 英文模式下如果只有中文，使用 model 或 code 作为替代
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 测试步骤</h2>
+            
+            <div class="test-step">
+                <strong>步骤1：访问PO页面</strong>
+                <div class="expected-result">
+                    访问：<a href="http://localhost:5173/po" target="_blank">http://localhost:5173/po</a>
+                </div>
+            </div>
+            
+            <div class="test-step">
+                <strong>步骤2：测试英文模式</strong>
+                <div class="expected-result">
+                    1. 点击右上角语言切换按钮，切换到英文<br>
+                    2. 观察产品名称列的显示<br>
+                    3. 检查控制台日志中的 <span class="code">🔧 [PO Page] 最终名称结果</span>
+                </div>
+                <div class="problem-case">
+                    <strong>预期修复效果：</strong><br>
+                    • "ET1003 气垫输送系统" → 应显示 "ET1003" (model)<br>
+                    • "ET1007 网兜系统" → 应显示 "ET1007" (model)<br>
+                    • "他同" → 应显示 "他同" (无英文替代时保持原样)<br>
+                    • "LCD Screen" → 应显示 "LCD Screen" (已是英文)
+                </div>
+            </div>
+            
+            <div class="test-step">
+                <strong>步骤3：测试中文模式</strong>
+                <div class="expected-result">
+                    1. 切换回中文模式<br>
+                    2. 观察产品名称列的显示<br>
+                    3. 检查是否正确显示中文名称
+                </div>
+                <div class="problem-case">
+                    <strong>预期修复效果：</strong><br>
+                    • "ET1003 气垫输送系统" → 应显示 "ET1003 气垫输送系统"<br>
+                    • "ET1007 网兜系统" → 应显示 "ET1007 网兜系统"<br>
+                    • "LCD Screen" → 应显示 "LCD Screen" (无中文时保持原样)
+                </div>
+            </div>
+            
+            <div class="test-step">
+                <strong>步骤4：测试Cart和Order页面</strong>
+                <div class="expected-result">
+                    1. 访问 <a href="http://localhost:5173/cart" target="_blank">Cart页面</a><br>
+                    2. 访问 <a href="http://localhost:5173/orderlist" target="_blank">Order页面</a><br>
+                    3. 测试相同的语言切换功能
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 关键日志检查</h2>
+            <div class="test-step">
+                <strong>查看控制台日志</strong>
+                <div class="expected-result">
+                    打开浏览器开发者工具(F12)，查看以下关键日志：
+                </div>
+                <div class="log-section">
+🔧 [PO Page] getProductName调用: {
+  currentLanguage: 'en',
+  productCode: '60A10002',
+  name: 'ET1003 气垫输送系统',
+  name_zh: undefined,
+  name_en: undefined
+}
+🔧 [PO Page] 最终名称结果: ET1003
+
+🔧 [PO Page] getProductName调用: {
+  currentLanguage: 'zh', 
+  productCode: '60A10002',
+  name: 'ET1003 气垫输送系统'
+}
+🔧 [PO Page] 最终名称结果: ET1003 气垫输送系统
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>✅ 成功标准</h2>
+            <ul>
+                <li><span class="success">✓</span> 英文模式下不再显示中文产品名称</li>
+                <li><span class="success">✓</span> 中文模式下正确显示中文产品名称</li>
+                <li><span class="success">✓</span> 语言切换实时生效，无需刷新页面</li>
+                <li><span class="success">✓</span> Cart、Order、PO页面行为一致</li>
+                <li><span class="success">✓</span> 控制台日志显示正确的语言检测和选择过程</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>🛠️ 技术实现说明</h2>
+            <div class="test-step">
+                <strong>智能语言检测算法</strong>
+                <div class="expected-result">
+                    <div class="code">
+function isChineseText(text: string): boolean {<br>
+&nbsp;&nbsp;const chineseMatches = text.match(/[\u4e00-\u9fff]/g);<br>
+&nbsp;&nbsp;const chineseRatio = chineseMatches ? chineseMatches.length / totalChars : 0;<br>
+&nbsp;&nbsp;return chineseRatio > 0.3; // 中文字符占比超过30%<br>
+}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-step">
+                <strong>统一处理逻辑</strong>
+                <div class="expected-result">
+                    1. 优先使用明确的语言字段 (name_zh/name_en)<br>
+                    2. 通过文本检测选择合适的候选项<br>
+                    3. 英文模式下使用 model/code 作为中文的替代<br>
+                    4. 避免强制的英中文映射转换
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载完成后的提示
+        window.addEventListener('load', function() {
+            console.log('🎯 多语言修复测试页面已加载');
+            console.log('📋 请按照上述步骤进行测试');
+            console.log('🔍 重点关注控制台中的产品名称处理日志');
+        });
+    </script>
+</body>
+</html> 

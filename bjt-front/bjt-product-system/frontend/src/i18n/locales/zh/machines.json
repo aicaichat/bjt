@@ -55,7 +55,7 @@
   },
   "table": {
     "model": "型号",
-    "partNumber": "零件号",
+    "partNumber": "料号",
     "voltage": "电压",
     "price": "价格",
     "inventory": "库存",
@@ -156,7 +156,7 @@
   "specDetails": "规格说明",
   "moreInfo": "更多信息",
   "packSize": "包装尺寸",
-  "boxQty": "每箱数量",
+  "boxQty": "单箱数量",
   "palletSize": "卡板尺寸",
   "palletQty": "每卡板数量",
   "netWeight": "净重",
@@ -279,9 +279,9 @@
     "cm": "cm",
     "inch": "inch",
     "kg": "kg",
-    "lbs": "lbs", 
+    "lbs": "lb",
     "V": "V",
     "Hz": "Hz"
   },
   "unknownMachine": "未知机器"
-} 
+}

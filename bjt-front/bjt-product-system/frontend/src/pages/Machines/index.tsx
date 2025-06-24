@@ -58,6 +58,9 @@ export interface ConsumableSpecs {
   compatibility?: string | null;
 }
 
+// 统一产品名称工具
+import { getSimpleProductName } from '../../utils/simpleProductName';
+
 const MachinesPage: React.FC = () => {
   const { t, i18n } = useTranslation('machines');
   const navigate = useNavigate();
@@ -203,55 +206,25 @@ const MachinesPage: React.FC = () => {
     productName: ''
   });
 
+  /**
+   * 获取主机名称（多语言）——统一由 getSimpleProductName 处理
+   */
   const getMachineName = (machine: MachinePart): string => {
-    const name = currentLanguage === 'zh' ? machine.name_zh : machine.name_en;
-    if (!name) {
-      const fallbackName = currentLanguage === 'zh' ? machine.name_en : machine.name_zh;
-      return safeTextContent(fallbackName || machine.model || 'N/A');
-    }
-    return safeTextContent(name);
+    return safeTextContent(
+      getSimpleProductName(machine, currentLanguage.startsWith('zh') ? 'zh' : 'en')
+    );
+  };
+
+  /**
+   * 获取配件名称（多语言）——统一由 getSimpleProductName 处理
+   */
+  const getAccessoryName = (accessory: MachineAccessory): string => {
+    return safeTextContent(
+      getSimpleProductName(accessory, currentLanguage.startsWith('zh') ? 'zh' : 'en')
+    );
   };
 
   // ✅ 新增：获取配件名称，支持多语言切换
-  const getAccessoryName = (accessory: MachineAccessory): string => {
-    console.log('🔍 [getAccessoryName] Called with:', {
-      accessoryId: accessory.id,
-      currentLanguage,
-      title_zh: accessory.title_zh,
-      title_en: accessory.title_en,
-      name_zh: accessory.name_zh,
-      name_en: accessory.name_en
-    });
-    
-    // ✅ 修复：根据当前语言选择对应的数据库字段
-    let name: string;
-    
-    if (currentLanguage === 'zh') {
-      // 中文模式：使用中文字段
-      name = accessory.title_zh || accessory.name_zh || '';
-    } else {
-      // 英文模式：使用英文字段
-      name = accessory.title_en || accessory.name_en || '';
-    }
-    
-    // ✅ 修复：移除回退机制，避免语言混乱
-    // 如果当前语言的字段为空，显示提示信息而不是回退到另一种语言
-    if (!name) {
-      const fallbackMessage = currentLanguage === 'zh' ? '名称待翻译' : 'Name translation pending';
-      console.log('🔍 [getAccessoryName] No name found for current language, using fallback message:', fallbackMessage);
-      return safeTextContent(fallbackMessage);
-    }
-    
-    console.log('🔍 [getAccessoryName] Selected name:', {
-      name,
-      language: currentLanguage,
-      usedFallback: false
-    });
-    
-    return safeTextContent(name);
-  };
-
-  // ✅ 调试：专门的配件名称获取函数，包含更多调试信息
   const getAccessoryNameDebug = (accessory: MachineAccessory, context: string = ''): string => {
     console.log(`🔍 [getAccessoryNameDebug][${context}] Called with:`, {
       accessoryId: accessory.id,
@@ -280,12 +253,12 @@ const MachinesPage: React.FC = () => {
     // 如果当前语言的字段为空，显示提示信息而不是回退到另一种语言
     if (!name) {
       const fallbackMessage = currentLanguage === 'zh' ? '名称待翻译' : 'Name translation pending';
-      console.log(`🔍 [getAccessoryNameDebug][${context}] No name found for current language, using fallback message:`, fallbackMessage);
+      console.log('🔍 [getAccessoryNameDebug] No name found for current language, using fallback message:', fallbackMessage);
       return safeTextContent(fallbackMessage);
     }
     
-    console.log(`🔍 [getAccessoryNameDebug][${context}] Selected name:`, {
-      selectedName: name,
+    console.log('🔍 [getAccessoryNameDebug] Selected name:', {
+      name,
       language: currentLanguage,
       usedFallback: false
     });

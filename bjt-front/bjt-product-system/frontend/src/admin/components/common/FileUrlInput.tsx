@@ -52,7 +52,7 @@ const FileUrlInput: React.FC<FileUrlInputProps> = ({
     setInputValue(value);
     
     // 如果有值且来自上传，设置文件列表用于显示
-    if (value && value.startsWith(uploadPath)) {
+    if (value) {
       const fileName = value.split('/').pop() || 'file';
       setFileList([
         {
@@ -322,7 +322,7 @@ const FileUrlInput: React.FC<FileUrlInputProps> = ({
               <span className="text-sm font-medium">{fileList[0].name}</span>
             </Space>
             <Space>
-              {preview && fileType === 'image' && (
+              {preview && (
                 <Button
                   size="small"
                   type="text"

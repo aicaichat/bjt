@@ -43,7 +43,7 @@
   },
   "table": {
     "columns": {
-      "partNumber": "Part No. #",
+      "partNumber": "Part No.",
       "item": "Item",
       "model": "Model",
       "description": "Item description",
@@ -149,7 +149,15 @@
   "messages": {
     "noOrders": "No purchase orders found",
     "loading": "Loading purchase orders...",
-    "error": "Error loading purchase orders",
+    "error": {
+      "create": "Failed to create purchase order",
+      "update": "Failed to update purchase order",
+      "approve": "Failed to approve purchase order",
+      "reject": "Failed to reject purchase order",
+      "receive": "Failed to receive purchase order",
+      "close": "Failed to close purchase order",
+      "delete": "Failed to delete purchase order"
+    },
     "deleteConfirm": "Are you sure you want to delete this purchase order?",
     "cancelConfirm": "Are you sure you want to cancel this purchase order?",
     "success": {
@@ -160,15 +168,6 @@
       "received": "Purchase order received successfully",
       "closed": "Purchase order closed successfully",
       "deleted": "Purchase order deleted successfully"
-    },
-    "error": {
-      "create": "Failed to create purchase order",
-      "update": "Failed to update purchase order",
-      "approve": "Failed to approve purchase order",
-      "reject": "Failed to reject purchase order",
-      "receive": "Failed to receive purchase order",
-      "close": "Failed to close purchase order",
-      "delete": "Failed to delete purchase order"
     }
   },
   "batchActions": {
@@ -181,4 +180,4 @@
   "tips": {
     "excelStyling": "To beautify the table style, select the table area in Excel, click 'Home' - 'Format as Table' to bold headers and color amounts with one click."
   }
-} 
+}

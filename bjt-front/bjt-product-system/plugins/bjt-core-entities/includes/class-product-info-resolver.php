@@ -101,7 +101,10 @@ class BJT_Product_Info_Resolver {
                 $product = $wpdb->get_row($wpdb->prepare(
                     "SELECT COALESCE(model, '') as model, COALESCE(brand, '') as brand, 
                             COALESCE(spec, description_zh, '') as spec, '' as properties, 
-                            description_zh as description, title_zh as name_zh, title_en as name_en, product_line_id as category 
+                            description_zh as description, 
+                            COALESCE(name_zh, title_zh, '') AS name_zh, 
+                            COALESCE(name_en, title_en, '') AS name_en, 
+                            product_line_id as category 
                      FROM {$table_name} WHERE id = %d LIMIT 1",
                     $product_id
                 ));
@@ -214,7 +217,10 @@ class BJT_Product_Info_Resolver {
                 $product = $wpdb->get_row($wpdb->prepare(
                     "SELECT COALESCE(model, '') as model, COALESCE(brand, '') as brand, 
                             COALESCE(spec, description_zh, '') as spec, '' as properties, 
-                            description_zh as description, title_zh as name_zh, title_en as name_en, product_line_id as category 
+                            description_zh as description, 
+                            COALESCE(name_zh, title_zh, '') AS name_zh, 
+                            COALESCE(name_en, title_en, '') AS name_en, 
+                            product_line_id as category 
                      FROM {$table_name} WHERE part_number = %s LIMIT 1",
                     $part_number
                 ));

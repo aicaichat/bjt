@@ -29,6 +29,7 @@ import {
   adminMaterialService,
   adminSpecificationService,
 } from '../../services/admin-dictionary.service';
+import FileUrlInput from '../../components/common/FileUrlInput';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -225,7 +226,11 @@ const DictionaryItemEditPage: React.FC<DictionaryItemEditPageProps> = ({ type, m
                   name="image_url"
                   label="主图URL"
                 >
-                  <Input placeholder="形状主图片URL" />
+                  <FileUrlInput
+                    placeholder="上传或输入主图URL"
+                    fileType="image"
+                    uploadPath="/uploads/shapes/images/"
+                  />
                 </Form.Item>
               </Col>
               <Col span={12}>
@@ -233,7 +238,11 @@ const DictionaryItemEditPage: React.FC<DictionaryItemEditPageProps> = ({ type, m
                   name="image_url2"
                   label="示意图URL"
                 >
-                  <Input placeholder="形状示意图URL" />
+                  <FileUrlInput
+                    placeholder="上传或输入示意图URL"
+                    fileType="image"
+                    uploadPath="/uploads/shapes/images/"
+                  />
                 </Form.Item>
               </Col>
             </Row>

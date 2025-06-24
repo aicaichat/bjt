@@ -58,6 +58,46 @@ separator() {
     echo -e "${BLUE}================================================================================${NC}"
 }
 
+# 在全局统计变量下方新增字段校验函数
+validate_name_fields() {
+    local json_payload="$1"
+    local endpoint="$2"
+
+    # 只对包含 product/host/accessory/consumable/spare-part/machines 等对象的端点进行检查
+    if [[ ! "$endpoint" =~ /(hosts|machines|accessories|consumables|spare-parts|parts) ]]; then
+        return 0  # 非目标端点直接通过
+    fi
+
+    # Strip warnings similar to check_response
+    local clean_json=$(echo "$json_payload" | grep -v "^Warning:" | grep -v "Cannot modify header")
+
+    # 如果是列表：期望 .data.items OR .data[*]
+    if echo "$clean_json" | jq -e '.data.items? // .data? // empty' >/dev/null 2>&1; then
+        # 遍历列表中的每一项
+        local items_json=$(echo "$clean_json" | jq -c '.data.items? // .data')
+        echo "$items_json" | jq -c '.[]' | while read -r item; do
+            local has_name_zh=$(echo "$item" | jq -er 'select(.name_zh? and (.name_zh | tostring | length > 0))' >/dev/null 2>&1 && echo 1 || echo 0)
+            local has_name_en=$(echo "$item" | jq -er 'select(.name_en? and (.name_en | tostring | length > 0))' >/dev/null 2>&1 && echo 1 || echo 0)
+            if [[ "$has_name_zh" -eq 0 && "$has_name_en" -eq 0 ]]; then
+                echo -e "${RED}✗ 字段校验失败: $endpoint - 列表项缺少 name_zh/name_en${NC}" >&2
+                TESTS_FAILED=$((TESTS_FAILED + 1))
+                return 1
+            fi
+        done
+    else
+        # 单对象
+        local has_name_zh=$(echo "$clean_json" | jq -er '.data.name_zh? and (.data.name_zh | tostring | length > 0)' >/dev/null 2>&1 && echo 1 || echo 0)
+        local has_name_en=$(echo "$clean_json" | jq -er '.data.name_en? and (.data.name_en | tostring | length > 0)' >/dev/null 2>&1 && echo 1 || echo 0)
+        if [[ "$has_name_zh" -eq 0 && "$has_name_en" -eq 0 ]]; then
+            echo -e "${RED}✗ 字段校验失败: $endpoint - 响应缺少 name_zh/name_en${NC}" >&2
+            TESTS_FAILED=$((TESTS_FAILED + 1))
+            return 1
+        fi
+    fi
+
+    return 0
+}
+
 # 检查API响应是否成功
 check_response() {
     local response="$1"
@@ -84,6 +124,9 @@ check_response() {
             echo -e "${GREEN}✓ 测试通过: $method $endpoint${NC}" >&2
             TESTS_PASSED=$((TESTS_PASSED + 1))
             
+            # 若为需要校验 name 字段的端点，执行校验
+            validate_name_fields "$clean_response" "$endpoint"
+
             # 如果是成功的登录请求，保存token AND echo it for capture
             if [ "$method" = "POST" ] && [ "$endpoint" = "/auth/login" ]; then
                 local new_token=$(echo "$clean_response" | jq -r '.data.token')

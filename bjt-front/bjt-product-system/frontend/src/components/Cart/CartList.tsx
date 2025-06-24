@@ -5,7 +5,7 @@ import { CartContext } from '../../contexts/CartContext';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { ASSETS } from '../../config/appConfig';
-import { CartFieldUnifier } from '../../utils/CartFieldUnifier';
+import { getSimpleProductName } from '../../utils/simpleProductName';
 import { CartListProductDetails } from './UnifiedProductDetails';
 import './UnifiedProductDetails.css';
 import './CartList.css';
@@ -116,7 +116,7 @@ export const CartList: React.FC<CartListProps> = ({
 
   // 📝 **获取商品名称**
   const getDisplayName = (item: ExtendedCartItem): string => {
-    return CartFieldUnifier.getProductName(item, currentLanguage);
+    return getSimpleProductName(item, currentLanguage);
   };
 
   // 💰 **计算商品价格**

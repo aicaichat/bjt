@@ -152,16 +152,16 @@
       "code": "Part Number",
       "model": "Model",
       "spec": "Specification",
-      "bubble_diameter": "Bubble Diameter",
+              "bubble_diameter": "Bubble Dia.",
       "id": "Product ID",
       "pcs_per_box": "Pieces per Box",
       "material": "Material",
-      "thickness": "Thickness/Weight",
-      "width": "Film Width",
-      "length": "Bag Length",
+              "thickness": "Thickness/Basis Weight",
+        "width": "Width",
+        "length": "Length",
       "total_length": "Total Length",
       "package_type": "Packaging Type",
-      "package_size": "Package Size",
+      "package_size": "Packaging Dim.",
       "net_weight": "Unit Weight",
       "package_image_url": "Package Image",
       "pallet_size": "Pallet Size",
@@ -174,7 +174,7 @@
       "pcs_per_pallet_c": "Pallet Rolls C",
       "pallet_gross_weight_c": "Pallet Weight C",
       "pallet_height_c": "Pallet Height C",
-      "tube_inner_diameter": "Core Diameter",
+              "tube_inner_diameter": "Inner Dia.",
       "brand": "Brand"
     },
     "fieldsWithUnits": {
@@ -184,12 +184,12 @@
         "shape": "Shape",
         "spec": "Specifications",
         "pcs_per_box": "Pieces per Box",
-        "bubble_diameter": "Bubble Diameter(cm)",
-        "thickness": "Thickness/Weight(μm/gsm)",
-        "width": "Film Width(cm)",
-        "length": "Bag Length(cm)",
+        "bubble_diameter": "Bubble Dia.(cm)",
+        "thickness": "Thickness/Basis Weight(μm/gsm)",
+        "width": "Width(cm)",
+        "length": "Length(cm)",
         "total_length": "Total Length(m)",
-        "package_size": "Package Size(cm)",
+        "package_size": "Packaging Dim.(cm)",
         "net_weight": "Unit Weight(kg)",
         "pallet_size": "Pallet Size(cm)",
         "pallet_gross_weight_a": "Pallet Weight A(kg)",
@@ -198,7 +198,7 @@
         "pallet_height_b": "Pallet Height B(cm)",
         "pallet_gross_weight_c": "Pallet Weight C(kg)",
         "pallet_height_c": "Pallet Height C(cm)",
-        "tube_inner_diameter": "Core Diameter(cm)"
+        "tube_inner_diameter": "Inner Dia.(cm)"
       },
       "imperial": {
         "app_model": "Compatible Model",
@@ -206,21 +206,21 @@
         "shape": "Shape",
         "spec": "Specifications",
         "pcs_per_box": "Pieces per Box",
-        "bubble_diameter": "Bubble Diameter(inch)",
-        "thickness": "Thickness/Weight(mil/#)",
-        "width": "Film Width(inch)",
-        "length": "Bag Length(inch)",
+        "bubble_diameter": "Bubble Dia.(inch)",
+        "thickness": "Thickness/Basis Weight(mil/#)",
+        "width": "Width(inch)",
+        "length": "Length(inch)",
         "total_length": "Total Length(ft)",
-        "package_size": "Package Size(inch)",
-        "net_weight": "Unit Weight(lbs)",
+        "package_size": "Packaging Dim.(inch)",
+        "net_weight": "Unit Weight(lb)",
         "pallet_size": "Pallet Size(inch)",
-        "pallet_gross_weight_a": "Pallet Weight A(lbs)",
+        "pallet_gross_weight_a": "GW per Pallet A(lb)",
         "pallet_height_a": "Pallet Height A(inch)",
-        "pallet_gross_weight_b": "Pallet Weight B(lbs)",
+        "pallet_gross_weight_b": "GW per Pallet B(lb)",
         "pallet_height_b": "Pallet Height B(inch)",
-        "pallet_gross_weight_c": "Pallet Weight C(lbs)",
+        "pallet_gross_weight_c": "GW per Pallet C(lb)",
         "pallet_height_c": "Pallet Height C(inch)",
-        "tube_inner_diameter": "Core Diameter(inch)"
+        "tube_inner_diameter": "Inner Dia.(inch)"
       }
     }
   },
@@ -466,7 +466,7 @@
       "pcs_per_box": "Pieces per Box",
       "pcsPerPallet": "Pieces per Pallet",
       "pcs_per_pallet": "Pieces per Pallet",
-      "packageSize": "Package Size",
+      "packageSize": "Packaging Dim.",
       "package_size_cm": "Package Size (cm)",
       "palletSize": "Pallet Size",
       "pallet_size_cm": "Pallet Size (cm)",
@@ -532,7 +532,7 @@
       "model": "Compatible Model",
       "spec": "Specification",
       "specImperial": "Imperial Specification",
-      "packageSize": "Package Size",
+      "packageSize": "Packaging Dim.",
       "pcsPerBox": "Pieces per Box",
       "unit": "Unit"
     },
@@ -582,7 +582,7 @@
     },
     "unitWeight": {
       "metric": "Unit Weight(kg)",
-      "imperial": "Unit Weight(lbs)"
+      "imperial": "Unit Weight(lb)"
     },
     "totalLength": {
       "metric": "Total Length(m)",
@@ -593,8 +593,8 @@
       "imperial": "Core Diameter(inch)"
     },
     "packageSize": {
-      "metric": "Package Size(cm)",
-      "imperial": "Package Size(inch)"
+      "metric": "Packaging Dim.(cm)",
+      "imperial": "Packaging Dim.(inch)"
     },
     "palletSize": "Pallet Size"
   },
