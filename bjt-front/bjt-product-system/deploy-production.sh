@@ -179,9 +179,9 @@ update_docker_images() {
 
 # 数据库 schema 升级（耗材表增加 name_zh/name_en）
 run_db_migration() {
-    print_message "执行数据库 schema 升级 (wp_bjt_consumables)..."
+    print_message "执行数据库 schema 升级 (wp_bjt_consumables & wp_bjt_accessories)..."
 
-    local sql="\nALTER TABLE wp_bjt_consumables\n  ADD COLUMN IF NOT EXISTS name_zh VARCHAR(255) NOT NULL DEFAULT '' COMMENT '中文名称' AFTER part_number,\n  ADD COLUMN IF NOT EXISTS name_en VARCHAR(255) NOT NULL DEFAULT '' COMMENT '英文名称' AFTER name_zh;\n\nUPDATE wp_bjt_consumables\n   SET name_zh = IF(name_zh='', title_zh, name_zh),\n       name_en = IF(name_en='', title_en, name_en);\n"
+    local sql="\n-- Consumables: add name_zh/name_en\nALTER TABLE wp_bjt_consumables\n  ADD COLUMN IF NOT EXISTS name_zh VARCHAR(255) NOT NULL DEFAULT '' COMMENT '中文名称' AFTER part_number,\n  ADD COLUMN IF NOT EXISTS name_en VARCHAR(255) NOT NULL DEFAULT '' COMMENT '英文名称' AFTER name_zh;\n\nUPDATE wp_bjt_consumables\n   SET name_zh = IF(name_zh='', title_zh, name_zh),\n       name_en = IF(name_en='', title_en, name_en);\n\n-- Accessories: add title_zh/title_en (back-compat columns)\nALTER TABLE wp_bjt_accessories\n  ADD COLUMN IF NOT EXISTS title_zh VARCHAR(255) NOT NULL DEFAULT '' COMMENT '中文标题' AFTER name_en,\n  ADD COLUMN IF NOT EXISTS title_en VARCHAR(255) NOT NULL DEFAULT '' COMMENT '英文标题' AFTER title_zh;\n\nUPDATE wp_bjt_accessories\n   SET title_zh = IF(title_zh='', name_zh, title_zh),\n       title_en = IF(title_en='', name_en, title_en);\n"
 
     if echo -e "$sql" | docker-compose -f docker/prod/docker-compose.prod.yml exec -T mysql mysql -u root -p${MYSQL_ROOT_PASSWORD} ${MYSQL_DATABASE}; then
         print_message "数据库 schema 升级完成"
