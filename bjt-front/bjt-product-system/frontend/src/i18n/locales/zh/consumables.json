@@ -376,9 +376,15 @@
       "imperial": "总长(ft)"
     },
     "units": {
-      "rolls": "卷",
-      "weight": "克重",
-      "height": "高度"
-    }
+      "rolls": "一托数量",
+      "weight": "整托毛重",
+      "height": "打托高度"
+    },
+    "applicableSN": "适配序列号",
+    "packageSize": "包装尺寸",
+    "netWeight": "净重",
+    "packageGrossWeight": "包装毛重",
+    "palletHeight": "打托高度",
+    "palletGrossWeight": "整托毛重"
   }
 } 

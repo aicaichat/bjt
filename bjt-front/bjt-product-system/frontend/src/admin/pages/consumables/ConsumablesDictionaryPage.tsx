@@ -387,9 +387,9 @@ const ConsumablesDictionaryPage: React.FC = () => {
       render: (code: string) => {
         const typeMap: Record<string, { text: string; color: string }> = {
           thickness: { text: '厚度', color: 'blue' },
+          weight: { text: '克重', color: 'cyan' },
           width: { text: '宽度', color: 'green' },
-          length: { text: '长度', color: 'orange' },
-          weight: { text: '重量', color: 'purple' },
+          length: { text: '虚线间距', color: 'orange' },
         };
         const { text, color } = typeMap[code] || { text: code, color: 'default' };
         return <Tag color={color}>{text}</Tag>;

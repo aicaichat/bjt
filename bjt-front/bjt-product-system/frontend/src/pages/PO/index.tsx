@@ -999,16 +999,32 @@ const POPage: React.FC = () => {
         <tbody>
           {products.map((p, idx) => (
             <tr key={idx} style={{backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8f9fa'}}>
-              <td style={{textAlign: 'center', fontFamily: 'monospace'}}>{p.code || p.sku || '-'}</td>
+              <td style={{textAlign: 'center', fontFamily: 'monospace'}}>
+                {p.code || p.sku || (p as any).part_number || (p as any).item_id || '-'}
+              </td>
               <td style={{fontWeight: '500'}}>
                 <ProductName product={p} />
               </td>
-              <td style={{textAlign: 'center'}}>{getModel(p)}</td>
-              <td style={{fontSize: '13px', lineHeight: '1.4'}}>{getDescription(p)}</td>
-              <td style={{textAlign: 'center'}}>{getBrand(p)}</td>
+              <td style={{textAlign: 'center'}}>
+                {getModel(p)}
+              </td>
+              <td style={{fontSize: '13px', lineHeight: '1.4'}}>
+                {getDescription(p)}
+              </td>
+              <td style={{textAlign: 'center'}}>
+                {getBrand(p)}
+              </td>
               <td style={{textAlign: 'center', fontWeight: 'bold'}}>{p.quantity}</td>
-              <td className="amount-cell" style={{textAlign: 'right', fontFamily: 'monospace'}}>{Number(p.price).toFixed(2)}</td>
-              <td className="amount-cell" style={{textAlign: 'right', fontFamily: 'monospace', fontWeight: 'bold'}}>{Number(p.price * p.quantity).toFixed(2)}</td>
+              <td className="amount-cell" style={{textAlign: 'right', fontFamily: 'monospace'}}>
+                <span style={{color: Number(p.price) === 0 ? '#dc3545' : 'inherit'}}>
+                  {Number(p.price || 0).toFixed(2)}
+                </span>
+              </td>
+              <td className="amount-cell" style={{textAlign: 'right', fontFamily: 'monospace', fontWeight: 'bold'}}>
+                <span style={{color: Number(p.price * p.quantity) === 0 ? '#dc3545' : 'inherit'}}>
+                  {Number((p.price || 0) * (p.quantity || 1)).toFixed(2)}
+                </span>
+              </td>
             </tr>
           ))}
           {/* 合计、备注等行 */}

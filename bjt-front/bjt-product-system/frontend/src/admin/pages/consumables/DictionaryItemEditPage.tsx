@@ -337,9 +337,9 @@ const DictionaryItemEditPage: React.FC<DictionaryItemEditPageProps> = ({ type, m
                 >
                   <Select placeholder="选择规格类型">
                     <Option value="thickness">厚度</Option>
+                    <Option value="weight">克重</Option>
                     <Option value="width">宽度</Option>
-                    <Option value="length">长度</Option>
-                    <Option value="weight">重量</Option>
+                    <Option value="length">虚线间距</Option>
                   </Select>
                 </Form.Item>
               </Col>

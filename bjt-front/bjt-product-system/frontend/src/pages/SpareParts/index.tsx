@@ -330,13 +330,35 @@ const SparePartsPage = () => {
     loadFilterOptions();
   }, []);
   
+  // ----- 🏎️ 性能优化：缓存配置 -----
+  const SP_CACHE_KEY = 'spare_parts_cache_v1';
+  const SP_CACHE_TTL = 5 * 60 * 1000; // 5分钟
+
   // 加载备件数据
   const loadSparePartsData = async (retryCount = 0, maxRetries = 2) => {
-    console.log(`🔄 [loadSparePartsData] Starting (attempt ${retryCount + 1}/${maxRetries + 1}) - FRONTEND_FILTERING_ONLY:`, {
-      strategy: 'FRONTEND_FILTERING_ONLY', // 只使用前端筛选，API不筛选
-      note: '获取所有基础数据，在前端进行筛选'
-    });
-    
+    console.log(`🔄 [loadSparePartsData] Starting (attempt ${retryCount + 1}/${maxRetries + 1})`);
+
+    // 1️⃣ 优先尝试本地缓存
+    try {
+      const cachedRaw = localStorage.getItem(SP_CACHE_KEY);
+      if (cachedRaw) {
+        const cached = JSON.parse(cachedRaw) as { timestamp: number; data: SparePart[] };
+        if (Date.now() - cached.timestamp < SP_CACHE_TTL) {
+          console.log('⚡ [loadSparePartsData] Using cached spare parts data:', cached.data.length);
+          setSpareParts(cached.data);
+          updateAccessoryModels(cached.data);
+          setTotalItems(cached.data.length);
+          setTotalPages(Math.max(1, Math.ceil(cached.data.length / pageSize)));
+          setLoading(false);
+          return; // 直接返回，避免网络请求
+        } else {
+          console.log('ℹ️ [loadSparePartsData] Cache expired, fetching new data');
+        }
+      }
+    } catch (cacheErr) {
+      console.warn('⚠️ [loadSparePartsData] Failed to read cache:', cacheErr);
+    }
+
     setLoading(true);
     setError(null);
     
@@ -445,6 +467,16 @@ const SparePartsPage = () => {
       // 设置原始数据（未筛选）
       setSpareParts(sparePartsData);
       updateAccessoryModels(sparePartsData);
+
+      // 🚀 写入缓存
+      try {
+        localStorage.setItem(
+          SP_CACHE_KEY,
+          JSON.stringify({ timestamp: Date.now(), data: sparePartsData })
+        );
+      } catch (cacheSaveErr) {
+        console.warn('⚠️ [loadSparePartsData] Failed to save cache:', cacheSaveErr);
+      }
       
       // 前端分页处理（在筛选之后）
       setTotalItems(sparePartsData.length);

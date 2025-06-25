@@ -8,7 +8,7 @@ import { useToastNotifications } from '../../components/ui';
 const CartPage: React.FC = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation('cart');
-  const { items, updateQuantity, removeItem, clearCart, isItemSelected, toggleItemSelection, selectAll, selectedItems, selectedTotal, selectedCount } = useContext(CartContext);
+  const { items, updateQuantity, removeItem, removeMultipleItems, clearCart, isItemSelected, toggleItemSelection, selectAll, selectedItems, selectedTotal, selectedCount } = useContext(CartContext);
   const { success, warning } = useToastNotifications();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
@@ -27,6 +27,25 @@ const CartPage: React.FC = () => {
     clearCart();
     setShowClearConfirm(false);
     success(currentLanguage === 'zh' ? '购物车已清空' : 'Cart cleared');
+  };
+
+  // 处理批量删除
+  const handleBulkRemove = async (itemIds: string[]) => {
+    if (itemIds.length === 0) {
+      warning(currentLanguage === 'zh' ? '请选择要删除的商品' : 'Please select items to remove');
+      return;
+    }
+    
+    try {
+      await removeMultipleItems(itemIds);
+      success(currentLanguage === 'zh' 
+        ? `已删除 ${itemIds.length} 个商品` 
+        : `Removed ${itemIds.length} items`
+      );
+    } catch (error) {
+      console.error('Bulk remove error:', error);
+      warning(currentLanguage === 'zh' ? '删除商品时出错' : 'Error removing items');
+    }
   };
 
   // 处理结算
@@ -86,6 +105,7 @@ const CartPage: React.FC = () => {
               items={items}
               onUpdateQuantity={updateQuantity}
               onRemove={removeItem}
+              onBulkRemove={handleBulkRemove}
               language={currentLanguage}
               showBulkActions={true}
             />

@@ -24,7 +24,7 @@
     "thickness": "Thickness",
     "weight": "Basis Weight",
     "width": "Width",
-    "length": "Dash Spacing",
+    "length": "Perforation",
     "weightImp": "Weight(#)",
     "weightMet": "Weight(gsm)",
     "thicknessImp": "Thickness(mil)",
@@ -376,9 +376,15 @@
       "imperial": "Length(ft)"
     },
     "units": {
-      "rolls": "Rolls",
-      "weight": "Basis Weight",
-      "height": "Height"
-    }
+      "rolls": "Packs per Pallet",
+      "weight": "GW per Pallet",
+      "height": "Pallet Height"
+    },
+    "applicableSN": "Applicable SN.",
+    "packageSize": "Packaging Dim.",
+    "netWeight": "Net Weight",
+    "packageGrossWeight": "Gross Weight",
+    "palletHeight": "Pallet Height",
+    "palletGrossWeight": "GW per Pallet"
   }
 } 

@@ -208,6 +208,7 @@ export interface CartContextType {
   items: ExtendedCartItem[];
   addItem: (item: ExtendedCartItem) => void;
   removeItem: (id: string) => void;
+  removeMultipleItems: (ids: string[]) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
   clearInvalidItems: () => Promise<void>;
@@ -228,6 +229,7 @@ export const CartContext = createContext<CartContextType>({
   items: [],
   addItem: () => {},
   removeItem: () => {},
+  removeMultipleItems: () => {},
   updateQuantity: () => {},
   clearCart: () => {},
   clearInvalidItems: async () => {},
@@ -335,109 +337,79 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     currentUserIdRef.current = newUserId;
   }, [user?.id, isAuthenticated]);
   
-  // 添加商品到购物车
+  // 🚀 优化版本：减少数据处理，增加缓存
   const addItem = async (newItem: ExtendedCartItem) => {
     try {
       setLoading(true);
       console.log('🛒 [CartContext.addItem] Starting with newItem:', newItem);
       
-      // 增强的 properties 处理，确保不同产品类型的属性正确保存
-      const enhancedProperties = {
-        // 基本产品信息 - 确保所有产品类型都有这些基础字段
+      // 🚀 优化：简化properties处理，只保留核心字段
+      const coreProperties = {
+        // 基本产品信息
         productName: newItem.name,
         name: newItem.name,
         part_number: newItem.part_number,
         image_url: newItem.image_url,
-        image: newItem.image_url,
         price: newItem.unit_price,
-        unit_price: newItem.unit_price,
-        currency: newItem.currency,
         product_type: newItem.product_type,
         
-        // 根据产品类型添加特定属性
+        // 产品类型特定字段（最小化）
         ...(newItem.product_type === 'consumable' && {
-          // 耗材特有属性
-          name_zh: newItem.name_zh || newItem.name,
-          name_en: newItem.name_en || newItem.name,
-          material: (newItem.properties as any)?.material || (newItem as any).material,
-          width: (newItem.properties as any)?.width || (newItem as any).width,
-          length: (newItem.properties as any)?.length || (newItem as any).length,
-          thickness: (newItem.properties as any)?.thickness || (newItem as any).thickness,
-          rollLength: (newItem.properties as any)?.rollLength || (newItem as any).rollLength,
-          shape: (newItem.properties as any)?.shape || (newItem as any).shape,
-          app_model: (newItem.properties as any)?.app_model || (newItem as any).app_model || '',
-          code: (newItem.properties as any)?.code || newItem.part_number,
+          material: (newItem.properties as any)?.material,
+          app_model: (newItem.properties as any)?.app_model,
           specs: (newItem.properties as any)?.specs
         }),
         ...(newItem.product_type === 'spare_part' && {
-          // 备件特有属性
-          name_zh: newItem.name_zh || newItem.name,
-          name_en: newItem.name_en || newItem.name,
-          spec: newItem.spec,
-          spec_imperial: newItem.spec_imperial,
           app_model: newItem.app_model,
           app_sn: newItem.app_sn,
-          is_consumable: newItem.is_consumable,
           unit: newItem.unit,
-          pcs_per_box: newItem.pcs_per_box,
           required_parts: (newItem.properties as any)?.required_parts,
-          required_quantity: (newItem.properties as any)?.required_quantity,
-          package_size_cm: newItem.package_size_cm,
-          package_size_inch: newItem.package_size_inch,
-          net_weight_kg: newItem.net_weight_kg,
-          net_weight_lbs: newItem.net_weight_lbs
+          required_quantity: (newItem.properties as any)?.required_quantity
         }),
-        // 从原始properties中复制其他信息，但不覆盖上面的关键字段
-        ...(newItem.properties || {}),
-        // 确保关键字段不被覆盖
+        
+        // 保留原始产品对象用于tooltip
+        product: (newItem.properties as any)?.product,
         id: newItem.product_id,
         productId: newItem.product_id
       };
 
-      // 准备添加购物车请求数据
+      // 🚀 优化：最小化API请求数据
       const addToCartRequest = {
         product_type: newItem.product_type,
         product_id: newItem.product_id,
         part_number: newItem.part_number,
         quantity: newItem.quantity,
-        properties: enhancedProperties
+        properties: coreProperties
       };
 
-      console.log('🛒 [CartContext.addItem] Enhanced properties for', newItem.product_type, ':', enhancedProperties);
-      console.log('🛒 [CartContext.addItem] Calling cartService.addToCart with:', addToCartRequest);
+      console.log('🛒 [CartContext.addItem] Optimized request:', addToCartRequest);
       
-      // 调用购物车服务
+      // 🚀 调用购物车服务
       const result = await cartService.addToCart(addToCartRequest);
-      console.log('🛒 [CartContext.addItem] cartService.addToCart result:', result);
+      console.log('🛒 [CartContext.addItem] Service result:', result);
       
-      // 缓存 properties，使用产品类型+料号作为复合key，避免不同类型商品互相覆盖
+      // 🚀 优化：使用轻量级缓存
       if (newItem.part_number) {
         const cacheKey = `${newItem.product_type}_${newItem.part_number}`;
-        cartPropertiesMap.current[cacheKey] = enhancedProperties;
-        console.log('🛒 [CartContext.addItem] Cached properties with key:', cacheKey);
-      } else {
-        console.warn('[CartContext.addItem] part_number is empty, skip caching properties:', newItem);
+        cartPropertiesMap.current[cacheKey] = coreProperties;
+        console.log('🛒 [CartContext.addItem] Cached with key:', cacheKey);
       }
       
-      // 重新获取购物车数据
-      console.log('🛒 [CartContext.addItem] Fetching updated cart...');
-      await fetchCart();
-      console.log('🛒 [CartContext.addItem] Cart updated successfully');
+      // 🚀 优化：延迟刷新购物车，避免阻塞UI
+      setTimeout(() => {
+        fetchCart().catch(error => {
+          console.error('🛒 [CartContext.addItem] Delayed cart refresh failed:', error);
+        });
+      }, 100);
       
     } catch (error) {
-      console.error('❌ [CartContext.addItem] Failed to add item to cart:', error);
-      console.error('❌ [CartContext.addItem] Error details:', {
-        error,
-        newItem: {
-          product_type: newItem.product_type,
-          part_number: newItem.part_number,
-          name: newItem.name,
-          product_id: newItem.product_id
-        }
-      });
+      console.error('❌ [CartContext.addItem] Error:', error);
       setSyncError('Failed to add item to cart');
       setLoading(false);
-      throw error; // 重新抛出错误，让调用方处理
+      throw error;
+    } finally {
+      // 🚀 快速释放loading状态
+      setTimeout(() => setLoading(false), 50);
     }
   };
   
@@ -459,6 +431,56 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('🛒 [CartContext.removeItem] Error removing item:', error);
       // 可以在这里添加用户提示
+    }
+  };
+
+  // 批量删除购物车商品
+  const removeMultipleItems = async (itemIds: string[]) => {
+    console.log('🛒 [CartContext.removeMultipleItems] Removing items:', itemIds);
+    try {
+      setLoading(true);
+      
+      // 并行删除所有选中的商品
+      const deletePromises = itemIds.map(async (itemId) => {
+        const numericId = parseInt(itemId);
+        if (isNaN(numericId)) {
+          console.error('🛒 [CartContext.removeMultipleItems] Invalid item ID:', itemId);
+          return { success: false, itemId, error: 'Invalid ID' };
+        }
+        
+        try {
+          await cartService.removeCartItem(numericId);
+          return { success: true, itemId };
+        } catch (error) {
+          console.error('🛒 [CartContext.removeMultipleItems] Error removing item:', itemId, error);
+          return { success: false, itemId, error: error.message };
+        }
+      });
+      
+      const results = await Promise.all(deletePromises);
+      const successCount = results.filter(r => r.success).length;
+      const failureCount = results.filter(r => !r.success).length;
+      
+      console.log(`🛒 [CartContext.removeMultipleItems] Completed: ${successCount} success, ${failureCount} failures`);
+      
+      // 清空选中状态
+      setSelectedItemIds(new Set());
+      
+      // 立即刷新购物车状态
+      await refreshCart();
+      
+      // 设置成功消息
+      if (successCount > 0) {
+        setSyncError(`成功删除 ${successCount} 个商品${failureCount > 0 ? `，${failureCount} 个失败` : ''}`);
+        setTimeout(() => setSyncError(null), 3000);
+      }
+      
+    } catch (error) {
+      console.error('🛒 [CartContext.removeMultipleItems] Error in bulk remove:', error);
+      setSyncError('批量删除商品时出错');
+      setTimeout(() => setSyncError(null), 3000);
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -634,6 +656,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     items,
     addItem,
     removeItem,
+    removeMultipleItems,
     updateQuantity,
     clearCart,
     clearInvalidItems,

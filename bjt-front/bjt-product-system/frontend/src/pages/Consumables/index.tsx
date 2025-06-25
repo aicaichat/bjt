@@ -1982,56 +1982,48 @@ const ConsumablesPage: React.FC = () => {
       const processedShapes = new Set<string>();
       const matchedDbShapes = new Set<string>(); // 🔥 新增：跟踪已匹配的数据库形状，防止重复匹配
 
-      // 1. 🔥 修复：处理API返回的形状配置，防止bubble等形状的多重匹配
+      // 1. 🔥 使用词典API数据处理形状筛选选项
       if (filterOptions?.shapes && Array.isArray(filterOptions.shapes)) {
-
-        
         filterOptions.shapes.forEach(shapeConfig => {
-
-          
-          let exactMatch: { dbShape: string; count: number; matchType: string } | null = null;
-           
-          // 🔥 修复：只使用shapeConfig.id进行精确匹配，避免多重匹配导致重复
-          if (shapeCountMap.has(shapeConfig.id) && !matchedDbShapes.has(shapeConfig.id)) {
-            exactMatch = {
-              dbShape: shapeConfig.id,
-              count: shapeCountMap.get(shapeConfig.id) || 0,
-              matchType: '精确匹配'
-            };
-
-          } else {
-
+          // 使用精确匹配查找对应的数据库形状
+          if (shapeCountMap.has(shapeConfig.code) && !matchedDbShapes.has(shapeConfig.code)) {
+            const count = shapeCountMap.get(shapeConfig.code) || 0;
+            
+            // 根据当前语言选择正确的显示名称
+            let displayName = shapeConfig.code; // 默认使用代码
+            if (i18n.language.startsWith('zh')) {
+              displayName = shapeConfig.name_zh || shapeConfig.name || shapeConfig.code;
+            } else {
+              displayName = shapeConfig.name_en || shapeConfig.name || shapeConfig.code;
+            }
+            
+            if (!processedShapes.has(shapeConfig.code)) {
+              console.log(`🔍 [形状词典] 找到形状 ${shapeConfig.code}:`, {
+                name_zh: shapeConfig.name_zh,
+                name_en: shapeConfig.name_en,
+                displayName,
+                language: i18n.language,
+                count
+              });
+              
+              shapeOptions.push({
+                id: shapeConfig.code,
+                name: displayName,
+                count: count,
+                disabled: count === 0,
+                originalData: {
+                  ...shapeConfig,
+                  image_url: shapeConfig.image_url,
+                  image_url2: shapeConfig.image_url2
+                }
+              });
+              
+              processedShapes.add(shapeConfig.code);
+              matchedDbShapes.add(shapeConfig.code);
+            }
+          } else if (!shapeCountMap.has(shapeConfig.code)) {
+            console.warn(`⚠️ [形状词典] 词典中的形状 ${shapeConfig.code} 在数据库中未找到对应数据`);
           }
-          
-                     // 🔥 严格控制：只有找到精确匹配才添加选项
-           if (exactMatch) {
-             const finalShapeId = exactMatch.dbShape;
-             const finalShapeName = shapeConfig.name_zh || shapeConfig.name_en || shapeConfig.name || finalShapeId;
-             
-             if (!processedShapes.has(finalShapeId)) {
-
-               
-               shapeOptions.push({
-                 id: finalShapeId,
-                 name: finalShapeName,
-                 count: exactMatch.count,
-                 disabled: exactMatch.count === 0,
-                 originalData: {
-                   ...shapeConfig,
-                   matchType: exactMatch.matchType,
-                   image_url: shapeConfig.image_url,
-                   image_url2: shapeConfig.image_url2
-                 }
-               });
-               
-               processedShapes.add(finalShapeId);
-               matchedDbShapes.add(exactMatch.dbShape); // 标记数据库形状已被匹配
-             } else {
-
-             }
-           } else {
-
-           }
         });
       }
 
@@ -2079,64 +2071,53 @@ const ConsumablesPage: React.FC = () => {
       const availableItems = calculateCascadingOptions('selectedMaterial');
       const materialCountMap = new Map<string, number>();
       
-      // 🔥 修复：直接使用material字段统计
+      // 统计各种材料的数量
       availableItems.forEach(item => {
         if (item.material) {
           materialCountMap.set(item.material, (materialCountMap.get(item.material) || 0) + 1);
         }
       });
       
-
-      
       const materialOptions: SmartFilterOption[] = [];
       
-      // 🔥 硬编码材料映射作为回退方案
-      const MATERIAL_MAPPING: Record<string, { zh: string; en: string }> = {
-        'HDPE': { zh: 'HDPE', en: 'HDPE' },
-        '50% HDPE': { zh: '50%回料HDPE', en: '50% HDPE' },
-        'PAPE': { zh: 'PAPE共挤膜', en: 'PAPE' },
-        'PAPER': { zh: '纸塑膜', en: 'PAPER' },
-        '50% LDPE': { zh: '50%回料LDPE', en: '50% LDPE' },
-        '30% HDPE': { zh: '30%回料HDPE', en: '30% HDPE' },
-        'LDPE': { zh: 'LDPE', en: 'LDPE' }
-      };
-      
-      // 🔥 修复：使用API字典数据或硬编码映射提供多语言材料名称
+      // 🔥 完全使用词典API数据，不使用本地硬编码配置
       Array.from(materialCountMap.entries())
         .sort(([, a], [, b]) => b - a)
         .forEach(([materialCode, count]) => {
-          // 从API字典数据中查找对应的材料信息
-          let displayName = materialCode; // 默认使用代码
-          let foundInApi = false;
+          let displayName = materialCode; // 默认使用代码作为显示名称
           
-          // 优先使用API字典数据
+          // 从API字典数据中查找对应的材料信息
           if (filterOptions?.materials && filterOptions.materials.length > 0) {
             const materialInfo = filterOptions.materials.find((mat: any) => 
-              mat.id === materialCode || mat.code === materialCode
+              mat.code === materialCode || mat.id === materialCode
             );
             
             if (materialInfo) {
-              foundInApi = true;
-              // 🔥 修复：根据当前语言正确选择显示名称
+              // 根据当前语言选择正确的显示名称
               if (i18n.language.startsWith('zh')) {
-                // 中文环境：优先使用中文名称
+                // 中文环境：使用中文名称
                 displayName = materialInfo.name_zh || materialInfo.name || materialCode;
               } else {
-                // 英文环境：使用英文名称，如果英文名称就是代码则使用代码
+                // 英文环境：使用英文名称
                 displayName = materialInfo.name_en || materialInfo.name || materialCode;
               }
+              
+              console.log(`🔍 [材料词典] 找到材料 ${materialCode}:`, {
+                name_zh: materialInfo.name_zh,
+                name_en: materialInfo.name_en,
+                displayName,
+                language: i18n.language
+              });
+            } else {
+              console.warn(`⚠️ [材料词典] 未找到材料代码 ${materialCode} 的词典数据`);
             }
-          }
-          
-          // 如果API数据不可用，使用硬编码映射
-          if (!foundInApi && MATERIAL_MAPPING[materialCode]) {
-            const mapping = MATERIAL_MAPPING[materialCode];
-            displayName = i18n.language.startsWith('zh') ? mapping.zh : mapping.en;
+          } else {
+            console.warn('⚠️ [材料词典] API字典数据不可用，使用原始材料代码');
           }
           
           materialOptions.push({
             id: materialCode,
-            name: displayName, // 🔥 使用多语言名称
+            name: displayName,
             count: count,
             disabled: false
           });
@@ -2586,7 +2567,7 @@ const ConsumablesPage: React.FC = () => {
     }));
   };
   
-  // 添加到购物车 - 参考备件页面的实现 (使用useCallback优化)
+  // 添加到购物车 - 优化版本 (使用useCallback优化)
   const addToCart = useCallback(async (itemId: string, buttonElement?: HTMLElement) => {
     if (!quantities[itemId] || quantities[itemId] < 1) {
       warning(t('warning.selectQuantity', 'Please select quantity'));
@@ -2599,120 +2580,18 @@ const ConsumablesPage: React.FC = () => {
       return;
     }
 
-    try {
-      const quantity = quantities[itemId];
-      // 手动补全 properties 字段，合并 specs 并兜底
-      const specs: Partial<{
-        width: string;
-        length: string;
-        thickness: string;
-        material: string;
-        shape: string;
-        rollLength: string;
-        compatibility: string;
-      }> = product.specs || {};
-      const image_url = cleanImageUrl(product.image_url);
+    const quantity = quantities[itemId];
+    
+    // 🚀 乐观更新 - 立即显示成功状态
+    const optimisticUpdate = () => {
+      // 立即显示成功通知
+      success(t('cart.added', '商品已成功添加到购物车'));
       
-      // 添加更详细的名称兜底逻辑
-      const resolvedName = 
-        product.name || 
-        product.code || 
-        product.part_number ||
-        product.id || 
-        'N/A';
-
-      // 调试日志：分析名称来源 (生产环境可移除)
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[addToCart] 耗材名称分析:', {
-          'product.name': product.name,
-          'product.code': product.code, 
-          'product.part_number': product.part_number,
-          'product.id': product.id,
-          'resolvedName': resolvedName
-        });
-      }
-
-      const properties = {
-        ...product,
-        ...specs,
-        image_url,
-        brand: product.brand || 'N/A',
-        model: product.model || 'N/A',
-        spec: product.spec || 'N/A',
-        part_number: product.part_number || product.code || product.id,
-        name: resolvedName,
-        // 添加多语言名称支持
-        name_zh: product.name || product.code || product.id,
-        name_en: product.name || product.code || product.id,
-        // 添加产品代码兜底
-        code: product.code || product.id,
-        // 确保图片字段完整
-        image: image_url,
-        // 规格信息
-        width: specs?.width || 'N/A',
-        length: specs?.length || 'N/A',
-        thickness: specs?.thickness || 'N/A',
-        material: specs?.material || 'N/A',
-        shape: specs?.shape || 'N/A',
-        rollLength: specs?.rollLength || 'N/A',
-        compatibility: specs?.compatibility || 'N/A',
-        // 添加完整的 specs 嵌套对象
-        specs: {
-          ...specs,
-          material: specs?.material || 'N/A',
-          shape: specs?.shape || 'N/A',
-          thickness: specs?.thickness || 'N/A',
-          width: specs?.width || 'N/A',
-          length: specs?.length || 'N/A',
-          rollLength: specs?.rollLength || 'N/A',
-          compatibility: specs?.compatibility || 'N/A'
-        }
-      };
-
-      const cartItem: ExtendedCartItem = {
-        item_id: parseInt(itemId) || 0,
-        product_type: 'consumable',
-        product_id: parseInt(itemId) || 0,
-        part_number: properties.part_number,
-        quantity,
-        name: resolvedName,
-        image_url: properties.image_url,
-        unit_price: getRegionalPrice(product, quantity),
-        currency: getCurrencySymbolByRegion(),
-        line_total: getRegionalPrice(product, quantity) * quantity,
-        inventory_status: 'in_stock',
-        added_at: new Date().toISOString(),
-        id: itemId,
-        code: properties.part_number,
-        partNumber: properties.part_number,
-        image: properties.image_url,
-        category: 'consumable',
-        productId: parseInt(itemId) || 0,
-        priceTiers: product.pricing?.map(p => {
-          const minQty = parseInt(p.range.split('-')[0] || '1') || 1;
-          const maxQty = p.range.includes('+') ? null : (parseInt(p.range.split('-')[1] || '999999') || 999999);
-          return {
-            min: minQty,
-            max: maxQty,
-            price: p.regionalPrices?.cn || p.price || 0
-          };
-        }) || [],
-        selected: false,
-        type: 'consumable',
-        specs: {
-          partNumber: properties.part_number,
-          productName: resolvedName
-        },
-        price: getRegionalPrice(product, quantity),
-        properties,
-        product // 传递完整产品对象，便于购物车展示适用机型等字段
-      };
-      // 调试日志 (生产环境自动移除)
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[addToCart] product:', product);
-        console.log('[addToCart] cartItem:', cartItem);
-      }
-      await addItem(cartItem);
+      // 立即重置数量
+      setQuantities(prev => ({
+        ...prev,
+        [itemId]: 0,
+      }));
       
       // 触发购物车动画
       if (buttonElement && cartButtonRef.current) {
@@ -2724,34 +2603,107 @@ const ConsumablesPage: React.FC = () => {
           productName: product.name
         });
       }
+    };
+
+    try {
+      // 🚀 优化：简化数据构建，只保留必要字段
+      const resolvedName = product.name || product.code || product.part_number || product.id || 'N/A';
+      const image_url = cleanImageUrl(product.image_url);
+      const regionalPrice = getRegionalPrice(product, quantity);
       
-      // 显示成功通知 - 使用现代化Toast
-      success(t('cart.added', '商品已成功添加到购物车'));
+      // 🚀 优化：最小化properties对象，减少内存占用
+      const essentialProperties = {
+        // 核心字段
+        name: resolvedName,
+        part_number: product.part_number || product.code || product.id,
+        image_url,
+        brand: product.brand || 'N/A',
+        model: product.model || 'N/A',
+        spec: product.spec || 'N/A',
+        
+        // 耗材特有字段（仅保留关键字段）
+        material: product.specs?.material || 'N/A',
+        app_model: product.app_model || '',
+        
+        // 完整产品对象（用于tooltip）
+        product: product
+      };
+
+      // 🚀 优化：简化CartItem构建
+      const cartItem: ExtendedCartItem = {
+        // 基础字段
+        item_id: parseInt(itemId) || 0,
+        product_type: 'consumable',
+        product_id: parseInt(itemId) || 0,
+        part_number: essentialProperties.part_number,
+        quantity,
+        name: resolvedName,
+        image_url,
+        unit_price: regionalPrice,
+        currency: getCurrencySymbolByRegion(),
+        line_total: regionalPrice * quantity,
+        inventory_status: 'in_stock',
+        added_at: new Date().toISOString(),
+        
+        // UI必需字段
+        id: itemId,
+        code: essentialProperties.part_number,
+        partNumber: essentialProperties.part_number,
+        image: image_url,
+        category: 'consumable',
+        productId: parseInt(itemId) || 0,
+        selected: false,
+        type: 'consumable',
+        price: regionalPrice,
+        
+        // 简化的价格层级和规格
+        priceTiers: product.pricing?.map(p => ({
+          min: parseInt(p.range.split('-')[0] || '1') || 1,
+          max: p.range.includes('+') ? null : (parseInt(p.range.split('-')[1] || '999999') || 999999),
+          price: p.regionalPrices?.cn || p.price || 0
+        })) || [],
+        specs: {
+          partNumber: essentialProperties.part_number,
+          productName: resolvedName
+        },
+        
+        // 优化的properties
+        properties: essentialProperties
+      };
+
+      // 🚀 立即执行乐观更新
+      optimisticUpdate();
       
-      // 重置数量
-      setQuantities(prev => ({
-        ...prev,
-        [itemId]: 0,
-      }));
+      // 🚀 异步执行实际API调用（不阻塞UI）
+      Promise.resolve(addItem(cartItem)).catch((error: any) => {
+        console.error('Add to cart error:', error);
+        
+        // 如果API调用失败，回滚乐观更新
+        setQuantities(prev => ({
+          ...prev,
+          [itemId]: quantity, // 恢复原始数量
+        }));
+        
+        // 显示错误信息
+        let errorMessage = String(t('ui.addToCartFailed') || '添加到购物车失败');
+        if (error instanceof Error) {
+          if (error.message?.includes('part_number')) {
+            errorMessage = String(t('ui.partNumberMissing') || '产品料号信息缺失，请刷新页面重试');
+          } else if (error.message?.includes('401') || error.message?.includes('unauthorized')) {
+            errorMessage = String(t('ui.authExpired') || '认证失效，请刷新页面重新登录');
+          } else if (error.message?.includes('400')) {
+            errorMessage = String(t('ui.invalidRequest') || '请求参数错误，请检查产品信息');
+          }
+        }
+        
+        showErrorToast(String(t('ui.addToCartFailed') || '添加失败'), errorMessage);
+      });
       
     } catch (error) {
       console.error('Add to cart error:', error);
-      
-      // 使用现代化错误通知
-      let errorMessage = String(t('ui.addToCartFailed') || '添加到购物车失败');
-      if (error instanceof Error) {
-        if (error.message?.includes('part_number')) {
-          errorMessage = String(t('ui.partNumberMissing') || '产品料号信息缺失，请刷新页面重试');
-        } else if (error.message?.includes('401') || error.message?.includes('unauthorized')) {
-          errorMessage = String(t('ui.authExpired') || '认证失效，请刷新页面重新登录');
-        } else if (error.message?.includes('400')) {
-          errorMessage = String(t('ui.invalidRequest') || '请求参数错误，请检查产品信息');
-        }
-      }
-      
-      showErrorToast(String(t('ui.addToCartFailed') || '添加失败'), errorMessage);
+      showErrorToast(String(t('ui.addToCartFailed') || '添加失败'));
     }
-  }, [quantities, consumables, userRegion, addItem, success, showErrorToast, t, warning, cartButtonRef]);
+  }, [quantities, consumables, userRegion, addItem, success, showErrorToast, t, warning, cartButtonRef, getRegionalPrice, getCurrencySymbolByRegion]);
   
   // 切换购物车模态框
   const toggleCartModal = () => {

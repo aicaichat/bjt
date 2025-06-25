@@ -380,8 +380,36 @@ const MachinesPage: React.FC = () => {
     }
   };
 
-  // 获取机器数据 - 使用真实API
+  // ----- ⚡ 性能缓存配置 -----
+  const MACHINE_CACHE_TTL = 5 * 60 * 1000; // 5分钟
+  const getMachineCacheKey = (category: string, region: string, voltage: string) => `machines_${category}_${region}_${voltage}`;
+
+  // 获取机器数据
   const fetchMachines = async () => {
+    setLoading(true);
+    setError(null);
+
+    const cacheKey = getMachineCacheKey(category, filterRegion, selectedVoltage);
+    try {
+      // 1️⃣ 尝试读取缓存
+      const cachedRaw = localStorage.getItem(cacheKey);
+      if (cachedRaw) {
+        const cached = JSON.parse(cachedRaw) as { timestamp: number; data: any[] };
+        if (Date.now() - cached.timestamp < MACHINE_CACHE_TTL) {
+          console.log('⚡ [fetchMachines] Using cached machines:', cached.data.length);
+          setMachines(cached.data);
+          setTotal(cached.data.length);
+          setTotalPages(Math.max(1, Math.ceil(cached.data.length / pageSize)));
+          setLoading(false);
+          return;
+        } else {
+          console.log('ℹ️ [fetchMachines] Cache expired, fetch fresh');
+        }
+      }
+    } catch (cacheErr) {
+      console.warn('⚠️ [fetchMachines] Failed to read cache:', cacheErr);
+    }
+    
     console.log('🚀 [fetchMachines] Starting API call with params:', {
       category,
       currentLanguage,
@@ -390,15 +418,6 @@ const MachinesPage: React.FC = () => {
       currentPage,
       pageSize
     });
-    
-    setLoading(true);
-    setError(null);
-    
-    // ✅ 强制清理状态，防止显示缓存的旧数据
-    setMachines([]);
-    setTotal(0);
-    setCurrentPage(1);
-    setTotalPages(1);
     
     try {
       // Get token from localStorage
@@ -567,6 +586,16 @@ const MachinesPage: React.FC = () => {
               })));
 
               setMachines(transformedMachines);
+
+              // 🚀 写入缓存
+              try {
+                localStorage.setItem(
+                  getMachineCacheKey(category, filterRegion, selectedVoltage),
+                  JSON.stringify({ timestamp: Date.now(), data: transformedMachines })
+                );
+              } catch (cacheSaveErr) {
+                console.warn('⚠️ [fetchMachines] Failed to save cache:', cacheSaveErr);
+              }
               
               // 调试：显示所有机器的图片URL情况
               console.log('🔍 [DEBUG] All machines image URLs:', transformedMachines.map(m => ({

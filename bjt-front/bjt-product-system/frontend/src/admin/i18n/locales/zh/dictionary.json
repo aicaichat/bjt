@@ -82,15 +82,15 @@
   },
   "specTypes": {
     "thickness": "厚度",
+    "weight": "克重",
     "width": "宽度", 
-    "length": "长度",
-    "weight": "重量"
+    "length": "虚线间距"
   },
   "specTypeColors": {
     "thickness": "blue",
+    "weight": "cyan",
     "width": "green",
-    "length": "orange", 
-    "weight": "purple"
+    "length": "orange"
   },
   "actions": {
     "refreshAll": "刷新全部",

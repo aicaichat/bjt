@@ -307,16 +307,16 @@ class BJT_Dictionary_Controller extends BJT_API_Controller {
                                 $name_en = 'Thickness';
                                 break;
                             case 'weight':
-                                $name_zh = '重量';
-                                $name_en = 'Weight';
+                                $name_zh = '克重';
+                                $name_en = 'Basis Weight';
                                 break;
                             case 'width':
                                 $name_zh = '宽度';
                                 $name_en = 'Width';
                                 break;
                             case 'length':
-                                $name_zh = '长度';
-                                $name_en = 'Length';
+                                $name_zh = '虚线间距';
+                                $name_en = 'Perforation';
                                 break;
                             default:
                                 $name_zh = $spec_type;

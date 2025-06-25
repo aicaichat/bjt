@@ -1,0 +1,521 @@
+/* Cart Tooltip Styles - 优化版本：更简洁美观 */
+
+/* 主要容器样式 */
+.consumables-custom-tooltip .ant-tooltip-inner {
+  max-width: min(500px, 90vw) !important;
+  padding: 0 !important;
+  width: auto !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.consumable-tooltip {
+  width: auto;
+  min-width: 280px;
+  max-width: 500px;
+  overflow: visible;
+  font-size: 13px;
+  line-height: 1.5;
+  background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
+  border-radius: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* 移除头部样式 - 更简洁 */
+.consumable-tooltip .tooltip-header {
+  display: none;
+}
+
+/* 内容网格布局 */
+.consumable-tooltip .tooltip-content-grid {
+  padding: 16px;
+  margin: 0;
+}
+
+/* 卡片样式优化 */
+.consumable-tooltip .package-info-card,
+.consumable-tooltip .specs-summary-card,
+.consumable-tooltip .pallet-configs-card,
+.consumable-tooltip .tech-params-card {
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px;
+  margin: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.consumable-tooltip .package-info-card:hover,
+.consumable-tooltip .specs-summary-card:hover,
+.consumable-tooltip .pallet-configs-card:hover,
+.consumable-tooltip .tech-params-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+/* 字段行样式 */
+.consumable-tooltip .package-row,
+.consumable-tooltip .spec-item,
+.consumable-tooltip .pallet-config-row,
+.consumable-tooltip .tech-param-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  border: 1px solid rgba(226, 232, 240, 0.5);
+  margin-bottom: 6px;
+  min-height: auto;
+  transition: all 0.15s ease;
+  backdrop-filter: blur(4px);
+}
+
+.consumable-tooltip .package-row:hover,
+.consumable-tooltip .spec-item:hover,
+.consumable-tooltip .pallet-config-row:hover,
+.consumable-tooltip .tech-param-row:hover {
+  background: #ffffff;
+  border-color: rgba(59, 130, 246, 0.3);
+  transform: translateX(2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.consumable-tooltip .package-row:last-child,
+.consumable-tooltip .spec-item:last-child,
+.consumable-tooltip .pallet-config-row:last-child,
+.consumable-tooltip .tech-param-row:last-child {
+  margin-bottom: 0;
+}
+
+/* 标签样式优化 */
+.consumable-tooltip .package-label,
+.consumable-tooltip .spec-label,
+.consumable-tooltip .config-label,
+.consumable-tooltip .param-label {
+  font-size: 12px;
+  color: #475569;
+  font-weight: 500;
+  flex: 0 0 auto;
+  text-align: left;
+  margin-right: 16px;
+  word-break: keep-all;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 值样式优化 */
+.consumable-tooltip .package-value,
+.consumable-tooltip .spec-value,
+.consumable-tooltip .config-value,
+.consumable-tooltip .param-value {
+  font-size: 12px;
+  color: #0f172a;
+  font-weight: 600;
+  text-align: right;
+  flex: 1;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  min-width: 0;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+/* 特殊值样式 */
+.consumable-tooltip .package-value[data-value="N/A"],
+.consumable-tooltip .spec-value[data-value="N/A"],
+.consumable-tooltip .config-value[data-value="N/A"],
+.consumable-tooltip .param-value[data-value="N/A"] {
+  color: #64748b !important;
+  font-style: italic;
+  text-shadow: none !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .consumable-tooltip .package-value[data-value="N/A"],
+  .consumable-tooltip .spec-value[data-value="N/A"],
+  .consumable-tooltip .config-value[data-value="N/A"],
+  .consumable-tooltip .param-value[data-value="N/A"] {
+    color: #94a3b8 !important;
+  }
+}
+
+/* 区域标题样式 */
+.consumable-tooltip .section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  margin: 0 0 12px 0;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  border-radius: 8px;
+  border-left: 3px solid #3b82f6;
+}
+
+.consumable-tooltip .title-icon {
+  font-size: 16px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+/* 网格布局优化 */
+.consumable-tooltip .specs-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+/* 配置项样式 */
+.consumable-tooltip .config-values {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.consumable-tooltip .config-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  padding: 2px 0;
+}
+
+.consumable-tooltip .unit-label {
+  color: #64748b;
+  font-weight: 500;
+  margin-right: 6px;
+}
+
+.consumable-tooltip .unit-value {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+/* 包装图片样式 */
+.consumable-tooltip .package-image-section {
+  margin-bottom: 12px;
+}
+
+.consumable-tooltip .package-image-container {
+  position: relative;
+  width: 100%;
+  max-width: 100px;
+  margin: 0 auto;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.consumable-tooltip .package-image-container img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  transition: transform 0.2s ease;
+}
+
+.consumable-tooltip .package-image-container:hover img {
+  transform: scale(1.02);
+}
+
+.consumable-tooltip .image-label {
+  font-size: 10px;
+  color: #64748b;
+  text-align: center;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .consumables-custom-tooltip .ant-tooltip-inner {
+    max-width: 95vw !important;
+  }
+
+  .consumable-tooltip {
+    min-width: 260px;
+    font-size: 12px;
+  }
+
+  .consumable-tooltip .tooltip-content-grid {
+    padding: 12px;
+  }
+
+  .consumable-tooltip .package-info-card,
+  .consumable-tooltip .specs-summary-card,
+  .consumable-tooltip .pallet-configs-card,
+  .consumable-tooltip .tech-params-card {
+    padding: 12px;
+  }
+
+  .consumable-tooltip .package-row,
+  .consumable-tooltip .spec-item,
+  .consumable-tooltip .pallet-config-row,
+  .consumable-tooltip .tech-param-row {
+    padding: 8px 10px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .consumable-tooltip .package-label,
+  .consumable-tooltip .spec-label,
+  .consumable-tooltip .config-label,
+  .consumable-tooltip .param-label {
+    margin-right: 0;
+    margin-bottom: 2px;
+  }
+
+  .consumable-tooltip .package-value,
+  .consumable-tooltip .spec-value,
+  .consumable-tooltip .config-value,
+  .consumable-tooltip .param-value {
+    text-align: left;
+    width: 100%;
+  }
+}
+
+/* 滚动条样式 */
+.consumable-tooltip ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.consumable-tooltip ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.consumable-tooltip ::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #cbd5e1, #94a3b8);
+  border-radius: 3px;
+}
+
+.consumable-tooltip ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #94a3b8, #64748b);
+}
+
+/* 实用类 */
+.consumable-tooltip .mb-2 {
+  margin-bottom: 8px;
+}
+
+.consumable-tooltip .p-2 {
+  padding: 8px;
+}
+
+.consumable-tooltip .rounded {
+  border-radius: 6px;
+}
+
+.consumable-tooltip .text-xs {
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.consumable-tooltip .flex {
+  display: flex;
+}
+
+.consumable-tooltip .items-center {
+  align-items: center;
+}
+
+.consumable-tooltip .justify-center {
+  justify-content: center;
+}
+
+.consumable-tooltip .space-x-3 > * + * {
+  margin-left: 12px;
+}
+
+/* 加载动画 */
+.consumable-tooltip .animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+.consumable-tooltip .rounded-full {
+  border-radius: 50%;
+}
+
+.consumable-tooltip .h-5 {
+  height: 20px;
+}
+
+.consumable-tooltip .w-5 {
+  width: 20px;
+}
+
+.consumable-tooltip .border-2 {
+  border-width: 2px;
+}
+
+.consumable-tooltip .border-blue-500 {
+  border-color: #3b82f6;
+}
+
+.consumable-tooltip .border-t-transparent {
+  border-top-color: transparent;
+}
+
+.consumable-tooltip .text-gray-600 {
+  color: #4b5563;
+}
+
+.consumable-tooltip .text-sm {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.consumable-tooltip .py-6 {
+  padding-top: 24px;
+  padding-bottom: 24px;
+}
+
+.consumable-tooltip .p-4 {
+  padding: 16px;
+}
+
+.consumable-tooltip .bg-white {
+  background-color: #ffffff;
+}
+
+.consumable-tooltip .rounded-lg {
+  border-radius: 8px;
+}
+
+.consumable-tooltip .shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.consumable-tooltip .border {
+  border-width: 1px;
+}
+
+.consumable-tooltip .border-gray-200 {
+  border-color: #e5e7eb;
+}
+
+.consumable-tooltip .min-w-400 {
+  min-width: 280px;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .consumables-custom-tooltip .ant-tooltip-inner {
+    background: linear-gradient(145deg, #1e293b 0%, #334155 100%) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .consumable-tooltip {
+    background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+  }
+
+  .consumable-tooltip .package-info-card,
+  .consumable-tooltip .specs-summary-card,
+  .consumable-tooltip .pallet-configs-card,
+  .consumable-tooltip .tech-params-card {
+    background: linear-gradient(145deg, #334155 0%, #475569 100%);
+    border-color: #475569;
+  }
+
+  .consumable-tooltip .package-row,
+  .consumable-tooltip .spec-item,
+  .consumable-tooltip .pallet-config-row,
+  .consumable-tooltip .tech-param-row {
+    background: rgba(30, 41, 59, 0.9);
+    border-color: rgba(71, 85, 105, 0.5);
+  }
+
+  .consumable-tooltip .package-row:hover,
+  .consumable-tooltip .spec-item:hover,
+  .consumable-tooltip .pallet-config-row:hover,
+  .consumable-tooltip .tech-param-row:hover {
+    background: rgba(30, 41, 59, 1);
+    border-color: rgba(96, 165, 250, 0.4);
+  }
+
+  .consumable-tooltip .section-title {
+    background: linear-gradient(135deg, #475569 0%, #64748b 100%);
+    color: #e2e8f0;
+  }
+
+  .consumable-tooltip .package-label,
+  .consumable-tooltip .spec-label,
+  .consumable-tooltip .config-label,
+  .consumable-tooltip .param-label {
+    color: #cbd5e1;
+  }
+
+  .consumable-tooltip .package-value,
+  .consumable-tooltip .spec-value,
+  .consumable-tooltip .config-value,
+  .consumable-tooltip .param-value {
+    color: #f1f5f9;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* 新增：简洁版本的额外样式 */
+.consumable-tooltip.compact {
+  min-width: 240px;
+  max-width: 400px;
+}
+
+.consumable-tooltip.compact .package-info-card {
+  padding: 12px;
+}
+
+.consumable-tooltip.compact .package-row {
+  padding: 8px 10px;
+  margin-bottom: 4px;
+}
+
+.consumable-tooltip.compact .package-label {
+  font-size: 11px;
+}
+
+.consumable-tooltip.compact .package-value {
+  font-size: 11px;
+}
+
+/* 特殊效果：渐变边框 */
+.consumable-tooltip .package-info-card::before,
+.consumable-tooltip .specs-summary-card::before,
+.consumable-tooltip .pallet-configs-card::before,
+.consumable-tooltip .tech-params-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 10px;
+  padding: 1px;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8, #7c3aed);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.consumable-tooltip .package-info-card:hover::before,
+.consumable-tooltip .specs-summary-card:hover::before,
+.consumable-tooltip .pallet-configs-card:hover::before,
+.consumable-tooltip .tech-params-card:hover::before {
+  opacity: 0.3;
+} 

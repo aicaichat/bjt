@@ -803,17 +803,17 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={12}>
                         <Form.Item
                           name="name_zh"
-                          label="中文名称 (Name Zh)"
+                          label={t('fields.name_zh', { ns: 'consumables' })}
                         >
-                          <Input placeholder="请输入中文名称" />
+                          <Input placeholder={t('placeholders.enterChineseName', { ns: 'consumables' })} />
                         </Form.Item>
                       </Col>
                       <Col span={12}>
                         <Form.Item
                           name="name_en"
-                          label="英文名称 (Name En)"
+                          label={t('fields.name_en', { ns: 'consumables' })}
                         >
-                          <Input placeholder="请输入英文名称" />
+                          <Input placeholder={t('placeholders.enterEnglishName', { ns: 'consumables' })} />
                         </Form.Item>
                       </Col>
                     </Row>
@@ -822,10 +822,10 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={8}>
                         <Form.Item
                           name="bag_type"
-                          label="袋型 (Bag Type)"
+                          label={t('fields.bag_type', { ns: 'consumables' })}
                         >
                           <Select 
-                            placeholder="请选择袋型" 
+                            placeholder={t('placeholders.selectBagType', { ns: 'consumables' })} 
                             loading={bagTypeLoading}
                           >
                             {bagTypeOptions.map((option) => (
@@ -839,11 +839,11 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={8}>
                         <Form.Item
                           name="material"
-                          label="材质 (Material)"
-                          extra={`材料数据库中的可选材质，当前共 ${materialOptions.length} 个材质`}
+                          label={t('fields.material', { ns: 'consumables' })}
+                          extra={t('extra.materialOptions', { ns: 'consumables', count: materialOptions.length })}
                         >
                           <Select
-                            placeholder="请选择材质"
+                            placeholder={t('placeholders.selectMaterial', { ns: 'consumables' })}
                             loading={materialLoading}
                           >
                             {materialOptions.map((option) => (
@@ -857,10 +857,10 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={8}>
                         <Form.Item
                           name="brand"
-                          label="品牌 (Brand)"
+                          label={t('fields.brand', { ns: 'consumables' })}
                         >
                           <Select
-                            placeholder="请选择品牌"
+                            placeholder={t('placeholders.selectBrand', { ns: 'consumables' })}
                           >
                             <Option value="LockedAir">LockedAir</Option>
                             <Option value="LockedPaper">LockedPaper</Option>
@@ -873,17 +873,17 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={12}>
                         <Form.Item
                           name="spec"
-                          label="规格参数 (Specification)"
+                          label={t('fields.spec', { ns: 'consumables' })}
                         >
-                          <Input placeholder="请输入规格参数" />
+                          <Input placeholder={t('placeholders.enterSpec', { ns: 'consumables' })} />
                         </Form.Item>
                       </Col>
                       <Col span={12}>
                         <Form.Item
                           name="spec_imperial"
-                          label="规格参数(英制) (Specification Imperial)"
+                          label={t('fields.spec_imperial', { ns: 'consumables' })}
                         >
-                          <Input placeholder="请输入英制规格参数" />
+                          <Input placeholder={t('placeholders.enterImperialSpec', { ns: 'consumables' })} />
                         </Form.Item>
                       </Col>
                     </Row>
@@ -892,11 +892,11 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={12}>
                         <Form.Item
                           name="app_model"
-                          label="适配机型 (Compatible Models)"
+                          label={t('fields.app_model', { ns: 'consumables' })}
                         >
                           <Select
                             mode="multiple"
-                            placeholder="请选择适配机型"
+                            placeholder={t('placeholders.selectCompatibleModels', { ns: 'consumables' })}
                             loading={compatibleModelLoading}
                             showSearch
                             filterOption={(input, option) =>
@@ -923,26 +923,26 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={6}>
                         <Form.Item
                           name="unit"
-                          label="单位 (Unit)"
-                          rules={[{ required: true, message: '请选择单位' }]}
+                          label={t('fields.unit', { ns: 'consumables' })}
+                          rules={[{ required: true, message: t('validation.unitRequired', { ns: 'consumables' }) }]}
                         >
-                          <Select placeholder="请选择单位">
-                            <Option value="roll">卷 (Roll)</Option>
-                            <Option value="pcs">件 (Pieces)</Option>
-                            <Option value="box">箱 (Box)</Option>
+                          <Select placeholder={t('placeholders.selectUnit', { ns: 'consumables' })}>
+                            <Option value="roll">{t('units.roll', { ns: 'consumables' })}</Option>
+                            <Option value="pcs">{t('units.pieces', { ns: 'consumables' })}</Option>
+                            <Option value="box">{t('units.box', { ns: 'consumables' })}</Option>
                           </Select>
                         </Form.Item>
                       </Col>
                       <Col span={6}>
                         <Form.Item
                           name="status"
-                          label="状态 (Status)"
-                          rules={[{ required: true, message: '请选择状态' }]}
+                          label={t('fields.status', { ns: 'consumables' })}
+                          rules={[{ required: true, message: t('validation.statusRequired', { ns: 'consumables' }) }]}
                         >
-                          <Select placeholder="请选择状态">
-                            <Option value="publish">已发布 (Published)</Option>
-                            <Option value="draft">草稿 (Draft)</Option>
-                            <Option value="trash">回收站 (Trash)</Option>
+                          <Select placeholder={t('placeholders.selectStatus', { ns: 'consumables' })}>
+                            <Option value="publish">{t('status.publish', { ns: 'consumables' })}</Option>
+                            <Option value="draft">{t('status.draft', { ns: 'consumables' })}</Option>
+                            <Option value="trash">{t('status.trash', { ns: 'consumables' })}</Option>
                           </Select>
                         </Form.Item>
                       </Col>
@@ -952,10 +952,10 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={12}>
                         <Form.Item
                           name="image_url"
-                          label="产品图片 (Product Image)"
+                          label={t('fields.image_url', { ns: 'consumables' })}
                         >
                           <FileUrlInput
-                            placeholder="请输入图片URL或点击上传"
+                            placeholder={t('placeholders.enterProductImageUrl', { ns: 'consumables' })}
                             uploadPath="/uploads/consumables/images/"
                           />
                         </Form.Item>
@@ -963,10 +963,10 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={12}>
                         <Form.Item
                           name="package_image_url"
-                          label="包装图片 (Package Image)"
+                          label={t('fields.package_image_url', { ns: 'consumables' })}
                         >
                           <FileUrlInput
-                            placeholder="请输入图片URL或点击上传"
+                            placeholder={t('placeholders.enterPackageImageUrl', { ns: 'consumables' })}
                             uploadPath="/uploads/consumables/images/"
                           />
                         </Form.Item>
@@ -980,12 +980,12 @@ const ConsumableEditPage: React.FC = () => {
                 label: t('sections.specInfo', { ns: 'consumables' }),
                 children: (
                   <>
-                    <Divider orientation="left">{t('fields.thickness', { ns: 'consumables' })}</Divider>
+                    <Divider orientation="left">{t('sections.thickness', { ns: 'consumables' })}</Divider>
                     <Row gutter={16}>
                       <Col span={12}>
                         <Form.Item
                           name="thickness_met"
-                          label={t('fields.thickness', { ns: 'consumables' }) + '(μm/gsm)'}
+                          label={t('fields.thickness_met', { ns: 'consumables' })}
                         >
                           <InputNumber
                             min={0}
@@ -999,7 +999,7 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={12}>
                         <Form.Item
                           name="thickness_imp"
-                          label={t('fields.thickness', { ns: 'consumables' }) + '(mil/#)'}
+                          label={t('fields.thickness_imp', { ns: 'consumables' })}
                         >
                           <InputNumber
                             min={0}
@@ -1012,12 +1012,44 @@ const ConsumableEditPage: React.FC = () => {
                       </Col>
                     </Row>
 
-                    <Divider orientation="left">{t('fields.size', { ns: 'consumables' })}</Divider>
+                    <Divider orientation="left">{t('sections.basisWeight', { ns: 'consumables' })}</Divider>
+                    <Row gutter={16}>
+                      <Col span={12}>
+                        <Form.Item
+                          name="basis_weight_gsm"
+                          label={t('fields.basis_weight_gsm', { ns: 'consumables' })}
+                        >
+                          <InputNumber
+                            min={0}
+                            step={1}
+                            precision={0}
+                            style={{ width: '100%' }}
+                            placeholder={t('placeholders.enterBasisWeight', { ns: 'consumables' })}
+                          />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item
+                          name="basis_weight_lb"
+                          label={t('fields.basis_weight_lb', { ns: 'consumables' })}
+                        >
+                          <InputNumber
+                            min={0}
+                            step={0.1}
+                            precision={1}
+                            style={{ width: '100%' }}
+                            placeholder={t('placeholders.enterBasisWeight', { ns: 'consumables' })}
+                          />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+
+                    <Divider orientation="left">{t('sections.dimensionInfo', { ns: 'consumables' })}</Divider>
                     <Row gutter={16}>
                       <Col span={6}>
                         <Form.Item
                           name="width_met"
-                          label={t('fields.size', { ns: 'consumables' }) + '(cm)'}
+                          label={t('fields.width_met', { ns: 'consumables' })}
                         >
                           <InputNumber
                             min={0}
@@ -1031,7 +1063,7 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={6}>
                         <Form.Item
                           name="width_imp"
-                          label={t('fields.size', { ns: 'consumables' }) + '(inch)'}
+                          label={t('fields.width_imp', { ns: 'consumables' })}
                         >
                           <InputNumber
                             min={0}
@@ -1045,7 +1077,7 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={6}>
                         <Form.Item
                           name="length_met"
-                          label={t('fields.size', { ns: 'consumables' }) + '(cm)'}
+                          label={t('fields.length_met', { ns: 'consumables' })}
                         >
                           <InputNumber
                             min={0}
@@ -1059,7 +1091,7 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={6}>
                         <Form.Item
                           name="length_imp"
-                          label={t('fields.size', { ns: 'consumables' }) + '(inch)'}
+                          label={t('fields.length_imp', { ns: 'consumables' })}
                         >
                           <InputNumber
                             min={0}
@@ -1072,12 +1104,12 @@ const ConsumableEditPage: React.FC = () => {
                       </Col>
                     </Row>
 
-                    <Divider orientation="left">{t('sections.otherInfo', { ns: 'consumables' })}</Divider>
+                    <Divider orientation="left">{t('sections.otherSpecInfo', { ns: 'consumables' })}</Divider>
                     <Row gutter={16}>
                       <Col span={6}>
                         <Form.Item
                           name="bubble_diameter_met"
-                          label={t('fields.size', { ns: 'consumables' }) + '(cm)'}
+                          label={t('fields.bubble_diameter_met', { ns: 'consumables' })}
                         >
                           <InputNumber
                             min={0}
@@ -1091,7 +1123,7 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={6}>
                         <Form.Item
                           name="bubble_diameter_imp"
-                          label={t('fields.size', { ns: 'consumables' }) + '(inch)'}
+                          label={t('fields.bubble_diameter_imp', { ns: 'consumables' })}
                         >
                           <InputNumber
                             min={0}
@@ -1105,7 +1137,7 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={6}>
                         <Form.Item
                           name="total_length_met"
-                          label={t('fields.size', { ns: 'consumables' }) + '(m)'}
+                          label={t('fields.total_length_met', { ns: 'consumables' })}
                         >
                           <InputNumber
                             min={0}
@@ -1119,7 +1151,7 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={6}>
                         <Form.Item
                           name="total_length_imp"
-                          label={t('fields.size', { ns: 'consumables' }) + '(ft)'}
+                          label={t('fields.total_length_imp', { ns: 'consumables' })}
                         >
                           <InputNumber
                             min={0}
@@ -1132,12 +1164,12 @@ const ConsumableEditPage: React.FC = () => {
                       </Col>
                     </Row>
 
-                    <Divider orientation="left">{t('fields.tube', { ns: 'consumables' })}</Divider>
+                    <Divider orientation="left">{t('sections.tubeInfo', { ns: 'consumables' })}</Divider>
                     <Row gutter={16}>
                       <Col span={12}>
                         <Form.Item
                           name="tube_inner_diameter_cm"
-                          label={t('fields.size', { ns: 'consumables' }) + '(cm)'}
+                          label={t('fields.tube_inner_diameter_cm', { ns: 'consumables' })}
                         >
                           <InputNumber
                             min={0}
@@ -1151,7 +1183,7 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={12}>
                         <Form.Item
                           name="tube_inner_diameter_inch"
-                          label={t('fields.size', { ns: 'consumables' }) + '(inch)'}
+                          label={t('fields.tube_inner_diameter_inch', { ns: 'consumables' })}
                         >
                           <InputNumber
                             min={0}
@@ -1183,7 +1215,7 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={8}>
                         <Form.Item
                           name="package_size_cm"
-                          label={t('fields.size', { ns: 'consumables' }) + '(cm)'}
+                          label={t('fields.package_size_cm', { ns: 'consumables' })}
                         >
                           <Input placeholder={t('placeholders.enterSize', { ns: 'consumables' })} />
                         </Form.Item>
@@ -1191,7 +1223,7 @@ const ConsumableEditPage: React.FC = () => {
                       <Col span={8}>
                         <Form.Item
                           name="package_size_inch"
-                          label={t('fields.size', { ns: 'consumables' }) + '(inch)'}
+                          label={t('fields.package_size_inch', { ns: 'consumables' })}
                         >
                           <Input placeholder={t('placeholders.enterSize', { ns: 'consumables' })} />
                         </Form.Item>
@@ -1268,25 +1300,6 @@ const ConsumableEditPage: React.FC = () => {
                             style={{ width: '100%' }}
                             placeholder={t('placeholders.enterPcsPerBox', { ns: 'consumables' })}
                           />
-                        </Form.Item>
-                      </Col>
-                    </Row>
-
-                    <Row gutter={16}>
-                      <Col span={12}>
-                        <Form.Item
-                          name="image_url"
-                          label={t('fields.productImageUrl', { ns: 'consumables' })}
-                        >
-                          <Input placeholder={t('placeholders.enterProductImageUrl', { ns: 'consumables' })} />
-                        </Form.Item>
-                      </Col>
-                      <Col span={12}>
-                        <Form.Item
-                          name="package_image_url"
-                          label={t('fields.packageImageUrl', { ns: 'consumables' })}
-                        >
-                          <Input placeholder={t('placeholders.enterPackageImageUrl', { ns: 'consumables' })} />
                         </Form.Item>
                       </Col>
                     </Row>

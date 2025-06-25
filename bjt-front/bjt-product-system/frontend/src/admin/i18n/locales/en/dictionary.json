@@ -82,15 +82,15 @@
   },
   "specTypes": {
     "thickness": "Thickness",
+    "weight": "Basis Weight",
     "width": "Width", 
-    "length": "Length",
-    "weight": "Weight"
+    "length": "Perforation"
   },
   "specTypeColors": {
     "thickness": "blue",
+    "weight": "cyan",
     "width": "green",
-    "length": "orange", 
-    "weight": "purple"
+    "length": "orange"
   },
   "actions": {
     "refreshAll": "Refresh All",

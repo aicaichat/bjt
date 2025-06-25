@@ -992,6 +992,7 @@ class BJT_Cart_Controller extends BJT_API_Controller {
     protected function get_product_detail_fields($part_number, $product_type) {
         global $wpdb;
         $table = '';
+        
         switch ($product_type) {
             case 'host':
             case 'machine':
@@ -1009,21 +1010,151 @@ class BJT_Cart_Controller extends BJT_API_Controller {
             default:
                 return [];
         }
+        
+        // 获取产品详细信息
         $product = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE part_number = %s", $part_number), ARRAY_A);
-        if (!$product) return [];
-        $fields = [
-            // 基本参数
-            'model', 'voltage', 'frequency', 'spec', 'spec_imperial',
-            'package_size_cm', 'package_size_inch', 'net_weight_kg', 'net_weight_lbs',
-            'gross_weight_kg', 'gross_weight_lbs', 'pcs_per_box', 'pcs_per_pallet',
-            'pallet_size_cm', 'pallet_size_inch', 'brand', 'unit',
-            // 多语言名称字段
-            'name_zh', 'name_en'
-        ];
-        $result = [];
-        foreach ($fields as $f) {
-            $result[$f] = isset($product[$f]) && $product[$f] !== '' ? $product[$f] : 'N/A';
+        if (!$product) {
+            error_log("[BJT_Cart_Controller] Product not found in {$table} for part_number: {$part_number}");
+            return [];
         }
+        
+        // 🔧 根据产品类型返回相应的字段集合
+        $result = [];
+        
+        if ($product_type === 'consumable') {
+            // 🧴 耗材：返回完整的31个字段
+            $consumable_fields = [
+                // 基本信息字段
+                'model', 'model_metric', 'model_imperial', 'voltage', 'frequency', 
+                'spec', 'spec_imperial', 'brand', 'unit', 'name_zh', 'name_en',
+                'app_model', 'app_sn', 'is_consumable',
+                
+                // 技术参数字段
+                'material', 'shape', 'film_type', 'film_type_code',
+                'bubble_diameter_mm', 'bubble_diameter_cm', 'bubble_diameter_inch',
+                'thickness_um', 'thickness_mil', 'thickness_um_gsm', 'thickness_mil_hash',
+                'film_width_cm', 'film_width_inch', 'width_met', 'width_imp',
+                'bag_length_cm', 'bag_length_inch', 'length_met', 'length_imp',
+                'total_length_m', 'total_length_ft', 'roll_length_m', 'roll_length_ft',
+                'reinforcement', 'ply', 'color', 'printing',
+                'tube_inner_diameter_cm', 'tube_inner_diameter_inch',
+                
+                // 包装信息字段
+                'package_type', 'packaging_type', 'packaging_method', 'sales_unit',
+                'package_image_url', 'packaging_image',
+                'package_size_cm', 'package_size_inch', 'packaging_dim_cm', 'packaging_dim_inch',
+                'net_weight_kg', 'net_weight_lbs', 'unit_weight_kg', 'unit_weight_lbs',
+                'gross_weight_kg', 'gross_weight_lbs', 'package_gross_weight_kg', 'package_gross_weight_lbs',
+                'pcs_per_box', 'qty_per_carton', 'quantity_per_box',
+                
+                // 托盘信息字段
+                'pallet_size_cm', 'pallet_size_inch', 'pallet_dimensions_cm', 'pallet_dimensions_inch',
+                
+                // A配置托盘字段
+                'pcs_per_pallet_a', 'pallet_rolls_a', 'palletRollsA', 'packsPerPalletA',
+                'pallet_gross_weight_a_kg', 'pallet_weight_a_kg', 'palletWeightA',
+                'pallet_gross_weight_a_lbs', 'pallet_weight_a_lbs', 'palletWeightA_imperial',
+                'pallet_height_a_cm', 'palletHeightA',
+                'pallet_height_a_inch', 'palletHeightA_imperial',
+                
+                // B配置托盘字段
+                'pcs_per_pallet_b', 'pallet_rolls_b', 'palletRollsB', 'packsPerPalletB',
+                'pallet_gross_weight_b_kg', 'pallet_weight_b_kg', 'palletWeightB',
+                'pallet_gross_weight_b_lbs', 'pallet_weight_b_lbs', 'palletWeightB_imperial',
+                'pallet_height_b_cm', 'palletHeightB',
+                'pallet_height_b_inch', 'palletHeightB_imperial',
+                
+                // C配置托盘字段
+                'pcs_per_pallet_c', 'pallet_rolls_c', 'palletRollsC', 'packsPerPalletC',
+                'pallet_gross_weight_c_kg', 'pallet_weight_c_kg', 'palletWeightC',
+                'pallet_gross_weight_c_lbs', 'pallet_weight_c_lbs', 'palletWeightC_imperial',
+                'pallet_height_c_cm', 'palletHeightC',
+                'pallet_height_c_inch', 'palletHeightC_imperial',
+                
+                // 必选品字段
+                'necessaries', 'qty_of_necessaries'
+            ];
+            
+            // 提取所有可用字段
+            foreach ($consumable_fields as $field) {
+                if (isset($product[$field])) {
+                    $value = $product[$field];
+                    // 处理特殊值
+                    if ($value === '' || $value === null) {
+                        $result[$field] = 'N/A';
+                    } else {
+                        $result[$field] = $value;
+                    }
+                } else {
+                    $result[$field] = 'N/A';
+                }
+            }
+            
+            // 🔧 特殊处理：从通用字段映射到特定字段
+            $field_mappings = [
+                'pcs_per_pallet' => 'pcs_per_pallet_a',
+                'pallet_gross_weight_kg' => 'pallet_gross_weight_a_kg',
+                'pallet_gross_weight_lbs' => 'pallet_gross_weight_a_lbs',
+                'pallet_height_cm' => 'pallet_height_a_cm',
+                'pallet_height_inch' => 'pallet_height_a_inch',
+                'stacking_height_cm' => 'pallet_height_a_cm',
+                'stacking_height_inch' => 'pallet_height_a_inch'
+            ];
+            
+            foreach ($field_mappings as $generic_field => $specific_field) {
+                if (isset($product[$generic_field]) && $product[$generic_field] !== '' && $product[$generic_field] !== null) {
+                    $result[$specific_field] = $product[$generic_field];
+                }
+            }
+            
+            error_log("[BJT_Cart_Controller] Retrieved " . count($result) . " consumable fields for part_number: {$part_number}");
+            
+        } elseif ($product_type === 'spare_part') {
+            // 🔧 备件：返回备件相关字段
+            $spare_part_fields = [
+                'model', 'voltage', 'frequency', 'spec', 'spec_imperial',
+                'brand', 'unit', 'name_zh', 'name_en', 'app_model', 'app_sn', 'is_consumable',
+                'package_size_cm', 'package_size_inch', 'net_weight_kg', 'net_weight_lbs',
+                'gross_weight_kg', 'gross_weight_lbs', 'pcs_per_box'
+            ];
+            
+            foreach ($spare_part_fields as $field) {
+                $result[$field] = isset($product[$field]) && $product[$field] !== '' ? $product[$field] : 'N/A';
+            }
+            
+        } elseif ($product_type === 'accessory') {
+            // ⚙️ 配件：返回配件相关字段
+            $accessory_fields = [
+                'model', 'voltage', 'frequency', 'spec', 'spec_imperial',
+                'brand', 'unit', 'name_zh', 'name_en',
+                'package_size_cm', 'package_size_inch', 'net_weight_kg', 'net_weight_lbs',
+                'gross_weight_kg', 'gross_weight_lbs', 'pcs_per_box',
+                'pallet_size_cm', 'pallet_size_inch', 'pcs_per_pallet',
+                'stacking_height_cm', 'stacking_height_inch',
+                'pallet_gross_weight_kg', 'pallet_gross_weight_lbs'
+            ];
+            
+            foreach ($accessory_fields as $field) {
+                $result[$field] = isset($product[$field]) && $product[$field] !== '' ? $product[$field] : 'N/A';
+            }
+            
+        } else {
+            // 🔧 主机/机器：返回机器相关字段
+            $machine_fields = [
+                'model', 'voltage', 'frequency', 'spec', 'spec_imperial',
+                'brand', 'unit', 'name_zh', 'name_en',
+                'package_size_cm', 'package_size_inch', 'net_weight_kg', 'net_weight_lbs',
+                'pcs_per_box', 'pallet_size_cm', 'pallet_size_inch', 'pcs_per_pallet',
+                'stacking_height_cm', 'stacking_height_inch',
+                'pallet_gross_weight_kg', 'pallet_gross_weight_lbs'
+            ];
+            
+            foreach ($machine_fields as $field) {
+                $result[$field] = isset($product[$field]) && $product[$field] !== '' ? $product[$field] : 'N/A';
+            }
+        }
+        
+        error_log("[BJT_Cart_Controller] Retrieved " . count($result) . " detail fields for {$product_type} part_number: {$part_number}");
         return $result;
     }
 

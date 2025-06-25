@@ -564,9 +564,9 @@
     "cartonPack": "Carton Package",
     "apiError": "API call failed, showing basic information",
     "units": {
-      "rolls": "Rolls",
-      "weight": "Weight",
-      "height": "Height"
+      "rolls": "Packs per Pallet",
+      "weight": "GW per Pallet",
+      "height": "Pallet Height"
     },
     "thickness": {
       "metric": "Thickness(μm)",

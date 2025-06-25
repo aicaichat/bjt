@@ -7,6 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { ASSETS } from '../../config/appConfig';
 import { getSimpleProductName } from '../../utils/simpleProductName';
 import { CartListProductDetails } from './UnifiedProductDetails';
+import CartTooltip from './CartTooltip';
 import './UnifiedProductDetails.css';
 import './CartList.css';
 
@@ -225,6 +226,14 @@ export const CartList: React.FC<CartListProps> = ({
                 <div className="item-header">
                   <h3 className="item-name">{getDisplayName(item)}</h3>
                   <div className="item-actions">
+                    <CartTooltip item={item} placement="topRight">
+                      <button
+                        className="tooltip-btn"
+                        title={currentLanguage === 'zh' ? '查看详细信息' : 'View Details'}
+                      >
+                        ℹ️
+                      </button>
+                    </CartTooltip>
                     <button
                       onClick={() => onRemove(item.id)}
                       className="remove-btn"

@@ -1199,17 +1199,20 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
                 }
             }
             
-            // 2. 处理材质
+            // 2. 处理材质 - 使用词典API获取准确翻译
             if (!empty($item->material) && !isset($materials_set[$item->material])) {
                 $materials_set[$item->material] = true;
-                $material_display_name = $this->get_material_display_name($item->material);
+                
+                // 从词典API获取材料信息
+                $material_info = $this->get_material_from_dictionary($item->material);
+                
                 $filter_options['materials'][] = [
                     'id' => $item->material,
                     'code' => $item->material,
-                    'name' => $material_display_name, // 保持向后兼容
-                    'name_zh' => $material_display_name,
-                    'name_en' => $item->material,
-                    'sort_order' => count($filter_options['materials']) * 10
+                    'name' => $material_info['name_zh'], // 使用词典中文名称
+                    'name_zh' => $material_info['name_zh'],
+                    'name_en' => $material_info['name_en'],
+                    'sort_order' => $material_info['sort_order'] ?: (count($filter_options['materials']) * 10)
                 ];
             }
             
@@ -1373,7 +1376,38 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
     }
     
     /**
-     * 🔥 新增方法：获取材质显示名称
+     * 🔥 新增方法：从词典API获取材料信息
+     */
+    private function get_material_from_dictionary($material_code) {
+        global $wpdb;
+        
+        // 查询材料词典表
+        $material_info = $wpdb->get_row($wpdb->prepare(
+            "SELECT code, name_zh, name_en, sort_order 
+             FROM {$wpdb->prefix}bjt_materials 
+             WHERE code = %s AND status = 'publish'",
+            $material_code
+        ));
+        
+        if ($material_info) {
+            return [
+                'name_zh' => $material_info->name_zh,
+                'name_en' => trim($material_info->name_en, '"\''), // 清理引号
+                'sort_order' => intval($material_info->sort_order)
+            ];
+        }
+        
+        // 如果词典中没有找到，使用回退值
+        error_log("[BJT Consumables] Material '{$material_code}' not found in dictionary, using fallback");
+        return [
+            'name_zh' => $material_code,
+            'name_en' => $material_code,
+            'sort_order' => 999
+        ];
+    }
+    
+    /**
+     * 🔥 保留方法：获取材质显示名称（作为回退）
      */
     private function get_material_display_name($material) {
         $material_names = [
