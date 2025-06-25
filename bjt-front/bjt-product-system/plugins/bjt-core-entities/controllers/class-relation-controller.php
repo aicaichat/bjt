@@ -1160,11 +1160,25 @@ class BJT_Relation_Controller extends BJT_API_Controller {
                                 LEFT JOIN {$accessory_models_table} am ON a.product_line_id = am.product_line_id AND a.model = am.model
                                 WHERE a.part_number = %s AND a.status = 'publish'";
             
-            $accessory = $wpdb->get_row(
-                $wpdb->prepare($accessory_query, $child_part_number)
-            );
+            // 💡 DEBUG: 记录运行时查询 SQL，方便排查"数据库有行但 API 仍返回 missing"
+            // 打开 WP_DEBUG 时才输出，生产可关闭 WP_DEBUG 以避免日志过多
+            $prepared_sql = $wpdb->prepare($accessory_query, $child_part_number);
+            if ( defined('WP_DEBUG') && WP_DEBUG ) {
+                error_log('[BJT DEBUG] Accessory lookup SQL => ' . $prepared_sql);
+            }
+
+            // 执行查询
+            $accessory = $wpdb->get_row($prepared_sql);
+
+            if ( defined('WP_DEBUG') && WP_DEBUG ) {
+                error_log('[BJT DEBUG] Lookup result for ' . $child_part_number . ' => ' . ( $accessory ? 'FOUND' : 'NOT FOUND' ) );
+            }
+
+            // 创建配件数据结构或占位符
+            // -------------------------
+            // 以下逻辑保持不变，只是把原来的查询调用替换为上面已执行的 $prepared_sql 结果
+            // -------------------------
             
-            // 创建配件数据结构
             if ($accessory) {
                 // 🎯 特殊调试：针对14A01246的子配件
                 if ($part_number === '14A01246') {
