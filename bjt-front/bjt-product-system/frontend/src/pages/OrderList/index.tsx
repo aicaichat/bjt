@@ -120,7 +120,13 @@ const OrderListPage: React.FC = () => {
       
       // 添加新订单到列表顶部
       setOrders(prevOrders => [newOrder, ...prevOrders]);
-      setNotificationMsg(`新订单 ${state.newOrderData.orderNumber} 已创建`);
+      // 使用多语言翻译键构造通知文本
+      const localizedMsg = t('messages.newOrderCreated', {
+        orderNumber: state.newOrderData.orderNumber,
+        ns: 'orderList',
+        defaultValue: `New order ${state.newOrderData.orderNumber} created`
+      });
+      setNotificationMsg(localizedMsg);
       
       // 设置自动清除通知
       const timer = setTimeout(() => {

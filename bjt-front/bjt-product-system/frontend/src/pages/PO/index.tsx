@@ -15,8 +15,6 @@ import orderService, { Order, OrderStatus, CreateOrderRequest } from '../../api/
 import { Loading, Error } from '../../components/common';
 import * as XLSX from 'xlsx';
 import { CartExcelNormalizer } from '../../utils/CartFieldUnifier';
-import { getSimpleProductName } from '../../utils/simpleProductName';
-import { getModel, getBrand, getDescription } from '../../utils/productFieldGetters';
 import { UnifiedProduct, CustomerInfo, ShippingInfo, OrderSummary, POLocationState } from '../../types/product.types';
 import { useCart } from '../../contexts/CartContext';
 import { OrderNumberManager } from '../../utils/orderNumberUtils';
@@ -815,23 +813,29 @@ const POPage: React.FC = () => {
     setCurrentPage(page);
   };
 
-  // 🎯 获取产品名称（智能语言检测版本）
+  // 获取产品名称（直接值，不做智能补齐）
   const getProductName = (product: UnifiedProduct) => {
-    console.log('🔧 [PO Page] getProductName调用:', {
-      currentLanguage,
-      productCode: product.code,
-      productId: product.id,
-      name: product.name,
-      name_zh: (product as any).name_zh,
-      name_en: (product as any).name_en,
-      model: product.model,
-      '完整产品对象': product
-    });
-    
-    // 使用统一的产品名称获取工具
-    const result = getSimpleProductName(product, currentLanguage);
-    console.log('🔧 [PO Page] 最终名称结果:', result);
-    return result;
+    if (!product) return '';
+
+    // 优先使用显式多语言字段
+    if (currentLanguage === 'zh' && (product as any).name_zh) {
+      return (product as any).name_zh;
+    }
+    if (currentLanguage !== 'zh' && (product as any).name_en) {
+      return (product as any).name_en;
+    }
+
+    // 再检查复合 name 对象
+    if (typeof product.name === 'object' && product.name !== null) {
+      const key = currentLanguage === 'zh' ? 'zh-CN' : 'en-US';
+      const val = (product.name as any)[key] || (currentLanguage === 'zh' ? (product.name as any)['zh'] : (product.name as any)['en']);
+      if (val) return val;
+    }
+
+    // 最后 fallback 到单字符串 name
+    if (typeof product.name === 'string') return product.name;
+
+    return '';
   };
 
   // 根据语言或地区获取供应商地址
@@ -1003,16 +1007,16 @@ const POPage: React.FC = () => {
                 {p.code || p.sku || (p as any).part_number || (p as any).item_id || '-'}
               </td>
               <td style={{fontWeight: '500'}}>
-                <ProductName product={p} />
+                {getProductName(p)}
               </td>
               <td style={{textAlign: 'center'}}>
-                {getModel(p)}
+                {p.model || ''}
               </td>
               <td style={{fontSize: '13px', lineHeight: '1.4'}}>
-                {getDescription(p)}
+                {p.spec || ''}
               </td>
               <td style={{textAlign: 'center'}}>
-                {getBrand(p)}
+                {p.brand || ''}
               </td>
               <td style={{textAlign: 'center', fontWeight: 'bold'}}>{p.quantity}</td>
               <td className="amount-cell" style={{textAlign: 'right', fontFamily: 'monospace'}}>

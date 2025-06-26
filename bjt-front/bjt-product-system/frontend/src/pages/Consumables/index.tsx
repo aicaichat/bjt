@@ -558,10 +558,17 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
               </div>
               <div className="spec-item">
                 <span className="spec-label">
-                  {isImperialUnit ? 
-                    t('tooltip.thickness.imperial', 'Thickness(mil)') : 
-                    t('tooltip.thickness.metric', 'Thickness(μm)')
-                  }
+                  {isPaperMaterial(safeGet('material', ''))
+                    ? (
+                        isImperialUnit
+                          ? t('tooltip.weight.imperial', 'Basis Weight(lb)')
+                          : t('tooltip.weight.metric', 'Basis Weight(gsm)')
+                      )
+                    : (
+                        isImperialUnit
+                          ? t('tooltip.thickness.imperial', 'Thickness(mil)')
+                          : t('tooltip.thickness.metric', 'Thickness(μm)')
+                      )}
                 </span>
                 <span className="spec-value">
                   {(() => {
@@ -2582,18 +2589,13 @@ const ConsumablesPage: React.FC = () => {
 
     const quantity = quantities[itemId];
     
-    // 🚀 乐观更新 - 立即显示成功状态
+    // 🚀 乐观更新 - 立即显示成功状态（提前执行）
     const optimisticUpdate = () => {
-      // 立即显示成功通知
       success(t('cart.added', '商品已成功添加到购物车'));
-      
-      // 立即重置数量
       setQuantities(prev => ({
         ...prev,
         [itemId]: 0,
       }));
-      
-      // 触发购物车动画
       if (buttonElement && cartButtonRef.current) {
         setCartAnimation({
           isActive: true,
@@ -2605,104 +2607,64 @@ const ConsumablesPage: React.FC = () => {
       }
     };
 
-    try {
-      // 🚀 优化：简化数据构建，只保留必要字段
-      const resolvedName = product.name || product.code || product.part_number || product.id || 'N/A';
-      const image_url = cleanImageUrl(product.image_url);
-      const regionalPrice = getRegionalPrice(product, quantity);
-      
-      // 🚀 优化：最小化properties对象，减少内存占用
-      const essentialProperties = {
-        // 核心字段
-        name: resolvedName,
-        part_number: product.part_number || product.code || product.id,
-        image_url,
-        brand: product.brand || 'N/A',
-        model: product.model || 'N/A',
-        spec: product.spec || 'N/A',
-        
-        // 耗材特有字段（仅保留关键字段）
-        material: product.specs?.material || 'N/A',
-        app_model: product.app_model || '',
-        
-        // 完整产品对象（用于tooltip）
-        product: product
-      };
+    // 先执行乐观更新，随后异步处理后端同步，减少主线程阻塞
+    optimisticUpdate();
 
-      // 🚀 优化：简化CartItem构建
-      const cartItem: ExtendedCartItem = {
-        // 基础字段
-        item_id: parseInt(itemId) || 0,
-        product_type: 'consumable',
-        product_id: parseInt(itemId) || 0,
-        part_number: essentialProperties.part_number,
-        quantity,
-        name: resolvedName,
-        image_url,
-        unit_price: regionalPrice,
-        currency: getCurrencySymbolByRegion(),
-        line_total: regionalPrice * quantity,
-        inventory_status: 'in_stock',
-        added_at: new Date().toISOString(),
-        
-        // UI必需字段
-        id: itemId,
-        code: essentialProperties.part_number,
-        partNumber: essentialProperties.part_number,
-        image: image_url,
-        category: 'consumable',
-        productId: parseInt(itemId) || 0,
-        selected: false,
-        type: 'consumable',
-        price: regionalPrice,
-        
-        // 简化的价格层级和规格
-        priceTiers: product.pricing?.map(p => ({
-          min: parseInt(p.range.split('-')[0] || '1') || 1,
-          max: p.range.includes('+') ? null : (parseInt(p.range.split('-')[1] || '999999') || 999999),
-          price: p.regionalPrices?.cn || p.price || 0
-        })) || [],
-        specs: {
+    // 异步构建 payload 并调用 API，不阻塞 UI
+    setTimeout(async () => {
+      try {
+        const resolvedName = product.name || product.code || product.part_number || product.id || 'N/A';
+        const image_url = cleanImageUrl(product.image_url);
+        const essentialProperties = {
+          name: resolvedName,
+          part_number: product.part_number || product.code || product.id,
+          image_url
+        };
+
+        const regionalPrice = getRegionalPrice(product, quantity);
+
+        const cartItem: ExtendedCartItem = {
+          item_id: parseInt(itemId) || 0,
+          product_type: 'consumable',
+          product_id: parseInt(itemId) || 0,
+          part_number: essentialProperties.part_number,
+          quantity,
+          name: resolvedName,
+          image_url,
+          unit_price: regionalPrice,
+          currency: getCurrencySymbolByRegion(),
+          line_total: regionalPrice * quantity,
+          inventory_status: 'in_stock',
+          added_at: new Date().toISOString(),
+          id: itemId,
+          code: essentialProperties.part_number,
           partNumber: essentialProperties.part_number,
-          productName: resolvedName
-        },
-        
-        // 优化的properties
-        properties: essentialProperties
-      };
+          image: image_url,
+          category: 'consumable',
+          productId: parseInt(itemId) || 0,
+          selected: false,
+          type: 'consumable',
+          price: regionalPrice,
+          priceTiers: [],
+          specs: { partNumber: essentialProperties.part_number, productName: resolvedName },
+          properties: essentialProperties
+        };
 
-      // 🚀 立即执行乐观更新
-      optimisticUpdate();
-      
-      // 🚀 异步执行实际API调用（不阻塞UI）
-      Promise.resolve(addItem(cartItem)).catch((error: any) => {
-        console.error('Add to cart error:', error);
+        // 🚀 立即执行乐观更新
+        optimisticUpdate();
         
-        // 如果API调用失败，回滚乐观更新
+        // 🚀 异步执行实际API调用（不阻塞UI）
+        await addItem(cartItem);
+      } catch (error: any) {
+        console.error('Add to cart error:', error);
+        // 回滚数量
         setQuantities(prev => ({
           ...prev,
-          [itemId]: quantity, // 恢复原始数量
+          [itemId]: quantity,
         }));
-        
-        // 显示错误信息
-        let errorMessage = String(t('ui.addToCartFailed') || '添加到购物车失败');
-        if (error instanceof Error) {
-          if (error.message?.includes('part_number')) {
-            errorMessage = String(t('ui.partNumberMissing') || '产品料号信息缺失，请刷新页面重试');
-          } else if (error.message?.includes('401') || error.message?.includes('unauthorized')) {
-            errorMessage = String(t('ui.authExpired') || '认证失效，请刷新页面重新登录');
-          } else if (error.message?.includes('400')) {
-            errorMessage = String(t('ui.invalidRequest') || '请求参数错误，请检查产品信息');
-          }
-        }
-        
-        showErrorToast(String(t('ui.addToCartFailed') || '添加失败'), errorMessage);
-      });
-      
-    } catch (error) {
-      console.error('Add to cart error:', error);
-      showErrorToast(String(t('ui.addToCartFailed') || '添加失败'));
-    }
+        showErrorToast(String(t('ui.addToCartFailed') || '添加失败'));
+      }
+    }, 0);
   }, [quantities, consumables, userRegion, addItem, success, showErrorToast, t, warning, cartButtonRef, getRegionalPrice, getCurrencySymbolByRegion]);
   
   // 切换购物车模态框

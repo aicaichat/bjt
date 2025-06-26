@@ -107,6 +107,7 @@
     "cancelConfirm": "Are you sure you want to cancel this order?",
     "orderCanceled": "Order {{orderId}} has been successfully cancelled",
     "orderCreated": "Order created successfully",
+    "newOrderCreated": "New order {{orderNumber}} created",
     "success": {
       "created": "Order created successfully",
       "updated": "Order updated successfully",

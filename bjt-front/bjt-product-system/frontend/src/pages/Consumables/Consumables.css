@@ -2341,7 +2341,8 @@
   font-size: var(--consumable-text-xs);
   font-weight: 500;
   color: var(--consumable-secondary-600);
-  text-transform: uppercase;
+  /* Avoid upper-casing unit symbols such as "μm" */
+  text-transform: none;
   letter-spacing: 0.025em;
   margin-bottom: var(--consumable-space-1);
 }
@@ -2443,7 +2444,8 @@
   font-size: var(--consumable-text-xs);
   font-weight: 500;
   color: var(--consumable-secondary-600);
-  text-transform: uppercase;
+  /* Avoid upper-casing unit symbols such as "μm" */
+  text-transform: none;
   letter-spacing: 0.025em;
   margin-bottom: var(--consumable-space-1);
   line-height: 1.2;
@@ -2756,6 +2758,8 @@
   margin-right: 12px;
   word-break: keep-all;
   white-space: nowrap;
+  /* Keep original casing to avoid μ→Μ issue */
+  text-transform: none;
 }
 
 .consumable-tooltip .spec-value,
@@ -3336,3 +3340,12 @@
 }
 
 /* ======================================== */
+
+/* === Override to preserve lowercase/μ units === */
+.consumable-tooltip .spec-label,
+.consumable-tooltip .package-label,
+.consumable-tooltip .config-label,
+.consumable-tooltip .param-label,
+.consumable-tooltip .tooltip-field-label {
+  text-transform: none !important;
+}

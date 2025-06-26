@@ -63,6 +63,15 @@ function cleanImageUrl(url: string | undefined | null): string {
   return `/images/${url}`;
 }
 
+// 判断是否为纸质材料
+const isPaperMaterial = (materialId: string): boolean => {
+  return (
+    materialId === 'PAPER' ||
+    materialId === 'paper_pe' ||
+    (materialId || '').toLowerCase().includes('paper')
+  );
+};
+
 const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ item, userRegion }) => {
   const { t, i18n } = useTranslation(['consumables', 'common']);
   const { getPreferredUnit } = useAuth();
@@ -182,7 +191,14 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
         
       } catch (err: any) {
         console.error('❌ [CartTooltip] Failed to fetch detail data:', err);
-        setError(err.message || 'Failed to fetch detail data');
+        const msg = err?.message || '';
+        // 对于 404 错误静默处理，只使用 fallback 数据，不显示黄框
+        if (msg.startsWith('HTTP 404')) {
+          console.warn('⚠️ [CartTooltip] 404 Not Found - using fallback data silently');
+          setError(null); // 不显示错误横幅
+        } else {
+          setError(msg || 'Failed to fetch detail data');
+        }
         
         // 🔍 详细的fallback数据调试
         console.log('🔍 [CartTooltip] Creating fallback data from item:', {
@@ -535,10 +551,17 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
               </div>
               <div className="spec-item">
                 <span className="spec-label">
-                  {isImperialUnit ? 
-                    t('tooltip.thickness.imperial', 'Thickness(mil)') : 
-                    t('tooltip.thickness.metric', 'Thickness(μm)')
-                  }
+                  {isPaperMaterial(safeGet('material', ''))
+                    ? (
+                        isImperialUnit
+                          ? t('tooltip.weight.imperial', 'Basis Weight(lb)')
+                          : t('tooltip.weight.metric', 'Basis Weight(gsm)')
+                      )
+                    : (
+                        isImperialUnit
+                          ? t('tooltip.thickness.imperial', 'Thickness(mil)')
+                          : t('tooltip.thickness.metric', 'Thickness(μm)')
+                      )}
                 </span>
                 <span className="spec-value">
                   {(() => {

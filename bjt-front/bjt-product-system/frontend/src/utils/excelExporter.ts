@@ -17,11 +17,11 @@ const EXCEL_LABELS = {
     shipToInformation: '收货方信息',
     company: '公司',
     city: '城市',
-    partNo: '零件号',
-    item: '项目',
+    partNo: '料号',
+    item: '名称',
     model: '型号',
-    itemDescription: '项目描述',
-    brandName: '品牌名称',
+    itemDescription: '规格描述',
+    brandName: '品牌',
     quantity: '数量',
     unitPrice: '单价',
     amount: '金额',
@@ -47,8 +47,8 @@ const EXCEL_LABELS = {
     partNo: 'Part No.',
     item: 'Item',
     model: 'Model',
-    itemDescription: 'Item description',
-    brandName: 'Brand Name',
+    itemDescription: 'Spec.',
+    brandName: 'Brand',
     quantity: 'Quantity',
     unitPrice: 'Unit Price',
     amount: 'Amount',
@@ -353,17 +353,17 @@ export class ExcelExporter {
     const items = order.items.map((item: UnifiedProduct) => {
       console.log('🔧 [ExcelExporter] 处理商品项目:', item);
       
-      // 🔧 修复：使用与PO页面一致的产品名称处理逻辑
+      // 根据语言优先取 name_zh / name_en，再取 name
+      const lang = order.language || 'en';
       let itemName = '';
-      if (item.name && typeof item.name === 'string' && !item.name.startsWith('unknown-')) {
+      if (lang === 'zh' && (item as any).name_zh) {
+        itemName = (item as any).name_zh;
+      } else if (lang !== 'zh' && (item as any).name_en) {
+        itemName = (item as any).name_en;
+      } else if (typeof item.name === 'string') {
         itemName = item.name;
-      } else if (typeof item.name === 'object') {
-        // 使用与PO页面相同的语言选择逻辑
-        const language = order.language || 'en';
-        itemName = item.name[language === 'zh' ? 'zh-CN' : 'en-US'] || 
-                  item.name['en-US'] || 
-                  item.name['en'] || 
-                  JSON.stringify(item.name);
+      } else if (typeof item.name === 'object' && item.name !== null) {
+        itemName = item.name[lang === 'zh' ? 'zh-CN' : 'en-US'] || '';
       }
       
       // 🔧 修复：如果name是unknown格式或为空，使用备用字段
@@ -371,69 +371,8 @@ export class ExcelExporter {
         itemName = item.model || item.code || item.sku || 'Unknown Product';
       }
       
-      // 🔧 修复：使用与PO页面完全一致的商品描述处理逻辑
-      let cleanDescription = '';
-      
-      // 🔧 按照PO页面的逻辑构建Item description
-      const descriptionParts = [];
-      
-      // 添加partNumber信息（如果存在）
-      if (item.code || item.sku || item.part_number) {
-        descriptionParts.push(`partNumber: ${item.code || item.sku || item.part_number}`);
-      }
-      
-      // 添加productName信息
-      if (itemName && itemName !== 'Unknown Product') {
-        descriptionParts.push(`productName: ${itemName}`);
-      }
-      
-      // 添加规格信息（按照PO页面的优先级）
-      const specDescriptions = [];
-      
-      // 🔧 优先使用spec字段，然后是description字段
-      if (item.spec && typeof item.spec === 'string' && item.spec.trim() !== '') {
-        specDescriptions.push(item.spec);
-      } else if ((item as any).description && typeof (item as any).description === 'string' && (item as any).description.trim() !== '') {
-        specDescriptions.push((item as any).description);
-      } else if (item.specs && typeof item.specs === 'string' && item.specs.trim() !== '') {
-        specDescriptions.push(item.specs);
-      } else if (item.specs && typeof item.specs === 'object') {
-        const specsText = Object.entries(item.specs)
-          .filter(([k, v]) => v && v !== 'N/A' && v !== 'Not Specified')
-          .map(([k, v]) => `${k}: ${v}`)
-          .join(', ');
-        if (specsText) {
-          specDescriptions.push(specsText);
-        }
-      }
-      
-      // 从properties中添加关键规格（与PO页面逻辑一致）
-      if (item.properties && typeof item.properties === 'object') {
-        const importantSpecs = [];
-        if (item.properties.voltage && item.properties.voltage !== 'N/A') {
-          importantSpecs.push(`${item.properties.voltage}${item.properties.voltage.includes('V') ? '' : 'V'}`);
-        }
-        if (item.properties.frequency && item.properties.frequency !== 'N/A') {
-          importantSpecs.push(`${item.properties.frequency}${item.properties.frequency.includes('Hz') ? '' : 'Hz'}`);
-        }
-        if (importantSpecs.length > 0) {
-          specDescriptions.push(importantSpecs.join(', '));
-        }
-      }
-      
-      // 🔧 如果仍然没有描述，使用产品名称或型号作为备用
-      if (specDescriptions.length === 0) {
-        const fallbackDescription = itemName || item.model || '产品规格待补充';
-        specDescriptions.push(fallbackDescription);
-      }
-      
-      // 将规格信息添加到描述部分
-      if (specDescriptions.length > 0) {
-        descriptionParts.push(specDescriptions.join(' | '));
-      }
-      
-      // 最终组合所有描述部分
-      cleanDescription = descriptionParts.join(' | ');
+      // 统一使用 productFieldGetters 中的 getDescription，避免重复/不规范
+      const cleanDescription = item.spec || '';
       
       console.log('🔧 [ExcelExporter] Item description构建过程:', {
         partNumber: item.code || item.sku || item.part_number,

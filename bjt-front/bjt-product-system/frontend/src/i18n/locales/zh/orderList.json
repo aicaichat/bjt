@@ -107,6 +107,7 @@
     "cancelConfirm": "确定要取消此订单吗？",
     "orderCanceled": "订单 {{orderId}} 已成功取消",
     "orderCreated": "订单创建成功",
+    "newOrderCreated": "新订单 {{orderNumber}} 已创建",
     "success": {
       "created": "订单创建成功",
       "updated": "订单更新成功",
