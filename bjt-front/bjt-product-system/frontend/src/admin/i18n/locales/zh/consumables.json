@@ -75,7 +75,7 @@
     "name": "名称",
     "brand": "品牌",
     "spec": "规格描述",
-    "spec_imperial": "规格描述",
+    "spec_imperial": "规格描述(英制)",
     "voltage": "电压",
     "frequency": "频率",
     "unit": "单位",
