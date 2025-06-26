@@ -19,10 +19,10 @@ import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
-  UploadOutlined,
-  DownloadOutlined,
   LinkOutlined,
 } from '@ant-design/icons';
+import DataImporter from '../../components/importer/DataImporter';
+import { importRequired } from '../../../constants/importRequired';
 import type { ColumnsType } from 'antd/es/table';
 import { AdminPart, AdminHostModel } from '../../types/admin-models.types';
 import AdminPartService from '../../services/admin-part.service';
@@ -281,8 +281,11 @@ const PartsPage: React.FC = () => {
             >
               新增料号
             </Button>
-            <Button className="ml-2" icon={<UploadOutlined />}>导入</Button>
-            <Button className="ml-2" icon={<DownloadOutlined />}>导出</Button>
+            <DataImporter
+              entity="part"
+              requiredFields={importRequired.part}
+              onSuccess={() => fetchParts()}
+            />
           </div>
           <div>
             <Space>

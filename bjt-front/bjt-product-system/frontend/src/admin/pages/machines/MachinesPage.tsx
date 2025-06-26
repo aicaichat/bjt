@@ -46,6 +46,7 @@ import TableImportExport from '../../components/TableImportExport';
 import PdfUploader from '../../components/PdfUploader';
 import { useAdminI18n } from '../../i18n/hooks/useAdminI18n';
 import FileUrlInput from '../../components/common/FileUrlInput';
+import DataImporter from '../../components/importer/DataImporter';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -780,27 +781,16 @@ const MachinesPage: React.FC = () => {
             <Button type="primary" icon={<PlusOutlined />} onClick={handleCreateMachine}>
               {t('actions.addModel', { ns: 'machines' })}
             </Button>
-            <TableImportExport
-              data={modelsList}
-              columns={modelExportColumns}
-              exportFileName={`${t('list.models', { ns: 'machines' })}_${new Date().toISOString().split('T')[0]}.csv`}
-              templateFileName={`${t('list.models', { ns: 'machines' })}${t('actions.import', { ns: 'machines' })}.csv`}
-              onImportSuccess={handleImportModels}
+            <DataImporter
+              entity="machine-model"
               requiredFields={['code', 'title_zh', 'title_en']}
-              fieldMapping={{
-                code: 'model' // CSV中的code字段映射到数据库的model字段
-              }}
-              validateRow={(row, rowIndex) => {
+              validateRow={(row) => {
                 const errors: string[] = [];
-                if (!row.code && !row.model) {
-                  errors.push(t('validation.modelRequired', { ns: 'machines' }));
-                }
-                if (!row.title_zh) {
-                  errors.push(t('validation.chineseNameRequired', { ns: 'machines' }));
-                }
+                if (!row.model) errors.push('model required');
+                if (!row.title_zh) errors.push('title_zh required');
                 return { valid: errors.length === 0, errors };
               }}
-              className="ml-2"
+              onSuccess={fetchModels}
             />
           </div>
           <div>
@@ -894,14 +884,10 @@ const MachinesPage: React.FC = () => {
               templateFileName={`${t('list.parts', { ns: 'machines' })}${t('actions.import', { ns: 'machines' })}.csv`}
               onImportSuccess={handleImportParts}
               requiredFields={['model', 'part_number', 'name_zh', 'name_en']}
-              validateRow={(row, rowIndex) => {
+              validateRow={(row) => {
                 const errors: string[] = [];
-                if (!row.model) {
-                  errors.push(t('validation.modelRequired', { ns: 'machines' }));
-                }
-                if (!row.part_number) {
-                  errors.push(t('validation.partNumberRequired', { ns: 'machines' }));
-                }
+                if (!row.model) errors.push('model required');
+                if (!row.part_number) errors.push('part_number required');
                 return { valid: errors.length === 0, errors };
               }}
               className="ml-2"

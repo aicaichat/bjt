@@ -18,6 +18,8 @@ import adminPartService from '../../services/admin-part.service';
 import { accessoryService } from '../../services/admin-accessory.service';
 import { sparePartService } from '../../services/admin-spare-part.service';
 import { useAdminI18n } from '../../i18n/hooks/useAdminI18n';
+import DataImporter from '../../components/importer/DataImporter';
+import { importRequired } from '../../../constants/importRequired';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -1429,6 +1431,11 @@ const RelationsPage: React.FC = () => {
         onBack={handleBack}
         extra={
           <Space>
+            <DataImporter
+              entity="relation"
+              requiredFields={importRequired.relation}
+              onSuccess={() => loadRelationTree(false)}
+            />
             <Button icon={<ReloadOutlined />} onClick={() => loadRelationTree(true)} disabled={!selectedHostPartNumber}>
               {t('list.refresh', { ns: 'relations' })}
             </Button>

@@ -16,7 +16,6 @@ import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
-  UploadOutlined,
   DownloadOutlined,
   ReloadOutlined,
   ExperimentOutlined,
@@ -36,6 +35,8 @@ import {
   adminSpecificationService
 } from '../../services/admin-dictionary.service';
 import { useAdminI18n } from '../../i18n/hooks/useAdminI18n';
+import DataImporter from '../../components/importer/DataImporter';
+import { importRequired } from '../../../constants/importRequired';
 
 const { Title, Text } = Typography;
 const { confirm } = Modal;
@@ -473,9 +474,6 @@ const ConsumablesDictionaryPage: React.FC = () => {
             <Button icon={<ReloadOutlined />} onClick={handleRefreshAll}>
               {t('actions.refreshAll', { ns: 'dictionary' })}
             </Button>
-            <Button icon={<UploadOutlined />}>
-              {t('actions.batchImport', { ns: 'dictionary' })}
-            </Button>
             <Button icon={<DownloadOutlined />}>
               {t('actions.batchExport', { ns: 'dictionary' })}
             </Button>
@@ -510,14 +508,21 @@ const ConsumablesDictionaryPage: React.FC = () => {
                 <span>{t('shape.management', { ns: 'dictionary' })}</span>
                 <Badge count={shapes.length} showZero style={{ marginLeft: 12 }} />
               </div>
-              <Button
-                type="primary"
-                size="small"
-                icon={<PlusOutlined />}
-                onClick={() => handleCreate('shape')}
-              >
-                {t('shape.create', { ns: 'dictionary' })}
-              </Button>
+              <Space>
+                <DataImporter
+                  entity="shape"
+                  requiredFields={importRequired.shape}
+                  onSuccess={fetchShapes}
+                />
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<PlusOutlined />}
+                  onClick={() => handleCreate('shape')}
+                >
+                  {t('shape.create', { ns: 'dictionary' })}
+                </Button>
+              </Space>
             </div>
           }
           styles={{ body: { padding: '16px' } }}
@@ -549,14 +554,21 @@ const ConsumablesDictionaryPage: React.FC = () => {
                 <span>{t('material.management', { ns: 'dictionary' })}</span>
                 <Badge count={materials.length} showZero style={{ marginLeft: 12 }} />
               </div>
-              <Button
-                type="primary"
-                size="small"
-                icon={<PlusOutlined />}
-                onClick={() => handleCreate('material')}
-              >
-                {t('material.create', { ns: 'dictionary' })}
-              </Button>
+              <Space>
+                <DataImporter
+                  entity="material"
+                  requiredFields={importRequired.material}
+                  onSuccess={fetchMaterials}
+                />
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<PlusOutlined />}
+                  onClick={() => handleCreate('material')}
+                >
+                  {t('material.create', { ns: 'dictionary' })}
+                </Button>
+              </Space>
             </div>
           }
           styles={{ body: { padding: '16px' } }}
@@ -588,14 +600,21 @@ const ConsumablesDictionaryPage: React.FC = () => {
                 <span>{t('specification.management', { ns: 'dictionary' })}</span>
                 <Badge count={specifications.length} showZero style={{ marginLeft: 12 }} />
               </div>
-              <Button
-                type="primary"
-                size="small"
-                icon={<PlusOutlined />}
-                onClick={() => handleCreate('specification')}
-              >
-                {t('specification.create', { ns: 'dictionary' })}
-              </Button>
+              <Space>
+                <DataImporter
+                  entity="specification"
+                  requiredFields={importRequired.specification}
+                  onSuccess={fetchSpecifications}
+                />
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<PlusOutlined />}
+                  onClick={() => handleCreate('specification')}
+                >
+                  {t('specification.create', { ns: 'dictionary' })}
+                </Button>
+              </Space>
             </div>
           }
           styles={{ body: { padding: '16px' } }}

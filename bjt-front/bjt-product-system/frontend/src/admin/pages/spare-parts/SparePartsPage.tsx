@@ -7,7 +7,8 @@ import {
   PlusOutlined, EditOutlined, DeleteOutlined, WarningOutlined
 } from '@ant-design/icons';
 import AdminPageHeader from '../../components/common/AdminPageHeader';
-import ImportExportButtons from '../../components/common/ImportExportButtons';
+import DataImporter from '../../components/importer/DataImporter';
+import { importRequired } from '../../../constants/importRequired';
 import { useAdminApi } from '../../hooks/useAdminApi';
 import { sparePartModelService, sparePartService, SparePartModel, SparePart } from '../../services/admin-spare-part.service';
 import adminProductLineService from '../../services/admin-product-line.service';
@@ -341,15 +342,10 @@ const SparePartsPage: React.FC = () => {
             </Select>
           </Space>
           <Space>
-            <ImportExportButtons
-              onImport={async (file) => {
-                message.info(t('actions.import', { ns: 'spare-parts' }) + `: ${file.name}`);
-                return Promise.resolve();
-              }}
-              onExport={async () => {
-                message.info(t('actions.export', { ns: 'spare-parts' }));
-                return Promise.resolve();
-              }}
+            <DataImporter
+              entity="spare-part-model"
+              requiredFields={importRequired['spare-part-model']}
+              onSuccess={refetchModels}
             />
             <Button
               type="primary"
@@ -425,15 +421,10 @@ const SparePartsPage: React.FC = () => {
             </Space>
           </Space>
           <Space>
-            <ImportExportButtons
-              onImport={async (file) => {
-                message.info(t('actions.import', { ns: 'spare-parts' }) + `: ${file.name}`);
-                return Promise.resolve();
-              }}
-              onExport={async () => {
-                message.info(t('actions.export', { ns: 'spare-parts' }));
-                return Promise.resolve();
-              }}
+            <DataImporter
+              entity="spare-part"
+              requiredFields={importRequired['spare-part']}
+              onSuccess={refetchSpareParts}
             />
             <Button
               type="primary"

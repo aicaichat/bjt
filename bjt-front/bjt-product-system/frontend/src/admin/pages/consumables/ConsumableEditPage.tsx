@@ -983,63 +983,47 @@ const ConsumableEditPage: React.FC = () => {
                     <Divider orientation="left">{t('sections.thickness', { ns: 'consumables' })}</Divider>
                     <Row gutter={16}>
                       <Col span={12}>
-                        <Form.Item
-                          name="thickness_met"
-                          label={t('fields.thickness_met', { ns: 'consumables' })}
-                        >
-                          <InputNumber
-                            min={0}
-                            step={0.1}
-                            precision={1}
-                            style={{ width: '100%' }}
-                            placeholder={t('placeholders.enterThickness', { ns: 'consumables' })}
-                          />
+                        {/* 动态切换厚度 / 克重(gsm) 标签 */}
+                        <Form.Item shouldUpdate={(prev, cur) => prev.material !== cur.material} noStyle>
+                          {({ getFieldValue }) => {
+                            const material = getFieldValue('material');
+                            const isPaper = material && material.toString().toUpperCase().includes('PAPER');
+                            const labelText = isPaper ? '克重(gsm)' : '厚度(um)';
+                            const placeholderText = isPaper ? '请输入克重(gsm)' : '请输入厚度(um)';
+                            return (
+                              <Form.Item name="thickness_met" label={labelText}>
+                                <InputNumber
+                                  min={0}
+                                  step={isPaper ? 1 : 0.1}
+                                  precision={isPaper ? 0 : 1}
+                                  style={{ width: '100%' }}
+                                  placeholder={placeholderText}
+                                />
+                              </Form.Item>
+                            );
+                          }}
                         </Form.Item>
                       </Col>
                       <Col span={12}>
-                        <Form.Item
-                          name="thickness_imp"
-                          label={t('fields.thickness_imp', { ns: 'consumables' })}
-                        >
-                          <InputNumber
-                            min={0}
-                            step={0.1}
-                            precision={1}
-                            style={{ width: '100%' }}
-                            placeholder={t('placeholders.enterThickness', { ns: 'consumables' })}
-                          />
-                        </Form.Item>
-                      </Col>
-                    </Row>
-
-                    <Divider orientation="left">{t('sections.basisWeight', { ns: 'consumables' })}</Divider>
-                    <Row gutter={16}>
-                      <Col span={12}>
-                        <Form.Item
-                          name="basis_weight_gsm"
-                          label={t('fields.basis_weight_gsm', { ns: 'consumables' })}
-                        >
-                          <InputNumber
-                            min={0}
-                            step={1}
-                            precision={0}
-                            style={{ width: '100%' }}
-                            placeholder={t('placeholders.enterBasisWeight', { ns: 'consumables' })}
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col span={12}>
-                        <Form.Item
-                          name="basis_weight_lb"
-                          label={t('fields.basis_weight_lb', { ns: 'consumables' })}
-                        >
-                          <InputNumber
-                            min={0}
-                            step={0.1}
-                            precision={1}
-                            style={{ width: '100%' }}
-                            placeholder={t('placeholders.enterBasisWeight', { ns: 'consumables' })}
-                          />
+                        {/* 动态切换厚度 / 克重(lb) 标签 */}
+                        <Form.Item shouldUpdate={(prev, cur) => prev.material !== cur.material} noStyle>
+                          {({ getFieldValue }) => {
+                            const material = getFieldValue('material');
+                            const isPaper = material && material.toString().toUpperCase().includes('PAPER');
+                            const labelText = isPaper ? '克重(lb)' : '厚度(mil)';
+                            const placeholderText = isPaper ? '请输入克重(lb)' : '请输入厚度(mil)';
+                            return (
+                              <Form.Item name="thickness_imp" label={labelText}>
+                                <InputNumber
+                                  min={0}
+                                  step={0.1}
+                                  precision={1}
+                                  style={{ width: '100%' }}
+                                  placeholder={placeholderText}
+                                />
+                              </Form.Item>
+                            );
+                          }}
                         </Form.Item>
                       </Col>
                     </Row>

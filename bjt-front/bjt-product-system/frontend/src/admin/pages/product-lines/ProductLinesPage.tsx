@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Space, Popconfirm, message, Tag } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import DataImporter from '../../components/importer/DataImporter';
+import { importRequired } from '../../../constants/importRequired';
 import { useNavigate } from 'react-router-dom';
 import adminProductLineService, { ProductLine } from '../../services/admin-product-line.service';
 import PageHeader from '../../components/common/PageHeader';
@@ -152,6 +154,12 @@ const ProductLinesPage: React.FC = () => {
       <PageHeader 
         title={t('title', { ns: 'productLines' }) || '产品线管理'} 
         extra={[
+          <DataImporter
+            key="import"
+            entity="product-line"
+            requiredFields={importRequired['product-line']}
+            onSuccess={fetchProductLines}
+          />,
           <Button 
             key="add" 
             type="primary" 

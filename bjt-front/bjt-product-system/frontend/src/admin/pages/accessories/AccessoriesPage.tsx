@@ -7,7 +7,8 @@ import {
   PlusOutlined, EditOutlined, DeleteOutlined
 } from '@ant-design/icons';
 import AdminPageHeader from '../../components/common/AdminPageHeader';
-import ImportExportButtons from '../../components/common/ImportExportButtons';
+import DataImporter from '../../components/importer/DataImporter';
+import { importRequired } from '../../../constants/importRequired';
 import { useAdminApi } from '../../hooks/useAdminApi';
 import { accessoryModelService, accessoryService, AccessoryModel, Accessory } from '../../services/admin-accessory.service';
 import adminProductLineService from '../../services/admin-product-line.service';
@@ -443,17 +444,10 @@ const AccessoriesPage: React.FC = () => {
             </Select>
           </Space>
           <Space>
-            <ImportExportButtons
-              onImport={async (file) => {
-                message.info(t('actions.import', { ns: 'accessories' }) + `: ${file.name}`);
-                // TODO: 实现导入功能
-                return Promise.resolve();
-              }}
-              onExport={async () => {
-                message.info(t('actions.export', { ns: 'accessories' }));
-                // TODO: 实现导出功能
-                return Promise.resolve();
-              }}
+            <DataImporter
+              entity="accessory-model"
+              requiredFields={importRequired['accessory-model']}
+              onSuccess={refetchModels}
             />
             <Button
               type="primary"
@@ -514,17 +508,10 @@ const AccessoriesPage: React.FC = () => {
             </Select>
           </Space>
           <Space>
-            <ImportExportButtons
-              onImport={async (file) => {
-                message.info(t('actions.import', { ns: 'accessories' }) + `: ${file.name}`);
-                // TODO: 实现导入功能
-                return Promise.resolve();
-              }}
-              onExport={async () => {
-                message.info(t('actions.export', { ns: 'accessories' }));
-                // TODO: 实现导出功能
-                return Promise.resolve();
-              }}
+            <DataImporter
+              entity="accessory"
+              requiredFields={importRequired.accessory}
+              onSuccess={refetchAccessories}
             />
             <Button
               type="primary"

@@ -20,7 +20,6 @@ import {
   SearchOutlined,
   SettingOutlined,
   DownloadOutlined,
-  UploadOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -28,6 +27,8 @@ import { Consumable } from '../../services/admin-consumable.service';
 import { useAdminApi } from '../../hooks/useAdminApi';
 import { consumableService } from '../../services/admin-consumable.service';
 import { useAdminI18n } from '../../i18n/hooks/useAdminI18n';
+import DataImporter from '../../components/importer/DataImporter';
+import { importRequired } from '../../../constants/importRequired';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -509,12 +510,6 @@ const ConsumablesPage: React.FC = () => {
       icon: <DownloadOutlined />,
       onClick: () => message.info(t('actions.export', { ns: 'consumables' }) + ' ' + t('message.createFailed', { ns: 'consumables' })),
     },
-    {
-      key: 'import',
-      label: t('actions.import', { ns: 'consumables' }),
-      icon: <UploadOutlined />,
-      onClick: () => message.info(t('actions.import', { ns: 'consumables' }) + ' ' + t('message.createFailed', { ns: 'consumables' })),
-    },
   ];
 
   return (
@@ -528,6 +523,11 @@ const ConsumablesPage: React.FC = () => {
             </Text>
           </div>
           <Space>
+            <DataImporter
+              entity="consumable"
+              requiredFields={importRequired.consumable}
+              onSuccess={refetch}
+            />
             <Button 
               type="primary" 
               icon={<PlusOutlined />} 
@@ -535,11 +535,6 @@ const ConsumablesPage: React.FC = () => {
             >
               {t('actions.addConsumable', { ns: 'consumables' })}
             </Button>
-            <Dropdown menu={{ items: moreActionsItems }} placement="bottomRight">
-              <Button icon={<SettingOutlined />}>
-                {t('actions.export', { ns: 'consumables' })}
-              </Button>
-            </Dropdown>
           </Space>
         </div>
 

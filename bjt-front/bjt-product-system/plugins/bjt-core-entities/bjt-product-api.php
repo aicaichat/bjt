@@ -95,6 +95,7 @@ require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-relation-controll
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-user-controller.php';
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-settings-controller.php';
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-upload-controller.php';
+require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-import-controller.php';
 
 // Helper function to get current token from request
 if (!function_exists('bjt_get_current_token')) {
@@ -152,7 +153,8 @@ function bjt_api_register_routes() {
         'BJT_Relation_Controller',
         'BJT_User_Controller',
         'BJT_Settings_Controller',
-        'BJT_Upload_Controller'
+        'BJT_Upload_Controller',
+        'BJT_Import_Controller'
     );
 
     foreach ($controllers as $controller_name) {

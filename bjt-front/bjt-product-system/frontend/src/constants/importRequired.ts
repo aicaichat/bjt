@@ -1,0 +1,16 @@
+export const importRequired: Record<string, string[]> = {
+  'machine-model': ['model', 'title_zh'],
+  'accessory-model': ['product_line_id', 'model', 'title_zh'],
+  'spare-part-model': ['product_line_id', 'model', 'title_zh'],
+  part: ['product_line_id', 'part_number', 'name_zh'],
+  consumable: ['product_line_id', 'part_number', 'name_zh'],
+  'product-line': ['code', 'title_zh'],
+  material: ['product_line_id', 'code', 'name_zh'],
+  shape: ['product_line_id', 'code', 'name_zh'],
+  specification: ['product_line_id', 'spec_type', 'metric_value', 'metric_unit'],
+  relation: ['product_line_id', 'host_part_number', 'part_number', 'level', 'quantity'],
+  price: ['product_line_id', 'target_type', 'target_id', 'region', 'currency', 'base_price', 'min_quantity'],
+  inventory: ['product_line_id', 'target_type', 'target_id', 'region', 'warehouse'],
+  accessory: ['product_line_id', 'part_number', 'name_zh'],
+  'spare-part': ['product_line_id', 'part_number', 'name_zh'],
+}; 
