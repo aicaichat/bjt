@@ -1384,6 +1384,8 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
   );
 };
 
+const MemoConsumableItem = React.memo(StandardConsumableItem);
+
 // 在组件外部定义映射
 const shapeIdToSpecsShape: Record<string, string> = {
   MEX: 'paper air Pillow',
@@ -2650,9 +2652,6 @@ const ConsumablesPage: React.FC = () => {
           properties: essentialProperties
         };
 
-        // 🚀 立即执行乐观更新
-        optimisticUpdate();
-        
         // 🚀 异步执行实际API调用（不阻塞UI）
         await addItem(cartItem);
       } catch (error: any) {
@@ -2763,10 +2762,24 @@ const ConsumablesPage: React.FC = () => {
     // 移除setTimeout和handleApplyFilters调用
   };
 
-  // 处理材质变更
+  // 处理材质变更（根据材料类型重置厚度/克重筛选）
   const handleMaterialChange = (value: string) => {
     console.log('🔧 [Material Filter] Changed:', selectedMaterial, '->', value);
     setSelectedMaterial(value);
+
+    // 根据新选择的材质类型，安全地重置不适用的规格筛选
+    if (value === 'all' || value === '') {
+      // 若未指定材质，清空厚度和克重的选择，避免残留
+      setSelectedThickness('all');
+      setSelectedWeight('all');
+    } else if (isPaperMaterial(value)) {
+      // 纸质材料使用克重作为规格，清空厚度筛选
+      setSelectedThickness('all');
+    } else {
+      // 非纸质材料使用厚度作为规格，清空克重筛选
+      setSelectedWeight('all');
+    }
+
     setCurrentPage(1); // 重置页码
     // 移除setTimeout和handleApplyFilters调用
   };
@@ -2896,7 +2909,7 @@ const ConsumablesPage: React.FC = () => {
           if (useStandardizedFields) {
             // 使用新的标准化产品项组件
             return (
-              <StandardConsumableItem
+              <MemoConsumableItem
                 key={item.id}
                 item={item}
                 userRegion={userRegion}

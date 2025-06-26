@@ -176,7 +176,10 @@
       "thickness": "mil",
       "weight": "lb",
       "roll": "ft"
-    }
+    },
+    "roll": "Roll",
+    "pieces": "Pieces",
+    "box": "Box"
   },
   "rollLength": "Roll Length",
   "width": "Width",

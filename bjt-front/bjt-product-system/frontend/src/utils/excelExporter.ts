@@ -625,41 +625,99 @@ export class ExcelExporter {
   }
 
   /**
-   * 创建并下载Excel文件
+   * 创建并下载 .xlsx 文件（使用 SheetJS）
    */
   static async exportToExcel(order: UnifiedOrder): Promise<void> {
     console.log('🔧 [ExcelExporter] 开始导出订单:', order);
-    
+
     try {
-      // 转换数据格式
+      // 动态加载 SheetJS，以便按需引入减小首屏体积
+      const XLSX = await import(/* webpackChunkName: "xlsx" */ 'xlsx');
+
       const excelData = this.convertOrderToExcelData(order);
-      console.log('🔧 [ExcelExporter] 转换后的Excel数据:', excelData);
-      
-      // 生成CSV内容
-      const csvContent = this.generateCSV(excelData);
-      console.log('🔧 [ExcelExporter] 生成的CSV内容:', csvContent);
-      
-      // 创建Blob
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      
-      // 创建下载链接
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.setAttribute('href', url);
-      link.setAttribute('download', `${excelData.poNumber}.csv`);
-      link.style.visibility = 'hidden';
-      
-      // 添加到DOM并点击
-      document.body.appendChild(link);
-      link.click();
-      
-      // 清理
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      
-      console.log('🔧 [ExcelExporter] Excel文件下载完成');
+      const labels = EXCEL_LABELS[excelData.language];
+
+      // 构建二维数组 (AOA) 作为 Sheet 数据
+      const rows: any[][] = [];
+
+      rows.push([labels.purchaseOrder]);
+      rows.push([]);
+      rows.push([labels.purchaseOrderNumber, excelData.poNumber]);
+      rows.push([labels.date, excelData.date]);
+      rows.push([labels.paymentMethod, excelData.paymentMethod]);
+      rows.push([]);
+
+      // Buyer
+      rows.push([labels.buyerInformation]);
+      rows.push([labels.companyName, excelData.customer.companyName]);
+      rows.push([labels.contactPerson, excelData.customer.contactName]);
+      rows.push([labels.address, excelData.customer.address]);
+      rows.push([labels.phone, excelData.customer.phone]);
+      rows.push([]);
+
+      // Vendor
+      rows.push([labels.vendorInformation]);
+      rows.push([labels.company, excelData.vendor.companyName]);
+      rows.push([labels.address, excelData.vendor.address]);
+      rows.push([labels.city, excelData.vendor.city]);
+      rows.push([]);
+
+      // Ship To
+      rows.push([labels.shipToInformation]);
+      rows.push([labels.companyName, excelData.shipTo.companyName]);
+      rows.push([labels.contactPerson, excelData.shipTo.contactName]);
+      rows.push([labels.address, excelData.shipTo.address]);
+      rows.push([labels.phone, excelData.shipTo.phone]);
+      if (excelData.shipTo.notes) {
+        rows.push([labels.notes || 'Notes', excelData.shipTo.notes]);
+      }
+      rows.push([]);
+
+      // 商品表头
+      rows.push([
+        labels.partNo,
+        labels.item,
+        labels.model,
+        labels.itemDescription,
+        labels.brandName,
+        labels.quantity,
+        labels.unitPrice,
+        labels.amount
+      ]);
+
+      // 商品行
+      excelData.items.forEach((it) => {
+        rows.push([
+          it.partNumber,
+          it.itemName,
+          it.model,
+          it.description,
+          it.brandName,
+          it.quantity,
+          it.unitPrice,
+          it.amount
+        ]);
+      });
+
+      rows.push([]);
+
+      // 合计
+      rows.push(['', '', '', '', '', '', labels.total, excelData.totals.subtotal]);
+      rows.push(['', '', '', '', '', '', labels.freightCharge, excelData.totals.freightCharge]);
+      rows.push(['', '', '', '', '', '', labels.totalAmount, excelData.totals.totalAmount]);
+
+      // 生成工作簿
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'PO');
+
+      // 下载 .xlsx
+      const fileName = `${excelData.poNumber}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+
+      console.log('🔧 [ExcelExporter] .xlsx 文件下载完成');
     } catch (error) {
-      console.error('🔧 [ExcelExporter] 导出Excel时出错:', error);
+      console.error('❌ [ExcelExporter] 导出 .xlsx 时出错:', error);
       throw error;
     }
   }

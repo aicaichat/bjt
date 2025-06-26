@@ -176,7 +176,10 @@
       "thickness": "mil",
       "weight": "lb",
       "roll": "ft"
-    }
+    },
+    "roll": "卷",
+    "pieces": "个",
+    "box": "盒"
   },
   "rollLength": "总长",
   "width": "宽度",
