@@ -29,19 +29,28 @@
     "custom": "カスタム範囲"
   },
   "table": {
-    "poNumber": "発注番号",
-    "date": "発注日",
-    "supplier": "サプライヤー",
-    "total": "合計",
-    "status": "ステータス",
-    "actions": "操作",
     "columns": {
+      "partNumber": "部品番号",
+      "item": "項目",
+      "model": "モデル",
+      "description": "項目説明",
+      "brandName": "ブランド名",
+      "quantity": "数量",
+      "unitPrice": "単価",
+      "amount": "金額",
       "poNumber": "発注番号",
       "date": "発注日",
       "supplier": "サプライヤー",
-      "total": "合計",
+      "total": "合計金額",
       "status": "ステータス",
+      "expectedDate": "予定日",
       "actions": "操作"
+    },
+    "summary": {
+      "remarks": "備考: ",
+      "total": "小計",
+      "freightCharge": "送料",
+      "totalAmount": "合計金額"
     }
   },
   "actions": {
@@ -98,7 +107,15 @@
   "messages": {
     "noOrders": "発注書が見つかりません",
     "loading": "発注書を読み込み中...",
-    "error": "発注書の読み込みに失敗しました",
+    "error": {
+      "create": "発注書の作成に失敗しました",
+      "update": "発注書の更新に失敗しました",
+      "approve": "発注書の承認に失敗しました",
+      "reject": "発注書の却下に失敗しました",
+      "receive": "発注書の受取に失敗しました",
+      "close": "発注書のクローズに失敗しました",
+      "delete": "発注書の削除に失敗しました"
+    },
     "deleteConfirm": "この発注書を削除しますか？",
     "cancelConfirm": "この発注書をキャンセルしますか？",
     "success": {
@@ -109,15 +126,6 @@
       "received": "発注書が正常に受け取られました",
       "closed": "発注書が正常にクローズされました",
       "deleted": "発注書が正常に削除されました"
-    },
-    "error": {
-      "create": "発注書の作成に失敗しました",
-      "update": "発注書の更新に失敗しました",
-      "approve": "発注書の承認に失敗しました",
-      "reject": "発注書の却下に失敗しました",
-      "receive": "発注書の受取に失敗しました",
-      "close": "発注書のクローズに失敗しました",
-      "delete": "発注書の削除に失敗しました"
     }
   },
   "batchActions": {
@@ -170,29 +178,6 @@
     "phone": "電話番号",
     "notes": "備考"
   },
-  "table": {
-    "columns": {
-      "partNumber": "部品番号",
-      "item": "項目",
-      "model": "モデル",
-      "description": "項目説明",
-      "brandName": "ブランド名",
-      "quantity": "数量",
-      "unitPrice": "単価",
-      "amount": "金額",
-      "poNumber": "発注番号",
-      "date": "発注日",
-      "supplier": "サプライヤー",
-      "total": "合計金額",
-      "status": "ステータス",
-      "expectedDate": "予定日",
-      "actions": "操作"
-    },
-    "summary": {
-      "remarks": "備考: ",
-      "total": "小計",
-      "freightCharge": "送料",
-      "totalAmount": "合計金額"
-    }
-  }
-} 
+  "confirmPO": "PO注文を確認します",
+  "poConfirmed": "PO注文が確認されました"
+}

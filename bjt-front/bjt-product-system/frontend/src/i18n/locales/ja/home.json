@@ -38,5 +38,30 @@
     "loading": "読み込み中...",
     "error": "エラーが発生しました",
     "retry": "再試行"
-  }
-} 
+  },
+  "introduction": "BJT製品管理システムを使用してください",
+  "links": "[オブジェクトオブジェクト]",
+  "sections": "[オブジェクトオブジェクト]",
+  "browseProducts": "製品を閲覧します",
+  "slogan": "製品ライン、機器、アクセサリー、スペアパーツ、消耗品を効率的に管理するための統合ソリューション",
+  "enterDashboard": "ダッシュボードを入力します",
+  "systemGuide": "システムガイド",
+  "productLines": "製品ライン",
+  "viewProducts": "製品を表示します",
+  "noProductLines": "利用可能な製品ラインはありません",
+  "noProductsDescription": "後でもう一度やり直すか、サポートチームにお問い合わせください。",
+  "productManagementDesc": "製品ライン、機器、アクセサリー、スペアパーツ、消耗品を中央に管理する",
+  "productSearch": "製品照会",
+  "productSearchDesc": "カテゴリ、モデル、仕様などごとに製品をクエリします。",
+  "orderManagement": "注文管理",
+  "orderManagementDesc": "ワンストップオーダーの作成、追跡、管理",
+  "apiIntegration": "API統合",
+  "apiIntegrationDesc": "柔軟なAPIインターフェイスは、他のシステムとのシームレスな統合をサポートします",
+  "aboutSystem": "BJT製品管理システムについて",
+  "aboutSystemDesc": "BJT製品管理システムは、産業機器サプライヤー向けに特別に設計された最新の製品管理プラットフォームです。このシステムは、包括的な製品ライン管理、機器の構成、注文処理、在庫追跡をサポートし、製品管理プロセスを簡素化し、運用効率を向上させることを目指しています。",
+  "documentDownload": "ドキュメントダウンロード",
+  "afterSalesService": "アフターセールスサービス",
+  "errors": "[オブジェクトオブジェクト]",
+  "pagination": "[オブジェクトオブジェクト]",
+  "apiData": "データソース：Real API（{{{count}}製品ライン）"
+}

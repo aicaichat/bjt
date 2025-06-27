@@ -59,8 +59,8 @@ adminI18n
         productLines: productLinesEn,
       },
     },
-    lng: 'zh', // 默认语言
-    fallbackLng: 'zh',
+    lng: 'en', // 默认语言改为英文
+    fallbackLng: 'en',
     debug: process.env.NODE_ENV === 'development',
     
     // 独立的存储键

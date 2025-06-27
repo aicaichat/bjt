@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { Dropdown, Menu } from 'antd';
 
 interface LanguageSwitcherProps {
   className?: string;
@@ -13,12 +14,28 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
   size = 'medium' 
 }) => {
   const { i18n } = useTranslation();
-  const currentLang = i18n.language.startsWith('zh') ? 'zh' : 'en';
+  const SUPPORTED = [
+    { code: 'zh', label: '中文' },
+    { code: 'en', label: 'English' },
+    { code: 'ja', label: '日本語' }
+  ];
 
-  const toggleLanguage = () => {
-    const newLang = currentLang === 'zh' ? 'en' : 'zh';
-    i18n.changeLanguage(newLang);
-  };
+  const currentCode = SUPPORTED.find(l => i18n.language.startsWith(l.code))?.code || 'en';
+
+  const menuItems = SUPPORTED.map(l => ({
+    key: l.code,
+    label: l.label
+  }));
+
+  const menu = (
+    <Menu
+      items={menuItems}
+      onClick={({ key }) => {
+        if (key !== currentCode) i18n.changeLanguage(key);
+      }}
+      selectedKeys={[currentCode]}
+    />
+  );
 
   const sizeStyles = {
     small: { fontSize: '12px', padding: '4px 8px' },
@@ -32,59 +49,37 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
     large: 18
   };
 
+  const currentLabel = SUPPORTED.find(l => l.code === currentCode)?.label || currentCode.toUpperCase();
+
   return (
-    <button
-      onClick={toggleLanguage}
-      className={`language-switcher ${className}`}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        background: 'transparent',
-        border: '1px solid #e1e5e9',
-        borderRadius: '6px',
-        cursor: 'pointer',
-        color: '#495057',
-        transition: 'all 0.2s ease',
-        ...sizeStyles[size]
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.background = '#f8f9fa';
-        e.currentTarget.style.borderColor = '#007bff';
-        e.currentTarget.style.color = '#007bff';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background = 'transparent';
-        e.currentTarget.style.borderColor = '#e1e5e9';
-        e.currentTarget.style.color = '#495057';
-      }}
-      title={currentLang === 'zh' ? 'Switch to English' : '切换到中文'}
-    >
-      {/* 语言图标 */}
-      <svg 
-        width={iconSize[size]} 
-        height={iconSize[size]} 
-        viewBox="0 0 24 24" 
-        fill="currentColor"
+    <Dropdown overlay={menu} trigger={['click']} placement="bottomLeft">
+      <button
+        className={`language-switcher ${className}`}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          background: 'transparent',
+          border: '1px solid #e1e5e9',
+          borderRadius: '6px',
+          cursor: 'pointer',
+          color: '#495057',
+          transition: 'all 0.2s ease',
+          ...sizeStyles[size]
+        }}
       >
-        <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>
-      </svg>
-      
-      {showText && (
-        <>
-          <span>{currentLang === 'zh' ? '中文' : 'EN'}</span>
-          <svg 
-            width="12" 
-            height="12" 
-            viewBox="0 0 12 12" 
-            fill="currentColor"
-            style={{ opacity: 0.6 }}
-          >
-            <path d="M3 4.5L6 7.5L9 4.5"/>
-          </svg>
-        </>
-      )}
-    </button>
+        {/* globe icon */}
+        <svg
+          width={iconSize[size]}
+          height={iconSize[size]}
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-1.78 0-3.4-.58-4.72-1.55.2-.32.4-.66.6-1.01H16.1c.2.35.4.69.6 1.01C15.4 19.42 13.78 20 12 20zm-4.38-3c-.25-.66-.46-1.34-.62-2h9.99c-.16.66-.37 1.34-.62 2H7.62zM6.9 13c-.06-.33-.1-.66-.12-1H17.2c-.02.34-.06.67-.12 1H6.9zm.28-3c.16-.68.37-1.35.62-2h9.4c.25.65.46 1.32.62 2H7.18zM8.02 6c1.18-1.22 2.76-2 4.52-2s3.34.78 4.52 2H8.02z" />
+        </svg>
+        {showText && <span>{currentLabel}</span>}
+      </button>
+    </Dropdown>
   );
 };
 

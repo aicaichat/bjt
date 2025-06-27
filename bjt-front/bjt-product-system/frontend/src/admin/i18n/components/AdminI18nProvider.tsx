@@ -15,7 +15,7 @@ interface AdminI18nProviderProps {
 }
 
 const AdminI18nProvider: React.FC<AdminI18nProviderProps> = ({ children }) => {
-  const [language, setLanguage] = useState('zh');
+  const [language, setLanguage] = useState('en');
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
@@ -23,7 +23,7 @@ const AdminI18nProvider: React.FC<AdminI18nProviderProps> = ({ children }) => {
     const initI18n = async () => {
       try {
         // 获取保存的语言设置
-        const savedLang = localStorage.getItem('admin_i18nextLng') || 'zh';
+        const savedLang = localStorage.getItem('admin_i18nextLng') || 'en';
         
         // 确保i18n已初始化
         if (!adminI18n.isInitialized) {
@@ -38,7 +38,7 @@ const AdminI18nProvider: React.FC<AdminI18nProviderProps> = ({ children }) => {
         console.log('Admin i18n initialized with language:', savedLang);
       } catch (error) {
         console.error('Failed to initialize admin i18n:', error);
-        setLanguage('zh');
+        setLanguage('en');
         setIsReady(true);
       }
     };

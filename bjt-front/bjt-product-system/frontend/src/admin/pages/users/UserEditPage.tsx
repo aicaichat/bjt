@@ -120,17 +120,9 @@ const UserEditPage: React.FC = () => {
     }
   };
 
-  // 根据国家获取地区选项
-  const getRegionOptions = (country: string) => {
-    const regions: Record<string, string[]> = {
-      CN: ['北京', '上海', '广东', '江苏', '浙江', '山东', '河南', '四川', '湖北', '湖南'],
-      US: ['California', 'New York', 'Texas', 'Florida', 'Illinois', 'Pennsylvania', 'Ohio', 'Georgia', 'North Carolina', 'Michigan'],
-      UK: ['England', 'Scotland', 'Wales', 'Northern Ireland'],
-      DE: ['Bavaria', 'North Rhine-Westphalia', 'Baden-Württemberg', 'Lower Saxony', 'Hesse', 'Saxony', 'Rhineland-Palatinate', 'Schleswig-Holstein'],
-      JP: ['Tokyo', 'Osaka', 'Kanagawa', 'Aichi', 'Saitama', 'Chiba', 'Hyogo', 'Hokkaido', 'Fukuoka', 'Shizuoka'],
-    };
-    return regions[country] || [];
-  };
+  const regionCodeOptions = ['CN', 'EU', 'NA', 'AU'];
+
+  const getRegionOptions = () => regionCodeOptions;
 
   const tabItems = [
     {
@@ -267,7 +259,7 @@ const UserEditPage: React.FC = () => {
                 rules={[{ required: true, message: '请选择地区' }]}
               >
                 <Select placeholder="请选择地区">
-                  {getRegionOptions(form.getFieldValue('country')).map(region => (
+                  {getRegionOptions().map(region => (
                     <Option key={region} value={region}>{region}</Option>
                   ))}
                 </Select>

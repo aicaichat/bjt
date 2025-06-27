@@ -1,0 +1,133 @@
+{
+  "title": "カート",
+  "subtitle": "カート管理",
+  "empty": {
+    "title": "カートは空です",
+    "description": "商品をカートに追加してから決済に進んでください",
+    "continueShopping": "ショッピングを続ける"
+  },
+  "table": {
+    "columns": {
+      "product": "商品",
+      "price": "価格",
+      "quantity": "数量",
+      "total": "合計",
+      "actions": "操作"
+    }
+  },
+  "actions": {
+    "update": "更新",
+    "remove": "削除",
+    "clear": "カートを空にする",
+    "checkout": "決済へ進む",
+    "continueShopping": "ショッピングを続ける"
+  },
+  "summary": {
+    "title": "注文概要",
+    "subtotal": "小計",
+    "shipping": "送料",
+    "tax": "税金",
+    "discount": "割引",
+    "total": "合計",
+    "estimatedDelivery": "お届け予定日"
+  },
+  "messages": {
+    "loading": "カートを読み込み中...",
+    "error": {
+      "add": "カートへの追加に失敗しました",
+      "update": "カートの更新に失敗しました",
+      "remove": "商品の削除に失敗しました",
+      "clear": "カートのクリアに失敗しました"
+    },
+    "updateSuccess": "カートを更新しました",
+    "updateError": "カートの更新に失敗しました",
+    "removeConfirm": "この商品を削除しますか？",
+    "clearConfirm": "カートを空にしますか？",
+    "success": {
+      "added": "商品をカートに追加しました",
+      "updated": "カートを更新しました",
+      "removed": "商品をカートから削除しました",
+      "cleared": "カートを空にしました"
+    }
+  },
+  "quantity": {
+    "increase": "数量を増やす",
+    "decrease": "数量を減らす",
+    "update": "数量を更新"
+  },
+  "checkout": {
+    "title": "決済",
+    "steps": {
+      "cart": "カート",
+      "shipping": "配送",
+      "payment": "支払い",
+      "confirmation": "確認"
+    },
+    "buttons": {
+      "continue": "続ける",
+      "back": "戻る",
+      "placeOrder": "注文を確定"
+    }
+  },
+  "cartTitle": "カート",
+  "selectAll": "すべて選択",
+  "emptyCartMessage": "カートは空です。商品を追加してください！",
+  "clearCart": "カートを空にする",
+  "checkoutButton": "決済へ進む",
+  "clearConfirmTitle": "カートを空にする確認",
+  "cancel": "キャンセル",
+  "confirm": "確認",
+  "items": "点の商品",
+  "itemsList": "商品リスト",
+  "clearAll": "全部削除",
+  "orderSummary": "注文概要",
+  "selectedSubtotal": "選択された小計",
+  "shipping": "送料",
+  "freeShipping": "送料無料",
+  "selectedTotal": "選択された合計",
+  "selectedCount": "選択商品数",
+  "proceedToCheckout": "決済へ進む",
+  "continueShopping": "ショッピングを続ける",
+  "confirmClear": "クリアを確認",
+  "confirmClearMessage": "カートを空にしますか？この操作は取り消せません。",
+  "cartCleared": "カートを空にしました",
+  "emptyCartWarning": "カートが空のため決済できません",
+  "unitPrice": "単価",
+  "subtotal": "小計",
+  "remove": "削除",
+  "total": "合計",
+  "mainItems": "メイン商品",
+  "requiredParts": "必須パーツ",
+  "cart": {
+    "clearConfirmTitle": "カートを空にする確認",
+    "cancel": "キャンセル",
+    "confirm": "確認",
+    "emptyCartMessage": "カートは空です。商品を追加してください！"
+  },
+  "fields": {
+    "partNumber": "部品番号",
+    "model": "モデル",
+    "voltage": "電圧",
+    "frequency": "周波数",
+    "spec": "仕様",
+    "specImperial": "仕様（インチ）",
+    "pcsPerBox": "箱当たり数量",
+    "pcsPerPallet": "パレット当たり数量",
+    "packageSize": "パッケージサイズ",
+    "palletSize": "パレットサイズ",
+    "netWeight": "正味重量",
+    "grossWeight": "総重量",
+    "brand": "ブランド",
+    "unit": "単位",
+    "compatibleModel": "対応モデル",
+    "applicableSN": "適合シリアル番号",
+    "filmWidth": "フィルム幅",
+    "bubbleDiameter": "バブル径"
+  },
+  "productNames": {
+    "LA-E4S(paper) Host-Standard": "LA-E4S(紙) ホスト-スタンダード",
+    "LA-E4S(paper)": "LA-E4S(紙)",
+    "Host-Standard": "ホスト-スタンダード"
+  },
+  "shoppingCart": "ショッピングカート"
+}

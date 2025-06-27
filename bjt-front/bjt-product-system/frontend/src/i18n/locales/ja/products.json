@@ -84,5 +84,7 @@
     "out_of_stock": "在庫切れ",
     "pre_order": "予約受付中",
     "quantity": "在庫数：{{count}}"
-  }
-} 
+  },
+  "properties": "[オブジェクトオブジェクト]",
+  "defaultValues": "[オブジェクトオブジェクト]"
+}
