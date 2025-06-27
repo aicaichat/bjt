@@ -186,12 +186,12 @@
     "retired": "已退役"
   },
   "categories": {
-    "all": "全部分类",
+    "all": "所有分类",
     "standard": "标准",
-    "premium": "高级",
+    "premium": "高端",
     "professional": "专业",
     "industrial": "工业",
-    "machine": "设备"
+    "machine": "主机"
   },
   "price": {
     "all": "全部价格",

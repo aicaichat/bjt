@@ -161,5 +161,13 @@
     "EU": "欧洲",
     "APAC": "亚太",
     "NA": "北美"
+  },
+  "fields": {
+    "price": "价格"
+  },
+  "machines": {
+    "filters": {
+      "voltage": "电压"
+    }
   }
 } 

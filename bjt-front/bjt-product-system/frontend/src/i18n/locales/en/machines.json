@@ -175,6 +175,9 @@
     "industrial": "Industrial",
     "machine": "Machine"
   },
+  "filters": {
+    "voltage": "Voltage"
+  },
   "price": {
     "all": "All Prices",
     "under50k": "Under 50k",

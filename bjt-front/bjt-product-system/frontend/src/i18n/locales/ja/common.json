@@ -141,5 +141,13 @@
   "lastYear": "去年",
   "nextYear": "来年",
   "inventory": "[オブジェクトオブジェクト]",
-  "regions": "[オブジェクトオブジェクト]"
+  "regions": "[オブジェクトオブジェクト]",
+  "fields": {
+    "price": "価格"
+  },
+  "machines": {
+    "filters": {
+      "voltage": "電圧"
+    }
+  }
 }
