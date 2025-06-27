@@ -1888,9 +1888,6 @@ const SparePartsPage = () => {
                                 </span>
                               </div>
                             </div>
-                            <div className="mt-3 pt-2 border-t border-gray-100 text-center">
-                              <span className="text-xs text-gray-500">💡 悬停查看详细规格信息</span>
-                            </div>
                           </div>
                         }
                         placement="top"

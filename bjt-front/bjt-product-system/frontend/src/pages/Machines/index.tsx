@@ -1269,6 +1269,11 @@ const MachinesPage: React.FC = () => {
               const accessoryDiv = document.getElementById('accessory-level-1');
               if (accessoryDiv) {
                 accessoryDiv.style.display = 'block';
+                // Smooth scroll to the newly revealed Level-1 accessory section
+                accessoryDiv.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'start'
+                });
               }
               
               // 更新上一次选择的机器引用

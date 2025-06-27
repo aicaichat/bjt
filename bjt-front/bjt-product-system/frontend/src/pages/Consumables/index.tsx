@@ -2165,10 +2165,7 @@ const ConsumablesPage: React.FC = () => {
       return Array.from(specCountMap.entries())
         .map(([value, count]) => ({
           id: value,
-          name: `${value} ${userRegion === 'na' || userRegion === 'au' ? 
-            (fieldName === 'thickness' ? 'mil' : fieldName === 'weight' ? '#' : 'inch') : 
-            (fieldName === 'thickness' ? 'μm' : fieldName === 'weight' ? 'gsm' : 'cm')
-          }`,
+          name: value.toString(),
           count,
           disabled: !smartFilterConfig.hideEmptyOptions && count === 0,
           originalData: { value: parseFloat(value), fieldName }
@@ -2197,7 +2194,7 @@ const ConsumablesPage: React.FC = () => {
       return Array.from(bubbleCountMap.entries())
         .map(([value, count]) => ({
           id: value,
-          name: `Φ${value} ${userRegion === 'na' || userRegion === 'au' ? 'inch' : 'cm'}`,
+          name: `Φ${value}`,
           count,
           disabled: !smartFilterConfig.hideEmptyOptions && count === 0,
           originalData: { value: parseFloat(value), fieldName: 'bubbleDiameter' }
@@ -2233,7 +2230,7 @@ const ConsumablesPage: React.FC = () => {
   }, [
     allConsumables, selectedModel, selectedShape, selectedMaterial,
     selectedThickness, selectedWeight, selectedWidth, selectedLength,
-    filterOptions, userRegion, filterCache, i18n.language
+    filterOptions, isImperialUnit, filterCache, i18n.language
   ]);
   
   // ===== useEffect hooks - 确保调用顺序一致 =====
@@ -3041,7 +3038,7 @@ const ConsumablesPage: React.FC = () => {
                         <div className="flex items-center justify-between bg-white/60 rounded-lg px-3 py-2">
                           <span className="text-gray-600 font-medium">{String(t('filter.width') || '宽度')}</span>
                           <span className="text-gray-900 font-semibold">
-                            {userRegion === 'na' || userRegion === 'au' ? 
+                            {isImperialUnit ? 
                               (item.specs?.width ? item.specs.width + ' inch' : 'N/A') : 
                               (item.specs?.width ? item.specs.width : 'N/A')
                             }
@@ -3050,7 +3047,7 @@ const ConsumablesPage: React.FC = () => {
                         <div className="flex items-center justify-between bg-white/60 rounded-lg px-3 py-2">
                           <span className="text-gray-600 font-medium">{String(t('filter.length') || '长度')}</span>
                           <span className="text-gray-900 font-semibold">
-                            {userRegion === 'na' || userRegion === 'au' ? 
+                            {isImperialUnit ? 
                               (item.specs?.length ? item.specs.length + ' inch' : 'N/A') : 
                               (item.specs?.length ? item.specs.length : 'N/A')
                             }
@@ -3615,7 +3612,7 @@ const ConsumablesPage: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <SmartFilterSelect
-                    title={isPaperMaterial(selectedMaterial) ? String(t('ui.weight') || '重量') : String(t('ui.thickness') || '厚度')}
+                    title={isPaperMaterial(selectedMaterial) ? `${String(t('ui.weight') || '重量')} ${isImperialUnit ? '(#)' : '(gsm)'}` : `${String(t('ui.thickness') || '厚度')} ${isImperialUnit ? '(mil)' : '(μm)'}`}
                       value={isPaperMaterial(selectedMaterial) ? selectedWeight : selectedThickness}
                     options={isPaperMaterial(selectedMaterial) ? smartFilterOptions.weights : smartFilterOptions.thicknesses}
                       onChange={isPaperMaterial(selectedMaterial) ? handleWeightChange : handleThicknessChange}
@@ -3625,7 +3622,7 @@ const ConsumablesPage: React.FC = () => {
                   />
                   
                   <SmartFilterSelect
-                    title={String(t('filter.width') || '宽度')}
+                    title={`${String(t('filter.width') || '宽度')} ${isImperialUnit ? '(inch)' : '(cm)'}`}
                       value={selectedWidth}
                     options={smartFilterOptions.widths}
                       onChange={handleWidthChange}
@@ -3635,7 +3632,7 @@ const ConsumablesPage: React.FC = () => {
                   />
                   
                   <SmartFilterSelect
-                    title={String(t('filter.length') || '长度')}
+                    title={`${String(t('filter.length') || '长度')} ${isImperialUnit ? '(inch)' : '(cm)'}`}
                       value={selectedLength}
                     options={smartFilterOptions.lengths}
                       onChange={handleLengthChange}
@@ -3787,7 +3784,7 @@ const ConsumablesPage: React.FC = () => {
                   <div className="flex justify-between">
                     <span className="text-label font-medium">{String(t('length') || 'Length')}:</span>
                     <span className="text-content">
-                      {userRegion === 'na' || userRegion === 'au' ? 
+                      {isImperialUnit ? 
                         (selectedProduct.specs?.length ? selectedProduct.specs.length + ' inch' : 'N/A') : 
                         (selectedProduct.specs?.length ? selectedProduct.specs.length : 'N/A')
                       }
