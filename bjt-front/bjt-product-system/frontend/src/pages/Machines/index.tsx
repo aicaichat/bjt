@@ -62,7 +62,7 @@ export interface ConsumableSpecs {
 import { getSimpleProductName } from '../../utils/simpleProductName';
 
 const MachinesPage: React.FC = () => {
-  const { t, i18n } = useTranslation('machines');
+  const { t, i18n } = useTranslation(['machines', 'common']);
   const navigate = useNavigate();
   const { user } = useAuth();
   const { addItem } = useCart();
@@ -2383,7 +2383,7 @@ const MachinesPage: React.FC = () => {
               <div className="w-full md:w-1/5 md:pl-6 mt-6 md:mt-0 border-t md:border-t-0 md:border-l border-gray-200 pt-6 md:pt-0">
                 <div className="mb-4">
                   <div className="font-medium text-sm text-gray-600 mb-2">
-                    {t('fields.price') || '价格'}:
+                    {t('common:fields.price') || 'Price'}:
                   </div>
                   
                   <div className="text-2xl font-bold text-blue-600 mb-2">
@@ -2928,7 +2928,7 @@ const MachinesPage: React.FC = () => {
             {/* Price */}
             <div className="mb-4">
               <div className="font-medium text-sm text-gray-600 mb-2">
-                {t('fields.price') || '价格'}:
+                {t('common:fields.price') || 'Price'}:
               </div>
               
               <div className="text-2xl font-bold text-blue-600 mb-2">
@@ -3356,7 +3356,7 @@ const MachinesPage: React.FC = () => {
           {/* Voltage Filter */}
           <div className="flex flex-col">
             <label className="mb-1 text-sm font-medium text-label">
-              {t('machines.filters.voltage')}
+              {t('filters.voltage')}
             </label>
             <Select
               value={selectedVoltage}
