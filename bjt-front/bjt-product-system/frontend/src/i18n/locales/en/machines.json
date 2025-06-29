@@ -16,13 +16,10 @@
   "noPermissionAdd": "No permission to add",
   "filters": {
     "title": "Filters",
-    "voltage": "Voltage",
-    "region": "Region",
-    "partNumber": "Part No.",
-    "type": "Type",
-    "brand": "Brand",
     "all": "All",
-    "clear": "Clear Filters",
+    "priceRange": "Price Range",
+    "region": "Region",
+    "voltage": "Voltage",
     "model": "Model",
     "allModels": "All Models",
     "allVoltages": "All Voltages"
@@ -174,9 +171,6 @@
     "professional": "Professional",
     "industrial": "Industrial",
     "machine": "Machine"
-  },
-  "filters": {
-    "voltage": "Voltage"
   },
   "price": {
     "all": "All Prices",
