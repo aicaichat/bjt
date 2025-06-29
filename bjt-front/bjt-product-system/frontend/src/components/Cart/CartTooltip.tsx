@@ -513,7 +513,7 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
         <div className="product-image">
           <img 
             src={cleanImageUrl(safeGet('package_image_url', item.image_url))} 
-            alt={String(item.name || '')}
+            alt={String(item.name || item.name_zh || item.name_en || item.code || '')}
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               if (!target.src.startsWith('data:')) {
@@ -523,8 +523,8 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
           />
         </div>
         <div className="product-title">
-          <h4>{String(item.name || '')}</h4>
-          <div className="product-code">{String(item.code || item.id || '')}</div>
+          <h4>{String(item.name || item.name_zh || item.name_en || item.code || '')}</h4>
+          <div className="product-code">{String(item.code || item.part_number || item.id || '')}</div>
         </div>
       </div>
       
@@ -564,232 +564,56 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
                       )}
                 </span>
                 <span className="spec-value">
-                  {(() => {
-                    if (isImperialUnit) {
-                      const thicknessImp = safeGet('thickness_imp', '');
-                      const thickness = safeGet('thickness', '');
-                      return thicknessImp !== 'N/A' && thicknessImp !== '' ? thicknessImp : 
-                             (thickness !== 'N/A' && thickness !== '' ? thickness : 'N/A');
-                    } else {
-                      const thicknessMet = safeGet('thickness_met', '');
-                      const thickness = safeGet('thickness', '');
-                      return thicknessMet !== 'N/A' && thicknessMet !== '' ? thicknessMet : 
-                             (thickness !== 'N/A' && thickness !== '' ? thickness : 'N/A');
-                    }
-                  })()}
+                  {isPaperMaterial(safeGet('material', ''))
+                    ? safeGet('thickness', t('common.toBeFilled', 'To be filled'))
+                    : (
+                        isImperialUnit
+                          ? safeGet('thickness_mil', safeGet('thickness', t('common.toBeFilled', 'To be filled')))
+                          : safeGet('thickness_met', safeGet('thickness', t('common.toBeFilled', 'To be filled')))
+                      )}
                 </span>
               </div>
               <div className="spec-item">
                 <span className="spec-label">
-                  {isImperialUnit ? 
-                    t('tooltip.dimensions.imperial', 'Dimensions(inch)') : 
-                    t('tooltip.dimensions.metric', 'Dimensions(cm)')
-                  }
+                  {isImperialUnit
+                    ? t('tooltip.width.imperial', 'Width(inch)')
+                    : t('tooltip.width.metric', 'Width(cm)')}
                 </span>
                 <span className="spec-value">
-                  {(() => {
-                    const width = isImperialUnit ? 
-                      safeGet('width_imp', safeGet('width', '')) : 
-                      safeGet('width_met', safeGet('width', ''));
-                    const length = isImperialUnit ? 
-                      safeGet('length_imp', safeGet('length', '')) : 
-                      safeGet('length_met', safeGet('length', ''));
-                    
-                    if (width !== 'N/A' && length !== 'N/A' && width !== '' && length !== '') {
-                      return `${width} × ${length}`;
-                    } else if (width !== 'N/A' && width !== '') {
-                      return `W: ${width}`;
-                    } else if (length !== 'N/A' && length !== '') {
-                      return `L: ${length}`;
-                    }
-                    return 'N/A';
-                  })()}
+                  {isImperialUnit
+                    ? safeGet('width_imp', safeGet('film_width_inch', t('common.toBeFilled', 'To be filled')))
+                    : safeGet('width_met', safeGet('film_width_cm', t('common.toBeFilled', 'To be filled')))}
                 </span>
               </div>
-              {shouldShowBubbleDiameter() && (
-                <div className="spec-item">
-                  <span className="spec-label">
-                    {isImperialUnit ? 
-                      t('tooltip.bubbleDiameter.imperial', 'Bubble Diameter(inch)') : 
-                      t('tooltip.bubbleDiameter.metric', 'Bubble Diameter(mm)')
-                    }
-                  </span>
-                  <span className="spec-value">
-                    {(() => {
-                      if (isImperialUnit) {
-                        const bubbleDiameterImp = safeGet('bubble_diameter_imp', '');
-                        const bubbleDiameter = safeGet('bubble_diameter', '');
-                        return bubbleDiameterImp !== 'N/A' && bubbleDiameterImp !== '' ? bubbleDiameterImp : 
-                               (bubbleDiameter !== 'N/A' && bubbleDiameter !== '' ? bubbleDiameter : 'N/A');
-                      } else {
-                        const bubbleDiameterMet = safeGet('bubble_diameter_met', '');
-                        const bubbleDiameter = safeGet('bubble_diameter', '');
-                        return bubbleDiameterMet !== 'N/A' && bubbleDiameterMet !== '' ? bubbleDiameterMet : 
-                               (bubbleDiameter !== 'N/A' && bubbleDiameter !== '' ? bubbleDiameter : 'N/A');
-                      }
-                    })()}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* 托盘配置信息 - 简化显示 */}
-          <div className="pallet-configs-card">
-            <h5 className="section-title">
-              <span className="title-icon">🏗️</span>
-              {t('tooltip.palletConfigs', 'Pallet Configurations')}
-            </h5>
-            <div className="pallet-configs-compact">
-              {/* 配置A */}
-              {(() => {
-                const pcsA = safeGet('pcs_per_pallet_a', '');
-                const weightA = safeGet(isImperialUnit ? 'pallet_gross_weight_a_lbs' : 'pallet_gross_weight_a_kg', '');
-                const heightA = safeGet(isImperialUnit ? 'pallet_height_a_inch' : 'pallet_height_a_cm', '');
-                
-                if (pcsA !== 'N/A' && pcsA !== '' && weightA !== 'N/A' && weightA !== '') {
-                  const rollsLabel = t('tooltip.units.rolls', '一托数量');
-                  const weightLabel = t('tooltip.units.weight', '整托毛重');
-                  const heightLabel = t('tooltip.units.height', '打托高度');
-                  const weightUnit = isImperialUnit ? 'lb' : 'kg';
-                  const heightUnit = isImperialUnit ? 'inch' : 'cm';
-                  
-                  const formattedWeight = weightA ? parseFloat(weightA).toFixed(2) : 'N/A';
-                  const formattedHeight = heightA ? parseFloat(heightA).toFixed(2) : 'N/A';
-                  
-                  return (
-                    <div className="pallet-config-row">
-                      <span className="config-label">{t('tooltip.configA', 'Configuration A')}</span>
-                      <div className="config-values">
-                        <span className="config-item">
-                          <span className="unit-label">{rollsLabel}:</span>
-                          <span className="unit-value">{pcsA}</span>
-                        </span>
-                        <span className="config-item">
-                          <span className="unit-label">{weightLabel}({weightUnit}):</span>
-                          <span className="unit-value">{formattedWeight}</span>
-                        </span>
-                        {heightA !== 'N/A' && heightA !== '' && (
-                          <span className="config-item">
-                            <span className="unit-label">{heightLabel}({heightUnit}):</span>
-                            <span className="unit-value">{formattedHeight}</span>
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                }
-                return null;
-              })()}
-              
-              {/* 配置B */}
-              {(() => {
-                const pcsB = safeGet('pcs_per_pallet_b', '');
-                const weightB = safeGet(isImperialUnit ? 'pallet_gross_weight_b_lbs' : 'pallet_gross_weight_b_kg', '');
-                const heightB = safeGet(isImperialUnit ? 'pallet_height_b_inch' : 'pallet_height_b_cm', '');
-                
-                if (pcsB !== 'N/A' && pcsB !== '' && weightB !== 'N/A' && weightB !== '') {
-                  const rollsLabel = t('tooltip.units.rolls', '一托数量');
-                  const weightLabel = t('tooltip.units.weight', '整托毛重');
-                  const heightLabel = t('tooltip.units.height', '打托高度');
-                  const weightUnit = isImperialUnit ? 'lb' : 'kg';
-                  const heightUnit = isImperialUnit ? 'inch' : 'cm';
-                  
-                  const formattedWeight = weightB ? parseFloat(weightB).toFixed(2) : 'N/A';
-                  const formattedHeight = heightB ? parseFloat(heightB).toFixed(2) : 'N/A';
-                  
-                  return (
-                    <div className="pallet-config-row">
-                      <span className="config-label">{t('tooltip.configB', 'Configuration B')}</span>
-                      <div className="config-values">
-                        <span className="config-item">
-                          <span className="unit-label">{rollsLabel}:</span>
-                          <span className="unit-value">{pcsB}</span>
-                        </span>
-                        <span className="config-item">
-                          <span className="unit-label">{weightLabel}({weightUnit}):</span>
-                          <span className="unit-value">{formattedWeight}</span>
-                        </span>
-                        {heightB !== 'N/A' && heightB !== '' && (
-                          <span className="config-item">
-                            <span className="unit-label">{heightLabel}({heightUnit}):</span>
-                            <span className="unit-value">{formattedHeight}</span>
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                }
-                return null;
-              })()}
-              
-              {/* 配置C */}
-              {(() => {
-                const pcsC = safeGet('pcs_per_pallet_c', '');
-                const weightC = safeGet(isImperialUnit ? 'pallet_gross_weight_c_lbs' : 'pallet_gross_weight_c_kg', '');
-                const heightC = safeGet(isImperialUnit ? 'pallet_height_c_inch' : 'pallet_height_c_cm', '');
-                
-                if (pcsC !== 'N/A' && pcsC !== '' && weightC !== 'N/A' && weightC !== '') {
-                  const rollsLabel = t('tooltip.units.rolls', '一托数量');
-                  const weightLabel = t('tooltip.units.weight', '整托毛重');
-                  const heightLabel = t('tooltip.units.height', '打托高度');
-                  const weightUnit = isImperialUnit ? 'lb' : 'kg';
-                  const heightUnit = isImperialUnit ? 'inch' : 'cm';
-                  
-                  const formattedWeight = weightC ? parseFloat(weightC).toFixed(2) : 'N/A';
-                  const formattedHeight = heightC ? parseFloat(heightC).toFixed(2) : 'N/A';
-                  
-                  return (
-                    <div className="pallet-config-row">
-                      <span className="config-label">{t('tooltip.configC', 'Configuration C')}</span>
-                      <div className="config-values">
-                        <span className="config-item">
-                          <span className="unit-label">{rollsLabel}:</span>
-                          <span className="unit-value">{pcsC}</span>
-                        </span>
-                        <span className="config-item">
-                          <span className="unit-label">{weightLabel}({weightUnit}):</span>
-                          <span className="unit-value">{formattedWeight}</span>
-                        </span>
-                        {heightC !== 'N/A' && heightC !== '' && (
-                          <span className="config-item">
-                            <span className="unit-label">{heightLabel}({heightUnit}):</span>
-                            <span className="unit-value">{formattedHeight}</span>
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                }
-                return null;
-              })()}
-              
-              {/* 托盘尺寸 */}
-              {(() => {
-                const palletSize = safeGet(isImperialUnit ? 'pallet_size_inch' : 'pallet_size_cm', '');
-                if (palletSize !== 'N/A' && palletSize !== '') {
-                  const sizeUnit = isImperialUnit ? 'inch' : 'cm';
-                  const sizeLabel = t('tooltip.palletSize', 'Pallet Size');
-                  
-                  return (
-                    <div className="pallet-config-row">
-                      <span className="config-label">{sizeLabel}</span>
-                      <div className="config-values">
-                        <span className="config-item">
-                          <span className="unit-label">{sizeLabel}({sizeUnit}):</span>
-                          <span className="unit-value">{palletSize}</span>
-                        </span>
-                      </div>
-                    </div>
-                  );
-                }
-                return null;
-              })()}
+              <div className="spec-item">
+                <span className="spec-label">
+                  {isImperialUnit
+                    ? t('tooltip.length.imperial', 'Length(inch)')
+                    : t('tooltip.length.metric', 'Length(cm)')}
+                </span>
+                <span className="spec-value">
+                  {isImperialUnit
+                    ? safeGet('length_imp', safeGet('bag_length_inch', t('common.toBeFilled', 'To be filled')))
+                    : safeGet('length_met', safeGet('bag_length_cm', t('common.toBeFilled', 'To be filled')))}
+                </span>
+              </div>
+              <div className="spec-item">
+                <span className="spec-label">
+                  {isImperialUnit
+                    ? t('tooltip.rollLength.imperial', 'Roll Length(ft)')
+                    : t('tooltip.rollLength.metric', 'Roll Length(m)')}
+                </span>
+                <span className="spec-value">
+                  {isImperialUnit
+                    ? safeGet('roll_length_ft', safeGet('total_length_ft', t('common.toBeFilled', 'To be filled')))
+                    : safeGet('roll_length_m', safeGet('total_length_m', t('common.toBeFilled', 'To be filled')))}
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* 右栏：包装信息和技术参数 */}
+        {/* 右栏：包装信息 */}
         <div className="right-column">
           {/* 包装信息 */}
           <div className="package-info-card">
@@ -865,114 +689,33 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
                 
                 return null;
               })()}
-              <div className="package-row">
-                <span className="package-label">{t('tooltip.pcsPerBox', 'Qty per Carton')}</span>
-                <span className="package-value">
-                  {(() => {
-                    const pcsPerBox = safeGet('pcs_per_box', '');
-                    return pcsPerBox !== 'N/A' && pcsPerBox !== '' ? pcsPerBox : t('common.toBeFilled', 'To be filled');
-                  })()}
-                </span>
-              </div>
-              <div className="package-row">
-                <span className="package-label">
-                  {isImperialUnit ? 
-                    t('tooltip.unitWeight.imperial', 'Net Weight(lb)') : 
-                    t('tooltip.unitWeight.metric', 'Net Weight(kg)')
-                  }
-                </span>
-                <span className="package-value">
-                  {(() => {
-                    const weightField = isImperialUnit ? 'net_weight_lbs' : 'net_weight_kg';
-                    const weight = safeGet(weightField, '');
-                    return weight !== 'N/A' && weight !== '' ? weight : t('common.toBeFilled', 'To be filled');
-                  })()}
-                </span>
-              </div>
-              <div className="package-row">
-                <span className="package-label">
-                  {isImperialUnit ? 
-                    t('tooltip.totalLength.imperial', 'Length(ft)') : 
-                    t('tooltip.totalLength.metric', 'Length(m)')
-                  }
-                </span>
-                <span className="package-value">
-                  {(() => {
-                    if (isImperialUnit) {
-                      const totalLengthFt = safeGet('total_length_ft', '');
-                      const rollLengthFt = safeGet('roll_length_ft', '');
-                      const rollLength = safeGet('rollLength', '');
-                      if (totalLengthFt !== 'N/A' && totalLengthFt !== '') {
-                        return totalLengthFt;
-                      } else if (rollLengthFt !== 'N/A' && rollLengthFt !== '') {
-                        return rollLengthFt;
-                      } else if (rollLength !== 'N/A' && rollLength !== '') {
-                        return rollLength;
-                      }
-                      return 'N/A';
-                    } else {
-                      const totalLengthM = safeGet('total_length_m', '');
-                      const rollLengthM = safeGet('roll_length_m', '');
-                      const rollLength = safeGet('rollLength', '');
-                      if (totalLengthM !== 'N/A' && totalLengthM !== '') {
-                        return totalLengthM;
-                      } else if (rollLengthM !== 'N/A' && rollLengthM !== '') {
-                        return rollLengthM;
-                      } else if (rollLength !== 'N/A' && rollLength !== '') {
-                        return rollLength;
-                      }
-                      return 'N/A';
-                    }
-                  })()}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* 技术参数 */}
-          <div className="tech-params-card">
-            <h5 className="section-title">
-              <span className="title-icon">⚙️</span>
-              {t('tooltip.techParams', 'Technical Parameters')}
-            </h5>
-            <div className="tech-params-compact">
-              {(() => {
-                const tubeField = isImperialUnit ? 'tube_inner_diameter_inch' : 'tube_inner_diameter_cm';
-                const tubeDiameter = safeGet(tubeField, '');
-                
-                if (tubeDiameter !== 'N/A' && tubeDiameter !== '') {
-                  return (
-                    <div className="tech-param-row">
-                      <span className="param-label">
-                        {isImperialUnit ? 
-                          t('tooltip.tubeInnerDiameter.imperial', 'Inner Dia.(inch)') : 
-                          t('tooltip.tubeInnerDiameter.metric', 'Inner Dia.(cm)')
-                        }
-                      </span>
-                      <span className="param-value">{tubeDiameter}</span>
-                    </div>
-                  );
-                }
-                return null;
-              })()}
               
-              {(() => {
-                const packageSize = safeGet(isImperialUnit ? 'package_size_inch' : 'package_size_cm', '');
-                if (packageSize !== 'N/A' && packageSize !== '') {
-                  return (
-                    <div className="tech-param-row">
-                      <span className="param-label">
-                        {isImperialUnit ? 
-                          t('tooltip.packageSize.imperial', 'Packaging Dim.(inch)') : 
-                          t('tooltip.packageSize.metric', 'Packaging Dim.(cm)')
-                        }
-                      </span>
-                      <span className="param-value">{packageSize}</span>
-                    </div>
-                  );
-                }
-                return null;
-              })()}
+              <div className="package-row">
+                <span className="package-label">
+                  {t('tooltip.packageSize', 'Package Size')}({isImperialUnit ? 'inch' : 'cm'}):
+                </span>
+                <span className="package-value">
+                  {isImperialUnit
+                    ? safeGet('package_size_inch', t('common.toBeFilled', 'To be filled'))
+                    : safeGet('package_size_cm', t('common.toBeFilled', 'To be filled'))}
+                </span>
+              </div>
+              
+              <div className="package-row">
+                <span className="package-label">
+                  {t('tooltip.netWeight', 'Net Weight')}({isImperialUnit ? 'lbs' : 'kg'}):
+                </span>
+                <span className="package-value">
+                  {isImperialUnit
+                    ? safeGet('net_weight_lbs', t('common.toBeFilled', 'To be filled'))
+                    : safeGet('net_weight_kg', t('common.toBeFilled', 'To be filled'))}
+                </span>
+              </div>
+              
+              <div className="package-row">
+                <span className="package-label">{t('tooltip.pcsPerBox', 'Pcs per Box')}:</span>
+                <span className="package-value">{safeGet('pcs_per_box', t('common.toBeFilled', 'To be filled'))}</span>
+              </div>
             </div>
           </div>
         </div>
