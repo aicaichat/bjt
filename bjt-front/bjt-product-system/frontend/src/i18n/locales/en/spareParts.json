@@ -126,6 +126,7 @@
     "partType": "Type",
     "is_consumable": "Consumable Status",
     "app_model": "Applicable Machine",
+    "appModel": "Applicable Machine",
     "net_weight_kg": "Net Weight (kg)",
     "specifications": "Spec.",
     "compatibleSerialNumber": "Applicable SN.",
