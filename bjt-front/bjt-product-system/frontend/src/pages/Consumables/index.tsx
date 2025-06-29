@@ -2143,16 +2143,22 @@ const ConsumablesPage: React.FC = () => {
       availableItems.forEach(item => {
         let value: number | undefined;
         
+        // 根据当前单位制选择 _met 或 _imp 字段
+        const useMetric = !isImperialUnit;
+        const suffix = useMetric ? '_met' : '_imp';
+
         switch (fieldName) {
           case 'thickness':
+            value = extractNumber(item[`thickness${suffix}` as keyof typeof item] as any);
+            break;
           case 'weight':
-            value = extractNumber(item.thickness_met);
+            value = extractNumber(item[`weight${suffix}` as keyof typeof item] as any);
             break;
           case 'width':
-            value = extractNumber(item.width_met);
+            value = extractNumber(item[`width${suffix}` as keyof typeof item] as any);
             break;
           case 'length':
-            value = extractNumber(item.length_met);
+            value = extractNumber(item[`length${suffix}` as keyof typeof item] as any);
             break;
         }
         
