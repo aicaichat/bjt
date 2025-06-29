@@ -2,7 +2,7 @@
 
 /* 主要容器样式 */
 .consumables-custom-tooltip .ant-tooltip-inner {
-  max-width: min(900px, 95vw) !important;
+  max-width: min(1200px, 98vw) !important;
   padding: 0 !important;
   width: auto !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08) !important;
@@ -13,8 +13,8 @@
 
 .consumable-tooltip {
   width: auto;
-  min-width: 500px;
-  max-width: 900px;
+  min-width: 700px;
+  max-width: 1200px;
   overflow: visible;
   font-size: 13px;
   line-height: 1.5;
@@ -101,13 +101,13 @@
   font-weight: 500;
   flex: 0 0 auto;
   text-align: left;
-  margin-right: 20px;
+  margin-right: 30px;
   word-break: keep-all;
   white-space: nowrap;
   display: flex;
   align-items: center;
   gap: 4px;
-  max-width: 60%;
+  max-width: 50%;
 }
 
 /* 值样式优化 */
@@ -125,7 +125,7 @@
   min-width: 0;
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
   white-space: nowrap;
-  max-width: 40%;
+  max-width: 50%;
 }
 
 /* 特殊值样式 */
@@ -238,11 +238,11 @@
 /* 响应式设计 */
 @media (max-width: 768px) {
   .consumables-custom-tooltip .ant-tooltip-inner {
-    max-width: 95vw !important;
+    max-width: 98vw !important;
   }
 
   .consumable-tooltip {
-    min-width: 450px;
+    min-width: 600px;
     font-size: 12px;
   }
 
@@ -405,7 +405,7 @@
 }
 
 .consumable-tooltip .min-w-400 {
-  min-width: 500px;
+  min-width: 700px;
 }
 
 @keyframes spin {
@@ -521,4 +521,15 @@
 .consumable-tooltip .pallet-configs-card:hover::before,
 .consumable-tooltip .tech-params-card:hover::before {
   opacity: 0.3;
+}
+
+/* 修复：tech-param-row标题/值分行，但数值本身保持单行显示 */
+.consumable-tooltip .tech-param-row {
+  word-break: normal;
+}
+
+.consumable-tooltip .tech-param-row .param-value {
+  white-space: nowrap !important;
+  overflow: visible;
+  word-break: normal;
 } 

@@ -198,9 +198,9 @@ const TooltipField = ({ fieldKey, label, value }: { fieldKey: string; label: str
     .trim();
 
   return (
-    <div className="tech-param-row flex items-start justify-between mb-1 whitespace-nowrap">
-      <span className="param-label text-gray-500 mr-2">{label}</span>
-      <span className="param-value font-semibold text-purple-600 text-right whitespace-nowrap">{displayValue}</span>
+    <div className="tech-param-row mb-2">
+      <div className="param-label text-gray-500 text-xs mb-1">{label}</div>
+      <div className="param-value font-semibold text-purple-600 text-left">{displayValue}</div>
     </div>
   );
 };
