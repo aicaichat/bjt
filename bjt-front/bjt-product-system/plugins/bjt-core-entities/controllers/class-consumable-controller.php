@@ -531,9 +531,9 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
         'code' => $item_db_object->part_number ?? null, 
         'name' => $item_db_object->model ?? null,       
         'model' => $item_db_object->model ?? null,      
-        // 🆕 统一名称字段，提供中文/英文名称（若不存在则回落到模型或代码）
-        'name_zh' => !empty($item_db_object->name_zh) ? $item_db_object->name_zh : (!empty($item_db_object->title_zh) ? $item_db_object->title_zh : (!empty($item_db_object->model) ? $item_db_object->model : ($item_db_object->part_number ?? null))),
-        'name_en' => !empty($item_db_object->name_en) ? $item_db_object->name_en : (!empty($item_db_object->title_en) ? $item_db_object->title_en : ($item_db_object->part_number ?? null)),
+        // 🆕 统一名称字段，直接使用name_zh/name_en字段
+        'name_zh' => $item_db_object->name_zh ?? '',
+        'name_en' => $item_db_object->name_en ?? '',
         'model_imperial' => $item_db_object->model_imperial ?? null,
         'brand' => $item_db_object->brand ?? null,
         'sales_unit' => $item_db_object->package_type ?? null, 

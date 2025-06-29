@@ -4,6 +4,7 @@ import { useSmartUnitSystem } from '../../hooks/useSmartUnitSystem';
 import { useTranslation } from 'react-i18next';
 import { FEATURE_FLAGS, debugLog } from '../../config/feature-flags';
 import './SmartCartItemCard.css';
+import { getSimpleProductName } from '../../utils/simpleProductName';
 
 interface CartItem {
   id: string;
@@ -29,18 +30,16 @@ export const SmartCartItemCard: React.FC<SmartCartItemCardProps> = ({
   showSmartFields = true
 }) => {
   const { t, i18n } = useTranslation(['cart', 'products']);
-  const { isTemporaryOverride } = useSmartUnitSystem();
+  const { preferredUnitSystem, accountUnitSetting } = useSmartUnitSystem();
+  const isTemporaryOverride = preferredUnitSystem !== accountUnitSetting;
   const enhancedProduct = useCartDisplayEnhancer(item.product, item.productType);
   
   const isCurrentLanguageZh = i18n.language === 'zh' || i18n.language === 'zh-CN';
   
-  // 获取产品基本信息
+  // 获取产品基本信息（统一使用 getSimpleProductName，确保中英文与fallback一致）
   const getProductName = () => {
-    return enhancedProduct?.name || 
-           enhancedProduct?.name_en || 
-           enhancedProduct?.product_name || 
-           item.product?.name || 
-           '未知商品';
+    const lang: 'zh' | 'en' = isCurrentLanguageZh ? 'zh' : 'en';
+    return getSimpleProductName(enhancedProduct ?? item.product, lang);
   };
   
   const getProductImage = () => {

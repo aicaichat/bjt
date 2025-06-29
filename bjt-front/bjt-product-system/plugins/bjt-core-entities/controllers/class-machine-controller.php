@@ -604,9 +604,9 @@ class BJT_Machine_Controller extends BJT_API_Controller {
             $part_data = [
                 'id' => (int)$acc['accessory_id'],
                 'part_number' => $part_number,
-                // 🆕 Unified name fields for front-end hook compatibility
-                'name_zh' => !empty($acc['accessory_name_zh']) ? $acc['accessory_name_zh'] : (!empty($acc['accessory_model_code']) ? $acc['accessory_model_code'] : $part_number),
-                'name_en' => !empty($acc['accessory_name_en']) ? $acc['accessory_name_en'] : (!empty($acc['accessory_model_code']) ? $acc['accessory_model_code'] : $part_number),
+                // 🆕 统一名称字段，直接使用name_zh/name_en字段
+                'name_zh' => $acc['accessory_name_zh'] ?? '',
+                'name_en' => $acc['accessory_name_en'] ?? '',
                 'spec' => $acc[$accessory_spec_key],
                 'spec_imperial' => $acc['accessory_spec_imperial'], // Always include if available
                 'image_url' => $this->get_full_url($acc['accessory_image_url']),
@@ -738,8 +738,8 @@ class BJT_Machine_Controller extends BJT_API_Controller {
             'sort_order' => isset($item_db_object->sort_order) ? (int) $item_db_object->sort_order : 0,
             'created_at' => $item_db_object->created_at,
             'updated_at' => $item_db_object->updated_at,
-            'name_zh' => !empty($item_db_object->title_zh) ? trim($item_db_object->title_zh, "'\"") : ( !empty($item_db_object->model) ? trim($item_db_object->model, "'\"") : trim($item_db_object->code, "'\"") ),
-            'name_en' => !empty($item_db_object->title_en) ? trim($item_db_object->title_en, "'\"") : ( !empty($item_db_object->model) ? trim($item_db_object->model, "'\"") : trim($item_db_object->code, "'\"") ),
+            'name_zh' => isset($item_db_object->name_zh) ? trim($item_db_object->name_zh, "'\"") : '',
+            'name_en' => isset($item_db_object->name_en) ? trim($item_db_object->name_en, "'\"") : '',
         ];
     }
 

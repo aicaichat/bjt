@@ -61,7 +61,6 @@ export function getSimpleProductName(product: ProductLike, language: 'zh' | 'en'
     (product as any).title_en,
     (product as any).display_name_zh,
     (product as any).display_name_en,
-    product.model,
     product.code,
     product.part_number,
     product.sku
@@ -87,13 +86,8 @@ export function getSimpleProductName(product: ProductLike, language: 'zh' | 'en'
       return chineseCandidate;
     }
     
-    // 3. 如果没有中文，在中文模式下尝试使用model作为更简洁的替代
-    if (product.model && product.model !== productName) {
-      return product.model;
-    }
-    
-    // 4. 使用第一个可用的名称
-    return candidates[0] || '商品';
+    // 3. 如果没有有效的名称字段，返回空字符串而不是fallback到model
+    return candidates[0] || '';
     
   } else {
     // 英文模式：优先寻找英文名称
@@ -112,18 +106,8 @@ export function getSimpleProductName(product: ProductLike, language: 'zh' | 'en'
       return englishCandidate;
     }
     
-    // 3. 如果只有中文，使用model作为替代，避免显示长串code
-    if (product.model && product.model !== product.name) {
-      return product.model;
-    }
-    
-    // 4. 如果code不是很长的数字串，可以使用
-    if (product.code && product.code.length <= 12 && !/^\d{10,}$/.test(product.code)) {
-      return product.code;
-    }
-    
-    // 5. 最后使用第一个候选项或默认值
-    return candidates[0] || 'Product';
+    // 3. 如果没有有效的名称字段，返回空字符串而不是fallback到model或code
+    return candidates[0] || '';
   }
 }
 

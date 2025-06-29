@@ -464,9 +464,8 @@ class BJT_Cart_Controller extends BJT_API_Controller {
             $name_zh = $product->name_zh ?? '';
             $name_en = $product->name_en ?? '';
 
-            // 兼容旧字段 name（按请求语言选择）
-            $name = ($lang === 'en') ? ($name_en ?: $this->get_english_title($name_zh ?: 'Name N/A', $product_type))
-                                     : ($name_zh ?: 'Name N/A');
+            // 统一使用name_zh/name_en字段，不使用fallback
+            $name = ($lang === 'en') ? $name_en : $name_zh;
 
             return [
                 'name'      => $name,

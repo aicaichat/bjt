@@ -384,8 +384,6 @@ export class CartFieldUnifier {
         // 🔧 耗材特殊处理：使用model_metric作为名称
         item.model_metric, // 🔧 耗材可能使用model_metric作为名称
         props.model_metric,
-        item.model,        // 🔧 配件可能使用model作为名称
-        props.model,
         item.code,
         props.code,
         item.part_number,
@@ -423,8 +421,6 @@ export class CartFieldUnifier {
         // 🔧 耗材特殊处理：使用model_metric作为名称
         item.model_metric, // 🔧 耗材可能使用model_metric作为名称
         props.model_metric,
-        item.model,        // 🔧 配件可能使用model作为名称
-        props.model,
         item.code,
         props.code,
         item.part_number,

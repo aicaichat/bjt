@@ -4,6 +4,7 @@ export interface UnifiedProduct {
   code?: string;
   sku?: string;
   model?: string;
+  model_imperial?: string; // 英制型号信息
   name: string | { [key: string]: string };
   spec?: string; // 单数形式的规格信息
   specs?: string | Record<string, string>; // 复数形式的规格信息

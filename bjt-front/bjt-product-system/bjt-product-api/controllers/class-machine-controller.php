@@ -440,8 +440,8 @@ class BJT_Machine_Controller extends BJT_API_Controller {
         
         return [
             'id' => (int) $item->id,
-            'name_zh' => isset($item->name_zh) && $item->name_zh !== '' ? $item->name_zh : ($item->title_zh ?? ($item->model ?? $item->code)),
-            'name_en' => isset($item->name_en) && $item->name_en !== '' ? $item->name_en : ($item->title_en ?? ($item->model ?? $item->code)),
+                            'name_zh' => $item->name_zh ?? '',
+                            'name_en' => $item->name_en ?? '',
             'title' => $title,
             'description' => $description,
             'code' => $item->code,

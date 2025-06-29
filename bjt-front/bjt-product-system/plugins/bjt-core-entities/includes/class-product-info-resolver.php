@@ -81,7 +81,8 @@ class BJT_Product_Info_Resolver {
         switch ($product_type) {
             case 'machine':
                 $product = $wpdb->get_row($wpdb->prepare(
-                    "SELECT model, brand, spec, '' as properties, name_zh as description, name_zh, name_en, product_line_id as category 
+                    "SELECT model, brand, spec, '' as properties, name_zh as description, name_zh, name_en, product_line_id as category,
+                            COALESCE(spec_imperial, '') as spec_imperial
                      FROM {$table_name} WHERE id = %d LIMIT 1",
                     $product_id
                 ));
@@ -91,7 +92,8 @@ class BJT_Product_Info_Resolver {
                 $product = $wpdb->get_row($wpdb->prepare(
                     "SELECT COALESCE(NULLIF(model, ''), app_model, '') as model, '' as brand, 
                             COALESCE(spec, description_zh, '') as spec, '' as properties, 
-                            description_zh as description, name_zh, name_en, product_line_id as category 
+                            description_zh as description, name_zh, name_en, product_line_id as category,
+                            COALESCE(spec_imperial, '') as spec_imperial
                      FROM {$table_name} WHERE id = %d LIMIT 1",
                     $product_id
                 ));
@@ -104,7 +106,9 @@ class BJT_Product_Info_Resolver {
                             description_zh as description, 
                             COALESCE(name_zh, title_zh, '') AS name_zh, 
                             COALESCE(name_en, title_en, '') AS name_en, 
-                            product_line_id as category 
+                            product_line_id as category,
+                            COALESCE(model_imperial, '') as model_imperial,
+                            COALESCE(spec_imperial, '') as spec_imperial
                      FROM {$table_name} WHERE id = %d LIMIT 1",
                     $product_id
                 ));
@@ -114,7 +118,8 @@ class BJT_Product_Info_Resolver {
                 $product = $wpdb->get_row($wpdb->prepare(
                     "SELECT COALESCE(model, '') as model, COALESCE(brand, '') as brand, 
                             COALESCE(spec, description_zh, '') as spec, '' as properties, 
-                            description_zh as description, name_zh, name_en, product_line_id as category 
+                            description_zh as description, name_zh, name_en, product_line_id as category,
+                            COALESCE(spec_imperial, '') as spec_imperial
                      FROM {$table_name} WHERE id = %d LIMIT 1",
                     $product_id
                 ));
@@ -189,14 +194,16 @@ class BJT_Product_Info_Resolver {
             case 'machine':
                 // 多策略查询主机
                 $product = $wpdb->get_row($wpdb->prepare(
-                    "SELECT model, brand, spec, '' as properties, name_zh as description, name_zh, name_en, product_line_id as category 
+                    "SELECT model, brand, spec, '' as properties, name_zh as description, name_zh, name_en, product_line_id as category,
+                            COALESCE(spec_imperial, '') as spec_imperial
                      FROM {$table_name} WHERE part_number = %s LIMIT 1",
                     $part_number
                 ));
                 
                 if (!$product) {
                     $product = $wpdb->get_row($wpdb->prepare(
-                        "SELECT model, brand, spec, '' as properties, name_zh as description, name_zh, name_en, product_line_id as category 
+                        "SELECT model, brand, spec, '' as properties, name_zh as description, name_zh, name_en, product_line_id as category,
+                                COALESCE(spec_imperial, '') as spec_imperial
                          FROM {$table_name} WHERE model = %s LIMIT 1",
                         $part_number
                     ));
@@ -207,7 +214,8 @@ class BJT_Product_Info_Resolver {
                 $product = $wpdb->get_row($wpdb->prepare(
                     "SELECT COALESCE(NULLIF(model, ''), app_model, '') as model, '' as brand, 
                             COALESCE(spec, description_zh, '') as spec, '' as properties, 
-                            description_zh as description, name_zh, name_en, product_line_id as category 
+                            description_zh as description, name_zh, name_en, product_line_id as category,
+                            COALESCE(spec_imperial, '') as spec_imperial
                      FROM {$table_name} WHERE part_number = %s LIMIT 1",
                     $part_number
                 ));
@@ -220,7 +228,9 @@ class BJT_Product_Info_Resolver {
                             description_zh as description, 
                             COALESCE(name_zh, title_zh, '') AS name_zh, 
                             COALESCE(name_en, title_en, '') AS name_en, 
-                            product_line_id as category 
+                            product_line_id as category,
+                            COALESCE(model_imperial, '') as model_imperial,
+                            COALESCE(spec_imperial, '') as spec_imperial
                      FROM {$table_name} WHERE part_number = %s LIMIT 1",
                     $part_number
                 ));
@@ -230,7 +240,8 @@ class BJT_Product_Info_Resolver {
                 $product = $wpdb->get_row($wpdb->prepare(
                     "SELECT COALESCE(model, '') as model, COALESCE(brand, '') as brand, 
                             COALESCE(spec, description_zh, '') as spec, '' as properties, 
-                            description_zh as description, name_zh, name_en, product_line_id as category 
+                            description_zh as description, name_zh, name_en, product_line_id as category,
+                            COALESCE(spec_imperial, '') as spec_imperial
                      FROM {$table_name} WHERE part_number = %s LIMIT 1",
                     $part_number
                 ));

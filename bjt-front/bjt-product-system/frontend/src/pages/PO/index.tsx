@@ -19,6 +19,7 @@ import { UnifiedProduct, CustomerInfo, ShippingInfo, OrderSummary, POLocationSta
 import { useCart } from '../../contexts/CartContext';
 import { OrderNumberManager } from '../../utils/orderNumberUtils';
 import { ProductName } from '../../components/ProductName';
+import { useSmartUnitSystem } from '../../hooks/useSmartUnitSystem';
 
 // 1. 新增仿Excel模板的表格CSS
 const poExcelTableStyle = `
@@ -154,8 +155,92 @@ const POPage: React.FC = () => {
   // 当前语言
   const currentLanguage = i18n.language.startsWith('zh') ? 'zh' : 'en';
   
-  // 🔧 修复：获取用户的单位制偏好
-  const preferredUnit = user?.preferred_unit || 'metric';
+  // 使用智能单位制 Hook 获取实时单位制偏好（支持账户设置+临时切换）
+  const { preferredUnitSystem } = useSmartUnitSystem();
+  
+  // 使用智能单位制结果（支持实时切换）
+  const preferredUnit: 'metric' | 'imperial' = preferredUnitSystem;
+  
+  // 🔍 调试：暴露给全局调试
+  React.useEffect(() => {
+    (window as any).debugPO = {
+      products,
+      preferredUnit,
+      preferredUnitSystem,
+      getProductModel,
+      getProductSpec,
+      currentLanguage
+    };
+    console.log('🔍 [PO Debug] 单位制状态更新:', {
+      preferredUnit,
+      preferredUnitSystem,
+      currentLanguage,
+      productsCount: products.length
+    });
+  }, [preferredUnit, preferredUnitSystem, products, currentLanguage]);
+  
+  // 🔧 增强：除直接字段外，也检查 properties 内的 model_imperial / model
+  const getProductModel = (product: UnifiedProduct) => {
+    const directModelImp = (product as any).model_imperial;
+    const nestedModelImp = (product as any).properties?.model_imperial;
+    const directModel = product.model;
+    const nestedModel = (product as any).properties?.model;
+
+    // 🔍 调试：打印详细信息
+    if (product.code === '92A01007' || (product as any).part_number === '92A01007') {
+      console.log('🔍 [getProductModel] 92A01007 详细调试:', {
+        preferredUnit,
+        preferredUnitSystem,
+        directModelImp,
+        nestedModelImp,
+        directModel,
+        nestedModel,
+        fullProduct: product
+      });
+    }
+
+    if (preferredUnit === 'imperial') {
+      const result = directModelImp || nestedModelImp || directModel || nestedModel || '';
+      if (product.code === '92A01007' || (product as any).part_number === '92A01007') {
+        console.log('🔍 [getProductModel] 92A01007 英制结果:', result);
+      }
+      return result;
+    }
+    const result = directModel || nestedModel || directModelImp || nestedModelImp || '';
+    if (product.code === '92A01007' || (product as any).part_number === '92A01007') {
+      console.log('🔍 [getProductModel] 92A01007 公制结果:', result);
+    }
+    return result;
+  };
+  
+  // 🔧 新增：获取产品规格 - 支持公英制切换
+  const getProductSpec = (product: UnifiedProduct) => {
+    // 🔍 调试：打印详细信息
+    if (product.code === '92A01007' || (product as any).part_number === '92A01007') {
+      console.log('🔍 [getProductSpec] 92A01007 详细调试:', {
+        preferredUnit,
+        preferredUnitSystem,
+        'product.spec': product.spec,
+        'product.spec_imperial': (product as any).spec_imperial,
+        'properties.spec': (product as any).properties?.spec,
+        'properties.spec_imperial': (product as any).properties?.spec_imperial,
+        fullProduct: product
+      });
+    }
+
+    if (preferredUnit === 'imperial') {
+      const result = (product as any).spec_imperial || (product as any).properties?.spec_imperial || product.spec || (product as any).properties?.spec || '';
+      if (product.code === '92A01007' || (product as any).part_number === '92A01007') {
+        console.log('🔍 [getProductSpec] 92A01007 英制结果:', result);
+      }
+      return result;
+    }
+    const result = product.spec || (product as any).properties?.spec || (product as any).spec_imperial || (product as any).properties?.spec_imperial || '';
+    if (product.code === '92A01007' || (product as any).part_number === '92A01007') {
+      console.log('🔍 [getProductSpec] 92A01007 公制结果:', result);
+    }
+    return result;
+  };
   
   // 检查用户是否已登录
   useEffect(() => {
@@ -649,9 +734,9 @@ const POPage: React.FC = () => {
             quantity: product.quantity,
             price: product.price,
             unit_price: product.price,
-            model: product.model || '-', // Model列
-            // 🔧 修复：使用与PO页面Item description列完全相同的逻辑
-            spec: product.spec || (product as any).description || '', // 单数spec字段 - 与PO页面优先级一致
+            model: getProductModel(product), // Model列 - 支持公英制切换
+            // 🔧 修复：使用与PO页面Item description列完全相同的逻辑，支持公英制切换
+            spec: getProductSpec(product), // 规格字段 - 支持公英制切换
             specs: typeof product.specs === 'string' ? product.specs : '', // 复数specs字段 - 作为备用
             spec_imperial: product.spec_imperial || '',
             brand: product.brand || 'Lockedair', // Brand Name列
@@ -1010,10 +1095,10 @@ const POPage: React.FC = () => {
                 {getProductName(p)}
               </td>
               <td style={{textAlign: 'center'}}>
-                {p.model || ''}
+                {getProductModel(p)}
               </td>
               <td style={{fontSize: '13px', lineHeight: '1.4'}}>
-                {p.spec || ''}
+                {getProductSpec(p)}
               </td>
               <td style={{textAlign: 'center'}}>
                 {p.brand || ''}

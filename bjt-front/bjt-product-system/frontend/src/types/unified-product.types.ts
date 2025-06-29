@@ -21,6 +21,7 @@ export interface UnifiedProductBase {
   
   // 产品详情
   model: string;
+  model_imperial?: string;
   brand: string;
   type: string;
   unit?: string;
@@ -101,6 +102,7 @@ export class ProductDataConverter {
     // 🔧 修复：确保规格信息完整
     const specInfo = orderItem.spec || orderItem.specs || '';
     const specImperial = orderItem.spec_imperial || '';
+    const modelImperial = orderItem.model_imperial || '';
     
     const convertedProduct = {
       // 基础标识 - 优先使用最完整的字段
@@ -120,6 +122,7 @@ export class ProductDataConverter {
       
       // 产品详情
       model: orderItem.model || orderItem.item_name || '',
+      model_imperial: modelImperial,
       brand: orderItem.brand || 'Lockedair',
       type: orderItem.item_type || orderItem.type || 'product',
       unit: orderItem.unit || 'pcs',
@@ -138,6 +141,7 @@ export class ProductDataConverter {
         productName: productName,
         // 保留其他重要字段
         model: orderItem.model,
+        model_imperial: modelImperial,
         brand: orderItem.brand,
         spec: specInfo,
         spec_imperial: specImperial
@@ -203,6 +207,7 @@ export class ProductDataConverter {
       
       // 产品详情
       model: cartItem.model || '',
+      model_imperial: cartItem.model_imperial || '',
       brand: cartItem.brand || '',
       type: cartItem.type || 'product',
       unit: cartItem.unit || 'pcs',

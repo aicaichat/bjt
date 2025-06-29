@@ -410,7 +410,7 @@ class BJT_Accessory_Controller extends BJT_API_Controller {
             'brand' => $brand,
             'part_number' => $part_number,
             'name_zh' => $name_zh,
-            'name_en' => $name_en ?: $name_zh, // Default to zh if en not provided
+            'name_en' => $name_en ?? '', // 统一使用name_en字段，不使用fallback
             'spec' => $spec,
             'spec_imperial' => $spec_imperial,
             'voltage' => $voltage,

@@ -496,25 +496,9 @@ class BJT_Machine_Part_Controller extends BJT_API_Controller {
             }
         }
 
-        // ✨ Unified product name fallback logic — ensure name_zh / name_en are always present and non-empty
-        // Provide graceful degradation for legacy data rows that may still use title_* or only model / part_number fields.
-        if (empty($data['name_zh'])) {
-            if (!empty($item_db_object->title_zh)) {
-                $data['name_zh'] = $item_db_object->title_zh;
-            } elseif (!empty($item_db_object->model)) {
-                $data['name_zh'] = $item_db_object->model;
-            } elseif (!empty($item_db_object->part_number)) {
-                $data['name_zh'] = $item_db_object->part_number;
-            }
-        }
-
-        if (empty($data['name_en'])) {
-            if (!empty($item_db_object->title_en)) {
-                $data['name_en'] = $item_db_object->title_en;
-            } elseif (!empty($item_db_object->part_number)) {
-                $data['name_en'] = $item_db_object->part_number;
-            }
-        }
+        // ✨ 统一名称字段，直接使用name_zh/name_en字段
+        $data['name_zh'] = $item_db_object->name_zh ?? '';
+        $data['name_en'] = $item_db_object->name_en ?? '';
 
         return $data;
     }

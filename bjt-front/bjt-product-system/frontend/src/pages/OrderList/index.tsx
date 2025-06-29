@@ -569,6 +569,9 @@ const OrderListPage: React.FC = () => {
           price: item.price || item.unit_price || 0,
           specs: item.specs || item.spec,
           spec: item.spec || item.specs,
+          // 🔧 新增：添加imperial字段支持，确保PO页面公英制切换正常工作
+          spec_imperial: (item as any).spec_imperial,
+          model_imperial: (item as any).model_imperial,
           unit: '个',
           type: 'product',
           model: item.model || item.part_number,

@@ -181,6 +181,19 @@ class BJT_Order_Controller extends BJT_API_Controller {
                     'context'     => ['view', 'edit', 'embed'],
                     'readonly'    => true,
                 ],
+                // 🔧 新增：公英制切换字段
+                'model_imperial' => [
+                    'description' => __('Imperial model field captured at the time of order.'),
+                    'type'        => 'string',
+                    'context'     => ['view', 'edit', 'embed'],
+                    'readonly'    => true,
+                ],
+                'spec_imperial' => [
+                    'description' => __('Imperial specification field captured at the time of order.'),
+                    'type'        => 'string',
+                    'context'     => ['view', 'edit', 'embed'],
+                    'readonly'    => true,
+                ],
                 // No currency per line item, assume order level currency
             ],
         ];
@@ -479,20 +492,27 @@ class BJT_Order_Controller extends BJT_API_Controller {
                     $enriched_item['spec']        = $product_details['spec']        ?? '';
                     $enriched_item['specs']       = $product_details['specs']       ?? $product_details['spec'] ?? '';
                     $enriched_item['model']       = $product_details['model']       ?? '';
+                    // 🔧 新增：imperial单位字段
+                    if (isset($product_details['model_imperial'])) {
+                        $enriched_item['model_imperial'] = $product_details['model_imperial'];
+                    }
                     $enriched_item['brand']       = $product_details['brand']       ?? '';
                     $enriched_item['properties']  = $product_details['properties']  ?? [];
                     $enriched_item['description'] = $product_details['description'] ?? ($product_details['spec'] ?? '');
                     $enriched_item['category']    = $product_details['category']    ?? '';
+                    // 🔧 新增：imperial规格字段
+                    if (isset($product_details['spec_imperial'])) {
+                        $enriched_item['spec_imperial'] = $product_details['spec_imperial'];
+                    }
 
                     // 🔑 多语言名称字段（前端切换语言所需）
                     $enriched_item['name_zh'] = $product_details['name_zh'] ?? '';
                     $enriched_item['name_en'] = $product_details['name_en'] ?? '';
 
-                    // 兼容旧字段 name (按语言优先)
+                    // 统一使用name_zh/name_en字段，不使用fallback
                     if (empty($enriched_item['name'])) {
                         $lang = isset($_GET['lang']) ? strtolower(sanitize_key($_GET['lang'])) : 'zh';
-                        $enriched_item['name'] = ($lang === 'en') ? ($enriched_item['name_en'] ?: $enriched_item['model'] ?: $enriched_item['description'])
-                                                                  : ($enriched_item['name_zh'] ?: $enriched_item['model'] ?: $enriched_item['description']);
+                        $enriched_item['name'] = ($lang === 'en') ? $enriched_item['name_en'] : $enriched_item['name_zh'];
                     }
                     
                     error_log("✅ [Order Controller - get_items] 成功丰富产品信息: " . $item->item_id . " -> Model: " . ($product_details['model'] ?? 'N/A') . ", Spec: " . ($product_details['spec'] ?? 'N/A'));
@@ -909,8 +929,8 @@ class BJT_Order_Controller extends BJT_API_Controller {
                 break;
             case 'consumable': 
                 $table_name = $wpdb->prefix . 'bjt_consumables'; 
-                // 🔧 修复：耗材表使用 title_zh/title_en 字段
-                $name_col = ($lang === 'en') ? 'title_en' : 'title_zh';
+                // 统一使用name_zh/name_en字段
+                $name_col = ($lang === 'en') ? 'name_en' : 'name_zh';
                 break;
             case 'spare_part': 
                 $table_name = $wpdb->prefix . 'bjt_spare_parts'; 
@@ -1035,14 +1055,28 @@ class BJT_Order_Controller extends BJT_API_Controller {
                 $enriched_item['spec'] = $product_details['spec'] ?? '';
                 $enriched_item['specs'] = $product_details['specs'] ?? $product_details['spec'] ?? '';
                 $enriched_item['model'] = $product_details['model'] ?? '';
+                // 🔧 新增：imperial单位字段
+                if (isset($product_details['model_imperial'])) {
+                    $enriched_item['model_imperial'] = $product_details['model_imperial'];
+                }
                 $enriched_item['brand'] = $product_details['brand'] ?? '';
                 $enriched_item['properties'] = $product_details['properties'] ?? [];
-                $enriched_item['description'] = $product_details['description'] ?? '';
-                $enriched_item['category'] = $product_details['category'] ?? '';
-                
-                // 🔧 修复：添加多语言字段支持
+                $enriched_item['description'] = $product_details['description'] ?? ($product_details['spec'] ?? '');
+                $enriched_item['category']    = $product_details['category']    ?? '';
+                // 🔧 新增：imperial规格字段
+                if (isset($product_details['spec_imperial'])) {
+                    $enriched_item['spec_imperial'] = $product_details['spec_imperial'];
+                }
+
+                // 🔑 多语言名称字段（前端切换语言所需）
                 $enriched_item['name_zh'] = $product_details['name_zh'] ?? '';
                 $enriched_item['name_en'] = $product_details['name_en'] ?? '';
+
+                // 统一使用name_zh/name_en字段，不使用fallback
+                if (empty($enriched_item['name'])) {
+                    $lang = isset($_GET['lang']) ? strtolower(sanitize_key($_GET['lang'])) : 'zh';
+                    $enriched_item['name'] = ($lang === 'en') ? $enriched_item['name_en'] : $enriched_item['name_zh'];
+                }
                 
                 error_log("✅ [Order Controller - get_order_object] 成功丰富产品信息: {$part_number} ({$product_type}) -> Model: " . ($product_details['model'] ?? 'N/A') . ", Spec: " . ($product_details['spec'] ?? 'N/A') . ", 中文名: " . ($product_details['name_zh'] ?? 'N/A') . ", 英文名: " . ($product_details['name_en'] ?? 'N/A'));
             } else {
