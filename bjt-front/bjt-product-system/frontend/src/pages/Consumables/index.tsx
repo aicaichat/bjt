@@ -1145,7 +1145,7 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
           <div className="product-info-section">
             <div className="product-title">
               <h3 className="product-name">
-                {getLocalizedValue(item, 'name')}
+                {getLocalizedValue(item, 'model') || getLocalizedValue(item, 'name')}
               </h3>
               
               {/* 适用机型信息 */}
