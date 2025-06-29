@@ -74,7 +74,7 @@
       "name": "Item",
       "model": "Model",
       "compatibility": "Applicable Machine",
-      "spec": "Specification",
+      "spec": "Spec.",
       "price": "Price",
       "stock": "Inventory",
       "actions": "Action"
@@ -89,13 +89,13 @@
   },
   "details": {
     "properties": {
-      "appSn": "Compatible Serial Number",
+      "appSn": "Applicable SN.",
       "pcsPerBox": "Qty per Carton",
       "packageSize": "Packaging Dim.",
       "packageSizeCm": "Packaging Dim.(cm)",
       "packageSizeInch": "Packaging Dim.(inch)",
       "netWeight": "Net Weight",
-      "netWeightKg": "Net Weight (kg)",
+      "netWeightKg": "Net Weight(kg)",
       "netWeightLbs": "Net Weight(lb)",
       "unit": "Unit"
     },
@@ -127,8 +127,8 @@
     "is_consumable": "Consumable Status",
     "app_model": "Applicable Machine",
     "net_weight_kg": "Net Weight (kg)",
-    "specifications": "Specifications",
-    "compatibleSerialNumber": "Compatible Serial Number",
+    "specifications": "Spec.",
+    "compatibleSerialNumber": "Applicable SN.",
     "pcsPerBox": "Qty per Carton",
     "packageSize": "Packaging Dim.",
     "productId": "Product ID"
