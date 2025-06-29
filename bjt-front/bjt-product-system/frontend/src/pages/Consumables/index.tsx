@@ -203,9 +203,9 @@ const TooltipField = ({ fieldKey, label, value }: { fieldKey: string; label: str
   let translatedLabel = label;
   if (fieldKey === 'package_size') {
     if (label.includes('inch')) {
-      translatedLabel = t('tooltip.packageSize.imperial', '包装尺寸(inch)');
+      translatedLabel = t('tooltip.packageSize.imperial', 'Packaging Dim.(inch)');
     } else if (label.includes('cm')) {
-      translatedLabel = t('tooltip.packageSize.metric', '包装尺寸(cm)');
+      translatedLabel = t('tooltip.packageSize.metric', 'Packaging Dim.(cm)');
     }
   }
 
