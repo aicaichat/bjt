@@ -186,6 +186,8 @@ const TOOLTIP_FIELD_GROUPS = {
 
 // 单个字段组件
 const TooltipField = ({ fieldKey, label, value }: { fieldKey: string; label: string; value: string }) => {
+  const { t } = useTranslation(['consumables', 'common']);
+  
   if (!value) return null;
 
   // 🌐 统一尺寸显示：7.5*7.5*16.1 -> 7.5 × 7.5 × 16.1
@@ -197,9 +199,19 @@ const TooltipField = ({ fieldKey, label, value }: { fieldKey: string; label: str
     .replace(/[x\*]/g, ' × ')     // * 或 x 替换为乘号并添加空格
     .trim();
 
+  // 🌐 在组件内部处理包装尺寸的翻译
+  let translatedLabel = label;
+  if (fieldKey === 'package_size') {
+    if (label.includes('inch')) {
+      translatedLabel = t('tooltip.packageSize.imperial', '包装尺寸(inch)');
+    } else if (label.includes('cm')) {
+      translatedLabel = t('tooltip.packageSize.metric', '包装尺寸(cm)');
+    }
+  }
+
   return (
     <div className="tech-param-row mb-2">
-      <div className="param-label text-gray-500 text-xs mb-1">{label}</div>
+      <div className="param-label text-gray-500 text-xs mb-1">{translatedLabel}</div>
       <div className="param-value font-semibold text-purple-600 text-left">{displayValue}</div>
     </div>
   );
