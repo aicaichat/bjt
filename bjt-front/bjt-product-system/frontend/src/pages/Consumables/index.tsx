@@ -186,25 +186,18 @@ const TOOLTIP_FIELD_GROUPS = {
 
 // 单个字段组件
 const TooltipField = ({ fieldKey, label, value }: { fieldKey: string; label: string; value: string }) => {
-  const hasUnit = label.includes('(') && label.includes(')');
-  const isNumeric = /^\d+(\.\d+)?$/.test(value);
-  const isEmpty = !value || value === 'N/A' || value === '';
-  
+  if (!value) return null;
+
+  // 🌐 统一尺寸显示：7.5*7.5*16.1 -> 7.5 × 7.5 × 16.1
+  let displayValue = value;
+  if (/\d+[x\*]\d+/.test(value)) {
+    displayValue = value.replace(/[x\*]/g, ' × ');
+  }
+
   return (
-    <div className="tooltip-field">
-      <span 
-        className="field-label" 
-        data-has-unit={hasUnit}
-      >
-        {label}
-      </span>
-      <span 
-        className="field-value"
-        data-field-type={isNumeric ? 'numeric' : 'text'}
-        data-empty={isEmpty}
-      >
-        {isEmpty ? '' : value}
-      </span>
+    <div className="tech-param-row flex items-start justify-between mb-1 whitespace-nowrap">
+      <span className="param-label text-gray-500 mr-2">{label}</span>
+      <span className="param-value font-semibold text-purple-600 text-right whitespace-nowrap">{displayValue}</span>
     </div>
   );
 };
