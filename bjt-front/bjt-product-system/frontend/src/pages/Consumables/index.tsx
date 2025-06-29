@@ -190,9 +190,12 @@ const TooltipField = ({ fieldKey, label, value }: { fieldKey: string; label: str
 
   // 🌐 统一尺寸显示：7.5*7.5*16.1 -> 7.5 × 7.5 × 16.1
   let displayValue = value;
-  if (/\d+[x\*]\d+/.test(value)) {
-    displayValue = value.replace(/[x\*]/g, ' × ');
-  }
+  // 🧹 清理并格式化尺寸字符串，移除换行/空白并统一乘号
+  displayValue = value
+    .replace(/[\n\r\t]+/g, '')  // 移除换行制表符
+    .replace(/\s+/g, '')          // 移除所有空白，防止自动换行
+    .replace(/[x\*]/g, ' × ')     // * 或 x 替换为乘号并添加空格
+    .trim();
 
   return (
     <div className="tech-param-row flex items-start justify-between mb-1 whitespace-nowrap">
@@ -963,19 +966,18 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
               {(() => {
                 const tubeField = isImperialUnit ? 'tube_inner_diameter_inch' : 'tube_inner_diameter_cm';
                 const tubeDiameter = safeGet(tubeField, '');
-                const packageSize = safeGet(isImperialUnit ? 'package_size_inch' : 'package_size_cm', '');
                 
                 if (tubeDiameter !== 'N/A' && tubeDiameter !== '') {
+                  // 🧹 使用 TooltipField 组件统一处理尺寸格式化
                   return (
-                    <div className="tech-param-row">
-                      <span className="param-label">
-                        {isImperialUnit ? 
-                          t('tooltip.tubeInnerDiameter.imperial', 'Inner Dia.(inch)') : 
-                          t('tooltip.tubeInnerDiameter.metric', 'Inner Dia.(cm)')
-                        }
-                      </span>
-                      <span className="param-value">{tubeDiameter}</span>
-                    </div>
+                    <TooltipField
+                      fieldKey="tube_diameter"
+                      label={isImperialUnit ? 
+                        t('tooltip.tubeInnerDiameter.imperial', 'Inner Dia.(inch)') : 
+                        t('tooltip.tubeInnerDiameter.metric', 'Inner Dia.(cm)')
+                      }
+                      value={tubeDiameter}
+                    />
                   );
                 }
                 return null;
@@ -984,16 +986,16 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
               {(() => {
                 const packageSize = safeGet(isImperialUnit ? 'package_size_inch' : 'package_size_cm', '');
                 if (packageSize !== 'N/A' && packageSize !== '') {
+                  // 🧹 使用 TooltipField 组件统一处理尺寸格式化
                   return (
-                    <div className="tech-param-row">
-                      <span className="param-label">
-                        {isImperialUnit ? 
-                          t('tooltip.packageSize.imperial', 'Packaging Dim.(inch)') : 
-                          t('tooltip.packageSize.metric', 'Packaging Dim.(cm)')
-                        }
-                      </span>
-                      <span className="param-value">{packageSize}</span>
-                    </div>
+                    <TooltipField
+                      fieldKey="package_size"
+                      label={isImperialUnit ? 
+                        t('tooltip.packageSize.imperial', 'Packaging Dim.(inch)') : 
+                        t('tooltip.packageSize.metric', 'Packaging Dim.(cm)')
+                      }
+                      value={packageSize}
+                    />
                   );
                 }
                 return null;
