@@ -2383,7 +2383,7 @@ const MachinesPage: React.FC = () => {
               <div className="w-full md:w-1/5 md:pl-6 mt-6 md:mt-0 border-t md:border-t-0 md:border-l border-gray-200 pt-6 md:pt-0">
                 <div className="mb-4">
                   <div className="font-medium text-sm text-gray-600 mb-2">
-                    {t('common:fields.price') || 'Price'}:
+                    {t('tableHeaders.price') || 'Price'}:
                   </div>
                   
                   <div className="text-2xl font-bold text-blue-600 mb-2">
@@ -2928,7 +2928,7 @@ const MachinesPage: React.FC = () => {
             {/* Price */}
             <div className="mb-4">
               <div className="font-medium text-sm text-gray-600 mb-2">
-                {t('common:fields.price') || 'Price'}:
+                {t('tableHeaders.price') || 'Price'}:
               </div>
               
               <div className="text-2xl font-bold text-blue-600 mb-2">
