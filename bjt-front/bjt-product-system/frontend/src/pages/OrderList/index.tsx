@@ -695,42 +695,8 @@ const OrderListPage: React.FC = () => {
     );
   };
   
-  // 渲染筛选区域
-  const renderFilterSection = () => {
-    return (
-      <div className="filter-section">
-        <div className="date-range">
-          <span>{t('filters.dateRangeLabel')}</span>
-          <input 
-            type="date" 
-            className="date-input" 
-            id="start-date"
-            value={startDate}
-            onChange={handleDateChange}
-          />
-          <span>{t('filters.dateTo')}</span>
-          <input 
-            type="date" 
-            className="date-input" 
-            id="end-date"
-            value={endDate}
-            onChange={handleDateChange}
-          />
-        </div>
-        <div className="search-box">
-          <input 
-            type="text" 
-            className="search-input" 
-            placeholder={t('filters.searchPlaceholder')}
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-          />
-          <button className="search-button" onClick={handleSearch}>{t('filters.searchButton')}</button>
-        </div>
-      </div>
-    );
-  };
+  // 过滤/搜索已取消（UI 精简）
+  const renderFilterSection = () => null;
   
   // 渲染订单卡片
   const renderOrderCard = (order: UnifiedOrder) => {
