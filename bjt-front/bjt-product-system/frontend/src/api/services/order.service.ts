@@ -33,8 +33,8 @@ const mockOrdersData: OrderListResponse = {
           part_number: '1231313131313',
           name: 'LA ESS test',
           quantity: 1,
-          unit_price: 0.00,
-          line_total: 0.00,
+          unit_price: 2500.00,
+          line_total: 2500.00,
           properties: {
             model: 'LA-ESS V1.1',
             description: 'partNumber: 1231313131313, productName: LA ESS test | 220V',
@@ -48,8 +48,8 @@ const mockOrdersData: OrderListResponse = {
           part_number: '60A10002',
           name: 'ET1003 Air Cushion Delivery System',
           quantity: 1,
-          unit_price: 0.00,
-          line_total: 0.00,
+          unit_price: 1200.00,
+          line_total: 1200.00,
           properties: {
             model: 'ET1003',
             description: 'partNumber: 60A10002, productName: ET1003 Air Cushion Delivery System | 110V, 50Hz',
@@ -63,8 +63,8 @@ const mockOrdersData: OrderListResponse = {
           part_number: '90R01258',
           name: 'MEX-RH30-13-20-13-L',
           quantity: 1,
-          unit_price: 0.00,
-          line_total: 0.00,
+          unit_price: 45.50,
+          line_total: 45.50,
           properties: {
             model: 'MEX-RH30-13-20-13-L',
             description: 'partNumber: 90R01258, productName: Not Found',
@@ -78,8 +78,8 @@ const mockOrdersData: OrderListResponse = {
           part_number: '90R01312',
           name: 'MEX-H-13-20-13-L',
           quantity: 10,
-          unit_price: 0.00,
-          line_total: 0.00,
+          unit_price: 35.80,
+          line_total: 358.00,
           properties: {
             model: 'MEX-H-13-20-13-L',
             description: 'partNumber: 90R01312, productName: Not Found',

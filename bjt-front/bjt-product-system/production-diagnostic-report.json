@@ -1,0 +1,31 @@
+{
+  "timestamp": "2025-06-30T01:05:45.626Z",
+  "environment": {
+    "nodeVersion": "v23.11.0",
+    "platform": "darwin",
+    "cwd": "/Users/mac/bjt/bjt-front/bjt-product-system"
+  },
+  "files": {
+    "frontend/src/pages/PO/index.tsx": {
+      "exists": true,
+      "size": 49367
+    },
+    "frontend/src/config/appConfig.ts": {
+      "exists": true,
+      "size": 11431
+    },
+    "frontend/src/config.ts": {
+      "exists": true,
+      "size": 894
+    },
+    "frontend/.env.production": {
+      "exists": true,
+      "size": 473
+    },
+    "frontend/.env.development": {
+      "exists": true,
+      "size": 507
+    }
+  },
+  "recommendations": []
+}

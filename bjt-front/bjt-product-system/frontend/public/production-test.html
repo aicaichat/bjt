@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生产环境快速测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .info { background: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; background: #007cba; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 生产环境快速测试</h1>
+    <p>生成时间: 2025-06-30T01:05:45.626Z</p>
+    
+    <div class="test-section info">
+        <h2>环境信息</h2>
+        <div id="env-info"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>API测试</h2>
+        <button onclick="testAPI()">测试API连接</button>
+        <div id="api-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>PO页面测试</h2>
+        <button onclick="testPOPage()">测试PO页面</button>
+        <a href="/po" target="_blank" style="margin-left: 10px;">打开PO页面</a>
+        <div id="po-results"></div>
+    </div>
+    
+    <script>
+        // 显示环境信息
+        function showEnvInfo() {
+            const info = {
+                url: window.location.href,
+                userAgent: navigator.userAgent,
+                timestamp: new Date().toISOString()
+            };
+            document.getElementById('env-info').innerHTML = '<pre>' + JSON.stringify(info, null, 2) + '</pre>';
+        }
+        
+        // 测试API
+        async function testAPI() {
+            const resultsDiv = document.getElementById('api-results');
+            resultsDiv.innerHTML = '<p>测试中...</p>';
+            
+            const tests = [
+                '/wp-json/',
+                '/wp-json/bjt/v1/',
+                '/wp-json/bjt/v1/orders'
+            ];
+            
+            const results = [];
+            
+            for (const url of tests) {
+                try {
+                    const response = await fetch(url);
+                    results.push({
+                        url,
+                        status: response.status,
+                        ok: response.ok
+                    });
+                } catch (error) {
+                    results.push({
+                        url,
+                        error: error.message
+                    });
+                }
+            }
+            
+            resultsDiv.innerHTML = '<pre>' + JSON.stringify(results, null, 2) + '</pre>';
+        }
+        
+        // 测试PO页面
+        function testPOPage() {
+            const resultsDiv = document.getElementById('po-results');
+            resultsDiv.innerHTML = '<p>检查PO页面访问性...</p>';
+            
+            // 尝试在iframe中加载PO页面
+            const iframe = document.createElement('iframe');
+            iframe.src = '/po';
+            iframe.style.width = '100%';
+            iframe.style.height = '300px';
+            iframe.style.border = '1px solid #ddd';
+            
+            iframe.onload = function() {
+                resultsDiv.innerHTML = '<p class="success">✅ PO页面可以加载</p>';
+                resultsDiv.appendChild(iframe);
+            };
+            
+            iframe.onerror = function() {
+                resultsDiv.innerHTML = '<p class="error">❌ PO页面加载失败</p>';
+            };
+            
+            resultsDiv.appendChild(iframe);
+        }
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', showEnvInfo);
+    </script>
+</body>
+</html>

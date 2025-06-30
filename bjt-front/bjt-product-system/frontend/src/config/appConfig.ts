@@ -3,16 +3,52 @@
  * 集中管理API URL、区域设置、用户角色等全局参数
  */
 
+// 🔧 智能API URL配置 - 支持开发和生产环境
+const getApiBaseUrl = (): string => {
+  const envApiUrl = import.meta.env.VITE_API_URL;
+  const mode = import.meta.env.MODE;
+  const isDev = import.meta.env.DEV;
+  
+  // 如果明确设置了环境变量，直接使用
+  if (envApiUrl) {
+    return envApiUrl;
+  }
+  
+  // 根据环境自动判断
+  if (isDev || mode === 'development') {
+    return 'http://localhost:8080/wp-json/bjt/v1';
+  }
+  
+  // 生产环境默认配置
+  if (typeof window !== 'undefined') {
+    const { protocol, host } = window.location;
+    return `${protocol}//${host}/wp-json/bjt/v1`;
+  }
+  
+  // 最后的fallback
+  return '/wp-json/bjt/v1';
+};
+
 /**
  * API配置
  */
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_URL || '/wp-json/bjt/v1',
+  BASE_URL: getApiBaseUrl(),
   USE_MOCK_DATA: false, // 强制禁用Mock数据，只使用真实API
   TIMEOUT: 8000, // 请求超时时间（毫秒）
   RETRY_COUNT: 2, // 请求失败重试次数
   VERSION: 'v1',  // API版本
   RATE_LIMIT: 100, // 每分钟允许的请求数
+  
+  // 🔧 调试信息
+  getDebugInfo: () => ({
+    BASE_URL: API_CONFIG.BASE_URL,
+    VITE_API_URL: import.meta.env.VITE_API_URL,
+    MODE: import.meta.env.MODE,
+    DEV: import.meta.env.DEV,
+    PROD: import.meta.env.PROD,
+    currentOrigin: typeof window !== 'undefined' ? window.location.origin : 'N/A'
+  })
 };
 
 /**

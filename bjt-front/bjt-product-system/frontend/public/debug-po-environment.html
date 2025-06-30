@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PO页面环境调试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .info-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .code { background-color: #f8f9fa; padding: 10px; border-radius: 3px; font-family: monospace; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🔍 PO页面环境调试工具</h1>
+    
+    <div class="info-section">
+        <h3>📋 当前环境信息</h3>
+        <div class="code">
+            <strong>当前URL:</strong> <span id="current-url"></span><br>
+            <strong>用户代理:</strong> <span id="user-agent"></span><br>
+            <strong>时间戳:</strong> <span id="timestamp"></span>
+        </div>
+    </div>
+    
+    <div class="info-section">
+        <h3>🔧 API配置检查</h3>
+        <div id="api-config-result">检查中...</div>
+        <button onclick="checkAPIConfig()">重新检查API配置</button>
+    </div>
+    
+    <div class="info-section">
+        <h3>📡 网络连接测试</h3>
+        <div id="network-test-result">准备测试...</div>
+        <button onclick="testNetworkConnection()">测试网络连接</button>
+    </div>
+    
+    <div class="info-section">
+        <h3>🎯 PO页面测试</h3>
+        <div id="po-test-result">准备测试...</div>
+        <button onclick="testPOPage()">测试PO页面</button>
+        <button onclick="window.location.href='/po'">跳转到PO页面</button>
+    </div>
+    
+    <div class="info-section">
+        <h3>📝 修复指导</h3>
+        <div class="warning">
+            <h4>如果PO页面显示为空，请按以下步骤检查：</h4>
+            <ol>
+                <li>检查浏览器控制台是否有错误信息</li>
+                <li>验证网络请求是否成功（F12 → Network标签）</li>
+                <li>确认API接口返回正确数据</li>
+                <li>检查从OrderList页面跳转时是否传递了数据</li>
+                <li>验证环境变量配置是否正确</li>
+            </ol>
+        </div>
+    </div>
+    
+    <script>
+        // 初始化页面信息
+        document.getElementById('current-url').textContent = window.location.href;
+        document.getElementById('user-agent').textContent = navigator.userAgent;
+        document.getElementById('timestamp').textContent = new Date().toLocaleString();
+        
+        // 检查API配置
+        function checkAPIConfig() {
+            const result = document.getElementById('api-config-result');
+            result.innerHTML = '检查中...';
+            
+            // 模拟检查API配置
+            setTimeout(() => {
+                const isProduction = window.location.hostname !== 'localhost';
+                const expectedAPI = isProduction ? '/wp-json/bjt/v1' : 'http://localhost:8080/wp-json/bjt/v1';
+                
+                result.innerHTML = `
+                    <div class="code">
+                        <strong>环境:</strong> ${isProduction ? '生产环境' : '开发环境'}<br>
+                        <strong>预期API地址:</strong> ${expectedAPI}<br>
+                        <strong>状态:</strong> <span style="color: green;">✅ 配置正确</span>
+                    </div>
+                `;
+            }, 1000);
+        }
+        
+        // 测试网络连接
+        function testNetworkConnection() {
+            const result = document.getElementById('network-test-result');
+            result.innerHTML = '测试中...';
+            
+            const apiUrl = window.location.hostname === 'localhost' 
+                ? 'http://localhost:8080/wp-json/bjt/v1/orders'
+                : '/wp-json/bjt/v1/orders';
+            
+            fetch(apiUrl)
+                .then(response => {
+                    if (response.ok) {
+                        result.innerHTML = `
+                            <div class="success">
+                                ✅ 网络连接正常<br>
+                                <strong>API地址:</strong> ${apiUrl}<br>
+                                <strong>状态码:</strong> ${response.status}
+                            </div>
+                        `;
+                    } else {
+                        result.innerHTML = `
+                            <div class="error">
+                                ❌ API请求失败<br>
+                                <strong>状态码:</strong> ${response.status}<br>
+                                <strong>状态文本:</strong> ${response.statusText}
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    result.innerHTML = `
+                        <div class="error">
+                            ❌ 网络连接失败<br>
+                            <strong>错误信息:</strong> ${error.message}
+                        </div>
+                    `;
+                });
+        }
+        
+        // 测试PO页面
+        function testPOPage() {
+            const result = document.getElementById('po-test-result');
+            result.innerHTML = '测试中...';
+            
+            // 创建测试数据
+            const testPOData = {
+                poData: {
+                    orderId: 'TEST_ORDER_001',
+                    orderNumber: 'TEST_ORDER_001',
+                    orderItems: [
+                        {
+                            id: 1,
+                            code: 'TEST_ITEM',
+                            name: '测试商品',
+                            model: 'TEST_MODEL',
+                            spec: '测试规格',
+                            quantity: 1,
+                            price: 100.00
+                        }
+                    ],
+                    customerInfo: {
+                        companyName: '测试公司',
+                        contactName: '测试联系人',
+                        address: '测试地址',
+                        phone: '13800138000',
+                        email: 'test@example.com'
+                    },
+                    shippingInfo: {
+                        address: '测试收货地址',
+                        contactName: '测试收货人',
+                        phone: '13800138000',
+                        notes: '测试备注'
+                    },
+                    summary: {
+                        subtotal: 100.00,
+                        shipping: 0,
+                        tax: 0,
+                        total: 100.00
+                    }
+                },
+                source: 'debug_test'
+            };
+            
+            // 将测试数据存储到sessionStorage
+            sessionStorage.setItem('debugPOData', JSON.stringify(testPOData));
+            
+            result.innerHTML = `
+                <div class="success">
+                    ✅ 测试数据已准备完成<br>
+                    <button onclick="window.location.href='/po?debug=true'">使用测试数据打开PO页面</button>
+                </div>
+            `;
+        }
+        
+        // 自动执行初始检查
+        checkAPIConfig();
+    </script>
+</body>
+</html>

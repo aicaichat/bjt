@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生产环境API调试工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .debug-section {
+            background: white;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .debug-title {
+            color: #333;
+            border-bottom: 2px solid #007cba;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .status-ok { color: #28a745; }
+        .status-error { color: #dc3545; }
+        .status-warning { color: #ffc107; }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            border-left: 4px solid #007cba;
+        }
+        button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #005a87;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .test-result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .test-result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .test-result.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 BJT产品系统 - 生产环境API调试工具</h1>
+    
+    <div class="debug-section">
+        <h2 class="debug-title">📍 环境信息</h2>
+        <div id="environment-info"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2 class="debug-title">🔗 API连接测试</h2>
+        <button onclick="testApiConnections()">测试API连接</button>
+        <button onclick="testPOPageData()">测试PO页面数据</button>
+        <div id="api-test-results"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2 class="debug-title">🛠️ 问题诊断</h2>
+        <button onclick="runFullDiagnosis()">运行完整诊断</button>
+        <div id="diagnosis-results"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2 class="debug-title">📋 实时日志</h2>
+        <button onclick="clearLogs()">清除日志</button>
+        <div id="live-logs"></div>
+    </div>
+
+    <script>
+        // 全局日志收集器
+        const logs = [];
+        const originalConsole = {
+            log: console.log,
+            error: console.error,
+            warn: console.warn
+        };
+        
+        // 拦截console输出
+        ['log', 'error', 'warn'].forEach(method => {
+            console[method] = function(...args) {
+                logs.push({
+                    type: method,
+                    timestamp: new Date().toISOString(),
+                    message: args.map(arg => typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)).join(' ')
+                });
+                updateLiveLogs();
+                originalConsole[method].apply(console, args);
+            };
+        });
+        
+        function updateLiveLogs() {
+            const logsContainer = document.getElementById('live-logs');
+            const recentLogs = logs.slice(-20); // 只显示最近20条
+            logsContainer.innerHTML = recentLogs.map(log => 
+                `<div class="test-result ${log.type === 'error' ? 'error' : log.type === 'warn' ? 'info' : 'success'}">
+                    <strong>[${log.timestamp}] ${log.type.toUpperCase()}:</strong><br>
+                    <pre>${log.message}</pre>
+                </div>`
+            ).join('');
+        }
+        
+        function clearLogs() {
+            logs.length = 0;
+            document.getElementById('live-logs').innerHTML = '<p>日志已清除</p>';
+        }
+        
+        // 显示环境信息
+        function showEnvironmentInfo() {
+            const info = {
+                '当前URL': window.location.href,
+                '协议': window.location.protocol,
+                '主机': window.location.host,
+                '路径': window.location.pathname,
+                '用户代理': navigator.userAgent,
+                '时间戳': new Date().toISOString()
+            };
+            
+            document.getElementById('environment-info').innerHTML = 
+                '<pre>' + JSON.stringify(info, null, 2) + '</pre>';
+        }
+        
+        // 测试API连接
+        async function testApiConnections() {
+            const resultsContainer = document.getElementById('api-test-results');
+            resultsContainer.innerHTML = '<p>正在测试API连接...</p>';
+            
+            const tests = [
+                {
+                    name: 'WordPress REST API 基础检查',
+                    url: '/wp-json/',
+                    expected: 'WordPress REST API'
+                },
+                {
+                    name: 'BJT API 端点检查',
+                    url: '/wp-json/bjt/v1/',
+                    expected: 'BJT API'
+                },
+                {
+                    name: '订单API检查',
+                    url: '/wp-json/bjt/v1/orders',
+                    expected: 'orders'
+                },
+                {
+                    name: '产品API检查',
+                    url: '/wp-json/bjt/v1/products',
+                    expected: 'products'
+                }
+            ];
+            
+            const results = [];
+            
+            for (const test of tests) {
+                try {
+                    console.log(`🔍 测试: ${test.name} - ${test.url}`);
+                    const response = await fetch(test.url, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    const status = response.status;
+                    const statusText = response.statusText;
+                    let responseText = '';
+                    
+                    try {
+                        responseText = await response.text();
+                    } catch (e) {
+                        responseText = '无法读取响应内容';
+                    }
+                    
+                    results.push({
+                        name: test.name,
+                        url: test.url,
+                        status,
+                        statusText,
+                        success: status < 400,
+                        response: responseText.substring(0, 500) + (responseText.length > 500 ? '...' : '')
+                    });
+                    
+                    console.log(`✅ ${test.name}: ${status} ${statusText}`);
+                } catch (error) {
+                    results.push({
+                        name: test.name,
+                        url: test.url,
+                        status: 'ERROR',
+                        statusText: error.message,
+                        success: false,
+                        response: error.toString()
+                    });
+                    
+                    console.error(`❌ ${test.name}:`, error);
+                }
+            }
+            
+            // 显示结果
+            resultsContainer.innerHTML = results.map(result => 
+                `<div class="test-result ${result.success ? 'success' : 'error'}">
+                    <strong>${result.name}</strong><br>
+                    URL: ${result.url}<br>
+                    状态: ${result.status} ${result.statusText}<br>
+                    <details>
+                        <summary>响应内容</summary>
+                        <pre>${result.response}</pre>
+                    </details>
+                </div>`
+            ).join('');
+        }
+        
+        // 测试PO页面特定数据
+        async function testPOPageData() {
+            console.log('🔍 开始测试PO页面数据...');
+            
+            // 模拟PO页面的API调用
+            try {
+                const orderResponse = await fetch('/wp-json/bjt/v1/orders?page=1&per_page=10', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('📊 订单API响应状态:', orderResponse.status);
+                
+                if (orderResponse.ok) {
+                    const orderData = await orderResponse.json();
+                    console.log('📋 订单数据:', orderData);
+                } else {
+                    console.error('❌ 订单API调用失败:', orderResponse.statusText);
+                }
+            } catch (error) {
+                console.error('❌ PO页面数据测试失败:', error);
+            }
+        }
+        
+        // 运行完整诊断
+        async function runFullDiagnosis() {
+            const resultsContainer = document.getElementById('diagnosis-results');
+            resultsContainer.innerHTML = '<p>正在运行完整诊断...</p>';
+            
+            console.log('🔧 开始完整系统诊断...');
+            
+            const diagnostics = [];
+            
+            // 1. 环境检查
+            diagnostics.push({
+                category: '环境检查',
+                checks: [
+                    {
+                        name: 'HTTPS状态',
+                        result: window.location.protocol === 'https:' ? '✅ 使用HTTPS' : '⚠️ 使用HTTP',
+                        status: window.location.protocol === 'https:' ? 'success' : 'warning'
+                    },
+                    {
+                        name: '域名检查',
+                        result: window.location.host.includes('bjt.lockedair.com') ? '✅ 正确域名' : `⚠️ 当前域名: ${window.location.host}`,
+                        status: window.location.host.includes('bjt.lockedair.com') ? 'success' : 'warning'
+                    }
+                ]
+            });
+            
+            // 2. API可用性检查
+            try {
+                const apiCheck = await fetch('/wp-json/bjt/v1/', { method: 'HEAD' });
+                diagnostics.push({
+                    category: 'API可用性',
+                    checks: [
+                        {
+                            name: 'BJT API端点',
+                            result: apiCheck.ok ? '✅ API可访问' : `❌ API不可访问 (${apiCheck.status})`,
+                            status: apiCheck.ok ? 'success' : 'error'
+                        }
+                    ]
+                });
+            } catch (error) {
+                diagnostics.push({
+                    category: 'API可用性',
+                    checks: [
+                        {
+                            name: 'BJT API端点',
+                            result: `❌ API连接失败: ${error.message}`,
+                            status: 'error'
+                        }
+                    ]
+                });
+            }
+            
+            // 3. 浏览器兼容性检查
+            diagnostics.push({
+                category: '浏览器兼容性',
+                checks: [
+                    {
+                        name: 'Fetch API支持',
+                        result: typeof fetch !== 'undefined' ? '✅ 支持' : '❌ 不支持',
+                        status: typeof fetch !== 'undefined' ? 'success' : 'error'
+                    },
+                    {
+                        name: 'Promise支持',
+                        result: typeof Promise !== 'undefined' ? '✅ 支持' : '❌ 不支持',
+                        status: typeof Promise !== 'undefined' ? 'success' : 'error'
+                    },
+                    {
+                        name: 'ES6支持',
+                        result: typeof Symbol !== 'undefined' ? '✅ 支持' : '❌ 不支持',
+                        status: typeof Symbol !== 'undefined' ? 'success' : 'error'
+                    }
+                ]
+            });
+            
+            // 显示诊断结果
+            resultsContainer.innerHTML = diagnostics.map(category => 
+                `<div class="test-result info">
+                    <h3>${category.category}</h3>
+                    ${category.checks.map(check => 
+                        `<div class="test-result ${check.status}">
+                            <strong>${check.name}:</strong> ${check.result}
+                        </div>`
+                    ).join('')}
+                </div>`
+            ).join('');
+            
+            console.log('🔧 完整诊断完成');
+        }
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            showEnvironmentInfo();
+            console.log('🔧 生产环境调试工具已加载');
+            console.log('💡 提示: 打开浏览器开发者工具查看详细日志');
+        });
+    </script>
+</body>
+</html> 
