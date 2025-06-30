@@ -2,7 +2,8 @@ import React, { useState, useEffect, Fragment, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage, Language } from '../../contexts/LanguageContext';
 import './PO.css';
-import { ASSETS, API_CONFIG } from '../../config/appConfig';
+import { ASSETS } from '../../config/appConfig';
+import { API_BASE_URL } from '../../api/config';
 import { useNotification } from '../../contexts/NotificationContext';
 import { ROUTES } from '../../config/routes';
 import { format, addDays } from 'date-fns';
@@ -169,7 +170,7 @@ const POPage: React.FC = () => {
     });
     
     // 检查API配置 - 使用统一的API配置
-    const apiBaseUrl = API_CONFIG.BASE_URL;
+    const apiBaseUrl = API_BASE_URL;
     console.log('🔍 [PO Environment Check] API基础地址:', apiBaseUrl);
     
     // 检查数据传递
