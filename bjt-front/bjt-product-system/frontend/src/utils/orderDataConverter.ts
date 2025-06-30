@@ -51,6 +51,7 @@ export class OrderDataConverter {
       
       // 订单项目和汇总
       items,
+      orderItems: items,
       summary,
       
       // 扩展信息

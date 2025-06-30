@@ -99,14 +99,33 @@ export interface OrderSummary {
 
 // 完整订单数据
 export interface UnifiedOrderData {
-  id: string; // 数据库ID
+  id: string | number; // 数据库ID
+  orderId?: string; // 统一内部ID或WP订单ID
   orderNumber: string; // 统一业务订单号 ORD-YYYYMMDD-XXXXXX
-  customerInfo: CustomerInfo;
-  shippingInfo: ShippingInfo;
-  orderItems: UnifiedProduct[];
-  summary: OrderSummary;
-  createdAt: string;
   status: OrderStatus;
+  createdAt: string;
+  updatedAt?: string;
+
+  // 客户&地址信息
+  customerInfo: CustomerInfo;
+  shippingAddress?: CustomerInfo; // 兼容旧字段，等同于customerInfo或shippingInfo
+  billingAddress?: CustomerInfo;
+  shippingInfo?: ShippingInfo; // 新字段（推荐）
+
+  // 订单项目
+  items: OrderItem[]; // 兼容旧字段名称（推荐）
+  orderItems?: OrderItem[]; // 旧字段别名，逐步废弃
+
+  // 汇总
+  summary: OrderSummary;
+
+  // 支付/备注等扩展字段
+  paymentMethod?: string;
+  notes?: string;
+
+  // 额外上下文信息
+  region?: string; // 购物车区域
+  language?: string; // 购物车语言
 }
 
 // API响应格式
