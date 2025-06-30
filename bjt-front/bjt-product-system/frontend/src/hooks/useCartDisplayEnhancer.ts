@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useSmartUnitSystem } from './useSmartUnitSystem';
 import { useSmartFieldMapping, FIELD_UNIT_MAPPINGS } from './useSmartFieldMapping';
 import { useTranslation } from 'react-i18next';
+import { getProductModel, getProductSpec } from '../utils/productFieldHelpers';
 
 export type ProductType = 'machines' | 'consumables' | 'spareParts' | 'accessories';
 
@@ -72,6 +73,27 @@ export const useCartDisplayEnhancer = (originalData: any, productType: ProductTy
       preferredUnitSystem,
       isTemporaryOverride: false // 将在组件中更新
     };
+    
+    // 🆕 统一获取 Model / Spec，避免 fallback 到 part_number
+    const unifiedModel = getProductModel(originalData, preferredUnitSystem);
+    if (unifiedModel) {
+      enhanced._display['model'] = {
+        value: unifiedModel,
+        unit: '',
+        formatted: unifiedModel,
+        originalKey: 'model'
+      };
+    }
+
+    const unifiedSpec = getProductSpec(originalData, preferredUnitSystem);
+    if (unifiedSpec) {
+      enhanced._display['spec'] = {
+        value: unifiedSpec,
+        unit: '',
+        formatted: unifiedSpec,
+        originalKey: 'spec'
+      };
+    }
     
     return enhanced;
   }, [originalData, productType, preferredUnitSystem, getSmartFieldMapping]);

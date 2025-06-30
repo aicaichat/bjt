@@ -17,7 +17,12 @@ const CART_FIELD_CONFIGS = {
   // 机器字段配置 - 基于官方标准
   machines: {
     // 购物车显示字段 (9个)
-    model: { key: 'model', displayName: { zh: '型号', en: 'Model' }, priority: 1 },
+    model: { 
+      key: 'model', 
+      displayName: { zh: '型号', en: 'Model' }, 
+      priority: 1,
+      unitConfig: { metric: 'model', imperial: 'model_imperial' }
+    },
     voltage: { key: 'voltage', displayName: { zh: '电压', en: 'Voltage' }, priority: 2, unit: 'V' },
     part_number: { key: 'part_number', displayName: { zh: '料号', en: 'Part No.' }, priority: 3 },
     pcs_per_box: { key: 'pcs_per_box', displayName: { zh: '单箱数量', en: 'Qty per Carton' }, priority: 4 },
@@ -54,9 +59,9 @@ const CART_FIELD_CONFIGS = {
     },
     spec: { 
       key: 'spec', 
-      displayName: { zh: '规格描述', en: 'Spec.' }, 
-      priority: 4,
-      unitConfig: { metric: 'spec', imperial: 'spec_imperial' }
+      displayName: { zh: '规格', en: 'Spec.' }, 
+      unitConfig: { metric: 'spec', imperial: 'spec_imperial' },
+      priority: 4
     },
     bubble_diameter: { 
       key: 'bubble_diameter', 
@@ -95,7 +100,7 @@ const CART_FIELD_CONFIGS = {
     app_model: { key: 'app_model', displayName: { zh: '适用机型', en: 'Applicable Machine' }, priority: 1 },
     part_number: { key: 'part_number', displayName: { zh: '料号', en: 'Part No.' }, priority: 2 },
     name: { key: 'name', displayName: { zh: '名称', en: 'Item' }, priority: 3 },
-    spec: { key: 'spec', displayName: { zh: '规格描述', en: 'Spec.' }, priority: 4 },
+    spec: { key: 'spec', displayName: { zh: '规格', en: 'Spec.' }, priority: 4, unitConfig: { metric: 'spec', imperial: 'spec_imperial' } },
     app_sn: { key: 'app_sn', displayName: { zh: '适配序列号', en: 'Applicable SN.' }, priority: 5 },
     package_size: { 
       key: 'package_size', 
@@ -116,7 +121,12 @@ const CART_FIELD_CONFIGS = {
   // 配件字段配置 - 基于官方标准
   accessories: {
     // 购物车显示字段 (7个)
-    model: { key: 'model', displayName: { zh: '型号', en: 'Model' }, priority: 1 },
+    model: { 
+      key: 'model', 
+      displayName: { zh: '型号', en: 'Model' }, 
+      priority: 1,
+      unitConfig: { metric: 'model', imperial: 'model_imperial' }
+    },
     part_number: { key: 'part_number', displayName: { zh: '料号', en: 'Part No.' }, priority: 2 },
     voltage: { key: 'voltage', displayName: { zh: '电压', en: 'Voltage' }, priority: 3, unit: 'V' },
     frequency: { key: 'frequency', displayName: { zh: '频率', en: 'Frequency' }, priority: 4, unit: 'Hz' },
