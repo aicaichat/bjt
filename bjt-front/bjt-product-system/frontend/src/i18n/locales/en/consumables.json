@@ -323,8 +323,8 @@
     "configC": "Configuration C",
     "palletSize": "Pallet Size",
     "packageSize": {
-      "metric": "Packaging Dim.(cm)",
-      "imperial": "Packaging Dim.(inch)"
+      "metric": "Package Size(cm)",
+      "imperial": "Package Size(inch)"
     },
     "unitWeight": {
       "metric": "Net Weight(kg)",

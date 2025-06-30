@@ -2,7 +2,7 @@ import React, { useState, useEffect, Fragment, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage, Language } from '../../contexts/LanguageContext';
 import './PO.css';
-import { ASSETS } from '../../config/appConfig';
+import { ASSETS, API_CONFIG } from '../../config/appConfig';
 import { useNotification } from '../../contexts/NotificationContext';
 import { ROUTES } from '../../config/routes';
 import { format, addDays } from 'date-fns';
@@ -154,6 +154,41 @@ const POPage: React.FC = () => {
 
   // 当前语言
   const currentLanguage = i18n.language.startsWith('zh') ? 'zh' : 'en';
+  
+  // 🔧 环境检查和调试信息
+  React.useEffect(() => {
+    console.log('🔍 [PO Environment Check] 环境检查开始');
+    console.log('🔍 [PO Environment Check] 当前URL:', window.location.href);
+    console.log('🔍 [PO Environment Check] 环境变量检查:', {
+      'import.meta.env.VITE_API_URL': import.meta.env.VITE_API_URL,
+      'import.meta.env.VITE_DATA_SOURCE': import.meta.env.VITE_DATA_SOURCE,
+      'import.meta.env.VITE_USE_MOCK_DATA': import.meta.env.VITE_USE_MOCK_DATA,
+      'import.meta.env.MODE': import.meta.env.MODE,
+      'import.meta.env.PROD': import.meta.env.PROD,
+      'import.meta.env.DEV': import.meta.env.DEV
+    });
+    
+    // 检查API配置 - 使用统一的API配置
+    const apiBaseUrl = API_CONFIG.BASE_URL;
+    console.log('🔍 [PO Environment Check] API基础地址:', apiBaseUrl);
+    
+    // 检查数据传递
+    console.log('🔍 [PO Environment Check] Location state:', location.state);
+    console.log('🔍 [PO Environment Check] Has incoming PO data:', hasIncomingPOData);
+    
+    // 暴露调试信息到全局
+    (window as any).poEnvironmentDebug = {
+      apiBaseUrl,
+      locationState: location.state,
+      hasIncomingPOData,
+      products,
+      customerInfo,
+      shippingInfo,
+      summary,
+      isLoading,
+      error
+    };
+  }, []);
   
   // 使用智能单位制 Hook 获取实时单位制偏好（支持账户设置+临时切换）
   const { preferredUnitSystem } = useSmartUnitSystem();
