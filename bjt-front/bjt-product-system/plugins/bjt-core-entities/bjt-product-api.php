@@ -183,6 +183,13 @@ function bjt_api_register_routes() {
         },
         'permission_callback' => '__return_true',
     ]);
+
+    // DIAGNOSTIC ROUTE for remote debugging
+    register_rest_route('bjt/v1', '/diagnostic', array(
+        'methods' => 'GET',
+        'callback' => 'bjt_diagnostic_endpoint',
+        'permission_callback' => '__return_true', // 公开访问以便远程诊断
+    ));
 }
 add_action('rest_api_init', 'bjt_api_register_routes');
 
@@ -478,3 +485,154 @@ add_filter('wp_json_encode', function($result, $data, $options) {
     $options = $options | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
     return json_encode($data, $options);
 }, 999, 3);
+
+/**
+ * Diagnostic endpoint callback function
+ */
+function bjt_diagnostic_endpoint($request) {
+    global $wpdb;
+    
+    $diagnostic_data = array(
+        'timestamp' => current_time('mysql'),
+        'environment' => array(
+            'wordpress_version' => get_bloginfo('version'),
+            'php_version' => PHP_VERSION,
+            'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown',
+            'site_url' => get_site_url(),
+            'home_url' => get_home_url(),
+        ),
+        'plugin_info' => array(
+            'bjt_product_api_version' => '1.1',
+            'plugin_path' => BJT_CORE_ENTITIES_PLUGIN_DIR,
+            'plugin_url' => plugin_dir_url(__FILE__),
+            'is_active' => is_plugin_active('bjt-core-entities/bjt-product-api.php'),
+        ),
+        'database_info' => array(
+            'mysql_version' => $wpdb->get_var("SELECT VERSION()"),
+            'database_name' => DB_NAME,
+            'table_prefix' => $wpdb->prefix,
+        ),
+        'file_checksums' => array(),
+        'class_status' => array(),
+        'sample_data' => array(),
+        'debug_info' => array(),
+    );
+    
+    // 检查关键文件的存在性和最后修改时间
+    $critical_files = array(
+        'order_controller' => BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-order-controller.php',
+        'product_info_resolver' => BJT_CORE_ENTITIES_PLUGIN_DIR . 'includes/class-product-info-resolver.php',
+        'database_class' => BJT_CORE_ENTITIES_PLUGIN_DIR . 'includes/class-database.php',
+    );
+    
+    foreach ($critical_files as $key => $file_path) {
+        if (file_exists($file_path)) {
+            $diagnostic_data['file_checksums'][$key] = array(
+                'exists' => true,
+                'size' => filesize($file_path),
+                'modified' => date('Y-m-d H:i:s', filemtime($file_path)),
+                'md5' => md5_file($file_path),
+            );
+        } else {
+            $diagnostic_data['file_checksums'][$key] = array(
+                'exists' => false,
+            );
+        }
+    }
+    
+    // 检查类的加载状态
+    $critical_classes = array(
+        'BJT_Order_Controller',
+        'BJT_Product_Info_Resolver',
+        'BJT_Database',
+        'BJT_Product_Controller',
+    );
+    
+    foreach ($critical_classes as $class_name) {
+        $diagnostic_data['class_status'][$class_name] = array(
+            'exists' => class_exists($class_name),
+            'methods' => class_exists($class_name) ? get_class_methods($class_name) : array(),
+        );
+    }
+    
+    // 检查数据库表和示例数据
+    try {
+        // 检查订单表
+        $order_count = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}orders");
+        $diagnostic_data['sample_data']['orders'] = array(
+            'count' => intval($order_count),
+            'sample' => $wpdb->get_results("SELECT id, po_number, created_at FROM {$wpdb->prefix}orders LIMIT 3", ARRAY_A),
+        );
+        
+        // 检查订单详情表
+        $order_detail_count = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}order_details");
+        $diagnostic_data['sample_data']['order_details'] = array(
+            'count' => intval($order_detail_count),
+            'sample' => $wpdb->get_results("SELECT id, order_id, item_id, item_name FROM {$wpdb->prefix}order_details LIMIT 3", ARRAY_A),
+        );
+        
+        // 检查产品表
+        $product_count = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}products");
+        $diagnostic_data['sample_data']['products'] = array(
+            'count' => intval($product_count),
+            'sample' => $wpdb->get_results("SELECT id, part_number, model, spec FROM {$wpdb->prefix}products LIMIT 3", ARRAY_A),
+        );
+        
+        // 检查耗材表
+        $consumable_count = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}consumables");
+        $diagnostic_data['sample_data']['consumables'] = array(
+            'count' => intval($consumable_count),
+            'sample' => $wpdb->get_results("SELECT id, part_number, model, spec FROM {$wpdb->prefix}consumables LIMIT 3", ARRAY_A),
+        );
+        
+        // 测试产品信息解析器
+        if (class_exists('BJT_Product_Info_Resolver')) {
+            $resolver = new BJT_Product_Info_Resolver();
+            $test_part_number = '92R01006'; // 使用已知的测试部件号
+            $resolved_info = $resolver->resolve_product_info($test_part_number);
+            $diagnostic_data['debug_info']['product_resolver_test'] = array(
+                'test_part_number' => $test_part_number,
+                'resolved_info' => $resolved_info,
+            );
+        }
+        
+    } catch (Exception $e) {
+        $diagnostic_data['debug_info']['database_error'] = $e->getMessage();
+    }
+    
+    // 检查PHP缓存状态
+    $diagnostic_data['debug_info']['php_cache'] = array(
+        'opcache_enabled' => function_exists('opcache_get_status') ? opcache_get_status() : 'Not available',
+        'apc_enabled' => function_exists('apc_cache_info') ? 'Available' : 'Not available',
+    );
+    
+    // 检查WordPress缓存
+    $diagnostic_data['debug_info']['wp_cache'] = array(
+        'object_cache' => wp_using_ext_object_cache(),
+        'cache_plugins' => array(), // 可以扩展检查具体的缓存插件
+    );
+    
+    return new WP_REST_Response($diagnostic_data, 200);
+}
+
+/**
+ * Add a dashboard widget to the WordPress dashboard
+ */
+function bjt_add_dashboard_widget() {
+    if (current_user_can('manage_options')) {
+        wp_add_dashboard_widget(
+            'bjt_product_api_status',
+            'BJT Product API Status',
+            'bjt_dashboard_widget_content'
+        );
+    }
+}
+
+function bjt_dashboard_widget_content() {
+    echo '<p>BJT Product API Version: 1.1</p>';
+    echo '<p>Plugin Path: ' . BJT_CORE_ENTITIES_PLUGIN_DIR . '</p>';
+    echo '<p><a href="' . rest_url('bjt/v1/diagnostic') . '" target="_blank">View Diagnostic Info</a></p>';
+}
+
+// 添加仪表板小部件
+add_action('wp_dashboard_setup', 'bjt_add_dashboard_widget');
