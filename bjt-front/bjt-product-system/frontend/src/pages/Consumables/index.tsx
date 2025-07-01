@@ -1156,10 +1156,13 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
                 {getLocalizedValue(item, 'name') || getLocalizedValue(item, 'title') || getLocalizedValue(item, 'model')}
               </h3>
 
-              {/* 型号 model 移到名称下方显示 */}
+              {/* 型号信息 - 与适用机型相同格式，自动单位切换 & 符号替换 */}
               {shouldShowField(item, 'model') && (
-                <div className="product-model" style={{ fontSize: 14, color: '#4B5563', fontWeight: 500, marginBottom: 4 }}>
-                  {getLocalizedValue(item, 'model')}
+                <div className="model-info" style={{ marginBottom: 4 }}>
+                  <span className="label">{getFieldLabel('model')}:</span>
+                  <span className="value" style={{ fontWeight: 600, color: '#374151', marginLeft: 4 }}>
+                    {String(getLocalizedValue(item, 'model')).replace(/\*/g, '×')}
+                  </span>
                 </div>
               )}
               
