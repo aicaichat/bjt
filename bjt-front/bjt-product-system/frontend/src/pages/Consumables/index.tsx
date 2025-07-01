@@ -1157,11 +1157,8 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
                   // 优先显示当前语言的标题/名称，其次回退英文/中文，最后回退型号
                   const langZh = i18n.language.startsWith('zh');
                   const itm: any = item;
-                  const nameCandidates = langZh
-                    ? [itm.title_zh, itm.name_zh, itm.title, itm.name]
-                    : [itm.title_en, itm.name_en, itm.title, itm.name];
-                  const found = nameCandidates.find((v) => v && String(v).trim() !== '');
-                  return found || getLocalizedValue(item, 'model');
+                  const name = langZh ? itm.name_zh : itm.name_en;
+                  return (name && String(name).trim() !== '') ? name : getLocalizedValue(item, 'model');
                 })()}
               </h3>
 
@@ -2179,13 +2176,16 @@ const ConsumablesPage: React.FC = () => {
             value = extractNumber(item[`thickness${suffix}` as keyof typeof item] as any);
             break;
           case 'weight':
-            // 🔥 修复：重量选项只针对纸质材料，非纸质材料跳过
             if (isPaperMaterial(item.material || '')) {
-              // 纸质材料的重量数据存储在thickness_met字段中
+              // 部分纸质材料将克重存在 thickness 字段
               value = extractNumber(item[`thickness${suffix}` as keyof typeof item] as any);
+              // 若未取到，再尝试 weight 字段
+              if (value === undefined) {
+                value = extractNumber(item[`weight${suffix}` as keyof typeof item] as any);
+              }
             } else {
-              // 非纸质材料跳过，不生成重量选项
-              value = undefined;
+              // 非纸材直接读取 weight 字段
+              value = extractNumber(item[`weight${suffix}` as keyof typeof item] as any);
             }
             break;
           case 'width':
