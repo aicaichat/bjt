@@ -1153,7 +1153,16 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
             <div className="product-title">
               {/* 产品名称（根据语言） */}
               <h3 className="product-name">
-                {getLocalizedValue(item, 'name') || getLocalizedValue(item, 'title') || getLocalizedValue(item, 'model')}
+                {(() => {
+                  // 优先显示当前语言的标题/名称，其次回退英文/中文，最后回退型号
+                  const langZh = i18n.language.startsWith('zh');
+                  const itm: any = item;
+                  const nameCandidates = langZh
+                    ? [itm.title_zh, itm.name_zh, itm.title, itm.name]
+                    : [itm.title_en, itm.name_en, itm.title, itm.name];
+                  const found = nameCandidates.find((v) => v && String(v).trim() !== '');
+                  return found || getLocalizedValue(item, 'model');
+                })()}
               </h3>
 
               {/* 型号信息 - 与适用机型相同格式，自动单位切换 & 符号替换 */}
