@@ -391,16 +391,17 @@ class BJT_Spare_Part_Controller extends BJT_API_Controller {
      * 格式化错误响应
      * 
      * @param string $message 错误消息
-     * @param string $code 错误代码
-     * @param int $status HTTP状态码
+     * @param string $error_code 错误代码
+     * @param int $status_code HTTP状态码
+     * @param array $data 错误数据
      * @return WP_REST_Response
      */
-    protected function error_response($message, $error_code = 'error', $status = 400) {
-        return new WP_Error(
-            $error_code,
-            $message,
-            ['status' => $status]
-        );
+    protected function error_response($message, $error_code = 'error', $status_code = 400, $data = null) {
+        $error_data = array('status' => $status_code);
+        if ($data !== null) {
+            $error_data = array_merge($error_data, $data);
+        }
+        return new WP_Error($error_code, $message, $error_data);
     }
 
     // Basic CRUD Methods (adapted from BJT_Consumable_Controller)

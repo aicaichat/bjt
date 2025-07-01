@@ -2159,7 +2159,14 @@ const ConsumablesPage: React.FC = () => {
             value = extractNumber(item[`thickness${suffix}` as keyof typeof item] as any);
             break;
           case 'weight':
-            value = extractNumber(item[`weight${suffix}` as keyof typeof item] as any);
+            // 🔥 修复：重量选项只针对纸质材料，非纸质材料跳过
+            if (isPaperMaterial(item.material || '')) {
+              // 纸质材料的重量数据存储在thickness_met字段中
+              value = extractNumber(item[`thickness${suffix}` as keyof typeof item] as any);
+            } else {
+              // 非纸质材料跳过，不生成重量选项
+              value = undefined;
+            }
             break;
           case 'width':
             value = extractNumber(item[`width${suffix}` as keyof typeof item] as any);

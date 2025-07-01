@@ -66,8 +66,12 @@ class BJT_API_Controller {
     /**
      * Helper to return a WP_Error for API responses.
      */
-    protected function error_response($message, $error_code, $status_code) {
-        return new WP_Error($error_code, $message, array('status' => $status_code));
+    protected function error_response($message, $error_code, $status_code, $data = null) {
+        $error_data = array('status' => $status_code);
+        if ($data !== null) {
+            $error_data = array_merge($error_data, $data);
+        }
+        return new WP_Error($error_code, $message, $error_data);
     }
 
     /**

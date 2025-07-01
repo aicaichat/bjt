@@ -132,8 +132,10 @@ export class AccessoryModelService extends BaseService {
     return this.put<AccessoryModel>(`/${id}`, data);
   }
 
-  async deleteAccessoryModel(id: number) {
-    return this.delete(`/${id}`);
+  async deleteAccessoryModel(id: number, options: { force?: boolean } = {}) {
+    const { force } = options;
+    const forceParam = force ? '?force=true' : '';
+    return this.delete(`/${id}${forceParam}`);
   }
 }
 
@@ -168,8 +170,10 @@ export class AccessoryService extends BaseService {
     return this.put<Accessory>(`/${id}`, data);
   }
 
-  async deleteAccessory(id: number) {
-    return this.delete(`/${id}`);
+  async deleteAccessory(id: number, options: { force?: boolean } = {}) {
+    const { force } = options;
+    const forceParam = force ? '?force=true' : '';
+    return this.delete(`/${id}${forceParam}`);
   }
 }
 

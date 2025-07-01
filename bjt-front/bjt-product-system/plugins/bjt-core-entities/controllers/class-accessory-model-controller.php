@@ -289,14 +289,44 @@ class BJT_Accessory_Model_Controller extends BJT_API_Controller {
             return $this->error_response("Accessory model with ID {$id} not found.", 'not_found', 404);
         }
 
-        // 检查是否有依赖关系 (这里可以检查accessories表中是否有使用此model的配件)
-        $has_dependents = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$wpdb->prefix}bjt_accessories WHERE model = %s",
-            $existing_item->model
-        ));
+        $force = filter_var($request->get_param('force'), FILTER_VALIDATE_BOOLEAN);
         
-        if ($has_dependents > 0) {
-            return $this->error_response("Cannot delete accessory model. It is being used by {$has_dependents} accessories.", 'has_dependents', 400);
+        // 检查是否有关联的配件（通过host_accessories关联表）
+        $children = $wpdb->get_results($wpdb->prepare(
+            "SELECT a.id, a.model, a.name_cn, a.name_en, a.part_number 
+             FROM {$wpdb->prefix}bjt_accessories a
+             INNER JOIN {$wpdb->prefix}bjt_host_accessories ha ON ha.accessory_id = a.id
+             WHERE ha.host_model = %s AND a.status != 'trash'",
+            $existing_item->model
+        ), ARRAY_A);
+        
+        if (!empty($children) && !$force) {
+            return $this->error_response(
+                "Cannot delete accessory model with associated accessories. Please remove the following items first.",
+                'has_dependents',
+                400,
+                array('children' => $children)
+            );
+        }
+        
+        // 如果强制删除，先删除关联关系和配件
+        if (!empty($children) && $force) {
+            // 删除关联关系
+            $wpdb->delete(
+                $wpdb->prefix . 'bjt_host_accessories',
+                array('host_model' => $existing_item->model),
+                array('%s')
+            );
+            // 标记配件为trash
+            foreach ($children as $child) {
+                $wpdb->update(
+                    $wpdb->prefix . 'bjt_accessories',
+                    array('status' => 'trash'),
+                    array('id' => $child['id']),
+                    array('%s'),
+                    array('%d')
+                );
+            }
         }
 
         // 执行删除

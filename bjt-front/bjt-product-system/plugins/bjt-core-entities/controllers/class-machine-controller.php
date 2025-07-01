@@ -768,7 +768,7 @@ class BJT_Machine_Controller extends BJT_API_Controller {
         
         // Handle other fillable fields directly
         $direct_map_fields = [
-            'product_line_id', 'description_zh', 'description_en', 'type',
+            'product_line_id', 'title_zh', 'title_en', 'description_zh', 'description_en', 'type',
             'image1_url', 'image2_url', 'explosion_diagram_pdf', 'spec_pdf',
             'status', 'sort_order'
         ];
@@ -804,6 +804,8 @@ class BJT_Machine_Controller extends BJT_API_Controller {
                             $data[$db_column] = esc_url_raw($value);
                         }
                         break;
+                    case 'title_zh':
+                    case 'title_en':
                     case 'description_zh':
                     case 'description_en':
                         $data[$db_column] = sanitize_textarea_field($value);
@@ -847,12 +849,12 @@ class BJT_Machine_Controller extends BJT_API_Controller {
         $auth_controller = new BJT_Auth_Controller();
         $is_authenticated = $auth_controller->check_auth($request);
 
-        if (true !== $is_authenticated && is_wp_error($is_authenticated)) {
+        if (is_wp_error($is_authenticated)) {
             error_log('[BJT_Machine_Controller] Authentication failed: ' . $is_authenticated->get_error_message());
             return $is_authenticated;
         }
         
-        if (!$is_authenticated) {
+        if ($is_authenticated !== true) {
             error_log('[BJT_Machine_Controller] User not authenticated');
             return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
         }
@@ -925,12 +927,12 @@ class BJT_Machine_Controller extends BJT_API_Controller {
         $auth_controller = new BJT_Auth_Controller();
         $is_authenticated = $auth_controller->check_auth($request);
 
-        if (true !== $is_authenticated && is_wp_error($is_authenticated)) {
+        if (is_wp_error($is_authenticated)) {
             error_log('[BJT_Machine_Controller] Authentication failed: ' . $is_authenticated->get_error_message());
             return $is_authenticated;
         }
         
-        if (!$is_authenticated) {
+        if ($is_authenticated !== true) {
             error_log('[BJT_Machine_Controller] User not authenticated');
             return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
         }

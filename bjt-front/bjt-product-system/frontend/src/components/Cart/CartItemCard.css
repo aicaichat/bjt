@@ -1,7 +1,7 @@
 .cart-item-card {
   margin-bottom: 16px;
   border-radius: 8px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .cart-item-content {

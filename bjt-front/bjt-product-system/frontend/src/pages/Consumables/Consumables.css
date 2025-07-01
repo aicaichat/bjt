@@ -1247,7 +1247,7 @@
 
 /* 自定义Antd Tooltip样式 */
 .consumables-custom-tooltip .ant-tooltip-inner {
-  max-width: min(600px, 90vw) !important;
+  max-width: min(1200px, 95vw) !important;
   padding: 0 !important;
   width: auto !important;
   background: white !important;
@@ -1287,15 +1287,15 @@
 /* Tooltip内容的响应式样式 */
 @media (max-width: 768px) {
   .consumables-custom-tooltip .ant-tooltip-inner {
-    max-width: 450px !important;
-    min-width: 380px !important;
+    max-width: 750px !important;
+    min-width: 95vw !important;
   }
 }
 
 @media (max-width: 480px) {
   .consumables-custom-tooltip .ant-tooltip-inner {
-    max-width: 320px !important;
-    min-width: 320px !important;
+    max-width: 95vw !important;
+    min-width: 95vw !important;
   }
 }
 
@@ -2784,7 +2784,7 @@
   }
   
   .consumable-tooltip {
-    min-width: 280px;
+    min-width: 95vw;
     max-width: 95vw;
   }
   
@@ -2828,8 +2828,8 @@
 
 .consumable-tooltip {
   width: auto;
-  min-width: 320px;
-  max-width: 600px;
+  min-width: 800px;
+  max-width: 1200px;
   overflow: visible;
   font-size: 12px;
   line-height: 1.4;
@@ -2860,7 +2860,7 @@
   }
   
   .consumable-tooltip {
-    min-width: 280px;
+    min-width: 95vw;
     max-width: 95vw;
   }
   
@@ -2891,8 +2891,8 @@
   padding: 16px;
   margin-top: 8px;
   
-  width: 400px;
-  max-width: 90vw;
+  width: 800px;
+  max-width: 95vw;
   
   opacity: 0;
   visibility: hidden;
@@ -2934,12 +2934,12 @@
 
 /* Main tooltip container */
 .consumables-custom-tooltip {
-  max-width: min(600px, 90vw) !important;
+  max-width: min(1200px, 95vw) !important;
   z-index: 10000 !important;
 }
 
 .consumables-custom-tooltip .ant-tooltip-inner {
-  max-width: min(600px, 90vw) !important;
+  max-width: min(1200px, 95vw) !important;
   padding: 0 !important;
   width: auto !important;
   background: white !important;
@@ -2951,8 +2951,8 @@
 /* Tooltip content */
 .consumable-tooltip {
   width: auto;
-  min-width: 320px;
-  max-width: 600px;
+  min-width: 800px;
+  max-width: 1200px;
   font-size: 12px;
   line-height: 1.4;
   color: #1f2937;
@@ -3118,7 +3118,7 @@
   }
   
   .consumable-tooltip {
-    min-width: 280px;
+    min-width: 95vw;
     max-width: 95vw;
   }
   
@@ -3323,7 +3323,7 @@
   }
   
   .consumable-tooltip {
-    min-width: 280px;
+    min-width: 95vw;
     max-width: 95vw;
   }
   

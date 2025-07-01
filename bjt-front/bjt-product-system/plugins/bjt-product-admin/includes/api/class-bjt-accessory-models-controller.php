@@ -251,6 +251,7 @@ class BJT_Product_Accessory_Models_Controller extends BJT_Product_API_Controller
      */
     public function delete_item($request) {
         $id = (int) $request->get_param('id');
+        $force = filter_var($request->get_param('force'), FILTER_VALIDATE_BOOLEAN);
 
         // Check if there are any children
         $children_count = $this->wpdb->get_var(
@@ -260,11 +261,26 @@ class BJT_Product_Accessory_Models_Controller extends BJT_Product_API_Controller
             )
         );
 
-        if ($children_count > 0) {
-            return $this->format_error(
-                __('Cannot delete accessory model with child accessories.', 'bjt-product-admin'),
-                400
+        // 如果存在子配件且未显式 force，则返回需要先删除的子配件列表
+        if ($children_count > 0 && !$force) {
+            $children = $this->wpdb->get_results(
+                $this->wpdb->prepare(
+                    "SELECT id, model, name_cn AS name_zh, name_en FROM {$this->wpdb->prefix}bjt_accessory_models WHERE parent_id = %d",
+                    $id
+                ),
+                ARRAY_A
             );
+
+            return $this->format_error(
+                __('Cannot delete accessory model with child accessories. Please remove the following items first.', 'bjt-product-admin'),
+                400,
+                array('children' => $children)
+            );
+        }
+
+        // If explicitly forced,递归删除（保持之前逻辑）
+        if ($children_count > 0 && $force) {
+            $this->trash_children_recursive($id);
         }
 
         $result = $this->wpdb->update(
@@ -748,5 +764,36 @@ class BJT_Product_Accessory_Models_Controller extends BJT_Product_API_Controller
             'AU' => 'AUD'
         );
         return isset($currencies[$region]) ? $currencies[$region] : 'CNY';
+    }
+
+    /**
+     * Recursively mark all descendant accessory models as trash.
+     */
+    private function trash_children_recursive($parent_id) {
+        $children = $this->wpdb->get_results(
+            $this->wpdb->prepare(
+                "SELECT id FROM {$this->wpdb->prefix}bjt_accessory_models WHERE parent_id = %d",
+                $parent_id
+            ),
+            ARRAY_A
+        );
+
+        if (empty($children)) {
+            return;
+        }
+
+        foreach ($children as $child) {
+            // Mark child as trash
+            $this->wpdb->update(
+                $this->wpdb->prefix . 'bjt_accessory_models',
+                array('status' => 'trash'),
+                array('id' => $child['id']),
+                array('%s'),
+                array('%d')
+            );
+
+            // Recurse further
+            $this->trash_children_recursive($child['id']);
+        }
     }
 } 

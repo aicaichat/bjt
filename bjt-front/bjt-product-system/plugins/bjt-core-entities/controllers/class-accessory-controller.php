@@ -803,23 +803,42 @@ class BJT_Accessory_Controller extends BJT_API_Controller {
 
         // Check if there are child items in relations table
         $relations_table = $wpdb->prefix . 'bjt_relations';
-        $has_children = $wpdb->get_var(
+        $children = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT COUNT(*) FROM {$relations_table} 
-                 WHERE parent_part_number = %s",
+                "SELECT r.child_part_number, a.id, a.name_cn, a.name_en, a.part_number
+                 FROM {$relations_table} r
+                 LEFT JOIN {$wpdb->prefix}bjt_accessories a ON r.child_part_number = a.part_number
+                 WHERE r.parent_part_number = %s AND (a.status IS NULL OR a.status != 'trash')",
                 $existing->part_number
-            )
+            ),
+            ARRAY_A
         );
         
-        if ($has_children > 0 && !$force) {
+        if (!empty($children) && !$force) {
             return $this->error_response(
-                "Cannot delete accessory {$id} because it has child items. Use force=true to delete anyway.",
+                "Cannot delete accessory with child items. Please remove the following items first.",
                 'accessory_has_children',
-                400
+                400,
+                array('children' => $children)
             );
         }
         
         if ($force) {
+            // If force=true and there are children, mark them as trash first
+            if (!empty($children)) {
+                foreach ($children as $child) {
+                    if ($child['id']) {
+                        $wpdb->update(
+                            $table_name,
+                            array('status' => 'trash'),
+                            array('id' => $child['id']),
+                            array('%s'),
+                            array('%d')
+                        );
+                    }
+                }
+            }
+            
             // If force=true, perform actual deletion
             $result = $wpdb->delete(
                 $table_name,

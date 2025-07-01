@@ -197,15 +197,48 @@ class BJT_Product_Accessories_Controller extends BJT_Product_API_Controller {
      * Delete one accessory item
      */
     public function delete_item($request) {
-        $id = (int) $request->get_param('id');
+        $id    = (int) $request->get_param('id');
+        $force = filter_var($request->get_param('force'), FILTER_VALIDATE_BOOLEAN);
 
-        $result = $this->wpdb->delete(
+        // 检查是否仍被主机型号关联
+        $references = $this->wpdb->get_results(
+            $this->wpdb->prepare(
+                "SELECT hm.id as host_id, hm.model, hm.name_cn, hm.name_en
+                 FROM {$this->wpdb->prefix}bjt_host_accessories ha
+                 JOIN {$this->wpdb->prefix}bjt_host_models hm ON hm.id = ha.host_id
+                 WHERE ha.accessory_id = %d",
+                $id
+            ),
+            ARRAY_A
+        );
+
+        if (!empty($references) && !$force) {
+            return $this->format_error(
+                __('Cannot delete accessory because it is still linked to hosts. Please remove these relations first.', 'bjt-product-admin'),
+                400,
+                array('children' => $references)
+            );
+        }
+
+        // 如果强制删除，则先移除关联记录
+        if (!empty($references) && $force) {
+            $this->wpdb->delete(
+                $this->wpdb->prefix . 'bjt_host_accessories',
+                array('accessory_id' => $id),
+                array('%d')
+            );
+        }
+
+        // 软删除：将 status 设为 trash，而不是物理删除
+        $updated = $this->wpdb->update(
             $this->wpdb->prefix . 'bjt_accessories',
+            array('status' => 'trash'),
             array('id' => $id),
+            array('%s'),
             array('%d')
         );
 
-        if (!$result) {
+        if ($updated === false) {
             return $this->format_error(__('Failed to delete accessory.', 'bjt-product-admin'), 500);
         }
 

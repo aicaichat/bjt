@@ -132,7 +132,7 @@
     box-shadow: none !important;
     padding: 0 !important;
     border-radius: 0 !important;
-    max-width: 650px !important;
+    max-width: 1200px !important;
   }
   
   .ant-tooltip-arrow {
@@ -149,8 +149,8 @@
 // === Premium Tooltip样式 - 多栏紧凑型设计 ===
 .consumable-tooltip {
   // === 容器设计 ===
-  min-width: 600px;
-  max-width: 800px; // 增加最大宽度以容纳多栏布局
+  min-width: 800px;
+  max-width: 1200px; // 大幅增加最大宽度以避免数字溢出
   // 移除最大高度限制，确保不出现滚动条
   background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
   border: 1px solid rgba(0, 0, 0, 0.12);
@@ -1088,7 +1088,7 @@
     }
     
     .consumable-tooltip {
-      min-width: unset;
+      min-width: calc(100vw - 32px);
       max-width: calc(100vw - 32px);
       margin: 16px;
       padding: 16px;

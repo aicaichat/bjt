@@ -12,6 +12,7 @@
     padding: 20px;
     background-color: #f7f9fb;
     min-height: calc(100vh - 180px); /* 确保在内容较少时也有足够高度 */
+    overflow: visible;
 }
 
 /* Cart header - matching the mockup */
@@ -35,6 +36,7 @@
 /* Cart content container */
 .cart-content {
     position: relative;
+    overflow: visible;
 }
 
 /* Empty cart */
@@ -133,6 +135,7 @@
 /* Cart list */
 .cart-list {
     margin-bottom: 20px;
+    overflow: visible;
 }
 
 .cart-item {
@@ -147,6 +150,7 @@
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     transition: all 0.2s ease;
     position: relative;
+    overflow: visible;
 }
 
 .cart-item:hover {
@@ -348,7 +352,7 @@
     align-items: center;
     border: 1px solid #ddd;
     border-radius: 4px;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .cart-item-quantity button {

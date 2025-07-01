@@ -1,8 +1,13 @@
 /* Cart Tooltip Styles - 优化版本：更简洁美观 */
 
 /* 主要容器样式 */
+.consumables-custom-tooltip {
+  min-width: 800px !important;
+  max-width: min(1200px, 95vw) !important;
+}
+
 .consumables-custom-tooltip .ant-tooltip-inner {
-  max-width: min(900px, 98vw) !important;
+  min-width: 800px !important;
   padding: 0 !important;
   width: auto !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08) !important;
@@ -13,8 +18,8 @@
 
 .consumable-tooltip {
   width: auto;
-  min-width: 550px;
-  max-width: 900px;
+  min-width: 800px;
+  max-width: 1200px;
   overflow: visible;
   font-size: 13px;
   line-height: 1.5;
@@ -30,8 +35,28 @@
 
 /* 内容网格布局 */
 .consumable-tooltip .tooltip-content-grid {
+  display: flex;
+  gap: 16px;
   padding: 16px;
   margin: 0;
+  width: auto;
+  overflow: visible;
+}
+
+.consumable-tooltip .left-column,
+.consumable-tooltip .right-column {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.consumable-tooltip .left-column {
+  margin-right: 8px;
+}
+
+.consumable-tooltip .right-column {
+  margin-left: 8px;
 }
 
 /* 卡片样式优化 */
@@ -241,11 +266,13 @@
 /* 响应式设计 */
 @media (max-width: 768px) {
   .consumables-custom-tooltip .ant-tooltip-inner {
-    max-width: 98vw !important;
+    max-width: 95vw !important;
+    min-width: 95vw !important;
   }
 
   .consumable-tooltip {
-    min-width: 400px;
+    min-width: 95vw;
+    max-width: 95vw;
     font-size: 12px;
   }
 
@@ -284,6 +311,19 @@
   .consumable-tooltip .param-value {
     text-align: left;
     width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .consumables-custom-tooltip .ant-tooltip-inner {
+    max-width: 95vw !important;
+    min-width: 95vw !important;
+  }
+  
+  .consumable-tooltip {
+    min-width: 95vw;
+    max-width: 95vw;
+    font-size: 12px;
   }
 }
 

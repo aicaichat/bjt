@@ -143,21 +143,73 @@ class BJT_Product_API_Controller {
      * Check if a given request has access to create items
      */
     public function create_item_permissions_check($request) {
-        return current_user_can('manage_options');
+        // First, allow if current WP user has capability
+        if (current_user_can('manage_options')) {
+            return true;
+        }
+        // Fallback: check JWT token provided via Authorization header
+        return $this->check_jwt_admin_permission($request);
     }
 
     /**
      * Check if a given request has access to update a specific item
      */
     public function update_item_permissions_check($request) {
-        return current_user_can('manage_options');
+        if (current_user_can('manage_options')) {
+            return true;
+        }
+        return $this->check_jwt_admin_permission($request);
     }
 
     /**
      * Check if a given request has access to delete a specific item
      */
     public function delete_item_permissions_check($request) {
-        return current_user_can('manage_options');
+        if (current_user_can('manage_options')) {
+            return true;
+        }
+        return $this->check_jwt_admin_permission($request);
+    }
+
+    /**
+     * Helper: validate JWT token (from Authorization header) and ensure user role is administrator / admin.
+     * This bridges the front-end admin SPA (which authenticates via JWT) with WordPress capability checks so
+     * that write operations from the SPA succeed even when no WP cookie is present.
+     */
+    protected function check_jwt_admin_permission($request) {
+        // Expect header in the form "Bearer <token>"
+        $auth_header = $request->get_header('authorization');
+        if (!$auth_header || strpos($auth_header, 'Bearer ') !== 0) {
+            return false;
+        }
+        $token = substr($auth_header, 7);
+
+        // Use helper from fixed-jwt-auth / other JWT plugin if available
+        if (!function_exists('bjt_validate_jwt_token')) {
+            return false; // Validation function not found
+        }
+
+        $payload = bjt_validate_jwt_token($token);
+        if (is_wp_error($payload)) {
+            return false; // Invalid token
+        }
+
+        // Allow if roles include administrator / admin
+        if (isset($payload['user']['roles']) && is_array($payload['user']['roles'])) {
+            foreach ($payload['user']['roles'] as $role) {
+                if (strtolower($role) === 'administrator' || strtolower($role) === 'admin') {
+                    return true;
+                }
+            }
+        }
+        // Some payloads might use single 'role' string instead of 'roles' array
+        if (isset($payload['user']['role'])) {
+            $single_role = strtolower($payload['user']['role']);
+            if ($single_role === 'administrator' || $single_role === 'admin') {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

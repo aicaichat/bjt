@@ -33,7 +33,7 @@ export const ADMIN_API_ENDPOINTS = {
   
   // Product management
   PRODUCT_LINES: '/product-lines',
-  HOST_MODELS: '/machines',
+  HOST_MODELS: '/host-models',
   
   // Parts management - 根据后端实际端点调整
   PARTS: '/machineparts',

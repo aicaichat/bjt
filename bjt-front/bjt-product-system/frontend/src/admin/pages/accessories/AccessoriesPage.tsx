@@ -117,8 +117,18 @@ const AccessoriesPage: React.FC = () => {
       await accessoryModelService.deleteAccessoryModel(id);
       message.success(t('message.deleteSuccess', { ns: 'accessories' }));
       refetchModels();
-    } catch (error) {
-      message.error(t('message.deleteFailed', { ns: 'accessories' }));
+    } catch (error: any) {
+      const childList = error?.data?.data?.children || error?.data?.children;
+      if (childList && childList.length) {
+        const childItems = childList.map((c: any) => {
+          const name = c.name_cn || c.name_zh || c.name_en || '';
+          const partNumber = c.part_number || '';
+          return partNumber ? `${partNumber}(${name})` : name || c.id;
+        }).join(', ');
+        message.error(`删除失败，请先删除关联配件: ${childItems}`);
+      } else {
+        message.error(t('message.deleteFailed', { ns: 'accessories' }));
+      }
     }
   };
   
@@ -128,8 +138,22 @@ const AccessoriesPage: React.FC = () => {
       await accessoryService.deleteAccessory(id);
       message.success(t('message.deleteSuccess', { ns: 'accessories' }));
       refetchAccessories();
-    } catch (error) {
-      message.error(t('message.deleteFailed', { ns: 'accessories' }));
+    } catch (error: any) {
+      console.log('Delete accessory error:', error);
+      console.log('Error data:', error?.data);
+      console.log('Error code:', error?.code);
+      
+      const refList = error?.data?.data?.children || error?.data?.children;
+      if (refList && refList.length) {
+        const childItems = refList.map((c: any) => {
+          const name = c.name_cn || c.name_zh || c.name_en || '';
+          const partNumber = c.part_number || c.child_part_number || '';
+          return partNumber ? `${partNumber}(${name})` : name || c.id;
+        }).join(', ');
+        message.error(`删除失败，请先删除子配件: ${childItems}`);
+      } else {
+        message.error(t('message.deleteFailed', { ns: 'accessories' }));
+      }
     }
   };
   

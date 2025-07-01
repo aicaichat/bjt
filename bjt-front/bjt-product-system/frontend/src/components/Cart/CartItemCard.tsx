@@ -7,6 +7,8 @@ import './CartItemCard.css';
 import { useTranslation } from 'react-i18next';
 import { ASSETS } from '../../config/appConfig';
 import { getSimpleProductName } from '../../utils/simpleProductName';
+import { getProductModel } from '../../utils/productFieldHelpers';
+import { useSmartUnitSystem } from '../../hooks/useSmartUnitSystem';
 
 const { Text, Title } = Typography;
 
@@ -52,7 +54,9 @@ const CartItemCard: React.FC<CartItemCardProps> = ({ item, onUpdateQuantity, onR
   );
   
   const partNumber = props.part_number || (item as any).part_number || '';
-  const model = props.model || (item as any).model || '';
+  // 使用统一工具按单位制提取 Model
+  const { preferredUnitSystem } = useSmartUnitSystem();
+  const model = getProductModel({ ...item, ...props }, preferredUnitSystem);
   const voltage = props.voltage || (item as any).voltage || '';
   const frequency = props.frequency || (item as any).frequency || '';
   const pcs_per_box = props.pcs_per_box || (item as any).pcs_per_box || '';
