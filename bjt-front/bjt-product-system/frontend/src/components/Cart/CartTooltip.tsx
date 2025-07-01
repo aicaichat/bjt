@@ -492,7 +492,9 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
     }
     
     console.log(`🔍 [CartTooltip] Field ${field} resolved to:`, value);
-    return String(value);
+    const strVal = String(value);
+    const sanitized = strVal.replace(/\*/g, '×');
+    return sanitized;
   };
 
   const shouldShowBubbleDiameter = (): boolean => {
@@ -1038,10 +1040,14 @@ const SparePartTooltip: React.FC<{ item: any; userRegion?: string }> = ({ item, 
           if (baseFieldKey.includes('weight') || baseFieldKey.includes('net_weight')) {
             const numValue = parseFloat(value);
             if (!isNaN(numValue)) {
-              return numValue.toFixed(2);
+              const strVal = numValue.toFixed(2);
+              const sanitized = strVal.replace(/\*/g, '×');
+              return sanitized;
             }
           }
-          return String(value);
+          const strVal = String(value);
+          const sanitized = strVal.replace(/\*/g, '×');
+          return sanitized;
         }
       }
     }
@@ -1167,10 +1173,14 @@ const AccessoryTooltip: React.FC<{ item: any; userRegion?: string }> = ({ item, 
           if (baseFieldKey.includes('weight')) {
             const numValue = parseFloat(value);
             if (!isNaN(numValue)) {
-              return numValue.toFixed(2); // 显示两位小数，如10.00
+              const strVal = numValue.toFixed(2);
+              const sanitized = strVal.replace(/\*/g, '×');
+              return sanitized;
             }
           }
-          return String(value);
+          const strVal = String(value);
+          const sanitized = strVal.replace(/\*/g, '×');
+          return sanitized;
         }
       }
     }
@@ -1312,10 +1322,14 @@ const MachineTooltip: React.FC<{ item: any; userRegion?: string }> = ({ item, us
           if (baseFieldKey.includes('weight')) {
             const numValue = parseFloat(value);
             if (!isNaN(numValue)) {
-              return numValue.toFixed(2); // 显示两位小数，如10.00
+              const strVal = numValue.toFixed(2);
+              const sanitized = strVal.replace(/\*/g, '×');
+              return sanitized;
             }
           }
-          return String(value);
+          const strVal = String(value);
+          const sanitized = strVal.replace(/\*/g, '×');
+          return sanitized;
         }
       }
     }
