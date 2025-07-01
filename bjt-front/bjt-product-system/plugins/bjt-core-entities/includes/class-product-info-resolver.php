@@ -41,16 +41,24 @@ class BJT_Product_Info_Resolver {
             error_log("⚠️ [Product Resolver] 策略2失败: 料号 {$part_number} 在类型 {$product_type} 中未找到");
         }
         
-        // 🎯 策略3: 如果指定类型没找到，尝试所有类型（容错机制）
-        error_log("🔍 [Product Resolver] 策略3: 启动容错机制，遍历所有产品类型");
+        // 🎯 策略3: 模糊匹配（解决料号数据不一致问题）
+        error_log("🔍 [Product Resolver] 策略3: 启动模糊匹配，解决料号数据不一致");
+        $result = self::get_product_details_by_fuzzy_match($part_number, $product_type);
+        if ($result) {
+            error_log("✅ [Product Resolver] 策略3成功: 通过模糊匹配找到产品: PartNumber={$part_number}, Type={$product_type}");
+            return $result;
+        }
+        
+        // 🎯 策略4: 如果指定类型没找到，尝试所有类型（容错机制）
+        error_log("🔍 [Product Resolver] 策略4: 启动容错机制，遍历所有产品类型");
         $all_types = ['machine', 'spare_part', 'accessory', 'consumable'];
         foreach ($all_types as $type) {
             if ($type === $product_type) continue; // 跳过已经尝试过的类型
             
-            error_log("🔍 [Product Resolver] 策略3: 尝试类型 {$type}");
+            error_log("🔍 [Product Resolver] 策略4: 尝试类型 {$type}");
             $result = self::get_product_details_by_part_number($part_number, $type);
             if ($result) {
-                error_log("⚠️ [Product Resolver] 策略3成功: 类型不匹配但找到产品: PartNumber={$part_number}, ExpectedType={$product_type}, ActualType={$type}");
+                error_log("⚠️ [Product Resolver] 策略4成功: 类型不匹配但找到产品: PartNumber={$part_number}, ExpectedType={$product_type}, ActualType={$type}");
                 return $result;
             }
         }
@@ -252,6 +260,145 @@ class BJT_Product_Info_Resolver {
         }
         
         return self::process_product_result($product, $part_number, $product_type);
+    }
+    
+    /**
+     * 模糊匹配产品信息（解决料号数据不一致问题）
+     */
+    private static function get_product_details_by_fuzzy_match($part_number, $product_type) {
+        global $wpdb;
+        
+        $table_map = [
+            'spare_part' => $wpdb->prefix . 'bjt_spare_parts',
+            'accessory' => $wpdb->prefix . 'bjt_accessories', 
+            'consumable' => $wpdb->prefix . 'bjt_consumables',
+            'machine' => $wpdb->prefix . 'bjt_parts'
+        ];
+        
+        if (!isset($table_map[$product_type])) {
+            return null;
+        }
+        
+        $table_name = $table_map[$product_type];
+        
+        // 策略1: 数据库料号包含订单料号（如：92R01006666 包含 92R01006）
+        $product = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $table_name WHERE part_number LIKE %s ORDER BY CHAR_LENGTH(part_number) ASC LIMIT 1",
+            $part_number . '%'
+        ));
+        
+        if ($product) {
+            error_log("✅ [Product Resolver - Fuzzy] 策略1成功: 数据库料号包含订单料号: {$product->part_number} 包含 {$part_number}");
+            return self::format_product_result($product, $product_type);
+        }
+        
+        // 策略2: 订单料号包含数据库料号（如：92R01006666 被包含在 92R010066661234 中）
+        $product = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $table_name WHERE %s LIKE CONCAT('%', part_number, '%') ORDER BY CHAR_LENGTH(part_number) DESC LIMIT 1",
+            $part_number
+        ));
+        
+        if ($product) {
+            error_log("✅ [Product Resolver - Fuzzy] 策略2成功: 订单料号包含数据库料号: {$part_number} 包含 {$product->part_number}");
+            return self::format_product_result($product, $product_type);
+        }
+        
+        // 策略3: 相似度匹配（编辑距离小于3的料号）
+        $similar_products = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM $table_name WHERE part_number LIKE %s OR part_number LIKE %s LIMIT 5",
+            '%' . substr($part_number, 0, 6) . '%',
+            '%' . substr($part_number, -6) . '%'
+        ));
+        
+        if ($similar_products) {
+            // 找到最相似的料号
+            $best_match = null;
+            $min_distance = PHP_INT_MAX;
+            
+            foreach ($similar_products as $candidate) {
+                $distance = levenshtein($part_number, $candidate->part_number);
+                if ($distance < $min_distance && $distance <= 3) { // 允许最多3个字符差异
+                    $min_distance = $distance;
+                    $best_match = $candidate;
+                }
+            }
+            
+            if ($best_match) {
+                error_log("✅ [Product Resolver - Fuzzy] 策略3成功: 相似度匹配: {$best_match->part_number} (距离: {$min_distance})");
+                return self::format_product_result($best_match, $product_type);
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * 格式化产品结果
+     */
+    private static function format_product_result($product, $product_type) {
+        switch ($product_type) {
+            case 'machine':
+                $result = [
+                    'model' => $product->model ?? '',
+                    'brand' => $product->brand ?? '',
+                    'spec' => $product->spec ?? '',
+                    'properties' => '',
+                    'description' => $product->name_zh ?? '',
+                    'name_zh' => $product->name_zh ?? '',
+                    'name_en' => $product->name_en ?? '',
+                    'category' => $product->product_line_id ?? '',
+                    'spec_imperial' => $product->spec_imperial ?? ''
+                ];
+                break;
+                
+            case 'spare_part':
+                $result = [
+                    'model' => !empty($product->model) ? $product->model : ($product->app_model ?? ''),
+                    'brand' => '',
+                    'spec' => $product->spec ?? ($product->description_zh ?? ''),
+                    'properties' => '',
+                    'description' => $product->description_zh ?? '',
+                    'name_zh' => $product->name_zh ?? '',
+                    'name_en' => $product->name_en ?? '',
+                    'category' => $product->product_line_id ?? '',
+                    'spec_imperial' => $product->spec_imperial ?? ''
+                ];
+                break;
+                
+            case 'consumable':
+                $result = [
+                    'model' => $product->model ?? '',
+                    'brand' => $product->brand ?? '',
+                    'spec' => $product->spec ?? ($product->description_zh ?? ''),
+                    'properties' => '',
+                    'description' => $product->description_zh ?? '',
+                    'name_zh' => $product->name_zh ?? ($product->title_zh ?? ''),
+                    'name_en' => $product->name_en ?? ($product->title_en ?? ''),
+                    'category' => $product->product_line_id ?? '',
+                    'model_imperial' => $product->model_imperial ?? '',
+                    'spec_imperial' => $product->spec_imperial ?? ''
+                ];
+                break;
+                
+            case 'accessory':
+                $result = [
+                    'model' => $product->model ?? '',
+                    'brand' => $product->brand ?? '',
+                    'spec' => $product->spec ?? ($product->description_zh ?? ''),
+                    'properties' => '',
+                    'description' => $product->description_zh ?? '',
+                    'name_zh' => $product->name_zh ?? '',
+                    'name_en' => $product->name_en ?? '',
+                    'category' => $product->product_line_id ?? '',
+                    'spec_imperial' => $product->spec_imperial ?? ''
+                ];
+                break;
+                
+            default:
+                return null;
+        }
+        
+        return self::process_product_result((object)$result, $product->part_number ?? '', $product_type);
     }
 }
 ?> 
