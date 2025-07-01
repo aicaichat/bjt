@@ -1151,9 +1151,17 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
           {/* 产品信息区域 */}
           <div className="product-info-section">
             <div className="product-title">
+              {/* 产品名称（根据语言） */}
               <h3 className="product-name">
-                {getLocalizedValue(item, 'model') || getLocalizedValue(item, 'name')}
+                {getLocalizedValue(item, 'name') || getLocalizedValue(item, 'title') || getLocalizedValue(item, 'model')}
               </h3>
+
+              {/* 型号 model 移到名称下方显示 */}
+              {shouldShowField(item, 'model') && (
+                <div className="product-model" style={{ fontSize: 14, color: '#4B5563', fontWeight: 500, marginBottom: 4 }}>
+                  {getLocalizedValue(item, 'model')}
+                </div>
+              )}
               
               {/* 适用机型信息 */}
               {shouldShowField(item, 'app_model') && (
