@@ -1,0 +1,2 @@
+# 此文件确保uploads目录被Git跟踪
+# 但目录中的用户上传文件会被.gitignore忽略

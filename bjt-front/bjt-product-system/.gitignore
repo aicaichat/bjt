@@ -64,3 +64,8 @@ test-*.pdf
 nginx/ssl/*.pem
 nginx/ssl/*.key
 nginx/ssl/*.crt 
+# BJT uploads ignore rules - 忽略用户上传文件但保留目录结构
+frontend/public/uploads/*
+!frontend/public/uploads/.gitkeep
+!frontend/public/uploads/README.md
+uploads_backup_*
