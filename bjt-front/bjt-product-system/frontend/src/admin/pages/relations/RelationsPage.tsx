@@ -1878,7 +1878,7 @@ const RelationsPage: React.FC = () => {
         onCancel={() => setIsModalVisible(false)}
         footer={null}
         width={900}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form
           form={form}

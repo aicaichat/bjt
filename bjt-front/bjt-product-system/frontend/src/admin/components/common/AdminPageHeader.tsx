@@ -32,17 +32,17 @@ function AdminPageHeader({
   return (
     <div className="mb-6">
       {breadcrumb && breadcrumb.length > 0 && (
-        <Breadcrumb className="mb-4">
-          {breadcrumb.map((item, index) => (
-            <Breadcrumb.Item key={index}>
-              {item.path ? (
-                <a href={item.path}>{item.title}</a>
-              ) : (
-                item.title
-              )}
-            </Breadcrumb.Item>
-          ))}
-        </Breadcrumb>
+        <Breadcrumb
+          className="mb-4"
+          items={breadcrumb.map((item, index) => ({
+            key: index,
+            title: item.path ? (
+              <a href={item.path}>{item.title}</a>
+            ) : (
+              item.title
+            )
+          }))}
+        />
       )}
       
       <div className="flex justify-between items-start">

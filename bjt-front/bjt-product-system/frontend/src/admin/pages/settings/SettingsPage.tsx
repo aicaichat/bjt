@@ -30,7 +30,6 @@ import { useAdminApi } from '../../hooks/useAdminApi';
 import adminSettingsService from '../../services/admin-settings.service';
 
 const { Option } = Select;
-const { TabPane } = Tabs;
 const { TextArea } = Input;
 
 // 系统设置接口
@@ -201,83 +200,87 @@ const SettingsPage: React.FC = () => {
             lockout_duration: 15
           }}
         >
-          <Tabs defaultActiveKey="basic">
-            {/* 基础信息 */}
-            <TabPane
-              tab={
-                <span className="flex items-center gap-2">
-                  <GlobalOutlined />
-                  基础信息
-                </span>
-              }
-              key="basic"
-            >
-              <Row gutter={24}>
-                <Col span={12}>
-                  <Form.Item
-                    name="company_name"
-                    label="公司名称"
-                    rules={[{ required: true, message: '请输入公司名称' }]}
-                  >
-                    <Input placeholder="请输入公司名称" />
-                  </Form.Item>
-                </Col>
-                
-                <Col span={12}>
-                  <Form.Item
-                    name="default_language"
-                    label="默认语言"
-                    rules={[{ required: true, message: '请选择默认语言' }]}
-                  >
-                    <Select placeholder="请选择默认语言">
-                      <Option value="zh">中文</Option>
-                      <Option value="en">English</Option>
-                    </Select>
-                  </Form.Item>
-                </Col>
-              </Row>
+          <Tabs 
+            defaultActiveKey="basic"
+            items={[
+              {
+                key: 'basic',
+                label: (
+                  <span className="flex items-center gap-2">
+                    <GlobalOutlined />
+                    基础信息
+                  </span>
+                ),
+                children: (
+                  <>
+                    <Row gutter={24}>
+                      <Col span={12}>
+                        <Form.Item
+                          name="company_name"
+                          label="公司名称"
+                          rules={[{ required: true, message: '请输入公司名称' }]}
+                        >
+                          <Input placeholder="请输入公司名称" />
+                        </Form.Item>
+                      </Col>
+                      
+                      <Col span={12}>
+                        <Form.Item
+                          name="default_language"
+                          label="默认语言"
+                          rules={[{ required: true, message: '请选择默认语言' }]}
+                        >
+                          <Select placeholder="请选择默认语言">
+                            <Option value="zh">中文</Option>
+                            <Option value="en">English</Option>
+                          </Select>
+                        </Form.Item>
+                      </Col>
+                    </Row>
 
-              <Row gutter={24}>
-                <Col span={24}>
-                  <Form.Item
-                    name="contact_info"
-                    label="联系方式"
-                  >
-                    <TextArea
-                      rows={3}
-                      placeholder="请输入联系方式信息"
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
+                    <Row gutter={24}>
+                      <Col span={24}>
+                        <Form.Item
+                          name="contact_info"
+                          label="联系方式"
+                        >
+                          <TextArea
+                            rows={3}
+                            placeholder="请输入联系方式信息"
+                          />
+                        </Form.Item>
+                      </Col>
+                    </Row>
 
-              <Row gutter={24}>
-                <Col span={24}>
-                  <Form.Item label="公司Logo">
-                    <div className="flex items-center gap-4">
-                      <div className="w-20 h-20 border border-gray-300 rounded flex items-center justify-center bg-gray-50">
-                        {logoUrl ? (
-                          <img src={logoUrl} alt="Company Logo" className="w-full h-full object-cover rounded" />
-                        ) : (
-                          <GlobalOutlined className="text-2xl text-gray-400" />
-                        )}
-                      </div>
-                      <Upload
-                        name="logo"
-                        listType="text"
-                        showUploadList={false}
-                        onChange={handleLogoUpload}
-                        accept="image/*"
-                      >
-                        <Button icon={<UploadOutlined />}>
-                          上传Logo
-                        </Button>
-                      </Upload>
-                    </div>
-                  </Form.Item>
-                </Col>
-              </Row>
-            </TabPane>
+                    <Row gutter={24}>
+                      <Col span={24}>
+                        <Form.Item label="公司Logo">
+                          <div className="flex items-center gap-4">
+                            <div className="w-20 h-20 border border-gray-300 rounded flex items-center justify-center bg-gray-50">
+                              {logoUrl ? (
+                                <img src={logoUrl} alt="Company Logo" className="w-full h-full object-cover rounded" />
+                              ) : (
+                                <GlobalOutlined className="text-2xl text-gray-400" />
+                              )}
+                            </div>
+                            <Upload
+                              name="logo"
+                              listType="text"
+                              showUploadList={false}
+                              onChange={handleLogoUpload}
+                              accept="image/*"
+                            >
+                              <Button icon={<UploadOutlined />}>
+                                上传Logo
+                              </Button>
+                            </Upload>
+                          </div>
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                  </>
+                )
+              },
 
             {/* 系统设置 */}
             <TabPane

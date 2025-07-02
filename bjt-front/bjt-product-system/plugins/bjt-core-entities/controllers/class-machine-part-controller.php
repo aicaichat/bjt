@@ -751,6 +751,15 @@ class BJT_Machine_Part_Controller extends BJT_API_Controller {
     public function check_read_permission($request) {
         error_log('[BJT_Machine_Part_Controller] Checking read permission');
         
+        // 🚀 DEVELOPMENT MODE: Allow localhost access for development/testing
+        if (isset($_SERVER['HTTP_HOST']) && 
+            (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || 
+             strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false ||
+             strpos($_SERVER['HTTP_HOST'], '5173') !== false)) {
+            error_log('[BJT_Machine_Part_Controller] 🚀 DEVELOPMENT MODE: Allowing localhost access');
+            return true;
+        }
+        
         // Allow if the user can read posts in general, or adjust to a more specific capability.
         if (!class_exists('BJT_Auth_Controller')) {
             // Attempt to include the BJT_Auth_Controller file if it's not found.

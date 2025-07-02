@@ -38,7 +38,6 @@ import './accessibility.css';
 import { API_BASE_URL } from '../../api/config';
 
 const { Option } = Select;
-const { TabPane } = Tabs;
 
 interface RefreshResponse {
   success: boolean;

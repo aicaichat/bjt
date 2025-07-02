@@ -4,8 +4,6 @@ import { ShoppingCartOutlined, InfoCircleOutlined, RightOutlined } from '@ant-de
 import { useTranslation } from 'react-i18next';
 import { MachineAccessory } from '../../../types/machines';
 
-const { TabPane } = Tabs;
-
 interface AccessorySelectorProps {
   selectedMachine: string;
   accessories: MachineAccessory[];
@@ -202,52 +200,34 @@ export const AccessorySelector: React.FC<AccessorySelectorProps> = ({
         defaultActiveKey="level1"
         type="card"
         className="accessory-tabs"
-      >
-        {accessories.length > 0 && (
-          <TabPane
-            tab={`${t('accessory.level')} 1 (${accessories.length})`}
-            key="level1"
-          >
-            {renderAccessoryLevel(accessories, 1, false)}
-          </TabPane>
-        )}
-
-        {(level2Accessories.length > 0 || loadingStates.level2) && (
-          <TabPane
-            tab={`${t('accessory.level')} 2 (${level2Accessories.length})`}
-            key="level2"
-          >
-            {renderAccessoryLevel(level2Accessories, 2, loadingStates.level2)}
-          </TabPane>
-        )}
-
-        {(level3Accessories.length > 0 || loadingStates.level3) && (
-          <TabPane
-            tab={`${t('accessory.level')} 3 (${level3Accessories.length})`}
-            key="level3"
-          >
-            {renderAccessoryLevel(level3Accessories, 3, loadingStates.level3)}
-          </TabPane>
-        )}
-
-        {(level4Accessories.length > 0 || loadingStates.level4) && (
-          <TabPane
-            tab={`${t('accessory.level')} 4 (${level4Accessories.length})`}
-            key="level4"
-          >
-            {renderAccessoryLevel(level4Accessories, 4, loadingStates.level4)}
-          </TabPane>
-        )}
-
-        {(level5Accessories.length > 0 || loadingStates.level5) && (
-          <TabPane
-            tab={`${t('accessory.level')} 5 (${level5Accessories.length})`}
-            key="level5"
-          >
-            {renderAccessoryLevel(level5Accessories, 5, loadingStates.level5)}
-          </TabPane>
-        )}
-      </Tabs>
+        items={[
+          ...(accessories.length > 0 ? [{
+            key: 'level1',
+            label: `${t('accessory.level')} 1 (${accessories.length})`,
+            children: renderAccessoryLevel(accessories, 1, false)
+          }] : []),
+          ...(level2Accessories.length > 0 || loadingStates.level2 ? [{
+            key: 'level2',
+            label: `${t('accessory.level')} 2 (${level2Accessories.length})`,
+            children: renderAccessoryLevel(level2Accessories, 2, loadingStates.level2)
+          }] : []),
+          ...(level3Accessories.length > 0 || loadingStates.level3 ? [{
+            key: 'level3',
+            label: `${t('accessory.level')} 3 (${level3Accessories.length})`,
+            children: renderAccessoryLevel(level3Accessories, 3, loadingStates.level3)
+          }] : []),
+          ...(level4Accessories.length > 0 || loadingStates.level4 ? [{
+            key: 'level4',
+            label: `${t('accessory.level')} 4 (${level4Accessories.length})`,
+            children: renderAccessoryLevel(level4Accessories, 4, loadingStates.level4)
+          }] : []),
+          ...(level5Accessories.length > 0 || loadingStates.level5 ? [{
+            key: 'level5',
+            label: `${t('accessory.level')} 5 (${level5Accessories.length})`,
+            children: renderAccessoryLevel(level5Accessories, 5, loadingStates.level5)
+          }] : [])
+        ]}
+      />
     </div>
   );
 }; 
