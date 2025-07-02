@@ -1789,9 +1789,10 @@ const SparePartsPage = () => {
                               pcs_per_boxType: typeof part.pcs_per_box
                             });
                             
-                            return part.pcs_per_box !== null && part.pcs_per_box !== undefined && part.pcs_per_box > 0 
-                              ? String(part.pcs_per_box)  // 只显示纯数值
-                              : '1';
+                            // 🔧 修复：允许显示0值，只有在null/undefined时才显示默认值1
+                            return part.pcs_per_box !== null && part.pcs_per_box !== undefined 
+                              ? String(part.pcs_per_box)  // 显示实际值，包括0
+                              : '1';  // 只有在null/undefined时显示默认值
                           })()}
                         </span>
                       </div>
