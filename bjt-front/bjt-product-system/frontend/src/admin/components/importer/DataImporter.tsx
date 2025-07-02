@@ -164,7 +164,7 @@ const DataImporter: React.FC<DataImporterProps> = ({
       <Modal
         title="Data Import Wizard"
         open={visible}
-        destroyOnClose
+        destroyOnHidden
         onCancel={() => setVisible(false)}
         footer={null}
         width={900}

@@ -752,11 +752,35 @@ class BJT_Machine_Part_Controller extends BJT_API_Controller {
         error_log('[BJT_Machine_Part_Controller] Checking read permission');
         
         // 🚀 DEVELOPMENT MODE: Allow localhost access for development/testing
+        $is_development = false;
+        
+        // 检查HTTP_HOST
         if (isset($_SERVER['HTTP_HOST']) && 
             (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || 
              strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false ||
              strpos($_SERVER['HTTP_HOST'], '5173') !== false)) {
-            error_log('[BJT_Machine_Part_Controller] 🚀 DEVELOPMENT MODE: Allowing localhost access');
+            $is_development = true;
+        }
+        
+        // 检查Referer（来自前端开发服务器）
+        if (isset($_SERVER['HTTP_REFERER']) && 
+            (strpos($_SERVER['HTTP_REFERER'], 'localhost:5173') !== false ||
+             strpos($_SERVER['HTTP_REFERER'], '127.0.0.1:5173') !== false)) {
+            $is_development = true;
+        }
+        
+        // 检查来源IP（Docker开发网络）
+        if (isset($_SERVER['REMOTE_ADDR']) && 
+            (strpos($_SERVER['REMOTE_ADDR'], '172.18.') === 0 || 
+             strpos($_SERVER['REMOTE_ADDR'], '172.17.') === 0 ||
+             $_SERVER['REMOTE_ADDR'] === '127.0.0.1')) {
+            $is_development = true;
+        }
+        
+        if ($is_development) {
+            error_log('[BJT_Machine_Part_Controller] 🚀 DEVELOPMENT MODE: Allowing development access - HOST: ' . 
+                     ($_SERVER['HTTP_HOST'] ?? 'N/A') . ', REFERER: ' . ($_SERVER['HTTP_REFERER'] ?? 'N/A') . 
+                     ', IP: ' . ($_SERVER['REMOTE_ADDR'] ?? 'N/A'));
             return true;
         }
         
