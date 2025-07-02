@@ -809,9 +809,10 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
         
         if (!empty($data_to_update)) {
             // 🔥 新增：数据保护机制 - 防止有值字段被错误清零
+            // 注意：pcs_per_box (Qty per Carton) 字段已从保护列表中移除，允许设置为0或空值
             $protected_fields = [
                 'package_size_cm', 'package_size_inch', 'net_weight_kg', 'net_weight_lbs',
-                'gross_weight_kg', 'gross_weight_lbs', 'pcs_per_box',
+                'gross_weight_kg', 'gross_weight_lbs',
                 'pallet_size_cm', 'pallet_size_inch',
                 'pcs_per_pallet_a', 'pallet_gross_weight_a_kg', 'pallet_gross_weight_a_lbs',
                 'pallet_height_a_cm', 'pallet_height_a_inch',
@@ -832,6 +833,13 @@ class BJT_Consumable_Controller extends BJT_API_Controller {
                         unset($data_to_update[$field]); // 移除这个字段的更新
                     }
                 }
+            }
+            
+            // 🔥 特殊处理：pcs_per_box (Qty per Carton) 字段允许设置为0或空值
+            if (isset($data_to_update['pcs_per_box'])) {
+                $new_value = $data_to_update['pcs_per_box'];
+                $old_value = $existing_item_db->pcs_per_box ?? null;
+                error_log("[BJT_Consumable] ✅ ALLOWED: pcs_per_box (Qty per Carton) field update. Old value: '{$old_value}', new value: '{$new_value}' for ID {$id}");
             }
             
             $data_to_update['updated_at'] = current_time('mysql', 1);
