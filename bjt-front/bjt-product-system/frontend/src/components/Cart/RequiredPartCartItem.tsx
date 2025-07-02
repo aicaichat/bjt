@@ -132,8 +132,8 @@ export const RequiredPartCartItem: React.FC<RequiredPartCartItemProps> = ({
               </div>
             )}
             
-            {/* 单箱数量 - 🔧 修复：允许显示0值 */}
-            {(item.pcs_per_box !== null && item.pcs_per_box !== undefined) && (
+            {/* 单箱数量 - 🔧 修复：0值视为null，不显示整个字段 */}
+            {(item.pcs_per_box !== null && item.pcs_per_box !== undefined && Number(item.pcs_per_box) > 0) && (
               <div className="text-sm">
                 <span className="text-gray-600">{getLabel('pcsPerBox', t)}:</span>
                 <span className="ml-2">{item.pcs_per_box}</span>

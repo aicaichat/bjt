@@ -1775,27 +1775,27 @@ const SparePartsPage = () => {
                         </span>
                       </div>
                       
-                      {/* 单箱数量 */}
-                      <div className="flex items-center">
-                        <strong className="w-28 text-label font-medium flex-shrink-0 mr-3">
-                          {String(t('fields.pcsPerBox', { ns: 'spareParts' }) || (currentLanguage === 'zh' ? '单箱数量(件)' : 'Qty per Carton(pcs)'))}:
-                        </strong>
-                        <span className="text-content font-medium flex-1">
-                          {(() => {
-                            console.log('🔍 [renderSpareParts] Part pcs_per_box data:', {
-                              partId: part.id,
-                              partNumber: part.part_number,
-                              pcs_per_box: part.pcs_per_box,
-                              pcs_per_boxType: typeof part.pcs_per_box
-                            });
-                            
-                            // 🔧 修复：允许显示0值，只有在null/undefined时才显示默认值1
-                            return part.pcs_per_box !== null && part.pcs_per_box !== undefined 
-                              ? String(part.pcs_per_box)  // 显示实际值，包括0
-                              : '1';  // 只有在null/undefined时显示默认值
-                          })()}
-                        </span>
-                      </div>
+                      {/* 单箱数量 - 🔧 修复：0值视为null，不显示整个字段 */}
+                      {part.pcs_per_box !== null && part.pcs_per_box !== undefined && part.pcs_per_box > 0 && (
+                        <div className="flex items-center">
+                          <strong className="w-28 text-label font-medium flex-shrink-0 mr-3">
+                            {String(t('fields.pcsPerBox', { ns: 'spareParts' }) || (currentLanguage === 'zh' ? '单箱数量(件)' : 'Qty per Carton(pcs)'))}:
+                          </strong>
+                          <span className="text-content font-medium flex-1">
+                            {(() => {
+                              console.log('🔍 [renderSpareParts] Part pcs_per_box data:', {
+                                partId: part.id,
+                                partNumber: part.part_number,
+                                pcs_per_box: part.pcs_per_box,
+                                pcs_per_boxType: typeof part.pcs_per_box
+                              });
+                              
+                              // 只显示大于0的值
+                              return String(part.pcs_per_box);
+                            })()}
+                          </span>
+                        </div>
+                      )}
                       
                       {/* ProductId - 修复翻译和布局 */}
                       <div className="flex items-center">

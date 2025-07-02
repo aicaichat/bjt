@@ -230,6 +230,12 @@ export const useConsumableFieldDisplay = ({
       return false;
     }
     
+    // 🔧 修复：pcs_per_box字段特殊处理，0值视为null
+    if (fieldKey === 'pcs_per_box') {
+      const value = item[fieldKey];
+      return value !== null && value !== undefined && value !== '' && Number(value) > 0;
+    }
+    
     // 其他字段默认显示（如果有值）
     const value = getLocalizedValue(item, fieldKey);
     return value !== '';

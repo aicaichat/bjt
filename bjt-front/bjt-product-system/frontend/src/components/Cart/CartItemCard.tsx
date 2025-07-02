@@ -109,8 +109,8 @@ const CartItemCard: React.FC<CartItemCardProps> = ({ item, onUpdateQuantity, onR
           {model && <div><Text type="secondary">{getLabel('model', t)}: {getValue(model, t)}</Text></div>}
           {voltage && <div><Text type="secondary">{getLabel('voltage', t)}: {getValue(voltage, t)}</Text></div>}
           {frequency && <div><Text type="secondary">{getLabel('frequency', t)}: {getValue(frequency, t)}</Text></div>}
-          {/* 🔧 修复：允许显示0值 */}
-          {(pcs_per_box !== null && pcs_per_box !== undefined && pcs_per_box !== '') && <div><Text type="secondary">{getLabel('pcsPerBox', t)}: {getValue(pcs_per_box, t)}</Text></div>}
+          {/* 🔧 修复：0值视为null，不显示整个字段 */}
+          {(pcs_per_box !== null && pcs_per_box !== undefined && pcs_per_box !== '' && Number(pcs_per_box) > 0) && <div><Text type="secondary">{getLabel('pcsPerBox', t)}: {getValue(pcs_per_box, t)}</Text></div>}
           {pcs_per_pallet && <div><Text type="secondary">{getLabel('pcsPerPallet', t)}: {getValue(pcs_per_pallet, t)}</Text></div>}
           {package_size_cm && <div><Text type="secondary">{getLabel('packageSize', t)} (cm): {getValue(package_size_cm, t)}</Text></div>}
           {package_size_inch && <div><Text type="secondary">{getLabel('packageSize', t)} (inch): {getValue(package_size_inch, t)}</Text></div>}
