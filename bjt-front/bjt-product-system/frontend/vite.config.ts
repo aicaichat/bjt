@@ -40,64 +40,76 @@ console.log('🔧 WordPress Host Configuration:', {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/', // 使用根路径
   plugins: [react()],
-  css: { // Explicitly set postcss config
-    postcss: './postcss.config.js'
-  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '@components': path.resolve(__dirname, './src/components'),
-      '@pages': path.resolve(__dirname, './src/pages'),
-      '@services': path.resolve(__dirname, './src/services'),
-      '@utils': path.resolve(__dirname, './src/utils'),
-      '@contexts': path.resolve(__dirname, './src/contexts'),
-      '@i18n': path.resolve(__dirname, './src/i18n'),
-      '@assets': path.resolve(__dirname, './src/assets'),
-      '@styles': path.resolve(__dirname, './src/styles'),
-      '@config': path.resolve(__dirname, './src/config'),
-      '@types': path.resolve(__dirname, './src/types'),
-      '@api': path.resolve(__dirname, './src/api'),
-      '@mock': path.resolve(__dirname, './src/mock'),
-      '@translations': path.resolve(__dirname, './src/translations')
+    },
+  },
+  // 开发服务器配置
+  server: {
+    host: '0.0.0.0',
+    port: 5173, // 🔧 强制使用5173端口，避免CORS问题
+    strictPort: true, // 如果端口被占用则报错，不自动切换
+    // 🔧 修复API代理配置 - 增强错误处理和日志
+    proxy: {
+      // 代理所有以 /wp-json 开头的请求到后端WordPress服务器
+      '/wp-json': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false,
+        timeout: 10000, // 10秒超时
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, req, res) => {
+            console.error('❌ Proxy error:', err.message);
+            console.error('Request URL:', req.url);
+            console.error('Request method:', req.method);
+          });
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            console.log('📤 Proxying:', req.method, req.url, '→ http://localhost:8080');
+            // 添加必要的请求头
+            proxyReq.setHeader('Accept', 'application/json');
+            proxyReq.setHeader('Content-Type', 'application/json');
+          });
+          proxy.on('proxyRes', (proxyRes, req, _res) => {
+            console.log('📥 Response:', proxyRes.statusCode || 'unknown', req.url);
+            if (proxyRes.statusCode && proxyRes.statusCode >= 400) {
+              console.error('❌ API Error:', proxyRes.statusCode, proxyRes.statusMessage);
+            }
+          });
+        },
+      },
+      // 代理WordPress管理相关请求
+      '/wp-admin': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false,
+      },
+      // 代理WordPress登录相关请求
+      '/wp-login.php': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false,
+      }
     }
   },
-  server: {
-    port: 5173,
-    host: '0.0.0.0',
-    cors: true,
-    strictPort: true, // 确保使用指定端口
-    allowedHosts: ['frontend', 'localhost'],
-    // 只有在有明确target时才启用代理（避免空字符串导致问题）
-    ...(wordpressHost ? {
-      proxy: {
-        '/wp-json': {
-          target: wordpressHost,
-          changeOrigin: true,
-          secure: false,
-          configure: (proxy, options) => {
-            proxy.on('error', (err, req, res) => {
-              console.log('🚨 Proxy error:', err.message);
-            });
-            proxy.on('proxyReq', (proxyReq, req, res) => {
-              console.log('📤 Sending Request to:', req.method, req.url, '→', wordpressHost);
-            });
-            proxy.on('proxyRes', (proxyRes, req, res) => {
-              console.log('📥 Received Response:', proxyRes.statusCode, req.url);
-            });
-          }
-        },
-        '/wp-admin': {
-          target: wordpressHost,
-          changeOrigin: true,
-          secure: false
+  // 构建配置
+  build: {
+    outDir: 'dist',
+    sourcemap: true,
+    // 优化构建
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          antd: ['antd'],
+          utils: ['axios', 'dayjs']
         }
       }
-    } : {})
+    }
   },
-  build: {
-    outDir: 'build',
-    sourcemap: true
+  // 定义全局常量
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
   }
 })

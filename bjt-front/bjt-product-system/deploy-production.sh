@@ -120,7 +120,7 @@ build_frontend() {
     
     # 构建生产版本（跳过TypeScript检查）
     print_message "构建前端生产版本..."
-    VITE_API_URL="https://${DOMAIN_NAME}/wp-json/bjt/v1" npm run build:skip-check
+    VITE_API_URL="/wp-json/bjt/v1" npm run build:skip-check
     
     cd ..
     

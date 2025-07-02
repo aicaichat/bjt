@@ -221,10 +221,21 @@ class AuthService {
         },
       });
 
-      const data = await response.json();
+      // 安全解析可能为空的响应
+      const rawText = await response.text();
+      let data: any = {};
+      if (rawText) {
+        try {
+          data = JSON.parse(rawText);
+        } catch (parseErr) {
+          console.warn('[AuthService] 非JSON响应，可能未登录或令牌无效:', parseErr);
+        }
+      }
 
       if (!response.ok) {
-        throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
+        // 如果后端返回401/403且body为空，构造统一的错误信息
+        const message = data.message || `HTTP ${response.status}: ${response.statusText}`;
+        throw new Error(message);
       }
 
       if (data.success && data.data) {
@@ -232,7 +243,8 @@ class AuthService {
         this.setUser(data.data);
         return data.data;
       } else {
-        throw new Error(data.message || '获取用户信息失败');
+        // 如果数据结构不符合预期，则认为未登录
+        throw new Error(data.message || '未登录或令牌已失效');
       }
     } catch (error) {
       console.error('❌ [AuthService] Get current user failed:', error);
