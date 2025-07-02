@@ -904,15 +904,20 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
                 // 如果没有包装方式数据，则不显示这一行
                 return null;
               })()}
-              <div className="package-row">
-                <span className="package-label">{t('tooltip.pcsPerBox', 'Qty per Carton')}</span>
-                <span className="package-value">
-                  {(() => {
-                    const pcsPerBox = safeGet('pcs_per_box', '');
-                    return pcsPerBox !== 'N/A' && pcsPerBox !== '' ? pcsPerBox : t('common.toBeFilled', 'To be filled');
-                  })()}
-                </span>
-              </div>
+              {/* 🔧 修复：0值时不显示整个单箱数量字段 */}
+              {(() => {
+                const pcsPerBox = safeGet('pcs_per_box', '');
+                // 只有当值不为0、不为空、不为N/A时才显示
+                if (pcsPerBox !== 'N/A' && pcsPerBox !== '' && Number(pcsPerBox) > 0) {
+                  return (
+                    <div className="package-row">
+                      <span className="package-label">{t('tooltip.pcsPerBox', 'Qty per Carton')}</span>
+                      <span className="package-value">{pcsPerBox}</span>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
               <div className="package-row">
                 <span className="package-label">
                   {isImperialUnit ? 
