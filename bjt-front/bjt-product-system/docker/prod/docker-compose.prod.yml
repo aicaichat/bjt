@@ -72,6 +72,7 @@ services:
       JWT_AUTH_SECRET_KEY: ${JWT_AUTH_SECRET_KEY}
       WP_HOME: ${WP_HOME}
       WP_SITEURL: ${WP_SITEURL}
+      WP_REDIS_HOST: redis
       WORDPRESS_CONFIG_EXTRA: |
         define('WP_HOME', '${WP_HOME}');
         define('WP_SITEURL', '${WP_SITEURL}');
@@ -80,6 +81,7 @@ services:
         define('JWT_AUTH_SECRET_KEY', '${JWT_AUTH_SECRET_KEY}');
         define('FORCE_SSL_ADMIN', true);
         define('WP_CACHE', true);
+        define('WP_REDIS_HOST', 'redis');
     volumes:
       - ../../backend:/var/www/html
       - ../../plugins:/var/www/html/wp-content/plugins
@@ -91,6 +93,8 @@ services:
         condition: service_healthy
       db-init:
         condition: service_completed_successfully
+      redis:
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/"]
       interval: 30s
@@ -172,6 +176,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+      redis:
+        condition: service_started
     networks:
       - bjt_network
     restart: "no"  # 只运行一次
@@ -200,6 +206,23 @@ services:
       - bjt_network
     restart: unless-stopped
 
+  # Redis 缓存
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.2'
+          memory: 256M
+    networks:
+      - bjt_network
+
 networks:
   bjt_network:
     driver: bridge
@@ -212,4 +235,6 @@ volumes:
   uploads_data:
     driver: local
   wordpress_cache:
+    driver: local
+  redis_data:
     driver: local 
