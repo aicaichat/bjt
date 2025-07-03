@@ -122,6 +122,30 @@ build_frontend() {
     print_message "构建前端生产版本..."
     VITE_API_URL="/wp-json/bjt/v1" npm run build:skip-check
     
+    # 🔥 添加缓存破坏符到HTML文件
+    if [ -f "dist/index.html" ]; then
+        print_message "添加缓存破坏符..."
+        timestamp=$(date +%s)
+        # 避免bash感叹号问题的版本
+        sed -i.bak "s|<head>|<head><meta name=\"cache-buster\" content=\"${timestamp}\"><meta name=\"build-date\" content=\"$(date)\">|" dist/index.html
+        print_message "✅ 已添加版本号: ${timestamp}"
+        # 验证修改是否成功
+        if grep -q "cache-buster" dist/index.html; then
+            print_message "✅ 缓存破坏符添加成功"
+        else
+            print_warning "❌ 缓存破坏符添加失败"
+        fi
+    else
+        print_warning "构建文件 dist/index.html 不存在，检查构建是否成功"
+        # 列出dist目录内容以帮助调试
+        if [ -d "dist" ]; then
+            print_warning "dist目录内容："
+            ls -la dist/
+        else
+            print_error "dist目录不存在！构建可能失败"
+        fi
+    fi
+    
     cd ..
     
     print_message "前端构建完成"
