@@ -168,7 +168,7 @@ services:
       - ../../docker/dev/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
       - ../../generated_sql_imports/_设备.sql:/docker-entrypoint-initdb.d/_设备.sql:ro
       - ../../generated_sql_imports/_耗材.sql:/docker-entrypoint-initdb.d/_耗材.sql:ro
-    command: [/usr/local/bin/init-db.sh]
+    command: ["sh", "/usr/local/bin/init-db.sh"]
     depends_on:
       mysql:
         condition: service_healthy
