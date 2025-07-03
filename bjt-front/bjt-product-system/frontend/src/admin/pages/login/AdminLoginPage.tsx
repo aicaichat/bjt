@@ -1,35 +1,18 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, message, Typography, Row, Col, Card, Switch, Badge, Tag } from 'antd';
-import { UserOutlined, LockOutlined, CrownOutlined, ShoppingCartOutlined, TeamOutlined } from '@ant-design/icons';
+import { Form, Input, Button, message, Typography } from 'antd';
+import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AdminService from '../../api/adminService';
 import '../../styles/login.css'; // 假设我们创建类似的样式文件
 
 const { Title, Paragraph } = Typography;
 
-interface TestAccount {
-  username: string;
-  password: string;
-  role: string;
-  description: string;
-}
-
 const AdminLoginPage: React.FC = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [showTestAccounts, setShowTestAccounts] = useState(true); // 默认显示测试账户
   const navigate = useNavigate();
   const location = useLocation();
-
-  const testAccounts: TestAccount[] = [
-    {
-      username: 'admin',
-      password: 'password',
-      role: 'admin',
-      description: '系统管理员 - 拥有所有功能、用户管理和系统设置的完全访问权限'
-    }
-  ];
 
   const handleSubmit = async (values: { username: string; password: string; remember?: boolean }) => {
     console.log('🔐 [AdminLogin] Attempting login with:', values);
@@ -87,27 +70,6 @@ const AdminLoginPage: React.FC = () => {
       message.error(errorMessage);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fillTestAccount = (account: TestAccount) => {
-    // 只允许填入admin账号
-    if (account.username === 'admin') {
-      form.setFieldsValue({
-        username: account.username,
-        password: account.password,
-      });
-    }
-  };
-
-  const getRoleIcon = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return <CrownOutlined />;
-      case 'sales':
-        return <ShoppingCartOutlined />;
-      default:
-        return <UserOutlined />;
     }
   };
 
@@ -177,51 +139,6 @@ const AdminLoginPage: React.FC = () => {
             </Button>
           </Form.Item>
         </Form>
-
-        <div className="test-accounts-section">
-          <div className="test-accounts-header">
-            <span>管理员测试账户</span>
-            <Switch 
-              checked={showTestAccounts}
-              onChange={(checked: boolean) => setShowTestAccounts(checked)}
-              size="small"
-            />
-          </div>
-          
-          {showTestAccounts && (
-            <Card className="test-accounts-card" size="small">
-              <Row gutter={[8, 16]}>
-                {testAccounts.map((account, index) => (
-                  <Col span={24} key={index}>
-                    <div 
-                      className="test-account" 
-                      onClick={() => fillTestAccount(account)}
-                    >
-                      <div className="account-info">
-                        <Badge count={getRoleIcon(account.role)} offset={[0, 3]}>
-                          <span className="account-email">{account.username}</span>
-                        </Badge>
-                        <Tag color="red">
-                          {account.role}
-                        </Tag>
-                      </div>
-                      <div className="account-description">
-                        {account.description}
-                      </div>
-                      <div className="account-password">
-                        密码: <code>{account.password}</code>
-                      </div>
-                    </div>
-                  </Col>
-                ))}
-              </Row>
-              
-              <div style={{ marginTop: '12px', fontSize: '12px', color: '#666' }}>
-                <strong>安全提示：</strong> 只有admin账号可以访问管理后台，其他账号将被拒绝登录。
-              </div>
-            </Card>
-          )}
-        </div>
       </div>
     </div>
   );
