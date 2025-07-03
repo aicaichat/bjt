@@ -90,7 +90,6 @@ services:
       - uploads_data:/var/www/html/wp-content/uploads
       - wordpress_cache:/var/www/html/wp-content/cache
       - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
     depends_on:
       mysql:
         condition: service_healthy
