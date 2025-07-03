@@ -15,27 +15,9 @@ const CartPage: React.FC = () => {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   // 🌐 **当前语言设置**
   const currentLanguage: 'zh' | 'en' = i18n.language === 'en' ? 'en' : 'zh';
-  // 🔧 新增：购物选项菜单状态
-  const [showShoppingOptions, setShowShoppingOptions] = useState(false);
-  // 🔧 新增：菜单引用，用于点击外部关闭
-  const shoppingOptionsRef = useRef<HTMLDivElement>(null);
 
-  // 🔧 新增：点击外部关闭菜单
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (shoppingOptionsRef.current && !shoppingOptionsRef.current.contains(event.target as Node)) {
-        setShowShoppingOptions(false);
-      }
-    };
 
-    if (showShoppingOptions) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
 
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showShoppingOptions]);
 
   // 计算总价
   const calculateTotal = () => {
@@ -80,21 +62,82 @@ const CartPage: React.FC = () => {
     navigate('/order', { state: { orderItems: selectedItems, fromCart: true } });
   };
 
-  // 🔧 改进：智能导航到购物页面
+  // 🔧 改进：多策略智能导航到购物页面
   const handleContinueShopping = () => {
-    // 检查浏览器历史，如果上一页是购物页面则返回，否则导航到主页
-    const referrer = document.referrer;
-    const currentHost = window.location.origin;
+    console.log('[Cart] Continue Shopping - 开始导航逻辑');
     
-    // 如果来源是本站的购物页面，则返回上一页
-    if (referrer.startsWith(currentHost) && 
-        (referrer.includes('/consumables') || 
-         referrer.includes('/spare-parts') || 
-         referrer.includes('/machines'))) {
-      navigate(-1);
+    // 策略1：检查sessionStorage中的导航历史
+    const lastShoppingPage = sessionStorage.getItem('lastShoppingPage');
+    console.log('[Cart] Continue Shopping - sessionStorage中的上次购物页面:', lastShoppingPage);
+    
+    // 策略2：检查购物车中的商品类型，智能导航
+    if (items.length > 0) {
+      const firstItem = items[0];
+      const productType = firstItem.product_type || firstItem.type || firstItem.category;
+      
+      console.log('[Cart] Continue Shopping - 根据购物车商品类型导航:', { 
+        productType, 
+        firstItem: { 
+          product_type: firstItem.product_type,
+          type: firstItem.type,
+          category: firstItem.category 
+        }
+      });
+      
+      // 如果有存储的上次购物页面，优先使用
+      if (lastShoppingPage && 
+          (lastShoppingPage.includes('/consumables') || 
+           lastShoppingPage.includes('/spare-parts') || 
+           lastShoppingPage.includes('/machines'))) {
+        console.log('[Cart] Continue Shopping - 使用存储的上次购物页面:', lastShoppingPage);
+        navigate(lastShoppingPage);
+        return;
+      }
+      
+      // 根据商品类型智能导航
+      if (productType === 'consumable' || productType === 'consumables') {
+        console.log('[Cart] Continue Shopping - 根据商品类型导航到耗材页面');
+        navigate(ROUTES.CONSUMABLES);
+      } else if (productType === 'spare_part' || productType === 'spare-parts' || productType === 'spareParts') {
+        console.log('[Cart] Continue Shopping - 根据商品类型导航到备件页面');
+        navigate(ROUTES.SPARE_PARTS);
+      } else if (productType === 'machine' || productType === 'machines') {
+        console.log('[Cart] Continue Shopping - 根据商品类型导航到设备页面');
+        navigate(ROUTES.MACHINES);
+      } else if (productType === 'accessory' || productType === 'accessories') {
+        console.log('[Cart] Continue Shopping - 配件归类到设备页面');
+        navigate(ROUTES.MACHINES);
+      } else {
+        // 无法判断类型时，使用备用策略
+        console.log('[Cart] Continue Shopping - 商品类型未知，使用备用策略');
+        navigate(lastShoppingPage || ROUTES.CONSUMABLES);
+      }
     } else {
-      // 否则导航到主页
-      navigate(ROUTES.HOME);
+      // 策略3：空购物车时的处理
+      if (lastShoppingPage && 
+          (lastShoppingPage.includes('/consumables') || 
+           lastShoppingPage.includes('/spare-parts') || 
+           lastShoppingPage.includes('/machines'))) {
+        console.log('[Cart] Continue Shopping - 空购物车，使用存储的上次购物页面:', lastShoppingPage);
+        navigate(lastShoppingPage);
+      } else {
+        // 策略4：最终备用策略 - 检查document.referrer
+        const referrer = document.referrer;
+        const currentHost = window.location.origin;
+        
+        console.log('[Cart] Continue Shopping - 使用referrer备用策略:', { referrer, currentHost });
+        
+        if (referrer.startsWith(currentHost) && 
+            (referrer.includes('/consumables') || 
+             referrer.includes('/spare-parts') || 
+             referrer.includes('/machines'))) {
+          console.log('[Cart] Continue Shopping - referrer有效，返回上一页');
+          navigate(-1);
+        } else {
+          console.log('[Cart] Continue Shopping - 所有策略失效，导航到耗材页面');
+          navigate(ROUTES.CONSUMABLES);
+        }
+      }
     }
   };
 
@@ -241,89 +284,7 @@ const CartPage: React.FC = () => {
                   {currentLanguage === 'zh' ? '继续购物' : 'Continue Shopping'}
                 </button>
                 
-                {/* 🔧 新增：购物选项下拉菜单 */}
-                <div className="relative" ref={shoppingOptionsRef}>
-                  <button
-                    onClick={() => setShowShoppingOptions(!showShoppingOptions)}
-                    className="w-full px-6 py-2 text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
-                  >
-                    {currentLanguage === 'zh' ? '浏览商品分类' : 'Browse Categories'}
-                    <svg 
-                      className={`w-4 h-4 transition-transform ${showShoppingOptions ? 'rotate-180' : ''}`}
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  
-                  {showShoppingOptions && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
-                      <div className="py-2">
-                        <button
-                          onClick={() => {
-                            navigate(ROUTES.CONSUMABLES);
-                            setShowShoppingOptions(false);
-                          }}
-                          className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
-                        >
-                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                            🧪
-                          </div>
-                          <div>
-                            <div className="font-medium">
-                              {currentLanguage === 'zh' ? '耗材' : 'Consumables'}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {currentLanguage === 'zh' ? '实验室耗材用品' : 'Laboratory consumables'}
-                            </div>
-                          </div>
-                        </button>
-                        
-                        <button
-                          onClick={() => {
-                            navigate(ROUTES.SPARE_PARTS);
-                            setShowShoppingOptions(false);
-                          }}
-                          className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
-                        >
-                          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                            🔧
-                          </div>
-                          <div>
-                            <div className="font-medium">
-                              {currentLanguage === 'zh' ? '备件' : 'Spare Parts'}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {currentLanguage === 'zh' ? '设备备件配件' : 'Equipment spare parts'}
-                            </div>
-                          </div>
-                        </button>
-                        
-                        <button
-                          onClick={() => {
-                            navigate(ROUTES.MACHINES);
-                            setShowShoppingOptions(false);
-                          }}
-                          className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
-                        >
-                          <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                            ⚙️
-                          </div>
-                          <div>
-                            <div className="font-medium">
-                              {currentLanguage === 'zh' ? '设备' : 'Machines'}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {currentLanguage === 'zh' ? '实验室设备' : 'Laboratory equipment'}
-                            </div>
-                          </div>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
+
               </div>
 
               {/* 安全提示 */}

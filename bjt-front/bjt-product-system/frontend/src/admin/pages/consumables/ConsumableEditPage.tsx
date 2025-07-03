@@ -26,6 +26,7 @@ import { consumableService, ConsumableFormData } from '../../services/admin-cons
 import adminProductLineService from '../../services/admin-product-line.service';
 import { useAdminI18n } from '../../i18n/hooks/useAdminI18n';
 import adminDictionaryService from '../../services/admin-dictionary.service';
+import { adminCacheDebugger } from '../../utils/cacheDebugger';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -89,11 +90,20 @@ const ConsumableEditPage: React.FC = () => {
     try {
       console.log('[ConsumableEditPage] 获取耗材上下文数据', { productLineId, model });
       
+      // 🔧 修复：先清空现有选项，防止缓存污染
+      setConsumablePartOptions([]);
+      setConsumableSpecOptions([]);
+      setConsumableSpecImperialOptions([]);
+      setConsumableBrandOptions([]);
+      setConsumableMaterialOptions([]);
+      
       const queryParams: any = {
         page: 1,
         per_page: 100,
         product_line_id: productLineId,
-        status: 'publish'
+        status: 'publish',
+        _t: Date.now(), // 🔧 添加时间戳防缓存
+        _browser: navigator.userAgent.slice(0, 20) // 🔧 添加浏览器标识
       };
       
       if (model) {
@@ -177,11 +187,21 @@ const ConsumableEditPage: React.FC = () => {
       const token = localStorage.getItem('admin_token');
       const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/wp-json/bjt/v1';
       
-      const response = await fetch(`${baseUrl}/consumables/filter-options?lang=zh&product_line_id=${productLineId}`, {
+      // 🔧 修复：添加防缓存参数和头信息，解决浏览器差异问题
+      const timestamp = Date.now();
+      const browserInfo = navigator.userAgent.slice(0, 20);
+      const cacheKey = `${productLineId}_${timestamp}`;
+      
+      const response = await fetch(`${baseUrl}/consumables/filter-options?lang=zh&product_line_id=${productLineId}&_t=${timestamp}&_browser=${encodeURIComponent(browserInfo)}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate', // 强制禁用缓存
+          'Pragma': 'no-cache', // HTTP/1.0 缓存控制
+          'Expires': '0', // 立即过期
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-Cache-Buster': cacheKey,
           ...(token && { 'Authorization': `Bearer ${token}` })
         }
       });
@@ -218,6 +238,9 @@ const ConsumableEditPage: React.FC = () => {
           配件型号数: accessoryModels.length
         });
         
+        // 🔧 调试：记录适配机型数据加载
+        adminCacheDebugger.logDropdownLoad('适配机型', modelOptions.length, 'api');
+        
         setCompatibleModelOptions(modelOptions);
       } else {
         console.warn('[ConsumableEditPage] 筛选选项API返回空数据，使用备用选项');
@@ -234,6 +257,9 @@ const ConsumableEditPage: React.FC = () => {
           { value: 'ACC-001', label: 'ACC-001 (配件)' },
         ];
         
+        // 🔧 调试：记录适配机型数据加载（fallback）
+        adminCacheDebugger.logDropdownLoad('适配机型', fallbackOptions.length, 'fallback');
+        
         setCompatibleModelOptions(fallbackOptions);
       }
     } catch (error) {
@@ -246,6 +272,10 @@ const ConsumableEditPage: React.FC = () => {
         { value: 'LA-F2', label: 'LA-F2 (主机)' },
         { value: 'LA-E4S(paper)', label: 'LA-E4S(paper) (配件)' },
       ];
+      
+      // 🔧 调试：记录适配机型数据加载（错误fallback）
+      adminCacheDebugger.logDropdownLoad('适配机型', fallbackOptions.length, 'fallback');
+      
       setCompatibleModelOptions(fallbackOptions);
     } finally {
       setCompatibleModelLoading(false);
@@ -257,12 +287,15 @@ const ConsumableEditPage: React.FC = () => {
     console.log('[ConsumableEditPage] 产品线变化', { productLineId });
     setSelectedProductLineId(productLineId);
     
-    // 清空相关字段
+    // 🔧 修复：强制清空相关字段，防止缓存残留
     form.setFieldValue('model', '');
     form.setFieldValue('part_number', '');
     form.setFieldValue('app_model', []);  // 清空适配机型为空数组
+    form.setFieldValue('spec', '');
+    form.setFieldValue('brand', '');
+    form.setFieldValue('material', '');
     
-    // 清空所有智能提示选项
+    // 🔧 修复：立即清空所有智能提示选项，防止显示旧数据
     setConsumablePartOptions([]);
     setConsumableSpecOptions([]);
     setConsumableSpecImperialOptions([]);
@@ -270,10 +303,12 @@ const ConsumableEditPage: React.FC = () => {
     setConsumableMaterialOptions([]);
     setCompatibleModelOptions([]);  // 清空适配机型选项
     
-    // 加载产品线级别的数据
-    fetchConsumableContextData(productLineId);
-    // 加载适配机型数据
-    fetchCompatibleModels(productLineId);
+    // 🔧 修复：延迟加载新数据，确保状态完全清空
+    setTimeout(() => {
+      console.log('[ConsumableEditPage] 延迟加载产品线数据，防止缓存混淆');
+      fetchConsumableContextData(productLineId);
+      fetchCompatibleModels(productLineId);
+    }, 100);
   }, [fetchConsumableContextData, fetchCompatibleModels, form]);
 
   // 使用useCallback定义handleSpecChange函数
@@ -298,6 +333,9 @@ const ConsumableEditPage: React.FC = () => {
       setBagTypeLoading(true);
       console.log('[ConsumableEditPage] 获取袋型数据');
       
+      // 🔧 修复：清除可能的缓存状态
+      setBagTypeOptions([]);
+      
       const response = await adminDictionaryService.general.getBagTypes('zh');
       console.log('[ConsumableEditPage] 袋型数据响应:', response);
       
@@ -307,18 +345,26 @@ const ConsumableEditPage: React.FC = () => {
         name: `${item.code} - ${item.name_en || item.name || item.code}`
       }));
       
+      // 🔧 调试：记录袋型数据加载
+      adminCacheDebugger.logDropdownLoad('袋型', bagTypeOptions.length, 'api');
+      
       setBagTypeOptions(bagTypeOptions);
     } catch (error) {
       console.error('[ConsumableEditPage] 获取袋型数据失败:', error);
       // 降级到硬编码选项 - 使用形状表的code字段和英文名称
-      setBagTypeOptions([
+      const fallbackOptions = [
         { code: 'MEX', name: 'MEX - Air Pillow' },
         { code: 'MEY', name: 'MEY - Precut Air Pillow' },
         { code: 'MFB', name: 'MFB - Bubble' },
         { code: 'MFC', name: 'MFC - Tube' },
         { code: 'MFF', name: 'MFF - Bubble' },
         { code: 'MEX_PAPER', name: 'MEX_PAPER - Paper Air Pillow' }
-      ]);
+      ];
+      
+      // 🔧 调试：记录袋型数据加载（fallback）
+      adminCacheDebugger.logDropdownLoad('袋型', fallbackOptions.length, 'fallback');
+      
+      setBagTypeOptions(fallbackOptions);
     } finally {
       setBagTypeLoading(false);
     }
@@ -330,6 +376,9 @@ const ConsumableEditPage: React.FC = () => {
       setMaterialLoading(true);
       console.log('[ConsumableEditPage] 获取材料数据');
       
+      // 🔧 修复：清除可能的缓存状态
+      setMaterialOptions([]);
+      
       const response = await adminDictionaryService.general.getMaterials('zh');
       console.log('[ConsumableEditPage] 材料数据响应:', response);
       
@@ -339,11 +388,14 @@ const ConsumableEditPage: React.FC = () => {
         name: item.code // 直接显示code字段
       }));
       
+      // 🔧 调试：记录材料数据加载
+      adminCacheDebugger.logDropdownLoad('材料', materialOptions.length, 'api');
+      
       setMaterialOptions(materialOptions);
     } catch (error) {
       console.error('[ConsumableEditPage] 获取材料数据失败:', error);
       // 降级到硬编码选项 - 使用材料表的code字段
-      setMaterialOptions([
+      const fallbackOptions = [
         { code: '30% HDPE', name: '30% HDPE' },
         { code: '50% HDPE', name: '50% HDPE' },
         { code: 'HDPE', name: 'HDPE' },
@@ -351,7 +403,12 @@ const ConsumableEditPage: React.FC = () => {
         { code: 'LDPE', name: 'LDPE' },
         { code: 'PAPE', name: 'PAPE' },
         { code: 'PAPER', name: 'PAPER' }
-      ]);
+      ];
+      
+      // 🔧 调试：记录材料数据加载（fallback）
+      adminCacheDebugger.logDropdownLoad('材料', fallbackOptions.length, 'fallback');
+      
+      setMaterialOptions(fallbackOptions);
     } finally {
       setMaterialLoading(false);
     }
@@ -444,11 +501,42 @@ const ConsumableEditPage: React.FC = () => {
     }
   }, [selectedProductLineId, fetchConsumableContextData, fetchCompatibleModels]);
 
-  // 初始化时获取袋型数据
+  // 🔧 修复：页面初始化时强制清理所有缓存
   useEffect(() => {
+    console.log('[ConsumableEditPage] 页面初始化，清理缓存并重新加载数据');
+    
+    // 清理所有下拉框选项
+    setBagTypeOptions([]);
+    setMaterialOptions([]);
+    setCompatibleModelOptions([]);
+    setConsumablePartOptions([]);
+    setConsumableSpecOptions([]);
+    setConsumableSpecImperialOptions([]);
+    setConsumableBrandOptions([]);
+    setConsumableMaterialOptions([]);
+    
+    // 重新获取数据
     fetchBagTypes();
     fetchMaterials();
   }, [fetchBagTypes, fetchMaterials]);
+  
+  // 🔧 修复：浏览器可见性变化时重新加载数据
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('[ConsumableEditPage] 页面重新可见，重新加载数据防止缓存问题');
+        fetchBagTypes();
+        fetchMaterials();
+        if (selectedProductLineId) {
+          fetchCompatibleModels(selectedProductLineId);
+          fetchConsumableContextData(selectedProductLineId);
+        }
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [fetchBagTypes, fetchMaterials, fetchCompatibleModels, fetchConsumableContextData, selectedProductLineId]);
 
   const handleSubmit = async (values: any) => {
     try {

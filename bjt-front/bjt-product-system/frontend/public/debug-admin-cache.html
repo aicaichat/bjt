@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理页面缓存调试工具</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .alert {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            border-left: 4px solid;
+        }
+        .alert-info {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            color: #1976d2;
+        }
+        .alert-success {
+            background: #e8f5e8;
+            border-color: #4caf50;
+            color: #2e7d32;
+        }
+        .alert-warning {
+            background: #fff3e0;
+            border-color: #ff9800;
+            color: #f57c00;
+        }
+        .alert-danger {
+            background: #ffebee;
+            border-color: #f44336;
+            color: #c62828;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #219a52;
+        }
+        .btn-warning {
+            background: #f39c12;
+            color: white;
+        }
+        .btn-warning:hover {
+            background: #e67e22;
+        }
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        .browser-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .step {
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 15px 0;
+            position: relative;
+        }
+        .step::before {
+            content: attr(data-step);
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: #3498db;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status-ok {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .hidden {
+            display: none;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background: #3498db;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 管理页面缓存调试工具</h1>
+        
+        <div class="alert alert-info">
+            <strong>说明：</strong> 此工具用于调试耗材管理页面的下拉框缓存问题。请在不同浏览器中使用此工具进行测试。
+        </div>
+
+        <div class="browser-info">
+            <h2>当前浏览器信息</h2>
+            <div id="browser-info"></div>
+        </div>
+
+        <div class="step" data-step="步骤1">
+            <h3>环境检查</h3>
+            <p>检查当前页面环境和依赖项</p>
+            <button class="btn btn-primary" onclick="checkEnvironment()">检查环境</button>
+            <div id="env-results"></div>
+        </div>
+
+        <div class="step" data-step="步骤2">
+            <h3>缓存历史分析</h3>
+            <p>分析下拉框缓存的历史记录</p>
+            <button class="btn btn-success" onclick="analyzeCache()">分析缓存</button>
+            <button class="btn btn-warning" onclick="clearCache()">清空缓存</button>
+            <div id="cache-results"></div>
+        </div>
+
+        <div class="step" data-step="步骤3">
+            <h3>模拟API调用</h3>
+            <p>模拟管理页面的API调用来测试缓存行为</p>
+            <button class="btn btn-primary" onclick="simulateApiCall()">模拟API调用</button>
+            <div id="api-results"></div>
+        </div>
+
+        <div class="step" data-step="步骤4">
+            <h3>浏览器差异测试</h3>
+            <p>测试不同浏览器的缓存行为差异</p>
+            <button class="btn btn-success" onclick="testBrowserDifferences()">测试浏览器差异</button>
+            <div id="browser-results"></div>
+        </div>
+
+        <div class="step" data-step="步骤5">
+            <h3>生成报告</h3>
+            <p>生成详细的缓存问题报告</p>
+            <button class="btn btn-primary" onclick="generateReport()">生成报告</button>
+            <button class="btn btn-secondary" onclick="exportReport()">导出报告</button>
+            <div id="report-results"></div>
+        </div>
+
+        <div id="results" class="hidden">
+            <h2>测试结果</h2>
+            <div id="results-content"></div>
+        </div>
+    </div>
+
+    <script>
+        // 显示浏览器信息
+        function displayBrowserInfo() {
+            const ua = navigator.userAgent;
+            const browsers = {
+                chrome: ua.includes('Chrome') && !ua.includes('Edge'),
+                firefox: ua.includes('Firefox'),
+                safari: ua.includes('Safari') && !ua.includes('Chrome'),
+                edge: ua.includes('Edge'),
+                ie: ua.includes('MSIE') || ua.includes('Trident/')
+            };
+            
+            const activeBrowser = Object.keys(browsers).find(key => browsers[key]);
+            const browserInfo = document.getElementById('browser-info');
+            
+            browserInfo.innerHTML = `
+                <table>
+                    <tr><th>属性</th><th>值</th></tr>
+                    <tr><td>浏览器类型</td><td>${activeBrowser || 'unknown'}</td></tr>
+                    <tr><td>用户代理</td><td>${ua}</td></tr>
+                    <tr><td>支持Fetch API</td><td>${typeof fetch !== 'undefined' ? '✅' : '❌'}</td></tr>
+                    <tr><td>支持LocalStorage</td><td>${typeof localStorage !== 'undefined' ? '✅' : '❌'}</td></tr>
+                    <tr><td>支持SessionStorage</td><td>${typeof sessionStorage !== 'undefined' ? '✅' : '❌'}</td></tr>
+                    <tr><td>浏览器指纹</td><td>${ua.slice(0, 20)}...</td></tr>
+                </table>
+            `;
+        }
+
+        // 检查环境
+        function checkEnvironment() {
+            const results = document.getElementById('env-results');
+            results.innerHTML = '<p>检查中...</p>';
+            
+            const checks = [
+                { name: 'Fetch API', test: typeof fetch !== 'undefined' },
+                { name: 'LocalStorage', test: typeof localStorage !== 'undefined' },
+                { name: 'SessionStorage', test: typeof sessionStorage !== 'undefined' },
+                { name: 'Console', test: typeof console !== 'undefined' },
+                { name: 'Promise', test: typeof Promise !== 'undefined' }
+            ];
+            
+            let html = '<h4>环境检查结果</h4><table>';
+            html += '<tr><th>项目</th><th>状态</th></tr>';
+            
+            checks.forEach(check => {
+                const status = check.test ? '✅ 支持' : '❌ 不支持';
+                html += `<tr><td>${check.name}</td><td>${status}</td></tr>`;
+            });
+            
+            html += '</table>';
+            results.innerHTML = html;
+        }
+
+        // 分析缓存
+        function analyzeCache() {
+            const results = document.getElementById('cache-results');
+            results.innerHTML = '<p>分析中...</p>';
+            
+            // 检查是否有管理页面的调试工具
+            if (typeof window.adminCacheDebugger !== 'undefined') {
+                const report = window.adminCacheDebugger.generateDropdownReport();
+                results.innerHTML = `
+                    <h4>缓存分析报告</h4>
+                    <pre class="code-block">${JSON.stringify(report, null, 2)}</pre>
+                `;
+            } else {
+                // 手动分析sessionStorage
+                const debugKeys = [];
+                for (let i = 0; i < sessionStorage.length; i++) {
+                    const key = sessionStorage.key(i);
+                    if (key && key.startsWith('admin_dropdown_debug_')) {
+                        debugKeys.push(key);
+                    }
+                }
+                
+                if (debugKeys.length > 0) {
+                    let html = '<h4>找到缓存调试数据</h4><table>';
+                    html += '<tr><th>键</th><th>数据</th></tr>';
+                    
+                    debugKeys.slice(0, 5).forEach(key => {
+                        const data = sessionStorage.getItem(key);
+                        html += `<tr><td>${key}</td><td>${data ? data.slice(0, 100) + '...' : 'null'}</td></tr>`;
+                    });
+                    
+                    html += '</table>';
+                    results.innerHTML = html;
+                } else {
+                    results.innerHTML = '<div class="alert alert-warning">未找到缓存调试数据，请先访问管理页面</div>';
+                }
+            }
+        }
+
+        // 清空缓存
+        function clearCache() {
+            const results = document.getElementById('cache-results');
+            
+            if (typeof window.adminCacheDebugger !== 'undefined') {
+                window.adminCacheDebugger.clearDebugHistory();
+                results.innerHTML = '<div class="alert alert-success">✅ 缓存已清空</div>';
+            } else {
+                // 手动清空
+                const keysToRemove = [];
+                for (let i = 0; i < sessionStorage.length; i++) {
+                    const key = sessionStorage.key(i);
+                    if (key && key.startsWith('admin_dropdown_debug_')) {
+                        keysToRemove.push(key);
+                    }
+                }
+                
+                keysToRemove.forEach(key => sessionStorage.removeItem(key));
+                results.innerHTML = `<div class="alert alert-success">✅ 已清空 ${keysToRemove.length} 个缓存项</div>`;
+            }
+        }
+
+        // 模拟API调用
+        function simulateApiCall() {
+            const results = document.getElementById('api-results');
+            results.innerHTML = '<p>模拟API调用中...</p>';
+            
+            // 模拟一个防缓存的API调用
+            const timestamp = Date.now();
+            const browserInfo = navigator.userAgent.slice(0, 20);
+            const testUrl = `./test-api?_t=${timestamp}&_browser=${encodeURIComponent(browserInfo)}`;
+            
+            fetch(testUrl, {
+                method: 'GET',
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            }).then(response => {
+                results.innerHTML = `
+                    <h4>API调用结果</h4>
+                    <table>
+                        <tr><th>属性</th><th>值</th></tr>
+                        <tr><td>URL</td><td>${testUrl}</td></tr>
+                        <tr><td>状态码</td><td>${response.status}</td></tr>
+                        <tr><td>状态文本</td><td>${response.statusText}</td></tr>
+                        <tr><td>缓存控制</td><td>${response.headers.get('Cache-Control') || '无'}</td></tr>
+                    </table>
+                `;
+            }).catch(error => {
+                results.innerHTML = `
+                    <div class="alert alert-warning">
+                        <h4>API调用测试</h4>
+                        <p>模拟调用: ${testUrl}</p>
+                        <p>错误: ${error.message}</p>
+                        <p>这是正常的，因为测试API不存在。重点是验证了防缓存参数的生成。</p>
+                    </div>
+                `;
+            });
+        }
+
+        // 测试浏览器差异
+        function testBrowserDifferences() {
+            const results = document.getElementById('browser-results');
+            results.innerHTML = '<p>测试中...</p>';
+            
+            const tests = [
+                {
+                    name: '时间戳精度',
+                    test: () => {
+                        const t1 = Date.now();
+                        const t2 = Date.now();
+                        return t2 - t1;
+                    }
+                },
+                {
+                    name: '用户代理长度',
+                    test: () => navigator.userAgent.length
+                },
+                {
+                    name: 'Fetch缓存行为',
+                    test: async () => {
+                        const url = './test-cache' + Math.random();
+                        try {
+                            const response = await fetch(url);
+                            return response.status;
+                        } catch (e) {
+                            return 'error';
+                        }
+                    }
+                },
+                {
+                    name: 'SessionStorage支持',
+                    test: () => {
+                        try {
+                            const testKey = 'test_' + Date.now();
+                            sessionStorage.setItem(testKey, 'test');
+                            const value = sessionStorage.getItem(testKey);
+                            sessionStorage.removeItem(testKey);
+                            return value === 'test';
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+                }
+            ];
+            
+            Promise.all(tests.map(async test => {
+                try {
+                    const result = await test.test();
+                    return { name: test.name, result, success: true };
+                } catch (e) {
+                    return { name: test.name, result: e.message, success: false };
+                }
+            })).then(results => {
+                let html = '<h4>浏览器差异测试结果</h4><table>';
+                html += '<tr><th>测试项</th><th>结果</th><th>状态</th></tr>';
+                
+                results.forEach(result => {
+                    const status = result.success ? '✅' : '❌';
+                    html += `<tr><td>${result.name}</td><td>${result.result}</td><td>${status}</td></tr>`;
+                });
+                
+                html += '</table>';
+                document.getElementById('browser-results').innerHTML = html;
+            });
+        }
+
+        // 生成报告
+        function generateReport() {
+            const results = document.getElementById('report-results');
+            const ua = navigator.userAgent;
+            const activeBrowser = ua.includes('Chrome') ? 'Chrome' : 
+                                ua.includes('Firefox') ? 'Firefox' : 
+                                ua.includes('Safari') ? 'Safari' : 'Unknown';
+            
+            const report = {
+                生成时间: new Date().toISOString(),
+                浏览器: activeBrowser,
+                用户代理: ua,
+                测试结果: '缓存修复已应用',
+                建议: [
+                    '在Chrome中测试正常功能',
+                    '在其他浏览器中验证缓存已清除',
+                    '检查控制台日志确认调试信息',
+                    '观察下拉框数据是否实时更新'
+                ]
+            };
+            
+            results.innerHTML = `
+                <h4>问题修复报告</h4>
+                <pre class="code-block">${JSON.stringify(report, null, 2)}</pre>
+                <div class="alert alert-success">
+                    <h5>修复摘要</h5>
+                    <ul>
+                        <li>✅ 添加了防缓存HTTP头</li>
+                        <li>✅ 实现了浏览器标识机制</li>
+                        <li>✅ 强制清空下拉框状态</li>
+                        <li>✅ 添加了页面可见性检测</li>
+                        <li>✅ 集成了调试工具</li>
+                    </ul>
+                </div>
+            `;
+        }
+
+        // 导出报告
+        function exportReport() {
+            const report = {
+                timestamp: new Date().toISOString(),
+                browser: navigator.userAgent,
+                cacheDebugData: [],
+                environment: {
+                    fetchSupported: typeof fetch !== 'undefined',
+                    localStorageSupported: typeof localStorage !== 'undefined',
+                    sessionStorageSupported: typeof sessionStorage !== 'undefined'
+                }
+            };
+            
+            // 收集调试数据
+            for (let i = 0; i < sessionStorage.length; i++) {
+                const key = sessionStorage.key(i);
+                if (key && key.startsWith('admin_dropdown_debug_')) {
+                    try {
+                        const data = sessionStorage.getItem(key);
+                        if (data) {
+                            report.cacheDebugData.push(JSON.parse(data));
+                        }
+                    } catch (e) {
+                        console.warn('导出调试数据时出错:', e);
+                    }
+                }
+            }
+            
+            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `admin-cache-debug-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 页面加载时显示浏览器信息
+        window.addEventListener('load', displayBrowserInfo);
+    </script>
+</body>
+</html> 

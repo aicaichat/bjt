@@ -3,6 +3,9 @@ import { Button, Input, Select, Spin, Alert, Card, Row, Col, Tag, Space, Tooltip
 import { SearchOutlined, ReloadOutlined, ShoppingCartOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
+
+// 🔥 新增：导航历史记录Hook
+import { useNavigationHistory } from '../../hooks/useNavigationHistory';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
 import { ASSETS } from '../../config/appConfig';
@@ -107,6 +110,9 @@ const SparePartsPage = () => {
   
   // 现代化UI组件hooks
   const { success, error: showErrorToast, warning, info } = useToastNotifications();
+  
+  // 🔥 新增：导航历史记录Hook - 自动记录用户访问此页面
+  useNavigationHistory();
   
   // 使用 useAuth hook 获取用户偏好单位制
   const { user, getPreferredUnit } = useAuth();

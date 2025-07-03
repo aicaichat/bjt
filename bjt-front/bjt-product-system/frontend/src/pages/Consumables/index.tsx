@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Spin, Button, Select, Tabs, Tag, Tooltip, Modal } from 'antd';
+
+// 🔥 新增：导航历史记录Hook
+import { useNavigationHistory } from '../../hooks/useNavigationHistory';
 import { ShoppingCartOutlined, InfoCircleOutlined, FilterOutlined, ReloadOutlined, EyeOutlined } from '@ant-design/icons';
 
 // 导入现代化UI组件
@@ -46,6 +49,7 @@ import {
 import { DEFAULT_REGION } from '../../config/env';
 import { REGIONS, getCurrencySymbol } from '../../config/constants';
 import { ASSETS } from '../../config/appConfig';
+import { cacheDebugger } from '../../utils/cacheDebugger';
 import './Consumables.css';
 
 // 在文件顶部的import部分添加
@@ -1490,6 +1494,7 @@ interface FilterCache {
   key: string;
   timestamp: number;
   result: SmartFilterOptionsType;
+  browserInfo?: string; // 🔧 修复：添加浏览器标识字段
 }
 
 // 工具函数
@@ -1548,6 +1553,19 @@ const SmartFilterSelect: React.FC<SmartFilterSelectProps> = ({
   totalCount // 新增参数
 }) => {
   const { t } = useTranslation(['consumables', 'common']);
+  
+  // 🔧 修复：组件加载时验证数据新鲜度
+  useEffect(() => {
+    const browserInfo = navigator.userAgent.slice(0, 20);
+    const dataFingerprint = `${options.length}_${JSON.stringify(options.slice(0, 3))}`;
+    
+    console.log('🔍 [下拉框验证]', {
+      title,
+      optionsCount: options.length,
+      browserInfo,
+      dataFingerprint: dataFingerprint.slice(0, 50) + '...'
+    });
+  }, [options, title]);
   
   // 计算"全部"选项的正确计数
   const getAllCount = () => {
@@ -1672,6 +1690,9 @@ const ConsumablesPage: React.FC = () => {
   // 现代化UI组件hooks
   const { success, error: showErrorToast, warning, info } = useToastNotifications();
   
+  // 🔥 新增：导航历史记录Hook - 自动记录用户访问此页面
+  useNavigationHistory();
+  
   // ===== 所有状态定义 - 按功能分组，确保调用顺序一致 =====
   
   // 1. 基础页面状态
@@ -1774,6 +1795,33 @@ const ConsumablesPage: React.FC = () => {
   const [filterCache, setFilterCache] = useState<Map<string, FilterCache>>(new Map());
   const cacheTimeoutRef = useRef<NodeJS.Timeout>();
   
+  // 🔧 修复：页面初始化时清空缓存，防止浏览器间的缓存问题
+  useEffect(() => {
+    console.log('🚀 [页面初始化] 清空筛选缓存，防止浏览器差异问题');
+    setFilterCache(new Map());
+  }, []);
+  
+  // 🔧 修复：当数据变化时强制清空缓存
+  useEffect(() => {
+    if (allConsumables.length > 0) {
+      console.log('📊 [数据更新] 清空筛选缓存，数据条数:', allConsumables.length);
+      setFilterCache(new Map());
+    }
+  }, [allConsumables.length]);
+  
+  // 🔧 修复：浏览器切换时清空缓存（处理浏览器差异）
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('👁️ [页面可见] 清空筛选缓存，防止浏览器差异');
+        setFilterCache(new Map());
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+  
   // ===== 动态计算变量（非状态） =====
   const currentDimensionImage = useMemo(() => {
     if (selectedShape === 'all') return shapePlaceholderImage;
@@ -1875,39 +1923,62 @@ const ConsumablesPage: React.FC = () => {
   // ===== 智能筛选选项计算的函数 =====
   const calculateSmartFilterOptions = useCallback(() => {
     if (!allConsumables?.length) {
-
       return;
     }
     
-
+    // 🔧 修复：生成更精确的缓存键，避免冲突
+    const cacheKey = [
+      selectedModel,
+      selectedShape, 
+      selectedMaterial,
+      selectedThickness,
+      selectedWeight,
+      selectedWidth,
+      selectedLength,
+      allConsumables.length, // 添加数据版本标识
+      Date.now().toString().slice(-6) // 添加时间戳防止长期缓存
+    ].join('|');
     
-    // 生成缓存键
-    const cacheKey = `${selectedModel}-${selectedShape}-${selectedMaterial}-${selectedThickness}-${selectedWeight}-${selectedWidth}-${selectedLength}`;
     const now = Date.now();
     
-        // 检查缓存（包含语言信息）
-    const cacheKeyWithLang = `${cacheKey}_${i18n.language}`;
+    // 🔧 修复：检查缓存（包含语言信息和浏览器标识）
+    const browserInfo = navigator.userAgent.slice(0, 20); // 简化的浏览器标识
+    const cacheKeyWithLang = `${cacheKey}_${i18n.language}_${browserInfo}`;
     const cached = filterCache.get(cacheKeyWithLang);
-    if (cached && (now - cached.timestamp) < 5000) { // 5秒缓存
+    
+    // 🔧 修复：缩短缓存时间，强制更新以避免浏览器差异
+    if (cached && (now - cached.timestamp) < 1000) { // 缩短到1秒缓存
+      console.log('🔄 [缓存命中]', cacheKeyWithLang);
       setSmartFilterOptions(cached.result);
       return;
     }
+    
+    // 🔧 修复：主动清理过期缓存，防止内存泄漏
+    const cleanupCache = () => {
+      setFilterCache(prev => {
+        const newCache = new Map(prev);
+        let cleanedCount = 0;
+        
+        for (const [key, value] of newCache.entries()) {
+          if (now - value.timestamp > 5000) { // 5秒后清理
+            newCache.delete(key);
+            cleanedCount++;
+          }
+        }
+        
+        if (cleanedCount > 0) {
+          console.log(`🧹 [缓存清理] 清理了 ${cleanedCount} 个过期缓存项`);
+        }
+        
+        return newCache;
+      });
+    };
     
     // 清理过期缓存
     if (cacheTimeoutRef.current) {
       clearTimeout(cacheTimeoutRef.current);
     }
-    cacheTimeoutRef.current = setTimeout(() => {
-      setFilterCache(prev => {
-        const newCache = new Map(prev);
-        for (const [key, value] of newCache.entries()) {
-          if (now - value.timestamp > 30000) { // 30秒后清理
-            newCache.delete(key);
-          }
-        }
-        return newCache;
-      });
-    }, 1000);
+    cacheTimeoutRef.current = setTimeout(cleanupCache, 1000);
     
     // 创建筛选条件快照
     const currentFilters: FilterState = {
@@ -2260,14 +2331,25 @@ const ConsumablesPage: React.FC = () => {
       bubbleDiameters: generateBubbleDiameterOptions()
     };
     
-    // 缓存结果（包含语言信息）
+    // 🔧 修复：缓存结果（包含语言信息和浏览器标识）
     setFilterCache(prev => {
       const newCache = new Map(prev);
+      
+      // 🔧 修复：限制缓存大小，防止内存过度占用
+      if (newCache.size > 50) {
+        const oldestKey = Array.from(newCache.keys())[0];
+        newCache.delete(oldestKey);
+        console.log('🧹 [缓存限制] 删除最旧的缓存项:', oldestKey);
+      }
+      
       newCache.set(cacheKeyWithLang, {
         key: cacheKeyWithLang,
         timestamp: now,
-        result: newSmartFilterOptions
+        result: newSmartFilterOptions,
+        browserInfo: navigator.userAgent.slice(0, 20) // 添加浏览器标识
       });
+      
+      console.log('💾 [缓存设置]', cacheKeyWithLang, '总缓存数:', newCache.size);
       return newCache;
     });
     
@@ -3882,6 +3964,6 @@ const ConsumablesPage: React.FC = () => {
       </Modal>
     </div>
   );
-}
-
+  }
+  
 export default ConsumablesPage; 

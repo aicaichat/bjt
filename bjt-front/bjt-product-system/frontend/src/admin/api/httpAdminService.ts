@@ -38,13 +38,32 @@ axiosAdminInstance.interceptors.request.use(
       config.headers['Content-Type'] = 'application/json';
     }
     
-    // 调试日志：显示实际发送的Authorization header
+    // 🔧 修复根本原因：为所有管理后台请求添加防缓存头
+    const timestamp = Date.now();
+    const browserInfo = navigator.userAgent.slice(0, 20);
+    
+    // 添加防缓存HTTP头 - 解决浏览器差异问题
+    config.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+    config.headers['Pragma'] = 'no-cache';  // HTTP/1.0 兼容
+    config.headers['Expires'] = '0';
+    config.headers['X-Requested-With'] = 'XMLHttpRequest';
+    config.headers['X-Cache-Buster'] = `${timestamp}_${browserInfo.slice(0, 10)}`;
+    
+    // 在URL中添加防缓存参数（GET请求）
+    if (config.method?.toLowerCase() === 'get') {
+      const separator = config.url?.includes('?') ? '&' : '?';
+      config.url += `${separator}_t=${timestamp}&_browser=${encodeURIComponent(browserInfo)}`;
+    }
+    
+    // 调试日志：显示实际发送的Authorization header和缓存控制
     console.log('[HttpAdminService] Request interceptor:', {
       method: config.method?.toUpperCase(),
       url: config.url,
       authorization: config.headers['Authorization'] ? 'Bearer ***' + (config.headers['Authorization'] as string).slice(-10) : 'None',
+      cacheControl: config.headers['Cache-Control'],
       hasAdminToken: !!localStorage.getItem('admin_token'),
-      hasAuthToken: !!localStorage.getItem('auth_token')
+      hasAuthToken: !!localStorage.getItem('auth_token'),
+      cacheBuster: config.headers['X-Cache-Buster']
     });
     
     return config;

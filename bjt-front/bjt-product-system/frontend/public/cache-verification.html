@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>适配机型缓存修复验证</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .alert {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            border-left: 4px solid;
+        }
+        .alert-success {
+            background: #e8f5e8;
+            border-color: #4caf50;
+            color: #2e7d32;
+        }
+        .alert-info {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            color: #1976d2;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            background: #3498db;
+            color: white;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background: #2980b9;
+        }
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+        }
+        .step {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        .browser-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .browser-item {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-ok { background: #4caf50; }
+        .status-warning { background: #ff9800; }
+        .status-error { background: #f44336; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 适配机型缓存修复验证</h1>
+        
+        <div class="alert alert-success">
+            <strong>修复完成！</strong> 管理后台的HTTP服务已添加全局防缓存机制，解决了浏览器间的缓存差异问题。
+        </div>
+
+        <div class="step">
+            <h3>📋 验证步骤</h3>
+            <ol>
+                <li><strong>清空浏览器缓存</strong> - 在各浏览器中清空缓存和站点数据</li>
+                <li><strong>访问耗材编辑页面</strong> - <a href="http://localhost:5173/#/admin/consumables/create" target="_blank">点击这里</a></li>
+                <li><strong>选择产品线</strong> - 选择"气垫机"或其他产品线</li>
+                <li><strong>观察适配机型下拉框</strong> - 检查数据是否一致</li>
+                <li><strong>开启开发者工具</strong> - 查看网络请求的防缓存头</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h3>🌐 浏览器测试清单</h3>
+            <div class="browser-list">
+                <div class="browser-item">
+                    <strong>Chrome</strong><br>
+                    <span class="status-indicator status-ok"></span>
+                    原本正常
+                </div>
+                <div class="browser-item">
+                    <strong>Firefox</strong><br>
+                    <span class="status-indicator status-warning"></span>
+                    需要验证
+                </div>
+                <div class="browser-item">
+                    <strong>Safari</strong><br>
+                    <span class="status-indicator status-warning"></span>
+                    需要验证
+                </div>
+                <div class="browser-item">
+                    <strong>Edge</strong><br>
+                    <span class="status-indicator status-warning"></span>
+                    需要验证
+                </div>
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>🔍 网络请求验证</h3>
+            <p>在开发者工具的网络面板中，查找 <code>/consumables/filter-options</code> 请求，确认包含以下防缓存头：</p>
+            <div class="code-block">
+Cache-Control: no-cache, no-store, must-revalidate
+Pragma: no-cache
+Expires: 0
+X-Requested-With: XMLHttpRequest
+X-Cache-Buster: [时间戳]_[浏览器标识]
+            </div>
+            <p>URL中应包含防缓存参数：</p>
+            <div class="code-block">
+?lang=zh&product_line_id=1&_t=[时间戳]&_browser=[浏览器标识]
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>✅ 预期结果</h3>
+            <div class="alert alert-info">
+                <ul>
+                    <li>所有浏览器显示相同的适配机型选项</li>
+                    <li>产品线切换时，适配机型立即更新</li>
+                    <li>页面刷新后获取最新数据</li>
+                    <li>网络请求包含防缓存头</li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="http://localhost:5173/#/admin/consumables/create" class="btn" target="_blank">
+                🚀 开始验证
+            </a>
+            <button class="btn" onclick="window.location.reload()">
+                🔄 刷新页面
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 自动检测浏览器信息
+        window.addEventListener('load', function() {
+            const ua = navigator.userAgent;
+            const browser = ua.includes('Chrome') ? 'Chrome' : 
+                          ua.includes('Firefox') ? 'Firefox' : 
+                          ua.includes('Safari') ? 'Safari' : 
+                          ua.includes('Edge') ? 'Edge' : 'Unknown';
+            
+            console.log('🔍 当前浏览器:', browser);
+            console.log('🔍 用户代理:', ua);
+            console.log('🔍 浏览器指纹:', ua.slice(0, 20));
+            
+            // 在页面顶部显示当前浏览器
+            const browserInfo = document.createElement('div');
+            browserInfo.className = 'alert alert-info';
+            browserInfo.innerHTML = `<strong>当前浏览器:</strong> ${browser} | <strong>指纹:</strong> ${ua.slice(0, 20)}...`;
+            document.querySelector('.container').insertBefore(browserInfo, document.querySelector('h1').nextSibling);
+        });
+    </script>
+</body>
+</html> 

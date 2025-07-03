@@ -7,6 +7,9 @@ import { ShoppingCartOutlined, InfoCircleOutlined, PlusOutlined, ExclamationCirc
 import { useTranslation } from 'react-i18next';
 import MockServiceStatus from '../../components/MockServiceStatus';
 
+// 🔥 新增：导航历史记录Hook
+import { useNavigationHistory } from '../../hooks/useNavigationHistory';
+
 // 导入现代化UI组件
 import { 
   LoadingState, 
@@ -69,6 +72,9 @@ const MachinesPage: React.FC = () => {
   
   // 现代化UI组件hooks
   const { success, error: showErrorToast, warning, info } = useToastNotifications();
+  
+  // 🔥 新增：导航历史记录Hook - 自动记录用户访问此页面
+  useNavigationHistory();
   
   // 从URL参数获取category
   const category = searchParams.get('category') || '1';
