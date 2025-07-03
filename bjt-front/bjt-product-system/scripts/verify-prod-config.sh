@@ -4,17 +4,19 @@
 set -euo pipefail
 
 COMPOSE_FILE="docker/prod/docker-compose.prod.yml"
+# 指定 env 文件（若已复制为 .env，可自行调整）
+ENV_FILE=".env.production"
 
 # Helper to execute a command inside a service and print a title
 exec_in() {
   local service="$1"
   shift
   echo -e "\n====================== $service ======================"
-  docker compose -f "$COMPOSE_FILE" exec -T "$service" "$@"
+  docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T "$service" "$@"
 }
 
 # 获取 MySQL root 密码
-ROOT_PASS=$(grep -E "^MYSQL_ROOT_PASSWORD=" .env.production | cut -d'=' -f2-)
+ROOT_PASS=$(grep -E "^MYSQL_ROOT_PASSWORD=" "$ENV_FILE" | cut -d'=' -f2-)
 if [ -z "$ROOT_PASS" ]; then
   echo "[ERROR] 未在 .env.production 中找到 MYSQL_ROOT_PASSWORD，无法验证 MySQL 变量" >&2
   exit 1
