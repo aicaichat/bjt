@@ -168,14 +168,26 @@
       "width": "mm", 
       "thickness": "μm",
       "weight": "g/m²",
-      "roll": "m"
+      "roll": "m",
+      "model": "型号",
+      "app_model": "适用机型",
+      "id": "产品ID",
+      "shape": "袋型",
+      "spec": "规格描述",
+      "pcs_per_box": "单箱数量"
     },
     "imperial": {
       "length": "inch",
       "width": "inch",
       "thickness": "mil",
       "weight": "lb",
-      "roll": "ft"
+      "roll": "ft",
+      "model": "型号",
+      "app_model": "适用机型",
+      "id": "产品ID",
+      "shape": "袋型",
+      "spec": "规格描述",
+      "pcs_per_box": "单箱数量"
     },
     "roll": "卷",
     "pieces": "个",
@@ -292,10 +304,20 @@
     },
     "fieldsWithUnits": {
       "imperial": {
-        "model": "型号"
+        "model": "型号",
+        "app_model": "适用机型",
+        "id": "产品ID",
+        "shape": "袋型",
+        "spec": "规格描述",
+        "pcs_per_box": "单箱数量"
       },
       "metric": {
-        "model": "型号"
+        "model": "型号",
+        "app_model": "适用机型",
+        "id": "产品ID",
+        "shape": "袋型",
+        "spec": "规格描述",
+        "pcs_per_box": "单箱数量"
       }
     }
   },

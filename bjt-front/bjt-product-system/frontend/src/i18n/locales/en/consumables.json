@@ -292,10 +292,20 @@
     },
     "fieldsWithUnits": {
       "imperial": {
-        "model": "Model"
+        "model": "Model",
+        "app_model": "Compatible Model",
+        "id": "Product ID",
+        "shape": "Shape",
+        "spec": "Specifications",
+        "pcs_per_box": "Pieces per Box"
       },
       "metric": {
-        "model": "Model"
+        "model": "Model",
+        "app_model": "Compatible Model",
+        "id": "Product ID",
+        "shape": "Shape",
+        "spec": "Specifications",
+        "pcs_per_box": "Pieces per Box"
       }
     }
   },
