@@ -176,6 +176,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+    healthcheck:
+      disable: true
     networks:
       - bjt_network
     restart: "no"  # 只运行一次
