@@ -88,4 +88,14 @@ else
     echo "数据库已经初始化过（找到 $INIT_CHECK 个wp_bjt_product_lines表），跳过初始化步骤。"
 fi
 
-echo "🎉 BJT产品管理系统数据库准备就绪！" 
+echo "🎉 BJT产品管理系统数据库准备就绪！"
+
+# 创建完成标志文件
+touch /tmp/db-init-complete
+echo "✅ 数据库初始化完成标志已创建"
+
+# 保持容器运行状态，等待健康检查
+echo "等待健康检查确认..."
+while [ -f /tmp/db-init-complete ]; do
+    sleep 30
+done 
