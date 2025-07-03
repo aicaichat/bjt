@@ -8,6 +8,8 @@ services:
       dockerfile: docker/nginx/Dockerfile.prod
       args:
         - VITE_API_URL=/wp-json/bjt/v1
+    env_file:
+      - ../../.env.production
     ports:
       - "80:80"
       - "443:443"
@@ -50,6 +52,8 @@ services:
     build:
       context: ../../docker/wordpress
       dockerfile: Dockerfile.prod
+    env_file:
+      - ../../.env.production
     environment:
       WORDPRESS_DB_HOST: mysql
       WORDPRESS_DB_NAME: ${MYSQL_DATABASE}
@@ -113,6 +117,8 @@ services:
   # MySQL数据库
   mysql:
     image: mysql:8.0
+    env_file:
+      - ../../.env.production
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -153,6 +159,8 @@ services:
   # 数据库初始化服务
   db-init:
     image: mysql:8.0
+    env_file:
+      - ../../.env.production
     environment:
       MYSQL_HOST: mysql
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
@@ -175,6 +183,8 @@ services:
   # 数据库备份服务
   mysql-backup:
     image: alpine:3.18
+    env_file:
+      - ../../.env.production
     environment:
       MYSQL_HOST: mysql
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
