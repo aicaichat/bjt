@@ -16,8 +16,8 @@ services:
       - ../../backend:/var/www/html:ro
       - ../../plugins:/var/www/html/wp-content/plugins:ro
       - ../../frontend:/var/www/html/frontend:ro
-      # 前端热部署目录挂载
-      - ../../frontend_builds/prod:/usr/share/nginx/html
+      # 前端热部署目录挂载（修复：使用标准dist目录）
+      - ../../frontend/dist:/usr/share/nginx/html
       # 上传文件目录挂载 - 解决文件权限和访问问题
       - ../../frontend/public/uploads:/usr/share/nginx/html/uploads:rw
       - ../../frontend/public/uploads:/var/www/html/frontend/public/uploads:rw
