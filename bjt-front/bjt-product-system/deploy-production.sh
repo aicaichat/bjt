@@ -11,6 +11,9 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# 统一的 Docker Compose 命令（自动加载 .env 供变量替换）
+COMPOSE="docker compose --env-file .env -f docker/prod/docker-compose.prod.yml"
+
 # 打印带颜色的消息
 print_message() {
     echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')]${NC} $1"
@@ -95,7 +98,7 @@ backup_current_deployment() {
     mkdir -p "$backup_dir"
     
     # 备份数据库
-    if docker-compose -f docker/prod/docker-compose.prod.yml exec -T mysql mysqldump -u root -p${MYSQL_ROOT_PASSWORD} ${MYSQL_DATABASE} > "$backup_dir/database.sql"; then
+    if $COMPOSE exec -T mysql mysqldump -u root -p${MYSQL_ROOT_PASSWORD} ${MYSQL_DATABASE} > "$backup_dir/database.sql"; then
         print_message "数据库备份完成"
     else
         print_warning "数据库备份失败，继续部署..."
@@ -279,7 +282,7 @@ run_db_migration() {
 
     local sql="\n-- Consumables: add name_zh/name_en\nALTER TABLE wp_bjt_consumables\n  ADD COLUMN IF NOT EXISTS name_zh VARCHAR(255) NOT NULL DEFAULT '' COMMENT '中文名称' AFTER part_number,\n  ADD COLUMN IF NOT EXISTS name_en VARCHAR(255) NOT NULL DEFAULT '' COMMENT '英文名称' AFTER name_zh;\n\nUPDATE wp_bjt_consumables\n   SET name_zh = IF(name_zh='', title_zh, name_zh),\n       name_en = IF(name_en='', title_en, name_en);\n\n-- Accessories: add title_zh/title_en (back-compat columns)\nALTER TABLE wp_bjt_accessories\n  ADD COLUMN IF NOT EXISTS title_zh VARCHAR(255) NOT NULL DEFAULT '' COMMENT '中文标题' AFTER name_en,\n  ADD COLUMN IF NOT EXISTS title_en VARCHAR(255) NOT NULL DEFAULT '' COMMENT '英文标题' AFTER title_zh;\n\nUPDATE wp_bjt_accessories\n   SET title_zh = IF(title_zh='', name_zh, title_zh),\n       title_en = IF(title_en='', name_en, title_en);\n\n-- Orders: add currency/shipping/billing/payment_method columns\nALTER TABLE wp_bjt_orders\n  ADD COLUMN IF NOT EXISTS currency VARCHAR(10) NOT NULL DEFAULT 'CNY' COMMENT '货币代码' AFTER total_amount,\n  ADD COLUMN IF NOT EXISTS shipping_address TEXT NULL COMMENT '发货地址(JSON)' AFTER status,\n  ADD COLUMN IF NOT EXISTS billing_address TEXT NULL COMMENT '账单地址(JSON)' AFTER shipping_address,\n  ADD COLUMN IF NOT EXISTS payment_method VARCHAR(50) NULL COMMENT '支付方式' AFTER billing_address;\n\n-- Order Items: add item_type/item_id/item_name/currency columns\nALTER TABLE wp_bjt_order_items\n  ADD COLUMN IF NOT EXISTS item_type VARCHAR(50) NOT NULL DEFAULT 'product' COMMENT '条目类型' AFTER price,\n  ADD COLUMN IF NOT EXISTS item_id VARCHAR(100) NOT NULL COMMENT '料号或ID' AFTER item_type,\n  ADD COLUMN IF NOT EXISTS item_name VARCHAR(255) NULL COMMENT '显示名称' AFTER item_id,\n  ADD COLUMN IF NOT EXISTS currency VARCHAR(10) NOT NULL DEFAULT 'CNY' COMMENT '货币' AFTER item_name;\n"
 
-    if echo -e "$sql" | docker-compose -f docker/prod/docker-compose.prod.yml exec -T mysql mysql -u root -p${MYSQL_ROOT_PASSWORD} ${MYSQL_DATABASE}; then
+    if echo -e "$sql" | $COMPOSE exec -T mysql mysql -u root -p${MYSQL_ROOT_PASSWORD} ${MYSQL_DATABASE}; then
         print_message "数据库 schema 升级完成"
     else
         print_warning "数据库 schema 升级失败，请手动检查"
@@ -292,15 +295,15 @@ deploy() {
     
     # 停止当前服务
     print_message "停止当前服务..."
-    docker-compose -f docker/prod/docker-compose.prod.yml down
+    $COMPOSE down
     
     # 构建新镜像
     print_message "构建 Docker 镜像..."
-    docker-compose -f docker/prod/docker-compose.prod.yml build --no-cache
+    $COMPOSE build --no-cache
     
     # 启动服务
     print_message "启动服务..."
-    docker-compose -f docker/prod/docker-compose.prod.yml up -d
+    $COMPOSE up -d
     
     # 等待服务启动
     print_message "等待服务启动..."
@@ -308,7 +311,7 @@ deploy() {
     
     # 检查服务状态
     print_message "检查服务状态..."
-    docker-compose -f docker/prod/docker-compose.prod.yml ps
+    $COMPOSE ps
 }
 
 # 健康检查
@@ -394,7 +397,7 @@ main() {
         print_message "访问地址: https://${DOMAIN_NAME}"
     else
         print_error "部署完成但健康检查失败，请检查日志"
-        docker-compose -f docker/prod/docker-compose.prod.yml logs --tail=50
+        $COMPOSE logs --tail=50
         exit 1
     fi
 }
