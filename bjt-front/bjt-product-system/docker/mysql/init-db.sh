@@ -90,12 +90,6 @@ fi
 
 echo "🎉 BJT产品管理系统数据库准备就绪！"
 
-# 创建完成标志文件
-touch /tmp/db-init-complete
-echo "✅ 数据库初始化完成标志已创建"
-
-# 保持容器运行状态，等待健康检查
-echo "等待健康检查确认..."
-while [ -f /tmp/db-init-complete ]; do
-    sleep 30
-done 
+# 数据库初始化完成，容器正常退出
+echo "✅ 数据库初始化完成，容器即将退出"
+exit 0 
