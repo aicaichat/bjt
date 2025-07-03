@@ -163,10 +163,6 @@ services:
       - ../../.env.production
     environment:
       MYSQL_HOST: mysql
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - ../../docker/mysql/init-db.sh:/usr/local/bin/init-db.sh:ro
       - ../../docker/dev/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -187,8 +183,6 @@ services:
       - ../../.env.production
     environment:
       MYSQL_HOST: mysql
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
       BACKUP_SCHEDULE: ${BACKUP_SCHEDULE:-0 2 * * *}
     volumes:
       - mysql_backup:/backup
