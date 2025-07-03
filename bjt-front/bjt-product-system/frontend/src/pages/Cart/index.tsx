@@ -186,29 +186,7 @@ const CartPage: React.FC = () => {
                 {currentLanguage === 'zh' ? '开始购物' : 'Start Shopping'}
               </button>
             
-            {/* 🔧 新增：快速产品分类选择 */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <button
-                onClick={() => navigate(ROUTES.CONSUMABLES)}
-                className="px-4 py-2 text-sm text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
-              >
-                🧪 {currentLanguage === 'zh' ? '耗材' : 'Consumables'}
-              </button>
-              
-              <button
-                onClick={() => navigate(ROUTES.SPARE_PARTS)}
-                className="px-4 py-2 text-sm text-green-600 border border-green-300 rounded-lg hover:bg-green-50 transition-colors flex items-center justify-center gap-2"
-              >
-                🔧 {currentLanguage === 'zh' ? '备件' : 'Parts'}
-              </button>
-              
-              <button
-                onClick={() => navigate(ROUTES.MACHINES)}
-                className="px-4 py-2 text-sm text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50 transition-colors flex items-center justify-center gap-2"
-              >
-                ⚙️ {currentLanguage === 'zh' ? '设备' : 'Machines'}
-              </button>
-            </div>
+            {/* 省略快速分类按钮 -- 简化空购物车 UI */}
           </div>
         </div>
       ) : (
