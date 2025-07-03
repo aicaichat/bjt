@@ -104,11 +104,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2.0'
-          memory: 1G
+          cpus: '1.5'
+          memory: 3G
         reservations:
-          cpus: '1.0'
-          memory: 512M
+          cpus: '0.7'
+          memory: 1.5G
     networks:
       - bjt_network
     logging:
@@ -136,7 +136,7 @@ services:
       - ../../docker/dev/mysql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
       - ../../generated_sql_imports/_设备.sql:/docker-entrypoint-initdb.d/02-devices.sql:ro
       - ../../generated_sql_imports/_耗材.sql:/docker-entrypoint-initdb.d/03-consumables.sql:ro
-    command: --default-authentication-plugin=mysql_native_password --innodb-buffer-pool-size=512M
+    command: --default-authentication-plugin=mysql_native_password --innodb-buffer-pool-size=6G
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 30s
@@ -146,11 +146,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2.0'
-          memory: 2G
+          cpus: '3.0'
+          memory: 8G
         reservations:
-          cpus: '1.0'
-          memory: 1G
+          cpus: '2.0'
+          memory: 4G
     networks:
       - bjt_network
     logging:

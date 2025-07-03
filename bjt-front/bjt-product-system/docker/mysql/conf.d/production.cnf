@@ -5,9 +5,12 @@ character-set-server=utf8mb4
 collation-server=utf8mb4_unicode_ci
 
 # 性能优化
-innodb_buffer_pool_size=512M
-innodb_log_file_size=256M
-innodb_flush_log_at_trx_commit=1
+innodb_buffer_pool_size=6G
+innodb_buffer_pool_instances=6
+innodb_io_capacity=1000
+innodb_log_buffer_size=64M
+innodb_log_file_size=1G
+innodb_flush_log_at_trx_commit=2
 innodb_file_per_table=1
 innodb_flush_method=O_DIRECT
 
@@ -43,6 +46,8 @@ max_binlog_size=100M
 # 安全配置
 local_infile=0
 skip_show_database
+skip_name_resolve
+performance_schema=OFF
 
 # 表缓存
 table_open_cache=2000
