@@ -2162,14 +2162,24 @@ const ConsumablesPage: React.FC = () => {
 
       console.log('🔧 [Shape筛选] 最终生成的形状选项:', shapeOptions);
       
-      // 🔥 验证：检查是否还有bubble重复
-      const bubbleOptions = shapeOptions.filter(opt => 
-        opt.id.toLowerCase().includes('bubble') || opt.name.toLowerCase().includes('bubble')
+      // 🔥 验证：检查是否存在 *相同 id* 的重复 bubble 选项，避免对不同类型 Bubble（MFB/MFC/MFF）误报
+      const bubbleOptions = shapeOptions.filter(opt =>
+        /bubble/i.test(opt.id) || /bubble/i.test(opt.name)
       );
-      if (bubbleOptions.length > 1) {
-        console.warn('⚠️ [Shape筛选] 发现多个bubble选项:', bubbleOptions);
-      } else {
-        console.log('✅ [Shape筛选] bubble选项数量正常:', bubbleOptions.length);
+
+      const seenIds = new Set<string>();
+      let hasDuplicateBubble = false;
+      bubbleOptions.forEach(opt => {
+        const key = opt.id.toLowerCase();
+        if (seenIds.has(key)) {
+          hasDuplicateBubble = true;
+        } else {
+          seenIds.add(key);
+        }
+      });
+
+      if (hasDuplicateBubble) {
+        console.warn('⚠️ [Shape筛选] 检测到重复 bubble 选项:', bubbleOptions);
       }
       
       return shapeOptions;
