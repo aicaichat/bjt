@@ -158,7 +158,7 @@ services:
 
   # 数据库初始化服务
   db-init:
-    image: mysql:8.0
+    image: alpine:3.18
     env_file:
       - ../../.env.production
     environment:
@@ -172,12 +172,10 @@ services:
       - ../../docker/dev/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
       - ../../generated_sql_imports/_设备.sql:/docker-entrypoint-initdb.d/_设备.sql:ro
       - ../../generated_sql_imports/_耗材.sql:/docker-entrypoint-initdb.d/_耗材.sql:ro
-    command: ["/usr/local/bin/init-db.sh"]
+    command: [/usr/local/bin/init-db.sh]
     depends_on:
       mysql:
         condition: service_healthy
-    healthcheck:
-      test: ["NONE"]
     networks:
       - bjt_network
     restart: "no"  # 只运行一次

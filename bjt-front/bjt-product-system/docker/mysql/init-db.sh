@@ -3,6 +3,12 @@
 
 set -e
 
+# 如果在 Alpine 基础镜像上运行，需要安装 mysql-client 与 bash
+if ! command -v mysql >/dev/null 2>&1; then
+  echo "安装 mysql-client..."
+  apk add --no-cache mysql-client bash
+fi
+
 echo "开始初始化BJT产品管理系统数据库..."
 
 # 等待MySQL服务完全启动
