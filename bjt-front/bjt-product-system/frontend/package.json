@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:proxy": "VITE_USE_PROXY=true vite",
-    "dev:direct": "VITE_API_URL=http://localhost:8080/wp-json/bjt/v1 vite",
+    "dev:auto": "../scripts/setup-env.sh --start",
+    "dev:docker": "../scripts/setup-env.sh --docker",
+    "dev:local": "../scripts/setup-env.sh --local",
     "build": "tsc && vite build",
     "build:skip-check": "vite build",
     "build:production": "vite build --mode production",

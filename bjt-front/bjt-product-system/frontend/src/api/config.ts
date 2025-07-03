@@ -1,23 +1,29 @@
 // API配置
 const isDevelopment = import.meta.env.DEV;
+const isProduction = import.meta.env.PROD;
 
 // 检查是否强制使用代理
 const useProxy = import.meta.env.VITE_USE_PROXY === 'true';
 
 // 基础URL配置
-// 优先级：环境变量 > 代理配置 > 默认值
+// 优先级：环境变量 > 环境检测 > 默认值
 export const API_BASE_URL = (() => {
-  // 如果设置了VITE_API_URL环境变量，直接使用
+  // 1. 如果设置了VITE_API_URL环境变量，直接使用
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL;
   }
   
-  // 开发环境且启用代理时使用相对路径
+  // 2. 生产环境：使用相对路径（由Nginx代理）
+  if (isProduction) {
+    return '/wp-json/bjt/v1';
+  }
+  
+  // 3. 开发环境且启用代理时使用相对路径
   if (isDevelopment && useProxy) {
     return '/wp-json/bjt/v1';
   }
   
-  // 默认使用完整URL
+  // 4. 默认：直接访问后端服务器
   return 'http://localhost:8080/wp-json/bjt/v1';
 })();
 

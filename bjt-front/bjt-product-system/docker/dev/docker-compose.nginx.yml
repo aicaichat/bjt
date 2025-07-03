@@ -18,6 +18,7 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
+      - DOCKER_ENV=true
       - VITE_API_URL=/wp-json/bjt/v1
       - VITE_USE_MOCK_DATA=false
       - VITE_USE_PROXY=true

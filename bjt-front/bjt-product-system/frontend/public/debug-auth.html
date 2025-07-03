@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BJT Auth Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        button { margin: 10px; padding: 10px; }
+        .output { background: #f5f5f5; padding: 10px; margin: 10px 0; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>BJT 认证调试工具</h1>
+    
+    <div>
+        <button onclick="clearAuth()">清理认证数据</button>
+        <button onclick="showAuth()">显示认证数据</button>
+        <button onclick="testLogin()">测试登录</button>
+        <button onclick="testCurrentUser()">测试当前用户</button>
+    </div>
+    
+    <div id="output" class="output"></div>
+
+    <script>
+        const API_BASE = '/wp-json/bjt/v1';
+        let currentToken = null;
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+            output.innerHTML += `<div class="${className}">[${new Date().toLocaleTimeString()}] ${message}</div>`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearAuth() {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user');
+            currentToken = null;
+            log('✅ 认证数据已清理', 'success');
+            showAuth();
+        }
+
+        function showAuth() {
+            const token = localStorage.getItem('auth_token');
+            const user = localStorage.getItem('user');
+            log(`📄 当前认证状态:`);
+            log(`Token: ${token ? '存在 (长度: ' + token.length + ')' : '无'}`);
+            log(`User: ${user ? '存在' : '无'}`);
+            if (user) {
+                try {
+                    const userData = JSON.parse(user);
+                    log(`用户名: ${userData.username}, 角色: ${userData.role}`);
+                } catch (e) {
+                    log(`❌ 用户数据解析失败: ${e.message}`, 'error');
+                }
+            }
+        }
+
+        async function testLogin() {
+            log('🔐 开始测试登录...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'password123'
+                    })
+                });
+
+                const rawText = await response.text();
+                log(`📄 响应状态: ${response.status} ${response.statusText}`);
+                log(`📄 原始响应: ${rawText.substring(0, 200)}...`);
+                
+                if (rawText && rawText.trim()) {
+                    try {
+                        const data = JSON.parse(rawText);
+                        if (data.success && data.data.token) {
+                            currentToken = data.data.token;
+                            localStorage.setItem('auth_token', currentToken);
+                            localStorage.setItem('user', JSON.stringify(data.data.user));
+                            log('✅ 登录成功!', 'success');
+                            log(`Token: ${currentToken.substring(0, 50)}...`);
+                        } else {
+                            log(`❌ 登录失败: ${data.message}`, 'error');
+                        }
+                    } catch (e) {
+                        log(`❌ JSON解析失败: ${e.message}`, 'error');
+                    }
+                } else {
+                    log('❌ 响应为空', 'error');
+                }
+            } catch (error) {
+                log(`❌ 登录请求失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCurrentUser() {
+            const token = currentToken || localStorage.getItem('auth_token');
+            
+            if (!token) {
+                log('❌ 没有找到token，请先登录', 'error');
+                return;
+            }
+
+            log('👤 开始测试当前用户...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/user/me`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const rawText = await response.text();
+                log(`📄 响应状态: ${response.status} ${response.statusText}`);
+                log(`📄 原始响应: ${rawText.substring(0, 200)}...`);
+                
+                if (rawText && rawText.trim()) {
+                    try {
+                        const data = JSON.parse(rawText);
+                        if (data.success && data.data) {
+                            log('✅ 获取当前用户成功!', 'success');
+                            log(`用户: ${data.data.username} (${data.data.role})`);
+                        } else {
+                            log(`❌ 获取用户失败: ${data.message}`, 'error');
+                        }
+                    } catch (e) {
+                        log(`❌ JSON解析失败: ${e.message}`, 'error');
+                    }
+                } else {
+                    log('❌ 响应为空', 'error');
+                }
+            } catch (error) {
+                log(`❌ 用户请求失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 页面加载时显示当前状态
+        showAuth();
+    </script>
+</body>
+</html> 

@@ -98,13 +98,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           } catch (error) {
             console.error('❌ [AuthProvider] Failed to get current user, token may be invalid:', error);
             
-            // 🔧 当获取用户信息失败时，检查是否是认证错误
+            // 🔧 当获取用户信息失败时，检查是否是认证错误或JSON解析错误
             if (error instanceof Error && (
               error.message.includes('401') || 
+              error.message.includes('403') ||
               error.message.includes('未授权') ||
-              error.message.includes('Unauthorized')
+              error.message.includes('Unauthorized') ||
+              error.message.includes('Unexpected end of JSON input') ||
+              error.message.includes('SyntaxError')
             )) {
-              console.warn('🔄 [AuthProvider] Token invalid, clearing auth state');
+              console.warn('🔄 [AuthProvider] Token invalid or response malformed, clearing auth state');
               await authService.logout();
               setUser(null);
             } else {

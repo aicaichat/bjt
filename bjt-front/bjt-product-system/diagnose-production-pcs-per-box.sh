@@ -44,10 +44,10 @@ echo "Consumables/index.tsx: $(stat -f "%Sm" frontend/src/pages/Consumables/inde
 # 检查 shouldShowField 函数
 echo ""
 print_info "2. 验证本地代码逻辑..."
-if grep -q "pcs_per_box.*Number.*> 0" frontend/src/hooks/useConsumableFieldDisplay.ts; then
+if grep -q "Number(value) > 0" frontend/src/hooks/useConsumableFieldDisplay.ts; then
     print_success "✅ 本地代码包含正确的 pcs_per_box 隐藏逻辑"
     echo "逻辑位置："
-    grep -n -A 2 "pcs_per_box.*特殊处理" frontend/src/hooks/useConsumableFieldDisplay.ts
+    grep -n -A 3 "pcs_per_box字段特殊处理" frontend/src/hooks/useConsumableFieldDisplay.ts
 else
     print_error "❌ 本地代码缺少 pcs_per_box 隐藏逻辑"
 fi

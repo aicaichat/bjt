@@ -118,9 +118,81 @@ build_frontend() {
     print_message "安装前端依赖..."
     npm ci
     
+    # 🔧 修复：从根目录.env.production提取前端配置
+    print_message "设置生产环境变量..."
+    
+    # 备份当前的.env.production文件
+    if [ -f ".env.production" ]; then
+        cp .env.production .env.production.backup.$(date +%s)
+    fi
+    
+    # 从根目录.env.production提取前端相关的环境变量
+    print_message "从根目录.env.production提取前端配置..."
+    
+    # 创建前端专用的.env.production文件
+    cat > .env.production << 'EOF'
+# 前端生产环境配置 - 从根目录.env.production自动提取
+NODE_ENV=production
+EOF
+    
+    # 从根目录.env.production提取所有VITE_开头的变量
+    if [ -f "../.env.production" ]; then
+        print_message "✅ 找到根目录.env.production文件"
+        # 提取VITE_开头的变量并追加到前端.env.production
+        grep -E "^VITE_" ../.env.production >> .env.production || true
+        print_message "✅ 已提取VITE_变量到前端配置"
+    else
+        print_warning "根目录.env.production文件不存在，使用默认前端配置"
+        # 使用默认的前端配置
+        cat >> .env.production << 'EOF'
+VITE_API_URL=/wp-json/bjt/v1
+VITE_USE_PROXY=false
+VITE_DEBUG=false
+VITE_LOG_LEVEL=error
+VITE_ENABLE_SMART_UNITS=true
+VITE_ENABLE_CART_ENHANCEMENT=true
+VITE_ENABLE_STANDARD_FIELDS=true
+VITE_ENABLE_MULTILANG=true
+VITE_USE_STANDARDIZED_FIELDS=true
+VITE_ENABLE_SMART_UNIT_SYSTEM=true
+VITE_USE_MOCK_CART=false
+VITE_ENABLE_COMPRESSION=true
+VITE_ENABLE_CACHE=true
+EOF
+    fi
+    
+    # 显示将要使用的环境变量
+    print_message "当前前端环境变量配置："
+    print_message "===================="
+    cat .env.production
+    print_message "===================="
+    
     # 构建生产版本（跳过TypeScript检查）
     print_message "构建前端生产版本..."
-    VITE_API_URL="/wp-json/bjt/v1" npm run build:skip-check
+    
+    # 🔥 修复：显式设置所有环境变量并构建
+    export NODE_ENV=production
+    
+    # 从.env.production文件加载所有环境变量
+    if [ -f ".env.production" ]; then
+        print_message "加载前端环境变量..."
+        # 安全地加载环境变量
+        while IFS= read -r line; do
+            # 跳过空行和注释
+            if [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]]; then
+                continue
+            fi
+            # 匹配键值对并导出
+            if [[ "$line" =~ ^([a-zA-Z_][a-zA-Z0-9_]*)=(.*)$ ]]; then
+                key="${BASH_REMATCH[1]}"
+                value="${BASH_REMATCH[2]}"
+                export "$key=$value"
+                print_message "✅ 设置环境变量: $key=$value"
+            fi
+        done < .env.production
+    fi
+    
+    npm run build:skip-check
     
     # 🔥 添加缓存破坏符到HTML文件
     if [ -f "dist/index.html" ]; then

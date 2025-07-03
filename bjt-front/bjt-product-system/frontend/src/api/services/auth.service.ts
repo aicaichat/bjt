@@ -224,12 +224,20 @@ class AuthService {
       // 安全解析可能为空的响应
       const rawText = await response.text();
       let data: any = {};
-      if (rawText) {
+      if (rawText && rawText.trim()) {
         try {
           data = JSON.parse(rawText);
         } catch (parseErr) {
           console.warn('[AuthService] 非JSON响应，可能未登录或令牌无效:', parseErr);
+          console.warn('[AuthService] 原始响应内容:', rawText);
+          // 如果是认证失败，抛出具体的错误
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText} - 响应格式错误`);
+          }
         }
+      } else if (!response.ok) {
+        // 如果响应为空且状态码不正常，抛出错误
+        throw new Error(`HTTP ${response.status}: ${response.statusText} - 空响应`);
       }
 
       if (!response.ok) {

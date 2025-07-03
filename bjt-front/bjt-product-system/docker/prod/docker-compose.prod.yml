@@ -14,12 +14,11 @@ services:
     volumes:
       - ../../nginx/ssl:/etc/nginx/ssl
       - ../../backend:/var/www/html:ro
-      - ../../frontend/build:/usr/share/nginx/html:ro
+      - ../../frontend/dist:/usr/share/nginx/html:ro
       - ../../plugins:/var/www/html/wp-content/plugins:ro
       - ../../frontend:/var/www/html/frontend:ro
-      # 上传文件目录挂载 - 解决文件权限和访问问题
-      - ../../frontend/public/uploads:/usr/share/nginx/html/uploads:rw
-      - ../../frontend/public/uploads:/var/www/html/frontend/public/uploads:rw
+      # 上传文件目录挂载 - 统一使用volume避免权限冲突
+      - uploads_data:/usr/share/nginx/html/uploads:rw
     depends_on:
       - wordpress
     environment:
@@ -29,6 +28,14 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
     networks:
       - bjt_network
     logging:
@@ -73,10 +80,8 @@ services:
       - ../../backend:/var/www/html
       - ../../plugins:/var/www/html/wp-content/plugins
       - ../../frontend:/var/www/html/frontend
-      - wordpress_uploads:/var/www/html/wp-content/uploads
+      - uploads_data:/var/www/html/wp-content/uploads
       - wordpress_cache:/var/www/html/wp-content/cache
-    env_file:
-      - ../../.env.production
     depends_on:
       mysql:
         condition: service_healthy
@@ -88,6 +93,14 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '1.0'
+          memory: 512M
     networks:
       - bjt_network
     logging:
@@ -109,20 +122,25 @@ services:
       - mysql_data:/var/lib/mysql
       - mysql_backup:/backup
       - ../../docker/mysql/conf.d:/etc/mysql/conf.d
-      # 挂载初始化SQL文件
+      # 挂载初始化SQL文件（生产环境，移除测试数据）
       - ../../docker/dev/mysql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
       - ../../generated_sql_imports/_设备.sql:/docker-entrypoint-initdb.d/02-devices.sql:ro
       - ../../generated_sql_imports/_耗材.sql:/docker-entrypoint-initdb.d/03-consumables.sql:ro
-      - ../../docker/dev/mysql/test_users.sql:/docker-entrypoint-initdb.d/04-test-users.sql:ro
-    command: --default-authentication-plugin=mysql_native_password --innodb-buffer-pool-size=256M
-    env_file:
-      - ../../.env.production
+    command: --default-authentication-plugin=mysql_native_password --innodb-buffer-pool-size=512M
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
     networks:
       - bjt_network
     logging:
@@ -146,7 +164,6 @@ services:
       - ../../docker/dev/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
       - ../../generated_sql_imports/_设备.sql:/docker-entrypoint-initdb.d/_设备.sql:ro
       - ../../generated_sql_imports/_耗材.sql:/docker-entrypoint-initdb.d/_耗材.sql:ro
-      - ../../docker/dev/mysql/test_users.sql:/docker-entrypoint-initdb.d/_test_users.sql:ro
     command: ["/usr/local/bin/init-db.sh"]
     depends_on:
       mysql:
@@ -188,7 +205,7 @@ volumes:
     driver: local
   mysql_backup:
     driver: local
-  wordpress_uploads:
+  uploads_data:
     driver: local
   wordpress_cache:
     driver: local 
