@@ -122,7 +122,7 @@ services:
     restart: unless-stopped
     # 确保挂载卷的目录权限正确，避免插件安装失败
     command: >
-      bash -c "chown -R www-data:www-data /var/www/html/wp-content/{uploads,upgrade,plugins,themes} && \
+      bash -c "chown -R www-data:www-data /var/www/html/wp-content && \
                exec apache2-foreground"
 
   # MySQL数据库
