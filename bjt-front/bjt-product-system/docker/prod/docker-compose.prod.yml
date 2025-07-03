@@ -82,6 +82,7 @@ services:
         define('FORCE_SSL_ADMIN', true);
         define('WP_CACHE', true);
         define('WP_REDIS_HOST', 'redis');
+        define('FS_METHOD', 'direct');
     volumes:
       - ../../backend:/var/www/html
       - ../../plugins:/var/www/html/wp-content/plugins
