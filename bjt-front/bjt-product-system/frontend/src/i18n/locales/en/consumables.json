@@ -287,20 +287,15 @@
     "outOfStock": "Out of Stock"
   },
   "consumable": {
+    "fields": {
+      "model": "Model"
+    },
     "fieldsWithUnits": {
-      "metric": {
-        "app_model": "Applicable Machine",
-        "id": "Product ID",
-        "shape": "Film Type",
-        "spec": "Spec.",
-        "pcs_per_box": "Qty per Carton"
-      },
       "imperial": {
-        "app_model": "Applicable Machine",
-        "id": "Product ID", 
-        "shape": "Film Type",
-        "spec": "Spec.",
-        "pcs_per_box": "Qty per Carton"
+        "model": "Model"
+      },
+      "metric": {
+        "model": "Model"
       }
     }
   },
