@@ -108,6 +108,9 @@ class BJT_Cart_Controller extends WP_REST_Controller {
      * Get cart content
      */
     public function get_cart($request) {
+        // 🔧 添加防缓存响应头 (第三层保障)
+        $this->add_no_cache_headers();
+        
         // 模拟购物车数据，实际应从数据库或session获取
         $cart = array(
             'items' => array(),
@@ -134,6 +137,9 @@ class BJT_Cart_Controller extends WP_REST_Controller {
      * Add item to cart
      */
     public function add_item($request) {
+        // 🔧 添加防缓存响应头 (第三层保障)
+        $this->add_no_cache_headers();
+        
         $product_type = $request->get_param('product_type');
         $part_number = $request->get_param('part_number');
         $quantity = (int) $request->get_param('quantity');
@@ -160,6 +166,9 @@ class BJT_Cart_Controller extends WP_REST_Controller {
      * Update cart item
      */
     public function update_item($request) {
+        // 🔧 添加防缓存响应头 (第三层保障)
+        $this->add_no_cache_headers();
+        
         $id = (int) $request->get_param('id');
         $quantity = (int) $request->get_param('quantity');
 
@@ -185,6 +194,9 @@ class BJT_Cart_Controller extends WP_REST_Controller {
      * Delete cart item
      */
     public function delete_item($request) {
+        // 🔧 添加防缓存响应头 (第三层保障)
+        $this->add_no_cache_headers();
+        
         $id = (int) $request->get_param('id');
 
         // 模拟删除购物车商品，实际应从数据库删除记录
@@ -199,9 +211,32 @@ class BJT_Cart_Controller extends WP_REST_Controller {
 
         return new WP_REST_Response(array(
             'success' => true,
-            'data' => array('id' => $id),
-            'message' => __('Cart item removed successfully.', 'bjt-product-admin')
+            'data' => array('item_id' => $id),
+            'message' => __('Cart item deleted successfully.', 'bjt-product-admin')
         ));
+    }
+
+    /**
+     * 🔧 添加防缓存响应头 (第三层保障)
+     * 
+     * 虽然CDN和前端已经处理了缓存问题，但后端主动设置防缓存头是最佳实践
+     */
+    private function add_no_cache_headers() {
+        if (!headers_sent()) {
+            // 🚫 完全禁用缓存
+            header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
+            header('Pragma: no-cache');
+            header('Expires: Thu, 01 Jan 1970 00:00:00 GMT');
+            
+            // 🔧 额外的防缓存头
+            header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
+            header('ETag: "' . md5(time() . rand()) . '"');
+            
+            // 🎯 针对特定代理服务器的防缓存
+            header('X-Accel-Expires: 0'); // Nginx
+            header('X-Cache-Control: no-cache'); // 某些代理
+            header('X-No-Cache: 1'); // 自定义标识
+        }
     }
 }
 

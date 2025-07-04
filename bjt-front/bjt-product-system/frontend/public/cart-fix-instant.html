@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛒 购物车功能急救修复</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.warning { background: #fff3cd; color: #856404; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn.primary { background: #007bff; color: white; }
+        .btn.primary:hover { background: #0056b3; }
+        .btn.danger { background: #dc3545; color: white; }
+        .btn.danger:hover { background: #c82333; }
+        .btn.success { background: #28a745; color: white; }
+        .btn.success:hover { background: #1e7e34; }
+        .progress {
+            background: #f0f0f0;
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 6px;
+            background: #007bff;
+            transition: width 0.3s ease;
+        }
+        .debug-info {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: left;
+            font-size: 12px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛒 购物车功能急救修复</h1>
+        
+        <div id="status" class="status info">
+            准备诊断购物车问题...
+        </div>
+        
+        <div class="progress">
+            <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+        </div>
+        
+        <button id="diagnosis-btn" class="btn primary" onclick="startDiagnosis()">
+            🔍 开始智能诊断
+        </button>
+        
+        <button id="quick-fix-btn" class="btn success" onclick="quickFix()" style="display:none;">
+            ⚡ 一键修复（推荐）
+        </button>
+        
+        <button id="manual-fix-btn" class="btn danger" onclick="manualFix()" style="display:none;">
+            🔧 手动深度修复
+        </button>
+        
+        <div id="debug-info" class="debug-info" style="display:none;">
+            <strong>诊断详情：</strong><br>
+            <div id="debug-content"></div>
+        </div>
+        
+        <div style="margin-top: 20px; font-size: 14px; color: #666;">
+            💡 <strong>问题说明：</strong><br>
+            本地正常、线上异常通常是localStorage缓存冲突导致
+        </div>
+    </div>
+
+    <script>
+        let diagnosisResult = null;
+        
+        // 🔍 智能诊断函数
+        async function startDiagnosis() {
+            updateStatus('🔍 正在诊断购物车问题...', 'info');
+            updateProgress(0);
+            
+            const problems = [];
+            
+            // 1. 检查认证状态
+            updateProgress(20);
+            const authIssues = checkAuthenticationIssues();
+            if (authIssues.length > 0) {
+                problems.push({
+                    type: 'auth',
+                    title: '认证状态异常',
+                    issues: authIssues,
+                    severity: 'high'
+                });
+            }
+            
+            // 2. 检查购物车缓存
+            updateProgress(40);
+            const cartIssues = checkCartCacheIssues();
+            if (cartIssues.length > 0) {
+                problems.push({
+                    type: 'cart_cache',
+                    title: '购物车缓存冲突',
+                    issues: cartIssues,
+                    severity: 'medium'
+                });
+            }
+            
+            // 3. 检查功能开关
+            updateProgress(60);
+            const flagIssues = checkFeatureFlagIssues();
+            if (flagIssues.length > 0) {
+                problems.push({
+                    type: 'feature_flags',
+                    title: '功能开关冲突',
+                    issues: flagIssues,
+                    severity: 'low'
+                });
+            }
+            
+            // 4. 检查API连通性
+            updateProgress(80);
+            const apiIssues = await checkAPIConnectivity();
+            if (apiIssues.length > 0) {
+                problems.push({
+                    type: 'api',
+                    title: 'API连接问题',
+                    issues: apiIssues,
+                    severity: 'high'
+                });
+            }
+            
+            updateProgress(100);
+            
+            diagnosisResult = { problems, timestamp: Date.now() };
+            
+            // 显示诊断结果
+            if (problems.length === 0) {
+                updateStatus('✅ 未发现明显问题，购物车应该正常工作', 'success');
+                showTestButton();
+            } else {
+                const highSeverity = problems.filter(p => p.severity === 'high').length;
+                const totalIssues = problems.reduce((sum, p) => sum + p.issues.length, 0);
+                
+                updateStatus(`⚠️ 发现 ${totalIssues} 个问题（${highSeverity} 个严重）`, 'warning');
+                showFixButtons();
+            }
+            
+            // 显示调试信息
+            showDebugInfo();
+        }
+        
+        // 🔧 检查认证状态
+        function checkAuthenticationIssues() {
+            const issues = [];
+            
+            // 检查重复的认证token
+            const authKeys = ['auth_token', 'jwt_token', 'user_data', 'auth_user', 'bjt_user_auth'];
+            const foundTokens = authKeys.filter(key => localStorage.getItem(key));
+            
+            if (foundTokens.length > 1) {
+                issues.push(`发现多个认证token: ${foundTokens.join(', ')}`);
+            }
+            
+            // 检查token有效性
+            const token = localStorage.getItem('auth_token') || localStorage.getItem('jwt_token');
+            if (token) {
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const expiry = new Date(payload.exp * 1000);
+                    const now = new Date();
+                    
+                    if (expiry < now) {
+                        issues.push(`认证token已过期: ${expiry.toLocaleString()}`);
+                    }
+                } catch (error) {
+                    issues.push('认证token格式无效');
+                }
+            } else {
+                issues.push('未找到有效的认证token');
+            }
+            
+            return issues;
+        }
+        
+        // 🔧 检查购物车缓存
+        function checkCartCacheIssues() {
+            const issues = [];
+            
+            const cartKeys = [
+                'bjt_mock_cart', 'cart_admin', 'cart_user',
+                'cart-api-cache', 'bjt-cart-cache', 'cart-data-cache'
+            ];
+            
+            const foundCarts = cartKeys.filter(key => localStorage.getItem(key));
+            
+            if (foundCarts.length > 1) {
+                issues.push(`发现多个购物车缓存: ${foundCarts.join(', ')}`);
+            }
+            
+            // 检查Mock数据干扰
+            const mockCart = localStorage.getItem('bjt_mock_cart');
+            if (mockCart) {
+                issues.push('存在Mock购物车数据，可能干扰真实API');
+            }
+            
+            return issues;
+        }
+        
+        // 🔧 检查功能开关
+        function checkFeatureFlagIssues() {
+            const issues = [];
+            
+            const flagKeys = ['cartBugFixFlags', 'feature_flags'];
+            const foundFlags = flagKeys.filter(key => localStorage.getItem(key));
+            
+            foundFlags.forEach(key => {
+                try {
+                    const flags = JSON.parse(localStorage.getItem(key));
+                    if (flags.USE_MOCK_CART === true) {
+                        issues.push(`${key}: 启用了Mock购物车模式`);
+                    }
+                } catch (error) {
+                    issues.push(`${key}: 功能开关格式错误`);
+                }
+            });
+            
+            return issues;
+        }
+        
+        // 🔧 检查API连通性
+        async function checkAPIConnectivity() {
+            const issues = [];
+            
+            try {
+                const response = await fetch('/wp-json/bjt/v1/cart', {
+                    method: 'HEAD',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('auth_token') || localStorage.getItem('jwt_token') || 'test'}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.status === 403) {
+                    issues.push('API返回403禁止访问 - 认证问题');
+                } else if (response.status === 401) {
+                    issues.push('API返回401未授权 - token无效');
+                } else if (!response.ok) {
+                    issues.push(`API返回${response.status} - 服务器错误`);
+                }
+            } catch (error) {
+                issues.push(`API连接失败: ${error.message}`);
+            }
+            
+            return issues;
+        }
+        
+        // ⚡ 一键修复
+        function quickFix() {
+            updateStatus('⚡ 正在执行一键修复...', 'info');
+            updateProgress(0);
+            
+            // 步骤1: 清理认证缓存
+            updateProgress(25);
+            clearAuthenticationCache();
+            
+            // 步骤2: 清理购物车缓存
+            updateProgress(50);
+            clearCartCache();
+            
+            // 步骤3: 重置功能开关
+            updateProgress(75);
+            resetFeatureFlags();
+            
+            // 步骤4: 设置修复标记
+            updateProgress(100);
+            setFixMarker();
+            
+            updateStatus('🎉 一键修复完成！请刷新页面测试购物车功能', 'success');
+            showRefreshButton();
+        }
+        
+        // 🔧 手动深度修复
+        function manualFix() {
+            updateStatus('🔧 正在执行深度修复...', 'info');
+            
+            // 完全清理localStorage
+            const keysToKeep = ['language', 'theme', 'bjt_cache_version'];
+            const allKeys = Object.keys(localStorage);
+            
+            allKeys.forEach(key => {
+                if (!keysToKeep.includes(key)) {
+                    localStorage.removeItem(key);
+                }
+            });
+            
+            // 清理sessionStorage
+            sessionStorage.clear();
+            
+            // 清理Cookies
+            document.cookie.split(";").forEach(cookie => {
+                const [name] = cookie.split("=");
+                document.cookie = `${name.trim()}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+            });
+            
+            // 设置新的缓存版本
+            localStorage.setItem('bjt_cache_version', 'v2.1_fixed');
+            localStorage.setItem('bjt_cart_fix_timestamp', Date.now().toString());
+            
+            updateStatus('🎉 深度修复完成！建议重新登录后测试', 'success');
+            showRefreshButton();
+        }
+        
+        // 🧹 清理认证缓存
+        function clearAuthenticationCache() {
+            const authKeys = ['auth_token', 'jwt_token', 'user_data', 'auth_user', 'bjt_user_auth'];
+            authKeys.forEach(key => localStorage.removeItem(key));
+        }
+        
+        // 🧹 清理购物车缓存
+        function clearCartCache() {
+            const cartKeys = [
+                'bjt_mock_cart', 'cart_admin', 'cart_user',
+                'cart-api-cache', 'bjt-cart-cache', 'cart-data-cache',
+                'cart-summary-cache', 'api_cache'
+            ];
+            cartKeys.forEach(key => {
+                localStorage.removeItem(key);
+                sessionStorage.removeItem(key);
+            });
+        }
+        
+        // 🧹 重置功能开关
+        function resetFeatureFlags() {
+            localStorage.removeItem('cartBugFixFlags');
+            localStorage.removeItem('feature_flags');
+            
+            // 设置正确的功能开关
+            localStorage.setItem('bjt_feature_flags', JSON.stringify({
+                USE_MOCK_CART: false,
+                CART_FIXED: true,
+                VERSION: '2.1'
+            }));
+        }
+        
+        // 🏷️ 设置修复标记
+        function setFixMarker() {
+            localStorage.setItem('bjt_cart_fix_applied', JSON.stringify({
+                timestamp: Date.now(),
+                version: '2.1',
+                issues_fixed: diagnosisResult?.problems?.length || 0
+            }));
+        }
+        
+        // 🔧 工具函数
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+        
+        function updateProgress(percent) {
+            document.getElementById('progress-bar').style.width = percent + '%';
+        }
+        
+        function showFixButtons() {
+            document.getElementById('quick-fix-btn').style.display = 'block';
+            document.getElementById('manual-fix-btn').style.display = 'block';
+        }
+        
+        function showTestButton() {
+            const btn = document.createElement('button');
+            btn.className = 'btn primary';
+            btn.textContent = '🔄 刷新页面测试';
+            btn.onclick = () => window.location.href = '/';
+            document.querySelector('.container').appendChild(btn);
+        }
+        
+        function showRefreshButton() {
+            const btn = document.createElement('button');
+            btn.className = 'btn success';
+            btn.textContent = '🔄 刷新页面 - 返回主站';
+            btn.onclick = () => window.location.href = '/';
+            document.querySelector('.container').appendChild(btn);
+        }
+        
+        function showDebugInfo() {
+            const debugDiv = document.getElementById('debug-info');
+            const debugContent = document.getElementById('debug-content');
+            
+            if (diagnosisResult && diagnosisResult.problems.length > 0) {
+                let content = '';
+                diagnosisResult.problems.forEach(problem => {
+                    content += `<strong>${problem.title} (${problem.severity}):</strong><br>`;
+                    problem.issues.forEach(issue => {
+                        content += `• ${issue}<br>`;
+                    });
+                    content += '<br>';
+                });
+                
+                debugContent.innerHTML = content;
+                debugDiv.style.display = 'block';
+            }
+        }
+        
+        // 🚀 页面加载时自动开始诊断
+        window.onload = function() {
+            setTimeout(startDiagnosis, 500);
+        };
+    </script>
+</body>
+</html> 

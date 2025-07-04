@@ -67,6 +67,9 @@ class BJT_API_Controller {
      * Helper to return a WP_Error for API responses.
      */
     protected function error_response($message, $error_code, $status_code, $data = null) {
+        // 🔧 即使是错误响应也添加防缓存头
+        $this->add_no_cache_headers();
+        
         $error_data = array('status' => $status_code);
         if ($data !== null) {
             $error_data = array_merge($error_data, $data);
@@ -84,6 +87,9 @@ class BJT_API_Controller {
      * @return WP_REST_Response 格式化的响应
      */
     protected function format_response($data, $message = '', $success = true, $status_code = 200) {
+        // 🔧 自动添加防缓存响应头
+        $this->add_no_cache_headers();
+        
         $response = [
             'success' => $success,
             'message' => $message, // 总是包含message字段，即使是空字符串
@@ -91,6 +97,51 @@ class BJT_API_Controller {
         ];
 
         return new WP_REST_Response($response, $status_code);
+    }
+
+    /**
+     * 🔧 添加防缓存响应头 (通用方法)
+     * 
+     * 为所有BJT API响应添加防缓存头，确保动态内容不被缓存
+     * 这是CDN和前端防缓存的第三层保障
+     */
+    protected function add_no_cache_headers() {
+        if (!headers_sent()) {
+            // 🚫 完全禁用缓存 - 核心防缓存头
+            header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
+            header('Pragma: no-cache');
+            header('Expires: Thu, 01 Jan 1970 00:00:00 GMT');
+            
+            // 🔧 额外的防缓存头 - 应对不同场景
+            header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
+            header('ETag: "' . md5(time() . rand()) . '"');
+            
+            // 🎯 针对特定代理服务器的防缓存
+            header('X-Accel-Expires: 0'); // Nginx
+            header('X-Cache-Control: no-cache'); // 某些代理
+            header('X-No-Cache: 1'); // 自定义标识
+            
+            // 🌐 确保UTF-8编码
+            header('Content-Type: application/json; charset=utf-8');
+            
+            // 📊 调试信息（开发环境）
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                header('X-BJT-Cache-Control: no-cache-applied');
+                header('X-BJT-Timestamp: ' . time());
+            }
+        }
+    }
+
+    /**
+     * 🔧 为所有动态API响应添加防缓存头的便捷方法
+     * 
+     * @param mixed $data 响应数据
+     * @param string $message 消息
+     * @param int $status_code 状态码
+     * @return WP_REST_Response
+     */
+    protected function success_response($data, $message = '', $status_code = 200) {
+        return $this->format_response($data, $message, true, $status_code);
     }
 
     /**

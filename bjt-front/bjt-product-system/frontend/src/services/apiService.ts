@@ -173,13 +173,42 @@ class ApiService {
       (config) => {
         // 从localStorage获取token并添加到请求头
         const token = localStorage.getItem('auth_token');
+        if (!config.headers) {
+          config.headers = {} as any;
+        }
+        
         if (token) {
-          config.headers = config.headers || {};
           config.headers.Authorization = `Bearer ${token}`;
           console.log(`[ApiService] Adding auth header for ${config.method?.toUpperCase()} ${config.url}`);
           console.log(`[ApiService] Token (first 15 chars): ${token.substring(0, 15)}...`);
         } else {
           console.warn(`[ApiService] No auth_token found for ${config.method?.toUpperCase()} ${config.url}`);
+        }
+        
+        // 🔧 修复：为所有API请求添加防CDN缓存头，特别是购物车相关的动态请求
+        const timestamp = Date.now();
+        const browserInfo = navigator.userAgent.slice(0, 20);
+        
+        // 购物车相关API或所有POST/PUT/DELETE请求需要绕过CDN缓存
+        const isCartAPI = config.url?.includes('/cart') || false;
+        const isDynamicRequest = ['post', 'put', 'delete', 'patch'].includes(config.method?.toLowerCase() || '');
+        
+        if (isCartAPI || isDynamicRequest) {
+          // 添加防缓存HTTP头
+          config.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+          config.headers['Pragma'] = 'no-cache';  // HTTP/1.0 兼容
+          config.headers['Expires'] = '0';
+          config.headers['X-Requested-With'] = 'XMLHttpRequest';
+          config.headers['X-Cache-Buster'] = `${timestamp}_${browserInfo.slice(0, 10)}`;
+          
+          console.log(`[ApiService] Applied anti-cache headers for ${config.method?.toUpperCase()} ${config.url}`);
+        }
+        
+        // 为GET请求添加时间戳参数防止CDN缓存（特别是购物车状态查询）
+        if (config.method?.toLowerCase() === 'get' && isCartAPI) {
+          const separator = config.url?.includes('?') ? '&' : '?';
+          config.url += `${separator}_t=${timestamp}&_cb=${encodeURIComponent(browserInfo.slice(0, 10))}`;
+          console.log(`[ApiService] Added cache-busting params to GET ${config.url}`);
         }
         
         // 为spare-parts API添加更详细的日志

@@ -27,6 +27,33 @@ axiosInstance.interceptors.request.use(
     if (!config.headers['Content-Type']) {
         config.headers['Content-Type'] = 'application/json';
     }
+    
+    // 🔧 修复：为动态请求添加防CDN缓存头
+    const timestamp = Date.now();
+    const browserInfo = navigator.userAgent.slice(0, 20);
+    
+    // 检测是否为购物车相关API或动态请求
+    const isCartAPI = config.url?.includes('/cart') || false;
+    const isDynamicRequest = ['post', 'put', 'delete', 'patch'].includes(config.method?.toLowerCase() || '');
+    
+    if (isCartAPI || isDynamicRequest) {
+      // 添加防缓存HTTP头
+      config.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+      config.headers['Pragma'] = 'no-cache';  // HTTP/1.0 兼容
+      config.headers['Expires'] = '0';
+      config.headers['X-Requested-With'] = 'XMLHttpRequest';
+      config.headers['X-Cache-Buster'] = `${timestamp}_${browserInfo.slice(0, 10)}`;
+      
+      console.log(`[HttpService] Applied anti-cache headers for ${config.method?.toUpperCase()} ${config.url}`);
+    }
+    
+    // 为购物车GET请求添加时间戳参数防止CDN缓存
+    if (config.method?.toLowerCase() === 'get' && isCartAPI) {
+      const separator = config.url?.includes('?') ? '&' : '?';
+      config.url += `${separator}_t=${timestamp}&_cb=${encodeURIComponent(browserInfo.slice(0, 10))}`;
+      console.log(`[HttpService] Added cache-busting params to cart GET ${config.url}`);
+    }
+    
     return config;
   },
   (error) => {

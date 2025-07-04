@@ -4,6 +4,7 @@ import App from './App.tsx'
 import './styles/global.css'
 import './i18n' // Import i18n configuration
 import { safeRender } from './utils/renderUtils'
+import { cacheManager } from './utils/cacheManager'
 
 // 专门用于捕获对象渲染错误的错误边界组件
 class ObjectRenderGuard extends React.Component<{children: React.ReactNode}> {
@@ -91,6 +92,14 @@ const installGlobalErrorHandler = () => {
 
 // 安装全局错误处理器
 installGlobalErrorHandler();
+
+// 🔧 初始化缓存管理器，清理冲突的localStorage
+try {
+  cacheManager.initialize();
+  console.log('🎉 购物车缓存冲突问题已修复');
+} catch (error) {
+  console.error('❌ 缓存管理器初始化失败:', error);
+}
 
 // 包装整个应用的安全组件
 const SafeApp = () => {

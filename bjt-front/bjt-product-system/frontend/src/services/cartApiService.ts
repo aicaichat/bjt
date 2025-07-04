@@ -92,7 +92,19 @@ class CartApiService {
     // 🚀 防重复请求
     return this.deduplicateRequest(cacheKey, async () => {
       console.log('🚀 [CartApiService] Fetching fresh cart data');
-      const response = await apiService.get<CartResponse>('/cart');
+      
+      // 🔧 修复：为购物车获取请求添加防CDN缓存参数
+      const timestamp = Date.now();
+      const cacheBuster = Math.random().toString(36).substr(2, 9);
+      
+      const response = await apiService.get<CartResponse>(`/cart?_t=${timestamp}&_cb=${cacheBuster}`, {}, {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+          'X-Cache-Buster': `cart_get_${timestamp}_${cacheBuster}`
+        }
+      });
       
       // 🚀 缓存结果
       this.setCache(cacheKey, response, this.CACHE_TTL);
@@ -109,10 +121,22 @@ class CartApiService {
     console.log('🚀 [CartApiService] Adding to cart:', item);
     
     try {
-      const response = await apiService.post<CartResponse>('/cart/add', item);
+      // 🔧 修复：为购物车动态请求添加强制刷新头，绕过CDN缓存
+      const antiCacheHeaders = {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-Cache-Buster': `cart_add_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      };
+      
+      const response = await apiService.post<CartResponse>('/cart/add', item, {
+        headers: antiCacheHeaders
+      });
       
       // 🚀 清除相关缓存
       this.invalidateCartCache();
+      this.forceClearCDNCache();
       
       return response;
     } catch (error) {
@@ -173,10 +197,22 @@ class CartApiService {
     console.log('🚀 [CartApiService] Removing from cart:', itemId);
     
     try {
-      const response = await apiService.delete<CartResponse>(`/cart/item/${itemId}`);
+      // 🔧 修复：为购物车删除请求添加强制刷新头，绕过CDN缓存
+      const antiCacheHeaders = {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-Cache-Buster': `cart_remove_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      };
+      
+      const response = await apiService.delete<CartResponse>(`/cart/item/${itemId}`, {
+        headers: antiCacheHeaders
+      });
       
       // 🚀 清除相关缓存
       this.invalidateCartCache();
+      this.forceClearCDNCache();
       
       return response;
     } catch (error) {
@@ -195,10 +231,22 @@ class CartApiService {
     console.log('🚀 [CartApiService] Updating quantity:', itemId, quantity);
     
     try {
-      const response = await apiService.put<CartResponse>(`/cart/item/${itemId}`, { quantity });
+      // 🔧 修复：为购物车更新请求添加强制刷新头，绕过CDN缓存
+      const antiCacheHeaders = {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-Cache-Buster': `cart_update_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      };
+      
+      const response = await apiService.put<CartResponse>(`/cart/item/${itemId}`, { quantity }, {
+        headers: antiCacheHeaders
+      });
       
       // 🚀 清除相关缓存
       this.invalidateCartCache();
+      this.forceClearCDNCache();
       
       return response;
     } catch (error) {
@@ -215,10 +263,22 @@ class CartApiService {
     console.log('🚀 [CartApiService] Clearing cart');
     
     try {
-      const response = await apiService.delete<CartResponse>('/cart');
+      // 🔧 修复：为购物车清空请求添加强制刷新头，绕过CDN缓存
+      const antiCacheHeaders = {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-Cache-Buster': `cart_clear_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      };
+      
+      const response = await apiService.delete<CartResponse>('/cart', {
+        headers: antiCacheHeaders
+      });
       
       // 🚀 清除所有缓存
       this.clearAllCache();
+      this.forceClearCDNCache();
       
       return response;
     } catch (error) {
@@ -245,6 +305,45 @@ class CartApiService {
       size: this.cache.size,
       keys: Array.from(this.cache.keys())
     };
+  }
+
+  // 🔧 修复：强制清除CDN缓存的方法
+  private forceClearCDNCache(): void {
+    try {
+      // 清除浏览器缓存
+      const cacheKeys = [
+        'cart-api-cache',
+        'cart-data-cache',
+        'cart-summary-cache',
+        'bjt-cart-cache'
+      ];
+      
+      cacheKeys.forEach(key => {
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+      });
+      
+      // 发送缓存清除信号给服务器
+      const cacheClearUrl = '/cart/cache-clear';
+      const timestamp = Date.now();
+      
+      // 使用image标签触发缓存清除请求（绕过CORS）
+      const img = new Image();
+      img.src = `${cacheClearUrl}?t=${timestamp}&action=clear&source=frontend`;
+      img.style.display = 'none';
+      document.body.appendChild(img);
+      
+      // 清理
+      setTimeout(() => {
+        if (img.parentNode) {
+          img.parentNode.removeChild(img);
+        }
+      }, 1000);
+      
+      console.log('🚀 [CartApiService] Force cleared CDN cache');
+    } catch (error) {
+      console.warn('🚀 [CartApiService] Failed to clear CDN cache:', error);
+    }
   }
 }
 

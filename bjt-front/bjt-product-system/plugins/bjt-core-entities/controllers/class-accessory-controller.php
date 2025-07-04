@@ -1328,10 +1328,11 @@ class BJT_Accessory_Controller extends BJT_API_Controller {
     /**
      * Helper to return a success WP_REST_Response for API responses.
      */
-    protected function success_response(array $data, $status_code = 200) {
+    protected function success_response($data, $message = '', $status_code = 200) {
         return new WP_REST_Response([
             'success' => true,
             'data'    => $data,
+            'message' => $message,
         ], $status_code);
 	}
 

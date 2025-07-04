@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛒 购物车缓存修复工具</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: bold;
+            text-align: center;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+        .button.danger {
+            background: #e53e3e;
+        }
+        .button.danger:hover {
+            background: #c53030;
+        }
+        .button.success {
+            background: #38a169;
+        }
+        .button.success:hover {
+            background: #2f855a;
+        }
+        .progress {
+            background: #f0f0f0;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 20px;
+            background: #667eea;
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+        .cache-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            background: #f9f9f9;
+        }
+        .cache-item {
+            padding: 8px 12px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .cache-item.cleared {
+            background: #d4edda;
+            color: #155724;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 14px;
+        }
+        .debug-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+        .debug-info h3 {
+            margin: 0 0 10px 0;
+            color: #495057;
+        }
+        .debug-info pre {
+            background: #343a40;
+            color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛒 购物车缓存修复工具</h1>
+        
+        <div id="status" class="status info">
+            🔍 正在检查缓存状态...
+        </div>
+        
+        <div class="progress">
+            <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+        </div>
+        
+        <button id="scan-btn" class="button" onclick="scanCache()">
+            🔍 扫描缓存冲突
+        </button>
+        
+        <button id="clear-btn" class="button danger" onclick="clearAllCache()" disabled>
+            🧹 清理所有冲突缓存
+        </button>
+        
+        <button id="fix-btn" class="button success" onclick="fixCartIssues()" disabled>
+            🔧 一键修复购物车问题
+        </button>
+        
+        <div id="cache-list" class="cache-list" style="display: none;">
+            <h3>📋 发现的缓存冲突：</h3>
+            <div id="cache-items"></div>
+        </div>
+        
+        <div id="debug-info" class="debug-info" style="display: none;">
+            <h3>🔍 调试信息</h3>
+            <pre id="debug-content"></pre>
+        </div>
+        
+        <div class="footer">
+            <p>💡 <strong>使用说明：</strong>此工具会自动检测并清理导致购物车功能异常的缓存冲突</p>
+            <p>🔧 修复完成后请刷新主页面测试购物车功能</p>
+        </div>
+    </div>
+
+    <script>
+        // 🔧 需要清理的缓存key列表
+        const CONFLICTING_CACHE_KEYS = [
+            'bjt_mock_cart',
+            'cart_admin', 
+            'cart_user',
+            'cart-api-cache',
+            'cart-data-cache',
+            'cart-summary-cache',
+            'bjt-cart-cache',
+            'auth_token',
+            'user_data',
+            'jwt_token',
+            'auth_user',
+            'cartBugFixFlags',
+            'feature_flags',
+            'api_cache',
+            'session_cache',
+            'temp_cache',
+            'mock_data',
+            'cart_items',
+            'cart_summary',
+            'bjt_user_auth',
+            'bjt_api_cache'
+        ];
+        
+        let foundConflicts = [];
+        
+        // 🔍 扫描缓存冲突
+        function scanCache() {
+            updateStatus('🔍 正在扫描缓存...', 'info');
+            updateProgress(0);
+            
+            foundConflicts = [];
+            const cacheItems = document.getElementById('cache-items');
+            cacheItems.innerHTML = '';
+            
+            // 扫描localStorage
+            let scannedCount = 0;
+            const totalKeys = CONFLICTING_CACHE_KEYS.length;
+            
+            CONFLICTING_CACHE_KEYS.forEach((key, index) => {
+                setTimeout(() => {
+                    const value = localStorage.getItem(key);
+                    if (value) {
+                        foundConflicts.push({
+                            key: key,
+                            storage: 'localStorage',
+                            size: value.length,
+                            preview: value.substring(0, 50) + (value.length > 50 ? '...' : '')
+                        });
+                        
+                        // 添加到界面
+                        const item = document.createElement('div');
+                        item.className = 'cache-item';
+                        item.innerHTML = `
+                            <span><strong>${key}</strong> (${formatBytes(value.length)})</span>
+                            <span>localStorage</span>
+                        `;
+                        cacheItems.appendChild(item);
+                    }
+                    
+                    // 检查sessionStorage
+                    const sessionValue = sessionStorage.getItem(key);
+                    if (sessionValue) {
+                        foundConflicts.push({
+                            key: key,
+                            storage: 'sessionStorage',
+                            size: sessionValue.length,
+                            preview: sessionValue.substring(0, 50) + (sessionValue.length > 50 ? '...' : '')
+                        });
+                        
+                        const item = document.createElement('div');
+                        item.className = 'cache-item';
+                        item.innerHTML = `
+                            <span><strong>${key}</strong> (${formatBytes(sessionValue.length)})</span>
+                            <span>sessionStorage</span>
+                        `;
+                        cacheItems.appendChild(item);
+                    }
+                    
+                    scannedCount++;
+                    updateProgress((scannedCount / totalKeys) * 100);
+                    
+                    if (scannedCount === totalKeys) {
+                        finishScan();
+                    }
+                }, index * 50); // 模拟扫描延迟
+            });
+        }
+        
+        // 🔍 完成扫描
+        function finishScan() {
+            const cacheList = document.getElementById('cache-list');
+            const clearBtn = document.getElementById('clear-btn');
+            const fixBtn = document.getElementById('fix-btn');
+            
+            if (foundConflicts.length > 0) {
+                updateStatus(`⚠️ 发现 ${foundConflicts.length} 个缓存冲突项，可能影响购物车功能`, 'warning');
+                cacheList.style.display = 'block';
+                clearBtn.disabled = false;
+                fixBtn.disabled = false;
+            } else {
+                updateStatus('✅ 未发现缓存冲突，购物车功能应该正常', 'success');
+                cacheList.style.display = 'none';
+            }
+            
+            // 显示调试信息
+            showDebugInfo();
+        }
+        
+        // 🧹 清理所有缓存
+        function clearAllCache() {
+            updateStatus('🧹 正在清理冲突缓存...', 'info');
+            updateProgress(0);
+            
+            let clearedCount = 0;
+            const totalItems = foundConflicts.length;
+            
+            foundConflicts.forEach((conflict, index) => {
+                setTimeout(() => {
+                    if (conflict.storage === 'localStorage') {
+                        localStorage.removeItem(conflict.key);
+                    } else if (conflict.storage === 'sessionStorage') {
+                        sessionStorage.removeItem(conflict.key);
+                    }
+                    
+                    // 标记为已清理
+                    const items = document.querySelectorAll('.cache-item');
+                    if (items[index]) {
+                        items[index].classList.add('cleared');
+                        items[index].innerHTML += ' <span>✅ 已清理</span>';
+                    }
+                    
+                    clearedCount++;
+                    updateProgress((clearedCount / totalItems) * 100);
+                    
+                    if (clearedCount === totalItems) {
+                        updateStatus(`✅ 成功清理 ${clearedCount} 个缓存冲突项`, 'success');
+                        foundConflicts = [];
+                    }
+                }, index * 100);
+            });
+        }
+        
+        // 🔧 一键修复购物车问题
+        function fixCartIssues() {
+            updateStatus('🔧 正在修复购物车问题...', 'info');
+            updateProgress(0);
+            
+            const fixSteps = [
+                { name: '清理旧缓存', action: clearAllCache },
+                { name: '重置认证状态', action: resetAuth },
+                { name: '清理Cookie', action: clearCookies },
+                { name: '重置应用状态', action: resetAppState }
+            ];
+            
+            let currentStep = 0;
+            
+            function executeNextStep() {
+                if (currentStep >= fixSteps.length) {
+                    updateStatus('🎉 购物车问题修复完成！请刷新页面测试', 'success');
+                    updateProgress(100);
+                    
+                    // 显示完成按钮
+                    const container = document.querySelector('.container');
+                    const refreshBtn = document.createElement('button');
+                    refreshBtn.className = 'button success';
+                    refreshBtn.textContent = '🔄 刷新页面测试购物车';
+                    refreshBtn.onclick = () => {
+                        window.opener ? window.opener.location.reload() : window.location.href = '/';
+                    };
+                    container.appendChild(refreshBtn);
+                    
+                    return;
+                }
+                
+                const step = fixSteps[currentStep];
+                updateStatus(`🔧 ${step.name}...`, 'info');
+                updateProgress((currentStep / fixSteps.length) * 100);
+                
+                try {
+                    step.action();
+                    currentStep++;
+                    setTimeout(executeNextStep, 1000);
+                } catch (error) {
+                    updateStatus(`❌ 修复步骤失败: ${error.message}`, 'error');
+                    console.error('修复失败:', error);
+                }
+            }
+            
+            executeNextStep();
+        }
+        
+        // 🔧 重置认证状态
+        function resetAuth() {
+            const authKeys = ['auth_token', 'user_data', 'jwt_token', 'auth_user', 'bjt_user_auth'];
+            authKeys.forEach(key => {
+                localStorage.removeItem(key);
+                sessionStorage.removeItem(key);
+            });
+            console.log('✅ 认证状态已重置');
+        }
+        
+        // 🔧 清理Cookie
+        function clearCookies() {
+            const cookies = document.cookie.split(";");
+            cookies.forEach(cookie => {
+                const eqPos = cookie.indexOf("=");
+                const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                if (name.trim().includes('bjt') || name.trim().includes('cart')) {
+                    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+                }
+            });
+            console.log('✅ 相关Cookie已清理');
+        }
+        
+        // 🔧 重置应用状态
+        function resetAppState() {
+            // 清理所有可能的应用状态
+            const appStateKeys = ['app_state', 'user_preferences', 'ui_state', 'feature_flags'];
+            appStateKeys.forEach(key => {
+                localStorage.removeItem(key);
+                sessionStorage.removeItem(key);
+            });
+            
+            // 设置修复标记
+            localStorage.setItem('bjt_cache_fixed', JSON.stringify({
+                timestamp: Date.now(),
+                version: '2.0.0',
+                fixedBy: 'cache-repair-tool'
+            }));
+            
+            console.log('✅ 应用状态已重置');
+        }
+        
+        // 📊 显示调试信息
+        function showDebugInfo() {
+            const debugInfo = document.getElementById('debug-info');
+            const debugContent = document.getElementById('debug-content');
+            
+            const info = {
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent,
+                localStorage: {
+                    enabled: typeof(Storage) !== "undefined",
+                    length: localStorage.length,
+                    keys: Object.keys(localStorage)
+                },
+                sessionStorage: {
+                    enabled: typeof(Storage) !== "undefined",
+                    length: sessionStorage.length,
+                    keys: Object.keys(sessionStorage)
+                },
+                foundConflicts: foundConflicts,
+                url: window.location.href,
+                referrer: document.referrer
+            };
+            
+            debugContent.textContent = JSON.stringify(info, null, 2);
+            debugInfo.style.display = 'block';
+        }
+        
+        // 🔧 工具函数
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+        
+        function updateProgress(percent) {
+            const progressBar = document.getElementById('progress-bar');
+            progressBar.style.width = percent + '%';
+        }
+        
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // 🚀 页面加载时自动开始扫描
+        window.onload = function() {
+            setTimeout(scanCache, 500);
+        };
+    </script>
+</body>
+</html> 
