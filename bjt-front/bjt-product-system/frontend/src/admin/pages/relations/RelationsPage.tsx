@@ -301,10 +301,16 @@ const RelationsPage: React.FC = () => {
     loadHostOptions();
   }, []);
 
+  // 🔧 修复：使用防抖的useEffect，避免频繁切换时的竞态条件
   useEffect(() => {
-    if (selectedHostPartNumber) {
-      loadRelationTree(false, undefined, false); // 初始加载时使用默认展开逻辑
-    }
+    if (!selectedHostPartNumber) return;
+    
+    // 设置一个小延迟，确保状态完全清理
+    const timeoutId = setTimeout(() => {
+      loadRelationTree(false, undefined, false);
+    }, 100);
+    
+    return () => clearTimeout(timeoutId);
   }, [selectedHostPartNumber]);
 
   // 返回到对应的主机管理页面
@@ -389,6 +395,14 @@ const RelationsPage: React.FC = () => {
     try {
       setTreeLoading(true);
       
+      // 🔧 修复：在加载开始时再次清理状态，确保干净的起始状态
+      if (!preserveExpandedState) {
+        setRelationTree([]);
+        setRelationsList([]);
+        setExpandedKeys([]);
+        setSelectedKeys([]);
+      }
+      
       let allRelations: Relation[] = [];
       let currentPage = 1;
       let totalPages = 1;
@@ -428,6 +442,12 @@ const RelationsPage: React.FC = () => {
       
       // 🔧 第一步：超严格过滤逻辑，确保只显示属于当前选择主机的记录
       const filteredRelations = allRelations.filter((relation: Relation) => {
+        // 🔧 增强：首先检查relation对象的有效性
+        if (!relation || !relation.id) {
+          console.warn(`RelationsPage: [过滤] 无效的关系对象:`, relation);
+          return false;
+        }
+        
         // 检查1：严格检查产品线ID
         if (relation.product_line_id !== productLineId) {
           console.warn(`RelationsPage: [过滤] 产品线不匹配 ID=${relation.id}, expected=${productLineId}, actual=${relation.product_line_id}`);
@@ -508,8 +528,24 @@ const RelationsPage: React.FC = () => {
         message.warning(`数据质量警告：发现并过滤了${filteredOutCount}条不属于当前主机的记录。请检查数据库中的host_part_number字段是否正确。`);
       }
       
-      setRelationsList(filteredRelations);
-      buildRelationTree(filteredRelations, preserveExpandedState, newNodePath);
+      // 🔧 增强：设置过滤后的关系列表前，再次验证当前主机是否匹配
+      if (selectedHostPartNumber) {
+        // 最后一次验证：确保所有记录都属于当前主机
+        const finalValidatedRelations = filteredRelations.filter(relation => 
+          relation.host_part_number?.toString() === selectedHostPartNumber
+        );
+        
+        if (finalValidatedRelations.length !== filteredRelations.length) {
+          console.warn(`RelationsPage: 最终验证时发现${filteredRelations.length - finalValidatedRelations.length}条记录主机不匹配`);
+        }
+        
+        setRelationsList(finalValidatedRelations);
+        buildRelationTree(finalValidatedRelations, preserveExpandedState, newNodePath);
+      } else {
+        // 如果没有选择主机，清空列表
+        setRelationsList([]);
+        setRelationTree([]);
+      }
     } catch (error) {
       console.error('RelationsPage: 加载关联关系失败:', error);
       message.error('加载关联关系失败');
@@ -522,6 +558,17 @@ const RelationsPage: React.FC = () => {
   // 构建关系树
   const buildRelationTree = useCallback((relations: Relation[], preserveExpandedState = false, newNodePath?: string) => {
     if (!selectedHostPartNumber) return;
+
+    // 🔧 增强：在构建树之前再次验证数据
+    const validatedRelations = relations.filter(relation => 
+      relation && 
+      relation.host_part_number?.toString() === selectedHostPartNumber &&
+      relation.product_line_id === productLineId
+    );
+    
+    if (validatedRelations.length !== relations.length) {
+      console.warn(`RelationsPage.buildRelationTree: 过滤掉${relations.length - validatedRelations.length}条无效记录`);
+    }
 
     // 获取选中主机的详细信息
     const selectedHostInfo = hostOptions.find(option => option.value === selectedHostPartNumber);
@@ -575,7 +622,7 @@ const RelationsPage: React.FC = () => {
     };
 
     // 构建子节点
-    const builtChildren = buildTreeNodes(relations, selectedHostPartNumber, null, new Set(), []);
+    const builtChildren = buildTreeNodes(validatedRelations, selectedHostPartNumber, null, new Set(), []);
     hostNode.children = builtChildren;
 
     // 处理展开状态
@@ -849,21 +896,39 @@ const RelationsPage: React.FC = () => {
 
   // 处理主机料号变化
   const handleHostPartNumberChange = (value: string) => {
-    // 强制清理所有缓存状态，防止数据串联
-    setRelationTree([]);
-    setRelationsList([]);
-    setExpandedKeys([]);
-    setSelectedKeys([]);
-    setIsModalVisible(false);
-    setEditingRelation(null);
-    form.resetFields();
-    setChildPartOptions([]);
-    setRequiredPartsOptions([]);
-    setTreeLoading(false);
-    setLoadingChildParts(false);
-    setLoadingRequiredParts(false);
-    
-    setSelectedHostPartNumber(value);
+    // 🔧 修复：使用函数式状态更新，确保状态完全清理
+    setSelectedHostPartNumber(prevValue => {
+      // 如果是同一个主机，跳过清理
+      if (prevValue === value) {
+        return value;
+      }
+      
+      // 立即清理所有相关状态
+      setRelationTree([]);
+      setRelationsList([]);
+      setExpandedKeys([]);
+      setSelectedKeys([]);
+      setIsModalVisible(false);
+      setEditingRelation(null);
+      setChildPartOptions([]);
+      setRequiredPartsOptions([]);
+      setTreeLoading(false);
+      setLoadingChildParts(false);
+      setLoadingRequiredParts(false);
+      
+      // 重置表单
+      form.resetFields();
+      
+      // 🔧 新增：强制清理缓存状态
+      setCacheDebugInfo({});
+      
+      // 🔧 新增：显示切换提示
+      if (prevValue) {
+        message.info(`正在切换主机: ${prevValue} → ${value}`);
+      }
+      
+      return value;
+    });
   };
 
   // 缓存清理工具函数
@@ -1597,6 +1662,400 @@ const RelationsPage: React.FC = () => {
               disabled={!selectedHostPartNumber}
             >
               验证缓存状态
+            </Button>
+            {/* 🔧 新增：数据状态调试工具 */}
+            <Button 
+              type="dashed" 
+              icon={<SettingOutlined />} 
+              onClick={() => {
+                Modal.confirm({
+                  title: '🔍 数据状态调试',
+                  width: 1000,
+                  content: (
+                    <div>
+                      <div><strong>当前状态：</strong></div>
+                      <div style={{ 
+                        padding: '12px', 
+                        backgroundColor: '#f5f5f5', 
+                        borderRadius: '6px',
+                        fontFamily: 'monospace',
+                        fontSize: '12px',
+                        marginTop: '8px'
+                      }}>
+                        <div>📋 选中主机: {selectedHostPartNumber}</div>
+                        <div>📦 产品线ID: {productLineId}</div>
+                        <div>📊 关系记录数: {relationsList.length}</div>
+                        <div>🌳 树节点数: {relationTree.length}</div>
+                        <div>📈 展开的键: {expandedKeys.length}</div>
+                        <div>🎯 选中的键: {selectedKeys.length}</div>
+                      </div>
+                      
+                      <div style={{ marginTop: '16px' }}><strong>关系记录详情：</strong></div>
+                      <div style={{ 
+                        maxHeight: '300px', 
+                        overflow: 'auto',
+                        border: '1px solid #d9d9d9',
+                        borderRadius: '6px',
+                        padding: '12px',
+                        marginTop: '8px'
+                      }}>
+                        {relationsList.map((relation, index) => (
+                          <div key={relation.id} style={{ 
+                            padding: '4px 0', 
+                            borderBottom: '1px solid #f0f0f0',
+                            fontSize: '11px'
+                          }}>
+                            <div>
+                              <strong>[{index + 1}]</strong> ID:{relation.id} | 
+                              主机:{relation.host_part_number} | 
+                              产品线:{relation.product_line_id} | 
+                              {relation.parent_part_number || '(主机)'} → {relation.part_number} → {relation.child_part_number}
+                            </div>
+                            <div style={{ color: '#666', fontSize: '10px' }}>
+                              Level:{relation.level} | 类型:{relation.child_type} | 状态:{relation.status}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div style={{ marginTop: '16px' }}><strong>验证结果：</strong></div>
+                      <div style={{ 
+                        padding: '8px', 
+                        backgroundColor: relationsList.every(r => r.host_part_number?.toString() === selectedHostPartNumber) ? '#f6ffed' : '#fff2e8',
+                        borderRadius: '4px',
+                        fontSize: '12px'
+                      }}>
+                        {relationsList.every(r => r.host_part_number?.toString() === selectedHostPartNumber) ? 
+                          '✅ 所有记录的主机号都匹配当前选择' : 
+                          '❌ 存在主机号不匹配的记录'
+                        }
+                      </div>
+                    </div>
+                  ),
+                  okText: '关闭',
+                  cancelText: null,
+                  onOk: () => {}
+                });
+              }}
+              disabled={!selectedHostPartNumber}
+            >
+              调试状态
+            </Button>
+            {/* 🔧 新增：重复料号专项分析工具 */}
+            <Button 
+              type="primary" 
+              danger
+              icon={<InfoCircleOutlined />} 
+              onClick={() => {
+                // 🔍 专门分析重复料号问题
+                const duplicatePartNumbers = ['60A06006', '60A04005'];
+                
+                Modal.confirm({
+                  title: '🔍 重复料号专项分析',
+                  width: 1200,
+                  content: (
+                    <div>
+                      <div style={{ marginBottom: '16px' }}>
+                        <strong>🎯 分析目标:</strong> 深度分析料号 <code>60A06006</code> 和 <code>60A04005</code> 的重复关联问题
+                      </div>
+                      
+                      {/* 重复料号统计 */}
+                      <div style={{ marginBottom: '16px' }}>
+                        <h4>📊 重复料号统计分析</h4>
+                        <div style={{ 
+                          padding: '12px', 
+                          backgroundColor: '#f5f5f5', 
+                          borderRadius: '6px',
+                          fontFamily: 'monospace',
+                          fontSize: '12px'
+                        }}>
+                          {duplicatePartNumbers.map(partNumber => {
+                            // 统计该料号在所有关系中的出现情况
+                            const relationsAsChild = relationsList.filter(rel => rel.child_part_number === partNumber);
+                            const relationsAsPart = relationsList.filter(rel => rel.part_number === partNumber);
+                            
+                            // 统计涉及的主机数量
+                            const hostsAsChild = [...new Set(relationsAsChild.map(rel => rel.host_part_number))];
+                            const hostsAsPart = [...new Set(relationsAsPart.map(rel => rel.host_part_number))];
+                            
+                            return (
+                              <div key={partNumber} style={{ marginBottom: '12px', padding: '8px', backgroundColor: '#fff2e8', borderRadius: '4px' }}>
+                                <div><strong>🏷️ 料号: {partNumber}</strong></div>
+                                <div>   └── 作为子级(child_part_number): {relationsAsChild.length} 条记录</div>
+                                <div>       └── 涉及主机: {hostsAsChild.join(', ')}</div>
+                                <div>   └── 作为当前(part_number): {relationsAsPart.length} 条记录</div>
+                                <div>       └── 涉及主机: {hostsAsPart.join(', ')}</div>
+                                <div>   └── 总计涉及主机数: {[...new Set([...hostsAsChild, ...hostsAsPart])].length} 个</div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                      
+                      {/* 具体关系记录 */}
+                      <div style={{ marginBottom: '16px' }}>
+                        <h4>📋 具体关系记录详情</h4>
+                        <div style={{ 
+                          maxHeight: '300px', 
+                          overflow: 'auto',
+                          border: '1px solid #d9d9d9',
+                          borderRadius: '6px',
+                          padding: '12px'
+                        }}>
+                          {duplicatePartNumbers.map(partNumber => {
+                            const allRelations = relationsList.filter(rel => 
+                              rel.child_part_number === partNumber || rel.part_number === partNumber
+                            );
+                            
+                            return (
+                              <div key={partNumber} style={{ marginBottom: '16px' }}>
+                                <div style={{ fontWeight: 'bold', color: '#1890ff', marginBottom: '8px' }}>
+                                  📦 料号: {partNumber} (共 {allRelations.length} 条关系)
+                                </div>
+                                {allRelations.map(rel => (
+                                  <div key={rel.id} style={{ 
+                                    padding: '6px 12px', 
+                                    margin: '2px 0',
+                                                                         backgroundColor: rel.host_part_number?.toString() === selectedHostPartNumber ? '#e6f7ff' : '#fff2e8',
+                                     borderRadius: '4px',
+                                     fontSize: '11px',
+                                     borderLeft: `3px solid ${rel.host_part_number?.toString() === selectedHostPartNumber ? '#1890ff' : '#faad14'}`
+                                  }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <div>
+                                        <strong>ID {rel.id}:</strong> 
+                                        <span style={{ 
+                                                                                     backgroundColor: rel.host_part_number?.toString() === selectedHostPartNumber ? '#1890ff' : '#faad14',
+                                          color: 'white',
+                                          padding: '2px 6px',
+                                          borderRadius: '3px',
+                                          marginLeft: '8px',
+                                          fontSize: '10px'
+                                        }}>
+                                          {rel.host_part_number}
+                                        </span>
+                                                                                 {rel.host_part_number?.toString() === selectedHostPartNumber && (
+                                          <span style={{ color: '#52c41a', marginLeft: '8px' }}>✓ 当前主机</span>
+                                        )}
+                                      </div>
+                                      <div style={{ fontSize: '10px', color: '#666' }}>
+                                        Level {rel.level} | {rel.child_type}
+                                      </div>
+                                    </div>
+                                    <div style={{ marginTop: '4px', color: '#666' }}>
+                                      路径: {rel.parent_part_number || '(主机)'} → {rel.part_number} → {rel.child_part_number}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                      
+                      {/* 业务逻辑判断 */}
+                      <div style={{ marginBottom: '16px' }}>
+                        <h4>🧠 业务逻辑分析</h4>
+                        <div style={{ 
+                          padding: '12px', 
+                          backgroundColor: '#f6ffed', 
+                          borderRadius: '6px',
+                          border: '1px solid #b7eb8f'
+                        }}>
+                          <div><strong>🤔 关键问题:</strong></div>
+                          <ul style={{ marginLeft: '20px', marginTop: '8px' }}>
+                            <li>这些料号是否为<strong>通用配件</strong>（可以用于多个主机型号）？</li>
+                            <li>还是数据录入时的<strong>错误关联</strong>？</li>
+                            <li>是否是<strong>数据迁移</strong>过程中的问题？</li>
+                            <li>当前业务规则是否允许<strong>一对多关联</strong>？</li>
+                          </ul>
+                          
+                          <div style={{ marginTop: '12px', padding: '8px', backgroundColor: '#fff7e6', borderRadius: '4px' }}>
+                            <strong>💡 判断标准:</strong>
+                            <div style={{ fontSize: '13px', marginTop: '4px' }}>
+                              • 如果是通用配件 → 需要优化显示逻辑，避免重复显示
+                              <br />
+                              • 如果是录入错误 → 需要清理脏数据，建立数据约束
+                              <br />
+                              • 如果是迁移问题 → 需要数据修复和验证机制
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* 解决方案建议 */}
+                      <div>
+                        <h4>🔧 解决方案建议</h4>
+                        <div style={{ 
+                          padding: '12px', 
+                          backgroundColor: '#e6f7ff', 
+                          borderRadius: '6px',
+                          border: '1px solid #91d5ff'
+                        }}>
+                          <div><strong>🎯 短期解决方案:</strong></div>
+                          <ul style={{ marginLeft: '20px', marginTop: '4px', fontSize: '13px' }}>
+                            <li>在前端增加<strong>路径上下文过滤</strong>，确保只显示当前主机的关联路径</li>
+                            <li>优化树节点的<strong>key生成逻辑</strong>，包含完整路径信息</li>
+                            <li>添加<strong>数据验证警告</strong>，提醒用户存在跨主机关联</li>
+                          </ul>
+                          
+                          <div style={{ marginTop: '8px' }}>
+                            <strong>🏗️ 长期解决方案:</strong>
+                          </div>
+                          <ul style={{ marginLeft: '20px', marginTop: '4px', fontSize: '13px' }}>
+                            <li>建立<strong>数据库约束</strong>，防止无效的跨主机关联</li>
+                            <li>实现<strong>配件库管理</strong>，区分通用配件和专用配件</li>
+                            <li>完善<strong>业务规则验证</strong>，在数据录入时进行检查</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  ),
+                  okText: '📋 生成数据库检查SQL',
+                  cancelText: '关闭分析',
+                  onOk: () => {
+                    // 生成数据库检查SQL
+                    const sqlQueries = `
+-- 🔍 重复料号专项数据库检查 SQL
+-- 请在线上数据库执行以下查询进行深度分析
+
+-- 1. 分析 60A06006 的完整关联情况
+SELECT 
+    '60A06006 作为子级' as relation_type,
+    host_part_number,
+    parent_part_number,
+    part_number,
+    child_part_number,
+    level,
+    child_type,
+    quantity,
+    created_at,
+    updated_at
+FROM wp_bjt_relations 
+WHERE child_part_number = '60A06006'
+ORDER BY host_part_number, level;
+
+-- 2. 分析 60A06006 作为当前节点的情况
+SELECT 
+    '60A06006 作为当前节点' as relation_type,
+    host_part_number,
+    parent_part_number,
+    part_number,
+    child_part_number,
+    level,
+    child_type,
+    quantity,
+    created_at,
+    updated_at
+FROM wp_bjt_relations 
+WHERE part_number = '60A06006'
+ORDER BY host_part_number, level;
+
+-- 3. 分析 60A04005 的完整关联情况
+SELECT 
+    '60A04005 作为子级' as relation_type,
+    host_part_number,
+    parent_part_number,
+    part_number,
+    child_part_number,
+    level,
+    child_type,
+    quantity,
+    created_at,
+    updated_at
+FROM wp_bjt_relations 
+WHERE child_part_number = '60A04005'
+ORDER BY host_part_number, level;
+
+-- 4. 分析 60A04005 作为当前节点的情况
+SELECT 
+    '60A04005 作为当前节点' as relation_type,
+    host_part_number,
+    parent_part_number,
+    part_number,
+    child_part_number,
+    level,
+    child_type,
+    quantity,
+    created_at,
+    updated_at
+FROM wp_bjt_relations 
+WHERE part_number = '60A04005'
+ORDER BY host_part_number, level;
+
+-- 5. 统计分析：找出所有跨主机重复的配件
+SELECT 
+    child_part_number,
+    COUNT(DISTINCT host_part_number) as host_count,
+    COUNT(*) as total_relations,
+    GROUP_CONCAT(DISTINCT host_part_number ORDER BY host_part_number) as hosts
+FROM wp_bjt_relations 
+WHERE product_line_id = 1
+GROUP BY child_part_number 
+HAVING host_count > 1
+ORDER BY host_count DESC, total_relations DESC;
+
+-- 6. 数据质量检查：查找可能的数据录入错误
+SELECT 
+    id,
+    host_part_number,
+    parent_part_number,
+    part_number,
+    child_part_number,
+    level,
+    child_type,
+    created_at,
+    CASE 
+        WHEN parent_part_number IS NULL AND part_number != host_part_number THEN '可能错误: 主机直接子级但part_number不是host'
+        WHEN parent_part_number IS NOT NULL AND parent_part_number = host_part_number THEN '可能错误: parent应该是NULL'
+        WHEN level = 1 AND child_type != 'spare_part' AND parent_part_number IS NOT NULL THEN '可能错误: Level 1应该是必选备件或主机直接子级'
+        ELSE '正常'
+    END as data_quality_check
+FROM wp_bjt_relations 
+WHERE child_part_number IN ('60A06006', '60A04005')
+ORDER BY data_quality_check DESC, host_part_number;`;
+
+                                         // 创建一个新的模态框显示SQL
+                     Modal.confirm({
+                      title: '📋 数据库检查SQL',
+                      width: 1000,
+                      content: (
+                        <div>
+                          <div style={{ marginBottom: '12px' }}>
+                            <strong>请将以下SQL复制到线上数据库执行，进行深度数据分析：</strong>
+                          </div>
+                          <div style={{ 
+                            backgroundColor: '#f5f5f5', 
+                            padding: '12px', 
+                            borderRadius: '6px',
+                            fontFamily: 'monospace',
+                            fontSize: '11px',
+                            maxHeight: '500px',
+                            overflow: 'auto',
+                            border: '1px solid #d9d9d9'
+                          }}>
+                            <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{sqlQueries}</pre>
+                          </div>
+                          <div style={{ marginTop: '12px', fontSize: '13px', color: '#666' }}>
+                            💡 <strong>执行建议：</strong>
+                            <ul style={{ marginLeft: '20px', marginTop: '4px' }}>
+                              <li>优先执行统计分析查询（第5条），了解整体情况</li>
+                              <li>然后执行具体料号的分析查询（第1-4条）</li>
+                              <li>最后执行数据质量检查（第6条），识别问题数据</li>
+                            </ul>
+                                                     </div>
+                         </div>
+                       ),
+                       okText: '关闭',
+                       cancelText: null,
+                       onOk: () => {}
+                     });
+                  }
+                });
+              }}
+              disabled={!selectedHostPartNumber}
+            >
+              🔍 重复料号分析
             </Button>
             {qualityIssues.length > 0 && (
               <Button 
