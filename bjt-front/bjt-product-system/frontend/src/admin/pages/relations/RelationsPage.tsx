@@ -425,8 +425,36 @@ const RelationsPage: React.FC = () => {
         currentPage++;
       } while (currentPage <= totalPages);
       
-      // 🔧 超严格过滤逻辑，确保只显示属于当前选择主机的记录
-      const filteredRelations = allRelations.filter((relation: Relation) => {
+      // 🔧 第一步：去重处理（解决API返回重复数据的问题）
+      const uniqueRelationsMap = new Map<number, Relation>();
+      allRelations.forEach(relation => {
+        if (!uniqueRelationsMap.has(relation.id)) {
+          uniqueRelationsMap.set(relation.id, relation);
+        }
+      });
+      const uniqueRelations = Array.from(uniqueRelationsMap.values());
+      
+      // 🚨 数据质量警报：检测重复数据
+      if (uniqueRelations.length !== allRelations.length) {
+        const duplicateCount = allRelations.length - uniqueRelations.length;
+        console.error(`🚨 RelationsPage: 检测到API返回重复数据！原始${allRelations.length}条，去重后${uniqueRelations.length}条，重复${duplicateCount}条`);
+        
+        // 分析重复的记录
+        const duplicateIds = allRelations.reduce((acc, relation) => {
+          acc[relation.id] = (acc[relation.id] || 0) + 1;
+          return acc;
+        }, {} as Record<number, number>);
+        
+        const duplicateDetails = Object.entries(duplicateIds)
+          .filter(([id, count]) => count > 1)
+          .map(([id, count]) => `ID ${id} (出现${count}次)`);
+        
+        console.warn('🚨 重复记录详情:', duplicateDetails);
+        message.warning(`检测到API重复数据：${duplicateDetails.join(', ')}。已自动去重。`);
+      }
+
+      // 🔧 第二步：超严格过滤逻辑，确保只显示属于当前选择主机的记录
+      const filteredRelations = uniqueRelations.filter((relation: Relation) => {
         // 检查1：严格检查产品线ID
         if (relation.product_line_id !== productLineId) {
           console.warn(`RelationsPage: [过滤] 产品线不匹配 ID=${relation.id}, expected=${productLineId}, actual=${relation.product_line_id}`);
@@ -446,7 +474,7 @@ const RelationsPage: React.FC = () => {
             relation.parent_part_number !== selectedHostPartNumber &&
             relation.parent_part_number !== relation.part_number) {
           // 临时严格模式：如果parent不是主机，则需要在同一主机的其他记录中能找到parent作为child
-          const parentExists = allRelations.some(parentRelation => 
+          const parentExists = uniqueRelations.some(parentRelation => 
             parentRelation.host_part_number?.toString() === selectedHostPartNumber &&
             parentRelation.child_part_number === relation.parent_part_number
           );
@@ -472,13 +500,13 @@ const RelationsPage: React.FC = () => {
         return true;
       });
       
-      // 数据质量警告：如果过滤后的记录数量与API返回数量不一致，说明存在脏数据
-      if (filteredRelations.length !== allRelations.length) {
-        const filteredOutCount = allRelations.length - filteredRelations.length;
+      // 数据质量警告：如果过滤后的记录数量与去重后数量不一致，说明存在脏数据
+      if (filteredRelations.length !== uniqueRelations.length) {
+        const filteredOutCount = uniqueRelations.length - filteredRelations.length;
         console.warn(`RelationsPage: 数据质量警告 - 过滤掉了 ${filteredOutCount} 条不匹配的记录`);
         
         // 显示详细的被过滤记录信息
-        const filteredOutRelations = allRelations.filter(relation => 
+        const filteredOutRelations = uniqueRelations.filter(relation => 
           relation.product_line_id !== productLineId || 
           relation.host_part_number?.toString() !== selectedHostPartNumber
         );

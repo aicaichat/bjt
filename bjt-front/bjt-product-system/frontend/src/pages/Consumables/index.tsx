@@ -1037,7 +1037,7 @@ interface StandardConsumableItemProps {
   onAddToCart: (itemId: string, buttonElement?: HTMLElement) => void;
   onQuantityChange: (itemId: string, value: number) => void;
   quantities: Record<string, number>;
-  getCurrencySymbolByRegion: () => string;
+  getCurrencySymbolByRegion: (region?: string) => string; // 🔧 修复：匹配实际函数签名
   getRegionalPrice: (product: ConsumableProduct, quantity: number) => number;
   handleImageError: (e: React.SyntheticEvent<HTMLImageElement>) => void;
   isSales: boolean; // 新增：权限控制
@@ -1836,13 +1836,17 @@ const ConsumablesPage: React.FC = () => {
     console.log('🔄 [筛选计算] 开始重新计算筛选结果...');
     console.log('🔄 筛选条件:', {
       selectedModel, selectedShape, selectedMaterial,
-      selectedThickness, selectedWeight, selectedWidth, selectedLength
+      selectedThickness, selectedWeight, selectedWidth, selectedLength,
+      isImperialUnit // 🔧 添加单位制信息到日志
     });
     
     if (!allConsumables?.length) {
       console.log('🔄 [筛选计算] 没有可筛选的数据');
       return [];
     }
+    
+          // 🔧 修复：使用统一的字段映射配置
+      const unitType = isImperialUnit ? 'imperial' : 'metric';
     
     const filtered = allConsumables.filter((item) => {
       // 1. 设备型号筛选（基于app_model字段）
@@ -1871,11 +1875,12 @@ const ConsumablesPage: React.FC = () => {
         }
       }
       
-      // 4. 厚度/重量筛选（基于thickness_met字段，根据材质判断是厚度还是重量）
+      // 4. 厚度/重量筛选（🔧 修复：根据单位制选择正确的字段）
       if (isPaperMaterial(item.material || '')) {
         // 纸质材料按重量筛选
         if (selectedWeight !== 'all') {
-          const itemWeight = extractNumber(item.thickness_met);
+          const fieldSuffix = isImperialUnit ? '_imp' : '_met';
+          const itemWeight = extractNumber(item[`thickness${fieldSuffix}` as keyof typeof item] as any);
           const targetWeight = extractNumber(selectedWeight);
           if (itemWeight !== targetWeight) {
             return false;
@@ -1884,7 +1889,8 @@ const ConsumablesPage: React.FC = () => {
       } else {
         // 非纸质材料按厚度筛选
         if (selectedThickness !== 'all') {
-          const itemThickness = extractNumber(item.thickness_met);
+          const fieldSuffix = isImperialUnit ? '_imp' : '_met';
+          const itemThickness = extractNumber(item[`thickness${fieldSuffix}` as keyof typeof item] as any);
           const targetThickness = extractNumber(selectedThickness);
           if (itemThickness !== targetThickness) {
             return false;
@@ -1892,18 +1898,20 @@ const ConsumablesPage: React.FC = () => {
         }
       }
       
-      // 5. 宽度筛选（基于width_met字段）
+      // 5. 宽度筛选（🔧 修复：根据单位制选择正确的字段）
       if (selectedWidth !== 'all') {
-        const itemWidth = extractNumber(item.width_met);
+        const fieldSuffix = isImperialUnit ? '_imp' : '_met';
+        const itemWidth = extractNumber(item[`width${fieldSuffix}` as keyof typeof item] as any);
         const targetWidth = extractNumber(selectedWidth);
         if (itemWidth !== targetWidth) {
           return false;
         }
       }
       
-      // 6. 长度筛选（基于length_met字段）
+      // 6. 长度筛选（🔧 修复：根据单位制选择正确的字段）
       if (selectedLength !== 'all') {
-        const itemLength = extractNumber(item.length_met);
+        const fieldSuffix = isImperialUnit ? '_imp' : '_met';
+        const itemLength = extractNumber(item[`length${fieldSuffix}` as keyof typeof item] as any);
         const targetLength = extractNumber(selectedLength);
         if (itemLength !== targetLength) {
           return false;
@@ -1917,7 +1925,8 @@ const ConsumablesPage: React.FC = () => {
     return filtered;
   }, [
     allConsumables, selectedModel, selectedShape, selectedMaterial,
-    selectedThickness, selectedWeight, selectedWidth, selectedLength
+    selectedThickness, selectedWeight, selectedWidth, selectedLength,
+    isImperialUnit // 🔧 添加单位制依赖项
   ]);
   
   // ===== 智能筛选选项计算的函数 =====
@@ -2018,24 +2027,27 @@ const ConsumablesPage: React.FC = () => {
         // 规格筛选
         const isPaper = isPaperMaterial(item.material || '');
         
+        // 🔧 修复：根据单位制选择字段后缀
+        const fieldSuffix = isImperialUnit ? '_imp' : '_met';
+        
         if (isPaper && excludeField !== 'selectedSpecs' && currentFilters.selectedSpecs.weight !== 'all') {
-          const itemWeight = extractNumber(item.thickness_met);
+          const itemWeight = extractNumber(item[`thickness${fieldSuffix}` as keyof typeof item] as any);
           const targetWeight = extractNumber(currentFilters.selectedSpecs.weight);
           if (itemWeight !== targetWeight) return false;
         } else if (!isPaper && excludeField !== 'selectedSpecs' && currentFilters.selectedSpecs.thickness !== 'all') {
-          const itemThickness = extractNumber(item.thickness_met);
+          const itemThickness = extractNumber(item[`thickness${fieldSuffix}` as keyof typeof item] as any);
           const targetThickness = extractNumber(currentFilters.selectedSpecs.thickness);
           if (itemThickness !== targetThickness) return false;
         }
         
         if (excludeField !== 'selectedSpecs' && currentFilters.selectedSpecs.width !== 'all') {
-          const itemWidth = extractNumber(item.width_met);
+          const itemWidth = extractNumber(item[`width${fieldSuffix}` as keyof typeof item] as any);
           const targetWidth = extractNumber(currentFilters.selectedSpecs.width);
           if (itemWidth !== targetWidth) return false;
         }
         
         if (excludeField !== 'selectedSpecs' && currentFilters.selectedSpecs.length !== 'all') {
-          const itemLength = extractNumber(item.length_met);
+          const itemLength = extractNumber(item[`length${fieldSuffix}` as keyof typeof item] as any);
           const targetLength = extractNumber(currentFilters.selectedSpecs.length);
           if (itemLength !== targetLength) return false;
         }
@@ -2253,32 +2265,31 @@ const ConsumablesPage: React.FC = () => {
       availableItems.forEach(item => {
         let value: number | undefined;
         
-        // 根据当前单位制选择 _met 或 _imp 字段
-        const useMetric = !isImperialUnit;
-        const suffix = useMetric ? '_met' : '_imp';
+        // 🔧 修复：根据单位制选择字段后缀
+        const fieldSuffix = isImperialUnit ? '_imp' : '_met';
 
         switch (fieldName) {
           case 'thickness':
-            value = extractNumber(item[`thickness${suffix}` as keyof typeof item] as any);
+            value = extractNumber(item[`thickness${fieldSuffix}` as keyof typeof item] as any);
             break;
           case 'weight':
             if (isPaperMaterial(item.material || '')) {
               // 部分纸质材料将克重存在 thickness 字段
-              value = extractNumber(item[`thickness${suffix}` as keyof typeof item] as any);
-              // 若未取到，再尝试 weight 字段
+              value = extractNumber(item[`thickness${fieldSuffix}` as keyof typeof item] as any);
+              // 若未取到，再尝试 weight 字段（通常weight字段较少使用）
               if (value === undefined) {
-                value = extractNumber(item[`weight${suffix}` as keyof typeof item] as any);
+                value = extractNumber(item[`weight${fieldSuffix}` as keyof typeof item] as any);
               }
             } else {
               // 非纸材直接读取 weight 字段
-              value = extractNumber(item[`weight${suffix}` as keyof typeof item] as any);
+              value = extractNumber(item[`weight${fieldSuffix}` as keyof typeof item] as any);
             }
             break;
           case 'width':
-            value = extractNumber(item[`width${suffix}` as keyof typeof item] as any);
+            value = extractNumber(item[`width${fieldSuffix}` as keyof typeof item] as any);
             break;
           case 'length':
-            value = extractNumber(item[`length${suffix}` as keyof typeof item] as any);
+            value = extractNumber(item[`length${fieldSuffix}` as keyof typeof item] as any);
             break;
         }
         
@@ -2556,9 +2567,12 @@ const ConsumablesPage: React.FC = () => {
         return isNaN(numValue) ? undefined : numValue;
       };
 
-      // 厚度筛选 - 使用thickness_met字段
+      // 🔧 根据单位制动态选择字段后缀
+      const fieldSuffix = isImperialUnit ? '_imp' : '_met';
+
+      // 厚度筛选 - 根据单位制选择字段
       if (selectedThickness !== 'all') {
-        const itemThickness = extractNumber(item.thickness_met);
+        const itemThickness = extractNumber(item[`thickness${fieldSuffix}` as keyof typeof item] as any);
         const targetThickness = extractNumber(selectedThickness);
         if (itemThickness === undefined || targetThickness === undefined || 
             Math.abs(itemThickness - targetThickness) > 0.01) {
@@ -2571,8 +2585,8 @@ const ConsumablesPage: React.FC = () => {
       if (selectedWeight !== 'all') {
         let itemWeight;
         if (isPaperMaterial(item.material)) {
-          // 纸质材料的"重量"实际存储在thickness_met字段
-          itemWeight = extractNumber(item.thickness_met);
+          // 纸质材料的"重量"实际存储在thickness字段，根据单位制选择
+          itemWeight = extractNumber(item[`thickness${fieldSuffix}` as keyof typeof item] as any);
         } else {
           itemWeight = extractNumber(item.net_weight_kg) || extractNumber(item.specs?.weight);
         }
@@ -2584,9 +2598,9 @@ const ConsumablesPage: React.FC = () => {
         }
       }
 
-      // 宽度筛选 - 使用width_met字段
+      // 宽度筛选 - 根据单位制选择字段
       if (selectedWidth !== 'all') {
-        const itemWidth = extractNumber(item.width_met);
+        const itemWidth = extractNumber(item[`width${fieldSuffix}` as keyof typeof item] as any);
         const targetWidth = extractNumber(selectedWidth);
         if (itemWidth === undefined || targetWidth === undefined || 
             Math.abs(itemWidth - targetWidth) > 0.01) {
@@ -2595,9 +2609,9 @@ const ConsumablesPage: React.FC = () => {
         }
       }
 
-      // 长度筛选 - 使用length_met字段
+      // 长度筛选 - 根据单位制选择字段
       if (selectedLength !== 'all') {
-        const itemLength = extractNumber(item.length_met);
+        const itemLength = extractNumber(item[`length${fieldSuffix}` as keyof typeof item] as any);
         const targetLength = extractNumber(selectedLength);
         if (itemLength === undefined || targetLength === undefined || 
             Math.abs(itemLength - targetLength) > 0.01) {
@@ -2647,8 +2661,9 @@ const ConsumablesPage: React.FC = () => {
   }, []);
   
   // 获取货币符号
-  const getCurrencySymbolByRegion = (region: string = userRegion): string => {
-    return REGIONS[region]?.currencySymbol || REGIONS.CN.currencySymbol;
+  const getCurrencySymbolByRegion = (region?: string): string => {
+    const targetRegion = region || userRegion;
+    return REGIONS[targetRegion]?.currencySymbol || REGIONS.CN.currencySymbol;
   };
   
   // 价格计算缓存
