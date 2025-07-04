@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 关系管理CDN修复验证工具</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #f6ffed;
+            border: 1px solid #b7eb8f;
+            color: #52c41a;
+        }
+        .status.error {
+            background: #fff2f0;
+            border: 1px solid #ffccc7;
+            color: #ff4d4f;
+        }
+        .status.warning {
+            background: #fffbe6;
+            border: 1px solid #ffe58f;
+            color: #faad14;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            color: #1890ff;
+            margin-bottom: 15px;
+        }
+        .log-output {
+            background: #f5f5f5;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .button {
+            background: #1890ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .button:hover { background: #40a9ff; }
+        .button.danger { background: #ff4d4f; }
+        .button.danger:hover { background: #ff7875; }
+        .button.success { background: #52c41a; }
+        .button.success:hover { background: #73d13d; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 关系管理CDN修复验证工具</h1>
+            <p>检测和验证关系管理页面的CDN缓存修复效果</p>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 系统状态检查</h3>
+            <button class="button" onclick="checkSystemStatus()">🔍 检查系统状态</button>
+            <button class="button success" onclick="testApiRequests()">🧪 测试API请求</button>
+            <button class="button danger" onclick="simulateCDNIssue()">⚠️ 模拟CDN问题</button>
+            <div id="systemStatus" class="log-output" style="margin-top: 15px;">
+点击按钮开始检查...
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 API请求验证</h3>
+            <button class="button" onclick="monitorApiRequests()">📡 监听API请求</button>
+            <button class="button" onclick="validateUrlParameters()">🔗 验证URL参数</button>
+            <button class="button" onclick="checkCacheHeaders()">📋 检查缓存头</button>
+            <div id="apiValidation" class="log-output" style="margin-top: 15px;">
+等待API请求监听...
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 数据完整性验证</h3>
+            <button class="button" onclick="validateDataIntegrity()">🔍 检查数据完整性</button>
+            <button class="button" onclick="detectWrongRelations()">❌ 检测错误关系</button>
+            <button class="button danger" onclick="emergencyFix()">🚨 紧急修复</button>
+            <div id="dataValidation" class="log-output" style="margin-top: 15px;">
+准备进行数据验证...
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📈 测试结果汇总</h3>
+            <div id="testSummary">
+                <div id="testResults"></div>
+                <button class="button success" onclick="generateReport()" style="margin-top: 15px;">📄 生成测试报告</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let testResults = {
+            systemStatus: null,
+            apiValidation: null,
+            dataIntegrity: null,
+            timestamp: new Date().toISOString()
+        };
+
+        // 日志记录函数
+        function log(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            element.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+            element.scrollTop = element.scrollHeight;
+        }
+
+        // 系统状态检查
+        function checkSystemStatus() {
+            log('systemStatus', '开始系统状态检查...', 'info');
+            
+            try {
+                // 检查当前页面是否是关系管理页面
+                const isRelationsPage = window.location.href.includes('/admin/relations') || 
+                                       document.title.includes('关系管理') ||
+                                       document.querySelector('[data-testid="relations-page"]');
+                
+                if (isRelationsPage) {
+                    log('systemStatus', '✅ 当前在关系管理页面', 'success');
+                } else {
+                    log('systemStatus', '⚠️ 当前不在关系管理页面，请导航到关系管理页面进行测试', 'warning');
+                }
+
+                // 检查主机选择器
+                const hostSelector = document.querySelector('.ant-select-selection-item, [data-testid="host-selector"]');
+                if (hostSelector) {
+                    const currentHost = hostSelector.textContent?.split(' ')[0];
+                    log('systemStatus', `✅ 检测到主机选择器，当前主机: ${currentHost}`, 'success');
+                    testResults.systemStatus = { pass: true, currentHost };
+                } else {
+                    log('systemStatus', '❌ 未检测到主机选择器', 'error');
+                    testResults.systemStatus = { pass: false, error: '主机选择器未找到' };
+                }
+
+                // 检查关系树
+                const relationTree = document.querySelector('.ant-tree, [data-testid="relation-tree"]');
+                if (relationTree) {
+                    const nodeCount = relationTree.querySelectorAll('.ant-tree-node').length;
+                    log('systemStatus', `✅ 检测到关系树，节点数量: ${nodeCount}`, 'success');
+                } else {
+                    log('systemStatus', '⚠️ 未检测到关系树', 'warning');
+                }
+
+                // 检查localStorage缓存
+                const cacheKeys = Object.keys(localStorage).filter(key => 
+                    key.includes('relation') || key.includes('admin') || key.includes('bjt')
+                );
+                log('systemStatus', `📋 检测到 ${cacheKeys.length} 个相关缓存键: ${cacheKeys.join(', ')}`, 'info');
+
+                log('systemStatus', '系统状态检查完成', 'success');
+                
+            } catch (error) {
+                log('systemStatus', `❌ 系统状态检查失败: ${error.message}`, 'error');
+                testResults.systemStatus = { pass: false, error: error.message };
+            }
+        }
+
+        // API请求监听
+        function monitorApiRequests() {
+            log('apiValidation', '开始监听API请求...', 'info');
+            
+            // 拦截fetch请求
+            const originalFetch = window.fetch;
+            window.fetch = function(...args) {
+                const url = args[0];
+                
+                if (typeof url === 'string' && url.includes('/wp-json/bjt/v1/relations')) {
+                    log('apiValidation', `🔍 拦截到关系API请求: ${url}`, 'info');
+                    
+                    // 检查URL参数
+                    const hasHostParam = url.includes('host_part_number');
+                    const hasCacheKey = url.includes('_cache_key');
+                    const hasTimestamp = url.includes('_t=');
+                    
+                    log('apiValidation', `   - host_part_number参数: ${hasHostParam ? '✅' : '❌'}`, hasHostParam ? 'success' : 'error');
+                    log('apiValidation', `   - _cache_key参数: ${hasCacheKey ? '✅' : '❌'}`, hasCacheKey ? 'success' : 'error');
+                    log('apiValidation', `   - 时间戳参数: ${hasTimestamp ? '✅' : '❌'}`, hasTimestamp ? 'success' : 'error');
+                    
+                    testResults.apiValidation = {
+                        pass: hasHostParam && hasCacheKey,
+                        hasHostParam,
+                        hasCacheKey,
+                        hasTimestamp,
+                        url
+                    };
+                }
+                
+                return originalFetch.apply(this, args);
+            };
+            
+            log('apiValidation', '✅ API请求监听已启动，请切换主机触发API请求', 'success');
+        }
+
+        // 验证URL参数
+        function validateUrlParameters() {
+            log('apiValidation', '验证API URL参数...', 'info');
+            
+            if (testResults.apiValidation && testResults.apiValidation.url) {
+                const url = testResults.apiValidation.url;
+                const urlObj = new URL(url, window.location.origin);
+                
+                log('apiValidation', `📋 URL参数分析:`, 'info');
+                for (const [key, value] of urlObj.searchParams.entries()) {
+                    log('apiValidation', `   - ${key}: ${value}`, 'info');
+                }
+                
+                // 验证关键参数
+                const requiredParams = ['product_line_id', 'host_part_number'];
+                const missingParams = requiredParams.filter(param => !urlObj.searchParams.has(param));
+                
+                if (missingParams.length === 0) {
+                    log('apiValidation', '✅ 所有必需参数都存在', 'success');
+                } else {
+                    log('apiValidation', `❌ 缺少必需参数: ${missingParams.join(', ')}`, 'error');
+                }
+            } else {
+                log('apiValidation', '⚠️ 尚未捕获到API请求，请先切换主机', 'warning');
+            }
+        }
+
+        // 检查缓存头
+        function checkCacheHeaders() {
+            log('apiValidation', '检查HTTP缓存头...', 'info');
+            
+            // 模拟发送请求来检查响应头
+            const testUrl = '/wp-json/bjt/v1/relations/?product_line_id=1&per_page=1&_test=true';
+            
+            fetch(testUrl)
+                .then(response => {
+                    log('apiValidation', '📋 响应头分析:', 'info');
+                    
+                    const cacheControl = response.headers.get('Cache-Control');
+                    const pragma = response.headers.get('Pragma');
+                    const expires = response.headers.get('Expires');
+                    
+                    log('apiValidation', `   - Cache-Control: ${cacheControl || '未设置'}`, cacheControl ? 'success' : 'warning');
+                    log('apiValidation', `   - Pragma: ${pragma || '未设置'}`, pragma ? 'success' : 'warning');
+                    log('apiValidation', `   - Expires: ${expires || '未设置'}`, expires ? 'success' : 'warning');
+                    
+                    const hasAntiCache = cacheControl?.includes('no-cache') || pragma === 'no-cache';
+                    log('apiValidation', `   - 防缓存配置: ${hasAntiCache ? '✅ 已配置' : '❌ 未配置'}`, hasAntiCache ? 'success' : 'error');
+                })
+                .catch(error => {
+                    log('apiValidation', `❌ 检查缓存头失败: ${error.message}`, 'error');
+                });
+        }
+
+        // 数据完整性验证
+        function validateDataIntegrity() {
+            log('dataValidation', '开始数据完整性验证...', 'info');
+            
+            try {
+                // 获取当前选择的主机
+                const hostElement = document.querySelector('.ant-select-selection-item');
+                const currentHost = hostElement ? hostElement.textContent.split(' ')[0] : null;
+                
+                if (!currentHost) {
+                    log('dataValidation', '❌ 无法检测当前选择的主机', 'error');
+                    return;
+                }
+                
+                log('dataValidation', `📋 当前主机: ${currentHost}`, 'info');
+                
+                // 检查关系树中的数据
+                const treeNodes = document.querySelectorAll('.ant-tree-node');
+                let wrongDataCount = 0;
+                let totalNodes = treeNodes.length;
+                
+                treeNodes.forEach((node, index) => {
+                    const nodeText = node.textContent;
+                    if (nodeText && nodeText.includes('Path: ')) {
+                        const pathMatch = nodeText.match(/Path: (\w+)/);
+                        if (pathMatch && pathMatch[1] !== currentHost) {
+                            wrongDataCount++;
+                            log('dataValidation', `❌ 发现错误数据 节点${index}: Path: ${pathMatch[1]} (期望: ${currentHost})`, 'error');
+                        }
+                    }
+                });
+                
+                log('dataValidation', `📊 验证结果: 总节点${totalNodes}个，错误数据${wrongDataCount}个`, wrongDataCount > 0 ? 'error' : 'success');
+                
+                testResults.dataIntegrity = {
+                    pass: wrongDataCount === 0,
+                    currentHost,
+                    totalNodes,
+                    wrongDataCount
+                };
+                
+                if (wrongDataCount === 0) {
+                    log('dataValidation', '✅ 数据完整性验证通过', 'success');
+                } else {
+                    log('dataValidation', `❌ 数据完整性验证失败，发现${wrongDataCount}个错误节点`, 'error');
+                }
+                
+            } catch (error) {
+                log('dataValidation', `❌ 数据完整性验证失败: ${error.message}`, 'error');
+                testResults.dataIntegrity = { pass: false, error: error.message };
+            }
+        }
+
+        // 检测错误关系
+        function detectWrongRelations() {
+            log('dataValidation', '检测错误关系记录...', 'info');
+            
+            const hostElement = document.querySelector('.ant-select-selection-item');
+            const currentHost = hostElement ? hostElement.textContent.split(' ')[0] : null;
+            
+            if (!currentHost) {
+                log('dataValidation', '❌ 无法检测当前主机', 'error');
+                return;
+            }
+            
+            const wrongNodes = [];
+            document.querySelectorAll('.ant-tree-node').forEach((node, index) => {
+                const text = node.textContent;
+                if (text && text.includes('Path: ')) {
+                    const pathMatch = text.match(/Path: (\w+)/);
+                    if (pathMatch && pathMatch[1] !== currentHost) {
+                        wrongNodes.push({
+                            index,
+                            element: node,
+                            wrongHost: pathMatch[1],
+                            expectedHost: currentHost
+                        });
+                    }
+                }
+            });
+            
+            if (wrongNodes.length > 0) {
+                log('dataValidation', `❌ 发现 ${wrongNodes.length} 个错误关系:`, 'error');
+                wrongNodes.forEach(({ index, wrongHost, expectedHost }) => {
+                    log('dataValidation', `   节点 ${index}: 显示 ${wrongHost}，应为 ${expectedHost}`, 'error');
+                });
+            } else {
+                log('dataValidation', '✅ 未发现错误关系记录', 'success');
+            }
+            
+            return wrongNodes;
+        }
+
+        // 紧急修复
+        function emergencyFix() {
+            log('dataValidation', '执行紧急修复...', 'warning');
+            
+            const wrongNodes = detectWrongRelations();
+            
+            if (wrongNodes && wrongNodes.length > 0) {
+                wrongNodes.forEach(({ element, index }) => {
+                    element.style.display = 'none';
+                    element.style.border = '3px solid red';
+                    element.title = '数据错误已隐藏';
+                });
+                
+                log('dataValidation', `✅ 已隐藏 ${wrongNodes.length} 个错误节点`, 'success');
+                
+                // 尝试触发刷新
+                const refreshBtn = document.querySelector('button[title*="刷新"], .ant-btn[aria-label*="刷新"]');
+                if (refreshBtn) {
+                    log('dataValidation', '🔄 触发数据刷新...', 'info');
+                    refreshBtn.click();
+                } else {
+                    log('dataValidation', '⚠️ 未找到刷新按钮，请手动刷新页面', 'warning');
+                }
+            } else {
+                log('dataValidation', '✅ 无需修复，数据正常', 'success');
+            }
+        }
+
+        // 测试API请求
+        function testApiRequests() {
+            log('apiValidation', '测试API请求...', 'info');
+            
+            const testParams = {
+                product_line_id: 1,
+                host_part_number: '60A01108',
+                per_page: 5,
+                _cache_key: `test_${Date.now()}`,
+                _t: Date.now()
+            };
+            
+            const queryString = new URLSearchParams(testParams).toString();
+            const testUrl = `/wp-json/bjt/v1/relations/?${queryString}`;
+            
+            log('apiValidation', `🔗 测试URL: ${testUrl}`, 'info');
+            
+            fetch(testUrl)
+                .then(response => {
+                    log('apiValidation', `✅ API响应状态: ${response.status}`, response.ok ? 'success' : 'error');
+                    return response.json();
+                })
+                .then(data => {
+                    log('apiValidation', `📊 API响应数据: ${JSON.stringify(data).substring(0, 200)}...`, 'info');
+                })
+                .catch(error => {
+                    log('apiValidation', `❌ API请求失败: ${error.message}`, 'error');
+                });
+        }
+
+        // 模拟CDN问题
+        function simulateCDNIssue() {
+            log('systemStatus', '⚠️ 模拟CDN缓存问题...', 'warning');
+            
+            // 暂时禁用防缓存参数
+            const originalFetch = window.fetch;
+            window.fetch = function(...args) {
+                let url = args[0];
+                if (typeof url === 'string' && url.includes('/wp-json/bjt/v1/relations')) {
+                    // 移除防缓存参数
+                    url = url.replace(/[&?]_cache_key=[^&]*/, '');
+                    url = url.replace(/[&?]_session_id=[^&]*/, '');
+                    url = url.replace(/[&?]_t=[^&]*/, '');
+                    args[0] = url;
+                    
+                    log('systemStatus', `⚠️ 模拟CDN问题 - 移除防缓存参数: ${url}`, 'warning');
+                }
+                return originalFetch.apply(this, args);
+            };
+            
+            log('systemStatus', '⚠️ CDN问题模拟已启动，建议切换主机观察效果', 'warning');
+            
+            // 10秒后恢复正常
+            setTimeout(() => {
+                window.fetch = originalFetch;
+                log('systemStatus', '✅ 已恢复正常API行为', 'success');
+            }, 10000);
+        }
+
+        // 生成测试报告
+        function generateReport() {
+            const report = {
+                timestamp: testResults.timestamp,
+                userAgent: navigator.userAgent,
+                url: window.location.href,
+                results: testResults
+            };
+            
+            const reportElement = document.getElementById('testResults');
+            reportElement.innerHTML = `
+                <h4>📄 测试报告</h4>
+                <pre style="background: #f5f5f5; padding: 15px; border-radius: 4px; overflow-x: auto; font-size: 12px;">
+${JSON.stringify(report, null, 2)}
+                </pre>
+                <div style="margin-top: 15px;">
+                    <button class="button" onclick="copyReport()">📋 复制报告</button>
+                    <button class="button success" onclick="downloadReport()">💾 下载报告</button>
+                </div>
+            `;
+        }
+
+        // 复制报告
+        function copyReport() {
+            const reportText = JSON.stringify(testResults, null, 2);
+            navigator.clipboard.writeText(reportText).then(() => {
+                alert('✅ 报告已复制到剪贴板');
+            });
+        }
+
+        // 下载报告
+        function downloadReport() {
+            const reportText = JSON.stringify(testResults, null, 2);
+            const blob = new Blob([reportText], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `relations-fix-report-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // 页面加载时自动检查
+        window.addEventListener('load', () => {
+            log('systemStatus', '🚀 关系管理CDN修复验证工具已加载', 'info');
+            log('systemStatus', '💡 建议操作顺序: 1.检查系统状态 → 2.监听API请求 → 3.切换主机 → 4.验证数据完整性', 'info');
+        });
+    </script>
+</body>
+</html> 

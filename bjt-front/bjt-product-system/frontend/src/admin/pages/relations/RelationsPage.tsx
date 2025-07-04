@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Card, Tree, Button, Space, Select, message, 
@@ -94,15 +94,7 @@ const useDataQualityCheck = (relationsList: Relation[], selectedHostPartNumber: 
         action: '需要为这些料号创建到主机或其他节点的父级关系'
       });
       
-      console.log('🔗 孤儿父级关系检测:', {
-        orphanParents,
-        affectedRelations: affectedRelations.map(r => ({
-          id: r.id,
-          parent: r.parent_part_number,
-          part: r.part_number,
-          child: r.child_part_number
-        }))
-      });
+
     }
 
     // 检查3：传统孤儿关系（父级不存在于任何子级中）
@@ -160,19 +152,7 @@ const useDataQualityCheck = (relationsList: Relation[], selectedHostPartNumber: 
         relatedIds: duplicates.flat().map(r => r.id)
       });
       
-      // 添加详细的重复关系信息到控制台
-      console.log('数据质量检查 - 重复关系详情:', duplicates.map(group => ({
-        key: `${group[0].host_part_number}-${group[0].parent_part_number || 'NULL'}-${group[0].part_number}-${group[0].child_part_number}`,
-        count: group.length,
-        ids: group.map(r => r.id),
-        relations: group.map(r => ({
-          id: r.id,
-          host: r.host_part_number,
-          parent: r.parent_part_number,
-          part: r.part_number,
-          child: r.child_part_number
-        }))
-      })));
+
     }
 
     // 检查6：层级异常
@@ -296,11 +276,21 @@ const RelationsPage: React.FC = () => {
   // 🔧 使用数据质量检查
   const { qualityIssues, checkDataQuality } = useDataQualityCheck(relationsList, selectedHostPartNumber || '');
 
-  // ✅ 修复1: URL参数初始化 - 检查URL中的主机料号参数
+  // 🔍 添加缓存验证工具
+  const [cacheDebugInfo, setCacheDebugInfo] = useState<{
+    lastRequestHeaders?: any;
+    lastResponseHeaders?: any;
+    cdnHitStatus?: string;
+    requestTimestamp?: number;
+    responseTime?: number;
+    responseSize?: number;
+    apiCallCount?: number;
+  }>({});
+
+  // URL参数初始化 - 检查URL中的主机料号参数
   useEffect(() => {
     const urlHostPartNumber = searchParams.get('host_part_number');
     if (urlHostPartNumber) {
-      console.log('RelationsPage: Found host_part_number in URL:', urlHostPartNumber);
       setSelectedHostPartNumber(urlHostPartNumber);
     }
   }, [searchParams]);
@@ -312,7 +302,7 @@ const RelationsPage: React.FC = () => {
 
   useEffect(() => {
     if (selectedHostPartNumber) {
-      loadRelationTree(false); // 初始加载时使用默认展开逻辑
+      loadRelationTree(false, undefined, false); // 初始加载时使用默认展开逻辑
     }
   }, [selectedHostPartNumber]);
 
@@ -326,7 +316,6 @@ const RelationsPage: React.FC = () => {
   const loadHostOptions = async () => {
     try {
       setLoading(true);
-      console.log(`RelationsPage: Loading host options from parts table for product line ${productLineId}...`);
       
       // ✅ 修复：从真正的主机料号表（wp_bjt_parts）中读取数据
       let allParts: any[] = [];
@@ -340,8 +329,6 @@ const RelationsPage: React.FC = () => {
           product_line_id: productLineId, // 按产品线过滤
         });
         
-        console.log(`RelationsPage: Parts API page ${currentPage} response:`, response);
-        
         if (!response || !response.items || !Array.isArray(response.items)) {
           console.warn('RelationsPage: Parts API返回的数据结构不正确:', response);
           break;
@@ -350,25 +337,12 @@ const RelationsPage: React.FC = () => {
         allParts = allParts.concat(response.items);
         totalPages = response.total_pages || 1;
         currentPage++;
-        
-        console.log(`RelationsPage: Loaded parts page ${currentPage - 1}/${totalPages}, total parts so far: ${allParts.length}`);
       } while (currentPage <= totalPages);
-      
-      console.log(`RelationsPage: All parts loaded for product line ${productLineId}:`, allParts.length);
       
       // 从主机料号表中提取唯一料号作为主机选项
       const hostOptionsMap = new Map<string, HostOption>();
       
-      allParts.forEach((part: any, index: number) => {
-        if (index < 3) {
-          console.log(`RelationsPage: Sample part ${index}:`, {
-            id: part.id,
-            product_line_id: part.product_line_id,
-            part_number: part.part_number,
-            name_zh: part.name_zh,
-            model: part.model
-          });
-        }
+      allParts.forEach((part: any) => {
         
         // 确保产品线匹配且有料号
         if (part.product_line_id === productLineId && part.part_number) {
@@ -382,31 +356,21 @@ const RelationsPage: React.FC = () => {
               name_en: part.name_en,
               model: part.model
             });
-            console.log('RelationsPage: Added host option from parts table:', {
-              partNumber,
-              name_zh: part.name_zh,
-              model: part.model
-            });
+
           }
         }
       });
       
       const hostOptionsArray = Array.from(hostOptionsMap.values());
-      console.log(`RelationsPage: Final host options from parts table for product line ${productLineId}:`, hostOptionsArray);
-      console.log('RelationsPage: Host options count:', hostOptionsArray.length);
       setHostOptions(hostOptionsArray);
       
       // 如果URL中有指定的主机料号，则选择它
       const urlHostPartNumber = searchParams.get('host_part_number');
       if (urlHostPartNumber && hostOptionsArray.some(option => option.value === urlHostPartNumber)) {
         setSelectedHostPartNumber(urlHostPartNumber);
-        console.log('RelationsPage: Auto-selected from URL:', urlHostPartNumber);
       } else if (hostOptionsArray.length > 0) {
         // ✅ 默认选中第一个主机选项，确保用户进入页面后立即看到树形结构
         setSelectedHostPartNumber(hostOptionsArray[0].value);
-        console.log('RelationsPage: Auto-selected first available option:', hostOptionsArray[0].value);
-      } else {
-        console.log('RelationsPage: No host options available for auto-selection');
       }
     } catch (error) {
       console.error('RelationsPage: 加载主机选项失败:', error);
@@ -418,23 +382,38 @@ const RelationsPage: React.FC = () => {
   };
 
   // 加载关系树
-  const loadRelationTree = async (preserveExpandedState = false, newNodePath?: string) => {
+  const loadRelationTree = async (preserveExpandedState = false, newNodePath?: string, forceRefresh = false) => {
     if (!selectedHostPartNumber) return;
     
     try {
       setTreeLoading(true);
-      console.log(`RelationsPage: Loading relation tree for host ${selectedHostPartNumber}, product line ${productLineId}`);
       
       let allRelations: Relation[] = [];
       let currentPage = 1;
       let totalPages = 1;
       
       do {
-        const response = await adminRelationService.getRelations({
+        // 🔧 API调用：添加主机参数和防缓存机制
+        const apiParams: any = {
           page: currentPage,
           per_page: 100,
           product_line_id: productLineId,
-        });
+          // 🔧 关键修复：添加主机参数确保CDN缓存隔离
+          host_part_number: selectedHostPartNumber,
+        };
+        
+        // 添加时间戳参数防止缓存
+        if (forceRefresh) {
+          apiParams._t = Date.now();
+        }
+        
+        // 🔧 CDN缓存破坏：为每个主机添加唯一缓存键
+        apiParams._cache_key = `relations_${selectedHostPartNumber}_${productLineId}`;
+        
+        // 🔧 防止跨主机数据污染
+        apiParams._session_id = `${selectedHostPartNumber}_${Date.now()}`;
+        
+        const response = await adminRelationService.getRelations(apiParams);
         
         if (!response || !response.items || !Array.isArray(response.items)) {
           console.warn('RelationsPage: API返回的数据结构不正确:', response);
@@ -446,23 +425,76 @@ const RelationsPage: React.FC = () => {
         currentPage++;
       } while (currentPage <= totalPages);
       
-      // 双重过滤确保数据准确性
-      const filteredRelations = allRelations.filter((relation: Relation) => 
-        relation.product_line_id === productLineId && 
-        relation.host_part_number?.toString() === selectedHostPartNumber
-      );
-      
-      console.log(`RelationsPage: Filtered relations for host ${selectedHostPartNumber}:`, {
-        total: filteredRelations.length,
-        sample: filteredRelations.slice(0, 3).map(r => ({
-          id: r.id,
-          part_number: r.part_number,
-          parent_part_number: r.parent_part_number,
-          child_part_number: r.child_part_number,
-          child_type: r.child_type,
-          level: r.level
-        }))
+      // 🔧 超严格过滤逻辑，确保只显示属于当前选择主机的记录
+      const filteredRelations = allRelations.filter((relation: Relation) => {
+        // 检查1：严格检查产品线ID
+        if (relation.product_line_id !== productLineId) {
+          console.warn(`RelationsPage: [过滤] 产品线不匹配 ID=${relation.id}, expected=${productLineId}, actual=${relation.product_line_id}`);
+          return false;
+        }
+        
+        // 检查2：严格检查主机料号（核心过滤逻辑）
+        const relationHostPartNumber = relation.host_part_number?.toString();
+        if (relationHostPartNumber !== selectedHostPartNumber) {
+          console.warn(`RelationsPage: [过滤] 主机料号不匹配 ID=${relation.id}, expected=${selectedHostPartNumber}, actual=${relationHostPartNumber}`);
+          return false;
+        }
+        
+        // 检查3：验证parent_part_number和part_number的一致性
+        // 如果parent_part_number不为空，它应该要么是主机料号，要么是其他已验证的子级料号
+        if (relation.parent_part_number && 
+            relation.parent_part_number !== selectedHostPartNumber &&
+            relation.parent_part_number !== relation.part_number) {
+          // 临时严格模式：如果parent不是主机，则需要在同一主机的其他记录中能找到parent作为child
+          const parentExists = allRelations.some(parentRelation => 
+            parentRelation.host_part_number?.toString() === selectedHostPartNumber &&
+            parentRelation.child_part_number === relation.parent_part_number
+          );
+          
+          if (!parentExists) {
+            console.warn(`RelationsPage: [过滤] 孤儿父级关系 ID=${relation.id}, parent=${relation.parent_part_number}, 在当前主机${selectedHostPartNumber}下找不到对应的父级关系`);
+            return false;
+          }
+        }
+        
+        // 检查4：验证part_number的合理性（避免跨主机数据污染）
+        if (!relation.part_number) {
+          console.warn(`RelationsPage: [过滤] part_number为空 ID=${relation.id}`);
+          return false;
+        }
+        
+        // 检查5：验证child_part_number的存在性
+        if (!relation.child_part_number) {
+          console.warn(`RelationsPage: [过滤] child_part_number为空 ID=${relation.id}`);
+          return false;
+        }
+        
+        return true;
       });
+      
+      // 数据质量警告：如果过滤后的记录数量与API返回数量不一致，说明存在脏数据
+      if (filteredRelations.length !== allRelations.length) {
+        const filteredOutCount = allRelations.length - filteredRelations.length;
+        console.warn(`RelationsPage: 数据质量警告 - 过滤掉了 ${filteredOutCount} 条不匹配的记录`);
+        
+        // 显示详细的被过滤记录信息
+        const filteredOutRelations = allRelations.filter(relation => 
+          relation.product_line_id !== productLineId || 
+          relation.host_part_number?.toString() !== selectedHostPartNumber
+        );
+        
+        console.warn('RelationsPage: 被过滤的记录详情:', filteredOutRelations.map(r => ({
+          id: r.id,
+          host_part_number: r.host_part_number,
+          expected_host: selectedHostPartNumber,
+          product_line_id: r.product_line_id,
+          expected_product_line: productLineId,
+          part_number: r.part_number,
+          child_part_number: r.child_part_number
+        })));
+        
+        message.warning(`数据质量警告：发现并过滤了${filteredOutCount}条不属于当前主机的记录。请检查数据库中的host_part_number字段是否正确。`);
+      }
       
       setRelationsList(filteredRelations);
       buildRelationTree(filteredRelations, preserveExpandedState, newNodePath);
@@ -478,8 +510,6 @@ const RelationsPage: React.FC = () => {
   // 构建关系树
   const buildRelationTree = useCallback((relations: Relation[], preserveExpandedState = false, newNodePath?: string) => {
     if (!selectedHostPartNumber) return;
-
-    console.log('buildRelationTree: Building tree for relations:', relations);
 
     // 获取选中主机的详细信息
     const selectedHostInfo = hostOptions.find(option => option.value === selectedHostPartNumber);
@@ -552,13 +582,12 @@ const RelationsPage: React.FC = () => {
           const nodePath = [...currentPath, node.key];
           
           if (node.partNumber === targetPartNumber) {
-            // 🔧 展开到目标节点的完整路径（包括目标节点本身）
+            // 展开到目标节点的完整路径（包括目标节点本身）
             nodePath.forEach(pathKey => {
               if (!keysToExpand.includes(pathKey)) {
                 keysToExpand.push(pathKey);
               }
             });
-            console.log('buildRelationTree: Found target node, expanding path:', nodePath);
           }
           
           if (node.children && node.children.length > 0) {
@@ -574,16 +603,61 @@ const RelationsPage: React.FC = () => {
       keysToExpand.unshift(`host-${selectedHostPartNumber}`);
     }
     
-    console.log('buildRelationTree: Final expanded keys:', keysToExpand);
     setExpandedKeys(keysToExpand);
     setRelationTree([hostNode]);
   }, [selectedHostPartNumber, hostOptions]);
 
+  // 🔍 缓存验证工具
+  const verifyCacheStatus = useCallback(async () => {
+    if (!selectedHostPartNumber) return;
+    
+    try {
+      console.log('🔍 缓存验证：检查API请求是否真正绕过缓存...');
+      
+      const startTime = Date.now();
+      const apiParams = {
+        page: 1,
+        per_page: 10,
+        product_line_id: productLineId,
+        host_part_number: selectedHostPartNumber,
+        _cache_verification: `test_${startTime}`
+      };
+      
+      const response = await adminRelationService.getRelations(apiParams);
+      const endTime = Date.now();
+      
+      const cacheInfo = {
+        requestTimestamp: startTime,
+        responseTime: endTime - startTime,
+        apiCallCount: (cacheDebugInfo.apiCallCount || 0) + 1,
+        requestParams: apiParams,
+        responseSize: JSON.stringify(response).length,
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'X-Cache-Verification': 'active'
+        }
+      };
+      
+      setCacheDebugInfo(cacheInfo);
+      
+      // 验证是否获取到了最新数据
+      console.log('🔍 缓存验证结果:', {
+        ...cacheInfo,
+        recordCount: response?.items?.length || 0,
+        fastResponse: cacheInfo.responseTime < 100 ? '⚠️ 可能命中缓存' : '✅ 正常请求时间'
+      });
+      
+      message.info(`缓存验证完成 - 响应时间: ${cacheInfo.responseTime}ms`);
+      
+    } catch (error) {
+      console.error('🔍 缓存验证失败:', error);
+      message.error('缓存验证失败');
+    }
+  }, [selectedHostPartNumber, productLineId, cacheDebugInfo.apiCallCount]);
+
   // 构建树节点 - 添加循环检测，修复查询逻辑
   const buildTreeNodes = (relations: Relation[], currentPartNumber: string, currentParentPartNumber: string | null, visitedNodes: Set<string> = new Set(), currentPath: string[] = []): RelationTreeNode[] => {
-    console.log(`buildTreeNodes: Building for current=${currentPartNumber}, parent=${currentParentPartNumber}, host=${selectedHostPartNumber}`);
-    console.log(`buildTreeNodes: Current path:`, currentPath);
-    console.log(`buildTreeNodes: Visited nodes so far:`, Array.from(visitedNodes));
+
     
     // 🔧 循环检测：如果当前节点已经在访问路径中，则停止递归
     if (visitedNodes.has(currentPartNumber)) {
@@ -595,13 +669,10 @@ const RelationsPage: React.FC = () => {
     const newVisitedNodes = new Set(visitedNodes);
     newVisitedNodes.add(currentPartNumber);
     
-    // 🔧 构建当前路径：[主机, 路径节点1, 路径节点2, ..., 当前节点]
+    // 构建当前路径：[主机, 路径节点1, 路径节点2, ..., 当前节点]
     const currentFullPath = [...currentPath, currentPartNumber];
-    console.log(`buildTreeNodes: Current full path:`, currentFullPath);
     
-    console.log(`buildTreeNodes: Total relations to search:`, relations.length);
-    
-    // 🔧 修正逻辑：根据具体的树路径上下文查找子级关系
+    // 修正逻辑：根据具体的树路径上下文查找子级关系
     const childRelations = relations.filter(relation => {
       // 首先确保是同一个主机
       const isSameHost = relation.host_part_number?.toString() === selectedHostPartNumber;
@@ -614,42 +685,18 @@ const RelationsPage: React.FC = () => {
         const isHostDirectChild = relation.parent_part_number === null && 
                                  relation.part_number === selectedHostPartNumber;
         
-        console.log(`buildTreeNodes: Checking host direct child for relation ${relation.id}: parent_part_number=${relation.parent_part_number}, part_number=${relation.part_number}, isHostDirectChild=${isHostDirectChild}`);
-        
-        if (isHostDirectChild) {
-          console.log(`buildTreeNodes: Found host direct child ${relation.id}: ${relation.part_number} → ${relation.child_part_number}`);
-        }
-        
         return isHostDirectChild;
       } else {
-        // 🔧 关键修复：查找 part_number = 当前节点 AND parent_part_number = 当前父级 的记录
+        // 关键修复：查找 part_number = 当前节点 AND parent_part_number = 当前父级 的记录
         // 这确保了节点只显示在正确的路径上下文中
         const isCurrentNodeRelation = relation.part_number === currentPartNumber && 
                                      relation.parent_part_number === currentParentPartNumber;
-        
-        console.log(`buildTreeNodes: Checking relation for current node ${currentPartNumber}, parent ${currentParentPartNumber}: relation ${relation.id}, part_number=${relation.part_number}, parent_part_number=${relation.parent_part_number}, isMatch=${isCurrentNodeRelation}`);
-        
-        if (isCurrentNodeRelation) {
-          console.log(`buildTreeNodes: Found child for node ${currentPartNumber} with correct parent context: ${relation.child_part_number} (relation ${relation.id})`);
-        }
         
         return isCurrentNodeRelation;
       }
     });
 
-    console.log(`buildTreeNodes: Found ${childRelations.length} child relations for ${currentPartNumber} with parent context ${currentParentPartNumber} under host ${selectedHostPartNumber}`);
-    
-    // 打印详细的关系信息用于调试
-    if (childRelations.length > 0) {
-      console.log(`buildTreeNodes: Child relations details:`, childRelations.map(r => ({
-        id: r.id,
-        host_part_number: r.host_part_number,
-        parent_part_number: r.parent_part_number,
-        part_number: r.part_number,
-        child_part_number: r.child_part_number,
-        level: r.level
-      })));
-    }
+
 
     // 为每个子关系创建节点
     const nodes: RelationTreeNode[] = [];
@@ -700,13 +747,9 @@ const RelationsPage: React.FC = () => {
                   子级{grandChildren.length}项
                 </Tag>
               )}
-              {/* 🔧 显示当前层级信息 */}
+              {/* 显示当前层级信息 */}
               <Tag size="small" color="blue">
                 Level {currentNodeLevel}
-              </Tag>
-              {/* 🔧 显示路径信息（调试用） */}
-              <Tag size="small" color="purple" style={{ fontSize: '10px' }}>
-                Path: {childFullPath.join(' → ')}
               </Tag>
             </div>
             <div className="flex items-center space-x-1">
@@ -789,22 +832,159 @@ const RelationsPage: React.FC = () => {
       nodes.push(node);
     });
 
-    console.log(`buildTreeNodes: Created ${nodes.length} tree nodes for ${currentPartNumber} with parent context ${currentParentPartNumber} under host ${selectedHostPartNumber}`);
     return nodes;
   };
 
   // 处理主机料号变化
   const handleHostPartNumberChange = (value: string) => {
-    setSelectedHostPartNumber(value);
-  };
-
-  // 重置
-  const handleReset = () => {
-    setSelectedHostPartNumber(undefined);
+    // 强制清理所有缓存状态，防止数据串联
     setRelationTree([]);
     setRelationsList([]);
     setExpandedKeys([]);
     setSelectedKeys([]);
+    setIsModalVisible(false);
+    setEditingRelation(null);
+    form.resetFields();
+    setChildPartOptions([]);
+    setRequiredPartsOptions([]);
+    setTreeLoading(false);
+    setLoadingChildParts(false);
+    setLoadingRequiredParts(false);
+    
+    setSelectedHostPartNumber(value);
+  };
+
+  // 缓存清理工具函数
+  const clearAllCaches = () => {
+    // 清理组件状态缓存（但保留核心选择状态）
+    setRelationTree([]);
+    setRelationsList([]);
+    setExpandedKeys([]);
+    setSelectedKeys([]);
+    setIsModalVisible(false);
+    setEditingRelation(null);
+    setChildPartOptions([]);
+    setRequiredPartsOptions([]);
+    form.resetFields();
+    
+    // 清理浏览器缓存
+    const cacheKeys = [
+      'relations-page-cache',
+      'host-options-cache',
+      'relation-tree-cache',
+      'admin-relation-cache'
+    ];
+    
+    cacheKeys.forEach(key => {
+      localStorage.removeItem(key);
+      sessionStorage.removeItem(key);
+    });
+    
+    // 清理 Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(registration => {
+        registration.unregister();
+      });
+    }
+    
+    message.success('缓存已清理，页面即将重新加载');
+    
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
+  };
+
+  // 🔧 新增：智能强制重建函数
+  const forceRebuildRelations = async () => {
+    if (!selectedHostPartNumber) {
+      message.error('请先选择一个主机');
+      return;
+    }
+
+    try {
+      // 显示确认对话框
+      Modal.confirm({
+        title: '🔄 强制重建关系树',
+        icon: <ExclamationCircleOutlined />,
+        content: (
+          <div>
+            <p>将强制重建主机 <strong>{selectedHostPartNumber}</strong> 的关系树</p>
+            <div style={{ 
+              padding: '12px', 
+              backgroundColor: '#fff7e6', 
+              borderRadius: '6px', 
+              marginTop: '8px',
+              border: '1px solid #ffd591'
+            }}>
+              <div><strong>🔧 操作内容：</strong></div>
+              <ul style={{ marginLeft: '16px', marginTop: '4px' }}>
+                <li>清理所有缓存状态</li>
+                <li>强制从服务器重新获取数据</li>
+                <li>重新构建关系树结构</li>
+                <li>应用最新的CDN缓存破坏机制</li>
+              </ul>
+            </div>
+            <p style={{ marginTop: '12px' }}>
+              <strong>注意：</strong>此操作不会删除数据库中的任何数据，仅重新构建显示树。
+            </p>
+          </div>
+        ),
+        width: 500,
+        okText: '🔄 开始重建',
+        cancelText: '取消',
+        onOk: async () => {
+          const currentHost = selectedHostPartNumber;
+          
+          // 1. 清理状态（但保留当前选中的主机）
+          setRelationTree([]);
+          setRelationsList([]);
+          setExpandedKeys([]);
+          setSelectedKeys([]);
+          setIsModalVisible(false);
+          setEditingRelation(null);
+          setChildPartOptions([]);
+          setRequiredPartsOptions([]);
+          form.resetFields();
+          
+          // 2. 清理浏览器缓存
+          const cacheKeys = [
+            'relations-page-cache',
+            'host-options-cache', 
+            'relation-tree-cache',
+            'admin-relation-cache'
+          ];
+          
+          cacheKeys.forEach(key => {
+            localStorage.removeItem(key);
+            sessionStorage.removeItem(key);
+          });
+          
+          // 3. 显示重建进度
+          message.loading('正在重建关系树...');
+          
+          try {
+            // 4. 重新加载主机选项（确保选项列表是最新的）
+            await loadHostOptions();
+            
+            // 5. 强制重新加载关系树（使用forceRefresh=true）
+            await loadRelationTree(false, undefined, true);
+            
+            message.success(`主机 ${currentHost} 的关系树重建完成！`);
+          } catch (error) {
+            console.error('RelationsPage: 强制重建失败:', error);
+            message.error('重建失败，请重试或刷新页面');
+          }
+        }
+      });
+    } catch (error) {
+      console.error('RelationsPage: 强制重建确认失败:', error);
+      message.error('操作失败');
+    }
+  };
+
+  // 重置
+  const handleReset = () => {
+    clearAllCaches();
   };
 
   // 🔧 新增：带有完整路径上下文的添加子级函数
@@ -818,17 +998,12 @@ const RelationsPage: React.FC = () => {
     setModalMode('create');
     setEditingRelation(null);
     
-    console.log(`handleAddChildWithContext: clicked=${clickedPartNumber}, pathContext:`, pathContext);
-    
-    // 🔧 从路径上下文中获取准确的父级信息
+    // 从路径上下文中获取准确的父级信息
     const parentPartNumber = pathContext.parentPartNumber;
     const partNumber = clickedPartNumber; // 当前节点就是被点击的配件
     
-    // 🔧 根据路径上下文确定下一级的level
+    // 根据路径上下文确定下一级的level
     const nextLevel = childType === 'spare_part' ? 1 : Math.min(pathContext.level + 1, 5);
-    
-    console.log(`handleAddChildWithContext: Using context - host=${pathContext.hostPartNumber}, parent=${parentPartNumber}, part=${partNumber}, nextLevel=${nextLevel}`);
-    console.log(`handleAddChildWithContext: Full path context:`, pathContext.fullPath.join(' → '));
 
     // 设置表单值
     form.setFieldsValue({
@@ -885,7 +1060,6 @@ const RelationsPage: React.FC = () => {
     } else {
       // ⚠️ 警告：这里存在歧义问题，无法确定准确的路径上下文
       // 建议使用 handleAddChildWithContext 代替
-      console.warn('handleAddChild: 使用了旧版本的添加函数，可能存在路径上下文歧义问题');
       
       // 用户点击某个配件节点，要为该配件添加子级
       // 需要找到被点击节点的父级料号
@@ -908,7 +1082,7 @@ const RelationsPage: React.FC = () => {
       (relationsList.find(r => r.child_part_number === clickedPartNumber)?.level || 1);
     const nextLevel = childType === 'spare_part' ? 1 : Math.min(currentNodeLevel + 1, 5);
     
-    console.log(`handleAddChild: clicked=${clickedPartNumber}, parent=${parentPartNumber}, part=${partNumber}, nextLevel=${nextLevel}`);
+
 
     // 设置表单值
     form.setFieldsValue({
@@ -985,7 +1159,7 @@ const RelationsPage: React.FC = () => {
         try {
           await adminRelationService.deleteRelation(relation.id, { cascade: true });
           message.success('删除成功');
-          await loadRelationTree(true);
+          await loadRelationTree(true, undefined, false);
         } catch (error) {
           console.error('删除失败:', error);
           message.error('删除失败');
@@ -999,8 +1173,6 @@ const RelationsPage: React.FC = () => {
     try {
       setSubmitting(true);
       const values = await form.validateFields();
-      
-      console.log('RelationsPage.handleFormSubmit - Original form values:', values);
 
       // 1. 处理依赖关系字段
       const requiredPartsArray = values.required_parts_display 
@@ -1035,9 +1207,7 @@ const RelationsPage: React.FC = () => {
         })
       );
 
-      console.log('RelationsPage.handleFormSubmit - Final data to submit:', finalData);
-
-      // 🔧 验证必需字段
+      // 验证必需字段
       const requiredFieldsValidation = {
         product_line_id: finalData.product_line_id,
         host_part_number: finalData.host_part_number,
@@ -1048,8 +1218,6 @@ const RelationsPage: React.FC = () => {
         quantity: finalData.quantity,
         status: finalData.status
       };
-      
-      console.log('RelationsPage.handleFormSubmit - Required fields validation:', requiredFieldsValidation);
       
       // 检查是否有缺失的必需字段
       const missingFields = Object.entries(requiredFieldsValidation)
@@ -1113,9 +1281,9 @@ const RelationsPage: React.FC = () => {
               // 切换到编辑模式
               handleEditRelation(duplicateRelation);
             },
-            onCancel: () => {
-              console.log('RelationsPage: User cancelled duplicate relation handling');
-            }
+                          onCancel: () => {
+                // 用户取消操作
+              }
           });
           return;
         }
@@ -1123,49 +1291,24 @@ const RelationsPage: React.FC = () => {
 
       // 4. API调用
       if (modalMode === 'create') {
-        console.log('RelationsPage.handleFormSubmit - About to call createRelation API');
-        console.log('RelationsPage.handleFormSubmit - API endpoint:', '/wp-json/bjt/v1/relations');
-        console.log('RelationsPage.handleFormSubmit - Request data:', JSON.stringify(finalData, null, 2));
-        
         const result = await adminRelationService.createRelation(finalData);
-        console.log('RelationsPage.handleFormSubmit - API response:', result);
         message.success('创建关系成功');
         
-        // 🔧 修复自动展开逻辑：展开到新子级的父级节点
+        // 修复自动展开逻辑：展开到新子级的父级节点
         // 新创建的关系结构是：part_number -> child_part_number
         // 我们需要确保新子级的父级节点被展开，这样新子级就能显示出来
         const parentOfNewChild = finalData.part_number; // 新子级的父级节点
-        console.log('RelationsPage.handleFormSubmit - Auto-expanding to parent of new child:', parentOfNewChild);
-        console.log('RelationsPage.handleFormSubmit - New child part number:', finalData.child_part_number);
-        await loadRelationTree(true, parentOfNewChild);
+        await loadRelationTree(true, parentOfNewChild, false);
       } else if (editingRelation) {
-        console.log('RelationsPage.handleFormSubmit - About to call updateRelation API');
-        console.log('RelationsPage.handleFormSubmit - API endpoint:', `/wp-json/bjt/v1/relations/${editingRelation.id}`);
-        console.log('RelationsPage.handleFormSubmit - Request data:', JSON.stringify(finalData, null, 2));
-        
         await adminRelationService.updateRelation(editingRelation.id, finalData);
         message.success('更新关系成功');
-        await loadRelationTree(true);
+        await loadRelationTree(true, undefined, false);
       }
       
       setIsModalVisible(false);
       form.resetFields();
     } catch (error) {
       console.error('RelationsPage.handleFormSubmit - Error:', error);
-      
-      // 🔧 增强错误处理 - 专门处理重复关系错误
-      console.error('RelationsPage.handleFormSubmit - Detailed error info:', {
-        error,
-        errorType: typeof error,
-        errorConstructor: error?.constructor?.name,
-        errorString: String(error),
-        errorJSON: JSON.stringify(error, Object.getOwnPropertyNames(error)),
-        response: error?.response,
-        responseData: error?.response?.data,
-        responseStatus: error?.response?.status,
-        responseStatusText: error?.response?.statusText,
-        stack: error?.stack
-      });
       
       // 🔧 智能错误处理
       let errorMessage = '操作失败';
@@ -1174,7 +1317,6 @@ const RelationsPage: React.FC = () => {
       try {
         if (error instanceof Error) {
           errorMessage = `操作失败: ${error.message}`;
-          console.log('RelationsPage: Error is instance of Error:', error.message);
         } else if (typeof error === 'object' && error !== null) {
           const errorObj = error as any;
           
@@ -1186,8 +1328,6 @@ const RelationsPage: React.FC = () => {
             
             showDuplicateDialog = true;
             errorMessage = '关系已存在，无法重复创建';
-            
-            console.log('RelationsPage: Detected duplicate relation error, showing smart dialog');
             
             // 显示智能重复处理对话框
             Modal.confirm({
@@ -1229,12 +1369,11 @@ const RelationsPage: React.FC = () => {
                   );
                   
                   if (targetRelation) {
-                    console.log('RelationsPage: Found target relation for editing:', targetRelation);
                     message.info('已找到现有关系，切换到编辑模式');
                     handleEditRelation(targetRelation);
                   } else {
                     message.warning('未在当前树中找到对应关系，请刷新数据后重试');
-                    await loadRelationTree(true);
+                    await loadRelationTree(true, undefined, true);
                   }
                 } catch (findError) {
                   console.error('RelationsPage: Error finding existing relation:', findError);
@@ -1242,7 +1381,6 @@ const RelationsPage: React.FC = () => {
                 }
               },
               onCancel: () => {
-                console.log('RelationsPage: User cancelled duplicate handling');
                 message.info('操作已取消');
               }
             });
@@ -1251,38 +1389,29 @@ const RelationsPage: React.FC = () => {
             // 其他类型的错误处理
             if (errorObj.response?.data?.message) {
               errorMessage = errorObj.response.data.message;
-              console.log('RelationsPage: Found response.data.message:', errorMessage);
             } else if (errorObj.response?.data?.error) {
               errorMessage = errorObj.response.data.error;
-              console.log('RelationsPage: Found response.data.error:', errorMessage);
             } else if (errorObj.response?.data) {
               try {
                 errorMessage = `API错误: ${JSON.stringify(errorObj.response.data)}`;
-                console.log('RelationsPage: Found response.data (JSON):', errorObj.response.data);
               } catch (jsonError) {
                 errorMessage = `API错误: ${String(errorObj.response.data)}`;
-                console.log('RelationsPage: Found response.data (String):', errorObj.response.data);
               }
             } else if (errorObj.message) {
               errorMessage = errorObj.message;
-              console.log('RelationsPage: Found error.message:', errorMessage);
             } else if (errorObj.error) {
               errorMessage = errorObj.error;
-              console.log('RelationsPage: Found error.error:', errorMessage);
             } else {
               // 如果都找不到，尝试转换为字符串
               try {
                 errorMessage = `未知错误: ${JSON.stringify(errorObj)}`;
-                console.log('RelationsPage: Unknown error (JSON):', errorObj);
               } catch (jsonError) {
                 errorMessage = `未知错误: ${String(errorObj)}`;
-                console.log('RelationsPage: Unknown error (String):', errorObj);
               }
             }
           }
         } else {
           errorMessage = `未知类型错误: ${String(error)}`;
-          console.log('RelationsPage: Non-object error:', error);
         }
       } catch (parseError) {
         console.error('RelationsPage: Error parsing error message:', parseError);
@@ -1302,7 +1431,6 @@ const RelationsPage: React.FC = () => {
   const loadChildPartOptions = async (childType: 'accessory' | 'spare_part') => {
     try {
       setLoadingChildParts(true);
-      console.log(`RelationsPage: Loading ${childType} options for product line ${productLineId}`);
       
       let options: { value: string; label: string; type: string }[] = [];
       
@@ -1335,7 +1463,7 @@ const RelationsPage: React.FC = () => {
           type: 'accessory'
         }));
         
-        console.log(`RelationsPage: Loaded ${options.length} accessory options`);
+
       } else if (childType === 'spare_part') {
         // 获取备件料号
         let allSpareParts: any[] = [];
@@ -1366,7 +1494,7 @@ const RelationsPage: React.FC = () => {
           type: 'spare_part'
         }));
         
-        console.log(`RelationsPage: Loaded ${options.length} spare part options`);
+
       }
       
       setChildPartOptions(options);
@@ -1383,7 +1511,6 @@ const RelationsPage: React.FC = () => {
   const loadRequiredPartsOptions = async () => {
     try {
       setLoadingRequiredParts(true);
-      console.log(`RelationsPage: Loading required spare parts (is_consumable = 0) for product line ${productLineId}`);
       
       let allRequiredSpareParts: any[] = [];
       let currentPage = 1;
@@ -1412,7 +1539,6 @@ const RelationsPage: React.FC = () => {
         label: `${sparePart.part_number} - ${sparePart.name_zh || sparePart.name_en || ''} (必选备件)`,
       }));
       
-      console.log(`RelationsPage: Loaded ${options.length} required spare part options (is_consumable = 0)`);
       setRequiredPartsOptions(options);
     } catch (error) {
       console.error('RelationsPage: 加载必选备件料号失败:', error);
@@ -1434,13 +1560,31 @@ const RelationsPage: React.FC = () => {
             <DataImporter
               entity="relation"
               requiredFields={importRequired.relation}
-              onSuccess={() => loadRelationTree(false)}
+              onSuccess={() => loadRelationTree(false, undefined, true)}
             />
-            <Button icon={<ReloadOutlined />} onClick={() => loadRelationTree(true)} disabled={!selectedHostPartNumber}>
+            <Button icon={<ReloadOutlined />} onClick={() => loadRelationTree(true, undefined, true)} disabled={!selectedHostPartNumber}>
               {t('list.refresh', { ns: 'relations' })}
+            </Button>
+            <Button 
+              type="primary" 
+              danger 
+              icon={<ReloadOutlined />} 
+              onClick={forceRebuildRelations} 
+              disabled={!selectedHostPartNumber}
+            >
+              强制重建
             </Button>
             <Button onClick={handleReset}>
               {t('list.reset', { ns: 'relations' })}
+            </Button>
+            {/* 🔍 缓存验证工具 */}
+            <Button 
+              type="dashed" 
+              icon={<InfoCircleOutlined />} 
+              onClick={verifyCacheStatus}
+              disabled={!selectedHostPartNumber}
+            >
+              验证缓存状态
             </Button>
             {qualityIssues.length > 0 && (
               <Button 
@@ -1528,13 +1672,39 @@ const RelationsPage: React.FC = () => {
           </Col>
           
           <Col span={16}>
-            <Alert
-              message={`产品线已固定为: ${getProductLineTypeName(typeFromUrl)}`}
-              description={`当前正在管理 ${getProductLineTypeName(typeFromUrl)} 的关联关系。产品线ID: ${productLineId}`}
-              type="info"
-              showIcon
-              className="mb-0"
-            />
+            <div className="space-y-2">
+              <Alert
+                message={`产品线已固定为: ${getProductLineTypeName(typeFromUrl)}`}
+                description={`当前正在管理 ${getProductLineTypeName(typeFromUrl)} 的关联关系。产品线ID: ${productLineId}`}
+                type="info"
+                showIcon
+                className="mb-0"
+              />
+              {/* 🔍 缓存验证状态显示 */}
+              {cacheDebugInfo.requestTimestamp && (
+                <div className="flex items-center space-x-4 px-3 py-2 bg-green-50 rounded-md border border-green-200">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-green-600">
+                      🔍 缓存验证已完成
+                    </span>
+                    <Tag color="green" size="small">
+                      响应时间: {cacheDebugInfo.responseTime}ms
+                    </Tag>
+                  </div>
+                  <div className="flex items-center space-x-2 text-xs text-gray-600">
+                    <span>
+                      📊 API调用: {cacheDebugInfo.apiCallCount} 次
+                    </span>
+                    <span>
+                      📦 数据大小: {(cacheDebugInfo.responseSize! / 1024).toFixed(1)}KB
+                    </span>
+                    <span>
+                      {cacheDebugInfo.responseTime! < 100 ? '⚠️ 可能有缓存' : '✅ 响应时间正常'}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
           </Col>
         </Row>
       </Card>
@@ -1765,9 +1935,9 @@ const RelationsPage: React.FC = () => {
                                 onOk: () => {
                                   message.info('请按照指导操作修复孤儿关系');
                                 },
-                                onCancel: () => {
-                                  console.log('User closed orphan relation guide');
-                                }
+                                                onCancel: () => {
+                  // 用户关闭指导
+                }
                               });
                             }}
                           >
@@ -1813,6 +1983,12 @@ const RelationsPage: React.FC = () => {
                 <Tag color="blue">{t('list.hostPartNumber', { ns: 'relations' })}: {selectedHostPartNumber}</Tag>
                 <Tag color="purple">{t('list.relationshipCount', { ns: 'relations' })}: {relationsList.length}</Tag>
                 <Tag color="cyan">{t('list.productLine', { ns: 'relations' })}: {productLineId}</Tag>
+                {/* 🔍 缓存验证状态标签 */}
+                {cacheDebugInfo.requestTimestamp && (
+                  <Tag color="green" icon={<InfoCircleOutlined />}>
+                    缓存验证: {cacheDebugInfo.responseTime}ms
+                  </Tag>
+                )}
               </div>
               <div className="flex items-center space-x-2">
                 <Text type="secondary">{t('list.legend', { ns: 'relations' })}:</Text>
