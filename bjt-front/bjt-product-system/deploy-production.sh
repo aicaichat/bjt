@@ -97,18 +97,65 @@ backup_current_deployment() {
     backup_dir="backups/$(date +'%Y%m%d_%H%M%S')"
     mkdir -p "$backup_dir"
     
-    # 备份数据库
-    if $COMPOSE exec -T mysql mysqldump -u root -p${MYSQL_ROOT_PASSWORD} ${MYSQL_DATABASE} > "$backup_dir/database.sql"; then
-        print_message "数据库备份完成"
+    # 🔥 新增：备份前端uploads目录（用户上传的图片）
+    if [ -d "frontend/public/uploads" ]; then
+        print_message "备份前端uploads目录..."
+        cp -r frontend/public/uploads "$backup_dir/frontend_uploads"
+        print_message "✅ 前端uploads目录备份完成"
     else
-        print_warning "数据库备份失败，继续部署..."
+        print_warning "⚠️  frontend/public/uploads 目录不存在"
     fi
     
-    # 备份上传文件
+    # 备份WordPress uploads目录
     if [ -d "wordpress_uploads" ]; then
-        cp -r wordpress_uploads "$backup_dir/"
-        print_message "上传文件备份完成"
+        print_message "备份WordPress uploads目录..."
+        cp -r wordpress_uploads "$backup_dir/wordpress_uploads"
+        print_message "✅ WordPress uploads目录备份完成"
+    else
+        print_warning "⚠️  wordpress_uploads 目录不存在"
     fi
+    
+    # 🔥 新增：备份Docker挂载的uploads目录（如果存在）
+    docker_uploads_paths=(
+        "frontend/public/uploads"
+        "wordpress/wp-content/uploads"
+        "wp-content/uploads"
+    )
+    
+    for upload_path in "${docker_uploads_paths[@]}"; do
+        if [ -d "$upload_path" ]; then
+            print_message "备份 $upload_path..."
+            mkdir -p "$backup_dir/$(dirname $upload_path)"
+            cp -r "$upload_path" "$backup_dir/$upload_path" 2>/dev/null || true
+        fi
+    done
+    
+    # 备份数据库
+    if $COMPOSE exec -T mysql mysqldump -u root -p${MYSQL_ROOT_PASSWORD} ${MYSQL_DATABASE} > "$backup_dir/database.sql" 2>/dev/null; then
+        print_message "✅ 数据库备份完成"
+    else
+        print_warning "❌ 数据库备份失败，继续部署..."
+    fi
+    
+    # 🔥 新增：创建备份清单
+    cat > "$backup_dir/backup_manifest.txt" << EOF
+备份时间: $(date)
+备份内容:
+- 前端uploads: $([ -d "frontend/public/uploads" ] && echo "✅ 已备份" || echo "❌ 不存在")
+- WordPress uploads: $([ -d "wordpress_uploads" ] && echo "✅ 已备份" || echo "❌ 不存在")  
+- 数据库: $([ -f "$backup_dir/database.sql" ] && echo "✅ 已备份" || echo "❌ 备份失败")
+- 备份目录: $backup_dir
+
+恢复方法:
+如果需要恢复图片文件：
+1. 停止服务: docker compose down
+2. 恢复前端图片: cp -r $backup_dir/frontend_uploads/* frontend/public/uploads/
+3. 恢复WordPress图片: cp -r $backup_dir/wordpress_uploads/* wordpress_uploads/
+4. 重启服务: docker compose up -d
+EOF
+    
+    print_message "📋 备份清单已创建: $backup_dir/backup_manifest.txt"
+    print_message "💾 备份完成，备份位置: $backup_dir"
 }
 
 # 构建前端应用
@@ -116,6 +163,16 @@ build_frontend() {
     print_message "构建前端应用..."
     
     cd frontend
+    
+    # 🔥 新增：保护现有的uploads目录
+    local temp_uploads_backup="/tmp/frontend_uploads_temp_$(date +%s)"
+    if [ -d "public/uploads" ]; then
+        print_message "🛡️  保护现有uploads目录..."
+        cp -r public/uploads "$temp_uploads_backup"
+        print_message "✅ uploads目录已临时备份到: $temp_uploads_backup"
+    else
+        print_message "ℹ️  uploads目录不存在，跳过保护步骤"
+    fi
     
     # 安装依赖
     print_message "安装前端依赖..."
@@ -221,6 +278,31 @@ EOF
         fi
     fi
     
+    # 🔥 新增：恢复uploads目录
+    if [ -d "$temp_uploads_backup" ]; then
+        print_message "🔄 恢复uploads目录..."
+        
+        # 确保dist/uploads目录结构存在
+        mkdir -p dist/uploads
+        
+        # 恢复用户上传的文件到构建输出目录
+        cp -r "$temp_uploads_backup"/* dist/uploads/ 2>/dev/null || true
+        
+        # 同时恢复到public目录（保持源文件完整）
+        if [ ! -d "public/uploads" ]; then
+            mkdir -p public/uploads
+        fi
+        cp -r "$temp_uploads_backup"/* public/uploads/ 2>/dev/null || true
+        
+        print_message "✅ uploads目录已恢复到构建输出"
+        
+        # 清理临时备份
+        rm -rf "$temp_uploads_backup"
+        print_message "🧹 临时备份已清理"
+    else
+        print_message "ℹ️  无需恢复uploads目录"
+    fi
+    
     cd ..
     
     print_message "前端构建完成"
@@ -230,36 +312,87 @@ EOF
 setup_upload_permissions() {
     print_message "设置upload目录权限..."
     
-    # 确保uploads目录存在
-    mkdir -p frontend/public/uploads/machines/pdfs
-    mkdir -p frontend/public/uploads/machines/images
-    mkdir -p frontend/public/uploads/host
-    mkdir -p frontend/public/uploads/accessory
-    mkdir -p frontend/public/uploads/spare_parts
-    mkdir -p frontend/public/uploads/consumables
-    mkdir -p frontend/public/uploads/documents
+    # 🔥 修复：确保uploads目录存在，但不覆盖现有文件
+    upload_dirs=(
+        "frontend/public/uploads/machines/pdfs"
+        "frontend/public/uploads/machines/images"
+        "frontend/public/uploads/host"
+        "frontend/public/uploads/accessory"
+        "frontend/public/uploads/spare_parts"
+        "frontend/public/uploads/consumables"
+        "frontend/public/uploads/documents"
+        "frontend/dist/uploads/machines/pdfs"
+        "frontend/dist/uploads/machines/images"
+        "frontend/dist/uploads/host"
+        "frontend/dist/uploads/accessory"
+        "frontend/dist/uploads/spare_parts"
+        "frontend/dist/uploads/consumables"
+        "frontend/dist/uploads/documents"
+    )
     
-    print_message "uploads目录结构已创建"
+    for dir in "${upload_dirs[@]}"; do
+        if [ ! -d "$dir" ]; then
+            mkdir -p "$dir"
+            print_message "✅ 创建目录: $dir"
+        else
+            print_message "ℹ️  目录已存在: $dir"
+        fi
+    done
     
-    # 设置正确的权限
+    print_message "uploads目录结构已确保"
+    
+    # 🔥 修复：安全地设置权限，不影响现有文件内容
     print_message "设置目录权限..."
     
-    # 设置目录权限为755，文件权限为644
-    find frontend/public/uploads -type d -exec chmod 755 {} \; 2>/dev/null || true
-    find frontend/public/uploads -type f -exec chmod 644 {} \; 2>/dev/null || true
-    
-    # 确保上传目录可写
-    chmod -R 755 frontend/public/uploads 2>/dev/null || true
+    # 为所有uploads相关目录设置权限
+    for base_path in "frontend/public/uploads" "frontend/dist/uploads"; do
+        if [ -d "$base_path" ]; then
+            print_message "设置 $base_path 权限..."
+            
+            # 设置目录权限为755
+            find "$base_path" -type d -exec chmod 755 {} \; 2>/dev/null || true
+            
+            # 设置文件权限为644
+            find "$base_path" -type f -exec chmod 644 {} \; 2>/dev/null || true
+            
+            # 🔥 特别保护图片文件（常见格式）
+            image_extensions=("*.jpg" "*.jpeg" "*.png" "*.gif" "*.webp" "*.svg" "*.ico")
+            for ext in "${image_extensions[@]}"; do
+                find "$base_path" -name "$ext" -type f -exec chmod 644 {} \; 2>/dev/null || true
+            done
+            
+            print_message "✅ $base_path 权限设置完成"
+        else
+            print_warning "⚠️  $base_path 目录不存在，跳过权限设置"
+        fi
+    done
     
     print_message "upload目录权限设置完成"
     
-    # 测试文件创建权限
-    local test_file="frontend/public/uploads/test-$(date +%s).txt"
+    # 🔥 新增：验证关键目录和文件
+    print_message "验证uploads目录状态..."
+    
+    for base_path in "frontend/public/uploads" "frontend/dist/uploads"; do
+        if [ -d "$base_path" ]; then
+            file_count=$(find "$base_path" -type f | wc -l)
+            dir_count=$(find "$base_path" -type d | wc -l)
+            print_message "📊 $base_path: $file_count 个文件, $dir_count 个目录"
+            
+            # 检查是否有图片文件
+            image_count=$(find "$base_path" -type f \( -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" -o -name "*.gif" -o -name "*.webp" \) | wc -l)
+            if [ "$image_count" -gt 0 ]; then
+                print_message "🖼️  发现 $image_count 个图片文件（已保护）"
+            fi
+        fi
+    done
+    
+    # 测试文件创建权限（使用非冲突的测试文件名）
+    local test_file="frontend/public/uploads/test-permissions-$(date +%s).txt"
     if echo "Test file created at $(date)" > "$test_file" 2>/dev/null; then
-        print_message "文件权限测试成功"
+        print_message "✅ 文件权限测试成功"
         rm "$test_file" 2>/dev/null || true
     else
-        print_warning "文件权限测试失败，但继续部署..."
+        print_warning "⚠️  文件权限测试失败，但继续部署..."
     fi
 }
 
