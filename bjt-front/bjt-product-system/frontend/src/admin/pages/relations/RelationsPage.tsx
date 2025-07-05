@@ -467,12 +467,50 @@ const RelationsPage: React.FC = () => {
           break;
         }
         
-        // 🔧 防止重复数据：检查是否有重复项
-        const newItems = response.items.filter((newItem: Relation) => 
-          !allRelations.some(existingItem => existingItem.id === newItem.id)
-        );
+        // 🔧 强化去重逻辑：多层去重处理
+        console.log(`🔍 第${currentPage}页返回${response.items.length}条数据`);
         
-        allRelations = allRelations.concat(newItems);
+        // 1. 基于ID的严格去重
+        const existingIds = new Set(allRelations.map(item => item.id));
+        const newItems = response.items.filter((newItem: Relation) => {
+          const isDuplicate = existingIds.has(newItem.id);
+          if (isDuplicate) {
+            console.warn(`⚠️  发现重复ID: ${newItem.id} (host: ${newItem.host_part_number})`);
+          }
+          return !isDuplicate;
+        });
+        
+        console.log(`🔍 去重后剩余${newItems.length}条新数据`);
+        
+        // 2. 预过滤：只保留当前主机的数据
+        const preFilteredItems = newItems.filter((item: Relation) => {
+          const isValid = item.host_part_number?.toString() === selectedHostPartNumber;
+          if (!isValid) {
+            console.log(`[预过滤] 主机料号不匹配 ID=${item.id}, expected=${selectedHostPartNumber}, actual=${item.host_part_number}`);
+          }
+          return isValid;
+        });
+        
+        console.log(`🔍 预过滤后剩余${preFilteredItems.length}条当前主机数据`);
+        
+        // 3. 合并数据
+        allRelations = allRelations.concat(preFilteredItems);
+        
+        // 4. 中间去重检查：确保合并后没有重复
+        const uniqueRelations = [];
+        const finalIds = new Set();
+        
+        allRelations.forEach(item => {
+          if (!finalIds.has(item.id)) {
+            finalIds.add(item.id);
+            uniqueRelations.push(item);
+          } else {
+            console.error(`🚨 中间去重：发现重复ID ${item.id} (host: ${item.host_part_number})`);
+          }
+        });
+        
+        allRelations = uniqueRelations;
+        console.log(`🎯 当前累计${allRelations.length}条唯一数据`);
         totalPages = response.total_pages || 1;
         currentPage++;
         
@@ -570,17 +608,41 @@ const RelationsPage: React.FC = () => {
         message.warning(`数据质量警告：发现并过滤了${filteredOutCount}条不属于当前主机的记录。请检查数据库中的host_part_number字段是否正确。`);
       }
       
+      // 🔧 最终唯一性验证：确保绝对无重复
+      console.log(`🔍 开始最终唯一性验证，当前有${filteredRelations.length}条记录`);
+      
+      const finalUniqueRelations = [];
+      const finalUniqueIds = new Set();
+      
+      filteredRelations.forEach((relation, index) => {
+        if (!finalUniqueIds.has(relation.id)) {
+          finalUniqueIds.add(relation.id);
+          finalUniqueRelations.push(relation);
+        } else {
+          console.error(`🚨 最终验证：发现重复ID ${relation.id} (host: ${relation.host_part_number}, index: ${index})`);
+        }
+      });
+      
+      if (finalUniqueRelations.length !== filteredRelations.length) {
+        const duplicateCount = filteredRelations.length - finalUniqueRelations.length;
+        console.error(`🚨 最终去重：移除了${duplicateCount}条重复记录`);
+        message.error(`发现并移除了${duplicateCount}条重复数据，请检查后端API返回的数据一致性`);
+      }
+      
+      console.log(`✅ 最终唯一性验证完成，确保${finalUniqueRelations.length}条记录绝对唯一`);
+      
       // 🔧 增强：设置过滤后的关系列表前，再次验证当前主机是否匹配
       if (selectedHostPartNumber) {
         // 最后一次验证：确保所有记录都属于当前主机
-        const finalValidatedRelations = filteredRelations.filter(relation => 
+        const finalValidatedRelations = finalUniqueRelations.filter(relation => 
           relation.host_part_number?.toString() === selectedHostPartNumber
         );
         
-        if (finalValidatedRelations.length !== filteredRelations.length) {
-          console.warn(`RelationsPage: 最终验证时发现${filteredRelations.length - finalValidatedRelations.length}条记录主机不匹配`);
+        if (finalValidatedRelations.length !== finalUniqueRelations.length) {
+          console.warn(`RelationsPage: 最终验证时发现${finalUniqueRelations.length - finalValidatedRelations.length}条记录主机不匹配`);
         }
         
+        console.log(`🎯 设置最终数据：${finalValidatedRelations.length}条记录`);
         setRelationsList(finalValidatedRelations);
         buildRelationTree(finalValidatedRelations, preserveExpandedState, newNodePath);
       } else {
@@ -1727,6 +1789,82 @@ const RelationsPage: React.FC = () => {
             >
               验证缓存状态
             </Button>
+            {/* 🔧 重复数据检测工具 */}
+            <Button 
+              type="dashed" 
+              icon={<InfoCircleOutlined />} 
+              onClick={() => {
+                // 检测当前数据的重复情况
+                const duplicateCheck = relationsList.reduce((acc, relation, index) => {
+                  const existingIndex = acc.findIndex(item => item.id === relation.id);
+                  if (existingIndex !== -1) {
+                    acc[existingIndex].duplicateIndexes.push(index);
+                  } else {
+                    acc.push({
+                      id: relation.id,
+                      host_part_number: relation.host_part_number,
+                      part_number: relation.part_number,
+                      child_part_number: relation.child_part_number,
+                      duplicateIndexes: [index]
+                    });
+                  }
+                  return acc;
+                }, [] as any[]);
+                
+                const duplicates = duplicateCheck.filter(item => item.duplicateIndexes.length > 1);
+                
+                Modal.confirm({
+                  title: '🔍 重复数据检测报告',
+                  width: 900,
+                  content: (
+                    <div>
+                      <div style={{ marginBottom: '16px' }}>
+                        <strong>当前状态：</strong>
+                        <div style={{ padding: '8px', backgroundColor: '#f0f0f0', borderRadius: '4px' }}>
+                          总记录数: {relationsList.length}<br/>
+                          重复ID数: {duplicates.length}<br/>
+                          数据状态: {duplicates.length === 0 ? '✅ 无重复' : '❌ 存在重复'}
+                        </div>
+                      </div>
+                      
+                      {duplicates.length > 0 && (
+                        <div>
+                          <strong>🚨 发现重复数据：</strong>
+                          {duplicates.map(dup => (
+                            <div key={dup.id} style={{ 
+                              padding: '8px', 
+                              backgroundColor: '#fff2f0', 
+                              border: '1px solid #ff4d4f', 
+                              borderRadius: '4px',
+                              marginTop: '8px'
+                            }}>
+                              <div><strong>ID:</strong> {dup.id}</div>
+                              <div><strong>主机:</strong> {dup.host_part_number}</div>
+                              <div><strong>关系:</strong> {dup.part_number} → {dup.child_part_number}</div>
+                              <div><strong>重复出现在索引:</strong> {dup.duplicateIndexes.join(', ')}</div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {duplicates.length === 0 && (
+                        <div style={{ padding: '16px', backgroundColor: '#f6ffed', borderRadius: '4px', textAlign: 'center' }}>
+                          ✅ 当前数据无重复，状态正常
+                        </div>
+                      )}
+                    </div>
+                  ),
+                  okText: '确定',
+                  cancelText: '关闭',
+                  onOk: () => {},
+                  onCancel: () => {}
+                });
+              }}
+              disabled={!selectedHostPartNumber}
+            >
+              检测重复数据
+            </Button>
+            
             {/* 🔧 CDN缓存测试工具 */}
             <Button 
               type="dashed" 

@@ -12,23 +12,28 @@
 
 ## 根因分析
 
-### 1. CDN缓存机制问题
+### 1. 🚨 **主要原因：API后端分页数据重复**
+- **原因：** 后端API在分页查询时，同一条记录在不同页面中重复返回
+- **表现：** 相同的ID在第36、37条记录和第136、137条记录中重复出现
+- **影响：** 前端即使有去重逻辑，仍然会收到重复数据
+
+### 2. CDN缓存机制问题
 - **原因：** CDN缓存导致API返回重复或过期数据
 - **表现：** 同一个API请求在不同时间返回不同结果
 - **影响：** 数据合并时出现重复项
 
-### 2. 并发请求竞态条件
+### 3. 并发请求竞态条件
 - **原因：** 用户快速点击展开/折叠时触发多个并发请求
 - **表现：** 多个请求同时修改状态，导致数据重复添加
 - **影响：** 状态管理混乱，数据不一致
 
-### 3. 缓存破坏机制不彻底
+### 4. 缓存破坏机制不彻底
 - **原因：** 原有的缓存破坏参数不足以绕过所有缓存层
 - **表现：** 请求参数变化但仍返回缓存数据
 - **影响：** 无法获取最新数据
 
-### 4. 数据去重机制缺失
-- **原因：** 数据合并时没有去重处理
+### 5. 数据去重机制不够强
+- **原因：** 原来的去重逻辑没有考虑到后端返回重复数据的情况
 - **表现：** 相同ID的数据被重复添加到数组中
 - **影响：** 树形结构显示重复节点
 
@@ -80,14 +85,96 @@ const apiParams = {
 };
 ```
 
-### 3. 🔄 数据去重处理
+### 3. 🔄 **强化多层去重机制**
 ```typescript
-// 防止重复数据合并
-const newItems = response.items.filter((newItem: Relation) => 
-  !allRelations.some(existingItem => existingItem.id === newItem.id)
-);
+// 🔧 三层去重处理
+console.log(`🔍 第${currentPage}页返回${response.items.length}条数据`);
 
-allRelations = allRelations.concat(newItems);
+// 1. 基于ID的严格去重
+const existingIds = new Set(allRelations.map(item => item.id));
+const newItems = response.items.filter((newItem: Relation) => {
+  const isDuplicate = existingIds.has(newItem.id);
+  if (isDuplicate) {
+    console.warn(`⚠️  发现重复ID: ${newItem.id}`);
+  }
+  return !isDuplicate;
+});
+
+console.log(`🔍 去重后剩余${newItems.length}条新数据`);
+
+// 2. 预过滤：只保留当前主机的数据
+const preFilteredItems = newItems.filter((item: Relation) => {
+  const isValid = item.host_part_number?.toString() === selectedHostPartNumber;
+  if (!isValid) {
+    console.log(`[预过滤] 主机料号不匹配 ID=${item.id}`);
+  }
+  return isValid;
+});
+
+// 3. 合并数据
+allRelations = allRelations.concat(preFilteredItems);
+
+// 4. 中间去重检查：确保合并后没有重复
+const uniqueRelations = [];
+const finalIds = new Set();
+allRelations.forEach(item => {
+  if (!finalIds.has(item.id)) {
+    finalIds.add(item.id);
+    uniqueRelations.push(item);
+  } else {
+    console.error(`🚨 中间去重：发现重复ID ${item.id}`);
+  }
+});
+allRelations = uniqueRelations;
+```
+
+### 3.1 🎯 最终唯一性验证
+```typescript
+// 🔧 最终去重验证
+const finalUniqueRelations = [];
+const finalUniqueIds = new Set();
+
+filteredRelations.forEach((relation, index) => {
+  if (!finalUniqueIds.has(relation.id)) {
+    finalUniqueIds.add(relation.id);
+    finalUniqueRelations.push(relation);
+  } else {
+    console.error(`🚨 最终验证：发现重复ID ${relation.id}`);
+  }
+});
+
+if (finalUniqueRelations.length !== filteredRelations.length) {
+  const duplicateCount = filteredRelations.length - finalUniqueRelations.length;
+  message.error(`发现并移除了${duplicateCount}条重复数据`);
+}
+```
+
+### 3.2 🔍 重复数据检测工具
+```typescript
+// 新增页面检测按钮
+<Button onClick={() => {
+  // 检测当前数据重复情况
+  const duplicateCheck = relationsList.reduce((acc, relation, index) => {
+    const existingIndex = acc.findIndex(item => item.id === relation.id);
+    if (existingIndex !== -1) {
+      acc[existingIndex].duplicateIndexes.push(index);
+    } else {
+      acc.push({
+        id: relation.id,
+        host_part_number: relation.host_part_number,
+        part_number: relation.part_number,
+        child_part_number: relation.child_part_number,
+        duplicateIndexes: [index]
+      });
+    }
+    return acc;
+  }, []);
+  
+  const duplicates = duplicateCheck.filter(item => item.duplicateIndexes.length > 1);
+  // 显示检测结果弹窗
+}}>
+  检测重复数据
+</Button>
 ```
 
 ### 4. ⚡ 树操作防护
