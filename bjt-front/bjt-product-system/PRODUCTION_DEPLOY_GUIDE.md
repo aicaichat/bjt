@@ -146,3 +146,98 @@ mysql -u root -p your_database_name < backup_file.sql
 **预计耗时**：5-10分钟
 **影响范围**：耗材页面筛选功能
 **回滚时间**：1-2分钟 
+
+# 生产环境API修复部署指南
+
+## 🎯 问题描述
+前端关联关系页面在生产环境（CDN）下出现重复数据，每个树节点展开时显示2条相同记录。本次修复解决了API缺失host_part_number参数过滤的根本问题。
+
+## 🚀 生产环境部署步骤
+
+### 1. 上传代码到生产服务器
+```bash
+# 1. 将修复代码上传到生产服务器的项目目录
+# 确保包含以下文件：
+# - plugins/bjt-core-entities/controllers/class-relation-controller.php (修复后的文件)
+# - scripts/deploy-production.sh (生产部署脚本)
+# - scripts/test-production.sh (生产测试脚本)
+```
+
+### 2. 在生产服务器上执行部署
+```bash
+# 进入项目目录
+cd /path/to/bjt-product-system
+
+# 执行生产环境部署脚本
+sudo bash scripts/deploy-production.sh
+```
+
+### 3. 验证部署效果
+```bash
+# 运行测试脚本验证修复效果
+bash scripts/test-production.sh
+```
+
+## 📋 部署脚本功能
+
+### `deploy-production.sh` 部署脚本
+- ✅ 自动检测生产环境
+- 💾 备份原始文件
+- 📁 部署修复后的API控制器
+- 🔒 设置正确的文件权限
+- 🔄 自动重启Web服务器
+- 🧪 执行基础API测试
+
+### `test-production.sh` 测试脚本  
+- 🔍 测试多个主机的过滤效果
+- 📊 验证数据一致性
+- ⚡ 性能测试
+- 📝 生成详细测试报告
+
+## 🔧 修复内容
+1. **添加参数定义**: 在`get_collection_params()`方法中添加`host_part_number`参数
+2. **参数提取**: 在`prepare_items_query()`方法中添加参数提取逻辑
+3. **WHERE条件**: 在`get_items()`方法中添加数据库过滤条件
+
+## ✅ 预期效果
+- **修复前**: API返回多个主机的混合数据，前端显示重复记录
+- **修复后**: API只返回指定主机的数据，前端显示正确的单条记录
+
+## 🚨 回滚方案
+如果部署后出现问题，可以快速回滚：
+```bash
+# 查看备份文件
+ls -la /tmp/bjt-backup-*
+
+# 回滚到备份版本
+sudo cp /tmp/bjt-backup-YYYYMMDD_HHMMSS/class-relation-controller.php.backup \
+       /var/www/html/wp-content/plugins/bjt-core-entities/controllers/class-relation-controller.php
+
+# 重启Web服务器
+sudo systemctl reload apache2  # 或 nginx
+```
+
+## 📈 监控建议
+1. **API响应时间**: 监控`/wp-json/bjt/v1/relations`接口的响应时间
+2. **错误率**: 关注API返回的错误状态码
+3. **CDN缓存**: 清理相关API的CDN缓存
+4. **前端功能**: 测试关联关系页面的树展开功能
+
+## 💡 重要提醒
+- ⚠️ 请在业务低峰期执行部署
+- 🔄 部署完成后务必清理CDN缓存
+- 📱 通知前端团队验证功能
+- 📊 监控生产环境API日志
+
+## 🆘 故障处理
+如果遇到问题，请按以下顺序排查：
+1. 检查Web服务器错误日志
+2. 验证文件权限和所有者
+3. 确认API响应格式
+4. 检查数据库连接
+5. 如有必要，执行回滚操作
+
+---
+**部署时间**: 预计5-10分钟  
+**影响范围**: 关联关系API及相关前端功能  
+**回滚时间**: 1-2分钟  
