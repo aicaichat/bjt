@@ -186,6 +186,9 @@ class BJT_Relation_Controller extends BJT_API_Controller {
         }
 
         // 自定义筛选参数
+        if (isset($request['host_part_number'])) {
+            $prepared_args['host_part_number'] = sanitize_text_field($request['host_part_number']);
+        }
         if (isset($request['parent_part_number'])) {
             $prepared_args['parent_part_number'] = sanitize_text_field($request['parent_part_number']);
         }
@@ -234,6 +237,13 @@ class BJT_Relation_Controller extends BJT_API_Controller {
     public function get_collection_params() {
         $params = parent::get_collection_params();
 
+        // 🔧 修复：添加host_part_number参数定义
+        $params['host_part_number'] = [
+            'description'       => __('Filter relations by host part number.'),
+            'type'              => 'string',
+            'sanitize_callback' => 'sanitize_text_field',
+            'validate_callback' => 'rest_validate_request_arg',
+        ];
         $params['parent_part_number'] = [
             'description'       => __('Filter relations by parent part number.'),
             'type'              => 'string',
@@ -304,6 +314,12 @@ class BJT_Relation_Controller extends BJT_API_Controller {
             // 3. Build WHERE Clauses
             $where_clauses = ["1=1"];
             $where_values = [];
+
+            // 🔧 修复：添加host_part_number过滤
+            if (!empty($prepared_args['host_part_number'])) {
+                $where_clauses[] = "host_part_number = %s";
+                $where_values[] = $prepared_args['host_part_number'];
+            }
 
             // 产品线ID筛选
             if (!empty($prepared_args['product_line_id'])) {
