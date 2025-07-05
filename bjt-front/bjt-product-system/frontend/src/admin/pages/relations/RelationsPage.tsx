@@ -257,6 +257,10 @@ const RelationsPage: React.FC = () => {
   const [treeLoading, setTreeLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   
+  // 🔧 新增：防止并发请求的loading状态
+  const [isLoadingRelations, setIsLoadingRelations] = useState(false);
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
   // 树状态
   const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
@@ -312,6 +316,15 @@ const RelationsPage: React.FC = () => {
     
     return () => clearTimeout(timeoutId);
   }, [selectedHostPartNumber]);
+
+  // 🔧 清理资源
+  useEffect(() => {
+    return () => {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // 返回到对应的主机管理页面
   const handleBack = () => {
@@ -392,8 +405,20 @@ const RelationsPage: React.FC = () => {
   const loadRelationTree = async (preserveExpandedState = false, newNodePath?: string, forceRefresh = false) => {
     if (!selectedHostPartNumber) return;
     
+    // 🔧 防止并发请求
+    if (isLoadingRelations) {
+      console.warn('RelationsPage: 正在加载中，跳过重复请求');
+      return;
+    }
+    
     try {
+      setIsLoadingRelations(true);
       setTreeLoading(true);
+      
+      // 🔧 清理之前的超时
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
       
       // 🔧 修复：在加载开始时再次清理状态，确保干净的起始状态
       if (!preserveExpandedState) {
@@ -407,8 +432,11 @@ const RelationsPage: React.FC = () => {
       let currentPage = 1;
       let totalPages = 1;
       
+      // 🔧 生成唯一的请求ID，防止CDN缓存冲突
+      const requestId = `${selectedHostPartNumber}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
       do {
-        // 🔧 API调用：添加主机参数和防缓存机制
+        // 🔧 API调用：增强的防缓存机制
         const apiParams: any = {
           page: currentPage,
           per_page: 100,
@@ -417,16 +445,20 @@ const RelationsPage: React.FC = () => {
           host_part_number: selectedHostPartNumber,
         };
         
-        // 添加时间戳参数防止缓存
-        if (forceRefresh) {
+        // 🔧 强化缓存破坏机制
+        if (forceRefresh || currentPage === 1) {
           apiParams._t = Date.now();
+          apiParams._page_t = `${currentPage}_${Date.now()}`;
         }
         
-        // 🔧 CDN缓存破坏：为每个主机添加唯一缓存键
-        apiParams._cache_key = `relations_${selectedHostPartNumber}_${productLineId}`;
+        // 🔧 CDN缓存破坏：为每个主机和页面添加唯一缓存键
+        apiParams._cache_key = `relations_${selectedHostPartNumber}_${productLineId}_${currentPage}`;
         
-        // 🔧 防止跨主机数据污染
-        apiParams._session_id = `${selectedHostPartNumber}_${Date.now()}`;
+        // 🔧 防止跨主机数据污染，每个请求唯一ID
+        apiParams._session_id = `${requestId}_page_${currentPage}`;
+        
+        // 🔧 添加随机数防止CDN缓存
+        apiParams._rand = Math.random().toString(36).substr(2, 9);
         
         const response = await adminRelationService.getRelations(apiParams);
         
@@ -435,9 +467,19 @@ const RelationsPage: React.FC = () => {
           break;
         }
         
-        allRelations = allRelations.concat(response.items);
+        // 🔧 防止重复数据：检查是否有重复项
+        const newItems = response.items.filter((newItem: Relation) => 
+          !allRelations.some(existingItem => existingItem.id === newItem.id)
+        );
+        
+        allRelations = allRelations.concat(newItems);
         totalPages = response.total_pages || 1;
         currentPage++;
+        
+        // 🔧 添加小延迟防止请求过快
+        if (currentPage <= totalPages) {
+          await new Promise(resolve => setTimeout(resolve, 10));
+        }
       } while (currentPage <= totalPages);
       
       // 🔧 第一步：超严格过滤逻辑，确保只显示属于当前选择主机的记录
@@ -552,6 +594,11 @@ const RelationsPage: React.FC = () => {
       setRelationTree([]);
     } finally {
       setTreeLoading(false);
+      
+      // 🔧 延迟清理loading状态，防止快速重复请求
+      loadingTimeoutRef.current = setTimeout(() => {
+        setIsLoadingRelations(false);
+      }, 100);
     }
   };
 
@@ -903,6 +950,12 @@ const RelationsPage: React.FC = () => {
         return value;
       }
       
+      // 🔧 立即清理loading状态，防止并发请求
+      setIsLoadingRelations(false);
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+      
       // 立即清理所有相关状态
       setRelationTree([]);
       setRelationsList([]);
@@ -1012,7 +1065,18 @@ const RelationsPage: React.FC = () => {
         onOk: async () => {
           const currentHost = selectedHostPartNumber;
           
+          // 🔧 防止并发重建
+          if (isLoadingRelations) {
+            message.warning('正在加载数据，请稍后再试');
+            return;
+          }
+          
           // 1. 清理状态（但保留当前选中的主机）
+          setIsLoadingRelations(false);
+          if (loadingTimeoutRef.current) {
+            clearTimeout(loadingTimeoutRef.current);
+          }
+          
           setRelationTree([]);
           setRelationsList([]);
           setExpandedKeys([]);
@@ -1663,6 +1727,68 @@ const RelationsPage: React.FC = () => {
             >
               验证缓存状态
             </Button>
+            {/* 🔧 CDN缓存测试工具 */}
+            <Button 
+              type="dashed" 
+              icon={<InfoCircleOutlined />} 
+              onClick={() => {
+                Modal.confirm({
+                  title: '🌐 CDN缓存测试',
+                  width: 800,
+                  content: (
+                    <div>
+                      <div><strong>检测到线上环境CDN缓存问题？</strong></div>
+                      <div style={{ 
+                        padding: '12px', 
+                        backgroundColor: '#fff7e6', 
+                        borderRadius: '6px', 
+                        marginTop: '8px',
+                        border: '1px solid #ffd591'
+                      }}>
+                        <div><strong>现象：</strong>点击展开树节点后，相同数据显示2条</div>
+                        <div><strong>原因：</strong>CDN缓存导致API返回重复数据</div>
+                        <div><strong>环境：</strong>本地正常，线上异常</div>
+                      </div>
+                      
+                      <div style={{ marginTop: '16px' }}>
+                        <strong>🔧 已应用的修复措施：</strong>
+                        <ul style={{ marginLeft: '20px', marginTop: '8px' }}>
+                          <li>✅ 增强缓存破坏机制（添加随机数和时间戳）</li>
+                          <li>✅ 防止并发请求导致的数据重复</li>
+                          <li>✅ 在数据合并时去重处理</li>
+                          <li>✅ 添加请求唯一ID防止冲突</li>
+                          <li>✅ 防止loading期间的重复操作</li>
+                        </ul>
+                      </div>
+                      
+                      <div style={{ marginTop: '16px' }}>
+                        <strong>🧪 测试建议：</strong>
+                        <div style={{ 
+                          padding: '8px', 
+                          backgroundColor: '#f6ffed', 
+                          borderRadius: '4px',
+                          marginTop: '8px',
+                          fontSize: '13px'
+                        }}>
+                          <div>1. 点击"强制重建"按钮，观察是否还有重复数据</div>
+                          <div>2. 切换不同主机，检查数据是否正确隔离</div>
+                          <div>3. 快速点击展开/折叠，观察是否有并发问题</div>
+                          <div>4. 在浏览器开发者工具Network标签查看API请求</div>
+                        </div>
+                      </div>
+                    </div>
+                  ),
+                  okText: '开始测试',
+                  cancelText: '关闭',
+                  onOk: () => {
+                    message.info('请按照建议进行测试，观察问题是否解决');
+                  }
+                });
+              }}
+              disabled={!selectedHostPartNumber}
+            >
+              🌐 CDN缓存测试
+            </Button>
             {/* 🔧 新增：数据状态调试工具 */}
             <Button 
               type="dashed" 
@@ -1688,6 +1814,27 @@ const RelationsPage: React.FC = () => {
                         <div>🌳 树节点数: {relationTree.length}</div>
                         <div>📈 展开的键: {expandedKeys.length}</div>
                         <div>🎯 选中的键: {selectedKeys.length}</div>
+                        <div>🔄 正在加载: {isLoadingRelations ? '是' : '否'}</div>
+                        <div>⏳ 树加载中: {treeLoading ? '是' : '否'}</div>
+                        <div>🌐 CDN缓存: {location.hostname === 'localhost' ? '本地环境' : '线上环境'}</div>
+                      </div>
+                      
+                      {/* 🔧 CDN缓存调试信息 */}
+                      <div style={{ marginTop: '16px' }}>
+                        <strong>🌐 CDN缓存诊断：</strong>
+                        <div style={{ 
+                          padding: '8px', 
+                          backgroundColor: '#e6f7ff', 
+                          borderRadius: '4px',
+                          marginTop: '8px',
+                          fontSize: '12px'
+                        }}>
+                          <div>• 环境: {location.hostname === 'localhost' ? '本地开发' : '线上生产'}</div>
+                          <div>• 协议: {location.protocol}</div>
+                          <div>• 主机: {location.hostname}</div>
+                          <div>• 端口: {location.port || '默认'}</div>
+                          <div>• 时间戳: {new Date().toISOString()}</div>
+                        </div>
                       </div>
                       
                       <div style={{ marginTop: '16px' }}><strong>关系记录详情：</strong></div>
@@ -2475,8 +2622,18 @@ ORDER BY data_quality_check DESC, host_part_number;`;
                   treeData={relationTree}
                   expandedKeys={expandedKeys}
                   selectedKeys={selectedKeys}
-                  onExpand={setExpandedKeys}
-                  onSelect={setSelectedKeys}
+                  onExpand={(keys) => {
+                    // 🔧 防止在loading期间展开触发重复请求
+                    if (!isLoadingRelations) {
+                      setExpandedKeys(keys);
+                    }
+                  }}
+                  onSelect={(keys) => {
+                    // 🔧 防止在loading期间选择触发重复请求
+                    if (!isLoadingRelations) {
+                      setSelectedKeys(keys);
+                    }
+                  }}
                   showIcon
                   className="relation-tree"
                   style={{ minHeight: '400px' }}
