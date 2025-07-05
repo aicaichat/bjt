@@ -13,7 +13,6 @@ class BJT_API_Controller {
     public function __construct() {
         global $wpdb;
         $this->db = $wpdb;
-        parent::__construct();
 
         // Ensure the database connection is using utf8mb4
         if ($this->db->dbh) { // Check if dbh is available (connection established)
