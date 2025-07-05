@@ -351,6 +351,44 @@ cleanup() {
     print_message "清理完成"
 }
 
+# 检查代码版本并拉取最新代码
+check_and_update_code() {
+    print_message "检查和更新代码..."
+    
+    # 显示当前状态
+    print_message "当前Git状态："
+    git status --porcelain
+    
+    # 显示当前分支和最新提交
+    print_message "当前分支: $(git branch --show-current)"
+    print_message "当前提交: $(git log --oneline -1)"
+    
+    # 检查是否有未提交的更改
+    if ! git diff --quiet; then
+        print_warning "⚠️  存在未提交的更改："
+        git diff --stat
+        print_warning "这些更改可能会被覆盖"
+    fi
+    
+    # 拉取最新代码
+    print_message "拉取最新代码..."
+    if git pull origin main; then
+        print_message "✅ 代码更新成功"
+        print_message "最新提交: $(git log --oneline -1)"
+    else
+        print_error "❌ 代码更新失败"
+        print_error "请检查网络连接和Git权限"
+        exit 1
+    fi
+    
+    # 验证API修复是否存在
+    if grep -q "host_part_number.*sanitize_text_field" plugins/bjt-core-entities/controllers/class-relation-controller.php; then
+        print_message "✅ API修复代码已存在"
+    else
+        print_warning "⚠️  API修复代码可能不存在，请检查"
+    fi
+}
+
 # 主函数
 main() {
     print_message "开始 BJT Product System 生产环境部署"
@@ -360,6 +398,9 @@ main() {
         print_error "请在项目根目录运行此脚本"
         exit 1
     fi
+    
+    # 🔥 新增：检查和更新代码
+    check_and_update_code
     
     # 加载环境变量
     if [ -f ".env.production" ]; then
