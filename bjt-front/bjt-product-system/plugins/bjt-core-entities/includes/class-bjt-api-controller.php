@@ -13,7 +13,7 @@ class BJT_API_Controller {
     public function __construct() {
         global $wpdb;
         $this->db = $wpdb;
-        // parent::__construct(); // Removed call to WP_REST_Controller constructor
+        parent::__construct();
 
         // Ensure the database connection is using utf8mb4
         if ($this->db->dbh) { // Check if dbh is available (connection established)
@@ -47,6 +47,62 @@ class BJT_API_Controller {
         if (empty($this->rest_base) && !empty($this->resource_name)) {
             $this->rest_base = $this->resource_name;
         }
+
+        // 🔥 新增：为所有BJT API响应添加no-cache头
+        add_action('rest_api_init', [$this, 'add_api_no_cache_headers']);
+    }
+
+    /**
+     * 🔥 新增：为所有BJT API响应添加no-cache头
+     * 确保CDN不缓存API响应，解决缓存导致的数据问题
+     */
+    public function add_api_no_cache_headers() {
+        // 添加过滤器到所有REST API响应
+        add_filter('rest_pre_serve_request', [$this, 'set_no_cache_headers'], 10, 4);
+    }
+
+    /**
+     * 设置no-cache响应头
+     * 
+     * @param bool $served Whether the request has already been served.
+     * @param WP_HTTP_Response $result Result to send to the client.
+     * @param WP_REST_Request $request Request used to generate the response.
+     * @param WP_REST_Server $server Server instance.
+     * @return bool
+     */
+    public function set_no_cache_headers($served, $result, $request, $server) {
+        // 只处理BJT API路径
+        $route = $request->get_route();
+        if (strpos($route, '/bjt/v1/') === 0) {
+            
+            // 设置强制不缓存的头信息
+            $headers = [
+                'Cache-Control' => 'no-cache, no-store, must-revalidate, max-age=0',
+                'Pragma' => 'no-cache',
+                'Expires' => 'Thu, 01 Jan 1970 00:00:00 GMT',
+                'X-BJT-Cache-Control' => 'no-cache-api-' . time(), // 自定义标识
+            ];
+            
+            foreach ($headers as $name => $value) {
+                if (!headers_sent()) {
+                    header("$name: $value");
+                }
+            }
+            
+            // 如果是WP_REST_Response对象，也设置头信息
+            if (is_a($result, 'WP_REST_Response')) {
+                foreach ($headers as $name => $value) {
+                    $result->header($name, $value);
+                }
+            }
+            
+            // 记录日志（调试用）
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log("BJT API: Set no-cache headers for route: $route");
+            }
+        }
+        
+        return $served;
     }
 
     /**
