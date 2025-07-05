@@ -484,9 +484,9 @@ cleanup() {
     print_message "清理完成"
 }
 
-# 检查代码版本并拉取最新代码
-check_and_update_code() {
-    print_message "检查和更新代码..."
+# 检查代码版本状态（不自动拉取）
+check_code_status() {
+    print_message "检查代码版本状态..."
     
     # 显示当前状态
     print_message "当前Git状态："
@@ -500,26 +500,52 @@ check_and_update_code() {
     if ! git diff --quiet; then
         print_warning "⚠️  存在未提交的更改："
         git diff --stat
-        print_warning "这些更改可能会被覆盖"
+        print_warning "建议在部署前处理这些更改"
     fi
     
-    # 拉取最新代码
-    print_message "拉取最新代码..."
-    if git pull origin main; then
-        print_message "✅ 代码更新成功"
-        print_message "最新提交: $(git log --oneline -1)"
-    else
-        print_error "❌ 代码更新失败"
-        print_error "请检查网络连接和Git权限"
-        exit 1
+    # 检查是否有未追踪的文件
+    if [ -n "$(git ls-files --others --exclude-standard)" ]; then
+        print_warning "⚠️  存在未追踪的文件："
+        git ls-files --others --exclude-standard
     fi
+    
+    # 🔥 提醒手动更新代码（不自动执行）
+    print_message "📋 部署前代码检查清单："
+    echo "  1. ✅ 确认当前分支是正确的部署分支"
+    echo "  2. ✅ 确认当前提交包含所需的修复"
+    echo "  3. ✅ 在部署前已手动执行 'git pull origin main'"
+    echo "  4. ✅ 检查并处理任何代码冲突"
+    echo ""
+    print_warning "⚠️  重要提醒："
+    print_warning "   如果您还没有手动更新代码，请先执行："
+    print_warning "   git pull origin main"
+    print_warning "   然后重新运行此部署脚本"
+    echo ""
     
     # 验证API修复是否存在
     if grep -q "host_part_number.*sanitize_text_field" plugins/bjt-core-entities/controllers/class-relation-controller.php; then
         print_message "✅ API修复代码已存在"
     else
-        print_warning "⚠️  API修复代码可能不存在，请检查"
+        print_error "❌ API修复代码不存在"
+        print_error "请确保已经 git pull 最新代码，或检查修复是否正确合并"
+        return 1
     fi
+    
+    # 简单的交互确认
+    echo ""
+    print_message "🤔 请确认："
+    echo "  - 您已经手动执行了 git pull 获取最新代码？"
+    echo "  - 当前代码版本是您要部署的版本？"
+    echo "  - API修复代码检查通过？"
+    echo ""
+    read -p "确认以上检查都通过了吗？继续部署请输入 'yes': " confirm
+    
+    if [ "$confirm" != "yes" ]; then
+        print_warning "部署已取消。请手动更新代码后重新运行。"
+        exit 1
+    fi
+    
+    print_message "✅ 代码版本检查通过，继续部署..."
 }
 
 # 主函数
@@ -533,7 +559,7 @@ main() {
     fi
     
     # 🔥 新增：检查和更新代码
-    check_and_update_code
+    check_code_status
     
     # 加载环境变量
     if [ -f ".env.production" ]; then
