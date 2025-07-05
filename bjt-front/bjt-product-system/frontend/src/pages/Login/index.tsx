@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, message, Typography, Row, Col, Card, Switch, Badge, Tag } from 'antd';
 import { UserOutlined, LockOutlined, CrownOutlined, ShoppingCartOutlined, TeamOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import './Login.css';
 const logo = '/images/logo-1.webp';
@@ -23,6 +23,7 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const { t } = useTranslation('login');
 
@@ -52,8 +53,17 @@ const Login: React.FC = () => {
         userObject: user
       });
       
-      // 导航到机器页面
-      navigate('/machines');
+      // 解析跳转目标：既支持对象形式({pathname:"/xxx"})，也支持直接字符串形式("/xxx")
+      const stateFrom = (location.state as any)?.from;
+      const redirectPath =
+        // 1) location.state.from 可以是对象或字符串
+        (typeof stateFrom === 'string' ? stateFrom : stateFrom?.pathname) ||
+        // 其次检查查询参数中的 redirect 字段（手动调用 /login?redirect=/target ）
+        new URLSearchParams(location.search).get('redirect') ||
+        // 默认回退到机器页面
+        '/machines';
+
+      navigate(redirectPath, { replace: true });
     } catch (error: any) {
       console.error('❌ [Login] Login failed:', error);
       setErrorMsg(error.message || '登录失败，请检查用户名和密码');

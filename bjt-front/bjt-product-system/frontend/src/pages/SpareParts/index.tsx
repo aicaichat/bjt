@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef, useContext } from 'rea
 import { Button, Input, Select, Spin, Alert, Card, Row, Col, Tag, Space, Tooltip } from 'antd';
 import { SearchOutlined, ReloadOutlined, ShoppingCartOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 // 🔥 新增：导航历史记录Hook
 import { useNavigationHistory } from '../../hooks/useNavigationHistory';
@@ -101,6 +101,7 @@ type SparePartsFilterOptions = LocalFilterOptions;
 // 添加缺失的状态变量
 const SparePartsPage = () => {
   const navigate = useNavigate();
+  const locationRouter = useLocation();
   const { t, i18n } = useTranslation(['spareParts', 'translation']);
   
   // 获取当前语言
@@ -281,7 +282,7 @@ const SparePartsPage = () => {
     
     if (!authData) {
       // 未登录，重定向到登录页面
-      navigate('/login');
+      navigate('/login', { state: { from: { pathname: locationRouter.pathname } } });
       return;
     }
     
@@ -294,9 +295,9 @@ const SparePartsPage = () => {
       console.log('✅ User data validated from localStorage');
     } catch (err) {
       console.error('Error parsing auth data:', err);
-      navigate('/login');
+      navigate('/login', { state: { from: { pathname: locationRouter.pathname } } });
     }
-  }, []); // Remove navigate from dependencies
+  }, [locationRouter.pathname]); // Remove navigate from dependencies
   
   // 获取用户角色的显示名称
   const getRoleDisplayName = (role: string): string => {
@@ -403,7 +404,7 @@ const SparePartsPage = () => {
       if (response.status === 401) {
         // Token expired, redirect to login
         if (retryCount < maxRetries) {
-          navigate('/login');
+          navigate('/login', { state: { from: { pathname: locationRouter.pathname } } });
           return;
         }
       }
@@ -1606,7 +1607,7 @@ const SparePartsPage = () => {
             <button 
               onClick={() => {
                 localStorage.removeItem('auth_token');
-                navigate('/login');
+                navigate('/login', { state: { from: { pathname: locationRouter.pathname } } });
               }} 
               className="flex items-center px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
             >
@@ -2085,45 +2086,7 @@ const SparePartsPage = () => {
           ))}
         </div>
         
-        {/* 分页组件 */}
-        {totalPages > 1 && !isNaN(totalPages) && !isNaN(currentPage) && (
-          <div className="flex justify-center mt-8">
-            <div className="pagination">
-              <button 
-                className="pagination-button"
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-              >
-                {String(t('pagination.previous', { ns: 'spareParts' }) || '上一页')}
-              </button>
-              <div className="pagination-pages">
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const page = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
-                  // 确保page是有效数字且在合理范围内
-                  if (isNaN(page) || page < 1 || page > totalPages) {
-                    return null;
-                  }
-                  return (
-                    <button
-                      key={`page-${page}`}
-                      className={`pagination-page ${currentPage === page ? 'active' : ''}`}
-                      onClick={() => setCurrentPage(page)}
-                    >
-                      {page}
-                    </button>
-                  );
-                }).filter(Boolean)}
-              </div>
-              <button 
-                className="pagination-button"
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
-              >
-                {String(t('pagination.next', { ns: 'spareParts' }) || '下一页')}
-              </button>
-            </div>
-          </div>
-        )}
+
       </>
     );
   };
