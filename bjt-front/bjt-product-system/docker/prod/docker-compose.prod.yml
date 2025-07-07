@@ -87,6 +87,7 @@ services:
       - ../../backend:/var/www/html
       - ../../plugins:/var/www/html/wp-content/plugins
       - ../../frontend:/var/www/html/frontend
+      - uploads_data:/var/www/html/frontend/public/uploads
       - uploads_data:/var/www/html/wp-content/uploads
       - uploads_data:/var/www/html/wp-content/upgrade
       - wordpress_cache:/var/www/html/wp-content/cache
