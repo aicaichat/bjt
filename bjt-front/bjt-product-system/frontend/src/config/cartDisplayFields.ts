@@ -108,6 +108,7 @@ export const SPARE_PART_FIELDS = {
     'pcs_per_box',
     'package_size_cm', // 智能单位制
     'net_weight_kg',   // 智能单位制
+    'pallet_size_cm', // 🔧 修复：添加托盘尺寸字段，支持智能单位制切换
   ],
   order_page: [
     'app_model',
@@ -119,6 +120,7 @@ export const SPARE_PART_FIELDS = {
     'unit',
     'net_weight_kg',   // 智能单位制 (自动切换到net_weight_lbs)
     'pcs_per_box',
+    'pallet_size_cm', // 🔧 修复：添加托盘尺寸字段，支持智能单位制切换
   ],
   tooltip: [
     'package_size_cm', // 智能单位制

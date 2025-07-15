@@ -211,6 +211,27 @@ export class CartFieldUnifier {
       return `${baseName}(${unit})`;
     }
     
+    // 🔧 修复：托盘尺寸字段的智能单位制处理
+    if (fieldKey === 'pallet_size_cm' || fieldKey === 'pallet_size_inch' || fieldKey === 'pallet_size') {
+      const baseName = language === 'zh' ? '托盘尺寸' : 'Pallet Size';
+      const unit = unitSystem === 'metric' ? 'cm' : 'inch';
+      return `${baseName}(${unit.toUpperCase()})`;
+    }
+    
+    // 🔧 修复：托盘高度字段的智能单位制处理
+    if (fieldKey === 'pallet_height_cm' || fieldKey === 'pallet_height_inch' || fieldKey === 'pallet_height') {
+      const baseName = language === 'zh' ? '托盘高度' : 'Pallet Height';
+      const unit = unitSystem === 'metric' ? 'cm' : 'inch';
+      return `${baseName}(${unit.toUpperCase()})`;
+    }
+    
+    // 🔧 修复：包装毛重字段的智能单位制处理
+    if (fieldKey === 'gross_weight_kg' || fieldKey === 'gross_weight_lbs' || fieldKey === 'gross_weight') {
+      const baseName = language === 'zh' ? '包装毛重' : 'Gross Weight';
+      const unit = unitSystem === 'metric' ? 'kg' : 'lbs';
+      return `${baseName}(${unit})`;
+    }
+    
     // 1. 先尝试直接从字段映射查找
     const mapping = FIELD_MAP.get(fieldKey.toLowerCase());
     if (mapping) {
@@ -588,6 +609,119 @@ export class CartFieldUnifier {
           item.bubble_diameter_imp
         ];
         for (const source of sources) {
+          if (this.isValidValue(source)) return source;
+        }
+      }
+    }
+    
+    // 🔧 修复：托盘尺寸字段的智能单位制切换
+    if (fieldKey === 'pallet_size_cm' || fieldKey === 'pallet_size_inch' || fieldKey === 'pallet_size') {
+      if (unitSystem === 'metric') {
+        // 公制用户：优先使用公制字段
+        const metricSources = [
+          props.pallet_size_cm,
+          item.pallet_size_cm,
+          props.pallet_size,
+          item.pallet_size
+        ];
+        for (const source of metricSources) {
+          if (this.isValidValue(source)) return source;
+        }
+      } else {
+        // 英制用户：优先使用英制字段
+        const imperialSources = [
+          props.pallet_size_inch,
+          item.pallet_size_inch,
+          props.pallet_size_imperial,
+          item.pallet_size_imperial
+        ];
+        for (const source of imperialSources) {
+          if (this.isValidValue(source)) return source;
+        }
+        // 回退到公制字段
+        const metricSources = [
+          props.pallet_size_cm,
+          item.pallet_size_cm,
+          props.pallet_size,
+          item.pallet_size
+        ];
+        for (const source of metricSources) {
+          if (this.isValidValue(source)) return source;
+        }
+      }
+    }
+    
+    // 🔧 修复：托盘高度字段的智能单位制切换
+    if (fieldKey === 'pallet_height_cm' || fieldKey === 'pallet_height_inch' || fieldKey === 'pallet_height') {
+      if (unitSystem === 'metric') {
+        // 公制用户：优先使用公制字段
+        const metricSources = [
+          props.pallet_height_cm,
+          item.pallet_height_cm,
+          props.pallet_height,
+          item.pallet_height
+        ];
+        for (const source of metricSources) {
+          if (this.isValidValue(source)) return source;
+        }
+      } else {
+        // 英制用户：优先使用英制字段
+        const imperialSources = [
+          props.pallet_height_inch,
+          item.pallet_height_inch,
+          props.pallet_height_imperial,
+          item.pallet_height_imperial
+        ];
+        for (const source of imperialSources) {
+          if (this.isValidValue(source)) return source;
+        }
+        // 回退到公制字段
+        const metricSources = [
+          props.pallet_height_cm,
+          item.pallet_height_cm,
+          props.pallet_height,
+          item.pallet_height
+        ];
+        for (const source of metricSources) {
+          if (this.isValidValue(source)) return source;
+        }
+      }
+    }
+    
+    // 🔧 修复：包装毛重字段的智能单位制切换
+    if (fieldKey === 'gross_weight_kg' || fieldKey === 'gross_weight_lbs' || fieldKey === 'gross_weight') {
+      if (unitSystem === 'metric') {
+        // 公制用户：优先使用公制字段
+        const metricSources = [
+          props.gross_weight_kg,
+          item.gross_weight_kg,
+          props.gross_weight,
+          item.gross_weight
+        ];
+        for (const source of metricSources) {
+          if (this.isValidValue(source)) return source;
+        }
+      } else {
+        // 英制用户：优先使用英制字段
+        const imperialSources = [
+          props.gross_weight_lbs,
+          item.gross_weight_lbs,
+          props.gross_weight_lb,
+          item.gross_weight_lb,
+          props.gross_weight_imperial,
+          item.gross_weight_imperial
+        ];
+        for (const source of imperialSources) {
+          if (this.isValidValue(source)) return source;
+        }
+        // 回退到公制字段
+        const metricSources = [
+          props.gross_weight_kg,
+          item.gross_weight_kg,
+          props.gross_weight,
+          item.gross_weight
+        ];
+        for (const source of metricSources) {
           if (this.isValidValue(source)) return source;
         }
       }
