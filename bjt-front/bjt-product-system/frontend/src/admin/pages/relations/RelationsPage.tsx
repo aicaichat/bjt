@@ -824,18 +824,22 @@ const RelationsPage: React.FC = () => {
   }, [selectedHostPartNumber, productLineId, cacheDebugInfo.apiCallCount]);
 
   // 构建树节点 - 添加循环检测，修复查询逻辑
-  const buildTreeNodes = (relations: Relation[], currentPartNumber: string, currentParentPartNumber: string | null, visitedNodes: Set<string> = new Set(), currentPath: string[] = []): RelationTreeNode[] => {
+  const buildTreeNodes = (relations: Relation[], currentPartNumber: string, currentParentPartNumber: string | null, visitedPaths: Set<string> = new Set(), currentPath: string[] = []): RelationTreeNode[] => {
 
     
-    // 🔧 循环检测：如果当前节点已经在访问路径中，则停止递归
-    if (visitedNodes.has(currentPartNumber)) {
-      console.warn(`buildTreeNodes: Detected cycle at node ${currentPartNumber}, stopping recursion`);
+    // 🔧 修复：基于完整路径上下文的循环检测
+    // 生成当前路径标识符，格式：parent→current
+    const currentPathContext = currentParentPartNumber ? `${currentParentPartNumber}→${currentPartNumber}` : `ROOT→${currentPartNumber}`;
+    
+    // 🔧 循环检测：如果当前路径上下文已经在访问路径中，则停止递归
+    if (visitedPaths.has(currentPathContext)) {
+      console.warn(`buildTreeNodes: Detected cycle at path ${currentPathContext}, stopping recursion`);
       return [];
     }
     
-    // 添加当前节点到访问集合
-    const newVisitedNodes = new Set(visitedNodes);
-    newVisitedNodes.add(currentPartNumber);
+    // 添加当前路径上下文到访问集合
+    const newVisitedPaths = new Set(visitedPaths);
+    newVisitedPaths.add(currentPathContext);
     
     // 构建当前路径：[主机, 路径节点1, 路径节点2, ..., 当前节点]
     const currentFullPath = [...currentPath, currentPartNumber];
@@ -892,7 +896,7 @@ const RelationsPage: React.FC = () => {
       // 🔧 修正递归调用：传递正确的父级上下文和完整路径
       // child_part_number 作为下一级的 currentPartNumber
       // currentPartNumber 作为下一级的 currentParentPartNumber  
-      const grandChildren = buildTreeNodes(relations, relation.child_part_number, currentPartNumber, newVisitedNodes, currentFullPath);
+      const grandChildren = buildTreeNodes(relations, relation.child_part_number, currentPartNumber, newVisitedPaths, currentFullPath);
       
       // 🔧 计算当前节点的实际层级
       const currentNodeLevel = relation.level || 1;
@@ -1357,15 +1361,67 @@ const RelationsPage: React.FC = () => {
     confirm({
       title: '确认删除关系',
       icon: <ExclamationCircleOutlined />,
-      content: `确定要删除关系 "${relation.part_number} → ${relation.child_part_number}" 吗？`,
+      content: (
+        <div>
+          <p>确定要删除关系 <strong>"{relation.part_number} → {relation.child_part_number}"</strong> 吗？</p>
+          <div style={{ 
+            padding: '12px', 
+            backgroundColor: '#fff2e8', 
+            borderRadius: '6px', 
+            marginTop: '8px',
+            border: '1px solid #ffbb96'
+          }}>
+            <div><strong>⚠️ 注意：</strong>此操作将级联删除所有子级关系</div>
+            <div style={{ marginTop: '4px', fontSize: '13px', color: '#666' }}>
+              关系ID: {relation.id} | 层级: Level {relation.level} | 数量: {relation.quantity}
+            </div>
+          </div>
+        </div>
+      ),
       onOk: async () => {
         try {
+          console.log('正在删除关系:', relation);
           await adminRelationService.deleteRelation(relation.id, { cascade: true });
           message.success('删除成功');
           await loadRelationTree(true, undefined, false);
         } catch (error) {
           console.error('删除失败:', error);
-          message.error('删除失败');
+          
+          // 🔧 增强错误处理：提供详细的错误信息
+          let errorMessage = '删除失败';
+          let errorDetails = '';
+          
+          if (error instanceof Error) {
+            errorMessage = error.message;
+            errorDetails = error.stack || '';
+          } else if (typeof error === 'object' && error !== null) {
+            const errorObj = error as any;
+            
+            // 检查是否是循环引用错误
+            if (errorObj.code === 'cycle_detected' || errorObj.message?.includes('循环引用')) {
+              errorMessage = '删除失败：检测到循环引用';
+              errorDetails = '数据中存在循环引用，请检查关系数据的完整性';
+            } 
+            // 检查是否是数据库错误
+            else if (errorObj.code === 'database_error' || errorObj.message?.includes('数据库')) {
+              errorMessage = '删除失败：数据库错误';
+              errorDetails = errorObj.message || '数据库操作失败';
+            }
+            // 检查是否是网络错误
+            else if (errorObj.code === 500 || errorObj.status === 500) {
+              errorMessage = '删除失败：服务器错误';
+              errorDetails = errorObj.message || '服务器内部错误，请稍后重试';
+            }
+            // 其他错误
+            else {
+              errorMessage = errorObj.message || '删除失败';
+              errorDetails = JSON.stringify(errorObj);
+            }
+          }
+          
+          // 显示详细错误信息
+          message.error(errorMessage);
+          console.error('详细错误信息:', errorDetails);
         }
       }
     });

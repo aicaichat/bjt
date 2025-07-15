@@ -666,13 +666,36 @@ class BJT_Relation_Controller extends BJT_API_Controller {
         } catch (Exception $e) {
             // 回滚事务
             $wpdb->query('ROLLBACK');
-            error_log('BJT_Relation_Controller Cascade Delete Error: ' . $e->getMessage());
-            return $this->error_response('Failed to delete relation(s): ' . $e->getMessage(), 'delete_error', 500);
+            
+            // 🔧 增强错误处理：记录详细的错误信息
+            $error_details = [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'relation_id' => $id,
+                'cascade_mode' => $cascade ? 'true' : 'false',
+                'item_to_delete' => $item_to_delete ? json_encode($item_to_delete) : 'null'
+            ];
+            
+            error_log('BJT_Relation_Controller Cascade Delete Error: ' . json_encode($error_details));
+            
+            // 检查是否是循环引用错误
+            if (strpos($e->getMessage(), 'cycle') !== false || strpos($e->getMessage(), 'Detected cycle') !== false) {
+                return $this->error_response('删除失败：检测到循环引用，请检查数据完整性', 'cycle_detected', 500);
+            }
+            
+            // 检查是否是数据库错误
+            if (strpos($e->getMessage(), 'DELETE') !== false || strpos($e->getMessage(), 'database') !== false) {
+                return $this->error_response('删除失败：数据库错误 - ' . $e->getMessage(), 'database_error', 500);
+            }
+            
+            return $this->error_response('删除失败：' . $e->getMessage(), 'delete_error', 500);
         }
     }
 
     /**
-     * 查找需要级联删除的所有关系
+     * 查找需要级联删除的所有关系 - 基于精确的树路径
      * 
      * @param object $root_relation 根关系记录
      * @return array 需要删除的关系记录数组
@@ -681,54 +704,90 @@ class BJT_Relation_Controller extends BJT_API_Controller {
         global $wpdb;
         
         $relations_to_delete = [$root_relation]; // 包含根关系本身
-        $processed_parts = []; // 防止重复处理
         
-        // 递归查找所有子级关系
-        $this->find_child_relations_recursive($root_relation->child_part_number, $root_relation->product_line_id, $relations_to_delete, $processed_parts);
+        // 🔧 修复：基于精确的树路径查找子级关系
+        // 查找所有以根关系的child_part_number为parent_part_number的记录
+        $this->find_direct_child_relations_recursive(
+            $root_relation->child_part_number,  // 成为子级的父级
+            $root_relation->product_line_id,
+            $root_relation->host_part_number,
+            $relations_to_delete,
+            []  // 初始化空的访问路径
+        );
         
         return $relations_to_delete;
     }
 
     /**
-     * 递归查找子级关系
+     * 递归查找直接子级关系 - 基于精确的父子关系
      * 
-     * @param string $part_number 当前料号
+     * @param string $parent_part_number 父级料号
      * @param int $product_line_id 产品线ID
+     * @param string $host_part_number 主机料号
      * @param array &$relations_to_delete 需要删除的关系数组（引用传递）
-     * @param array &$processed_parts 已处理的料号数组（引用传递，防止循环）
+     * @param array $visited_paths 已访问的路径，防止循环引用
      */
-    private function find_child_relations_recursive($part_number, $product_line_id, &$relations_to_delete, &$processed_parts) {
+    private function find_direct_child_relations_recursive($parent_part_number, $product_line_id, $host_part_number, &$relations_to_delete, $visited_paths = []) {
         global $wpdb;
         
-        // 防止循环引用
-        if (in_array($part_number, $processed_parts)) {
-            error_log("BJT Relations: Circular reference detected during cascade delete for part_number: {$part_number}");
+        // 🔧 修复：基于完整路径上下文的循环检测
+        $current_path = implode('→', $visited_paths) . '→' . $parent_part_number;
+        
+        // 🔧 检查是否存在循环引用
+        if (in_array($parent_part_number, $visited_paths)) {
+            error_log("BJT Relations: Detected cycle in cascade delete at path: {$current_path}, stopping recursion");
             return;
         }
-        $processed_parts[] = $part_number;
         
-        // 查找以当前料号为part_number的所有子级关系
+        // 添加当前料号到访问路径
+        $new_visited_paths = array_merge($visited_paths, [$parent_part_number]);
+        
+        // 🔧 关键修复：查找所有以parent_part_number为父级的直接子级关系
+        // 这样可以精确找到特定树分支下的子级，避免误删其他分支
         $child_relations = $wpdb->get_results($wpdb->prepare(
             "SELECT * FROM {$this->table_name} 
-             WHERE part_number = %s AND product_line_id = %d 
-             ORDER BY level DESC, id ASC",
-            $part_number,
-            $product_line_id
+             WHERE parent_part_number = %s 
+             AND product_line_id = %d 
+             AND host_part_number = %s
+             AND status = 'publish'
+             ORDER BY level ASC, sort_order ASC, id ASC",
+            $parent_part_number,
+            $product_line_id,
+            $host_part_number
         ));
+        
+        error_log("BJT Relations: find_direct_child_relations_recursive - Found " . count($child_relations) . " direct children for parent: {$parent_part_number} at path: {$current_path}");
         
         if (!empty($child_relations)) {
             foreach ($child_relations as $child_relation) {
-                // 添加到删除列表
-                $relations_to_delete[] = $child_relation;
+                // 检查是否已经在删除列表中（避免重复删除）
+                $already_exists = false;
+                foreach ($relations_to_delete as $existing_relation) {
+                    if ($existing_relation->id === $child_relation->id) {
+                        $already_exists = true;
+                        break;
+                    }
+                }
                 
-                // 递归查找更深层的子级
-                if (!empty($child_relation->child_part_number)) {
-                    $this->find_child_relations_recursive(
-                        $child_relation->child_part_number, 
-                        $product_line_id, 
-                        $relations_to_delete, 
-                        $processed_parts
-                    );
+                if (!$already_exists) {
+                    // 添加到删除列表
+                    $relations_to_delete[] = $child_relation;
+                    
+                    error_log("BJT Relations: Added child relation ID {$child_relation->id} (parent: {$child_relation->parent_part_number} -> part: {$child_relation->part_number} -> child: {$child_relation->child_part_number}) to delete list");
+                    
+                    // 递归查找更深层的子级
+                    // 🔧 关键：使用child_relation->child_part_number作为下一级的parent_part_number
+                    if (!empty($child_relation->child_part_number)) {
+                        $this->find_direct_child_relations_recursive(
+                            $child_relation->child_part_number,  // 当前记录的子级成为下一级的父级
+                            $product_line_id,
+                            $host_part_number,
+                            $relations_to_delete,
+                            $new_visited_paths  // 传递访问路径
+                        );
+                    }
+                } else {
+                    error_log("BJT Relations: Skipping duplicate relation ID {$child_relation->id} in cascade delete");
                 }
             }
         }
@@ -1075,11 +1134,11 @@ class BJT_Relation_Controller extends BJT_API_Controller {
      * @param int $max_levels 最大层级
      * @param string $lang 语言
      * @param string $region 区域
-     * @param array $visited_nodes 已访问节点，防止循环引用
+     * @param array $visited_paths 已访问的路径，防止循环引用 (格式: ["parent→child", ...])
      * @param string $current_parent_part_number 当前节点的父级料号，用于确定上下文路径
      * @return array
      */
-    private function get_accessories_recursive($part_number, $current_level, $max_levels, $lang, $region, $visited_nodes = [], $current_parent_part_number = null) {
+    private function get_accessories_recursive($part_number, $current_level, $max_levels, $lang, $region, $visited_paths = [], $current_parent_part_number = null) {
         global $wpdb;
         
         if ($current_level > $max_levels) {
@@ -1087,14 +1146,31 @@ class BJT_Relation_Controller extends BJT_API_Controller {
             return [];
         }
         
-        // 🔧 循环检测：如果当前节点已经在访问路径中，则停止递归
-        if (in_array($part_number, $visited_nodes)) {
-            error_log("BJT Relations: get_accessories_recursive - Detected cycle at node {$part_number}, stopping recursion");
+        // 🔧 修复：基于完整路径上下文的循环检测
+        $current_path = $current_parent_part_number ? "{$current_parent_part_number}→{$part_number}" : "ROOT→{$part_number}";
+        
+        // 🎯 特殊调试：针对60A10003的循环检测问题
+        if ($part_number === '60A10003') {
+            error_log("🎯 BJT Relations: [60A10003 DEBUG] Processing part_number: {$part_number}, current_level: {$current_level}, parent: {$current_parent_part_number}");
+            error_log("🎯 BJT Relations: [60A10003 DEBUG] current_path: {$current_path}");
+            error_log("🎯 BJT Relations: [60A10003 DEBUG] visited_paths: [" . implode(', ', $visited_paths) . "]");
+        }
+        
+        // 🔧 修复：检查当前路径是否已经访问过（真正的循环检测）
+        if (in_array($current_path, $visited_paths)) {
+            error_log("BJT Relations: get_accessories_recursive - Detected cycle at path {$current_path}, stopping recursion");
+            
+            // 🎯 特殊调试：针对60A10003的循环检测问题
+            if ($part_number === '60A10003') {
+                error_log("🎯 BJT Relations: [60A10003 DEBUG] ⚠️ CYCLE DETECTED! Path: {$current_path}");
+                error_log("🎯 BJT Relations: [60A10003 DEBUG] This is a real cycle, recursion should stop");
+            }
+            
             return [];
         }
         
-        // 添加当前节点到访问集合
-        $new_visited_nodes = array_merge($visited_nodes, [$part_number]);
+        // 🔧 修复：添加当前路径到访问集合
+        $new_visited_paths = array_merge($visited_paths, [$current_path]);
         
         error_log("BJT Relations: get_accessories_recursive - Processing part_number: {$part_number}, current_level: {$current_level}, parent: {$current_parent_part_number}");
         
@@ -1128,6 +1204,16 @@ class BJT_Relation_Controller extends BJT_API_Controller {
             );
         }
         
+        // 🎯 特殊调试：针对60A10003
+        if ($part_number === '60A10003') {
+            error_log("🎯 BJT Relations: [60A10003 DEBUG] Query context: part={$part_number}, parent={$current_parent_part_number}");
+            error_log("🎯 BJT Relations: [60A10003 DEBUG] Query executed: " . $wpdb->prepare($relations_query, $part_number, $current_parent_part_number, $this->get_current_host_part_number()));
+            error_log("🎯 BJT Relations: [60A10003 DEBUG] Found " . count($relations) . " child relations:");
+            foreach ($relations as $i => $rel) {
+                error_log("🎯 BJT Relations: [60A10003 DEBUG]   Child {$i}: {$rel->child_part_number} (level: {$rel->level}, quantity: {$rel->quantity}, relation_id: {$rel->id}, parent: {$rel->parent_part_number})");
+            }
+        }
+        
         // 🎯 特殊调试：针对14A01246
         if ($part_number === '14A01246') {
             error_log("🎯 BJT Relations: [14A01246 DEBUG] Query context: part={$part_number}, parent={$current_parent_part_number}");
@@ -1142,6 +1228,13 @@ class BJT_Relation_Controller extends BJT_API_Controller {
         
         if (empty($relations)) {
             error_log("BJT Relations: get_accessories_recursive - No child relations found for part_number: {$part_number}, parent: {$current_parent_part_number}");
+            
+            // 🎯 特殊调试：针对60A10003
+            if ($part_number === '60A10003') {
+                error_log("🎯 BJT Relations: [60A10003 DEBUG] ⚠️ No child relations found! This might be the issue");
+                error_log("🎯 BJT Relations: [60A10003 DEBUG] Expected query should find children for part_number=60A10003 with parent={$current_parent_part_number}");
+            }
+            
             return [];
         }
         
@@ -1154,6 +1247,11 @@ class BJT_Relation_Controller extends BJT_API_Controller {
         foreach ($relations as $relation) {
             $child_part_number = $relation->child_part_number;
             if (!$child_part_number) continue;
+            
+            // 🎯 特殊调试：针对60A10003的子配件
+            if ($part_number === '60A10003') {
+                error_log("🎯 BJT Relations: [60A10003 DEBUG] Processing child: {$child_part_number} (relation ID: {$relation->id})");
+            }
             
             // 🎯 特殊调试：针对14A01246的子配件
             if ($part_number === '14A01246') {
@@ -1309,7 +1407,7 @@ class BJT_Relation_Controller extends BJT_API_Controller {
                     $max_levels, 
                     $lang, 
                     $region,
-                    $new_visited_nodes,
+                    $new_visited_paths,
                     $part_number // 🔧 关键修复：传递当前节点作为子级的父级上下文
                 );
                 
