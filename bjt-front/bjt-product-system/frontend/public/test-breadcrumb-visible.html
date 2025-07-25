@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>面包屑可见性测试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 200vh;
+        }
+        
+        /* 面包屑样式 - 使用fixed定位和高z-index */
+        .breadcrumb-visible {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 9999;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 12px 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .breadcrumb-left {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .breadcrumb-item {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .breadcrumb-item.primary {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+        
+        .breadcrumb-item.secondary {
+            background: #f0fdf4;
+            color: #15803d;
+        }
+        
+        .breadcrumb-separator {
+            margin: 0 8px;
+            color: #9ca3af;
+            font-size: 12px;
+        }
+        
+        .status-indicator {
+            font-size: 14px;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+        }
+        
+        /* 占位空间 */
+        .breadcrumb-spacer {
+            height: 60px;
+        }
+        
+        .content-section {
+            background: white;
+            margin: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .status-badge {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            z-index: 10000;
+        }
+        
+        .test-info {
+            background: #f3f4f6;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .test-info h3 {
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        
+        .test-info ul {
+            margin-left: 20px;
+            color: #6b7280;
+        }
+        
+        .test-info li {
+            margin-bottom: 4px;
+        }
+        
+        .demo-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            margin: 8px;
+        }
+        
+        .demo-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .machine-name {
+            color: #374151;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .machine-name:hover {
+            color: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <!-- 面包屑 - 使用fixed定位和高z-index -->
+    <div class="breadcrumb-visible">
+        <div class="breadcrumb-left">
+            <span class="breadcrumb-item primary">产品线</span>
+            <span style="color: #374151; font-weight: 500;">气垫机</span>
+            
+            <span class="breadcrumb-separator">→</span>
+            <span class="breadcrumb-item secondary">Host</span>
+            <span class="machine-name">LA-E4S 气垫机</span>
+            
+            <span class="breadcrumb-separator">→</span>
+            <span style="color: #2563eb; font-weight: 500;">Level 1 Accessory</span>
+        </div>
+        
+        <div class="status-indicator">
+            📋 请选择配件
+        </div>
+    </div>
+    
+    <!-- 占位空间 -->
+    <div class="breadcrumb-spacer"></div>
+    
+    <!-- 状态指示器 -->
+    <div class="status-badge" id="status">✅ 面包屑可见</div>
+    
+    <!-- 测试说明 -->
+    <div class="content-section">
+        <div class="test-info">
+            <h3>👁️ 面包屑可见性测试</h3>
+            <p>这个页面测试面包屑是否可见。面包屑现在使用fixed定位和高z-index。</p>
+            <ul>
+                <li>✅ 使用position: fixed确保始终可见</li>
+                <li>✅ z-index: 9999确保在最顶层</li>
+                <li>✅ 纯白色背景，避免兼容性问题</li>
+                <li>✅ 内联样式，避免CSS冲突</li>
+                <li>✅ 简单的箭头符号，避免图标问题</li>
+            </ul>
+        </div>
+        
+        <h2>修复要点</h2>
+        <p>1. 提高z-index到9999</p>
+        <p>2. 使用纯白色背景替代毛玻璃效果</p>
+        <p>3. 使用内联样式避免CSS冲突</p>
+        <p>4. 简化图标，使用文本符号</p>
+        
+        <button class="demo-button" onclick="scrollToBottom()">滚动到底部测试</button>
+        <button class="demo-button" onclick="scrollToTop()">返回顶部</button>
+    </div>
+    
+    <!-- 内容区域1 -->
+    <div class="content-section">
+        <h2>主机选择区域</h2>
+        <p>这里是主机选择的内容区域。面包屑应该始终可见在顶部。</p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 16px;">
+            <div style="border: 1px solid #e5e7eb; padding: 16px; border-radius: 6px;">
+                <h3 style="color: #1f2937; margin-bottom: 8px;">LA-E4S 气垫机</h3>
+                <p style="color: #6b7280; font-size: 14px;">高性能气垫机，适用于各种包装需求</p>
+            </div>
+            <div style="border: 1px solid #e5e7eb; padding: 16px; border-radius: 6px;">
+                <h3 style="color: #1f2937; margin-bottom: 8px;">LA-E5P 气垫机</h3>
+                <p style="color: #6b7280; font-size: 14px;">专业级气垫机，适合大批量生产</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 内容区域2 -->
+    <div class="content-section">
+        <h2>配件选择区域</h2>
+        <p>这里是配件选择的内容区域。面包屑应该仍然可见。</p>
+        <div style="background: #f9fafb; padding: 16px; border-radius: 6px; margin-top: 16px;">
+            <p style="color: #6b7280; text-align: center;">配件选择内容将在这里显示</p>
+        </div>
+    </div>
+    
+    <!-- 内容区域3 -->
+    <div class="content-section">
+        <h2>页面底部</h2>
+        <p>你已经滚动到页面底部了！面包屑应该仍然可见在顶部。</p>
+        <p>如果面包屑消失了，说明还有问题需要修复。</p>
+    </div>
+    
+    <script>
+        function scrollToBottom() {
+            window.scrollTo({
+                top: document.body.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+        
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+        
+        // 监听滚动事件
+        window.addEventListener('scroll', function() {
+            const status = document.getElementById('status');
+            const breadcrumb = document.querySelector('.breadcrumb-visible');
+            const rect = breadcrumb.getBoundingClientRect();
+            
+            if (rect.top === 0) {
+                status.textContent = '✅ 面包屑可见';
+                status.style.background = '#10b981';
+            } else {
+                status.textContent = '❌ 面包屑不可见';
+                status.style.background = '#ef4444';
+            }
+        });
+        
+        // 页面加载完成后的提示
+        console.log('👁️ 面包屑可见性测试页面已加载');
+        console.log('📝 请检查面包屑是否可见');
+    </script>
+</body>
+</html> 

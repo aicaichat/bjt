@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>面包屑导航功能验证</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        .status {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+        }
+        .status.success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .status.warning {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+        }
+        .status.error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        .breadcrumb-demo {
+            background: white;
+            padding: 12px 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            margin: 16px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .breadcrumb-item {
+            padding: 4px 8px;
+            background: #f3f4f6;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .breadcrumb-item:hover {
+            background: #e5e7eb;
+        }
+        .breadcrumb-separator {
+            color: #9ca3af;
+            font-size: 10px;
+        }
+        .breadcrumb-current {
+            color: #3b82f6;
+            font-weight: 500;
+        }
+        .test-button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 8px 4px;
+        }
+        .test-button:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍞 面包屑导航功能验证</h1>
+        
+        <div class="status success">
+            <strong>✅ 功能已实现</strong><br>
+            面包屑导航功能已经在 ProductLine1Page.tsx 中实现
+        </div>
+
+        <h2>📋 实现的功能</h2>
+        <ul>
+            <li><strong>可点击的面包屑</strong>：产品线和主机名称都可以点击</li>
+            <li><strong>返回功能</strong>：点击主机名称可返回主机选择状态</li>
+            <li><strong>状态提示</strong>：根据当前选择状态显示相应提示</li>
+            <li><strong>动态标题</strong>：页面标题根据状态显示"主机选择"或"配件选择"</li>
+        </ul>
+
+        <h2>🎯 面包屑演示</h2>
+        
+        <h3>阶段1：初始状态 - 主机选择</h3>
+        <div class="breadcrumb-demo">
+            <span class="breadcrumb-item">产品线</span>
+            <span class="breadcrumb-separator">></span>
+            <span class="breadcrumb-item">AIR CUSHIONING SYSTEM</span>
+            <div style="margin-left: 16px; font-size: 12px; color: #6b7280;">
+                ℹ️ 请选择主机型号
+            </div>
+        </div>
+
+        <h3>阶段2：主机已选 - 一级配件</h3>
+        <div class="breadcrumb-demo">
+            <span class="breadcrumb-item">产品线</span>
+            <span class="breadcrumb-separator">></span>
+            <span class="breadcrumb-item">AIR CUSHIONING SYSTEM</span>
+            <span class="breadcrumb-separator">></span>
+            <span class="breadcrumb-item">Host</span>
+            <span class="breadcrumb-item">LA E5S test</span>
+            <span class="breadcrumb-separator">></span>
+            <span class="breadcrumb-current">Level 1 Accessory</span>
+            <div style="margin-left: 16px; font-size: 12px; color: #6b7280;">
+                ℹ️ 请选择配件
+            </div>
+        </div>
+
+        <h3>阶段3：配件已选 - 下级配件</h3>
+        <div class="breadcrumb-demo">
+            <span class="breadcrumb-item">产品线</span>
+            <span class="breadcrumb-separator">></span>
+            <span class="breadcrumb-item">AIR CUSHIONING SYSTEM</span>
+            <span class="breadcrumb-separator">></span>
+            <span class="breadcrumb-item">Host</span>
+            <span class="breadcrumb-item">LA E5S test</span>
+            <span class="breadcrumb-separator">></span>
+            <span class="breadcrumb-item">进料系统</span>
+            <span class="breadcrumb-separator">></span>
+            <span class="breadcrumb-current">Level 2 Accessory</span>
+            <div style="margin-left: 16px; font-size: 12px; color: #6b7280;">
+                ℹ️ 当前层级: 2
+            </div>
+        </div>
+
+        <h2>🔧 测试步骤</h2>
+        <ol>
+            <li>访问 <a href="http://localhost:5173/machines/product-line-1" target="_blank">主机选购页面</a></li>
+            <li>检查页面顶部是否显示面包屑导航</li>
+            <li>选择一个主机，观察面包屑是否更新</li>
+            <li>点击面包屑中的主机名称，测试返回功能</li>
+            <li>选择配件，观察面包屑和状态提示的变化</li>
+        </ol>
+
+        <h2>🚨 如果面包屑不显示</h2>
+        <div class="status warning">
+            <strong>可能的原因：</strong>
+            <ul>
+                <li>浏览器缓存问题 - 请强制刷新页面 (Ctrl+F5)</li>
+                <li>开发服务器需要重启 - 检查终端输出</li>
+                <li>CSS样式冲突 - 检查浏览器开发者工具</li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <button class="test-button" onclick="window.open('http://localhost:5173/machines/product-line-1', '_blank')">
+                打开主机选购页面
+            </button>
+            <button class="test-button" onclick="location.reload()">
+                刷新此页面
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 检查页面功能
+        console.log('🍞 面包屑导航功能验证页面已加载');
+        console.log('📝 请访问 http://localhost:5173/machines/product-line-1 查看实际效果');
+    </script>
+</body>
+</html> 

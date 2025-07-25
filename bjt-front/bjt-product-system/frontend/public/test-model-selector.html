@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>产品型号选择器 - 测试页面</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .select-container {
+            position: relative;
+        }
+        .select-dropdown {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 12px 16px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .select-dropdown:hover {
+            border-color: #3b82f6;
+        }
+        .select-dropdown.open {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .dropdown-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #3b82f6;
+            border-radius: 12px;
+            margin-top: 4px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .dropdown-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .dropdown-item:hover {
+            background-color: #f8fafc;
+        }
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+        .model-image {
+            transition: transform 0.3s ease;
+        }
+        .model-image:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-2xl shadow-xl p-8 max-w-4xl mx-auto">
+            <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">
+                产品型号选择器演示
+            </h1>
+            
+            <!-- 模拟ProductLine2ConsumablesPage的型号筛选器 -->
+            <div class="model-filter-section mb-8">
+                <label class="mb-4 text-lg font-semibold text-gray-700 block">
+                    适用机型
+                </label>
+                
+                <!-- 下拉框选择器 -->
+                <div class="mb-6">
+                    <div class="select-container max-w-md">
+                        <div class="select-dropdown" id="modelSelect">
+                            <div class="flex justify-between items-center">
+                                <span id="selectedText">请选择适用机型</span>
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        
+                        <div class="dropdown-list hidden" id="dropdownList">
+                            <div class="dropdown-item" data-value="all">
+                                <div class="font-medium">全部机型</div>
+                                <div class="text-gray-500 text-sm">显示所有型号的耗材</div>
+                            </div>
+                            <div class="dropdown-item" data-value="P100">
+                                <div class="font-medium">P100系列</div>
+                                <div class="text-gray-500 text-sm">入门级纸垫机</div>
+                            </div>
+                            <div class="dropdown-item" data-value="P200">
+                                <div class="font-medium">P200系列</div>
+                                <div class="text-gray-500 text-sm">标准型纸垫机</div>
+                            </div>
+                            <div class="dropdown-item" data-value="P300">
+                                <div class="font-medium">P300系列</div>
+                                <div class="text-gray-500 text-sm">专业级纸垫机</div>
+                            </div>
+                            <div class="dropdown-item" data-value="P400">
+                                <div class="font-medium">P400系列</div>
+                                <div class="text-gray-500 text-sm">高端型纸垫机</div>
+                            </div>
+                            <div class="dropdown-item" data-value="P500">
+                                <div class="font-medium">P500系列</div>
+                                <div class="text-gray-500 text-sm">旗舰级纸垫机</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 选中型号的图片展示 -->
+                <div id="selectedModelDisplay" class="hidden selected-model-display bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-8 border border-blue-200 shadow-md">
+                    <div class="flex items-center space-x-8">
+                        <div class="flex-shrink-0">
+                            <div class="relative">
+                                <img
+                                    id="modelImage"
+                                    src=""
+                                    alt=""
+                                    class="model-image w-40 h-40 object-contain rounded-xl bg-white shadow-lg border-2 border-white"
+                                />
+                                <div class="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold shadow-lg">
+                                    ✓
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="mb-2">
+                                <span class="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                                    已选择
+                                </span>
+                            </div>
+                            <h3 id="modelTitle" class="text-2xl font-bold text-gray-900 mb-3">
+                            </h3>
+                            <p id="modelDescription" class="text-gray-600 text-lg mb-4">
+                            </p>
+                            <div class="flex items-center space-x-2 text-blue-600">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="font-medium">
+                                    显示适用于此机型的耗材产品
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 说明文档 -->
+            <div class="bg-gray-50 rounded-xl p-6 mt-8">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">功能说明</h2>
+                <ul class="space-y-2 text-gray-600">
+                    <li class="flex items-start space-x-2">
+                        <span class="text-blue-500 mt-1">•</span>
+                        <span>用户从下拉框中选择产品型号（P100-P500系列）</span>
+                    </li>
+                    <li class="flex items-start space-x-2">
+                        <span class="text-blue-500 mt-1">•</span>
+                        <span>选择后下方会显示对应的产品图片和详细信息</span>
+                    </li>
+                    <li class="flex items-start space-x-2">
+                        <span class="text-blue-500 mt-1">•</span>
+                        <span>图片支持悬停放大效果，提升用户体验</span>
+                    </li>
+                    <li class="flex items-start space-x-2">
+                        <span class="text-blue-500 mt-1">•</span>
+                        <span>选择"全部机型"时不显示图片，显示所有耗材产品</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const models = {
+            'all': {
+                label: '全部机型',
+                description: '显示所有型号的耗材',
+                image: ''
+            },
+            'P100': {
+                label: 'P100系列',
+                description: '入门级纸垫机',
+                image: '/images/product-models/p100.png'
+            },
+            'P200': {
+                label: 'P200系列',
+                description: '标准型纸垫机',
+                image: '/images/product-models/p200.png'
+            },
+            'P300': {
+                label: 'P300系列',
+                description: '专业级纸垫机',
+                image: '/images/product-models/p300.png'
+            },
+            'P400': {
+                label: 'P400系列',
+                description: '高端型纸垫机',
+                image: '/images/product-models/p400.png'
+            },
+            'P500': {
+                label: 'P500系列',
+                description: '旗舰级纸垫机',
+                image: '/images/product-models/p500.png'
+            }
+        };
+
+        let selectedModel = 'all';
+
+        const modelSelect = document.getElementById('modelSelect');
+        const dropdownList = document.getElementById('dropdownList');
+        const selectedText = document.getElementById('selectedText');
+        const selectedModelDisplay = document.getElementById('selectedModelDisplay');
+        const modelImage = document.getElementById('modelImage');
+        const modelTitle = document.getElementById('modelTitle');
+        const modelDescription = document.getElementById('modelDescription');
+
+        // 切换下拉框
+        modelSelect.addEventListener('click', () => {
+            dropdownList.classList.toggle('hidden');
+            modelSelect.classList.toggle('open');
+        });
+
+        // 点击其他地方关闭下拉框
+        document.addEventListener('click', (e) => {
+            if (!modelSelect.contains(e.target) && !dropdownList.contains(e.target)) {
+                dropdownList.classList.add('hidden');
+                modelSelect.classList.remove('open');
+            }
+        });
+
+        // 选择项目
+        dropdownList.addEventListener('click', (e) => {
+            const item = e.target.closest('.dropdown-item');
+            if (item) {
+                const value = item.dataset.value;
+                selectModel(value);
+                dropdownList.classList.add('hidden');
+                modelSelect.classList.remove('open');
+            }
+        });
+
+        function selectModel(value) {
+            selectedModel = value;
+            const model = models[value];
+            
+            selectedText.textContent = model.label;
+            
+            if (value !== 'all' && model.image) {
+                modelImage.src = model.image;
+                modelImage.alt = model.label;
+                modelTitle.textContent = model.label;
+                modelDescription.textContent = model.description;
+                selectedModelDisplay.classList.remove('hidden');
+            } else {
+                selectedModelDisplay.classList.add('hidden');
+            }
+        }
+
+        // 图片加载错误处理
+        modelImage.addEventListener('error', () => {
+            modelImage.src = '/images/product-models/placeholder.png';
+        });
+    </script>
+</body>
+</html> 

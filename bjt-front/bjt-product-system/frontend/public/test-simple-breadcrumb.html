@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简单面包屑测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .breadcrumb {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .breadcrumb-tag {
+            font-size: 12px;
+            padding: 2px 6px;
+            background-color: #f3f4f6;
+            border-radius: 4px;
+            margin-right: 8px;
+            color: #374151;
+        }
+        .breadcrumb-text {
+            color: #374151;
+        }
+        .breadcrumb-separator {
+            color: #d1d5db;
+            margin: 0 8px;
+            font-size: 10px;
+        }
+        .breadcrumb-current {
+            color: #3b82f6;
+            font-weight: 500;
+        }
+        .status-hint {
+            margin-top: 8px;
+            margin-left: 16px;
+            font-size: 14px;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+        }
+        .status-hint::before {
+            content: "ℹ️";
+            margin-right: 4px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .action-button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .action-button:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍞 面包屑导航测试</h1>
+        
+        <div class="test-section">
+            <h2>测试1: 未选择主机</h2>
+            <div class="breadcrumb">
+                <span class="breadcrumb-tag">产品线</span>
+                <span class="breadcrumb-text">产品线1</span>
+            </div>
+            <div class="status-hint">请选择主机型号</div>
+        </div>
+
+        <div class="test-section">
+            <h2>测试2: 已选择主机</h2>
+            <div class="breadcrumb">
+                <span class="breadcrumb-tag">产品线</span>
+                <span class="breadcrumb-text">产品线1</span>
+                <span class="breadcrumb-separator">›</span>
+                <span class="breadcrumb-tag">Host</span>
+                <span class="breadcrumb-text">LA E5S test</span>
+                <span class="breadcrumb-separator">›</span>
+                <span class="breadcrumb-current">Level 1 Accessory</span>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>测试3: 已选择配件</h2>
+            <div class="breadcrumb">
+                <span class="breadcrumb-tag">产品线</span>
+                <span class="breadcrumb-text">产品线1</span>
+                <span class="breadcrumb-separator">›</span>
+                <span class="breadcrumb-tag">Host</span>
+                <span class="breadcrumb-text">LA E5S test</span>
+                <span class="breadcrumb-separator">›</span>
+                <span class="breadcrumb-current">进料系统 - 传感器</span>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>操作</h2>
+            <a href="http://localhost:5173/machines/product-line-1" class="action-button" target="_blank">
+                查看实际页面
+            </a>
+            <a href="http://localhost:5173/debug-breadcrumb.html" class="action-button" target="_blank">
+                调试工具
+            </a>
+            <a href="http://localhost:5173/test-new-breadcrumb.html" class="action-button" target="_blank">
+                新样式演示
+            </a>
+        </div>
+    </div>
+</body>
+</html> 

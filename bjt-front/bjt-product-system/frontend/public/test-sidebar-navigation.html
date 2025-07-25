@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>侧边栏导航设计 - BJT Tech</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        :root {
+            --bjt-bg-primary: #ffffff;
+            --bjt-bg-secondary: #f8f9fa;
+            --bjt-bg-accent: #e3f2fd;
+            --bjt-bg-tertiary: #f1f3f4;
+            --bjt-text-primary: #1a1a1a;
+            --bjt-text-secondary: #5f6368;
+            --bjt-primary-blue: #1976d2;
+            --bjt-primary-blue-dark: #1565c0;
+            --bjt-border-primary: #e0e0e0;
+            --bjt-border-secondary: #f0f0f0;
+            --bjt-shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
+            --bjt-shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --bjt-shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+            --bjt-radius-sm: 4px;
+            --bjt-radius-md: 6px;
+            --bjt-radius-lg: 8px;
+            --bjt-radius-full: 50%;
+            --bjt-space-xs: 4px;
+            --bjt-space-sm: 8px;
+            --bjt-space-md: 16px;
+            --bjt-space-lg: 24px;
+            --bjt-space-xl: 32px;
+            --bjt-transition-normal: 0.3s ease;
+            --bjt-z-fixed: 1000;
+            --bjt-z-modal: 1100;
+            --bjt-font-size-xs: 12px;
+            --bjt-font-size-sm: 14px;
+            --bjt-font-size-base: 16px;
+            --bjt-font-weight-medium: 500;
+            --bjt-font-weight-semibold: 600;
+            --bjt-font-weight-bold: 700;
+        }
+        
+        body {
+            background-color: var(--bjt-bg-secondary);
+            color: var(--bjt-text-primary);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .test-info {
+            background-color: #e8f5e8;
+            border: 1px solid #28a745;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .test-info h2 {
+            color: #155724;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+        
+        .test-info ul {
+            padding-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .test-info li {
+            margin-bottom: 8px;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .demo-section {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: var(--bjt-shadow-md);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        
+        .demo-header {
+            background-color: var(--bjt-bg-secondary);
+            padding: 20px;
+            border-bottom: 1px solid var(--bjt-border-primary);
+        }
+        
+        .demo-header h3 {
+            color: var(--bjt-text-primary);
+            font-size: 18px;
+            font-weight: var(--bjt-font-weight-semibold);
+        }
+        
+        .demo-content {
+            padding: 30px;
+        }
+        
+        /* 侧边栏样式 */
+        .sidebar-demo {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 280px;
+            background-color: var(--bjt-bg-primary);
+            border-right: 1px solid var(--bjt-border-primary);
+            box-shadow: var(--bjt-shadow-lg);
+            z-index: var(--bjt-z-fixed);
+            transition: all var(--bjt-transition-normal);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .sidebar-demo.collapsed {
+            width: 80px;
+        }
+        
+        /* 侧边栏头部 */
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--bjt-space-md);
+            border-bottom: 1px solid var(--bjt-border-primary);
+            background-color: var(--bjt-bg-secondary);
+            min-height: 80px;
+        }
+        
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+        
+        .sidebar-logo img {
+            height: 60px;
+            max-height: 60px;
+            width: auto;
+            max-width: 200px;
+            object-fit: contain;
+        }
+        
+        .sidebar-demo.collapsed .sidebar-logo img {
+            max-width: 50px;
+        }
+        
+        .sidebar-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background-color: transparent;
+            border: 1px solid var(--bjt-border-primary);
+            border-radius: var(--bjt-radius-md);
+            color: var(--bjt-text-secondary);
+            cursor: pointer;
+            transition: all var(--bjt-transition-normal);
+        }
+        
+        .sidebar-toggle:hover {
+            background-color: var(--bjt-bg-accent);
+            color: var(--bjt-primary-blue);
+            border-color: var(--bjt-primary-blue);
+        }
+        
+        /* 侧边栏菜单 */
+        .sidebar-menu {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: var(--bjt-space-sm) 0;
+        }
+        
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: var(--bjt-space-md) var(--bjt-space-lg);
+            color: var(--bjt-text-secondary);
+            text-decoration: none;
+            font-weight: var(--bjt-font-weight-medium);
+            font-size: var(--bjt-font-size-base);
+            transition: all var(--bjt-transition-normal);
+            border-radius: 0;
+            margin: 0;
+            cursor: pointer;
+        }
+        
+        .menu-item:hover {
+            color: var(--bjt-primary-blue);
+            background-color: var(--bjt-bg-accent);
+        }
+        
+        .menu-item.active {
+            color: var(--bjt-primary-blue);
+            background-color: var(--bjt-bg-accent);
+            font-weight: var(--bjt-font-weight-semibold);
+            border-right: 3px solid var(--bjt-primary-blue);
+        }
+        
+        .menu-item-icon {
+            margin-right: var(--bjt-space-md);
+            font-size: 18px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .menu-item-text {
+            flex: 1;
+        }
+        
+        .menu-item-arrow {
+            font-size: 12px;
+            transition: transform var(--bjt-transition-normal);
+        }
+        
+        .menu-item.expanded .menu-item-arrow {
+            transform: rotate(90deg);
+        }
+        
+        .sidebar-demo.collapsed .menu-item-text,
+        .sidebar-demo.collapsed .menu-item-arrow {
+            display: none;
+        }
+        
+        .sidebar-demo.collapsed .menu-item {
+            padding: var(--bjt-space-md);
+            justify-content: center;
+        }
+        
+        .sidebar-demo.collapsed .menu-item-icon {
+            margin-right: 0;
+        }
+        
+        /* 子菜单 */
+        .submenu {
+            background-color: var(--bjt-bg-secondary);
+            border-left: 2px solid var(--bjt-border-primary);
+            margin-left: var(--bjt-space-md);
+            overflow: hidden;
+            transition: all var(--bjt-transition-normal);
+        }
+        
+        .submenu-group {
+            padding: var(--bjt-space-sm) 0;
+        }
+        
+        .submenu-title {
+            padding: var(--bjt-space-sm) var(--bjt-space-lg);
+            font-size: var(--bjt-font-size-sm);
+            font-weight: var(--bjt-font-weight-semibold);
+            color: var(--bjt-text-primary);
+            background-color: var(--bjt-bg-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .submenu-item {
+            display: block;
+            padding: var(--bjt-space-sm) var(--bjt-space-xl);
+            color: var(--bjt-text-secondary);
+            text-decoration: none;
+            font-size: var(--bjt-font-size-sm);
+            transition: all var(--bjt-transition-normal);
+        }
+        
+        .submenu-item:hover {
+            color: var(--bjt-primary-blue);
+            background-color: var(--bjt-bg-accent);
+        }
+        
+        /* 侧边栏底部 */
+        .sidebar-footer {
+            padding: var(--bjt-space-md);
+            border-top: 1px solid var(--bjt-border-primary);
+            background-color: var(--bjt-bg-secondary);
+            display: flex;
+            flex-direction: column;
+            gap: var(--bjt-space-sm);
+        }
+        
+        .sidebar-demo.collapsed .sidebar-footer {
+            align-items: center;
+        }
+        
+        .sidebar-button {
+            display: flex;
+            align-items: center;
+            gap: var(--bjt-space-xs);
+            padding: var(--bjt-space-sm) var(--bjt-space-md);
+            color: var(--bjt-text-secondary);
+            background-color: transparent;
+            border: 1px solid var(--bjt-border-primary);
+            border-radius: var(--bjt-radius-md);
+            font-weight: var(--bjt-font-weight-medium);
+            font-size: var(--bjt-font-size-sm);
+            transition: all var(--bjt-transition-normal);
+            cursor: pointer;
+            width: 100%;
+            justify-content: flex-start;
+        }
+        
+        .sidebar-button:hover {
+            color: var(--bjt-primary-blue);
+            background-color: var(--bjt-bg-accent);
+            border-color: var(--bjt-primary-blue);
+            transform: translateY(-1px);
+            box-shadow: var(--bjt-shadow-sm);
+        }
+        
+        .sidebar-demo.collapsed .sidebar-button {
+            width: 40px;
+            height: 40px;
+            padding: var(--bjt-space-sm);
+            justify-content: center;
+        }
+        
+        .sidebar-demo.collapsed .sidebar-button span {
+            display: none;
+        }
+        
+        /* 主内容区域 */
+        .main-content {
+            margin-left: 280px;
+            transition: all var(--bjt-transition-normal);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .main-content.sidebar-collapsed {
+            margin-left: 80px;
+        }
+        
+        /* 移动端菜单按钮 */
+        .mobile-menu-toggle {
+            position: fixed;
+            top: var(--bjt-space-md);
+            left: var(--bjt-space-md);
+            display: none;
+            flex-direction: column;
+            justify-content: space-around;
+            width: 40px;
+            height: 40px;
+            background-color: var(--bjt-bg-primary);
+            border: 1px solid var(--bjt-border-primary);
+            border-radius: var(--bjt-radius-md);
+            cursor: pointer;
+            padding: 8px;
+            z-index: var(--bjt-z-modal);
+            transition: all var(--bjt-transition-normal);
+            box-shadow: var(--bjt-shadow-sm);
+        }
+        
+        .mobile-menu-toggle:hover {
+            background-color: var(--bjt-bg-accent);
+            border-color: var(--bjt-primary-blue);
+        }
+        
+        .mobile-menu-toggle .bar {
+            width: 100%;
+            height: 2px;
+            background-color: var(--bjt-text-secondary);
+            border-radius: 2px;
+            transition: all var(--bjt-transition-normal);
+            transform-origin: center;
+        }
+        
+        .mobile-menu-toggle.active .bar:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+            background-color: var(--bjt-primary-blue);
+        }
+        
+        .mobile-menu-toggle.active .bar:nth-child(2) {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        
+        .mobile-menu-toggle.active .bar:nth-child(3) {
+            transform: rotate(-45deg) translate(5px, -5px);
+            background-color: var(--bjt-primary-blue);
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .sidebar-demo {
+                transform: translateX(-100%);
+                width: 280px;
+            }
+            
+            .sidebar-demo.mobile-open {
+                transform: translateX(0);
+            }
+            
+            .sidebar-demo.collapsed {
+                width: 280px;
+            }
+            
+            .main-content,
+            .main-content.sidebar-collapsed {
+                margin-left: 0;
+                padding-top: 80px;
+            }
+            
+            .mobile-menu-toggle {
+                display: flex;
+            }
+        }
+        
+        /* 侧边栏遮罩 */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: calc(var(--bjt-z-fixed) - 1);
+            transition: all var(--bjt-transition-normal);
+            display: none;
+        }
+        
+        .sidebar-overlay.show {
+            display: block;
+        }
+        
+        .feature-highlight {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 14px;
+            color: #856404;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-working {
+            background-color: #28a745;
+        }
+        
+        .status-issue {
+            background-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+    </button>
+    
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <!-- 侧边栏 -->
+    <div class="sidebar-demo" id="sidebar">
+        <!-- 侧边栏头部 -->
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjYwIiB2aWV3Qm94PSIwIDAgMjAwIDYwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjMTk3NmQyIi8+Cjx0ZXh0IHg9IjEwMCIgeT0iMzUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5CSlQgVGVjaDwvdGV4dD4KPC9zdmc+" alt="BJT Tech Logo" />
+            </div>
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <span>×</span>
+            </button>
+        </div>
+        
+        <!-- 侧边栏菜单 -->
+        <div class="sidebar-menu">
+            <a href="#" class="menu-item active">
+                <span class="menu-item-icon">🏠</span>
+                <span class="menu-item-text">首页</span>
+            </a>
+            
+            <div class="menu-item" onclick="toggleSubmenu('products')">
+                <span class="menu-item-icon">📦</span>
+                <span class="menu-item-text">产品中心</span>
+                <span class="menu-item-arrow">▶</span>
+            </div>
+            
+            <div class="submenu" id="productsSubmenu">
+                <div class="submenu-group">
+                    <div class="submenu-title">气垫包装系统</div>
+                    <a href="#" class="submenu-item">气垫包装机及配件</a>
+                    <a href="#" class="submenu-item">薄膜选项</a>
+                    <a href="#" class="submenu-item">备件</a>
+                </div>
+                <div class="submenu-group">
+                    <div class="submenu-title">纸垫包装系统</div>
+                    <a href="#" class="submenu-item">纸垫包装机及配件</a>
+                    <a href="#" class="submenu-item">纸张选项</a>
+                    <a href="#" class="submenu-item">备件</a>
+                </div>
+                <div class="submenu-group">
+                    <div class="submenu-title">水活化胶带系统</div>
+                    <a href="#" class="submenu-item">水活化胶带机及配件</a>
+                    <a href="#" class="submenu-item">水活化胶带选项</a>
+                    <a href="#" class="submenu-item">备件</a>
+                </div>
+            </div>
+            
+            <div class="menu-item" onclick="toggleSubmenu('support')">
+                <span class="menu-item-icon">🛠️</span>
+                <span class="menu-item-text">技术支持</span>
+                <span class="menu-item-arrow">▶</span>
+            </div>
+            
+            <div class="submenu" id="supportSubmenu">
+                <a href="#" class="submenu-item">售后服务</a>
+                <a href="#" class="submenu-item">文档下载</a>
+                <a href="#" class="submenu-item">常见问题</a>
+            </div>
+            
+            <a href="#" class="menu-item">
+                <span class="menu-item-icon">📞</span>
+                <span class="menu-item-text">联系我们</span>
+            </a>
+        </div>
+        
+        <!-- 侧边栏底部 -->
+        <div class="sidebar-footer">
+            <button class="sidebar-button">
+                <span>🌐</span>
+                <span>中文</span>
+            </button>
+            <button class="sidebar-button">
+                <span>🛒</span>
+                <span>购物车 (3)</span>
+            </button>
+            <button class="sidebar-button">
+                <span>👤</span>
+                <span>用户登录</span>
+            </button>
+        </div>
+    </div>
+    
+    <!-- 主内容区域 -->
+    <div class="main-content" id="mainContent">
+        <div class="container">
+            <div class="test-info">
+                <h2>🎨 侧边栏导航设计 - 新布局</h2>
+                <p><strong>设计特点：</strong></p>
+                <ul>
+                    <li><span class="status-indicator status-working"></span>左侧目录式导航，类似文件管理器</li>
+                    <li><span class="status-indicator status-working"></span>PC端优先设计，支持展开/收起</li>
+                    <li><span class="status-indicator status-working"></span>手机端隐藏按钮，点击显示侧边栏</li>
+                    <li><span class="status-indicator status-working"></span>多级菜单支持，清晰的视觉层次</li>
+                    <li><span class="status-indicator status-working"></span>响应式设计，适配各种屏幕尺寸</li>
+                </ul>
+            </div>
+            
+            <div class="demo-section">
+                <div class="demo-header">
+                    <h3>📱 响应式演示</h3>
+                </div>
+                <div class="demo-content">
+                    <p><strong>PC端操作：</strong></p>
+                    <ul>
+                        <li>点击右上角的 "×" 按钮可以收起/展开侧边栏</li>
+                        <li>点击菜单项可以展开子菜单</li>
+                        <li>收起状态下只显示图标，节省空间</li>
+                    </ul>
+                    
+                    <div class="feature-highlight">
+                        <strong>移动端操作：</strong><br>
+                        在移动设备上，侧边栏默认隐藏，点击左上角的汉堡菜单按钮可以显示侧边栏。
+                    </div>
+                    
+                    <p><strong>设计优势：</strong></p>
+                    <ul>
+                        <li>✅ 更符合现代Web应用的设计趋势</li>
+                        <li>✅ 提供更大的内容展示空间</li>
+                        <li>✅ 导航层次清晰，易于使用</li>
+                        <li>✅ 支持多级菜单，信息组织更合理</li>
+                        <li>✅ 响应式设计，适配各种设备</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="demo-section">
+                <div class="demo-header">
+                    <h3>🎯 功能特性</h3>
+                </div>
+                <div class="demo-content">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                        <div class="feature-highlight">
+                            <strong>📋 目录式导航</strong><br>
+                            类似文件管理器的树形结构，支持多级菜单展开和收起
+                        </div>
+                        <div class="feature-highlight">
+                            <strong>🖥️ PC端优化</strong><br>
+                            优先考虑桌面端用户体验，提供完整的导航功能
+                        </div>
+                        <div class="feature-highlight">
+                            <strong>📱 移动端适配</strong><br>
+                            移动端通过隐藏按钮控制侧边栏显示，节省屏幕空间
+                        </div>
+                        <div class="feature-highlight">
+                            <strong>⚡ 性能优化</strong><br>
+                            平滑的动画过渡，良好的交互反馈
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let sidebarCollapsed = false;
+        let mobileMenuOpen = false;
+        
+        // 切换侧边栏展开/收起
+        function toggleSidebar() {
+            sidebarCollapsed = !sidebarCollapsed;
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            
+            if (sidebarCollapsed) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('sidebar-collapsed');
+            } else {
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('sidebar-collapsed');
+            }
+        }
+        
+        // 切换移动端菜单
+        function toggleMobileMenu() {
+            mobileMenuOpen = !mobileMenuOpen;
+            const sidebar = document.getElementById('sidebar');
+            const mobileToggle = document.getElementById('mobileMenuToggle');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            if (mobileMenuOpen) {
+                sidebar.classList.add('mobile-open');
+                mobileToggle.classList.add('active');
+                overlay.classList.add('show');
+            } else {
+                sidebar.classList.remove('mobile-open');
+                mobileToggle.classList.remove('active');
+                overlay.classList.remove('show');
+            }
+        }
+        
+        // 切换子菜单
+        function toggleSubmenu(menuId) {
+            const submenu = document.getElementById(menuId + 'Submenu');
+            const menuItem = submenu.previousElementSibling;
+            
+            if (submenu.style.maxHeight) {
+                submenu.style.maxHeight = null;
+                menuItem.classList.remove('expanded');
+            } else {
+                submenu.style.maxHeight = submenu.scrollHeight + "px";
+                menuItem.classList.add('expanded');
+            }
+        }
+        
+        // 事件监听
+        document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
+        document.getElementById('mobileMenuToggle').addEventListener('click', toggleMobileMenu);
+        document.getElementById('sidebarOverlay').addEventListener('click', toggleMobileMenu);
+        
+        // 初始化子菜单
+        document.addEventListener('DOMContentLoaded', function() {
+            const submenus = document.querySelectorAll('.submenu');
+            submenus.forEach(submenu => {
+                submenu.style.maxHeight = '0';
+                submenu.style.overflow = 'hidden';
+                submenu.style.transition = 'max-height 0.3s ease-out';
+            });
+        });
+        
+        // 页面加载完成后的测试
+        window.addEventListener('load', function() {
+            console.log('✅ 侧边栏导航设计测试页面加载完成');
+            console.log('🎨 设计特点：');
+            console.log('  1. 左侧目录式导航');
+            console.log('  2. PC端优先设计');
+            console.log('  3. 移动端隐藏按钮');
+            console.log('  4. 多级菜单支持');
+            console.log('  5. 响应式设计');
+        });
+    </script>
+</body>
+</html> 

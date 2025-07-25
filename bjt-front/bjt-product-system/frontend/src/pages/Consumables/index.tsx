@@ -144,6 +144,9 @@ function cleanImageUrl(url: string | undefined | null): string {
 interface ConsumableTooltipContentProps {
   item: ConsumableProduct;
   userRegion: string;
+  detailData?: any; // 新增：通过props传递详情数据
+  loading?: boolean; // 新增：通过props传递加载状态
+  error?: string | null; // 新增：通过props传递错误状态
 }
 
 // 字段分组配置
@@ -226,178 +229,18 @@ const TooltipField = ({ fieldKey, label, value }: { fieldKey: string; label: str
 const tooltipDataCache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5分钟缓存
 
-const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ item, userRegion }) => {
-  // 检查是否启用Premium设计
-  const usePremiumTooltip = import.meta.env.VITE_USE_PREMIUM_TOOLTIP !== 'false'; // 默认启用
+const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ 
+  item, 
+  userRegion, 
+  detailData, 
+  loading = false, 
+  error = null 
+}) => {
+  const { t } = useTranslation(['consumables', 'common']);
+  const { getPreferredUnit } = useAuth();
   
-  // 原有的Tooltip逻辑保持不变 (向后兼容)
-  const { t, i18n } = useTranslation(['consumables', 'common']);
-  const { getPreferredUnit } = useAuth(); // 🔥 新增：获取用户偏好单位制
-  
-  // 🔥 新增：获取用户偏好单位制，替换基于区域的单位制判断
-  const preferredUnit = getPreferredUnit(); // 'metric' | 'imperial'
+  const preferredUnit = getPreferredUnit();
   const isImperialUnit = preferredUnit === 'imperial';
-  
-  const [detailData, setDetailData] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
-  // 使用useRef防止重复请求
-  const isRequestInProgress = useRef(false);
-  const hasFetched = useRef(false);
-
-  // 生成缓存键
-  const cacheKey = `${item.id}-${userRegion}`;
-
-  useEffect(() => {
-    // 如果已经获取过数据，直接返回
-    if (hasFetched.current && detailData) {
-      return;
-    }
-
-    const fetchDetailData = async () => {
-      // 防止重复请求
-      if (isRequestInProgress.current) {
-        console.log('🚫 [ConsumableTooltipContent] Request already in progress, skipping');
-        return;
-      }
-      
-      if (!item.id) {
-        console.warn('⚠️ [ConsumableTooltipContent] No item ID found:', item);
-        return;
-      }
-
-      // 检查缓存
-      const cached = tooltipDataCache.get(cacheKey);
-      if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
-        console.log('✅ [ConsumableTooltipContent] Using cached data for:', item.id);
-        setDetailData(cached.data);
-        hasFetched.current = true;
-        return;
-      }
-
-      isRequestInProgress.current = true;
-      setLoading(true);
-      setError(null);
-
-      try {
-        console.log('🔍 [ConsumableTooltipContent] Fetching details for item ID:', item.id);
-        
-        // 使用现有的WordPress API URL格式和item.id
-        const token = localStorage.getItem('auth_token');
-        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1';
-        const apiUrl = `${baseUrl}/consumables/${item.id}?lang=${navigator.language.startsWith('zh') ? 'zh' : 'en'}&region=${userRegion}`;
-        
-        console.log('🔍 [ConsumableTooltipContent] API URL:', apiUrl);
-        
-        const response = await fetch(apiUrl, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            ...(token && { 'Authorization': `Bearer ${token}` })
-          }
-        });
-        
-        console.log('🔍 [ConsumableTooltipContent] Response status:', response.status);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const jsonData = await response.json();
-        console.log('✅ [ConsumableTooltipContent] Detail data loaded:', jsonData);
-        
-        let finalData = null;
-        
-        if (jsonData.success && jsonData.data) {
-          finalData = jsonData.data;
-        } else if (jsonData.data) {
-          finalData = jsonData.data;
-        } else if (Array.isArray(jsonData) && jsonData.length > 0) {
-          finalData = jsonData[0];
-        } else if (jsonData && typeof jsonData === 'object') {
-          finalData = jsonData;
-        } else {
-          throw new Error('No valid data structure found in API response');
-        }
-        
-        console.log('🔍 [ConsumableTooltipContent] Final mapped data:', finalData);
-        
-        // 缓存数据
-        tooltipDataCache.set(cacheKey, {
-          data: finalData,
-          timestamp: Date.now()
-        });
-        
-        setDetailData(finalData);
-        hasFetched.current = true;
-        
-      } catch (err: any) {
-        console.error('❌ [ConsumableTooltipContent] Failed to fetch detail data:', err);
-        setError(err.message || 'Failed to fetch detail data');
-        
-        // 使用基础数据作为fallback
-        const fallbackData = {
-          // 基本信息
-          material: item.specs?.material || item.material || 'N/A',
-          thickness: item.specs?.thickness || item.thickness_met || 'N/A',
-          width: item.specs?.width || item.width_met || 'N/A',
-          width_cm: item.specs?.width || item.width_met || 'N/A',
-          width_inch: item.specs?.width || item.width_imp || 'N/A',
-          length: item.specs?.length || item.length_met || 'N/A',
-          length_cm: item.specs?.length || item.length_met || 'N/A',
-          length_inch: item.specs?.length || item.length_imp || 'N/A',
-          rollLength: item.specs?.rollLength || item.total_length_met || 'N/A',
-          roll_length_m: item.specs?.rollLength || item.total_length_met || 'N/A',
-          roll_length_ft: item.specs?.rollLength || item.total_length_imp || 'N/A',
-          
-          // 包装属性
-          packaging_type: item.package_type || String(t('tooltip.cartonPack') || 'Carton Pack'),
-          package_size_cm: item.package_size_cm || String(t('common.toBeFilled') || 'To be filled'),
-          package_size_inch: item.package_size_inch || String(t('common.toBeFilled') || 'To be filled'),
-          unit_weight_kg: item.net_weight_kg || String(t('common.toBeFilled') || 'To be filled'),
-          unit_weight_lbs: item.net_weight_lbs || String(t('common.toBeFilled') || 'To be filled'),
-          pallet_size_cm: item.pallet_size_cm || String(t('common.toBeFilled') || 'To be filled'),
-          package_image_url: item.package_image_url || '',
-          
-          // 打托属性
-          pallet_rolls_a: item.pcs_per_pallet_a || String(t('common.toBeFilled') || 'To be filled'),
-          pallet_weight_a_kg: item.pallet_gross_weight_a_kg || String(t('common.toBeFilled') || 'To be filled'),
-          pallet_weight_a_lbs: item.pallet_gross_weight_a_lbs || String(t('common.toBeFilled') || 'To be filled'),
-          pallet_height_a_cm: item.pallet_height_a_cm || String(t('common.toBeFilled') || 'To be filled'),
-          pallet_height_a_inch: item.pallet_height_a_inch || String(t('common.toBeFilled') || 'To be filled'),
-          pallet_rolls_b: item.pcs_per_pallet_b || String(t('common.toBeFilled') || 'To be filled'),
-          pallet_weight_b_kg: item.pallet_gross_weight_b_kg || String(t('common.toBeFilled') || 'To be filled'),
-          pallet_weight_b_lbs: item.pallet_gross_weight_b_lbs || String(t('common.toBeFilled') || 'To be filled'),
-          pallet_height_b_cm: item.pallet_height_b_cm || String(t('common.toBeFilled') || 'To be filled'),
-          pallet_height_b_inch: item.pallet_height_b_inch || String(t('common.toBeFilled') || 'To be filled'),
-          pallet_rolls_c: item.pcs_per_pallet_c || String(t('common.toBeFilled') || 'To be filled'),
-          pallet_weight_c_kg: item.pallet_gross_weight_c_kg || String(t('common.toBeFilled') || 'To be filled'),
-          pallet_weight_c_lbs: item.pallet_gross_weight_c_lbs || String(t('common.toBeFilled') || 'To be filled'),
-          pallet_height_c_cm: item.pallet_height_c_cm || String(t('common.toBeFilled') || 'To be filled'),
-          pallet_height_c_inch: item.pallet_height_c_inch || String(t('common.toBeFilled') || 'To be filled'),
-          core_diameter_cm: item.tube_inner_diameter_cm || String(t('common.toBeFilled') || 'To be filled'),
-          core_diameter_inch: item.tube_inner_diameter_inch || String(t('common.toBeFilled') || 'To be filled')
-        };
-        
-        // 缓存fallback数据
-        tooltipDataCache.set(cacheKey, {
-          data: fallbackData,
-          timestamp: Date.now()
-        });
-        
-        setDetailData(fallbackData);
-        hasFetched.current = true;
-      } finally {
-        setLoading(false);
-        isRequestInProgress.current = false;
-      }
-    };
-
-    // 立即执行，不使用防抖延迟
-    fetchDetailData();
-    
-  }, [item.id, cacheKey]); // 只依赖item.id和cacheKey
 
   if (loading && !detailData) {
     return (
@@ -406,6 +249,19 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({ ite
           <div className="flex items-center space-x-3">
             <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-500 border-t-transparent"></div>
             <span className="text-gray-600 text-sm">{String(t('ui.loadingDetails') || '加载详细信息中...')}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 bg-white rounded-lg shadow-lg border border-gray-200 min-w-[400px]">
+        <div className="flex items-center justify-center py-6">
+          <div className="text-center">
+            <div className="text-red-500 text-sm mb-2">⚠️ {String(t('ui.loadError') || '加载失败')}</div>
+            <div className="text-gray-500 text-xs">{error}</div>
           </div>
         </div>
       </div>
@@ -1037,11 +893,12 @@ interface StandardConsumableItemProps {
   onAddToCart: (itemId: string, buttonElement?: HTMLElement) => void;
   onQuantityChange: (itemId: string, value: number) => void;
   quantities: Record<string, number>;
-  getCurrencySymbolByRegion: (region?: string) => string; // 🔧 修复：匹配实际函数签名
+  getCurrencySymbolByRegion: (region?: string) => string;
   getRegionalPrice: (product: ConsumableProduct, quantity: number) => number;
   handleImageError: (e: React.SyntheticEvent<HTMLImageElement>) => void;
-  isSales: boolean; // 新增：权限控制
-  filterOptions?: any; // 新增：API字典数据
+  isSales: boolean;
+  filterOptions?: any;
+  onImageClick: (imageSrc: string, imageAlt: string) => void; // 新增：图片点击处理函数
 }
 
 const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
@@ -1054,12 +911,11 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
   getCurrencySymbolByRegion,
   getRegionalPrice,
   handleImageError,
-  isSales, // 新增：接收权限参数
-  filterOptions // 新增：接收API字典数据
+  isSales,
+  filterOptions,
+  onImageClick // 新增：接收图片点击处理函数
 }) => {
   const { t, i18n } = useTranslation(['consumables', 'common']);
-  
-
   
   // 🚀 传递API字典数据给Hook
   const { 
@@ -1133,7 +989,7 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
   }, Infinity) || 0;
 
   return (
-    <div className="consumable-product-card slide-up" style={{ animationDelay: `${index * 0.1}s` }}>
+    <div className="consumable-item">
       {/* 库存状态标签 */}
       <div className={`stock-status-badge ${stockStatus === 'high' ? 'high-stock' : stockStatus === 'low' ? 'low-stock' : 'out-stock'}`}>
         {stockStatus === 'high' ? String(t('stockStatus.sufficient') || '库存充足') : 
@@ -1149,7 +1005,10 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
               <img 
                 src={cleanImageUrl(getLocalizedValue(item, 'image_url'))} 
                 alt={getLocalizedValue(item, 'name')} 
-                onError={handleImageError} 
+                onError={handleImageError}
+                onClick={() => onImageClick(getLocalizedValue(item, 'image_url'), getLocalizedValue(item, 'name'))}
+                style={{ cursor: 'pointer' }}
+                title="点击放大图片"
               />
             </div>
             <div className="product-code-badge">
@@ -1730,8 +1589,9 @@ const ConsumablesPage: React.FC = () => {
   
   // 4. 分页状态
   const [totalItems, setTotalItems] = useState<number>(0);
-  const [totalPages, setTotalPages] = useState<number>(1);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(12);
+  const [totalPages, setTotalPages] = useState<number>(1);
   
   // 5. 筛选状态
   const [selectedModel, setSelectedModel] = useState<string>('all');
@@ -1776,6 +1636,31 @@ const ConsumablesPage: React.FC = () => {
   // 8. UI辅助状态
   const cartButtonRef = useRef<HTMLButtonElement>(null);
   const currentLanguage = i18n.language;
+  
+  // 9. 图片预览状态
+  const [imagePreview, setImagePreview] = useState<{
+    visible: boolean;
+    src: string;
+    alt: string;
+  }>({
+    visible: false,
+    src: '',
+    alt: ''
+  });
+  
+  // 10. 缓存管理
+  const cacheTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // 11. 其他状态
+  const [filterCache, setFilterCache] = useState<Map<string, FilterCache>>(new Map());
+  const [smartFilterConfig] = useState<SmartFilterConfig>({
+    showCount: true,
+    hideEmptyOptions: false,
+    cascadeUpdate: true,
+    enableAnimation: true,
+    minCount: 1
+  });
+  
   // 判断用户角色和权限（与机器页面保持一致）
   const isSales = user && (user.role === 'admin' || user.role === 'sales');
   const userRegion = user?.region || 'CN'; // 优先使用用户的区域设置
@@ -1790,10 +1675,6 @@ const ConsumablesPage: React.FC = () => {
     isImperialUnit,
     userEmail: user?.email
   });
-  
-  // 9. 性能缓存状态
-  const [filterCache, setFilterCache] = useState<Map<string, FilterCache>>(new Map());
-  const cacheTimeoutRef = useRef<NodeJS.Timeout>();
   
   // 🔧 修复：页面初始化时清空缓存，防止浏览器间的缓存问题
   useEffect(() => {
@@ -3071,6 +2952,7 @@ const ConsumablesPage: React.FC = () => {
                 handleImageError={handleImageError}
                 isSales={isSales} // 新增：传递权限参数
                 filterOptions={filterOptions} // 新增：传递API字典数据
+                onImageClick={handleImageClick} // 新增：传递图片点击处理函数
               />
             );
           }
@@ -3454,244 +3336,231 @@ const ConsumablesPage: React.FC = () => {
     );
   }
   
+  // 处理图片点击放大
+  const handleImageClick = (imageSrc: string, imageAlt: string) => {
+    setImagePreview({
+      visible: true,
+      src: cleanImageUrl(imageSrc),
+      alt: imageAlt
+    });
+  };
+
+  // 关闭图片预览
+  const closeImagePreview = () => {
+    setImagePreview({
+      visible: false,
+      src: '',
+      alt: ''
+    });
+  };
+
   return (
-    <div className="consumables-page">
-      {/* SQL Mock服务状态组件 */}
-      <MockServiceStatus position="top-right" compact={true} hidden={true} />
-      
-      <div className="container">
-        {/* 现代化页面标题 */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {String(t('title') || '耗材产品')}
-              </h1>
-              <p className="text-lg text-gray-600">
-                {String(t('subtitle') || '选择适合您设备的高品质耗材')}
-              </p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-right text-sm text-gray-500">
-                <div>{String(t('ui.totalProducts', { count: totalItems }) || `总计 ${totalItems} 款产品`)}</div>
-                <div>{String(t('ui.pageInfo', { current: currentPage, total: totalPages }) || `第 ${currentPage} / ${totalPages} 页`)}</div>
-              </div>
-              <Button
-                type="primary"
-                icon={<ShoppingCartOutlined />}
-                onClick={toggleCartModal}
-                className="h-12 px-6 text-base font-medium shadow-lg hover:shadow-xl transition-all duration-300"
-                ref={cartButtonRef}
-              >
-                {String(t('button.cart') || '查看购物车')}
-              </Button>
-            </div>
-          </div>
+    <>
+      {/* 图片预览模态框 */}
+      <Modal
+        open={imagePreview.visible}
+        onCancel={closeImagePreview}
+        footer={null}
+        width="80%"
+        style={{ top: 20 }}
+        bodyStyle={{ 
+          padding: 0, 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center',
+          minHeight: '70vh',
+          background: 'rgba(0, 0, 0, 0.9)'
+        }}
+        maskStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.8)' }}
+      >
+        <div style={{ position: 'relative', maxWidth: '100%', maxHeight: '100%' }}>
+          <img
+            src={imagePreview.src}
+            alt={imagePreview.alt}
+            style={{
+              maxWidth: '100%',
+              maxHeight: '70vh',
+              objectFit: 'contain',
+              display: 'block',
+              margin: '0 auto'
+            }}
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = placeholderImage;
+            }}
+          />
+          <button
+            onClick={closeImagePreview}
+            style={{
+              position: 'absolute',
+              top: -40,
+              right: 0,
+              background: 'rgba(255, 255, 255, 0.9)',
+              border: 'none',
+              borderRadius: '50%',
+              width: 32,
+              height: 32,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              fontSize: '18px',
+              fontWeight: 'bold',
+              color: '#333'
+            }}
+          >
+            ×
+          </button>
         </div>
+      </Modal>
 
-        {/* 现代化筛选器设计 */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 mb-8 overflow-hidden fade-in">
-          {/* 筛选器标题栏 */}
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
+      {/* 原有页面内容 */}
+      <div className="consumables-page min-h-screen bg-gray-50 text-gray-900">
+        {/* SQL Mock服务状态组件 */}
+        <MockServiceStatus position="top-right" compact={true} hidden={true} />
+        
+        <div className="container">
+          {/* 现代化页面标题 */}
+          <div className="mb-8">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center pulse">
-                  <FilterOutlined className="text-white text-sm" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{String(t('ui.smartFilter') || '智能筛选')}</h3>
-                  <p className="text-sm text-gray-600">{String(t('ui.smartFilterDescription') || '精确找到您需要的耗材产品')}</p>
-                </div>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                  {String(t('title') || '耗材产品')}
+                </h1>
+                <p className="text-lg text-gray-600">
+                  {String(t('subtitle') || '选择适合您设备的高品质耗材')}
+                </p>
               </div>
-              <Button 
-                type="text" 
-                icon={<ReloadOutlined />} 
-                onClick={handleResetFilters}
-                className="flex items-center text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 hover:scale-105"
-              >
-                {String(t('ui.resetFilters') || '重置筛选')}
-              </Button>
+              <div className="flex items-center space-x-4">
+                <div className="text-right text-sm text-gray-500">
+                  <div>{String(t('ui.totalProducts', { count: totalItems }) || `总计 ${totalItems} 款产品`)}</div>
+                  <div>{String(t('ui.pageInfo', { current: currentPage, total: totalPages }) || `第 ${currentPage} / ${totalPages} 页`)}</div>
+                </div>
+                <Button
+                  type="primary"
+                  icon={<ShoppingCartOutlined />}
+                  onClick={toggleCartModal}
+                  className="h-12 px-6 text-base font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+                  ref={cartButtonRef}
+                >
+                  {String(t('button.cart') || '查看购物车')}
+                </Button>
+              </div>
             </div>
           </div>
 
-          <div className="p-6 space-y-8">
-            {/* 筛选面包屑 */}
-            <FilterBreadcrumb
-              filters={{
-                model: selectedModel !== 'all' ? selectedModel : undefined,
-                shape: selectedShape !== 'all' ? selectedShape : undefined,
-                material: selectedMaterial !== 'all' ? selectedMaterial : undefined,
-                thickness: selectedThickness !== 'all' ? selectedThickness : undefined,
-                weight: selectedWeight !== 'all' ? selectedWeight : undefined,
-                width: selectedWidth !== 'all' ? selectedWidth : undefined,
-                length: selectedLength !== 'all' ? selectedLength : undefined
-              }}
-              onRemoveFilter={handleRemoveFilter}
-              onClearAll={handleSmartResetFilters}
-            />
-
-            {/* 第一行：机器型号筛选 */}
-            <div className="bg-gray-50 rounded-xl p-5 slide-up">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center pulse">
-                  <span className="text-white text-xs font-bold">1</span>
+          {/* 现代化筛选器设计 */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 mb-8 overflow-hidden fade-in">
+            {/* 筛选器标题栏 */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center pulse">
+                    <FilterOutlined className="text-white text-sm" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">{String(t('ui.smartFilter') || '智能筛选')}</h3>
+                    <p className="text-sm text-gray-600">{String(t('ui.smartFilterDescription') || '精确找到您需要的耗材产品')}</p>
+                  </div>
                 </div>
-                <h4 className="text-base font-semibold text-gray-800">{String(t('ui.selectDeviceModel') || '选择设备型号')}</h4>
-                <Tooltip title={String(t('ui.deviceModelTooltip') || '选择您的设备型号以显示兼容的耗材')}>
-                  <InfoCircleOutlined className="text-gray-400 hover:text-blue-500 cursor-help transition-colors duration-200" />
-                </Tooltip>
+                <Button 
+                  type="text" 
+                  icon={<ReloadOutlined />} 
+                  onClick={handleResetFilters}
+                  className="flex items-center text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 hover:scale-105"
+                >
+                  {String(t('ui.resetFilters') || '重置筛选')}
+                </Button>
               </div>
-              <SmartFilterSelect
-                title={String(t('filter.model') || '设备型号')}
-                value={selectedModel} 
-                options={smartFilterOptions.models}
-                onChange={handleModelChange}
-                placeholder={String(t('ui.selectDeviceModelPlaceholder') || '请选择设备型号')}
-                showCount={smartFilterConfig.showCount}
-                totalCount={allConsumables.length}
-              />
             </div>
 
-            {/* 第二行：产品形状筛选 */}
-            <div className="slide-up" style={{ animationDelay: '0.1s' }}>
-              <div className="flex items-center space-x-3 mb-6">
-                <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center pulse">
-                  <span className="text-white text-xs font-bold">2</span>
+            <div className="p-6 space-y-8">
+              {/* 筛选面包屑 */}
+              <FilterBreadcrumb
+                filters={{
+                  model: selectedModel !== 'all' ? selectedModel : undefined,
+                  shape: selectedShape !== 'all' ? selectedShape : undefined,
+                  material: selectedMaterial !== 'all' ? selectedMaterial : undefined,
+                  thickness: selectedThickness !== 'all' ? selectedThickness : undefined,
+                  weight: selectedWeight !== 'all' ? selectedWeight : undefined,
+                  width: selectedWidth !== 'all' ? selectedWidth : undefined,
+                  length: selectedLength !== 'all' ? selectedLength : undefined
+                }}
+                onRemoveFilter={handleRemoveFilter}
+                onClearAll={handleSmartResetFilters}
+              />
+
+              {/* 第一行：机器型号筛选 */}
+              <div className="bg-gray-50 rounded-xl p-5 slide-up">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center pulse">
+                    <span className="text-white text-xs font-bold">1</span>
+                  </div>
+                  <h4 className="text-base font-semibold text-gray-800">{String(t('ui.selectDeviceModel') || '选择设备型号')}</h4>
+                  <Tooltip title={String(t('ui.deviceModelTooltip') || '选择您的设备型号以显示兼容的耗材')}>
+                    <InfoCircleOutlined className="text-gray-400 hover:text-blue-500 cursor-help transition-colors duration-200" />
+                  </Tooltip>
                 </div>
-                <h4 className="text-base font-semibold text-gray-800">{String(t('ui.selectProductShape') || '选择产品形状')}</h4>
-                <Tooltip title={String(t('ui.productShapeTooltip') || '不同形状的耗材适用于不同的包装需求')}>
-                  <InfoCircleOutlined className="text-gray-400 hover:text-blue-500 cursor-help transition-colors duration-200" />
-                </Tooltip>
+                <SmartFilterSelect
+                  title={String(t('filter.model') || '设备型号')}
+                  value={selectedModel} 
+                  options={smartFilterOptions.models}
+                  onChange={handleModelChange}
+                  placeholder={String(t('ui.selectDeviceModelPlaceholder') || '请选择设备型号')}
+                  showCount={smartFilterConfig.showCount}
+                  totalCount={allConsumables.length}
+                />
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
-                {/* 全部选项 */}
-                <div className="relative">
-                  <input 
-                    type="radio"
-                    id="shape-all"
-                    name="shape"
-                    checked={selectedShape === 'all'}
-                    onChange={() => handleShapeChange('all')}
-                    className="sr-only"
-                  />
-                  <label 
-                    htmlFor="shape-all" 
-                    className={`
-                      block p-5 rounded-xl border-2 cursor-pointer transition-all duration-300 text-center
-                      ${selectedShape === 'all' 
-                        ? 'border-blue-500 bg-blue-50 shadow-lg scale-105' 
-                        : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md hover:bg-blue-25'
-                      }
-                    `}
-                  >
-                    <div className="mb-4 flex justify-center">
-                      <div className="h-28 w-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-sm font-medium">
-                        {String(t('filter.all') || '全部')}
-                      </div>
-                    </div>
-                    <div className={`
-                      text-base font-medium transition-colors duration-200 flex flex-col items-center
-                      ${selectedShape === 'all' ? 'text-blue-700' : 'text-gray-700'}
-                    `}>
-                      <span>{String(t('ui.allShapes') || '全部形状')}</span>
-                      {smartFilterConfig.showCount && (
-                        <span className="text-xs mt-1 text-blue-500">
-                          ({allConsumables.length})
-                        </span>
-                      )}
-                    </div>
-                    {selectedShape === 'all' && (
-                      <div className="absolute -top-1 -right-1 w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center">
-                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                    )}
-                  </label>
+
+              {/* 第二行：产品形状筛选 */}
+              <div className="slide-up" style={{ animationDelay: '0.1s' }}>
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center pulse">
+                    <span className="text-white text-xs font-bold">2</span>
+                  </div>
+                  <h4 className="text-base font-semibold text-gray-800">{String(t('ui.selectProductShape') || '选择产品形状')}</h4>
+                  <Tooltip title={String(t('ui.productShapeTooltip') || '不同形状的耗材适用于不同的包装需求')}>
+                    <InfoCircleOutlined className="text-gray-400 hover:text-blue-500 cursor-help transition-colors duration-200" />
+                  </Tooltip>
                 </div>
-                {smartFilterOptions.shapes.map((shape, index) => (
-                  <div key={`shape-${shape.id}-${index}`} className="relative">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
+                  {/* 全部选项 */}
+                  <div className="relative">
                     <input 
                       type="radio"
-                      id={`shape-${shape.id}`}
+                      id="shape-all"
                       name="shape"
-                      checked={selectedShape === shape.id}
-                      onChange={() => handleShapeChange(shape.id)}
+                      checked={selectedShape === 'all'}
+                      onChange={() => handleShapeChange('all')}
                       className="sr-only"
-                      disabled={shape.disabled}
                     />
                     <label 
-                      htmlFor={`shape-${shape.id}`} 
+                      htmlFor="shape-all" 
                       className={`
                         block p-5 rounded-xl border-2 cursor-pointer transition-all duration-300 text-center
-                        ${shape.disabled ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}
-                        ${selectedShape === shape.id 
+                        ${selectedShape === 'all' 
                           ? 'border-blue-500 bg-blue-50 shadow-lg scale-105' 
                           : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md hover:bg-blue-25'
                         }
                       `}
                     >
                       <div className="mb-4 flex justify-center">
-                        <img
-                          src={(() => {
-                            // 🔥 修复：Shape筛选器应该显示基础图片（image_url）便于快速识别
-                            const debugImageSrc = shape.originalData?.image_url || shapePlaceholderImage;
-                            // 🔥 添加缓存清除参数
-                            const cacheBusterSrc = debugImageSrc + '?v=' + Date.now();
-                            console.log(`🖼️ [Shape渲染实时] ${shape.name}:`, {
-                              即将使用的图片: debugImageSrc,
-                              带缓存清除的图片: cacheBusterSrc,
-                              image_url: shape.originalData?.image_url,
-                              image_url2: shape.originalData?.image_url2,
-                              完整originalData: shape.originalData
-                            });
-                            return cacheBusterSrc;
-                          })()}
-                          alt={shape.name}
-                          className="h-28 w-32 object-contain"
-                          id={`shape-image-${shape.id}`}
-                          data-shape-id={shape.id}
-                          data-image-type="basic"
-                          data-original-url={shape.originalData?.image_url}
-                          onLoad={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            console.log(`✅ [Shape渲染] ${shape.name} 图片加载成功！基础图正确显示`);
-                            console.log(`🔧 [DOM验证] 元素ID: ${target.id}, 实际src: ${target.src}`);
-                            console.log(`🔧 [DOM验证] 元素位置:`, target.getBoundingClientRect());
-                            // 🔥 强制高亮显示加载成功的图片
-                            target.style.border = '2px solid green';
-                            setTimeout(() => {
-                              target.style.border = '';
-                            }, 2000);
-                          }}
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            console.error(`❌ [Shape渲染] ${shape.name} 图片加载失败:`, target.src);
-                            console.error('❌ [Shape渲染] 尝试加载备用图片...');
-                            if (!target.src.includes('placeholder')) {
-                              target.src = shapePlaceholderImage;
-                            }
-                          }}
-                        />
+                        <div className="h-28 w-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-sm font-medium">
+                          {String(t('filter.all') || '全部')}
+                        </div>
                       </div>
                       <div className={`
                         text-base font-medium transition-colors duration-200 flex flex-col items-center
-                        ${selectedShape === shape.id ? 'text-blue-700' : 'text-gray-700'}
-                        ${shape.disabled ? 'text-gray-400' : ''}
+                        ${selectedShape === 'all' ? 'text-blue-700' : 'text-gray-700'}
                       `}>
-                        <span className={shape.disabled ? 'line-through' : ''}>
-                          {i18n.language.startsWith('zh') 
-                            ? (shape.originalData?.name_zh || shape.name)
-                            : (shape.originalData?.name_en || shape.name)
-                          }
-                        </span>
+                        <span>{String(t('ui.allShapes') || '全部形状')}</span>
                         {smartFilterConfig.showCount && (
-                          <span className={`text-xs mt-1 ${shape.disabled ? 'text-gray-300' : 'text-blue-500'}`}>
-                            ({shape.count})
+                          <span className="text-xs mt-1 text-blue-500">
+                            ({allConsumables.length})
                           </span>
                         )}
                       </div>
-                      {selectedShape === shape.id && !shape.disabled && (
+                      {selectedShape === 'all' && (
                         <div className="absolute -top-1 -right-1 w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center">
                           <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -3700,295 +3569,387 @@ const ConsumablesPage: React.FC = () => {
                       )}
                     </label>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* 第三行：材质和规格筛选 */}
-            <div className="bg-gray-50 rounded-xl p-5 slide-up" style={{ animationDelay: '0.2s' }}>
-              <div className="flex items-center space-x-3 mb-6">
-                <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center pulse">
-                  <span className="text-white text-xs font-bold">3</span>
-                </div>
-                <h4 className="text-base font-semibold text-gray-800">{String(t('ui.materialAndSpecs') || '材质与规格筛选')}</h4>
-              </div>
-
-              {/* 材质选择器 */}
-              <div className="mb-6">
-                <h5 className="text-sm font-medium text-gray-700 mb-3">{String(t('ui.materialType') || '材质类型')}</h5>
-                <div className="flex flex-wrap gap-2">
-                  <button 
-                    className={`
-                      material-btn px-4 py-2 rounded-lg border transition-all duration-200 font-medium text-sm relative overflow-hidden flex items-center
-                      ${selectedMaterial === 'all' 
-                        ? 'bg-purple-500 text-white border-purple-500 shadow-md scale-105' 
-                        : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400 hover:bg-purple-50 hover:shadow-sm hover:scale-105'
-                      }
-                    `}
-                    onClick={() => handleMaterialChange('all')}
-                  >
-                    <span>{String(t('ui.allMaterials') || '全部材质')}</span>
-                    {smartFilterConfig.showCount && (
-                      <span className="ml-2 text-xs">
-                        ({allConsumables.length})
-                      </span>
-                    )}
-                  </button>
-                  {smartFilterOptions.materials.map((material, index) => (
-                    <button 
-                      key={`material-${material.id}-${index}`}
-                      className={`
-                        material-btn px-4 py-2 rounded-lg border transition-all duration-200 font-medium text-sm relative overflow-hidden flex items-center
-                        ${material.disabled ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''}
-                        ${selectedMaterial === material.id 
-                          ? 'bg-purple-500 text-white border-purple-500 shadow-md active scale-105' 
-                          : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400 hover:bg-purple-50 hover:shadow-sm hover:scale-105'
-                        }
-                      `}
-                      onClick={() => !material.disabled && handleMaterialChange(material.id)}
-                      style={{ animationDelay: `${index * 0.05}s` }}
-                      disabled={material.disabled}
-                    >
-                      <span className={material.disabled ? 'line-through' : ''}>{material.name}</span>
-                      {smartFilterConfig.showCount && (
-                        <span className={`ml-2 text-xs ${material.disabled ? 'text-gray-300' : ''}`}>
-                          ({material.count})
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 尺寸筛选器 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <SmartFilterSelect
-                    title={isPaperMaterial(selectedMaterial) ? `${String(t('ui.weight') || '重量')} ${isImperialUnit ? '(#)' : '(gsm)'}` : `${String(t('ui.thickness') || '厚度')} ${isImperialUnit ? '(mil)' : '(μm)'}`}
-                      value={isPaperMaterial(selectedMaterial) ? selectedWeight : selectedThickness}
-                    options={isPaperMaterial(selectedMaterial) ? smartFilterOptions.weights : smartFilterOptions.thicknesses}
-                      onChange={isPaperMaterial(selectedMaterial) ? handleWeightChange : handleThicknessChange}
-                      placeholder={isPaperMaterial(selectedMaterial) ? String(t('ui.selectWeight') || '选择重量') : String(t('ui.selectThickness') || '选择厚度')}
-                    showCount={smartFilterConfig.showCount}
-                    totalCount={allConsumables.length}
-                  />
-                  
-                  <SmartFilterSelect
-                    title={`${String(t('filter.width') || '宽度')} ${isImperialUnit ? '(inch)' : '(cm)'}`}
-                      value={selectedWidth}
-                    options={smartFilterOptions.widths}
-                      onChange={handleWidthChange}
-                      placeholder={String(t('ui.selectWidth') || '选择宽度')}
-                    showCount={smartFilterConfig.showCount}
-                    totalCount={allConsumables.length}
-                  />
-                  
-                  <SmartFilterSelect
-                    title={`${String(t('filter.length') || '长度')} ${isImperialUnit ? '(inch)' : '(cm)'}`}
-                      value={selectedLength}
-                    options={smartFilterOptions.lengths}
-                      onChange={handleLengthChange}
-                      placeholder={String(t('ui.selectLength') || '选择长度')}
-                    showCount={smartFilterConfig.showCount}
-                    totalCount={allConsumables.length}
-                  />
-                </div>
-                
-                {/* 尺寸指导图片 */}
-                <div className="flex flex-col items-center justify-center">
-                  <div className="text-sm font-medium text-gray-700 mb-3">{String(t('ui.dimensionGuide') || '尺寸指导图')}</div>
-                  <div className="w-full h-48 bg-white rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
-                    <img 
-                      src={currentDimensionImage} 
-                      alt={String(t('ui.dimensionGuideAlt') || '产品尺寸指导')}
-                      className="max-w-full max-h-full object-contain"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* 产品列表容器 */}
-        <div className="products-container">
-          {renderConsumablesTable()}
-          
-          {/* 翻页组件 */}
-          {totalPages > 1 && (
-            <div className="flex justify-center mt-8">
-              <div className="flex items-center space-x-2 bg-white rounded-xl shadow-md border border-gray-200 p-2">
-                <button 
-                  className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                >
-                  {String(t('ui.previousPage') || '上一页')}
-                </button>
-                
-                <div className="flex items-center space-x-1">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    const page = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
-                    if (page < 1 || page > totalPages) return null;
-                    
-                    return (
-                      <button
-                        key={`page-${page}`}
+                  {smartFilterOptions.shapes.map((shape, index) => (
+                    <div key={`shape-${shape.id}-${index}`} className="relative">
+                      <input 
+                        type="radio"
+                        id={`shape-${shape.id}`}
+                        name="shape"
+                        checked={selectedShape === shape.id}
+                        onChange={() => handleShapeChange(shape.id)}
+                        className="sr-only"
+                        disabled={shape.disabled}
+                      />
+                      <label 
+                        htmlFor={`shape-${shape.id}`} 
                         className={`
-                          w-10 h-10 text-sm font-medium rounded-lg transition-all duration-200
-                          ${currentPage === page 
-                            ? 'bg-blue-500 text-white shadow-md' 
-                            : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                          block p-5 rounded-xl border-2 cursor-pointer transition-all duration-300 text-center
+                          ${shape.disabled ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}
+                          ${selectedShape === shape.id 
+                            ? 'border-blue-500 bg-blue-50 shadow-lg scale-105' 
+                            : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md hover:bg-blue-25'
                           }
                         `}
-                        onClick={() => setCurrentPage(page)}
                       >
-                        {page}
-                      </button>
-                    );
-                  }).filter(Boolean)}
-                </div>
-                
-                <button 
-                  className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                >
-                  {String(t('ui.nextPage') || '下一页')}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-      
-      {/* 购物车动画组件 */}
-      <CartAnimation
-        isActive={cartAnimation.isActive}
-        startElement={cartAnimation.startElement}
-        targetElement={cartAnimation.targetElement}
-        productImage={cartAnimation.productImage}
-        productName={cartAnimation.productName}
-        onComplete={() => setCartAnimation({
-          isActive: false,
-          startElement: null,
-          targetElement: null
-        })}
-      />
-      
-      {/* 确认对话框组件 */}
-      <ConfirmDialog
-        isOpen={confirmDialog.isOpen}
-        title={confirmDialog.title}
-        message={confirmDialog.message}
-        type={confirmDialog.type}
-        loading={confirmDialog.loading}
-        onConfirm={confirmDialog.onConfirm}
-        onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
-      />
-      
-      {/* 产品详细信息Modal */}
-      <Modal
-        title={selectedProduct ? `${String(selectedProduct.name || '')} - ${String(t('ui.detailInfo') || '详细信息')}` : String(t('ui.productDetail') || '产品详细信息')}
-        open={detailModalVisible}
-        onCancel={closeDetailModal}
-        footer={[
-          <Button key="close" onClick={closeDetailModal}>
-            {String(t('ui.close') || '关闭')}
-          </Button>,
-          selectedProduct && (
-            <SmartAddToCartButton
-              key="addToCart"
-              product={selectedProduct}
-              productType="consumables"
-              onAddToCart={() => {
-                addToCart(selectedProduct.id);
-                closeDetailModal();
-              }}
-              className="ant-btn ant-btn-primary"
-            >
-              <ShoppingCartOutlined className="mr-2" />
-              {String(t('ui.addToCart') || '加入购物车')}
-            </SmartAddToCartButton>
-          )
-        ]}
-        width={800}
-        className="product-detail-modal"
-      >
-        {selectedProduct && (
-          <div className="product-detail-content">
-            {/* 产品基本信息 */}
-            <div className="flex flex-col md:flex-row gap-6 mb-6">
-              <div className="w-full md:w-1/3">
-                <img 
-                  src={cleanImageUrl(selectedProduct.image_url) || placeholderImage}
-                  alt={String(selectedProduct.name || '')}
-                  className="w-full h-64 object-contain border border-border rounded-lg bg-card-alt p-4"
-                  onError={handleImageError}
-                />
-              </div>
-              <div className="w-full md:w-2/3">
-                <div className="mb-4">
-                  <span className="inline-block bg-primary text-white px-3 py-1 text-sm font-bold rounded-lg mb-2">
-                    {String(selectedProduct.code || '')}
-                  </span>
-                  <h3 className="text-xl font-bold text-title mb-2">{String(selectedProduct.name || '')}</h3>
-                  <div className="flex justify-between">
-                    <span className="text-label font-medium">{String(t('length') || 'Length')}:</span>
-                    <span className="text-content">
-                      {isImperialUnit ? 
-                        (selectedProduct.specs?.length ? selectedProduct.specs.length + ' inch' : 'N/A') : 
-                        (selectedProduct.specs?.length ? selectedProduct.specs.length : 'N/A')
-                      }
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-label font-medium">{String(t('rollLength') || 'Roll Length')}:</span>
-                    <span className="text-content">{selectedProduct.specs?.rollLength || 'N/A'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-label font-medium">{String(t('filter.material') || 'Material')}:</span>
-                    <span className="text-content">{selectedProduct.specs?.material || 'N/A'}</span>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-label font-medium">{String(t('filter.thickness') || 'Thickness')}:</span>
-                    <span className="text-content">{selectedProduct.specs?.thickness || 'N/A'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-label font-medium">{String(t('filter.shape') || 'Shape')}:</span>
-                    <span className="text-content">{selectedProduct.specs?.shape || 'N/A'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-label font-medium">{String(t('product.model') || 'Model')}:</span>
-                    <span className="text-content">{selectedProduct.specs?.compatibility || 'N/A'}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* 库存信息（仅管理员/销售可见） */}
-            {(user?.role === 'sales' || user?.role === 'admin') && (
-              <div className="bg-card-alt rounded-lg p-4">
-                <h4 className="font-medium text-base text-label mb-3">{String(t('inventory') || 'Inventory')}:</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {Object.entries(selectedProduct.inventory).map(([region, count]) => (
-                    <div key={region} className="bg-background rounded-lg p-3 text-center">
-                      <div className="text-sm text-label font-medium mb-1">{region.toUpperCase()}</div>
-                      <div className={`text-lg font-bold ${(count || 0) > 0 ? 'text-success' : 'text-error'}`}>
-                        {typeof count === 'number' ? count : (isNaN(Number(count)) ? 0 : Number(count))}
-                      </div>
+                        <div className="mb-4 flex justify-center">
+                          <img
+                            src={(() => {
+                              // 🔥 修复：Shape筛选器应该显示基础图片（image_url）便于快速识别
+                              const debugImageSrc = shape.originalData?.image_url || shapePlaceholderImage;
+                              // 🔥 添加缓存清除参数
+                              const cacheBusterSrc = debugImageSrc + '?v=' + Date.now();
+                              console.log(`🖼️ [Shape渲染实时] ${shape.name}:`, {
+                                即将使用的图片: debugImageSrc,
+                                带缓存清除的图片: cacheBusterSrc,
+                                image_url: shape.originalData?.image_url,
+                                image_url2: shape.originalData?.image_url2,
+                                完整originalData: shape.originalData
+                              });
+                              return cacheBusterSrc;
+                            })()}
+                            alt={shape.name}
+                            className="h-28 w-32 object-contain"
+                            id={`shape-image-${shape.id}`}
+                            data-shape-id={shape.id}
+                            data-image-type="basic"
+                            data-original-url={shape.originalData?.image_url}
+                            onLoad={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              console.log(`✅ [Shape渲染] ${shape.name} 图片加载成功！基础图正确显示`);
+                              console.log(`🔧 [DOM验证] 元素ID: ${target.id}, 实际src: ${target.src}`);
+                              console.log(`🔧 [DOM验证] 元素位置:`, target.getBoundingClientRect());
+                              // 🔥 强制高亮显示加载成功的图片
+                              target.style.border = '2px solid green';
+                              setTimeout(() => {
+                                target.style.border = '';
+                              }, 2000);
+                            }}
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              console.error(`❌ [Shape渲染] ${shape.name} 图片加载失败:`, target.src);
+                              console.error('❌ [Shape渲染] 尝试加载备用图片...');
+                              if (!target.src.includes('placeholder')) {
+                                target.src = shapePlaceholderImage;
+                              }
+                            }}
+                          />
+                        </div>
+                        <div className={`
+                          text-base font-medium transition-colors duration-200 flex flex-col items-center
+                          ${selectedShape === shape.id ? 'text-blue-700' : 'text-gray-700'}
+                          ${shape.disabled ? 'text-gray-400' : ''}
+                        `}>
+                          <span className={shape.disabled ? 'line-through' : ''}>
+                            {i18n.language.startsWith('zh') 
+                              ? (shape.originalData?.name_zh || shape.name)
+                              : (shape.originalData?.name_en || shape.name)
+                            }
+                          </span>
+                          {smartFilterConfig.showCount && (
+                            <span className={`text-xs mt-1 ${shape.disabled ? 'text-gray-300' : 'text-blue-500'}`}>
+                              ({shape.count})
+                            </span>
+                          )}
+                        </div>
+                        {selectedShape === shape.id && !shape.disabled && (
+                          <div className="absolute -top-1 -right-1 w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center">
+                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                        )}
+                      </label>
                     </div>
                   ))}
                 </div>
               </div>
+
+              {/* 第三行：材质和规格筛选 */}
+              <div className="bg-gray-50 rounded-xl p-5 slide-up" style={{ animationDelay: '0.2s' }}>
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center pulse">
+                    <span className="text-white text-xs font-bold">3</span>
+                  </div>
+                  <h4 className="text-base font-semibold text-gray-800">{String(t('ui.materialAndSpecs') || '材质与规格筛选')}</h4>
+                </div>
+
+                {/* 材质选择器 */}
+                <div className="mb-6">
+                  <h5 className="text-sm font-medium text-gray-700 mb-3">{String(t('ui.materialType') || '材质类型')}</h5>
+                  <div className="flex flex-wrap gap-2">
+                    <button 
+                      className={`
+                        material-btn px-4 py-2 rounded-lg border transition-all duration-200 font-medium text-sm relative overflow-hidden flex items-center
+                        ${selectedMaterial === 'all' 
+                          ? 'bg-purple-500 text-white border-purple-500 shadow-md scale-105' 
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400 hover:bg-purple-50 hover:shadow-sm hover:scale-105'
+                        }
+                      `}
+                      onClick={() => handleMaterialChange('all')}
+                    >
+                      <span>{String(t('ui.allMaterials') || '全部材质')}</span>
+                      {smartFilterConfig.showCount && (
+                        <span className="ml-2 text-xs">
+                          ({allConsumables.length})
+                        </span>
+                      )}
+                    </button>
+                    {smartFilterOptions.materials.map((material, index) => (
+                      <button 
+                        key={`material-${material.id}-${index}`}
+                        className={`
+                          material-btn px-4 py-2 rounded-lg border transition-all duration-200 font-medium text-sm relative overflow-hidden flex items-center
+                          ${material.disabled ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''}
+                          ${selectedMaterial === material.id 
+                            ? 'bg-purple-500 text-white border-purple-500 shadow-md active scale-105' 
+                            : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400 hover:bg-purple-50 hover:shadow-sm hover:scale-105'
+                          }
+                        `}
+                        onClick={() => !material.disabled && handleMaterialChange(material.id)}
+                        style={{ animationDelay: `${index * 0.05}s` }}
+                        disabled={material.disabled}
+                      >
+                        <span className={material.disabled ? 'line-through' : ''}>{material.name}</span>
+                        {smartFilterConfig.showCount && (
+                          <span className={`ml-2 text-xs ${material.disabled ? 'text-gray-300' : ''}`}>
+                            ({material.count})
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 尺寸筛选器 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <SmartFilterSelect
+                      title={isPaperMaterial(selectedMaterial) ? `${String(t('ui.weight') || '重量')} ${isImperialUnit ? '(#)' : '(gsm)'}` : `${String(t('ui.thickness') || '厚度')} ${isImperialUnit ? '(mil)' : '(μm)'}`}
+                        value={isPaperMaterial(selectedMaterial) ? selectedWeight : selectedThickness}
+                      options={isPaperMaterial(selectedMaterial) ? smartFilterOptions.weights : smartFilterOptions.thicknesses}
+                        onChange={isPaperMaterial(selectedMaterial) ? handleWeightChange : handleThicknessChange}
+                        placeholder={isPaperMaterial(selectedMaterial) ? String(t('ui.selectWeight') || '选择重量') : String(t('ui.selectThickness') || '选择厚度')}
+                      showCount={smartFilterConfig.showCount}
+                      totalCount={allConsumables.length}
+                    />
+                    
+                    <SmartFilterSelect
+                      title={`${String(t('filter.width') || '宽度')} ${isImperialUnit ? '(inch)' : '(cm)'}`}
+                        value={selectedWidth}
+                      options={smartFilterOptions.widths}
+                        onChange={handleWidthChange}
+                        placeholder={String(t('ui.selectWidth') || '选择宽度')}
+                      showCount={smartFilterConfig.showCount}
+                      totalCount={allConsumables.length}
+                    />
+                    
+                    <SmartFilterSelect
+                      title={`${String(t('filter.length') || '长度')} ${isImperialUnit ? '(inch)' : '(cm)'}`}
+                        value={selectedLength}
+                      options={smartFilterOptions.lengths}
+                        onChange={handleLengthChange}
+                        placeholder={String(t('ui.selectLength') || '选择长度')}
+                      showCount={smartFilterConfig.showCount}
+                      totalCount={allConsumables.length}
+                    />
+                  </div>
+                  
+                  {/* 尺寸指导图片 */}
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="text-sm font-medium text-gray-700 mb-3">{String(t('ui.dimensionGuide') || '尺寸指导图')}</div>
+                    <div className="w-full h-48 bg-white rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
+                      <img 
+                        src={currentDimensionImage} 
+                        alt={String(t('ui.dimensionGuideAlt') || '产品尺寸指导')}
+                        className="max-w-full max-h-full object-contain"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* 产品列表容器 */}
+          <div className="products-container">
+            {renderConsumablesTable()}
+            
+            {/* 翻页组件 */}
+            {totalPages > 1 && (
+              <div className="flex justify-center mt-8">
+                <div className="flex items-center space-x-2 bg-white rounded-xl shadow-md border border-gray-200 p-2">
+                  <button 
+                    className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    {String(t('ui.previousPage') || '上一页')}
+                  </button>
+                  
+                  <div className="flex items-center space-x-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      const page = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                      if (page < 1 || page > totalPages) return null;
+                      
+                      return (
+                        <button
+                          key={`page-${page}`}
+                          className={`
+                            w-10 h-10 text-sm font-medium rounded-lg transition-all duration-200
+                            ${currentPage === page 
+                              ? 'bg-blue-500 text-white shadow-md' 
+                              : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                            }
+                          `}
+                          onClick={() => setCurrentPage(page)}
+                        >
+                          {page}
+                        </button>
+                      );
+                    }).filter(Boolean)}
+                  </div>
+                  
+                  <button 
+                    className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    {String(t('ui.nextPage') || '下一页')}
+                  </button>
+                </div>
+              </div>
             )}
           </div>
-        )}
-      </Modal>
-    </div>
+        </div>
+        
+        {/* 购物车动画组件 */}
+        <CartAnimation
+          isActive={cartAnimation.isActive}
+          startElement={cartAnimation.startElement}
+          targetElement={cartAnimation.targetElement}
+          productImage={cartAnimation.productImage}
+          productName={cartAnimation.productName}
+          onComplete={() => setCartAnimation({
+            isActive: false,
+            startElement: null,
+            targetElement: null
+          })}
+        />
+        
+        {/* 确认对话框组件 */}
+        <ConfirmDialog
+          isOpen={confirmDialog.isOpen}
+          title={confirmDialog.title}
+          message={confirmDialog.message}
+          type={confirmDialog.type}
+          loading={confirmDialog.loading}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+        />
+        
+        {/* 产品详细信息Modal */}
+        <Modal
+          title={selectedProduct ? `${String(selectedProduct.name || '')} - ${String(t('ui.detailInfo') || '详细信息')}` : String(t('ui.productDetail') || '产品详细信息')}
+          open={detailModalVisible}
+          onCancel={closeDetailModal}
+          footer={[
+            <Button key="close" onClick={closeDetailModal}>
+              {String(t('ui.close') || '关闭')}
+            </Button>,
+            selectedProduct && (
+              <SmartAddToCartButton
+                key="addToCart"
+                product={selectedProduct}
+                productType="consumables"
+                onAddToCart={() => {
+                  addToCart(selectedProduct.id);
+                  closeDetailModal();
+                }}
+                className="ant-btn ant-btn-primary"
+              >
+                <ShoppingCartOutlined className="mr-2" />
+                {String(t('ui.addToCart') || '加入购物车')}
+              </SmartAddToCartButton>
+            )
+          ]}
+          width={800}
+          className="product-detail-modal"
+        >
+          {selectedProduct && (
+            <div className="product-detail-content">
+              {/* 产品基本信息 */}
+              <div className="flex flex-col md:flex-row gap-6 mb-6">
+                <div className="w-full md:w-1/3">
+                  <img 
+                    src={cleanImageUrl(selectedProduct.image_url) || placeholderImage}
+                    alt={String(selectedProduct.name || '')}
+                    className="w-full h-64 object-contain border border-border rounded-lg bg-card-alt p-4"
+                    onError={handleImageError}
+                  />
+                </div>
+                <div className="w-full md:w-2/3">
+                  <div className="mb-4">
+                    <span className="inline-block bg-primary text-white px-3 py-1 text-sm font-bold rounded-lg mb-2">
+                      {String(selectedProduct.code || '')}
+                    </span>
+                    <h3 className="text-xl font-bold text-title mb-2">{String(selectedProduct.name || '')}</h3>
+                    <div className="flex justify-between">
+                      <span className="text-label font-medium">{String(t('length') || 'Length')}:</span>
+                      <span className="text-content">
+                        {isImperialUnit ? 
+                          (selectedProduct.specs?.length ? selectedProduct.specs.length + ' inch' : 'N/A') : 
+                          (selectedProduct.specs?.length ? selectedProduct.specs.length : 'N/A')
+                        }
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-label font-medium">{String(t('rollLength') || 'Roll Length')}:</span>
+                      <span className="text-content">{selectedProduct.specs?.rollLength || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-label font-medium">{String(t('filter.material') || 'Material')}:</span>
+                      <span className="text-content">{selectedProduct.specs?.material || 'N/A'}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-label font-medium">{String(t('filter.thickness') || 'Thickness')}:</span>
+                      <span className="text-content">{selectedProduct.specs?.thickness || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-label font-medium">{String(t('filter.shape') || 'Shape')}:</span>
+                      <span className="text-content">{selectedProduct.specs?.shape || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-label font-medium">{String(t('product.model') || 'Model')}:</span>
+                      <span className="text-content">{selectedProduct.specs?.compatibility || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* 库存信息（仅管理员/销售可见） */}
+              {(user?.role === 'sales' || user?.role === 'admin') && (
+                <div className="bg-card-alt rounded-lg p-4">
+                  <h4 className="font-medium text-base text-label mb-3">{String(t('inventory') || 'Inventory')}:</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {Object.entries(selectedProduct.inventory).map(([region, count]) => (
+                      <div key={region} className="bg-background rounded-lg p-3 text-center">
+                        <div className="text-sm text-label font-medium mb-1">{region.toUpperCase()}</div>
+                        <div className={`text-lg font-bold ${(count || 0) > 0 ? 'text-success' : 'text-error'}`}>
+                          {typeof count === 'number' ? count : (isNaN(Number(count)) ? 0 : Number(count))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </Modal>
+      </div>
+    </>
   );
-  }
+}
   
 export default ConsumablesPage; 

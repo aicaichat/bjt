@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hooks修复测试</title>
+    <title>cacheTimeoutRef修复测试</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -91,79 +91,105 @@
         .test-link.primary:hover {
             background: #2563eb;
         }
+        
+        .code-block {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            color: #374151;
+            overflow-x: auto;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>React Hooks修复测试</h1>
+        <h1>cacheTimeoutRef修复测试</h1>
         
         <div class="status success">
             ✅ 开发服务器正在运行: http://localhost:5173
         </div>
         
         <div class="test-section">
-            <div class="test-title">主要测试</div>
+            <div class="test-title">问题描述</div>
+            <div style="color: #6b7280; line-height: 1.6;">
+                <p><strong>错误信息:</strong> <code>cacheTimeoutRef is not defined</code></p>
+                <p><strong>错误位置:</strong> 第2286行，在useEffect中使用了未定义的cacheTimeoutRef</p>
+                <p><strong>问题原因:</strong> cacheTimeoutRef被使用但没有在组件中定义</p>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">修复方案</div>
+            <div class="code-block">
+// 在ConsumablesPage组件的hooks定义部分添加：
+const cacheTimeoutRef = useRef&lt;NodeJS.Timeout | null&gt;(null);
+
+// 使用位置：
+if (cacheTimeoutRef.current) {
+  clearTimeout(cacheTimeoutRef.current);
+}
+cacheTimeoutRef.current = setTimeout(cleanupCache, 1000);
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">测试链接</div>
             <div class="test-links">
                 <a href="http://localhost:5173/consumables?category=1" class="test-link primary" target="_blank">
                     🧪 测试耗材页面 (主要测试)
                 </a>
-                <p style="margin: 8px 0; color: #6b7280; font-size: 14px;">
-                    点击上方链接测试耗材页面是否正常加载，检查控制台是否有 "Rendered more hooks than during the previous render" 错误
-                </p>
-            </div>
-        </div>
-        
-        <div class="test-section">
-            <div class="test-title">功能测试</div>
-            <div class="test-links">
+                <a href="http://localhost:5173/test-hooks-fix.html" class="test-link" target="_blank">
+                    🔧 Hooks修复测试页面
+                </a>
                 <a href="http://localhost:5173/test-consumables-image-zoom.html" class="test-link" target="_blank">
                     📸 图片点击放大功能测试
                 </a>
-                <a href="http://localhost:5173/test-image-zoom.html" class="test-link" target="_blank">
-                    🖼️ 图片放大功能演示
-                </a>
             </div>
         </div>
         
         <div class="test-section">
-            <div class="test-title">修复说明</div>
+            <div class="test-title">验证步骤</div>
+            <ol style="color: #6b7280; line-height: 1.6;">
+                <li>点击"测试耗材页面"链接</li>
+                <li>等待页面完全加载</li>
+                <li>打开浏览器开发者工具 (F12)</li>
+                <li>查看Console标签页</li>
+                <li>确认没有 "cacheTimeoutRef is not defined" 错误</li>
+                <li>测试筛选功能是否正常工作</li>
+                <li>测试图片点击放大功能</li>
+            </ol>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">预期结果</div>
+            <ul style="color: #6b7280; line-height: 1.6;">
+                <li>✅ 页面正常加载，无控制台错误</li>
+                <li>✅ 筛选功能正常工作</li>
+                <li>✅ 图片点击放大功能正常</li>
+                <li>✅ 缓存清理功能正常</li>
+                <li>✅ 所有交互功能正常</li>
+            </ul>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">技术细节</div>
             <div style="color: #6b7280; line-height: 1.6;">
-                <h4>问题原因:</h4>
+                <p><strong>cacheTimeoutRef的作用:</strong></p>
                 <ul>
-                    <li>在 ConsumableTooltipContent 组件中有重复的 useState hooks 定义</li>
-                    <li>hooks 调用顺序在组件重新渲染时发生变化</li>
-                    <li>违反了 React Hooks 的调用规则</li>
+                    <li>用于管理筛选选项缓存的清理定时器</li>
+                    <li>防止内存泄漏，及时清理过期的缓存数据</li>
+                    <li>优化性能，避免重复计算筛选选项</li>
                 </ul>
                 
-                <h4>修复方案:</h4>
+                <p><strong>修复位置:</strong></p>
                 <ul>
-                    <li>移除 ConsumableTooltipContent 组件中的重复 hooks 定义</li>
-                    <li>统一在主组件 ConsumablesPage 中管理所有状态</li>
-                    <li>通过 props 传递数据和状态给子组件</li>
-                    <li>确保所有 hooks 都在组件顶部，且调用顺序一致</li>
+                    <li>在ConsumablesPage组件的hooks定义部分</li>
+                    <li>使用useRef创建定时器引用</li>
+                    <li>在useEffect中正确使用和清理定时器</li>
                 </ul>
-                
-                <h4>预期结果:</h4>
-                <ul>
-                    <li>✅ 页面正常加载，无控制台错误</li>
-                    <li>✅ 图片点击放大功能正常工作</li>
-                    <li>✅ 所有筛选和分页功能正常</li>
-                    <li>✅ 购物车功能正常</li>
-                </ul>
-            </div>
-        </div>
-        
-        <div class="test-section">
-            <div class="test-title">故障排除</div>
-            <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 16px;">
-                <h4 style="color: #dc2626; margin: 0 0 8px 0;">如果仍有问题:</h4>
-                <ol style="color: #7f1d1d; margin: 0; padding-left: 20px;">
-                    <li>打开浏览器开发者工具 (F12)</li>
-                    <li>查看 Console 标签页的错误信息</li>
-                    <li>刷新页面 (Ctrl+F5 或 Cmd+Shift+R)</li>
-                    <li>清除浏览器缓存</li>
-                    <li>重启开发服务器</li>
-                </ol>
             </div>
         </div>
     </div>
@@ -171,7 +197,7 @@
     <script>
         // 简单的页面加载状态检查
         window.addEventListener('load', function() {
-            console.log('✅ 测试页面加载完成');
+            console.log('✅ cacheTimeoutRef修复测试页面加载完成');
         });
         
         // 检查开发服务器状态

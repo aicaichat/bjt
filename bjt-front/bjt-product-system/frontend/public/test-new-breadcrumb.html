@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新面包屑导航样式测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .content {
+            padding: 30px;
+        }
+        .breadcrumb-demo {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .breadcrumb-tag {
+            font-size: 12px;
+            padding: 2px 6px;
+            background-color: #f3f4f6;
+            border-radius: 4px;
+            margin-right: 8px;
+            color: #374151;
+        }
+        .breadcrumb-text {
+            color: #374151;
+        }
+        .breadcrumb-separator {
+            color: #d1d5db;
+            margin: 0 8px;
+            font-size: 10px;
+        }
+        .breadcrumb-current {
+            color: #3b82f6;
+            font-weight: 500;
+        }
+        .status-hint {
+            margin-top: 8px;
+            margin-left: 16px;
+            font-size: 14px;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+        }
+        .status-hint::before {
+            content: "ℹ️";
+            margin-right: 4px;
+        }
+        .demo-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .demo-description {
+            color: #6b7280;
+            text-align: center;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        .action-button {
+            padding: 12px 24px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .action-button:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        .action-button.secondary {
+            background: #6b7280;
+        }
+        .action-button.secondary:hover {
+            background: #4b5563;
+            box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+        }
+        .feature-list {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .feature-list h3 {
+            margin-top: 0;
+            color: #374151;
+        }
+        .feature-list ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .feature-list li {
+            margin-bottom: 8px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍞 新面包屑导航样式</h1>
+            <p>简洁高效的面包屑导航，为用户提供清晰的选择路径指引</p>
+        </div>
+        
+        <div class="content">
+            <div class="demo-title">新面包屑导航样式展示</div>
+            <div class="demo-description">
+                新的面包屑导航采用了更简洁的设计，突出显示主机信息和当前配件层级，
+                减少了视觉干扰，让用户能够快速了解当前位置和下一步操作。
+            </div>
+
+            <!-- 演示1: 未选择主机 -->
+            <div class="breadcrumb-demo">
+                <h3>📋 未选择主机状态</h3>
+                <div class="breadcrumb">
+                    <span class="breadcrumb-tag">产品线</span>
+                    <span class="breadcrumb-text">产品线1</span>
+                </div>
+                <div class="status-hint">请选择主机型号</div>
+            </div>
+
+            <!-- 演示2: 已选择主机，未选择配件 -->
+            <div class="breadcrumb-demo">
+                <h3>🖥️ 已选择主机，未选择配件</h3>
+                <div class="breadcrumb">
+                    <span class="breadcrumb-tag">Host</span>
+                    <span class="breadcrumb-text">LA E5S test</span>
+                    <span class="breadcrumb-separator">›</span>
+                    <span class="breadcrumb-current">Level 1 Accessory</span>
+                </div>
+                <div class="status-hint">请选择配件</div>
+            </div>
+
+            <!-- 演示3: 已选择配件 -->
+            <div class="breadcrumb-demo">
+                <h3>🔧 已选择配件</h3>
+                <div class="breadcrumb">
+                    <span class="breadcrumb-tag">Host</span>
+                    <span class="breadcrumb-text">LA E5S test</span>
+                    <span class="breadcrumb-separator">›</span>
+                    <span class="breadcrumb-current">进料系统 - 传感器</span>
+                </div>
+                <div class="status-hint">当前层级: 2</div>
+            </div>
+
+            <!-- 演示4: 多层级配件选择 -->
+            <div class="breadcrumb-demo">
+                <h3>🔗 多层级配件选择</h3>
+                <div class="breadcrumb">
+                    <span class="breadcrumb-tag">Host</span>
+                    <span class="breadcrumb-text">LA E5S test</span>
+                    <span class="breadcrumb-separator">›</span>
+                    <span class="breadcrumb-current">进料系统 - 传感器 - 控制器</span>
+                </div>
+                <div class="status-hint">当前层级: 3</div>
+            </div>
+
+            <div class="feature-list">
+                <h3>🎯 新面包屑导航的优势</h3>
+                <ul>
+                    <li><strong>简洁明了</strong> - 减少了视觉元素，突出核心信息</li>
+                    <li><strong>信息层次清晰</strong> - 主机信息用标签标识，配件信息用蓝色突出</li>
+                    <li><strong>状态提示智能</strong> - 根据当前选择状态显示相应的提示信息</li>
+                    <li><strong>响应式设计</strong> - 在不同屏幕尺寸下都能良好显示</li>
+                    <li><strong>多语言支持</strong> - 支持中英文切换，适配不同用户需求</li>
+                    <li><strong>实时更新</strong> - 随着用户选择实时更新显示内容</li>
+                </ul>
+            </div>
+
+            <div class="action-buttons">
+                <a href="http://localhost:5173/machines/product-line-1" class="action-button" target="_blank">
+                    🚀 体验实际页面
+                </a>
+                <a href="http://localhost:5173/" class="action-button secondary" target="_blank">
+                    🏠 返回首页
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 添加交互效果
+        document.addEventListener('DOMContentLoaded', function() {
+            // 页面加载动画
+            const container = document.querySelector('.container');
+            container.style.opacity = '0';
+            container.style.transform = 'translateY(30px)';
+            
+            setTimeout(() => {
+                container.style.transition = 'all 0.6s ease-out';
+                container.style.opacity = '1';
+                container.style.transform = 'translateY(0)';
+            }, 100);
+
+            // 面包屑演示动画
+            const breadcrumbDemos = document.querySelectorAll('.breadcrumb-demo');
+            breadcrumbDemos.forEach((demo, index) => {
+                demo.style.opacity = '0';
+                demo.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    demo.style.transition = 'all 0.4s ease-out';
+                    demo.style.opacity = '1';
+                    demo.style.transform = 'translateY(0)';
+                }, 200 + index * 150);
+            });
+        });
+    </script>
+</body>
+</html> 

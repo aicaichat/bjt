@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>面包屑逐级展开测试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 200vh;
+        }
+        
+        /* 面包屑样式 */
+        .breadcrumb-hierarchical {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 9999;
+            background-color: #ffffff;
+            border-bottom: 2px solid #e5e7eb;
+            padding: 16px 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 60px;
+            font-family: Arial, sans-serif;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .breadcrumb-left {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            flex: 1;
+        }
+        
+        .breadcrumb-button {
+            font-size: 14px;
+            padding: 8px 12px;
+            background-color: #3b82f6;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+            transition: background-color 0.2s ease;
+            white-space: nowrap;
+        }
+        
+        .breadcrumb-button:hover {
+            background-color: #2563eb;
+        }
+        
+        .breadcrumb-separator {
+            color: #6b7280;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0 4px;
+        }
+        
+        .breadcrumb-item {
+            color: #374151;
+            font-weight: 600;
+            font-size: 16px;
+            padding: 8px 12px;
+            background-color: #f3f4f6;
+            border-radius: 6px;
+            white-space: nowrap;
+        }
+        
+        .breadcrumb-host {
+            font-size: 14px;
+            padding: 8px 12px;
+            background-color: #10b981;
+            color: #ffffff;
+            border-radius: 6px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .breadcrumb-machine {
+            color: #374151;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            padding: 8px 12px;
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: background-color 0.2s ease;
+            white-space: nowrap;
+        }
+        
+        .breadcrumb-machine:hover {
+            background-color: #f3f4f6;
+        }
+        
+        .breadcrumb-accessory {
+            color: #3b82f6;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 6px 10px;
+            background-color: #eff6ff;
+            border: 1px solid #dbeafe;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            white-space: nowrap;
+        }
+        
+        .breadcrumb-accessory:hover {
+            background-color: #dbeafe;
+            border-color: #3b82f6;
+        }
+        
+        .breadcrumb-accessory-pending {
+            color: #f59e0b;
+            font-weight: 600;
+            font-size: 16px;
+            padding: 8px 12px;
+            background-color: #fef3c7;
+            border-radius: 6px;
+            white-space: nowrap;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        
+        .status-pending {
+            color: #6b7280;
+            background-color: #f3f4f6;
+        }
+        
+        .status-warning {
+            color: #f59e0b;
+            background-color: #fef3c7;
+        }
+        
+        .status-success {
+            color: #10b981;
+            background-color: #d1fae5;
+            font-weight: 600;
+        }
+        
+        /* 占位空间 */
+        .breadcrumb-spacer {
+            height: 80px;
+        }
+        
+        .content-section {
+            background: white;
+            margin: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .status-badge {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            z-index: 10000;
+        }
+        
+        .test-info {
+            background: #f3f4f6;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .test-info h3 {
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        
+        .test-info ul {
+            margin-left: 20px;
+            color: #6b7280;
+        }
+        
+        .test-info li {
+            margin-bottom: 4px;
+        }
+        
+        .demo-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            margin: 8px;
+        }
+        
+        .demo-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .interactive-demo {
+            background: #f9fafb;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+        
+        .demo-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .demo-controls button {
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .demo-controls button:hover {
+            background: #f3f4f6;
+        }
+        
+        .accessory-hierarchy {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+        
+        .hierarchy-level {
+            border: 1px solid #e5e7eb;
+            padding: 16px;
+            border-radius: 8px;
+            background: white;
+        }
+        
+        .hierarchy-level h4 {
+            color: #374151;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .accessory-item {
+            border: 1px solid #e5e7eb;
+            padding: 12px;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 8px;
+        }
+        
+        .accessory-item:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+        }
+        
+        .accessory-item.selected {
+            border-color: #10b981;
+            background-color: #f0fdf4;
+        }
+        
+        .accessory-item h5 {
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        
+        .accessory-item p {
+            color: #6b7280;
+            font-size: 12px;
+        }
+        
+        .breadcrumb-preview {
+            background: #f9fafb;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 12px 0;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .breadcrumb-preview h4 {
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .preview-content {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 4px;
+            font-size: 12px;
+        }
+        
+        .preview-separator {
+            color: #9ca3af;
+            margin: 0 2px;
+        }
+        
+        .preview-item {
+            background: #e5e7eb;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #374151;
+        }
+    </style>
+</head>
+<body>
+    <!-- 面包屑 - 逐级展开测试 -->
+    <div class="breadcrumb-hierarchical">
+        <div class="breadcrumb-left">
+            <button class="breadcrumb-button" onclick="goBack()">产品线</button>
+            <span class="breadcrumb-separator">→</span>
+            <span class="breadcrumb-item">气垫机</span>
+            
+            <span class="breadcrumb-separator" id="separator1" style="display: none;">→</span>
+            <span class="breadcrumb-host" id="host-label" style="display: none;">Host</span>
+            <button class="breadcrumb-machine" id="machine-name" style="display: none;" onclick="resetMachine()">LA-E4S 气垫机</button>
+            
+            <!-- 动态配件层级将在这里显示 -->
+            <div id="accessory-hierarchy"></div>
+        </div>
+        
+        <div class="status-indicator" id="status-indicator">
+            📋 请选择主机型号
+        </div>
+    </div>
+    
+    <!-- 占位空间 -->
+    <div class="breadcrumb-spacer"></div>
+    
+    <!-- 状态指示器 -->
+    <div class="status-badge" id="status">✅ 逐级展开功能测试</div>
+    
+    <!-- 测试说明 -->
+    <div class="content-section">
+        <div class="test-info">
+            <h3>🔧 面包屑逐级展开测试</h3>
+            <p>这个页面测试面包屑中配件逐级展开的显示功能。</p>
+            <ul>
+                <li>✅ 逐级显示所有选择的配件</li>
+                <li>✅ 每个配件都可以点击移除</li>
+                <li>✅ 移除配件时同时移除后续层级</li>
+                <li>✅ 清晰的层级标识和分隔符</li>
+                <li>✅ 响应式布局适配不同屏幕</li>
+            </ul>
+        </div>
+        
+        <h2>功能特性</h2>
+        <p>1. <strong>逐级展开</strong>：显示完整的配件选择路径</p>
+        <p>2. <strong>交互移除</strong>：点击任意配件可移除该层级及后续所有配件</p>
+        <p>3. <strong>层级标识</strong>：清楚显示每个配件的层级关系</p>
+        <p>4. <strong>视觉反馈</strong>：悬停效果和选中状态</p>
+        
+        <!-- 面包屑预览 -->
+        <div class="breadcrumb-preview">
+            <h4>当前面包屑预览</h4>
+            <div class="preview-content" id="breadcrumb-preview">
+                产品线 → 气垫机
+            </div>
+        </div>
+        
+        <!-- 交互演示 -->
+        <div class="interactive-demo">
+            <h3>配件层级选择演示</h3>
+            <div class="demo-controls">
+                <button onclick="selectMachine()">选择主机</button>
+                <button onclick="addLevel1Accessory()">添加1级配件</button>
+                <button onclick="addLevel2Accessory()">添加2级配件</button>
+                <button onclick="addLevel3Accessory()">添加3级配件</button>
+                <button onclick="addLevel4Accessory()">添加4级配件</button>
+                <button onclick="resetAll()">重置所有</button>
+            </div>
+            
+            <!-- 配件层级选择 -->
+            <div class="accessory-hierarchy" id="accessory-hierarchy-demo" style="display: none;">
+                <div class="hierarchy-level">
+                    <h4>1级配件</h4>
+                    <div class="accessory-item" onclick="selectAccessory(1, 'ET1004 Air Bubble Delivery System')">
+                        <h5>ET1004 Air Bubble Delivery System</h5>
+                        <p>气垫输送系统</p>
+                    </div>
+                    <div class="accessory-item" onclick="selectAccessory(1, '气垫膜控制器')">
+                        <h5>气垫膜控制器</h5>
+                        <p>智能控制系统</p>
+                    </div>
+                </div>
+                
+                <div class="hierarchy-level">
+                    <h4>2级配件</h4>
+                    <div class="accessory-item" onclick="selectAccessory(2, '高级气垫膜')">
+                        <h5>高级气垫膜</h5>
+                        <p>高品质气垫材料</p>
+                    </div>
+                    <div class="accessory-item" onclick="selectAccessory(2, '专业控制器')">
+                        <h5>专业控制器</h5>
+                        <p>专业级控制系统</p>
+                    </div>
+                </div>
+                
+                <div class="hierarchy-level">
+                    <h4>3级配件</h4>
+                    <div class="accessory-item" onclick="selectAccessory(3, '精密传感器')">
+                        <h5>精密传感器</h5>
+                        <p>高精度检测设备</p>
+                    </div>
+                    <div class="accessory-item" onclick="selectAccessory(3, '智能监控系统')">
+                        <h5>智能监控系统</h5>
+                        <p>实时监控和报警</p>
+                    </div>
+                </div>
+                
+                <div class="hierarchy-level">
+                    <h4>4级配件</h4>
+                    <div class="accessory-item" onclick="selectAccessory(4, '数据分析模块')">
+                        <h5>数据分析模块</h5>
+                        <p>数据分析和报告</p>
+                    </div>
+                    <div class="accessory-item" onclick="selectAccessory(4, '远程控制单元')">
+                        <h5>远程控制单元</h5>
+                        <p>远程操作和控制</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <button class="demo-button" onclick="scrollToBottom()">滚动到底部测试</button>
+        <button class="demo-button" onclick="scrollToTop()">返回顶部</button>
+    </div>
+    
+    <!-- 内容区域 -->
+    <div class="content-section">
+        <h2>配件选择区域</h2>
+        <p>这里是配件选择的内容区域。面包屑应该逐级显示所有选择的配件。</p>
+        <p>选择不同层级的配件，观察面包屑的逐级展开效果。</p>
+    </div>
+    
+    <!-- 页面底部 -->
+    <div class="content-section">
+        <h2>页面底部</h2>
+        <p>你已经滚动到页面底部了！面包屑应该仍然逐级显示所有配件。</p>
+    </div>
+    
+    <script>
+        let machineSelected = false;
+        let selectedAccessories = {};
+        
+        function goBack() {
+            alert('返回产品线选择页面');
+        }
+        
+        function resetMachine() {
+            machineSelected = false;
+            selectedAccessories = {};
+            updateBreadcrumb();
+        }
+        
+        function selectMachine() {
+            machineSelected = true;
+            selectedAccessories = {};
+            updateBreadcrumb();
+            document.getElementById('accessory-hierarchy-demo').style.display = 'grid';
+        }
+        
+        function selectAccessory(level, name) {
+            if (!machineSelected) {
+                alert('请先选择主机');
+                return;
+            }
+            
+            // 移除当前层级及之后的所有配件
+            const newSelectedAccessories = { ...selectedAccessories };
+            Object.keys(newSelectedAccessories).forEach(key => {
+                const keyLevel = parseInt(key.replace('level', ''));
+                if (keyLevel >= level) {
+                    delete newSelectedAccessories[key];
+                }
+            });
+            
+            // 添加新的配件
+            newSelectedAccessories[`level${level}`] = name;
+            selectedAccessories = newSelectedAccessories;
+            
+            updateBreadcrumb();
+            updatePreview();
+        }
+        
+        function addLevel1Accessory() {
+            if (!machineSelected) {
+                alert('请先选择主机');
+                return;
+            }
+            selectAccessory(1, 'ET1004 Air Bubble Delivery System');
+        }
+        
+        function addLevel2Accessory() {
+            if (!machineSelected) {
+                alert('请先选择主机');
+                return;
+            }
+            selectAccessory(2, '高级气垫膜');
+        }
+        
+        function addLevel3Accessory() {
+            if (!machineSelected) {
+                alert('请先选择主机');
+                return;
+            }
+            selectAccessory(3, '精密传感器');
+        }
+        
+        function addLevel4Accessory() {
+            if (!machineSelected) {
+                alert('请先选择主机');
+                return;
+            }
+            selectAccessory(4, '数据分析模块');
+        }
+        
+        function resetAll() {
+            machineSelected = false;
+            selectedAccessories = {};
+            updateBreadcrumb();
+            updatePreview();
+            document.getElementById('accessory-hierarchy-demo').style.display = 'none';
+        }
+        
+        function updateBreadcrumb() {
+            const separator1 = document.getElementById('separator1');
+            const hostLabel = document.getElementById('host-label');
+            const machineName = document.getElementById('machine-name');
+            const accessoryHierarchy = document.getElementById('accessory-hierarchy');
+            const statusIndicator = document.getElementById('status-indicator');
+            
+            if (machineSelected) {
+                separator1.style.display = 'inline';
+                hostLabel.style.display = 'inline';
+                machineName.style.display = 'inline';
+                
+                // 清空配件层级显示
+                accessoryHierarchy.innerHTML = '';
+                
+                // 逐级显示配件
+                Object.entries(selectedAccessories)
+                    .sort(([a], [b]) => parseInt(a.replace('level', '')) - parseInt(b.replace('level', '')))
+                    .forEach(([level, accessoryName]) => {
+                        const levelNum = parseInt(level.replace('level', ''));
+                        
+                        // 添加分隔符
+                        const separator = document.createElement('span');
+                        separator.className = 'breadcrumb-separator';
+                        separator.textContent = '→';
+                        accessoryHierarchy.appendChild(separator);
+                        
+                        // 添加配件按钮
+                        const accessoryButton = document.createElement('button');
+                        accessoryButton.className = 'breadcrumb-accessory';
+                        accessoryButton.textContent = `${levelNum}级: ${accessoryName}`;
+                        accessoryButton.title = `点击移除 ${levelNum}级配件: ${accessoryName}`;
+                        
+                        accessoryButton.onclick = () => {
+                            // 移除当前层级及之后的所有配件
+                            const newSelectedAccessories = { ...selectedAccessories };
+                            Object.keys(newSelectedAccessories).forEach(key => {
+                                const keyLevel = parseInt(key.replace('level', ''));
+                                if (keyLevel >= levelNum) {
+                                    delete newSelectedAccessories[key];
+                                }
+                            });
+                            selectedAccessories = newSelectedAccessories;
+                            updateBreadcrumb();
+                            updatePreview();
+                        };
+                        
+                        accessoryHierarchy.appendChild(accessoryButton);
+                    });
+                
+                if (Object.keys(selectedAccessories).length > 0) {
+                    statusIndicator.textContent = `📋 当前层级: ${Object.keys(selectedAccessories).length + 1}`;
+                    statusIndicator.className = 'status-indicator status-success';
+                } else {
+                    statusIndicator.textContent = '📋 请选择配件';
+                    statusIndicator.className = 'status-indicator status-warning';
+                }
+            } else {
+                separator1.style.display = 'none';
+                hostLabel.style.display = 'none';
+                machineName.style.display = 'none';
+                accessoryHierarchy.innerHTML = '';
+                statusIndicator.textContent = '📋 请选择主机型号';
+                statusIndicator.className = 'status-indicator status-pending';
+            }
+        }
+        
+        function updatePreview() {
+            const preview = document.getElementById('breadcrumb-preview');
+            let previewText = '产品线 → 气垫机';
+            
+            if (machineSelected) {
+                previewText += ' → Host → LA-E4S 气垫机';
+                
+                Object.entries(selectedAccessories)
+                    .sort(([a], [b]) => parseInt(a.replace('level', '')) - parseInt(b.replace('level', '')))
+                    .forEach(([level, accessoryName]) => {
+                        const levelNum = parseInt(level.replace('level', ''));
+                        previewText += ` → ${levelNum}级: ${accessoryName}`;
+                    });
+            }
+            
+            preview.innerHTML = previewText.split(' → ').map((item, index) => {
+                if (index === 0) {
+                    return `<span class="preview-item">${item}</span>`;
+                } else {
+                    return `<span class="preview-separator">→</span><span class="preview-item">${item}</span>`;
+                }
+            }).join('');
+        }
+        
+        function scrollToBottom() {
+            window.scrollTo({
+                top: document.body.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+        
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+        
+        // 监听滚动事件
+        window.addEventListener('scroll', function() {
+            const status = document.getElementById('status');
+            const breadcrumb = document.querySelector('.breadcrumb-hierarchical');
+            const rect = breadcrumb.getBoundingClientRect();
+            
+            if (rect.top === 0) {
+                status.textContent = '✅ 逐级展开功能正常';
+                status.style.background = '#10b981';
+            } else {
+                status.textContent = '❌ 面包屑有问题';
+                status.style.background = '#ef4444';
+            }
+        });
+        
+        // 页面加载完成后的提示
+        console.log('🔧 面包屑逐级展开测试页面已加载');
+        console.log('📝 请测试配件逐级展开功能');
+    </script>
+</body>
+</html> 

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>面包屑吸顶效果测试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 200vh;
+        }
+        
+        .breadcrumb-sticky-container {
+            position: relative;
+            z-index: 1000;
+        }
+        
+        .breadcrumb-sticky-container > div {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .breadcrumb-sticky-container > div:hover {
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        @keyframes breadcrumbSlideIn {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .breadcrumb-sticky-container > div {
+            animation: breadcrumbSlideIn 0.3s ease-out;
+        }
+        
+        .breadcrumb-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .breadcrumb-item {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .breadcrumb-item.primary {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+        
+        .breadcrumb-item.secondary {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+        }
+        
+        .breadcrumb-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .breadcrumb-separator {
+            color: #9ca3af;
+            font-size: 0.75rem;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        
+        .breadcrumb-scroll-indicator {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #3b82f6);
+            background-size: 200% 100%;
+            animation: scrollIndicator 2s ease-in-out infinite;
+            border-radius: 1px;
+            width: 100%;
+        }
+        
+        @keyframes scrollIndicator {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+        
+        .content-section {
+            background: white;
+            margin: 2rem;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .content-section h2 {
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+        
+        .content-section p {
+            color: #6b7280;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        
+        .demo-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .demo-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        @media (max-width: 768px) {
+            .breadcrumb-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .content-section {
+                margin: 1rem;
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 面包屑导航 -->
+    <div class="breadcrumb-sticky-container">
+        <div>
+            <div class="breadcrumb-content">
+                <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                    <span class="breadcrumb-item primary">产品线</span>
+                    <span style="color: #374151; font-weight: 500;">气垫机</span>
+                    
+                    <span class="breadcrumb-separator">→</span>
+                    <span class="breadcrumb-item secondary">Host</span>
+                    <span style="color: #374151; font-weight: 500; cursor: pointer;">LA-E4S 气垫机</span>
+                    
+                    <span class="breadcrumb-separator">→</span>
+                    <span style="color: #2563eb; font-weight: 500;">Level 1 Accessory</span>
+                </div>
+                
+                <div class="status-indicator">
+                    <span>📋 请选择配件</span>
+                </div>
+            </div>
+            
+            <!-- 滚动指示器 -->
+            <div class="breadcrumb-scroll-indicator"></div>
+        </div>
+    </div>
+    
+    <!-- 内容区域 -->
+    <div class="content-section">
+        <h2>面包屑吸顶效果演示</h2>
+        <p>这个页面演示了产品线1页面的面包屑导航吸顶效果。当你向下滚动时，面包屑会始终保持在页面顶部，方便用户随时了解当前位置。</p>
+        <p>面包屑具有以下特性：</p>
+        <ul style="margin-left: 2rem; color: #6b7280; line-height: 1.6;">
+            <li>✅ 吸顶效果 - 始终跟随屏幕滚动</li>
+            <li>✅ 毛玻璃背景 - 现代化的视觉效果</li>
+            <li>✅ 动画过渡 - 平滑的显示和隐藏动画</li>
+            <li>✅ 交互反馈 - 悬停效果和点击反馈</li>
+            <li>✅ 响应式设计 - 适配不同屏幕尺寸</li>
+            <li>✅ 滚动指示器 - 动态的进度条效果</li>
+        </ul>
+        <button class="demo-button" onclick="scrollToBottom()">滚动到底部测试</button>
+    </div>
+    
+    <!-- 更多内容区域 -->
+    <div class="content-section">
+        <h2>主机选择区域</h2>
+        <p>这里是主机选择的内容区域。当你滚动到这里时，面包屑会保持在顶部，让你随时可以返回或查看当前位置。</p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin-top: 1rem;">
+            <div style="border: 1px solid #e5e7eb; padding: 1rem; border-radius: 0.375rem;">
+                <h3 style="color: #1f2937; margin-bottom: 0.5rem;">LA-E4S 气垫机</h3>
+                <p style="color: #6b7280; font-size: 0.875rem;">高性能气垫机，适用于各种包装需求</p>
+            </div>
+            <div style="border: 1px solid #e5e7eb; padding: 1rem; border-radius: 0.375rem;">
+                <h3 style="color: #1f2937; margin-bottom: 0.5rem;">LA-E5P 气垫机</h3>
+                <p style="color: #6b7280; font-size: 0.875rem;">专业级气垫机，适合大批量生产</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="content-section">
+        <h2>配件选择区域</h2>
+        <p>这里是配件选择的内容区域。面包屑会显示当前选择的层级和状态。</p>
+        <div style="background: #f9fafb; padding: 1rem; border-radius: 0.375rem; margin-top: 1rem;">
+            <p style="color: #6b7280; text-align: center;">配件选择内容将在这里显示</p>
+        </div>
+    </div>
+    
+    <div class="content-section">
+        <h2>页面底部</h2>
+        <p>你已经滚动到页面底部了！面包屑仍然保持在顶部，方便你随时导航。</p>
+        <button class="demo-button" onclick="scrollToTop()">返回顶部</button>
+    </div>
+    
+    <script>
+        function scrollToBottom() {
+            window.scrollTo({
+                top: document.body.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+        
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+        
+        // 监听滚动事件，可以在这里添加更多交互逻辑
+        window.addEventListener('scroll', function() {
+            const breadcrumb = document.querySelector('.breadcrumb-sticky-container > div');
+            if (window.scrollY > 100) {
+                breadcrumb.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+            } else {
+                breadcrumb.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+            }
+        });
+    </script>
+</body>
+</html> 

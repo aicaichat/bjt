@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>耗材页面图片点击放大功能测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+        
+        .test-section {
+            margin-bottom: 40px;
+        }
+        
+        .test-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 16px;
+        }
+        
+        .instructions {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .instructions h3 {
+            margin: 0 0 8px 0;
+            color: #374151;
+            font-size: 16px;
+        }
+        
+        .instructions p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .test-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+        
+        .test-link {
+            display: block;
+            padding: 16px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #374151;
+            transition: all 0.2s ease;
+        }
+        
+        .test-link:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            transform: translateY(-2px);
+        }
+        
+        .test-link h4 {
+            margin: 0 0 8px 0;
+            color: #1e40af;
+            font-size: 16px;
+        }
+        
+        .test-link p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-left: 8px;
+        }
+        
+        .status.success {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .status.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 16px 0;
+        }
+        
+        .feature-list li {
+            padding: 4px 0;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .feature-list li::before {
+            content: "✅ ";
+            color: #10b981;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>耗材页面图片点击放大功能测试</h1>
+        
+        <div class="instructions">
+            <h3>功能说明</h3>
+            <p>测试耗材页面的图片点击放大功能，验证以下特性是否正常工作：</p>
+            <ul class="feature-list">
+                <li>点击产品图片自动放大显示</li>
+                <li>模态框居中显示，背景遮罩</li>
+                <li>多种关闭方式（关闭按钮、背景点击、ESC键）</li>
+                <li>响应式设计，适配不同屏幕尺寸</li>
+                <li>图片悬停效果和提示文字</li>
+            </ul>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">测试链接</div>
+            <div class="test-links">
+                <a href="http://localhost:5173/consumables?category=1" class="test-link" target="_blank">
+                    <h4>耗材页面 (category=1) <span class="status success">主要测试</span></h4>
+                    <p>访问耗材页面，点击任意产品图片测试放大功能</p>
+                </a>
+                
+                <a href="http://localhost:5173/test-image-zoom.html" class="test-link" target="_blank">
+                    <h4>图片放大功能演示 <span class="status pending">参考实现</span></h4>
+                    <p>查看图片点击放大功能的完整演示和实现细节</p>
+                </a>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">测试步骤</div>
+            <ol style="color: #6b7280; line-height: 1.6;">
+                <li>点击上方"耗材页面"链接，打开耗材页面</li>
+                <li>等待页面加载完成，找到产品图片</li>
+                <li>将鼠标悬停在图片上，应该看到"点击放大图片"提示</li>
+                <li>点击图片，应该弹出放大预览模态框</li>
+                <li>测试关闭功能：
+                    <ul>
+                        <li>点击右上角的 × 按钮</li>
+                        <li>点击模态框外的背景区域</li>
+                        <li>按键盘的 ESC 键</li>
+                    </ul>
+                </li>
+                <li>验证图片是否正确显示，没有变形</li>
+            </ol>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">预期结果</div>
+            <ul class="feature-list">
+                <li>图片点击后立即放大显示</li>
+                <li>模态框背景为深色半透明</li>
+                <li>图片保持原始比例，居中显示</li>
+                <li>关闭按钮位于右上角，样式清晰</li>
+                <li>所有关闭方式都能正常工作</li>
+                <li>页面滚动被禁用（模态框打开时）</li>
+            </ul>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">故障排除</div>
+            <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 16px;">
+                <h4 style="color: #dc2626; margin: 0 0 8px 0;">如果功能不正常：</h4>
+                <ul style="color: #7f1d1d; margin: 0; padding-left: 20px;">
+                    <li>检查浏览器控制台是否有错误信息</li>
+                    <li>确认开发服务器正在运行 (http://localhost:5173)</li>
+                    <li>刷新页面重新加载</li>
+                    <li>检查网络连接是否正常</li>
+                    <li>尝试清除浏览器缓存</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

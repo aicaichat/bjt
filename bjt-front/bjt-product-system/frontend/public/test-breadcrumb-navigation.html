@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>面包屑导航测试 - 机器页面</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .content {
+            padding: 30px;
+        }
+        .breadcrumb-demo {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .breadcrumb-item {
+            display: flex;
+            align-items: center;
+            margin-right: 8px;
+        }
+        .breadcrumb-link {
+            color: #3b82f6;
+            text-decoration: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .breadcrumb-link:hover {
+            background-color: #eff6ff;
+            color: #1d4ed8;
+        }
+        .breadcrumb-text {
+            color: #6b7280;
+            padding: 4px 8px;
+        }
+        .breadcrumb-current {
+            color: #374151;
+            font-weight: 500;
+            padding: 4px 8px;
+        }
+        .breadcrumb-separator {
+            color: #d1d5db;
+            margin: 0 4px;
+            font-size: 12px;
+        }
+        .status-hint {
+            margin-top: 10px;
+            padding: 8px 12px;
+            background-color: #f3f4f6;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+        }
+        .status-hint::before {
+            content: "ℹ️";
+            margin-right: 8px;
+        }
+        .demo-section {
+            margin-bottom: 30px;
+        }
+        .demo-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .feature-list {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .feature-list h3 {
+            margin-top: 0;
+            color: #374151;
+        }
+        .feature-list ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .feature-list li {
+            margin-bottom: 8px;
+            color: #6b7280;
+        }
+        .navigation-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .nav-button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        .nav-button:hover {
+            background: #2563eb;
+        }
+        .nav-button.secondary {
+            background: #6b7280;
+        }
+        .nav-button.secondary:hover {
+            background: #4b5563;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍞 面包屑导航功能演示</h1>
+            <p>机器页面的面包屑导航系统，帮助用户了解当前位置并引导选择</p>
+        </div>
+        
+        <div class="content">
+            <div class="demo-section">
+                <h2 class="demo-title">功能概述</h2>
+                <p>面包屑导航为机器页面提供了清晰的导航路径，显示用户从产品线到主机到配件的完整选择路径。</p>
+            </div>
+
+            <div class="demo-section">
+                <h2 class="demo-title">面包屑导航示例</h2>
+                
+                <!-- 示例1: 初始状态 -->
+                <div class="breadcrumb-demo">
+                    <h3>1. 初始状态 - 未选择主机</h3>
+                    <div class="breadcrumb">
+                        <div class="breadcrumb-item">
+                            <a href="#" class="breadcrumb-link">首页</a>
+                        </div>
+                        <div class="breadcrumb-separator">›</div>
+                        <div class="breadcrumb-item">
+                            <span class="breadcrumb-text">产品线1</span>
+                        </div>
+                    </div>
+                    <div class="status-hint">请选择主机型号</div>
+                </div>
+
+                <!-- 示例2: 已选择主机 -->
+                <div class="breadcrumb-demo">
+                    <h3>2. 已选择主机 - 未选择配件</h3>
+                    <div class="breadcrumb">
+                        <div class="breadcrumb-item">
+                            <a href="#" class="breadcrumb-link">首页</a>
+                        </div>
+                        <div class="breadcrumb-separator">›</div>
+                        <div class="breadcrumb-item">
+                            <span class="breadcrumb-text">产品线1</span>
+                        </div>
+                        <div class="breadcrumb-separator">›</div>
+                        <div class="breadcrumb-item">
+                            <span class="breadcrumb-current">主机型号A-2000</span>
+                        </div>
+                    </div>
+                    <div class="status-hint">请选择配件</div>
+                </div>
+
+                <!-- 示例3: 已选择配件 -->
+                <div class="breadcrumb-demo">
+                    <h3>3. 已选择配件 - 多层级</h3>
+                    <div class="breadcrumb">
+                        <div class="breadcrumb-item">
+                            <a href="#" class="breadcrumb-link">首页</a>
+                        </div>
+                        <div class="breadcrumb-separator">›</div>
+                        <div class="breadcrumb-item">
+                            <span class="breadcrumb-text">产品线1</span>
+                        </div>
+                        <div class="breadcrumb-separator">›</div>
+                        <div class="breadcrumb-item">
+                            <span class="breadcrumb-current">主机型号A-2000</span>
+                        </div>
+                        <div class="breadcrumb-separator">›</div>
+                        <div class="breadcrumb-item">
+                            <span class="breadcrumb-current">配件A - 进料系统</span>
+                        </div>
+                        <div class="breadcrumb-separator">›</div>
+                        <div class="breadcrumb-item">
+                            <span class="breadcrumb-current">配件B - 传感器</span>
+                        </div>
+                    </div>
+                    <div class="status-hint">当前层级: 3</div>
+                </div>
+            </div>
+
+            <div class="feature-list">
+                <h3>🎯 面包屑导航功能特点</h3>
+                <ul>
+                    <li><strong>清晰的导航路径</strong> - 显示从首页到当前选择的完整路径</li>
+                    <li><strong>可点击的链接</strong> - 首页链接可点击返回，方便快速导航</li>
+                    <li><strong>状态提示</strong> - 根据当前选择状态显示相应的提示信息</li>
+                    <li><strong>多语言支持</strong> - 支持中英文切换，适配不同用户需求</li>
+                    <li><strong>响应式设计</strong> - 在不同屏幕尺寸下都能良好显示</li>
+                    <li><strong>实时更新</strong> - 随着用户选择主机和配件实时更新路径</li>
+                    <li><strong>层级指示</strong> - 显示当前所在的配件层级</li>
+                </ul>
+            </div>
+
+            <div class="demo-section">
+                <h2 class="demo-title">技术实现</h2>
+                <p>面包屑导航通过以下技术实现：</p>
+                <ul>
+                    <li><strong>React组件</strong> - 使用函数式组件和Hooks管理状态</li>
+                    <li><strong>动态渲染</strong> - 根据用户选择动态生成面包屑项目</li>
+                    <li><strong>国际化</strong> - 使用react-i18next实现多语言支持</li>
+                    <li><strong>CSS样式</strong> - 使用Tailwind CSS实现现代化UI设计</li>
+                    <li><strong>状态管理</strong> - 通过useState管理面包屑状态</li>
+                </ul>
+            </div>
+
+            <div class="navigation-buttons">
+                <a href="http://localhost:5173/machines/product-line-1" class="nav-button" target="_blank">
+                    🚀 查看实际页面
+                </a>
+                <a href="http://localhost:5173/" class="nav-button secondary" target="_blank">
+                    🏠 返回首页
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 简单的交互效果
+        document.addEventListener('DOMContentLoaded', function() {
+            // 为面包屑链接添加点击效果
+            const breadcrumbLinks = document.querySelectorAll('.breadcrumb-link');
+            breadcrumbLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1)';
+                    }, 150);
+                });
+            });
+
+            // 添加页面加载动画
+            const container = document.querySelector('.container');
+            container.style.opacity = '0';
+            container.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                container.style.transition = 'all 0.5s ease-out';
+                container.style.opacity = '1';
+                container.style.transform = 'translateY(0)';
+            }, 100);
+        });
+    </script>
+</body>
+</html> 
