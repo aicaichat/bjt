@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>面包屑导航调试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .debug-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .breadcrumb-tag {
+            font-size: 12px;
+            padding: 2px 6px;
+            background-color: #f3f4f6;
+            border-radius: 4px;
+            margin-right: 8px;
+            color: #374151;
+        }
+        .breadcrumb-text {
+            color: #374151;
+        }
+        .breadcrumb-separator {
+            color: #d1d5db;
+            margin: 0 8px;
+            font-size: 10px;
+        }
+        .breadcrumb-current {
+            color: #3b82f6;
+            font-weight: 500;
+        }
+        .status-hint {
+            margin-top: 8px;
+            margin-left: 16px;
+            font-size: 14px;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+        }
+        .status-hint::before {
+            content: "ℹ️";
+            margin-right: 4px;
+        }
+        .test-button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .test-button:hover {
+            background: #2563eb;
+        }
+        .log-area {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .info { color: #17a2b8; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍞 面包屑导航调试工具</h1>
+        
+        <div class="debug-section">
+            <h2>📋 面包屑导航测试</h2>
+            <p>点击下面的按钮来测试不同的面包屑状态：</p>
+            
+            <button class="test-button" onclick="testBreadcrumb('no-machine')">测试：未选择主机</button>
+            <button class="test-button" onclick="testBreadcrumb('with-machine')">测试：已选择主机</button>
+            <button class="test-button" onclick="testBreadcrumb('with-accessory')">测试：已选择配件</button>
+            <button class="test-button" onclick="testBreadcrumb('multi-level')">测试：多层级配件</button>
+            
+            <div id="breadcrumb-display"></div>
+        </div>
+
+        <div class="debug-section">
+            <h2>🔍 实际页面检查</h2>
+            <p>检查实际页面的面包屑导航：</p>
+            
+            <button class="test-button" onclick="checkActualPage()">检查实际页面</button>
+            <button class="test-button" onclick="openActualPage()">打开实际页面</button>
+            
+            <div id="page-check-result"></div>
+        </div>
+
+        <div class="debug-section">
+            <h2>📝 调试日志</h2>
+            <div id="log-area" class="log-area"></div>
+        </div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logArea = document.getElementById('log-area');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = type;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logArea.appendChild(logEntry);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        function testBreadcrumb(type) {
+            const display = document.getElementById('breadcrumb-display');
+            let html = '';
+            
+            switch(type) {
+                case 'no-machine':
+                    html = `
+                        <div class="breadcrumb">
+                            <span class="breadcrumb-tag">产品线</span>
+                            <span class="breadcrumb-text">产品线1</span>
+                        </div>
+                        <div class="status-hint">请选择主机型号</div>
+                    `;
+                    log('测试：未选择主机状态', 'info');
+                    break;
+                    
+                case 'with-machine':
+                    html = `
+                        <div class="breadcrumb">
+                            <span class="breadcrumb-tag">Host</span>
+                            <span class="breadcrumb-text">LA E5S test</span>
+                            <span class="breadcrumb-separator">›</span>
+                            <span class="breadcrumb-current">Level 1 Accessory</span>
+                        </div>
+                        <div class="status-hint">请选择配件</div>
+                    `;
+                    log('测试：已选择主机，未选择配件', 'info');
+                    break;
+                    
+                case 'with-accessory':
+                    html = `
+                        <div class="breadcrumb">
+                            <span class="breadcrumb-tag">Host</span>
+                            <span class="breadcrumb-text">LA E5S test</span>
+                            <span class="breadcrumb-separator">›</span>
+                            <span class="breadcrumb-current">进料系统 - 传感器</span>
+                        </div>
+                        <div class="status-hint">当前层级: 2</div>
+                    `;
+                    log('测试：已选择配件', 'info');
+                    break;
+                    
+                case 'multi-level':
+                    html = `
+                        <div class="breadcrumb">
+                            <span class="breadcrumb-tag">Host</span>
+                            <span class="breadcrumb-text">LA E5S test</span>
+                            <span class="breadcrumb-separator">›</span>
+                            <span class="breadcrumb-current">进料系统 - 传感器 - 控制器</span>
+                        </div>
+                        <div class="status-hint">当前层级: 3</div>
+                    `;
+                    log('测试：多层级配件选择', 'info');
+                    break;
+            }
+            
+            display.innerHTML = html;
+        }
+
+        async function checkActualPage() {
+            log('开始检查实际页面...', 'info');
+            
+            try {
+                const response = await fetch('http://localhost:5173/machines/product-line-1');
+                const html = await response.text();
+                
+                if (html.includes('breadcrumb') || html.includes('Host') || html.includes('Level 1 Accessory')) {
+                    log('✅ 页面包含面包屑相关元素', 'success');
+                } else {
+                    log('❌ 页面未找到面包屑相关元素', 'error');
+                }
+                
+                if (html.includes('renderBreadcrumb')) {
+                    log('✅ 找到 renderBreadcrumb 函数调用', 'success');
+                } else {
+                    log('❌ 未找到 renderBreadcrumb 函数调用', 'error');
+                }
+                
+                const resultDiv = document.getElementById('page-check-result');
+                resultDiv.innerHTML = `
+                    <div style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+                        <strong>页面检查结果：</strong><br>
+                        - 页面大小: ${html.length} 字符<br>
+                        - 包含面包屑: ${html.includes('breadcrumb') ? '是' : '否'}<br>
+                        - 包含Host标签: ${html.includes('Host') ? '是' : '否'}<br>
+                        - 包含Level 1 Accessory: ${html.includes('Level 1 Accessory') ? '是' : '否'}
+                    </div>
+                `;
+                
+            } catch (error) {
+                log(`❌ 检查页面失败: ${error.message}`, 'error');
+            }
+        }
+
+        function openActualPage() {
+            window.open('http://localhost:5173/machines/product-line-1', '_blank');
+            log('已打开实际页面', 'info');
+        }
+
+        // 页面加载时自动检查
+        window.addEventListener('load', function() {
+            log('页面加载完成，开始初始化...', 'info');
+            setTimeout(() => {
+                checkActualPage();
+            }, 1000);
+        });
+    </script>
+</body>
+</html> 

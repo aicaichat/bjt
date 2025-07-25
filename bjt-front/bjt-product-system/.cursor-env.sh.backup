@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# 设置Cursor使用Kimi2模型
+export CURSOR_AI_MODEL="kimi2"
+export CURSOR_AI_PROVIDER="moonshot"
+
+# 可选：设置其他AI相关环境变量
+export CURSOR_AI_TEMPERATURE="0.7"
+export CURSOR_AI_MAX_TOKENS="4000"
+
+echo "Cursor AI模型已设置为Kimi2"
+echo "请重启Cursor以应用设置" 

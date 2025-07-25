@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单详情展开功能演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .page-title {
+            text-align: center;
+            color: #007bff;
+            margin: 30px 0;
+        }
+        
+        .order-card {
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+            overflow: hidden;
+            border: 1px solid #ddd;
+        }
+        
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .order-id {
+            font-weight: bold;
+        }
+        
+        .order-date {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .order-status {
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status-shipped {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .order-details {
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .detail-label {
+            font-weight: bold;
+            color: #666;
+        }
+        
+        .detail-value {
+            color: #333;
+        }
+        
+        .order-actions {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+            flex-wrap: wrap;
+        }
+        
+        .action-button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .expand-button {
+            background-color: #28a745;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .expand-button:hover {
+            background-color: #218838;
+        }
+        
+        .secondary-button {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .secondary-button:hover {
+            background-color: #545b62;
+        }
+        
+        .expand-icon {
+            font-size: 12px;
+            transition: transform 0.3s ease;
+        }
+        
+        .order-card.expanded .expand-icon {
+            transform: rotate(90deg);
+        }
+        
+        .order-items {
+            padding: 0 15px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background-color: #f8f9fa;
+        }
+        
+        .order-card.expanded .order-items {
+            max-height: 1000px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .order-items-header {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .order-items-header h4 {
+            margin: 0;
+            color: #333;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .product-item {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            padding: 12px;
+        }
+        
+        .product-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        
+        .product-subtitle {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        
+        .product-specs {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 4px;
+        }
+        
+        .product-price {
+            font-size: 13px;
+            font-weight: 600;
+            color: #007bff;
+        }
+        
+        .demo-info {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .demo-info h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .demo-info ul {
+            padding-left: 20px;
+        }
+        
+        .demo-info li {
+            margin-bottom: 8px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="page-title">订单详情展开功能演示</h1>
+        <p style="text-align: center; margin-bottom: 30px; color: #666;">
+            点击"查看详情"按钮展开订单商品列表，再次点击"收起详情"按钮收起列表
+        </p>
+        
+        <div class="order-card" id="orderCard">
+            <div class="order-header">
+                <div class="order-id">订单号：BJT20231015001</div>
+                <div class="order-date">订单日期：2023-10-15 14:30:25</div>
+                <div>
+                    <span class="order-status status-shipped">已发货</span>
+                </div>
+            </div>
+            <div class="order-details">
+                <div class="detail-row">
+                    <div>
+                        <span class="detail-label">总金额：</span>
+                        <span class="detail-value">¥234,670.00</span>
+                    </div>
+                    <div>
+                        <span class="detail-label">支付方式：</span>
+                        <span class="detail-value">银行转账</span>
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <div>
+                        <span class="detail-label">收货信息：</span>
+                        <span class="detail-value">张三 | 北京市朝阳区xxx街道xxx号 | 13800138000</span>
+                    </div>
+                </div>
+            </div>
+            <div class="order-actions">
+                <button class="action-button expand-button" onclick="toggleOrder()">
+                    <span class="expand-icon">▶</span>
+                    <span id="buttonText">查看详情</span>
+                </button>
+                <button class="action-button secondary-button">返回PO页面</button>
+            </div>
+            <div class="order-items" id="orderItems">
+                <div class="order-items-header">
+                    <h4>订购商品 (2件)</h4>
+                </div>
+                <div class="product-item">
+                    <div class="product-title">LA-E4S V2.0主机-标准版</div>
+                    <div class="product-subtitle">型号: 60A01143</div>
+                    <div class="product-specs">功率: 1000W 尺寸: 400x300x200mm 重量: 15kg</div>
+                    <div class="product-price">数量: 2 | 单价: ¥100,000.00 | 小计: ¥200,000.00</div>
+                </div>
+                <div class="product-item">
+                    <div class="product-title">LP-V1 包装机</div>
+                    <div class="product-subtitle">型号: 60A01144</div>
+                    <div class="product-specs">功率: 500W 尺寸: 300x250x150mm 重量: 8kg</div>
+                    <div class="product-price">数量: 1 | 单价: ¥34,670.00 | 小计: ¥34,670.00</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="demo-info">
+            <h3>功能说明：</h3>
+            <ul>
+                <li>✅ 点击"查看详情"按钮可以展开订单商品列表</li>
+                <li>✅ 展开后显示订单中的所有商品信息</li>
+                <li>✅ 每个商品显示名称、型号、规格、数量、价格等信息</li>
+                <li>✅ 支持收起功能，点击"收起详情"按钮可以隐藏商品列表</li>
+                <li>✅ 展开/收起有平滑的动画效果</li>
+                <li>✅ 按钮图标会随着展开状态旋转</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function toggleOrder() {
+            const orderCard = document.getElementById('orderCard');
+            const buttonText = document.getElementById('buttonText');
+            const expandIcon = document.querySelector('.expand-icon');
+            
+            if (orderCard.classList.contains('expanded')) {
+                orderCard.classList.remove('expanded');
+                buttonText.textContent = '查看详情';
+            } else {
+                orderCard.classList.add('expanded');
+                buttonText.textContent = '收起详情';
+            }
+        }
+    </script>
+</body>
+</html> 

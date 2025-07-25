@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>面包屑吸顶验证</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 200vh;
+        }
+        
+        .sticky-breadcrumb {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 12px;
+            margin-bottom: 16px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .breadcrumb-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .breadcrumb-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .breadcrumb-item {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+        
+        .content {
+            background: white;
+            margin: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            z-index: 2000;
+        }
+    </style>
+</head>
+<body>
+    <!-- 面包屑 -->
+    <div class="sticky-breadcrumb">
+        <div class="breadcrumb-content">
+            <div class="breadcrumb-left">
+                <span class="breadcrumb-item">产品线</span>
+                <span>气垫机</span>
+                <span>→</span>
+                <span class="breadcrumb-item">Host</span>
+                <span>LA-E4S</span>
+                <span>→</span>
+                <span style="color: #2563eb; font-weight: 500;">配件选择</span>
+            </div>
+            <div style="color: #6b7280; font-size: 14px;">
+                📋 请选择配件
+            </div>
+        </div>
+    </div>
+    
+    <!-- 状态指示器 -->
+    <div class="status" id="status">✅ 面包屑已吸顶</div>
+    
+    <!-- 内容区域 -->
+    <div class="content">
+        <h2>面包屑吸顶验证</h2>
+        <p>向下滚动页面，面包屑应该始终保持在顶部。</p>
+        <p>如果面包屑消失，说明吸顶效果有问题。</p>
+    </div>
+    
+    <div class="content">
+        <h2>内容区域 1</h2>
+        <p>这是第一个内容区域，用于测试滚动效果。</p>
+    </div>
+    
+    <div class="content">
+        <h2>内容区域 2</h2>
+        <p>这是第二个内容区域，面包屑应该仍然可见。</p>
+    </div>
+    
+    <div class="content">
+        <h2>内容区域 3</h2>
+        <p>这是第三个内容区域，继续测试吸顶效果。</p>
+    </div>
+    
+    <div class="content">
+        <h2>页面底部</h2>
+        <p>你已经滚动到页面底部，面包屑应该仍然在顶部。</p>
+        <button onclick="scrollToTop()" style="background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">返回顶部</button>
+    </div>
+    
+    <script>
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // 监听滚动事件
+        window.addEventListener('scroll', function() {
+            const status = document.getElementById('status');
+            const breadcrumb = document.querySelector('.sticky-breadcrumb');
+            const rect = breadcrumb.getBoundingClientRect();
+            
+            if (rect.top <= 0) {
+                status.textContent = '✅ 面包屑已吸顶';
+                status.style.background = '#10b981';
+            } else {
+                status.textContent = '❌ 面包屑未吸顶';
+                status.style.background = '#ef4444';
+            }
+        });
+        
+        // 页面加载完成后的提示
+        console.log('🧪 面包屑吸顶验证页面已加载');
+        console.log('📝 请向下滚动测试吸顶效果');
+    </script>
+</body>
+</html> 

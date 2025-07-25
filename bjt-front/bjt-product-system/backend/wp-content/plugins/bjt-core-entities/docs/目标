@@ -1,0 +1,64 @@
+我们的插件是用来为前端BJT项目提供rest API的，API如接口文档所示，我们还写了测试脚本，我们的目标是生成完整的rest api，该插件运行在docker的wordpress上，请查看当前进展，并完成所有代码的生成和测试通过
+
+
+ey Tasks & Instructions:
+Understand Project Context and Current State:
+Thoroughly review the API documentation: frontend/src/API 接口文档.ini to understand all required endpoints, request/response formats, authentication, pagination, multi-language/region support, and error handling.
+Analyze the existing plugin codebase located in plugins/bjt-core-entities/, paying close attention to the structure of existing controllers (e.g., controllers/class-auth-controller.php, controllers/class-machine-controller.php), models (if any in plugins/bjt-core-entities/models/), and the main plugin file (plugins/bjt-core-entities/bjt-product-api.php).
+Consult the plugin's README: plugins/bjt-core-entities/.cursor/README.md for an overview of the plugin, its setup, and developer guidelines (like adding new controllers).
+Examine the current implementation status: plugins/bjt-core-entities/.cursor/IMPLEMENTATION_STATUS.md to identify which API endpoints and controllers are already implemented and which are pending.
+Study the database schema provided in mockup.sql. This schema is critical for understanding data relationships and for implementing data manipulation logic (CRUD operations) for the API endpoints.
+Identify and Implement Missing API Endpoints:
+Based on the API documentation and the IMPLEMENTATION_STATUS.md file, create a definitive list of all unimplemented API controllers and their respective endpoints. This includes:
+Accessories API (BJT_Accessory_Controller):
+GET /accessories
+POST /accessories
+GET /accessories/{id}
+PUT /accessories/{id}
+DELETE /accessories/{id}
+GET /accessories/{id}/children
+GET /accessories/{id}/required
+Consumables API (BJT_Consumable_Controller):
+GET /consumables (Note: This seems to be listed under product-lines/{productLineId}/consumables in the API doc (section 5.1), but the status doc lists GET /consumables. Clarify or implement based on the more detailed API doc if discrepancy exists).
+POST /consumables/prices/batch
+POST /consumables/inventory/batch
+(Verify if other endpoints from API Doc section 5 & 6 like "Get Product Line Consumables", "Check Consumable Compatibility", etc., need to be part of this controller or a different one, and implement accordingly).
+SpareParts API (BJT_Sparepart_Controller):
+GET /spare-parts
+GET /spare-parts/{id}
+GET /spare-parts/{id}/compatibility
+Cart API (BJT_Cart_Controller):
+GET /cart
+POST /cart/items
+PUT /cart/items/{id}
+DELETE /cart/items/{id}
+POST /cart/clear
+Orders API (BJT_Order_Controller):
+GET /orders
+POST /orders
+GET /orders/{id}
+PUT /orders/{id}/status
+Code Generation and Implementation Details:
+For each unimplemented API endpoint, create or update the corresponding PHP controller class in the plugins/bjt-core-entities/controllers/ directory.
+Follow the existing coding patterns:
+New controllers should extend the BJT_API_Controller base class (presumably located in plugins/bjt-core-entities/includes/class-api-controller.php).
+Routes for new endpoints must be registered within the register_routes() method of their respective controllers.
+Ensure new controller classes are added to the $controllers array in plugins/bjt-core-entities/bjt-product-api.php to be initialized.
+Implement the business logic for each endpoint. This will involve:
+Reading request parameters, headers, and body.
+Validating input data.
+Performing database operations (SELECT, INSERT, UPDATE, DELETE) using WordPress database functions (global $wpdb;) interacting with tables defined in mockup.sql. Ensure to use prepared statements to prevent SQL injection.
+Formatting the response according to the JSON structure specified in frontend/src/API 接口文档.ini (including success, data, message, code fields).
+Implementing authentication checks where required (refer to "Authorization: Bearer {token}" in API docs).
+Implementing pagination, multi-language (lang parameter), and multi-region (region parameter) support as defined in the API documentation.
+Properly handling errors and returning appropriate error responses and codes.
+Update Documentation:
+After implementing and verifying each set of endpoints, update the plugins/bjt-core-entities/.cursor/IMPLEMENTATION_STATUS.md file to accurately reflect the completion status (mark implemented endpoints with ✅ and update completion percentages).
+Testing and Verification:
+The goal is for all implemented API endpoints to be fully functional and to pass all existing project-specific test scripts.
+While the test scripts themselves are not provided in this context, the generated code should be written with testability in mind, adhering strictly to the API specifications to ensure compatibility with any tests based on that specification.
+Manually verify basic functionality of each endpoint using a tool like Postman or curl, considering different scenarios (valid requests, invalid requests, edge cases).
+Deliverables:
+Completed PHP code for all unimplemented API controllers and their endpoints within the plugins/bjt-core-entities/ directory structure.
+An updated plugins/bjt-core-entities/.cursor/IMPLEMENTATION_STATUS.md file.
+Confirmation that new controllers have been registered in plugins/bjt-core-entities/bjt-product-api.php.

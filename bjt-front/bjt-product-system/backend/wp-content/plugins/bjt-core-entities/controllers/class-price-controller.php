@@ -1,0 +1,827 @@
+<?php
+/**
+ * 价格控制器
+ */
+class BJT_Price_Controller extends BJT_API_Controller {
+    public $resource_name = 'prices';
+    protected $table_name;
+
+    // Database fields
+    protected $fillable_fields = [
+        'part_number',
+        'region',
+        'currency',
+        'price',
+        'price_type' // e.g., 'standard', 'sale', 'msrp'
+    ];
+
+    // API fields needed for creation
+    protected $required_api_fields_for_create = [
+        'part_number',
+        'region',
+        'currency',
+        'price'
+        // 'price_type' will default if not provided
+    ];
+
+    public function __construct() {
+        global $wpdb;
+        $this->table_name = $wpdb->prefix . 'bjt_prices';
+        $this->resource_name = 'prices';
+        $this->rest_base = $this->resource_name;
+        $this->schema = null; // Initialize the schema property
+        parent::__construct();
+        error_log("BJT_Price_Controller initialized.");
+    }
+
+    public function register_routes() {
+        register_rest_route($this->namespace, '/' . $this->resource_name, [
+            [
+                'methods' => WP_REST_Server::READABLE,
+                'callback' => [$this, 'get_items'],
+                'permission_callback' => [$this, 'check_read_permission'],
+                'args' => $this->get_collection_params(),
+            ],
+            [
+                'methods' => WP_REST_Server::CREATABLE,
+                'callback' => [$this, 'create_item'],
+                'permission_callback' => [$this, 'check_write_permission'],
+                'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::CREATABLE),
+            ],
+        ]);
+
+        register_rest_route($this->namespace, '/' . $this->resource_name . '/(?P<id>[\d]+)', [
+            [
+                'methods' => WP_REST_Server::READABLE,
+                'callback' => [$this, 'get_item'],
+                'permission_callback' => [$this, 'check_read_permission'],
+                'args' => [
+                    'id' => [
+                        'description' => __('Unique identifier for the price record.'),
+                        'type' => 'integer',
+                        'required' => true,
+                        'validate_callback' => 'rest_validate_request_arg',
+                    ],
+                    'context' => $this->get_context_param(['default' => 'view']),
+                ],
+            ],
+            [
+                'methods' => WP_REST_Server::EDITABLE,
+                'callback' => [$this, 'update_item'],
+                'permission_callback' => [$this, 'check_write_permission'],
+                'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::EDITABLE),
+            ],
+            [
+                'methods' => WP_REST_Server::DELETABLE,
+                'callback' => [$this, 'delete_item'],
+                'permission_callback' => [$this, 'check_write_permission'],
+                'args' => [
+                    'id' => [
+                        'description' => __('Unique identifier for the price record.'),
+                        'type' => 'integer',
+                        'required' => true,
+                        'validate_callback' => 'rest_validate_request_arg',
+                    ],
+                    'force' => [
+                        'type'        => 'boolean',
+                        'default'     => true, // Prices usually hard deleted
+                        'description' => __('Whether to force deletion.'),
+                    ],
+                ],
+            ],
+            'schema' => [$this, 'get_public_item_schema'],
+        ]);
+        
+        // Batch prices endpoint for multiple items
+        register_rest_route($this->namespace, '/' . $this->resource_name . '/batch', [
+            [
+                'methods' => WP_REST_Server::CREATABLE,
+                'callback' => [$this, 'get_batch_prices'],
+                'permission_callback' => [$this, 'check_read_permission'],
+                'args' => [
+                    'items' => [
+                        'description' => __('List of items to get prices for.'),
+                        'type' => 'array',
+                        'required' => true,
+                        'items' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'item_type' => [
+                                    'description' => __('Type of item (machine, consumable, spare_part, accessory).'),
+                                    'type' => 'string',
+                                    'required' => true,
+                                    'enum' => ['machine', 'consumable', 'spare_part', 'accessory'],
+                                ],
+                                'item_id' => [
+                                    'description' => __('ID or part number of the item.'),
+                                    'type' => ['string', 'integer'],
+                                    'required' => true,
+                                ],
+                                'quantity' => [
+                                    'description' => __('Quantity for pricing calculation.'),
+                                    'type' => 'integer',
+                                    'default' => 1,
+                                    'minimum' => 1,
+                                ],
+                            ],
+                        ],
+                    ],
+                    'region' => [
+                        'description' => __('Region code for price lookup.'),
+                        'type' => 'string',
+                        'default' => 'CN',
+                    ],
+                ],
+            ],
+        ]);
+    }
+
+    public function get_collection_params() {
+        $params = parent::get_collection_params();
+        $params['part_number'] = [
+            'description'       => __('Filter prices by part number.'),
+            'type'              => 'string',
+            'sanitize_callback' => 'sanitize_text_field',
+            'validate_callback' => 'rest_validate_request_arg',
+        ];
+        $params['region'] = [
+            'description'       => __('Filter prices by region code.'),
+            'type'              => 'string',
+            'sanitize_callback' => 'sanitize_key',
+            'validate_callback' => 'rest_validate_request_arg',
+        ];
+        $params['currency'] = [
+            'description'       => __('Filter prices by currency code.'),
+            'type'              => 'string',
+            'sanitize_callback' => 'sanitize_key',
+            'validate_callback' => 'rest_validate_request_arg',
+        ];
+         $params['price_type'] = [
+            'description'       => __('Filter prices by price type.'),
+            'type'              => 'string',
+            'sanitize_callback' => 'sanitize_key',
+            'validate_callback' => 'rest_validate_request_arg',
+            'enum'              => ['standard', 'sale', 'msrp']
+        ];
+        $params['orderby']['enum'] = array_merge($params['orderby']['enum'], ['part_number', 'region', 'price', 'price_type']);
+
+        return $params;
+    }
+
+    public function get_item_schema() {
+         if ($this->schema) {
+            return $this->add_additional_fields_schema($this->schema);
+        }
+        $schema = [
+            '$schema'    => 'http://json-schema.org/draft-04/schema#',
+            'title'      => $this->resource_name,
+            'type'       => 'object',
+            'properties' => [
+                'id' => [
+                    'description' => __('Unique identifier for the price record.'),
+                    'type'        => 'integer',
+                    'context'     => ['view', 'edit', 'embed'],
+                    'readonly'    => true,
+                ],
+                 'part_number' => [
+                    'description' => __('Part number of the item.'),
+                    'type'        => 'string',
+                    'context'     => ['view', 'edit', 'embed'],
+                    'required'    => true,
+                ],
+                'region' => [
+                    'description' => __('Region code (e.g., CN, US, EU).'),
+                    'type'        => 'string',
+                    'context'     => ['view', 'edit', 'embed'],
+                    'required'    => true,
+                ],
+                'currency' => [
+                    'description' => __('Currency code (e.g., CNY, USD, EUR).'),
+                    'type'        => 'string',
+                    'context'     => ['view', 'edit', 'embed'],
+                    'required'    => true,
+                ],
+                'price' => [
+                    'description' => __('Price amount.'),
+                    'type'        => 'number', // Use number for price
+                    'format'      => 'float', // Indicate it's a float
+                    'context'     => ['view', 'edit', 'embed'],
+                    'required'    => true,
+                ],
+                'price_type' => [
+                    'description' => __('Type of price (e.g., standard, sale, msrp).'),
+                    'type'        => 'string',
+                    'default'     => 'standard', 
+                    'context'     => ['view', 'edit', 'embed'],
+                    'enum'        => ['standard', 'sale', 'msrp'],
+                ],
+                'created_at' => [
+                    'description' => __( 'The date the record was created.' ),
+                    'type'        => 'string',
+                    'format'      => 'date-time',
+                    'context'     => ['view', 'edit', 'embed'],
+                    'readonly'    => true,
+                ],
+                'updated_at' => [
+                    'description' => __( 'The date the record was last updated.' ),
+                    'type'        => 'string',
+                    'format'      => 'date-time',
+                    'context'     => ['view', 'edit', 'embed'],
+                    'readonly'    => true,
+                ],
+            ],
+        ];
+        $this->schema = $schema;
+        return $this->add_additional_fields_schema($this->schema);
+    }
+
+    // --- CRUD Methods Implementation ---
+    public function get_items($request) {
+        global $wpdb;
+        $prepared_args = $this->prepare_items_query($request);
+        $where_clauses = ["1=1"];
+
+        if (!empty($prepared_args['part_number'])) {
+            $where_clauses[] = $wpdb->prepare("part_number = %s", $prepared_args['part_number']);
+        }
+        if (!empty($prepared_args['region'])) {
+            $where_clauses[] = $wpdb->prepare("region = %s", $prepared_args['region']);
+        }
+        if (!empty($prepared_args['currency'])) {
+            $where_clauses[] = $wpdb->prepare("currency = %s", $prepared_args['currency']);
+        }
+        if (!empty($prepared_args['price_type'])) {
+            $where_clauses[] = $wpdb->prepare("price_type = %s", $prepared_args['price_type']);
+        }
+        if (!empty($prepared_args['search'])) {
+            $search_term = '%' . $wpdb->esc_like($prepared_args['search']) . '%';
+            $where_clauses[] = $wpdb->prepare("(part_number LIKE %s OR region LIKE %s OR currency LIKE %s)", $search_term, $search_term, $search_term);
+        }
+
+        $where_sql = implode(" AND ", $where_clauses);
+        $base_query = "FROM {$this->table_name}";
+
+        $total_items_query = "SELECT COUNT(id) {$base_query} WHERE {$where_sql}";
+        $total_items = (int) $wpdb->get_var($total_items_query);
+
+        $fields = $this->get_fields_for_response($request);
+        $select_fields = empty($fields) ? '*' : implode(', ', $fields);
+        
+        $items_query = $wpdb->prepare(
+            "SELECT {$select_fields} {$base_query} WHERE {$where_sql} ORDER BY {$prepared_args['orderby']} {$prepared_args['order']} LIMIT %d OFFSET %d",
+            $prepared_args['posts_per_page'],
+            $prepared_args['offset']
+        );
+        $items_db = $wpdb->get_results($items_query);
+
+        $formatted_items = [];
+        if ($items_db) {
+            foreach ($items_db as $item_db) {
+                $data = $this->prepare_item_for_response($item_db, $request);
+                $formatted_items[] = $this->prepare_response_for_collection($data);
+            }
+        }
+
+        $response = new WP_REST_Response($formatted_items, 200);
+        $response = $this->add_pagination_headers($response, $request, $total_items, $prepared_args['posts_per_page']);
+        
+        return $response;
+    }
+
+    public function get_item($request) {
+        global $wpdb;
+        $id = absint($request['id']);
+        if ($id <= 0) {
+            return $this->error_response('Invalid price ID.', 'invalid_id', 400);
+        }
+        $item_db = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->table_name} WHERE id = %d", $id));
+        if (!$item_db) {
+            return $this->error_response("Price record with ID {$id} not found.", 'not_found', 404);
+        }
+        $data     = $this->prepare_item_for_response($item_db, $request);
+        $response = rest_ensure_response($data);
+        return $response;
+    }
+
+    public function create_item($request) {
+        global $wpdb;
+        $params = $request->get_json_params();
+        if (null === $params) $params = $request->get_body_params();
+
+        foreach ($this->required_api_fields_for_create as $field) {
+            if (!isset($params[$field])) {
+                return $this->error_response("Missing required field: {$field}", 'missing_field', 400);
+            }
+        }
+
+        $data_to_insert = $this->map_request_to_db($request);
+
+        // Check for duplicate part_number/region/price_type combination
+        $existing_item = $wpdb->get_var($wpdb->prepare(
+            "SELECT id FROM {$this->table_name} WHERE part_number = %s AND region = %s AND price_type = %s",
+            $data_to_insert['part_number'],
+            $data_to_insert['region'],
+            $data_to_insert['price_type'] // Price type added to check
+        ));
+        if ($existing_item) {
+            return $this->error_response('Price record for this part number, region, and price type already exists.', 'duplicate_price', 409);
+        }
+
+        $current_time = current_time('mysql', 1);
+        $data_to_insert['created_at'] = $current_time;
+        $data_to_insert['updated_at'] = $current_time;
+
+        $result = $wpdb->insert($this->table_name, $data_to_insert);
+        if ($result === false) {
+            error_log('BJT_Price_Controller DB Insert Error: ' . $wpdb->last_error);
+            return $this->error_response('Failed to create price record. DB Error: ' . $wpdb->last_error, 'db_error', 500);
+        }
+
+        $new_item_id = $wpdb->insert_id;
+        $created_item_db = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->table_name} WHERE id = %d", $new_item_id));
+        if (!$created_item_db) {
+            return $this->error_response('Failed to retrieve created price record.', 'retrieve_error', 500);
+        }
+
+        $data = $this->prepare_item_for_response($created_item_db, $request);
+        $response = rest_ensure_response($data);
+        $response->set_status(201);
+        $response->header('Location', rest_url(sprintf('%s/%s/%d', $this->namespace, $this->rest_base, $new_item_id)));
+        return $response;
+    }
+
+    public function update_item($request) {
+        global $wpdb;
+        $id = absint($request['id']);
+        if ($id <= 0) {
+            return $this->error_response('Invalid price ID.', 'invalid_id', 400);
+        }
+        $existing_item_db = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->table_name} WHERE id = %d", $id));
+        if (!$existing_item_db) {
+            return $this->error_response("Price record with ID {$id} not found to update.", 'not_found', 404);
+        }
+
+        $data_to_update = $this->map_request_to_db($request, true);
+
+        // Prevent changing key identifiers on update
+        if (isset($data_to_update['part_number'])) unset($data_to_update['part_number']);
+        if (isset($data_to_update['region'])) unset($data_to_update['region']);
+        if (isset($data_to_update['price_type'])) unset($data_to_update['price_type']);
+        // Allow updating currency and price
+
+        if (empty($data_to_update)) {
+            $data = $this->prepare_item_for_response($existing_item_db, $request);
+            return rest_ensure_response($data);
+        }
+
+        $data_to_update['updated_at'] = current_time('mysql', 1);
+
+        $result = $wpdb->update($this->table_name, $data_to_update, array('id' => $id));
+        if ($result === false) {
+            error_log('BJT_Price_Controller DB Update Error: ' . $wpdb->last_error);
+            return $this->error_response('Failed to update price record. DB Error: ' . $wpdb->last_error, 'db_error', 500);
+        }
+
+        $updated_item_db = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->table_name} WHERE id = %d", $id));
+        if (!$updated_item_db) {
+            return $this->error_response('Failed to retrieve price record after update.', 'retrieve_after_update_error', 500);
+        }
+        $data = $this->prepare_item_for_response($updated_item_db, $request);
+        return rest_ensure_response($data);
+    }
+
+    public function delete_item($request) {
+        global $wpdb;
+        $id = absint($request['id']);
+        if ($id <= 0) {
+            return $this->error_response('Invalid price ID.', 'invalid_id', 400);
+        }
+        $item_to_delete = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->table_name} WHERE id = %d", $id));
+        if (!$item_to_delete) {
+            return $this->error_response("Price record with ID {$id} not found to delete.", 'not_found', 404);
+        }
+
+        $previous = $this->prepare_item_for_response($item_to_delete, $request);
+
+        $result = $wpdb->delete($this->table_name, array('id' => $id), array('%d'));
+        if ($result === false) {
+            error_log('BJT_Price_Controller DB Delete Error: ' . $wpdb->last_error);
+            return $this->error_response('Failed to delete price record. DB Error: ' . $wpdb->last_error, 'db_error', 500);
+        }
+        if ($result === 0) {
+            return $this->error_response("Price record with ID {$id} could not be deleted.", 'delete_failed', 404);
+        }
+
+        $response = new WP_REST_Response();
+        $response->set_data(array(
+            'deleted'  => true,
+            'previous' => $previous->get_data(),
+        ));
+        return $response;
+    }
+
+    // --- Helper Methods ---
+    protected function map_request_to_db(WP_REST_Request $request, $is_update = false) {
+        $params = $request->get_params();
+        $data = [];
+         foreach ($this->fillable_fields as $db_column) {
+            if (isset($params[$db_column])) {
+                 $value = $params[$db_column];
+                switch ($db_column) {
+                    case 'price':
+                         $data[$db_column] = floatval($value); 
+                         break;
+                    case 'part_number':
+                         $data[$db_column] = sanitize_text_field(strtoupper(trim($value)));
+                         break;
+                    case 'region':
+                    case 'currency':
+                    case 'price_type':
+                         $data[$db_column] = sanitize_key($value);
+                         break;
+                    default:
+                         $data[$db_column] = sanitize_text_field($value);
+                        break;
+                }
+            }
+         }
+         if (!$is_update && !array_key_exists('price_type', $data)) {
+             $data['price_type'] = 'standard';
+         }
+         return $data;
+    }
+
+    protected function format_item_for_response($item_db_object) {
+         if (!$item_db_object) return null;
+         $item_array = (array) $item_db_object;
+         $response_data = [];
+         $schema = $this->get_item_schema();
+         foreach (array_keys($schema['properties']) as $field_name) {
+             if (isset($item_array[$field_name])) {
+                 switch ($schema['properties'][$field_name]['type']) {
+                     case 'integer':
+                         $response_data[$field_name] = (int) $item_array[$field_name];
+                         break;
+                     case 'number':
+                         $response_data[$field_name] = (float) $item_array[$field_name];
+                         break;
+                     case 'boolean': 
+                         $response_data[$field_name] = (bool) $item_array[$field_name];
+                         break;
+                     default:
+                         $response_data[$field_name] = $item_array[$field_name];
+                         break;
+                 }
+             } else {
+                 // Don't set null by default
+             }
+         }
+          // Ensure required fields are present
+          if (isset($item_array['id'])) $response_data['id'] = (int) $item_array['id'];
+          if (isset($item_array['part_number'])) $response_data['part_number'] = $item_array['part_number'];
+          if (isset($item_array['region'])) $response_data['region'] = $item_array['region'];
+          if (isset($item_array['currency'])) $response_data['currency'] = $item_array['currency'];
+          if (isset($item_array['price'])) $response_data['price'] = (float) $item_array['price'];
+          if (isset($item_array['price_type'])) $response_data['price_type'] = $item_array['price_type'];
+          
+         return $response_data;
+    }
+    
+     /**
+	 * Prepares a single price output for response.
+	 */
+	public function prepare_item_for_response( $item, $request ) {
+        $data = $this->format_item_for_response($item); 
+        $context = ! empty( $request['context'] ) ? $request['context'] : 'view';
+        $data    = $this->add_additional_fields_to_object( $data, $request );
+        $data    = $this->filter_response_by_context( $data, $context );
+        $response = rest_ensure_response( $data );
+        $response->add_links( $this->prepare_links( $item->id ) );
+        return $response;
+	}
+
+    protected function prepare_links($id) {
+        $base = sprintf( '/%s/%s', $this->namespace, $this->rest_base );
+        return array(
+            'self' => array(
+                'href' => rest_url( trailingslashit( $base ) . $id ),
+            ),
+            'collection' => array(
+                'href' => rest_url( $base ),
+            ),
+        );
+    }
+
+    /**
+     * Get batch prices for multiple items
+     */
+    public function get_batch_prices($request) {
+        $params = $request->get_json_params();
+        if (null === $params) {
+            $params = $request->get_body_params();
+        }
+        
+        $items = isset($params['items']) ? $params['items'] : [];
+        $region = isset($params['region']) ? $params['region'] : 'CN';
+        
+        if (empty($items)) {
+            return $this->format_error('No items provided', 400);
+        }
+        
+        $results = [];
+        
+        foreach ($items as $item) {
+            if (!isset($item['item_type']) || !isset($item['item_id'])) {
+                continue;
+            }
+            
+            $item_type = $item['item_type'];
+            $item_id = $item['item_id'];
+            $quantity = isset($item['quantity']) ? intval($item['quantity']) : 1;
+            
+            // Get price from the appropriate table based on item type
+            $price_data = $this->get_price_by_type_and_id($item_type, $item_id, $region, $quantity);
+            
+            $results[] = [
+                'item_type' => $item_type,
+                'item_id' => $item_id,
+                'quantity' => $quantity,
+                'price' => $price_data['price'],
+                'currency' => $price_data['currency'],
+                'is_discount' => $price_data['is_discount'],
+                'original_price' => $price_data['original_price'],
+            ];
+        }
+        
+        return $this->format_response([
+            'items' => $results,
+            'region' => $region
+        ]);
+    }
+    
+    /**
+     * Get price by item type and ID
+     */
+    protected function get_price_by_type_and_id($item_type, $item_id, $region, $quantity = 1) {
+        global $wpdb;
+        
+        // Default response
+        $result = [
+            'price' => 0,
+            'currency' => 'CNY',
+            'is_discount' => false,
+            'original_price' => 0,
+        ];
+        
+        // Convert region to currency if needed
+        $currency = $region === 'CN' ? 'CNY' : ($region === 'US' ? 'USD' : ($region === 'EU' ? 'EUR' : 'CNY'));
+        
+        // Simple implementation - in real scenario would query database
+        switch ($item_type) {
+            case 'machine':
+                // Sample pricing for machines
+                $prices = [
+                    'MEY-001' => ['price' => 12800, 'currency' => 'CNY'],
+                    'LA-E4S' => ['price' => 15000, 'currency' => 'CNY'],
+                    'LA-E5P' => ['price' => 25000, 'currency' => 'CNY'],
+                ];
+                
+                if (is_numeric($item_id)) {
+                    // ID-based lookup (fallback)
+                    $result['price'] = 10000 + ($item_id * 1000);
+                } else if (isset($prices[$item_id])) {
+                    // Part number lookup
+                    $result['price'] = $prices[$item_id]['price'];
+                    $result['currency'] = $prices[$item_id]['currency'];
+                }
+                break;
+                
+            case 'consumable':
+                // For consumables, check quantity-based pricing
+                $result['price'] = is_numeric($item_id) ? 25 * $quantity : 30 * $quantity;
+                // Discount for larger quantities
+                if ($quantity > 10) {
+                    $result['is_discount'] = true;
+                    $result['original_price'] = $result['price'];
+                    $result['price'] = $result['price'] * 0.9; // 10% discount
+                }
+                break;
+                
+            case 'spare_part':
+                $result['price'] = is_numeric($item_id) ? 50 * $quantity : 45 * $quantity;
+                break;
+                
+            case 'accessory':
+                $result['price'] = is_numeric($item_id) ? 100 * $quantity : 120 * $quantity;
+                break;
+        }
+        
+        // Currency conversion if needed (simplified)
+        if ($currency !== 'CNY') {
+            $result['currency'] = $currency;
+            if ($currency === 'USD') {
+                $result['price'] = round($result['price'] / 7, 2);
+                if ($result['original_price'] > 0) {
+                    $result['original_price'] = round($result['original_price'] / 7, 2);
+                }
+            } else if ($currency === 'EUR') {
+                $result['price'] = round($result['price'] / 8, 2);
+                if ($result['original_price'] > 0) {
+                    $result['original_price'] = round($result['original_price'] / 8, 2);
+                }
+            }
+        }
+        
+        return $result;
+    }
+
+    /**
+     * Format a successful response
+     */
+    protected function format_response($data = null, $message = '', $success = true, $code = 200) {
+        $response = [
+            'success' => $success,
+        ];
+        
+        if ($data !== null) {
+            $response['data'] = $data;
+        }
+        
+        if (!empty($message)) {
+            $response['message'] = $message;
+        }
+        
+        return $response;
+    }
+    
+    /**
+     * Format an error response
+     */
+    protected function format_error($message, $code = 400, $data = null) {
+        return new WP_Error(
+            'bjt_api_error',
+            $message,
+            [
+                'status' => $code,
+                'data' => $data
+            ]
+        );
+    }
+
+    /**
+     * Checks if the current user has permission to write (create/update) prices.
+     * Requires authentication and proper BJT permissions.
+     *
+     * @param WP_REST_Request $request Full data about the request.
+     * @return true|WP_Error True if the request has write access, WP_Error object otherwise.
+     */
+    public function check_write_permission($request) {
+        error_log('[BJT_Price_Controller] Checking write permission');
+        
+        // Using BJT Auth Controller instead of WordPress capabilities
+        if (!class_exists('BJT_Auth_Controller')) {
+            $auth_controller_path = dirname(__FILE__) . '/class-auth-controller.php';
+            if (file_exists($auth_controller_path)) {
+                require_once $auth_controller_path;
+            } else {
+                error_log('[BJT_Price_Controller] BJT_Auth_Controller class file not found at: ' . $auth_controller_path);
+                return new WP_Error('rest_controller_not_found', 'Authentication controller not found.', ['status' => 500]);
+            }
+        }
+        
+        if (!class_exists('BJT_Auth_Controller')) {
+            error_log('[BJT_Price_Controller] BJT_Auth_Controller class still not found after include attempt');
+            return new WP_Error('rest_controller_not_loadable', 'Authentication controller class not loadable.', ['status' => 500]);
+        }
+
+        $auth_controller = new BJT_Auth_Controller();
+        $is_authenticated = $auth_controller->check_auth($request);
+
+        if (true !== $is_authenticated && is_wp_error($is_authenticated)) {
+            error_log('[BJT_Price_Controller] Authentication failed: ' . $is_authenticated->get_error_message());
+            return $is_authenticated;
+        }
+        
+        if (!$is_authenticated) {
+            error_log('[BJT_Price_Controller] User not authenticated');
+            return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
+        }
+
+        // 使用BJT用户角色系统检查权限
+        $user = $GLOBALS['bjt_current_user'];
+        if (!$user) {
+            error_log('[BJT_Price_Controller] No current user found in globals');
+            return new WP_Error('rest_forbidden', __('User information not available.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户状态
+        if ($user->status !== 'active') {
+            error_log('[BJT_Price_Controller] User is not active: ' . $user->username);
+            return new WP_Error('rest_forbidden', __('Your account is not active.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户角色 - 只有admin和manager可以修改价格
+        $has_write_permission = false;
+        if (isset($user->role)) {
+            $allowed_write_roles = ['admin', 'manager'];
+            $has_write_permission = in_array($user->role, $allowed_write_roles);
+        }
+
+        // 检查用户权限
+        if (isset($user->permissions) && is_array($user->permissions)) {
+            $has_write_permission = $has_write_permission || 
+                                    in_array('edit_prices', $user->permissions) || 
+                                    in_array('manage_prices', $user->permissions);
+        }
+
+        if (!$has_write_permission) {
+            error_log('[BJT_Price_Controller] User does not have write permission: ' . $user->username . ', role: ' . $user->role);
+            return new WP_Error(
+                'rest_forbidden',
+                __('You do not have permission to create or update prices.', 'bjt'),
+                ['status' => 403, 'success' => false]
+            );
+        }
+
+        error_log('[BJT_Price_Controller] Write permission granted for user: ' . $user->username);
+        return true;
+    }
+
+    /**
+     * Checks if the current user has permission to delete prices.
+     *
+     * @param WP_REST_Request $request Full data about the request.
+     * @return true|WP_Error True if the request has delete access, WP_Error object otherwise.
+     */
+    public function check_delete_permission($request) {
+        error_log('[BJT_Price_Controller] Checking delete permission');
+        
+        // Using BJT Auth Controller instead of WordPress capabilities
+        if (!class_exists('BJT_Auth_Controller')) {
+            $auth_controller_path = dirname(__FILE__) . '/class-auth-controller.php';
+            if (file_exists($auth_controller_path)) {
+                require_once $auth_controller_path;
+            } else {
+                error_log('[BJT_Price_Controller] BJT_Auth_Controller class file not found at: ' . $auth_controller_path);
+                return new WP_Error('rest_controller_not_found', 'Authentication controller not found.', ['status' => 500]);
+            }
+        }
+        
+        if (!class_exists('BJT_Auth_Controller')) {
+            error_log('[BJT_Price_Controller] BJT_Auth_Controller class still not found after include attempt');
+            return new WP_Error('rest_controller_not_loadable', 'Authentication controller class not loadable.', ['status' => 500]);
+        }
+
+        $auth_controller = new BJT_Auth_Controller();
+        $is_authenticated = $auth_controller->check_auth($request);
+
+        if (true !== $is_authenticated && is_wp_error($is_authenticated)) {
+            error_log('[BJT_Price_Controller] Authentication failed: ' . $is_authenticated->get_error_message());
+            return $is_authenticated;
+        }
+        
+        if (!$is_authenticated) {
+            error_log('[BJT_Price_Controller] User not authenticated');
+            return new WP_Error('rest_not_logged_in', __('User not authenticated.'), ['status' => 401]);
+        }
+
+        // 使用BJT用户角色系统检查权限
+        $user = $GLOBALS['bjt_current_user'];
+        if (!$user) {
+            error_log('[BJT_Price_Controller] No current user found in globals');
+            return new WP_Error('rest_forbidden', __('User information not available.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户状态
+        if ($user->status !== 'active') {
+            error_log('[BJT_Price_Controller] User is not active: ' . $user->username);
+            return new WP_Error('rest_forbidden', __('Your account is not active.', 'bjt'), ['status' => 403]);
+        }
+
+        // 检查用户角色 - 只有admin可以删除prices
+        $has_delete_permission = false;
+        if (isset($user->role)) {
+            $allowed_delete_roles = ['admin'];
+            $has_delete_permission = in_array($user->role, $allowed_delete_roles);
+        }
+
+        // 检查用户权限
+        if (isset($user->permissions) && is_array($user->permissions)) {
+            $has_delete_permission = $has_delete_permission || 
+                                     in_array('delete_prices', $user->permissions) || 
+                                     in_array('manage_prices', $user->permissions);
+        }
+
+        if (!$has_delete_permission) {
+            error_log('[BJT_Price_Controller] User does not have delete permission: ' . $user->username . ', role: ' . $user->role);
+            return new WP_Error(
+                'rest_forbidden',
+                __('You do not have permission to delete prices.', 'bjt'),
+                ['status' => 403, 'success' => false]
+            );
+        }
+
+        error_log('[BJT_Price_Controller] Delete permission granted for user: ' . $user->username);
+        return true;
+    }
+} 
