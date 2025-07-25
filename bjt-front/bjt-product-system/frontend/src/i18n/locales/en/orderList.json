@@ -51,6 +51,7 @@
   "actions": {
     "viewProducts": "View Products",
     "viewDetails": "View Details",
+    "hideDetails": "Hide Details",
     "edit": "Edit Order",
     "cancel": "Cancel Order",
     "goToPay": "Go to Pay",
@@ -83,7 +84,9 @@
     "orderDate": "Order Date: ",
     "totalAmount": "Total Amount: ",
     "paymentMethod": "Payment Method: ",
-    "shippingInfo": "Shipping Info: "
+    "shippingInfo": "Shipping Info: ",
+    "orderItems": "Order Items: ",
+    "noItems": "No items in this order."
   },
   "details": {
     "title": "Order Details",

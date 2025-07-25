@@ -51,6 +51,7 @@
   "actions": {
     "viewProducts": "查看商品",
     "viewDetails": "查看详情",
+    "hideDetails": "收起详情",
     "edit": "编辑订单",
     "cancel": "取消订单",
     "goToPay": "去支付",
@@ -83,7 +84,9 @@
     "orderDate": "订单日期：",
     "totalAmount": "总金额：",
     "paymentMethod": "支付方式：",
-    "shippingInfo": "收货信息："
+    "shippingInfo": "收货信息：",
+    "orderItems": "订单商品：",
+    "noItems": "暂无商品"
   },
   "details": {
     "title": "订单详情",

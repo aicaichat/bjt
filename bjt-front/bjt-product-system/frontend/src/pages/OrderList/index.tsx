@@ -700,17 +700,28 @@ const OrderListPage: React.FC = () => {
   
   // 渲染订单卡片
   const renderOrderCard = (order: UnifiedOrder) => {
-    const isExpanded = expandedOrders[order.id] || false;
+    // 默认展开所有订单
+    const isExpanded = true;
     
     return (
       <div className={`order-card ${isExpanded ? 'expanded' : ''}`} key={order.id}>
         <div className="order-header">
           <div className="order-id">{t('orderCard.orderNumber')}{order.orderNumber || order.id}</div>
           <div className="order-date">{t('orderCard.orderDate')}{order.date}</div>
-          <div>
-            <span className={`order-status status-${order.status}`}>
-              {getStatusText(order.status)}
-            </span>
+          <div className="order-header-actions">
+            {/* 查看详情按钮移到头部 */}
+            <button 
+              className="action-button expand-button header-expand-button" 
+              onClick={() => toggleOrderExpansion(order.id)}
+            >
+              <span className="expand-icon">{isExpanded ? '▼' : '▶'}</span>
+              {isExpanded ? t('actions.hideDetails', '收起详情') : t('actions.viewDetails', '查看详情')}
+            </button>
+            <div>
+              <span className={`order-status status-${order.status}`}>
+                {getStatusText(order.status)}
+              </span>
+            </div>
           </div>
         </div>
         <div className="order-details">
@@ -736,28 +747,56 @@ const OrderListPage: React.FC = () => {
           </div>
         </div>
         <div className="order-actions">
+          {/* Export PO按钮移到操作区域 */}
           <button 
             className="action-button secondary-button" 
             onClick={() => handleViewOrderDetail(order.id)}
           >
-            {t('actions.backToPO', '返回PO页面')}
+            {t('actions.exportPO', 'Export PO')}
           </button>
         </div>
+        {/* 订单商品列表 - 默认展开显示 */}
         <div className="order-items">
-          {order.items.map(item => (
-            <div key={item.id} className="enhanced-item-wrapper">
-              <ProductCard 
-                partNumber={item.part_number}
-                quantity={item.quantity}
-                price={item.price}
-                showPrice={true}
-                showQuantity={true}
-                showSpecs={true}
-                size="small"
-                className="list-view"
-              />
+          {order.items.length > 0 ? (
+            <>
+              <div className="order-items-header">
+                <h4>{t('orderCard.orderItems', '订购商品')} ({order.items.length}件)</h4>
+              </div>
+              {order.items.map(item => (
+                <div key={item.id} className="enhanced-item-wrapper">
+                  <div className="product-card">
+                    <div className="product-card-content">
+                      <div className="product-card-title">
+                        {item.name || item.item_name || item.part_number || '未知商品'}
+                      </div>
+                      <div className="product-card-subtitle">
+                        型号: {item.part_number || item.code || item.sku || 'N/A'}
+                      </div>
+                      {item.specs && typeof item.specs === 'object' && Object.keys(item.specs).length > 0 && (
+                        <div className="product-card-specs">
+                          {Object.entries(item.specs).map(([key, value]) => (
+                            <span key={key}>{key}: {value} </span>
+                          ))}
+                        </div>
+                      )}
+                      {item.spec && (
+                        <div className="product-card-specs">
+                          {item.spec}
+                        </div>
+                      )}
+                      <div className="product-card-price">
+                        数量: {item.quantity} | 单价: {formatPrice(item.price || item.unit_price || 0)} | 小计: {formatPrice((item.price || item.unit_price || 0) * item.quantity)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </>
+          ) : (
+            <div className="no-items-message">
+              {t('orderCard.noItems', '暂无商品信息')}
             </div>
-          ))}
+          )}
         </div>
       </div>
     );
