@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, message, Typography, Row, Col, Card, Switch, Badge, Tag } from 'antd';
 import { UserOutlined, LockOutlined, CrownOutlined, ShoppingCartOutlined, TeamOutlined } from '@ant-design/icons';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import './Login.css';
 const logo = '/images/logo-1.webp';
@@ -156,6 +156,15 @@ const Login: React.FC = () => {
             >
               {t('login')}
             </Button>
+          </Form.Item>
+          
+          <Form.Item>
+            <div style={{ textAlign: 'center', marginTop: '16px' }}>
+              <span style={{ color: '#666' }}>{t('register.title')}</span>
+              <Link to="/register" style={{ marginLeft: '8px', color: '#1890ff' }}>
+                {t('register.link')}
+              </Link>
+            </div>
           </Form.Item>
         </Form>
       </div>

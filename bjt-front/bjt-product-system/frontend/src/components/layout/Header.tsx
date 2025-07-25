@@ -5,8 +5,8 @@ import '../../styles/header.css';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage, getI18nLanguage } from '../../contexts/LanguageContext';
 import { useTranslation } from 'react-i18next';
-import { Menu, Dropdown, Button, Space, Divider, Badge } from 'antd';
-import { DownOutlined, MenuOutlined, UserOutlined, ShoppingCartOutlined, GlobalOutlined } from '@ant-design/icons';
+import { Menu, Dropdown, Button, Space, Divider, Badge, Input } from 'antd';
+import { DownOutlined, MenuOutlined, UserOutlined, ShoppingCartOutlined, GlobalOutlined, SearchOutlined } from '@ant-design/icons';
 // 导入环境变量
 import { IMAGE_BASE_URL } from '../../config/env';
 import { IMAGES } from '../../config/constants';
@@ -16,33 +16,11 @@ import classNames from 'classnames';
 // 导入购物车上下文
 import { useCart } from '../../contexts/CartContext';
 
-interface NavSubItem {
-  label: string;
-  url: string;
-}
-
-interface NavSection {
-  title: string;
-  items: NavSubItem[];
-}
-
-interface NavItem {
-  label: string;
-  path: string;
-  children?: NavSection[];
-  simpleDropdown?: NavSubItem[];
-  requiresAuth?: boolean;
-}
-
 export interface HeaderProps {
-  logo?: string;
-  navItems?: NavItem[];
   className?: string;
   onLanguageChange?: (language: string) => void;
+  onSearch?: (searchTerm: string) => void;
 }
-
-// 内联样式声明logo图片路径
-const logoImage = IMAGES.LOGO;
 
 /**
  * 超级安全渲染函数，专门处理产品对象类型
@@ -66,23 +44,6 @@ const safeSuperRender = (value: any): string => {
 };
 
 /**
- * 确保导航标签安全渲染
- */
-const renderNavLabel = (label: any): string => {
-  try {
-    const { t } = useTranslation();
-    // 尝试翻译文本，然后确保安全渲染
-    if (typeof label === 'string') {
-      return safeRender(t(label));
-    }
-    return safeRender(label);
-  } catch (error) {
-    console.error('Error rendering nav label:', error);
-    return safeRender(label, '[Label]');
-  }
-};
-
-/**
  * 安全渲染包装组件 - 捕获渲染错误
  */
 const SafeContent: React.FC<{children: React.ReactNode}> = ({ children }) => {
@@ -95,66 +56,18 @@ const SafeContent: React.FC<{children: React.ReactNode}> = ({ children }) => {
 };
 
 const Header = ({
-  logo = logoImage, // 使用导入的logo图片
-  navItems = [
-    { label: 'nav.home', path: '/', requiresAuth: false },
-    { 
-      label: 'nav.products',
-      path: '/products',
-      requiresAuth: false,
-      children: [
-        { 
-          title: 'menu.Air Cushioning System',
-          items: [
-            { label: 'menu.Air Cushion Machine & Accessory', url: '/machines?category=1' },
-            { label: 'menu.Film options', url: '/consumables?category=1' },
-            { label: 'menu.Spare parts', url: '/spare-parts?category=1' },
-          ] 
-        },
-        { 
-          title: 'menu.Paper Cushioning System',
-          items: [
-            { label: 'menu.Paper Cushion Machine & Accessory', url: '/machines?category=1' },
-            { label: 'menu.Paper options', url: '/consumables?category=1' },
-            { label: 'menu.Spare parts', url: '/spare-parts?category=1' },
-          ] 
-        },
-        { 
-          title: 'menu.Water Cushioning System',
-          items: [
-            { label: 'menu.Water Activated Tape Dispenser & Accessory', url: '/machines?category=1' },
-            { label: 'menu.Water Activated Tape options', url: '/consumables?category=1' },
-            { label: 'menu.Spare parts', url: '/spare-parts?category=1' },
-          ] 
-        }
-      ]
-    },
-    { 
-      label: 'nav.support',
-      path: '/support',
-      requiresAuth: false,
-      simpleDropdown: [
-        { label: 'menu.After-sales service', url: '/support?type=service' },
-        { label: 'menu.Document Download', url: '/support?type=download' },
-        { label: 'menu.FAQ', url: '/support?type=faq' },
-      ]
-    },
-    { label: 'nav.contactUs', path: '/contact', requiresAuth: false }
-  ],
   className = '',
   onLanguageChange,
+  onSearch,
 }: HeaderProps) => {
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { language, setLanguage, getI18nLanguage } = useLanguage();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [mobileSubMenuOpen, setMobileSubMenuOpen] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
   // 获取购物车数据
   const { items: cartItems = [], itemCount } = useCart();
@@ -169,23 +82,6 @@ const Header = ({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-    if (isMenuOpen) {
-      // 关闭菜单时也关闭所有下拉菜单
-      setOpenDropdown(null);
-      setUserMenuOpen(false);
-    }
-  };
-
-  const toggleDropdown = (label: string) => {
-    setOpenDropdown(openDropdown === label ? null : label);
-  };
-
-  const toggleUserMenu = () => {
-    setUserMenuOpen(!userMenuOpen);
-  };
 
   const handleLanguageChange = (e: { key: string }) => {
     changeLanguage(e.key);
@@ -204,22 +100,6 @@ const Header = ({
     navigate('/login');
   };
 
-  // 根据认证状态筛选导航项
-  const filteredNavItems = navItems.filter(item => 
-    !item.requiresAuth || user
-  );
-
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-    if (isMobileMenuOpen) {
-      setMobileSubMenuOpen(null);
-    }
-  };
-
-  const toggleMobileSubMenu = (label: string) => {
-    setMobileSubMenuOpen(mobileSubMenuOpen === label ? null : label);
-  };
-
   const changeLanguage = (lang: string) => {
     // Map from i18next language code to internal language code
     const internalLang = lang === 'zh' ? 'cn' : 'en';
@@ -230,209 +110,25 @@ const Header = ({
     }
   };
 
+  // 处理搜索
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    if (onSearch) {
+      onSearch(value);
+    }
+  };
+
+  const handleSearchSubmit = () => {
+    if (searchTerm.trim()) {
+      // 可以导航到搜索结果页面或触发搜索
+      navigate(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+    }
+  };
+
   // 移动端原生语言切换
   const handleMobileLanguageChange = () => {
     const newLang = language === 'cn' ? 'en' : 'zh';
     changeLanguage(newLang);
-  };
-
-  // 渲染移动端菜单项
-  const renderMobileNavItems = () => {
-    return filteredNavItems.map((navItem, index) => {
-      const navLabel = typeof navItem.label === 'string' ? navItem.label : 'nav.products';
-      
-      if (navItem.children) {
-        return (
-          <li key={`mobile-nav-${index}`} className="mobile-nav-item">
-            <div 
-              className={classNames('mobile-nav-link', {
-                'mobile-submenu-open': mobileSubMenuOpen === navLabel
-              })}
-              onClick={() => toggleMobileSubMenu(navLabel)}
-            >
-              <span>{safeRender(t(navLabel))}</span>
-              <DownOutlined className={classNames('mobile-dropdown-icon', {
-                'open': mobileSubMenuOpen === navLabel
-              })} />
-            </div>
-            
-            {mobileSubMenuOpen === navLabel && (
-              <div className="mobile-submenu">
-                {navItem.children.map((section, sectionIndex) => (
-                  <div key={`mobile-section-${sectionIndex}`} className="mobile-submenu-section">
-                    <div className="mobile-submenu-title">{safeRender(t(section.title))}</div>
-                    {section.items.map((item, itemIndex) => (
-                      <Link 
-                        key={`mobile-item-${itemIndex}`}
-                        to={item.url}
-                        className="mobile-submenu-item"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        {safeRender(t(item.label))}
-                      </Link>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            )}
-          </li>
-        );
-      } else if (navItem.simpleDropdown) {
-        return (
-          <li key={`mobile-nav-${index}`} className="mobile-nav-item">
-            <div 
-              className={classNames('mobile-nav-link', {
-                'mobile-submenu-open': mobileSubMenuOpen === navLabel
-              })}
-              onClick={() => toggleMobileSubMenu(navLabel)}
-            >
-              <span>{safeRender(t(navLabel))}</span>
-              <DownOutlined className={classNames('mobile-dropdown-icon', {
-                'open': mobileSubMenuOpen === navLabel
-              })} />
-            </div>
-            
-            {mobileSubMenuOpen === navLabel && (
-              <div className="mobile-submenu">
-                {navItem.simpleDropdown.map((item, itemIndex) => (
-                  <Link 
-                    key={`mobile-simple-${itemIndex}`}
-                    to={item.url}
-                    className="mobile-submenu-item"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    {safeRender(t(item.label))}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </li>
-        );
-      } else {
-        return (
-          <li key={`mobile-nav-${index}`} className="mobile-nav-item">
-            <Link
-              to={navItem.path}
-              className={classNames('mobile-nav-link', {
-                active: location.pathname === navItem.path,
-              })}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              {safeRender(t(navLabel))}
-            </Link>
-          </li>
-        );
-      }
-    });
-  };
-
-  // 渲染导航项目
-  const renderNavItems = () => {
-    return filteredNavItems.map((navItem, index) => {
-      // 确保导航项标签是字符串，防止对象
-      const navLabel = typeof navItem.label === 'string' ? navItem.label : 'nav.products';
-      
-      if (navItem.children) {
-        // 复杂下拉菜单渲染
-        return (
-          <li key={`nav-${index}`} className="nav-item">
-            <Dropdown
-              menu={{
-                items: navItem.children.map((section, sectionIndex) => ({
-                  key: `section-${sectionIndex}`,
-                  label: safeRender(t(section.title)),
-                  type: 'group',
-                  children: section.items.map((item, itemIndex) => ({
-                    key: `${sectionIndex}-${itemIndex}`,
-                    label: (
-                      <Link to={item.url}>
-                        {safeRender(t(item.label))}
-                      </Link>
-                    ),
-                  })),
-                })),
-              }}
-              onOpenChange={(open: boolean) => toggleDropdown(navLabel)}
-              open={openDropdown === navLabel}
-            >
-              <a
-                onClick={(e) => {
-                  e.preventDefault();
-                  toggleDropdown(navLabel);
-                }}
-                className={classNames('nav-link', {
-                  active: location.pathname === navItem.path,
-                })}
-              >
-                <SafeContent>
-                  {safeRender(t(navLabel))}
-                  <DownOutlined
-                    className={classNames('dropdown-icon', {
-                      open: openDropdown === navLabel,
-                    })}
-                  />
-                </SafeContent>
-              </a>
-            </Dropdown>
-          </li>
-        );
-      } else if (navItem.simpleDropdown) {
-        // 简单下拉菜单渲染
-        return (
-          <li key={`nav-${index}`} className="nav-item">
-            <Dropdown
-              menu={{
-                items: navItem.simpleDropdown.map((item, itemIndex) => ({
-                  key: `simple-${itemIndex}`,
-                  label: (
-                    <Link to={item.url}>
-                      {safeRender(t(item.label))}
-                    </Link>
-                  ),
-                })),
-              }}
-              onOpenChange={(open: boolean) => toggleDropdown(navLabel)}
-              open={openDropdown === navLabel}
-            >
-              <a
-                onClick={(e) => {
-                  e.preventDefault();
-                  toggleDropdown(navLabel);
-                }}
-                className={classNames('nav-link', {
-                  active: location.pathname === navItem.path,
-                })}
-              >
-                <SafeContent>
-                  {safeRender(t(navLabel))}
-                  <DownOutlined
-                    className={classNames('dropdown-icon', {
-                      open: openDropdown === navLabel,
-                    })}
-                  />
-                </SafeContent>
-              </a>
-            </Dropdown>
-          </li>
-        );
-      } else {
-        // 普通导航项渲染
-        return (
-          <li key={`nav-${index}`} className="nav-item">
-            <Link
-              to={navItem.path}
-              className={classNames('nav-link', {
-                active: location.pathname === navItem.path,
-              })}
-            >
-              <SafeContent>
-                {safeRender(t(navLabel))}
-              </SafeContent>
-            </Link>
-          </li>
-        );
-      }
-    });
   };
 
   // 用户菜单
@@ -473,91 +169,40 @@ const Header = ({
   const currentLanguageDisplay = language === 'cn' ? '中文' : 'English';
 
   return (
-    <header ref={headerRef} className={classNames('main-header', className, { 'menu-open': isMobileMenuOpen })}>
+    <header ref={headerRef} className={classNames('main-header', className)}>
       <div className="container mx-auto flex items-center justify-between py-4 px-4">
-        <a href="/" className="logo">
-          <img src={logo} alt="Logo" />
-        </a>
-
-        <button 
-          className={`mobile-menu-toggle ${isMobileMenuOpen ? 'active' : ''}`} 
-          onClick={toggleMobileMenu}
-          aria-label="Toggle menu"
-        >
-          <span className="bar"></span>
-          <span className="bar"></span>
-          <span className="bar"></span>
-        </button>
-
-        {/* 移动端导航 */}
-        {isMobile ? (
-          <nav className={`main-nav mobile-nav ${isMobileMenuOpen ? 'open' : ''}`}>
-            <ul className="mobile-nav-list">
-              {renderMobileNavItems()}
-              
-              {/* 移动端语言切换 */}
-              <li className="mobile-nav-item mobile-language-item">
-                <div className="mobile-nav-link" onClick={handleMobileLanguageChange}>
-                  <GlobalOutlined style={{ marginRight: 8 }} />
-                  <span>{currentLanguageDisplay}</span>
-                </div>
-              </li>
-              
-              {/* 移动端用户菜单 */}
-              {user ? (
-                <>
-                  <li className="mobile-nav-item">
-                    <Link to="/profile" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
-                      <UserOutlined style={{ marginRight: 8 }} />
-                      {t('header.profile')}
-                    </Link>
-                  </li>
-                  <li className="mobile-nav-item">
-                    <Link to="/orders" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
-                      {t('header.orders')}
-                    </Link>
-                  </li>
-                  <li className="mobile-nav-item">
-                    <div className="mobile-nav-link" onClick={handleLogout}>
-                      {t('header.logout')}
-                    </div>
-                  </li>
-                </>
-              ) : (
-                <li className="mobile-nav-item">
-                  <Link to="/login" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
-                    <UserOutlined style={{ marginRight: 8 }} />
-                    {t('header.login')}
-                  </Link>
-                </li>
-              )}
-            </ul>
-          </nav>
-        ) : (
-          /* 桌面端导航 */
-          <nav className={`main-nav desktop-nav ${isMobileMenuOpen ? 'open' : ''}`}>
-            <ul className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-6">
-              {renderNavItems()}
-            </ul>
-          </nav>
-        )}
+        {/* 搜索框 - 现在占据左侧空间 */}
+        <div className="search-container">
+          <Input
+            placeholder={t('header.searchPlaceholder', '搜索产品...')}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onPressEnter={handleSearchSubmit}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setIsSearchFocused(false)}
+            prefix={<SearchOutlined />}
+            className={classNames('search-input', {
+              'search-focused': isSearchFocused
+            })}
+            allowClear
+          />
+        </div>
 
         <div className="right-section flex items-center space-x-4">
-          {/* 桌面端语言切换 */}
-          {!isMobile && (
-            <Dropdown 
-              menu={{ items: languageMenuItems }} 
-              trigger={['click']}
-              placement="bottomRight"
-            >
-              <Button type="text" icon={<GlobalOutlined />} className="action-button language-button">
-                <SafeContent>
-                  {safeRender(currentLanguageDisplay)}
-                </SafeContent>
-              </Button>
-            </Dropdown>
-          )}
+          {/* 语言切换 */}
+          <Dropdown 
+            menu={{ items: languageMenuItems }} 
+            trigger={['click']}
+            placement="bottomRight"
+          >
+            <Button type="text" icon={<GlobalOutlined />} className="action-button language-button">
+              <SafeContent>
+                {safeRender(currentLanguageDisplay)}
+              </SafeContent>
+            </Button>
+          </Dropdown>
 
+          {/* 购物车 */}
           {(user || location.pathname !== '/') && (
             <Link to="/cart" className="cart-link">
               <Badge count={itemCount} size="small">
@@ -568,8 +213,8 @@ const Header = ({
             </Link>
           )}
 
-          {/* 桌面端用户菜单 */}
-          {!isMobile && user ? (
+          {/* 用户菜单 */}
+          {user ? (
             <Dropdown
               menu={{ items: userMenuItems }}
               trigger={['click']}
@@ -579,13 +224,14 @@ const Header = ({
                 <div className="user-avatar">
                   {safeRender(user.name).charAt(0).toUpperCase()}
                 </div>
+                {!isMobile && <span className="user-name">{safeRender(user.name)}</span>}
               </Button>
             </Dropdown>
-          ) : !isMobile && !user ? (
+          ) : (
             <button className="login-button" onClick={handleLogin}>
               {safeRender(t('header.login'))}
             </button>
-          ) : null}
+          )}
         </div>
       </div>
     </header>

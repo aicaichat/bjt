@@ -1,0 +1,20 @@
+graph LR
+  subgraph Cron
+    CRON["WP-Cron 1h"]
+  end
+  subgraph Plugin
+    SyncSvc["InventorySyncService"]
+    Cache["bjt_inventory_cache"]
+  end
+  CRM{{"CRM Inventory API"}}
+  Frontend[["React Request /inventory"]]
+  DB[(MySQL)]
+
+  CRON --> SyncSvc
+  SyncSvc -->|Fetch JSON| CRM
+  CRM -->|Stock List| SyncSvc
+  SyncSvc --> Cache
+  Cache -. write .-> DB
+  Frontend -->|GET /inventory?sku=*
+      | SyncSvc
+  SyncSvc -->|Cached Response| Frontend 

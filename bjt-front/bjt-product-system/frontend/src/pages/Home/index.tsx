@@ -100,20 +100,39 @@ const Home: React.FC = () => {
     return line.subitem3_en || line.subitem3_zh || '';
   };
 
-  // 创建产品链接数据（移除图标）
+  // 创建产品链接数据（为产品线4添加特殊处理）
   const createProductLinks = (line: any) => {
+    // 产品线4特殊处理：只有一个子项，且使用自定义链接
+    if (line.id === 4) {
+      const subitem1Text = getSubitem1(line);
+      if (subitem1Text && line.subitem1_link) {
+        return [
+          {
+            text: subitem1Text,
+            path: line.subitem1_link,
+            isExternal: line.subitem1_link.startsWith('http')
+          }
+        ];
+      }
+      return [];
+    }
+
+    // 其他产品线使用专用页面链接
     const links = [
       {
         text: getSubitem1(line),
-        path: `${ROUTES.MACHINES}?category=${line.id}`
+        path: `/machines/product-line-${line.id}`,
+        isExternal: false
       },
       {
         text: getSubitem2(line),
-        path: `${ROUTES.CONSUMABLES}?category=${line.id}`
+        path: line.id === 1 ? `${ROUTES.CONSUMABLES}?category=${line.id}` : `/consumables/product-line-${line.id}`,
+        isExternal: false
       },
       {
         text: getSubitem3(line),
-        path: `${ROUTES.SPARE_PARTS}?category=${line.id}`
+        path: `${ROUTES.SPARE_PARTS}?category=${line.id}`,
+        isExternal: false
       }
     ];
     return links.filter(link => link.text); // 过滤掉空文本的链接
@@ -134,7 +153,11 @@ const Home: React.FC = () => {
       <main className="container">
         {/* 产品线展示 */}
         {productLines && productLines.map((line: any, lineIndex: number) => (
-          <div key={line.id} className="product-section">
+          <div 
+            key={line.id} 
+            className="product-section"
+            data-product-line={line.id}
+          >
             <div className="section-header">
               {getTitle(line)}
             </div>
@@ -147,16 +170,31 @@ const Home: React.FC = () => {
                 {/* 革命性的产品链接设计 */}
                 <div className="product-links">
                   {createProductLinks(line).map((linkData, index) => (
-                    <Link 
-                      key={index}
-                      to={linkData.path}
-                      className="product-link" 
-                      onClick={(e) => handleProductLinkClick(e, linkData.path)}
-                    >
-                      <div className="product-link-text">
-                        {linkData.text}
-                      </div>
-                    </Link>
+                    linkData.isExternal ? (
+                      <a 
+                        key={index}
+                        href={linkData.path}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="product-link external-link"
+                      >
+                        <div className="product-link-text">
+                          {linkData.text}
+                          <span className="external-icon">↗</span>
+                        </div>
+                      </a>
+                    ) : (
+                      <Link 
+                        key={index}
+                        to={linkData.path}
+                        className="product-link" 
+                        onClick={(e) => handleProductLinkClick(e, linkData.path)}
+                      >
+                        <div className="product-link-text">
+                          {linkData.text}
+                        </div>
+                      </Link>
+                    )
                   ))}
                 </div>
               </div>

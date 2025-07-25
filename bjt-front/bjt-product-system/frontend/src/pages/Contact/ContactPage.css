@@ -1,0 +1,158 @@
+.contact-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 40px 0;
+}
+
+.contact-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.contact-info {
+  background: white;
+  border-radius: 12px;
+  padding: 40px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  height: fit-content;
+}
+
+.contact-title {
+  color: #1890ff;
+  margin-bottom: 30px !important;
+  font-weight: 600;
+}
+
+.contact-basic {
+  margin-bottom: 30px;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.contact-icon {
+  color: #1890ff;
+  font-size: 18px;
+}
+
+.social-media {
+  margin-bottom: 30px;
+}
+
+.social-icon {
+  font-size: 24px;
+  color: #1890ff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.social-icon:hover {
+  color: #40a9ff;
+  transform: scale(1.1);
+}
+
+.global-offices {
+  margin-top: 20px;
+}
+
+.office {
+  margin-bottom: 30px;
+}
+
+.office h4 {
+  color: #1890ff;
+  margin-bottom: 12px !important;
+}
+
+.office .ant-typography {
+  color: #666;
+  line-height: 1.6;
+}
+
+.message-form-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: none;
+}
+
+.message-form-card .ant-card-body {
+  padding: 40px;
+}
+
+.form-title {
+  color: #1890ff;
+  margin-bottom: 30px !important;
+  font-weight: 600;
+}
+
+.contact-form {
+  width: 100%;
+}
+
+.form-input,
+.form-textarea {
+  border-radius: 8px;
+  border: 1px solid #d9d9d9;
+  transition: all 0.3s ease;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+  color: #bfbfbf;
+}
+
+.submit-button {
+  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+  border: none;
+  border-radius: 8px;
+  height: 48px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.submit-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(24, 144, 255, 0.4);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .contact-page {
+    padding: 20px 0;
+  }
+  
+  .contact-container {
+    padding: 0 16px;
+  }
+  
+  .contact-info,
+  .message-form-card .ant-card-body {
+    padding: 24px;
+  }
+  
+  .office {
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 576px) {
+  .contact-info,
+  .message-form-card .ant-card-body {
+    padding: 20px;
+  }
+  
+  .social-icon {
+    font-size: 20px;
+  }
+} 

@@ -41,7 +41,8 @@
     "home": "Home",
     "products": "Products",
     "support": "Support",
-    "contactUs": "Contact Us"
+    "contactUs": "Contact Us",
+    "register": "Register"
   },
   "header": {
     "cart": "Cart",
@@ -295,6 +296,8 @@
     "Water Cushioning System": "Water Cushioning System",
     "Water Activated Tape Dispenser & Accessory": "Water Activated Tape Dispenser & Accessory",
     "Water Activated Tape options": "Water Activated Tape options",
+    "Air Column Bag System": "Air Column Bag System",
+    "Air Column Bag Products": "Air Column Bag Products",
     "After-sales service": "After-sales service",
     "Document Download": "Document Download",
     "FAQ": "FAQ"

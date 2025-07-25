@@ -1,0 +1,150 @@
+/* 面包屑吸顶样式 */
+.breadcrumb-sticky-container {
+  position: relative;
+  z-index: 1000;
+}
+
+.breadcrumb-sticky-container > div {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.breadcrumb-sticky-container > div:hover {
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 面包屑滚动时的动画效果 */
+@keyframes breadcrumbSlideIn {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.breadcrumb-sticky-container > div {
+  animation: breadcrumbSlideIn 0.3s ease-out;
+}
+
+/* 面包屑项目悬停效果 */
+.breadcrumb-sticky-container span[onClick] {
+  position: relative;
+  overflow: hidden;
+}
+
+.breadcrumb-sticky-container span[onClick]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.5s;
+}
+
+.breadcrumb-sticky-container span[onClick]:hover::before {
+  left: 100%;
+}
+
+/* 面包屑项目样式增强 */
+.breadcrumb-sticky-container .text-xs {
+  font-weight: 500;
+  letter-spacing: 0.025em;
+}
+
+.breadcrumb-sticky-container .bg-blue-50 {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 1px solid #bfdbfe;
+}
+
+.breadcrumb-sticky-container .bg-green-50 {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 1px solid #bbf7d0;
+}
+
+.breadcrumb-sticky-container .bg-blue-50:hover {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+/* 响应式面包屑 */
+@media (max-width: 768px) {
+  .breadcrumb-sticky-container > div {
+    padding: 0.75rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .breadcrumb-sticky-container .ml-auto {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-start;
+  }
+  
+  .breadcrumb-sticky-container .flex-wrap {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .breadcrumb-sticky-container > div {
+    padding: 0.5rem;
+  }
+  
+  .breadcrumb-sticky-container span {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+  
+  .breadcrumb-sticky-container .text-sm {
+    font-size: 0.75rem;
+  }
+}
+
+/* 滚动指示器 */
+.breadcrumb-scroll-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #3b82f6);
+  background-size: 200% 100%;
+  animation: scrollIndicator 2s ease-in-out infinite;
+  border-radius: 1px;
+}
+
+/* 滚动指示器动画 */
+@keyframes scrollIndicator {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* 确保sticky定位生效的强制样式 */
+.breadcrumb-sticky-container,
+.breadcrumb-sticky-container > div {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
+} 

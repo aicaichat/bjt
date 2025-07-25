@@ -1,0 +1,1111 @@
+{
+  "generated_at": "2025-07-24T09:24:39.495351",
+  "excel_file": "generated_sql_imports/选型网站二期需求和问题.csv.xlsx",
+  "summary": {
+    "total_systems": 7,
+    "total_requirements": 93,
+    "total_workload_days": 122.0,
+    "estimated_months": 6.1
+  },
+  "systems_analysis": {
+    "二期需求清单": {
+      "total_count": 82,
+      "requirements": [
+        {
+          "id": "二期需求清单_1",
+          "sheet": "二期需求清单",
+          "description": "备件料号表，显示“型号名称”，但是其实点了编辑打开的页面里，是没有这个属性字段的。",
+          "category": "一期测试未关闭问题",
+          "priority": "",
+          "status": "",
+          "estimated_days": 0.5,
+          "complexity": "low",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_2",
+          "sheet": "二期需求清单",
+          "description": "后台新建各种物料的页面，增加尺寸单位，",
+          "category": "一期测试未关闭问题",
+          "priority": "",
+          "status": "",
+          "estimated_days": 0.5,
+          "complexity": "low",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_3",
+          "sheet": "二期需求清单",
+          "description": "后台所有页面的所有必填项加上※标",
+          "category": "一期测试未关闭问题",
+          "priority": "",
+          "status": "",
+          "estimated_days": 2.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_4",
+          "sheet": "二期需求清单",
+          "description": "耗材的气泡属性中，宽度 和 虚线间距，分开显示。",
+          "category": "一期测试未关闭问题",
+          "priority": "",
+          "status": "",
+          "estimated_days": 0.5,
+          "complexity": "low",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_5",
+          "sheet": "二期需求清单",
+          "description": "耗材气泡属性中，中文却显示英文，见图:",
+          "category": "一期测试未关闭问题",
+          "priority": "",
+          "status": "",
+          "estimated_days": 0.5,
+          "complexity": "low",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_6",
+          "sheet": "二期需求清单",
+          "description": "选择所有材料时，厚度/克重的选项显示方式须优化，看图片。",
+          "category": "一期测试未关闭问题",
+          "priority": "",
+          "status": "",
+          "estimated_days": 0.5,
+          "complexity": "low",
+          "type": "optimization"
+        },
+        {
+          "id": "二期需求清单_7",
+          "sheet": "二期需求清单",
+          "description": "profile页面，英文环境却显示中文，保存成功后，提示语也是中文。",
+          "category": "一期测试未关闭问题",
+          "priority": "",
+          "status": "",
+          "estimated_days": 0.5,
+          "complexity": "low",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_8",
+          "sheet": "二期需求清单",
+          "description": "后端的一些页面，可以中英文同一个页面，但是要显示中文+英文",
+          "category": "一期测试未关闭问题",
+          "priority": "",
+          "status": "",
+          "estimated_days": 0.5,
+          "complexity": "low",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_9",
+          "sheet": "二期需求清单",
+          "description": "上传PDF预览，保留原文件名+时间戳",
+          "category": "一期测试未关闭问题",
+          "priority": "",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_10",
+          "sheet": "二期需求清单",
+          "description": "料号的英文名与表格要求不一致",
+          "category": "一期测试未关闭问题",
+          "priority": "",
+          "status": "",
+          "estimated_days": 1.5,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_11",
+          "sheet": "二期需求清单",
+          "description": "规格与表格要求不一致",
+          "category": "一期测试未关闭问题",
+          "priority": "",
+          "status": "",
+          "estimated_days": 1.5,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_12",
+          "sheet": "二期需求清单",
+          "description": "适用机型与表格字段要求不一致",
+          "category": "一期测试未关闭问题",
+          "priority": "",
+          "status": "",
+          "estimated_days": 0.5,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_13",
+          "sheet": "二期需求清单",
+          "description": "克重英制单位为#",
+          "category": "一期测试未关闭问题",
+          "priority": "",
+          "status": "",
+          "estimated_days": 0.5,
+          "complexity": "low",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_14",
+          "sheet": "二期需求清单",
+          "description": "新建账号时，可选国家太少",
+          "category": "一期测试未关闭问题",
+          "priority": "",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_15",
+          "sheet": "二期需求清单",
+          "description": "地区选项展示，增加完整英文单词",
+          "category": "一期测试未关闭问题",
+          "priority": "",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_16",
+          "sheet": "二期需求清单",
+          "description": "很容易出现需要重新登录，且每次刷新页面，都需要重新登录。",
+          "category": "一期测试未关闭问题",
+          "priority": "",
+          "status": "",
+          "estimated_days": 2.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_17",
+          "sheet": "二期需求清单",
+          "description": "很多页面的排版需要微调，主要问题是文字与文字之间空隙太大，排版不紧凑，导致页面展示信息偏少。",
+          "category": "一期测试未关闭问题",
+          "priority": "",
+          "status": "",
+          "estimated_days": 2.0,
+          "complexity": "medium",
+          "type": "bug_fix"
+        },
+        {
+          "id": "二期需求清单_18",
+          "sheet": "二期需求清单",
+          "description": "购物车的 气泡按钮位置改一下，样式改为和选型页的一样。more info",
+          "category": "一期测试未关闭问题",
+          "priority": "",
+          "status": "",
+          "estimated_days": 2.5,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_19",
+          "sheet": "二期需求清单",
+          "description": "前端页面提示不足，比如 购物车页的 check out按钮灰时，鼠标移到按钮上时，应提示“请选择商品”。confirm order页填写信息不合要求，也缺少提示",
+          "category": "销售试用反馈",
+          "priority": "",
+          "status": "",
+          "estimated_days": 2.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_20",
+          "sheet": "二期需求清单",
+          "description": "联系电话这里要不要加一项电话号码区号选项，收件地址国家和联系人号码区号不一定一致，不同国家客户没填国家区号易混淆错乱。",
+          "category": "销售试用反馈",
+          "priority": "",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_21",
+          "sheet": "二期需求清单",
+          "description": "用户在前端管理页面进行地址管理，可以存多个地址。",
+          "category": "销售试用反馈",
+          "priority": "",
+          "status": "",
+          "estimated_days": 2.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_22",
+          "sheet": "二期需求清单",
+          "description": "备件页，下拉选项只显示型号，不好理解，改为型号+名称；耗材 和 主机页面的型号选项，先不改，等方案确定。",
+          "category": "销售试用反馈",
+          "priority": "",
+          "status": "",
+          "estimated_days": 0.5,
+          "complexity": "low",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_23",
+          "sheet": "二期需求清单",
+          "description": "Select Machine 改为 展示可选配件（Show Optional Accessories）\n在没有下一级可选配件的主机、配件这，不显示此按钮。",
+          "category": "销售试用反馈",
+          "priority": "",
+          "status": "",
+          "estimated_days": 0.5,
+          "complexity": "low",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_24",
+          "sheet": "二期需求清单",
+          "description": "订单管理页，只有一页的情况下，底下显示了好多页，点击2 3页后，显示无内容。",
+          "category": "销售试用反馈",
+          "priority": "",
+          "status": "",
+          "estimated_days": 0.5,
+          "complexity": "low",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_25",
+          "sheet": "二期需求清单",
+          "description": "PO单导出excel排版乱，须优化；",
+          "category": "销售试用反馈",
+          "priority": "",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "optimization"
+        },
+        {
+          "id": "二期需求清单_26",
+          "sheet": "二期需求清单",
+          "description": "PDF格式空白格须优化，重新提供一个模板给开发；有几个标题字体白色 和 背景灰色太接近；",
+          "category": "销售试用反馈",
+          "priority": "",
+          "status": "",
+          "estimated_days": 0.5,
+          "complexity": "low",
+          "type": "optimization"
+        },
+        {
+          "id": "二期需求清单_27",
+          "sheet": "二期需求清单",
+          "description": "这个Back to PO，不够直观，想要导出PDF、excel的人，不容易找到，back to PO改为 Export PO；",
+          "category": "销售试用反馈",
+          "priority": "",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_28",
+          "sheet": "二期需求清单",
+          "description": "电脑主题是深色的话，我们的选项栏太黑了，看不到原来还有按键，优化不同主题下的显示，强制任何模式，都显示我们的模式",
+          "category": "销售试用反馈",
+          "priority": "",
+          "status": "",
+          "estimated_days": 0.5,
+          "complexity": "low",
+          "type": "optimization"
+        },
+        {
+          "id": "二期需求清单_29",
+          "sheet": "二期需求清单",
+          "description": "清空和结算，突出结算按钮，大小调整一下， 买东西习惯点最显眼的下单，如果要的规格多清空了重新选很麻烦",
+          "category": "销售试用反馈",
+          "priority": "",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_30",
+          "sheet": "二期需求清单",
+          "description": "加入购物车的产品，在勾选提交时没有勾选全部商品，在提交订单后，没选择的商品会被清空掉。",
+          "category": "销售试用反馈",
+          "priority": "",
+          "status": "",
+          "estimated_days": 2.5,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_31",
+          "sheet": "二期需求清单",
+          "description": "购物车里，耗材的MODEL属性，错误显示成part NO了。",
+          "category": "销售试用反馈",
+          "priority": "",
+          "status": "",
+          "estimated_days": 0.5,
+          "complexity": "low",
+          "type": "bug_fix"
+        },
+        {
+          "id": "二期需求清单_32",
+          "sheet": "二期需求清单",
+          "description": "账号在profile页面，更换头像功能失效。",
+          "category": "一期测试未关闭问题",
+          "priority": "",
+          "status": "",
+          "estimated_days": 2.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_33",
+          "sheet": "二期需求清单",
+          "description": "后端页面，左侧菜单，在展开多个时，最下面的菜单会超出范围且无法通过滚动让它显示出来。",
+          "category": "一期测试未关闭问题",
+          "priority": "",
+          "status": "",
+          "estimated_days": 0.5,
+          "complexity": "low",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_35",
+          "sheet": "二期需求清单",
+          "description": "耗材页的气泡，看起来像是底下有一个小气泡，上面叠加了一个大气泡。",
+          "category": "销售试用反馈",
+          "priority": "",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_36",
+          "sheet": "二期需求清单",
+          "description": "film选型页的气泡，鼠标移到方框区域内时，出现了这条线条，其他电脑没出现此问题。",
+          "category": "销售试用反馈",
+          "priority": "",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "bug_fix"
+        },
+        {
+          "id": "二期需求清单_37",
+          "sheet": "二期需求清单",
+          "description": "增加一个线上支付页面，用于临时给线下客户临时用于信用卡支付的页面，页面显示一些提示文字，然后一个按钮，点击按钮，跳转到银行网关的支付页面。\n<form name=\"PrePage\" method = \"post\" action = \"https://Simplecheckout.authorize.net/payment/CatalogPayment.aspx\"> <input type = \"hidden\" name = \"LinkId\" value =\"39bc420f-0207-4772-bd9e-90abe4be078d\" /> <input type = \"submit\" value = \"Trial Now\" /> </form>",
+          "category": "7-20讨论记录",
+          "priority": "中",
+          "status": "",
+          "estimated_days": 0.5,
+          "complexity": "low",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_38",
+          "sheet": "二期需求清单",
+          "description": "如何调整商品在前端的展示顺序？在后台填排序数值？目前是型号表已有，但是前端没采用，须采用；料号表没有，须增加，并采用。",
+          "category": "7-20讨论记录",
+          "priority": "中",
+          "status": "",
+          "estimated_days": 1.5,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_39",
+          "sheet": "二期需求清单",
+          "description": "在产品线1 2 3 的主机、配件页面，增加高亮显示频率，如果值为空，隐藏不显示",
+          "category": "7-20讨论记录",
+          "priority": "中",
+          "status": "",
+          "estimated_days": 0.5,
+          "complexity": "low",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_40",
+          "sheet": "二期需求清单",
+          "description": "增加订单详情页，样式待定：是另开一个页面？还是在订单列表展开？可以演示一下demo",
+          "category": "7-20讨论记录",
+          "priority": "中",
+          "status": "",
+          "estimated_days": 2.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_41",
+          "sheet": "二期需求清单",
+          "description": "页眉导航放到页面左侧，类似目录展开的方式，优先PC端效果，手机端菜单栏做隐藏按钮。如果不做左侧导航，则在页眉下面增加当前页面的路径（见图）",
+          "category": "7-20讨论记录",
+          "priority": "中",
+          "status": "",
+          "estimated_days": 2.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_42",
+          "sheet": "二期需求清单",
+          "description": "导航（在页眉或左侧）增加contact us按钮，跳转到：https://www.lockedair.com/contact/",
+          "category": "7-20讨论记录",
+          "priority": "中",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_43",
+          "sheet": "二期需求清单",
+          "description": "导航（在页眉或左侧）增加FAQ页面入口，点击新开页面，跳转到官网对应网页",
+          "category": "7-20讨论记录",
+          "priority": "中",
+          "status": "",
+          "estimated_days": 2.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_44",
+          "sheet": "二期需求清单",
+          "description": "所有页面的背景颜色差别小，看不出区域范围边界。见图片",
+          "category": "7-20讨论记录",
+          "priority": "中",
+          "status": "",
+          "estimated_days": 2.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_45",
+          "sheet": "二期需求清单",
+          "description": "增加库存展示，只有管理员 和 销售账号展示，且是展示多个仓库的库存；终端用户和代理商账号不展示。",
+          "category": "7-20讨论记录",
+          "priority": "中",
+          "status": "",
+          "estimated_days": 2.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_46",
+          "sheet": "二期需求清单",
+          "description": "OSS图片加载优化，需要涉及到后台管理页面的上传图片功能",
+          "category": "7-20讨论记录",
+          "priority": "中",
+          "status": "",
+          "estimated_days": 2.0,
+          "complexity": "medium",
+          "type": "optimization"
+        },
+        {
+          "id": "二期需求清单_47",
+          "sheet": "二期需求清单",
+          "description": "产品2的主机商品类型，增加图片，后台可关联",
+          "category": "7-20讨论记录",
+          "priority": "中",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_48",
+          "sheet": "二期需求清单",
+          "description": "客户PO订单确认后，商城通过邮件，按照客户所属区域，把PO信息发到对应的公共邮箱，不同区域提前分配好不同的邮箱收件地址。",
+          "category": "7-20讨论记录",
+          "priority": "中",
+          "status": "",
+          "estimated_days": 2.5,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_49",
+          "sheet": "二期需求清单",
+          "description": "PO页PDF 有几个标题字体白色 和 背景灰色太接近；",
+          "category": "7-20讨论记录",
+          "priority": "中",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_50",
+          "sheet": "二期需求清单",
+          "description": "1.网站主页页眉，建立一个文档下载菜单，点击后，跳转到www.lockedair.com/document-download官网下载页面；2.用户可在历史订单界面，点击某个商品中的按钮，获取 跳转 lockedair官网下载页面对应型号的链接https://www.lockedair.com/document-download/?q=E4S ）",
+          "category": "7-20讨论记录",
+          "priority": "中",
+          "status": "",
+          "estimated_days": 2.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_51",
+          "sheet": "二期需求清单",
+          "description": "在商城主页页眉上，有一个售后问题反馈入口：与订单不关联的维修工单提交页面，客户打开这个页面后，填写：个人联系方式，描述问题、上传视频、照片等信息后提交；",
+          "category": "7-20讨论记录",
+          "priority": "中",
+          "status": "",
+          "estimated_days": 2.0,
+          "complexity": "medium",
+          "type": "bug_fix"
+        },
+        {
+          "id": "二期需求清单_52",
+          "sheet": "二期需求清单",
+          "description": "提交后，后台通过邮件方式，发送到对应仓库售后负责人账号的邮箱上；不同区域提前分配好不同的邮箱收件地址。",
+          "category": "7-20讨论记录",
+          "priority": "中",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_53",
+          "sheet": "二期需求清单",
+          "description": "管理员可以在后台看到所有提交的维修工单记录；",
+          "category": "7-20讨论记录",
+          "priority": "中",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_54",
+          "sheet": "二期需求清单",
+          "description": "film和其他页面去掉鼠标移动上去后，板块放大的动画，效果参考现在的主机选型页",
+          "category": "7-20讨论记录",
+          "priority": "高",
+          "status": "",
+          "estimated_days": 2.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_55",
+          "sheet": "二期需求清单",
+          "description": "耗材选型的袋型选项图片，鼠标移动到图片上时，放大预览图片，交互效果待定。",
+          "category": "7-20讨论记录",
+          "priority": "高",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_56",
+          "sheet": "二期需求清单",
+          "description": "商品展示的图片，点击图片放大，点击放大图以外关闭放大图，增加到最多3张图，如果上传的数量是1张，则不显示选择小图标，如果是2、3张，则在图片边上显示小的选择小图标。",
+          "category": "7-20讨论记录",
+          "priority": "高",
+          "status": "",
+          "estimated_days": 0.5,
+          "complexity": "low",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_57",
+          "sheet": "二期需求清单",
+          "description": "主机型号选择，增加型号一览表图片，先做demo看看效果",
+          "category": "7-20讨论记录",
+          "priority": "高",
+          "status": "",
+          "estimated_days": 1.5,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_58",
+          "sheet": "二期需求清单",
+          "description": "主机选型页，层级关系，改为标签代表路径，只展示当前标签下的可选项，先做demo看效果",
+          "category": "7-20讨论记录",
+          "priority": "高",
+          "status": "",
+          "estimated_days": 1.5,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_59",
+          "sheet": "二期需求清单",
+          "description": "所有页面的more info 气泡，改为点一下才弹出，然后点一下气泡内的x，或者气泡以外的范围，才关闭；",
+          "category": "7-20讨论记录",
+          "priority": "高",
+          "status": "",
+          "estimated_days": 2.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_60",
+          "sheet": "二期需求清单",
+          "description": "在页眉上，增加搜索入口，根据料号、关键词能搜索出商品结果，在一个搜索结果页面展示结果，并且结果根据主机、配件、耗材、备件，分类分区展示，单条结果的排版和选型页的结果排版保持一致，有气泡展示详细信息，有一样的跳转按钮；有库存、加入购物车等按钮；",
+          "category": "7-20讨论记录",
+          "priority": "高",
+          "status": "",
+          "estimated_days": 2.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_61",
+          "sheet": "二期需求清单",
+          "description": "主机选型页出来的主机商品，都有一个【本机适配耗材】跳转按钮，点后，跳转到对应的耗材选项页，并提前把主机相关的选项预选好了，不需要用户重新选主机型号；",
+          "category": "7-20讨论记录",
+          "priority": "高",
+          "status": "",
+          "estimated_days": 2.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_62",
+          "sheet": "二期需求清单",
+          "description": "主机选型页出来的主机商品、配件商品，有一个【产品介绍】跳转按钮，跳转到官网对应的型号介绍详情页，地址在选型网站的主机型号、配件型号表里维护，如果没填地址，则不显示该按钮；",
+          "category": "7-20讨论记录",
+          "priority": "高",
+          "status": "",
+          "estimated_days": 0.5,
+          "complexity": "low",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_63",
+          "sheet": "二期需求清单",
+          "description": "在耗材选型页、备件页、购物车、右侧购物车弹窗、Confirm Order、订单详情页：出现适配型号的位置，增加跳转功能，点击适配型号的 LA-E4S，跳转到对应的主机选型页面，并自动把型号选好；",
+          "category": "7-20讨论记录",
+          "priority": "高",
+          "status": "",
+          "estimated_days": 2.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_64",
+          "sheet": "二期需求清单",
+          "description": "购物车、右侧购物车弹窗、Confirm Order、订单详情页：1.料号、名称，跳到搜索结果页面，在搜索结果页的列表展示；",
+          "category": "7-20讨论记录",
+          "priority": "高",
+          "status": "",
+          "estimated_days": 2.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_65",
+          "sheet": "二期需求清单",
+          "description": "每个页面排版不紧凑，空白太多，浪费页面空间；",
+          "category": "7-20讨论记录",
+          "priority": "高",
+          "status": "",
+          "estimated_days": 2.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_66",
+          "sheet": "二期需求清单",
+          "description": "关联关系中的必选配件、 备件料号中的必选备件，实现自动添加到购物车；",
+          "category": "7-20讨论记录",
+          "priority": "高",
+          "status": "",
+          "estimated_days": 2.5,
+          "complexity": "medium",
+          "type": "new_feature"
+        },
+        {
+          "id": "二期需求清单_67",
+          "sheet": "二期需求清单",
+          "description": "单箱数量不是1的商品，加入购物车时，只能增加单箱数量的整数倍；",
+          "category": "7-20讨论记录",
+          "priority": "高",
+          "status": "",
+          "estimated_days": 2.5,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_68",
+          "sheet": "二期需求清单",
+          "description": "耗材选型页的厚度/克重，宽度，虚线间距这3个属性之间的联动。以及显示的结果数量也做相应优化",
+          "category": "7-20讨论记录",
+          "priority": "高",
+          "status": "",
+          "estimated_days": 0.5,
+          "complexity": "low",
+          "type": "optimization"
+        },
+        {
+          "id": "二期需求清单_69",
+          "sheet": "二期需求清单",
+          "description": "产品线2，3，4全面实现",
+          "category": "7-20讨论记录",
+          "priority": "高",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_70",
+          "sheet": "二期需求清单",
+          "description": "产品线4：气柱袋，\n都是定制化产品，无法选型，所以在选型网站的主页，展示第四个产品线，然后有一个按钮，跳转到官网中气柱袋的对应展示页地址.",
+          "category": "7-20讨论记录",
+          "priority": "高",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_71",
+          "sheet": "二期需求清单",
+          "description": "能提交订单，生成PO，能导出Excel和PDF。（excel导出表格的列宽排版优化）",
+          "category": "7-20讨论记录",
+          "priority": "高",
+          "status": "",
+          "estimated_days": 1.5,
+          "complexity": "medium",
+          "type": "optimization"
+        },
+        {
+          "id": "二期需求清单_72",
+          "sheet": "二期需求清单",
+          "description": "2.后台管理在后台订单页面可以查看所有历史订单信息并且可以下载",
+          "category": "7-20讨论记录",
+          "priority": "高",
+          "status": "",
+          "estimated_days": 2.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_73",
+          "sheet": "二期需求清单",
+          "description": "保留中英文语言，增加德语（优先级低），其他语言去掉，靠浏览器翻译；",
+          "category": "7-20讨论记录",
+          "priority": "低",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_74",
+          "sheet": "二期需求清单",
+          "description": "如果没上传图片，或加载失败，展示一个BJT的通用图片",
+          "category": "7-20讨论记录",
+          "priority": "低",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_75",
+          "sheet": "二期需求清单",
+          "description": "登录后进入哪个页面，如果是点击某个选型页弹出的登录窗口，登录后，应该就打开哪个页面。如果不是点击选型页触发的登录弹窗，登录后，可以跳转到主页。",
+          "category": "7-20讨论记录",
+          "priority": "低",
+          "status": "",
+          "estimated_days": 2.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_76",
+          "sheet": "二期需求清单",
+          "description": "加载速度优化",
+          "category": "7-20讨论记录",
+          "priority": "低",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "optimization"
+        },
+        {
+          "id": "二期需求清单_77",
+          "sheet": "二期需求清单",
+          "description": "备件序列号展示：一期临时在选型页更多信息气泡里显示，二期改为如果不是ALL，显示：详见more info.",
+          "category": "7-20讨论记录",
+          "priority": "低",
+          "status": "",
+          "estimated_days": 0.5,
+          "complexity": "low",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_78",
+          "sheet": "二期需求清单",
+          "description": "PO页PDF格式空白格须优化，重新提供一个模板给开发；有几个标题字体白色 和 背景灰色太接近；",
+          "category": "7-20讨论记录",
+          "priority": "低",
+          "status": "",
+          "estimated_days": 0.5,
+          "complexity": "low",
+          "type": "optimization"
+        },
+        {
+          "id": "二期需求清单_79",
+          "sheet": "二期需求清单",
+          "description": "网页手机端适配（手机端页面排版还有问题，有些页面展示超出格子范围；）",
+          "category": "7-20讨论记录",
+          "priority": "低",
+          "status": "",
+          "estimated_days": 2.0,
+          "complexity": "medium",
+          "type": "bug_fix"
+        },
+        {
+          "id": "二期需求清单_80",
+          "sheet": "二期需求清单",
+          "description": "账号注册时，需要客户选定所属国家、地区、公英制、审核人员给此用户账号定义分类：",
+          "category": "7-20讨论记录",
+          "priority": "低",
+          "status": "",
+          "estimated_days": 2.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_81",
+          "sheet": "二期需求清单",
+          "description": "1. 账号类别：C端客户、经销商(代理商)、公司销售，管理员账号，（销售、管理员账号不在前端页面注册，在后台由管理员来创建）；",
+          "category": "7-20讨论记录",
+          "priority": "低",
+          "status": "",
+          "estimated_days": 2.0,
+          "complexity": "medium",
+          "type": "new_feature"
+        },
+        {
+          "id": "二期需求清单_82",
+          "sheet": "二期需求清单",
+          "description": "3. 公英制属性：账号申请时选择，管理员审核时可以改；",
+          "category": "7-20讨论记录",
+          "priority": "低",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "二期需求清单_83",
+          "sheet": "二期需求清单",
+          "description": "4. 管理员审核时分配客户代码，用于从CRM获取对应价格体系",
+          "category": "7-20讨论记录",
+          "priority": "低",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        }
+      ]
+    },
+    "选型网站首页": {
+      "total_count": 0,
+      "requirements": []
+    },
+    "购物流程": {
+      "total_count": 2,
+      "requirements": [
+        {
+          "id": "购物流程_1",
+          "sheet": "购物流程",
+          "description": "购物流程-备件",
+          "category": "",
+          "priority": "",
+          "status": "",
+          "estimated_days": 3.0,
+          "complexity": "high",
+          "type": "feature"
+        },
+        {
+          "id": "购物流程_2",
+          "sheet": "购物流程",
+          "description": "购物流程-备件",
+          "category": "",
+          "priority": "",
+          "status": "",
+          "estimated_days": 3.0,
+          "complexity": "high",
+          "type": "feature"
+        }
+      ]
+    },
+    "气垫系统": {
+      "total_count": 0,
+      "requirements": []
+    },
+    "纸垫系统": {
+      "total_count": 5,
+      "requirements": [
+        {
+          "id": "纸垫系统_1",
+          "sheet": "纸垫系统",
+          "description": "纸垫机与备件",
+          "category": "",
+          "priority": "",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "纸垫系统_2",
+          "sheet": "纸垫系统",
+          "description": "纸垫膜选项",
+          "category": "",
+          "priority": "",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "纸垫系统_3",
+          "sheet": "纸垫系统",
+          "description": "纸垫膜选项",
+          "category": "",
+          "priority": "",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "纸垫系统_4",
+          "sheet": "纸垫系统",
+          "description": "纸垫膜选项",
+          "category": "",
+          "priority": "",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "纸垫系统_5",
+          "sheet": "纸垫系统",
+          "description": "纸垫膜选项",
+          "category": "",
+          "priority": "",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        }
+      ]
+    },
+    "温水胶带系统": {
+      "total_count": 4,
+      "requirements": [
+        {
+          "id": "温水胶带系统_1",
+          "sheet": "温水胶带系统",
+          "description": "温水胶带机机与备件",
+          "category": "",
+          "priority": "",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "温水胶带系统_2",
+          "sheet": "温水胶带系统",
+          "description": "温水胶带机选项",
+          "category": "",
+          "priority": "",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "温水胶带系统_3",
+          "sheet": "温水胶带系统",
+          "description": "温水胶带机选项",
+          "category": "",
+          "priority": "",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        },
+        {
+          "id": "温水胶带系统_4",
+          "sheet": "温水胶带系统",
+          "description": "温水胶带机选项",
+          "category": "",
+          "priority": "",
+          "status": "",
+          "estimated_days": 1.0,
+          "complexity": "medium",
+          "type": "feature"
+        }
+      ]
+    },
+    "后台": {
+      "total_count": 0,
+      "requirements": []
+    }
+  },
+  "categories_analysis": {
+    "一期测试未关闭问题": {
+      "count": 20,
+      "days": 21.5
+    },
+    "销售试用反馈": {
+      "count": 15,
+      "days": 15.5
+    },
+    "7-20讨论记录": {
+      "count": 47,
+      "days": 70.0
+    },
+    "": {
+      "count": 11,
+      "days": 15.0
+    }
+  },
+  "priorities_analysis": {
+    "高": 30.0,
+    "中": 26.0,
+    "低": 14.0,
+    "未设置": 52.0
+  },
+  "types_analysis": {
+    "feature": 102.0,
+    "bug_fix": 7.5,
+    "optimization": 8.0,
+    "new_feature": 4.5
+  },
+  "recommendations": {
+    "timeline": [
+      "工作量较大，建议分3-4个阶段实施",
+      "预计需要6.1个月完成"
+    ],
+    "resource_allocation": [
+      "需求数量较多，建议分配2-3名开发人员"
+    ],
+    "priority_focus": [
+      "优先实施核心功能需求",
+      "Bug修复和优化需求可以并行处理"
+    ],
+    "risk_mitigation": []
+  }
+}

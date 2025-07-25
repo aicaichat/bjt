@@ -1,0 +1,2143 @@
+{
+  "generated_at": "2025-07-24T09:16:38.714585",
+  "summary": {
+    "total_requirements": 93,
+    "total_workload_days": 122.0,
+    "estimated_months": 6.1,
+    "estimated_cost": 951600.0
+  },
+  "workload_analysis": {
+    "by_category": {
+      "categories": {
+        "一期测试未关闭问题": {
+          "count": 20,
+          "total_days": 21.5,
+          "requirements": [
+            {
+              "id": "P2_1",
+              "description": "备件料号表，显示“型号名称”，但是其实点了编辑打开的页面里，是没有这个属性字段的。",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_2",
+              "description": "后台新建各种物料的页面，增加尺寸单位，",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_3",
+              "description": "后台所有页面的所有必填项加上※标",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_4",
+              "description": "耗材的气泡属性中，宽度 和 虚线间距，分开显示。",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_5",
+              "description": "耗材气泡属性中，中文却显示英文，见图:",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_6",
+              "description": "选择所有材料时，厚度/克重的选项显示方式须优化，看图片。",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_7",
+              "description": "profile页面，英文环境却显示中文，保存成功后，提示语也是中文。",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_8",
+              "description": "后端的一些页面，可以中英文同一个页面，但是要显示中文+英文",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_9",
+              "description": "上传PDF预览，保留原文件名+时间戳",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_10",
+              "description": "料号的英文名与表格要求不一致",
+              "days": 1.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_11",
+              "description": "规格与表格要求不一致",
+              "days": 1.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_12",
+              "description": "适用机型与表格字段要求不一致",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_13",
+              "description": "克重英制单位为#",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_14",
+              "description": "新建账号时，可选国家太少",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_15",
+              "description": "地区选项展示，增加完整英文单词",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_16",
+              "description": "很容易出现需要重新登录，且每次刷新页面，都需要重新登录。",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_17",
+              "description": "很多页面的排版需要微调，主要问题是文字与文字之间空隙太大，排版不紧凑，导致页面展示信息偏少。",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_18",
+              "description": "购物车的 气泡按钮位置改一下，样式改为和选型页的一样。more info",
+              "days": 2.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_32",
+              "description": "账号在profile页面，更换头像功能失效。",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_33",
+              "description": "后端页面，左侧菜单，在展开多个时，最下面的菜单会超出范围且无法通过滚动让它显示出来。",
+              "days": 0.5,
+              "system": "phase2_list"
+            }
+          ]
+        },
+        "销售试用反馈": {
+          "count": 15,
+          "total_days": 15.5,
+          "requirements": [
+            {
+              "id": "P2_19",
+              "description": "前端页面提示不足，比如 购物车页的 check out按钮灰时，鼠标移到按钮上时，应提示“请选择商品”。confirm order页填写信息不合要求，也缺少提示",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_20",
+              "description": "联系电话这里要不要加一项电话号码区号选项，收件地址国家和联系人号码区号不一定一致，不同国家客户没填国家区号易混淆错乱。",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_21",
+              "description": "用户在前端管理页面进行地址管理，可以存多个地址。",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_22",
+              "description": "备件页，下拉选项只显示型号，不好理解，改为型号+名称；耗材 和 主机页面的型号选项，先不改，等方案确定。",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_23",
+              "description": "Select Machine 改为 展示可选配件（Show Optional Accessories）\n在没有下一级可选配件的主机、配件这，不显示此按钮。",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_24",
+              "description": "订单管理页，只有一页的情况下，底下显示了好多页，点击2 3页后，显示无内容。",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_25",
+              "description": "PO单导出excel排版乱，须优化；",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_26",
+              "description": "PDF格式空白格须优化，重新提供一个模板给开发；有几个标题字体白色 和 背景灰色太接近；",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_27",
+              "description": "这个Back to PO，不够直观，想要导出PDF、excel的人，不容易找到，back to PO改为 Export PO；",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_28",
+              "description": "电脑主题是深色的话，我们的选项栏太黑了，看不到原来还有按键，优化不同主题下的显示，强制任何模式，都显示我们的模式",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_29",
+              "description": "清空和结算，突出结算按钮，大小调整一下， 买东西习惯点最显眼的下单，如果要的规格多清空了重新选很麻烦",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_30",
+              "description": "加入购物车的产品，在勾选提交时没有勾选全部商品，在提交订单后，没选择的商品会被清空掉。",
+              "days": 2.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_31",
+              "description": "购物车里，耗材的MODEL属性，错误显示成part NO了。",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_35",
+              "description": "耗材页的气泡，看起来像是底下有一个小气泡，上面叠加了一个大气泡。",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_36",
+              "description": "film选型页的气泡，鼠标移到方框区域内时，出现了这条线条，其他电脑没出现此问题。",
+              "days": 1.0,
+              "system": "phase2_list"
+            }
+          ]
+        },
+        "7-20讨论记录": {
+          "count": 47,
+          "total_days": 70.0,
+          "requirements": [
+            {
+              "id": "P2_37",
+              "description": "增加一个线上支付页面，用于临时给线下客户临时用于信用卡支付的页面，页面显示一些提示文字，然后一个按钮，点击按钮，跳转到银行网关的支付页面。\n<form name=\"PrePage\" method = \"post\" action = \"https://Simplecheckout.authorize.net/payment/CatalogPayment.aspx\"> <input type = \"hidden\" name = \"LinkId\" value =\"39bc420f-0207-4772-bd9e-90abe4be078d\" /> <input type = \"submit\" value = \"Trial Now\" /> </form>",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_38",
+              "description": "如何调整商品在前端的展示顺序？在后台填排序数值？目前是型号表已有，但是前端没采用，须采用；料号表没有，须增加，并采用。",
+              "days": 1.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_39",
+              "description": "在产品线1 2 3 的主机、配件页面，增加高亮显示频率，如果值为空，隐藏不显示",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_40",
+              "description": "增加订单详情页，样式待定：是另开一个页面？还是在订单列表展开？可以演示一下demo",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_41",
+              "description": "页眉导航放到页面左侧，类似目录展开的方式，优先PC端效果，手机端菜单栏做隐藏按钮。如果不做左侧导航，则在页眉下面增加当前页面的路径（见图）",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_42",
+              "description": "导航（在页眉或左侧）增加contact us按钮，跳转到：https://www.lockedair.com/contact/",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_43",
+              "description": "导航（在页眉或左侧）增加FAQ页面入口，点击新开页面，跳转到官网对应网页",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_44",
+              "description": "所有页面的背景颜色差别小，看不出区域范围边界。见图片",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_45",
+              "description": "增加库存展示，只有管理员 和 销售账号展示，且是展示多个仓库的库存；终端用户和代理商账号不展示。",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_46",
+              "description": "OSS图片加载优化，需要涉及到后台管理页面的上传图片功能",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_47",
+              "description": "产品2的主机商品类型，增加图片，后台可关联",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_48",
+              "description": "客户PO订单确认后，商城通过邮件，按照客户所属区域，把PO信息发到对应的公共邮箱，不同区域提前分配好不同的邮箱收件地址。",
+              "days": 2.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_49",
+              "description": "PO页PDF 有几个标题字体白色 和 背景灰色太接近；",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_50",
+              "description": "1.网站主页页眉，建立一个文档下载菜单，点击后，跳转到www.lockedair.com/document-download官网下载页面；2.用户可在历史订单界面，点击某个商品中的按钮，获取 跳转 lockedair官网下载页面对应型号的链接https://www.lockedair.com/document-download/?q=E4S ）",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_51",
+              "description": "在商城主页页眉上，有一个售后问题反馈入口：与订单不关联的维修工单提交页面，客户打开这个页面后，填写：个人联系方式，描述问题、上传视频、照片等信息后提交；",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_52",
+              "description": "提交后，后台通过邮件方式，发送到对应仓库售后负责人账号的邮箱上；不同区域提前分配好不同的邮箱收件地址。",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_53",
+              "description": "管理员可以在后台看到所有提交的维修工单记录；",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_54",
+              "description": "film和其他页面去掉鼠标移动上去后，板块放大的动画，效果参考现在的主机选型页",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_55",
+              "description": "耗材选型的袋型选项图片，鼠标移动到图片上时，放大预览图片，交互效果待定。",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_56",
+              "description": "商品展示的图片，点击图片放大，点击放大图以外关闭放大图，增加到最多3张图，如果上传的数量是1张，则不显示选择小图标，如果是2、3张，则在图片边上显示小的选择小图标。",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_57",
+              "description": "主机型号选择，增加型号一览表图片，先做demo看看效果",
+              "days": 1.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_58",
+              "description": "主机选型页，层级关系，改为标签代表路径，只展示当前标签下的可选项，先做demo看效果",
+              "days": 1.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_59",
+              "description": "所有页面的more info 气泡，改为点一下才弹出，然后点一下气泡内的x，或者气泡以外的范围，才关闭；",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_60",
+              "description": "在页眉上，增加搜索入口，根据料号、关键词能搜索出商品结果，在一个搜索结果页面展示结果，并且结果根据主机、配件、耗材、备件，分类分区展示，单条结果的排版和选型页的结果排版保持一致，有气泡展示详细信息，有一样的跳转按钮；有库存、加入购物车等按钮；",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_61",
+              "description": "主机选型页出来的主机商品，都有一个【本机适配耗材】跳转按钮，点后，跳转到对应的耗材选项页，并提前把主机相关的选项预选好了，不需要用户重新选主机型号；",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_62",
+              "description": "主机选型页出来的主机商品、配件商品，有一个【产品介绍】跳转按钮，跳转到官网对应的型号介绍详情页，地址在选型网站的主机型号、配件型号表里维护，如果没填地址，则不显示该按钮；",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_63",
+              "description": "在耗材选型页、备件页、购物车、右侧购物车弹窗、Confirm Order、订单详情页：出现适配型号的位置，增加跳转功能，点击适配型号的 LA-E4S，跳转到对应的主机选型页面，并自动把型号选好；",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_64",
+              "description": "购物车、右侧购物车弹窗、Confirm Order、订单详情页：1.料号、名称，跳到搜索结果页面，在搜索结果页的列表展示；",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_65",
+              "description": "每个页面排版不紧凑，空白太多，浪费页面空间；",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_66",
+              "description": "关联关系中的必选配件、 备件料号中的必选备件，实现自动添加到购物车；",
+              "days": 2.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_67",
+              "description": "单箱数量不是1的商品，加入购物车时，只能增加单箱数量的整数倍；",
+              "days": 2.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_68",
+              "description": "耗材选型页的厚度/克重，宽度，虚线间距这3个属性之间的联动。以及显示的结果数量也做相应优化",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_69",
+              "description": "产品线2，3，4全面实现",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_70",
+              "description": "产品线4：气柱袋，\n都是定制化产品，无法选型，所以在选型网站的主页，展示第四个产品线，然后有一个按钮，跳转到官网中气柱袋的对应展示页地址.",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_71",
+              "description": "能提交订单，生成PO，能导出Excel和PDF。（excel导出表格的列宽排版优化）",
+              "days": 1.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_72",
+              "description": "2.后台管理在后台订单页面可以查看所有历史订单信息并且可以下载",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_73",
+              "description": "保留中英文语言，增加德语（优先级低），其他语言去掉，靠浏览器翻译；",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_74",
+              "description": "如果没上传图片，或加载失败，展示一个BJT的通用图片",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_75",
+              "description": "登录后进入哪个页面，如果是点击某个选型页弹出的登录窗口，登录后，应该就打开哪个页面。如果不是点击选型页触发的登录弹窗，登录后，可以跳转到主页。",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_76",
+              "description": "加载速度优化",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_77",
+              "description": "备件序列号展示：一期临时在选型页更多信息气泡里显示，二期改为如果不是ALL，显示：详见more info.",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_78",
+              "description": "PO页PDF格式空白格须优化，重新提供一个模板给开发；有几个标题字体白色 和 背景灰色太接近；",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_79",
+              "description": "网页手机端适配（手机端页面排版还有问题，有些页面展示超出格子范围；）",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_80",
+              "description": "账号注册时，需要客户选定所属国家、地区、公英制、审核人员给此用户账号定义分类：",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_81",
+              "description": "1. 账号类别：C端客户、经销商(代理商)、公司销售，管理员账号，（销售、管理员账号不在前端页面注册，在后台由管理员来创建）；",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_82",
+              "description": "3. 公英制属性：账号申请时选择，管理员审核时可以改；",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_83",
+              "description": "4. 管理员审核时分配客户代码，用于从CRM获取对应价格体系",
+              "days": 1.0,
+              "system": "phase2_list"
+            }
+          ]
+        },
+        "": {
+          "count": 11,
+          "total_days": 15.0,
+          "requirements": [
+            {
+              "id": "购物流程_1",
+              "description": "购物流程-备件",
+              "days": 3.0,
+              "system": "购物流程"
+            },
+            {
+              "id": "购物流程_2",
+              "description": "购物流程-备件",
+              "days": 3.0,
+              "system": "购物流程"
+            },
+            {
+              "id": "纸垫系统_1",
+              "description": "纸垫机与备件",
+              "days": 1.0,
+              "system": "纸垫系统"
+            },
+            {
+              "id": "纸垫系统_2",
+              "description": "纸垫膜选项",
+              "days": 1.0,
+              "system": "纸垫系统"
+            },
+            {
+              "id": "纸垫系统_3",
+              "description": "纸垫膜选项",
+              "days": 1.0,
+              "system": "纸垫系统"
+            },
+            {
+              "id": "纸垫系统_4",
+              "description": "纸垫膜选项",
+              "days": 1.0,
+              "system": "纸垫系统"
+            },
+            {
+              "id": "纸垫系统_5",
+              "description": "纸垫膜选项",
+              "days": 1.0,
+              "system": "纸垫系统"
+            },
+            {
+              "id": "温水胶带系统_1",
+              "description": "温水胶带机机与备件",
+              "days": 1.0,
+              "system": "温水胶带系统"
+            },
+            {
+              "id": "温水胶带系统_2",
+              "description": "温水胶带机选项",
+              "days": 1.0,
+              "system": "温水胶带系统"
+            },
+            {
+              "id": "温水胶带系统_3",
+              "description": "温水胶带机选项",
+              "days": 1.0,
+              "system": "温水胶带系统"
+            },
+            {
+              "id": "温水胶带系统_4",
+              "description": "温水胶带机选项",
+              "days": 1.0,
+              "system": "温水胶带系统"
+            }
+          ]
+        }
+      },
+      "total_workload": 122.0
+    },
+    "by_priority": {
+      "高": {
+        "count": 19,
+        "total_days": 30.0,
+        "requirements": [
+          {
+            "id": "P2_54",
+            "description": "film和其他页面去掉鼠标移动上去后，板块放大的动画，效果参考现在的主机选型页",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_55",
+            "description": "耗材选型的袋型选项图片，鼠标移动到图片上时，放大预览图片，交互效果待定。",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_56",
+            "description": "商品展示的图片，点击图片放大，点击放大图以外关闭放大图，增加到最多3张图，如果上传的数量是1张，则不显示选择小图标，如果是2、3张，则在图片边上显示小的选择小图标。",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_57",
+            "description": "主机型号选择，增加型号一览表图片，先做demo看看效果",
+            "days": 1.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_58",
+            "description": "主机选型页，层级关系，改为标签代表路径，只展示当前标签下的可选项，先做demo看效果",
+            "days": 1.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_59",
+            "description": "所有页面的more info 气泡，改为点一下才弹出，然后点一下气泡内的x，或者气泡以外的范围，才关闭；",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_60",
+            "description": "在页眉上，增加搜索入口，根据料号、关键词能搜索出商品结果，在一个搜索结果页面展示结果，并且结果根据主机、配件、耗材、备件，分类分区展示，单条结果的排版和选型页的结果排版保持一致，有气泡展示详细信息，有一样的跳转按钮；有库存、加入购物车等按钮；",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_61",
+            "description": "主机选型页出来的主机商品，都有一个【本机适配耗材】跳转按钮，点后，跳转到对应的耗材选项页，并提前把主机相关的选项预选好了，不需要用户重新选主机型号；",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_62",
+            "description": "主机选型页出来的主机商品、配件商品，有一个【产品介绍】跳转按钮，跳转到官网对应的型号介绍详情页，地址在选型网站的主机型号、配件型号表里维护，如果没填地址，则不显示该按钮；",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_63",
+            "description": "在耗材选型页、备件页、购物车、右侧购物车弹窗、Confirm Order、订单详情页：出现适配型号的位置，增加跳转功能，点击适配型号的 LA-E4S，跳转到对应的主机选型页面，并自动把型号选好；",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_64",
+            "description": "购物车、右侧购物车弹窗、Confirm Order、订单详情页：1.料号、名称，跳到搜索结果页面，在搜索结果页的列表展示；",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_65",
+            "description": "每个页面排版不紧凑，空白太多，浪费页面空间；",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_66",
+            "description": "关联关系中的必选配件、 备件料号中的必选备件，实现自动添加到购物车；",
+            "days": 2.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_67",
+            "description": "单箱数量不是1的商品，加入购物车时，只能增加单箱数量的整数倍；",
+            "days": 2.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_68",
+            "description": "耗材选型页的厚度/克重，宽度，虚线间距这3个属性之间的联动。以及显示的结果数量也做相应优化",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_69",
+            "description": "产品线2，3，4全面实现",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_70",
+            "description": "产品线4：气柱袋，\n都是定制化产品，无法选型，所以在选型网站的主页，展示第四个产品线，然后有一个按钮，跳转到官网中气柱袋的对应展示页地址.",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_71",
+            "description": "能提交订单，生成PO，能导出Excel和PDF。（excel导出表格的列宽排版优化）",
+            "days": 1.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_72",
+            "description": "2.后台管理在后台订单页面可以查看所有历史订单信息并且可以下载",
+            "days": 2.0,
+            "system": "phase2_list"
+          }
+        ]
+      },
+      "中": {
+        "count": 17,
+        "total_days": 26.0,
+        "requirements": [
+          {
+            "id": "P2_37",
+            "description": "增加一个线上支付页面，用于临时给线下客户临时用于信用卡支付的页面，页面显示一些提示文字，然后一个按钮，点击按钮，跳转到银行网关的支付页面。\n<form name=\"PrePage\" method = \"post\" action = \"https://Simplecheckout.authorize.net/payment/CatalogPayment.aspx\"> <input type = \"hidden\" name = \"LinkId\" value =\"39bc420f-0207-4772-bd9e-90abe4be078d\" /> <input type = \"submit\" value = \"Trial Now\" /> </form>",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_38",
+            "description": "如何调整商品在前端的展示顺序？在后台填排序数值？目前是型号表已有，但是前端没采用，须采用；料号表没有，须增加，并采用。",
+            "days": 1.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_39",
+            "description": "在产品线1 2 3 的主机、配件页面，增加高亮显示频率，如果值为空，隐藏不显示",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_40",
+            "description": "增加订单详情页，样式待定：是另开一个页面？还是在订单列表展开？可以演示一下demo",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_41",
+            "description": "页眉导航放到页面左侧，类似目录展开的方式，优先PC端效果，手机端菜单栏做隐藏按钮。如果不做左侧导航，则在页眉下面增加当前页面的路径（见图）",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_42",
+            "description": "导航（在页眉或左侧）增加contact us按钮，跳转到：https://www.lockedair.com/contact/",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_43",
+            "description": "导航（在页眉或左侧）增加FAQ页面入口，点击新开页面，跳转到官网对应网页",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_44",
+            "description": "所有页面的背景颜色差别小，看不出区域范围边界。见图片",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_45",
+            "description": "增加库存展示，只有管理员 和 销售账号展示，且是展示多个仓库的库存；终端用户和代理商账号不展示。",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_46",
+            "description": "OSS图片加载优化，需要涉及到后台管理页面的上传图片功能",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_47",
+            "description": "产品2的主机商品类型，增加图片，后台可关联",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_48",
+            "description": "客户PO订单确认后，商城通过邮件，按照客户所属区域，把PO信息发到对应的公共邮箱，不同区域提前分配好不同的邮箱收件地址。",
+            "days": 2.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_49",
+            "description": "PO页PDF 有几个标题字体白色 和 背景灰色太接近；",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_50",
+            "description": "1.网站主页页眉，建立一个文档下载菜单，点击后，跳转到www.lockedair.com/document-download官网下载页面；2.用户可在历史订单界面，点击某个商品中的按钮，获取 跳转 lockedair官网下载页面对应型号的链接https://www.lockedair.com/document-download/?q=E4S ）",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_51",
+            "description": "在商城主页页眉上，有一个售后问题反馈入口：与订单不关联的维修工单提交页面，客户打开这个页面后，填写：个人联系方式，描述问题、上传视频、照片等信息后提交；",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_52",
+            "description": "提交后，后台通过邮件方式，发送到对应仓库售后负责人账号的邮箱上；不同区域提前分配好不同的邮箱收件地址。",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_53",
+            "description": "管理员可以在后台看到所有提交的维修工单记录；",
+            "days": 1.0,
+            "system": "phase2_list"
+          }
+        ]
+      },
+      "低": {
+        "count": 11,
+        "total_days": 14.0,
+        "requirements": [
+          {
+            "id": "P2_73",
+            "description": "保留中英文语言，增加德语（优先级低），其他语言去掉，靠浏览器翻译；",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_74",
+            "description": "如果没上传图片，或加载失败，展示一个BJT的通用图片",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_75",
+            "description": "登录后进入哪个页面，如果是点击某个选型页弹出的登录窗口，登录后，应该就打开哪个页面。如果不是点击选型页触发的登录弹窗，登录后，可以跳转到主页。",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_76",
+            "description": "加载速度优化",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_77",
+            "description": "备件序列号展示：一期临时在选型页更多信息气泡里显示，二期改为如果不是ALL，显示：详见more info.",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_78",
+            "description": "PO页PDF格式空白格须优化，重新提供一个模板给开发；有几个标题字体白色 和 背景灰色太接近；",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_79",
+            "description": "网页手机端适配（手机端页面排版还有问题，有些页面展示超出格子范围；）",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_80",
+            "description": "账号注册时，需要客户选定所属国家、地区、公英制、审核人员给此用户账号定义分类：",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_81",
+            "description": "1. 账号类别：C端客户、经销商(代理商)、公司销售，管理员账号，（销售、管理员账号不在前端页面注册，在后台由管理员来创建）；",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_82",
+            "description": "3. 公英制属性：账号申请时选择，管理员审核时可以改；",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_83",
+            "description": "4. 管理员审核时分配客户代码，用于从CRM获取对应价格体系",
+            "days": 1.0,
+            "system": "phase2_list"
+          }
+        ]
+      },
+      "未设置": {
+        "count": 46,
+        "total_days": 52.0,
+        "requirements": [
+          {
+            "id": "P2_1",
+            "description": "备件料号表，显示“型号名称”，但是其实点了编辑打开的页面里，是没有这个属性字段的。",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_2",
+            "description": "后台新建各种物料的页面，增加尺寸单位，",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_3",
+            "description": "后台所有页面的所有必填项加上※标",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_4",
+            "description": "耗材的气泡属性中，宽度 和 虚线间距，分开显示。",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_5",
+            "description": "耗材气泡属性中，中文却显示英文，见图:",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_6",
+            "description": "选择所有材料时，厚度/克重的选项显示方式须优化，看图片。",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_7",
+            "description": "profile页面，英文环境却显示中文，保存成功后，提示语也是中文。",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_8",
+            "description": "后端的一些页面，可以中英文同一个页面，但是要显示中文+英文",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_9",
+            "description": "上传PDF预览，保留原文件名+时间戳",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_10",
+            "description": "料号的英文名与表格要求不一致",
+            "days": 1.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_11",
+            "description": "规格与表格要求不一致",
+            "days": 1.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_12",
+            "description": "适用机型与表格字段要求不一致",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_13",
+            "description": "克重英制单位为#",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_14",
+            "description": "新建账号时，可选国家太少",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_15",
+            "description": "地区选项展示，增加完整英文单词",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_16",
+            "description": "很容易出现需要重新登录，且每次刷新页面，都需要重新登录。",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_17",
+            "description": "很多页面的排版需要微调，主要问题是文字与文字之间空隙太大，排版不紧凑，导致页面展示信息偏少。",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_18",
+            "description": "购物车的 气泡按钮位置改一下，样式改为和选型页的一样。more info",
+            "days": 2.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_19",
+            "description": "前端页面提示不足，比如 购物车页的 check out按钮灰时，鼠标移到按钮上时，应提示“请选择商品”。confirm order页填写信息不合要求，也缺少提示",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_20",
+            "description": "联系电话这里要不要加一项电话号码区号选项，收件地址国家和联系人号码区号不一定一致，不同国家客户没填国家区号易混淆错乱。",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_21",
+            "description": "用户在前端管理页面进行地址管理，可以存多个地址。",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_22",
+            "description": "备件页，下拉选项只显示型号，不好理解，改为型号+名称；耗材 和 主机页面的型号选项，先不改，等方案确定。",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_23",
+            "description": "Select Machine 改为 展示可选配件（Show Optional Accessories）\n在没有下一级可选配件的主机、配件这，不显示此按钮。",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_24",
+            "description": "订单管理页，只有一页的情况下，底下显示了好多页，点击2 3页后，显示无内容。",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_25",
+            "description": "PO单导出excel排版乱，须优化；",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_26",
+            "description": "PDF格式空白格须优化，重新提供一个模板给开发；有几个标题字体白色 和 背景灰色太接近；",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_27",
+            "description": "这个Back to PO，不够直观，想要导出PDF、excel的人，不容易找到，back to PO改为 Export PO；",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_28",
+            "description": "电脑主题是深色的话，我们的选项栏太黑了，看不到原来还有按键，优化不同主题下的显示，强制任何模式，都显示我们的模式",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_29",
+            "description": "清空和结算，突出结算按钮，大小调整一下， 买东西习惯点最显眼的下单，如果要的规格多清空了重新选很麻烦",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_30",
+            "description": "加入购物车的产品，在勾选提交时没有勾选全部商品，在提交订单后，没选择的商品会被清空掉。",
+            "days": 2.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_31",
+            "description": "购物车里，耗材的MODEL属性，错误显示成part NO了。",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_32",
+            "description": "账号在profile页面，更换头像功能失效。",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_33",
+            "description": "后端页面，左侧菜单，在展开多个时，最下面的菜单会超出范围且无法通过滚动让它显示出来。",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_35",
+            "description": "耗材页的气泡，看起来像是底下有一个小气泡，上面叠加了一个大气泡。",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_36",
+            "description": "film选型页的气泡，鼠标移到方框区域内时，出现了这条线条，其他电脑没出现此问题。",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "购物流程_1",
+            "description": "购物流程-备件",
+            "days": 3.0,
+            "system": "购物流程"
+          },
+          {
+            "id": "购物流程_2",
+            "description": "购物流程-备件",
+            "days": 3.0,
+            "system": "购物流程"
+          },
+          {
+            "id": "纸垫系统_1",
+            "description": "纸垫机与备件",
+            "days": 1.0,
+            "system": "纸垫系统"
+          },
+          {
+            "id": "纸垫系统_2",
+            "description": "纸垫膜选项",
+            "days": 1.0,
+            "system": "纸垫系统"
+          },
+          {
+            "id": "纸垫系统_3",
+            "description": "纸垫膜选项",
+            "days": 1.0,
+            "system": "纸垫系统"
+          },
+          {
+            "id": "纸垫系统_4",
+            "description": "纸垫膜选项",
+            "days": 1.0,
+            "system": "纸垫系统"
+          },
+          {
+            "id": "纸垫系统_5",
+            "description": "纸垫膜选项",
+            "days": 1.0,
+            "system": "纸垫系统"
+          },
+          {
+            "id": "温水胶带系统_1",
+            "description": "温水胶带机机与备件",
+            "days": 1.0,
+            "system": "温水胶带系统"
+          },
+          {
+            "id": "温水胶带系统_2",
+            "description": "温水胶带机选项",
+            "days": 1.0,
+            "system": "温水胶带系统"
+          },
+          {
+            "id": "温水胶带系统_3",
+            "description": "温水胶带机选项",
+            "days": 1.0,
+            "system": "温水胶带系统"
+          },
+          {
+            "id": "温水胶带系统_4",
+            "description": "温水胶带机选项",
+            "days": 1.0,
+            "system": "温水胶带系统"
+          }
+        ]
+      }
+    },
+    "by_type": {
+      "feature": {
+        "count": 77,
+        "total_days": 102.0,
+        "requirements": [
+          {
+            "id": "P2_1",
+            "description": "备件料号表，显示“型号名称”，但是其实点了编辑打开的页面里，是没有这个属性字段的。",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_2",
+            "description": "后台新建各种物料的页面，增加尺寸单位，",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_3",
+            "description": "后台所有页面的所有必填项加上※标",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_4",
+            "description": "耗材的气泡属性中，宽度 和 虚线间距，分开显示。",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_5",
+            "description": "耗材气泡属性中，中文却显示英文，见图:",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_7",
+            "description": "profile页面，英文环境却显示中文，保存成功后，提示语也是中文。",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_8",
+            "description": "后端的一些页面，可以中英文同一个页面，但是要显示中文+英文",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_9",
+            "description": "上传PDF预览，保留原文件名+时间戳",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_10",
+            "description": "料号的英文名与表格要求不一致",
+            "days": 1.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_11",
+            "description": "规格与表格要求不一致",
+            "days": 1.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_12",
+            "description": "适用机型与表格字段要求不一致",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_13",
+            "description": "克重英制单位为#",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_14",
+            "description": "新建账号时，可选国家太少",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_15",
+            "description": "地区选项展示，增加完整英文单词",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_16",
+            "description": "很容易出现需要重新登录，且每次刷新页面，都需要重新登录。",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_18",
+            "description": "购物车的 气泡按钮位置改一下，样式改为和选型页的一样。more info",
+            "days": 2.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_19",
+            "description": "前端页面提示不足，比如 购物车页的 check out按钮灰时，鼠标移到按钮上时，应提示“请选择商品”。confirm order页填写信息不合要求，也缺少提示",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_20",
+            "description": "联系电话这里要不要加一项电话号码区号选项，收件地址国家和联系人号码区号不一定一致，不同国家客户没填国家区号易混淆错乱。",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_21",
+            "description": "用户在前端管理页面进行地址管理，可以存多个地址。",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_22",
+            "description": "备件页，下拉选项只显示型号，不好理解，改为型号+名称；耗材 和 主机页面的型号选项，先不改，等方案确定。",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_23",
+            "description": "Select Machine 改为 展示可选配件（Show Optional Accessories）\n在没有下一级可选配件的主机、配件这，不显示此按钮。",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_24",
+            "description": "订单管理页，只有一页的情况下，底下显示了好多页，点击2 3页后，显示无内容。",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_27",
+            "description": "这个Back to PO，不够直观，想要导出PDF、excel的人，不容易找到，back to PO改为 Export PO；",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_29",
+            "description": "清空和结算，突出结算按钮，大小调整一下， 买东西习惯点最显眼的下单，如果要的规格多清空了重新选很麻烦",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_30",
+            "description": "加入购物车的产品，在勾选提交时没有勾选全部商品，在提交订单后，没选择的商品会被清空掉。",
+            "days": 2.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_32",
+            "description": "账号在profile页面，更换头像功能失效。",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_33",
+            "description": "后端页面，左侧菜单，在展开多个时，最下面的菜单会超出范围且无法通过滚动让它显示出来。",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_35",
+            "description": "耗材页的气泡，看起来像是底下有一个小气泡，上面叠加了一个大气泡。",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_37",
+            "description": "增加一个线上支付页面，用于临时给线下客户临时用于信用卡支付的页面，页面显示一些提示文字，然后一个按钮，点击按钮，跳转到银行网关的支付页面。\n<form name=\"PrePage\" method = \"post\" action = \"https://Simplecheckout.authorize.net/payment/CatalogPayment.aspx\"> <input type = \"hidden\" name = \"LinkId\" value =\"39bc420f-0207-4772-bd9e-90abe4be078d\" /> <input type = \"submit\" value = \"Trial Now\" /> </form>",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_38",
+            "description": "如何调整商品在前端的展示顺序？在后台填排序数值？目前是型号表已有，但是前端没采用，须采用；料号表没有，须增加，并采用。",
+            "days": 1.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_39",
+            "description": "在产品线1 2 3 的主机、配件页面，增加高亮显示频率，如果值为空，隐藏不显示",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_40",
+            "description": "增加订单详情页，样式待定：是另开一个页面？还是在订单列表展开？可以演示一下demo",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_41",
+            "description": "页眉导航放到页面左侧，类似目录展开的方式，优先PC端效果，手机端菜单栏做隐藏按钮。如果不做左侧导航，则在页眉下面增加当前页面的路径（见图）",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_42",
+            "description": "导航（在页眉或左侧）增加contact us按钮，跳转到：https://www.lockedair.com/contact/",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_43",
+            "description": "导航（在页眉或左侧）增加FAQ页面入口，点击新开页面，跳转到官网对应网页",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_44",
+            "description": "所有页面的背景颜色差别小，看不出区域范围边界。见图片",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_45",
+            "description": "增加库存展示，只有管理员 和 销售账号展示，且是展示多个仓库的库存；终端用户和代理商账号不展示。",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_47",
+            "description": "产品2的主机商品类型，增加图片，后台可关联",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_48",
+            "description": "客户PO订单确认后，商城通过邮件，按照客户所属区域，把PO信息发到对应的公共邮箱，不同区域提前分配好不同的邮箱收件地址。",
+            "days": 2.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_49",
+            "description": "PO页PDF 有几个标题字体白色 和 背景灰色太接近；",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_50",
+            "description": "1.网站主页页眉，建立一个文档下载菜单，点击后，跳转到www.lockedair.com/document-download官网下载页面；2.用户可在历史订单界面，点击某个商品中的按钮，获取 跳转 lockedair官网下载页面对应型号的链接https://www.lockedair.com/document-download/?q=E4S ）",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_52",
+            "description": "提交后，后台通过邮件方式，发送到对应仓库售后负责人账号的邮箱上；不同区域提前分配好不同的邮箱收件地址。",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_53",
+            "description": "管理员可以在后台看到所有提交的维修工单记录；",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_54",
+            "description": "film和其他页面去掉鼠标移动上去后，板块放大的动画，效果参考现在的主机选型页",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_55",
+            "description": "耗材选型的袋型选项图片，鼠标移动到图片上时，放大预览图片，交互效果待定。",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_56",
+            "description": "商品展示的图片，点击图片放大，点击放大图以外关闭放大图，增加到最多3张图，如果上传的数量是1张，则不显示选择小图标，如果是2、3张，则在图片边上显示小的选择小图标。",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_57",
+            "description": "主机型号选择，增加型号一览表图片，先做demo看看效果",
+            "days": 1.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_58",
+            "description": "主机选型页，层级关系，改为标签代表路径，只展示当前标签下的可选项，先做demo看效果",
+            "days": 1.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_59",
+            "description": "所有页面的more info 气泡，改为点一下才弹出，然后点一下气泡内的x，或者气泡以外的范围，才关闭；",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_60",
+            "description": "在页眉上，增加搜索入口，根据料号、关键词能搜索出商品结果，在一个搜索结果页面展示结果，并且结果根据主机、配件、耗材、备件，分类分区展示，单条结果的排版和选型页的结果排版保持一致，有气泡展示详细信息，有一样的跳转按钮；有库存、加入购物车等按钮；",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_61",
+            "description": "主机选型页出来的主机商品，都有一个【本机适配耗材】跳转按钮，点后，跳转到对应的耗材选项页，并提前把主机相关的选项预选好了，不需要用户重新选主机型号；",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_62",
+            "description": "主机选型页出来的主机商品、配件商品，有一个【产品介绍】跳转按钮，跳转到官网对应的型号介绍详情页，地址在选型网站的主机型号、配件型号表里维护，如果没填地址，则不显示该按钮；",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_63",
+            "description": "在耗材选型页、备件页、购物车、右侧购物车弹窗、Confirm Order、订单详情页：出现适配型号的位置，增加跳转功能，点击适配型号的 LA-E4S，跳转到对应的主机选型页面，并自动把型号选好；",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_64",
+            "description": "购物车、右侧购物车弹窗、Confirm Order、订单详情页：1.料号、名称，跳到搜索结果页面，在搜索结果页的列表展示；",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_65",
+            "description": "每个页面排版不紧凑，空白太多，浪费页面空间；",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_67",
+            "description": "单箱数量不是1的商品，加入购物车时，只能增加单箱数量的整数倍；",
+            "days": 2.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_69",
+            "description": "产品线2，3，4全面实现",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_70",
+            "description": "产品线4：气柱袋，\n都是定制化产品，无法选型，所以在选型网站的主页，展示第四个产品线，然后有一个按钮，跳转到官网中气柱袋的对应展示页地址.",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_72",
+            "description": "2.后台管理在后台订单页面可以查看所有历史订单信息并且可以下载",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_73",
+            "description": "保留中英文语言，增加德语（优先级低），其他语言去掉，靠浏览器翻译；",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_74",
+            "description": "如果没上传图片，或加载失败，展示一个BJT的通用图片",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_75",
+            "description": "登录后进入哪个页面，如果是点击某个选型页弹出的登录窗口，登录后，应该就打开哪个页面。如果不是点击选型页触发的登录弹窗，登录后，可以跳转到主页。",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_77",
+            "description": "备件序列号展示：一期临时在选型页更多信息气泡里显示，二期改为如果不是ALL，显示：详见more info.",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_80",
+            "description": "账号注册时，需要客户选定所属国家、地区、公英制、审核人员给此用户账号定义分类：",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_82",
+            "description": "3. 公英制属性：账号申请时选择，管理员审核时可以改；",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_83",
+            "description": "4. 管理员审核时分配客户代码，用于从CRM获取对应价格体系",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "购物流程_1",
+            "description": "购物流程-备件",
+            "days": 3.0,
+            "system": "购物流程"
+          },
+          {
+            "id": "购物流程_2",
+            "description": "购物流程-备件",
+            "days": 3.0,
+            "system": "购物流程"
+          },
+          {
+            "id": "纸垫系统_1",
+            "description": "纸垫机与备件",
+            "days": 1.0,
+            "system": "纸垫系统"
+          },
+          {
+            "id": "纸垫系统_2",
+            "description": "纸垫膜选项",
+            "days": 1.0,
+            "system": "纸垫系统"
+          },
+          {
+            "id": "纸垫系统_3",
+            "description": "纸垫膜选项",
+            "days": 1.0,
+            "system": "纸垫系统"
+          },
+          {
+            "id": "纸垫系统_4",
+            "description": "纸垫膜选项",
+            "days": 1.0,
+            "system": "纸垫系统"
+          },
+          {
+            "id": "纸垫系统_5",
+            "description": "纸垫膜选项",
+            "days": 1.0,
+            "system": "纸垫系统"
+          },
+          {
+            "id": "温水胶带系统_1",
+            "description": "温水胶带机机与备件",
+            "days": 1.0,
+            "system": "温水胶带系统"
+          },
+          {
+            "id": "温水胶带系统_2",
+            "description": "温水胶带机选项",
+            "days": 1.0,
+            "system": "温水胶带系统"
+          },
+          {
+            "id": "温水胶带系统_3",
+            "description": "温水胶带机选项",
+            "days": 1.0,
+            "system": "温水胶带系统"
+          },
+          {
+            "id": "温水胶带系统_4",
+            "description": "温水胶带机选项",
+            "days": 1.0,
+            "system": "温水胶带系统"
+          }
+        ]
+      },
+      "bug_fix": {
+        "count": 5,
+        "total_days": 7.5,
+        "requirements": [
+          {
+            "id": "P2_17",
+            "description": "很多页面的排版需要微调，主要问题是文字与文字之间空隙太大，排版不紧凑，导致页面展示信息偏少。",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_31",
+            "description": "购物车里，耗材的MODEL属性，错误显示成part NO了。",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_36",
+            "description": "film选型页的气泡，鼠标移到方框区域内时，出现了这条线条，其他电脑没出现此问题。",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_51",
+            "description": "在商城主页页眉上，有一个售后问题反馈入口：与订单不关联的维修工单提交页面，客户打开这个页面后，填写：个人联系方式，描述问题、上传视频、照片等信息后提交；",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_79",
+            "description": "网页手机端适配（手机端页面排版还有问题，有些页面展示超出格子范围；）",
+            "days": 2.0,
+            "system": "phase2_list"
+          }
+        ]
+      },
+      "optimization": {
+        "count": 9,
+        "total_days": 8.0,
+        "requirements": [
+          {
+            "id": "P2_6",
+            "description": "选择所有材料时，厚度/克重的选项显示方式须优化，看图片。",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_25",
+            "description": "PO单导出excel排版乱，须优化；",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_26",
+            "description": "PDF格式空白格须优化，重新提供一个模板给开发；有几个标题字体白色 和 背景灰色太接近；",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_28",
+            "description": "电脑主题是深色的话，我们的选项栏太黑了，看不到原来还有按键，优化不同主题下的显示，强制任何模式，都显示我们的模式",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_46",
+            "description": "OSS图片加载优化，需要涉及到后台管理页面的上传图片功能",
+            "days": 2.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_68",
+            "description": "耗材选型页的厚度/克重，宽度，虚线间距这3个属性之间的联动。以及显示的结果数量也做相应优化",
+            "days": 0.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_71",
+            "description": "能提交订单，生成PO，能导出Excel和PDF。（excel导出表格的列宽排版优化）",
+            "days": 1.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_76",
+            "description": "加载速度优化",
+            "days": 1.0,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_78",
+            "description": "PO页PDF格式空白格须优化，重新提供一个模板给开发；有几个标题字体白色 和 背景灰色太接近；",
+            "days": 0.5,
+            "system": "phase2_list"
+          }
+        ]
+      },
+      "new_feature": {
+        "count": 2,
+        "total_days": 4.5,
+        "requirements": [
+          {
+            "id": "P2_66",
+            "description": "关联关系中的必选配件、 备件料号中的必选备件，实现自动添加到购物车；",
+            "days": 2.5,
+            "system": "phase2_list"
+          },
+          {
+            "id": "P2_81",
+            "description": "1. 账号类别：C端客户、经销商(代理商)、公司销售，管理员账号，（销售、管理员账号不在前端页面注册，在后台由管理员来创建）；",
+            "days": 2.0,
+            "system": "phase2_list"
+          }
+        ]
+      }
+    },
+    "implementation_plan": {
+      "total_workload": 122.0,
+      "estimated_months": 6.1,
+      "phases": {
+        "phase1": {
+          "name": "第一阶段 - 核心功能",
+          "duration": "2-3个月",
+          "requirements": [
+            {
+              "id": "P2_54",
+              "description": "film和其他页面去掉鼠标移动上去后，板块放大的动画，效果参考现在的主机选型页",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_55",
+              "description": "耗材选型的袋型选项图片，鼠标移动到图片上时，放大预览图片，交互效果待定。",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_56",
+              "description": "商品展示的图片，点击图片放大，点击放大图以外关闭放大图，增加到最多3张图，如果上传的数量是1张，则不显示选择小图标，如果是2、3张，则在图片边上显示小的选择小图标。",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_57",
+              "description": "主机型号选择，增加型号一览表图片，先做demo看看效果",
+              "days": 1.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_58",
+              "description": "主机选型页，层级关系，改为标签代表路径，只展示当前标签下的可选项，先做demo看效果",
+              "days": 1.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_59",
+              "description": "所有页面的more info 气泡，改为点一下才弹出，然后点一下气泡内的x，或者气泡以外的范围，才关闭；",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_60",
+              "description": "在页眉上，增加搜索入口，根据料号、关键词能搜索出商品结果，在一个搜索结果页面展示结果，并且结果根据主机、配件、耗材、备件，分类分区展示，单条结果的排版和选型页的结果排版保持一致，有气泡展示详细信息，有一样的跳转按钮；有库存、加入购物车等按钮；",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_61",
+              "description": "主机选型页出来的主机商品，都有一个【本机适配耗材】跳转按钮，点后，跳转到对应的耗材选项页，并提前把主机相关的选项预选好了，不需要用户重新选主机型号；",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_62",
+              "description": "主机选型页出来的主机商品、配件商品，有一个【产品介绍】跳转按钮，跳转到官网对应的型号介绍详情页，地址在选型网站的主机型号、配件型号表里维护，如果没填地址，则不显示该按钮；",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_63",
+              "description": "在耗材选型页、备件页、购物车、右侧购物车弹窗、Confirm Order、订单详情页：出现适配型号的位置，增加跳转功能，点击适配型号的 LA-E4S，跳转到对应的主机选型页面，并自动把型号选好；",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_64",
+              "description": "购物车、右侧购物车弹窗、Confirm Order、订单详情页：1.料号、名称，跳到搜索结果页面，在搜索结果页的列表展示；",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_65",
+              "description": "每个页面排版不紧凑，空白太多，浪费页面空间；",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_66",
+              "description": "关联关系中的必选配件、 备件料号中的必选备件，实现自动添加到购物车；",
+              "days": 2.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_67",
+              "description": "单箱数量不是1的商品，加入购物车时，只能增加单箱数量的整数倍；",
+              "days": 2.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_68",
+              "description": "耗材选型页的厚度/克重，宽度，虚线间距这3个属性之间的联动。以及显示的结果数量也做相应优化",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_69",
+              "description": "产品线2，3，4全面实现",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_70",
+              "description": "产品线4：气柱袋，\n都是定制化产品，无法选型，所以在选型网站的主页，展示第四个产品线，然后有一个按钮，跳转到官网中气柱袋的对应展示页地址.",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_71",
+              "description": "能提交订单，生成PO，能导出Excel和PDF。（excel导出表格的列宽排版优化）",
+              "days": 1.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_72",
+              "description": "2.后台管理在后台订单页面可以查看所有历史订单信息并且可以下载",
+              "days": 2.0,
+              "system": "phase2_list"
+            }
+          ],
+          "total_days": 30.0,
+          "focus": "高优先级核心功能"
+        },
+        "phase2": {
+          "name": "第二阶段 - 功能完善",
+          "duration": "2-3个月",
+          "requirements": [
+            {
+              "id": "P2_37",
+              "description": "增加一个线上支付页面，用于临时给线下客户临时用于信用卡支付的页面，页面显示一些提示文字，然后一个按钮，点击按钮，跳转到银行网关的支付页面。\n<form name=\"PrePage\" method = \"post\" action = \"https://Simplecheckout.authorize.net/payment/CatalogPayment.aspx\"> <input type = \"hidden\" name = \"LinkId\" value =\"39bc420f-0207-4772-bd9e-90abe4be078d\" /> <input type = \"submit\" value = \"Trial Now\" /> </form>",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_38",
+              "description": "如何调整商品在前端的展示顺序？在后台填排序数值？目前是型号表已有，但是前端没采用，须采用；料号表没有，须增加，并采用。",
+              "days": 1.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_39",
+              "description": "在产品线1 2 3 的主机、配件页面，增加高亮显示频率，如果值为空，隐藏不显示",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_40",
+              "description": "增加订单详情页，样式待定：是另开一个页面？还是在订单列表展开？可以演示一下demo",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_41",
+              "description": "页眉导航放到页面左侧，类似目录展开的方式，优先PC端效果，手机端菜单栏做隐藏按钮。如果不做左侧导航，则在页眉下面增加当前页面的路径（见图）",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_42",
+              "description": "导航（在页眉或左侧）增加contact us按钮，跳转到：https://www.lockedair.com/contact/",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_43",
+              "description": "导航（在页眉或左侧）增加FAQ页面入口，点击新开页面，跳转到官网对应网页",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_44",
+              "description": "所有页面的背景颜色差别小，看不出区域范围边界。见图片",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_45",
+              "description": "增加库存展示，只有管理员 和 销售账号展示，且是展示多个仓库的库存；终端用户和代理商账号不展示。",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_46",
+              "description": "OSS图片加载优化，需要涉及到后台管理页面的上传图片功能",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_47",
+              "description": "产品2的主机商品类型，增加图片，后台可关联",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_48",
+              "description": "客户PO订单确认后，商城通过邮件，按照客户所属区域，把PO信息发到对应的公共邮箱，不同区域提前分配好不同的邮箱收件地址。",
+              "days": 2.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_49",
+              "description": "PO页PDF 有几个标题字体白色 和 背景灰色太接近；",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_50",
+              "description": "1.网站主页页眉，建立一个文档下载菜单，点击后，跳转到www.lockedair.com/document-download官网下载页面；2.用户可在历史订单界面，点击某个商品中的按钮，获取 跳转 lockedair官网下载页面对应型号的链接https://www.lockedair.com/document-download/?q=E4S ）",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_51",
+              "description": "在商城主页页眉上，有一个售后问题反馈入口：与订单不关联的维修工单提交页面，客户打开这个页面后，填写：个人联系方式，描述问题、上传视频、照片等信息后提交；",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_52",
+              "description": "提交后，后台通过邮件方式，发送到对应仓库售后负责人账号的邮箱上；不同区域提前分配好不同的邮箱收件地址。",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_53",
+              "description": "管理员可以在后台看到所有提交的维修工单记录；",
+              "days": 1.0,
+              "system": "phase2_list"
+            }
+          ],
+          "total_days": 26.0,
+          "focus": "中优先级功能完善"
+        },
+        "phase3": {
+          "name": "第三阶段 - 优化提升",
+          "duration": "1-2个月",
+          "requirements": [
+            {
+              "id": "P2_73",
+              "description": "保留中英文语言，增加德语（优先级低），其他语言去掉，靠浏览器翻译；",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_74",
+              "description": "如果没上传图片，或加载失败，展示一个BJT的通用图片",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_75",
+              "description": "登录后进入哪个页面，如果是点击某个选型页弹出的登录窗口，登录后，应该就打开哪个页面。如果不是点击选型页触发的登录弹窗，登录后，可以跳转到主页。",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_76",
+              "description": "加载速度优化",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_77",
+              "description": "备件序列号展示：一期临时在选型页更多信息气泡里显示，二期改为如果不是ALL，显示：详见more info.",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_78",
+              "description": "PO页PDF格式空白格须优化，重新提供一个模板给开发；有几个标题字体白色 和 背景灰色太接近；",
+              "days": 0.5,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_79",
+              "description": "网页手机端适配（手机端页面排版还有问题，有些页面展示超出格子范围；）",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_80",
+              "description": "账号注册时，需要客户选定所属国家、地区、公英制、审核人员给此用户账号定义分类：",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_81",
+              "description": "1. 账号类别：C端客户、经销商(代理商)、公司销售，管理员账号，（销售、管理员账号不在前端页面注册，在后台由管理员来创建）；",
+              "days": 2.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_82",
+              "description": "3. 公英制属性：账号申请时选择，管理员审核时可以改；",
+              "days": 1.0,
+              "system": "phase2_list"
+            },
+            {
+              "id": "P2_83",
+              "description": "4. 管理员审核时分配客户代码，用于从CRM获取对应价格体系",
+              "days": 1.0,
+              "system": "phase2_list"
+            }
+          ],
+          "total_days": 14.0,
+          "focus": "低优先级优化提升"
+        }
+      },
+      "resource_recommendation": {
+        "developers": "3-4名",
+        "testers": "1-2名",
+        "project_manager": "1名",
+        "total_team_size": "5-7人"
+      }
+    },
+    "cost_estimate": {
+      "total_cost": 951600.0,
+      "cost_per_day": 7800.0,
+      "team_cost_breakdown": {
+        "senior_developer": {
+          "count": 2,
+          "days": 122.0,
+          "rate": 2000
+        },
+        "developer": {
+          "count": 2,
+          "days": 122.0,
+          "rate": 1500
+        },
+        "tester": {
+          "count": 1,
+          "days": 36.6,
+          "rate": 1000
+        },
+        "project_manager": {
+          "count": 1,
+          "days": 24.400000000000002,
+          "rate": 2500
+        }
+      },
+      "cost_rates": {
+        "senior_developer": 2000,
+        "developer": 1500,
+        "tester": 1000,
+        "project_manager": 2500
+      }
+    }
+  },
+  "recommendations": {
+    "timeline": [
+      "总工作量 122.0 天，建议分3个阶段实施",
+      "预计总工期 6.1 个月",
+      "第一阶段专注高优先级核心功能",
+      "第二阶段完善中优先级功能",
+      "第三阶段进行低优先级优化"
+    ],
+    "resource_allocation": [
+      "建议团队规模: 5-7人",
+      "优先分配资深开发人员处理复杂需求",
+      "测试人员建议在开发后期介入",
+      "项目经理负责整体协调和进度把控"
+    ],
+    "risk_mitigation": [
+      "高优先级需求较多，建议增加技术评审时间",
+      "复杂需求需要提前进行技术可行性评估",
+      "建议建立需求变更管理流程",
+      "定期进行进度评估和风险识别"
+    ],
+    "cost_optimization": [
+      "预计总成本: ¥951,600.00",
+      "可通过并行开发优化成本",
+      "建议采用敏捷开发模式提高效率",
+      "考虑外包部分低复杂度需求"
+    ]
+  }
+}

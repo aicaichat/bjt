@@ -30,6 +30,7 @@ import {
 } from '@ant-design/icons';
 import AdminPageHeader from '../../components/common/AdminPageHeader';
 import ImportExportButtons from '../../components/common/ImportExportButtons';
+import UserManagementTabs from '../../components/common/UserManagementTabs';
 import { useAdminApi } from '../../hooks/useAdminApi';
 import adminUserService from '../../services/admin-user.service';
 
@@ -172,9 +173,14 @@ const UsersPage: React.FC = () => {
           partner: 'blue',
           customer: 'green',
         };
+        
+        // 更强的错误处理
+        const safeRole = role || 'customer';
+        const color = roleColors[safeRole as keyof typeof roleColors] || 'default';
+        
         return (
-          <Tag color={roleColors[role as keyof typeof roleColors] || 'default'}>
-            {role.toUpperCase()}
+          <Tag color={color}>
+            {safeRole.toUpperCase()}
           </Tag>
         );
       },
@@ -198,11 +204,14 @@ const UsersPage: React.FC = () => {
       dataIndex: 'preferred_unit',
       key: 'preferred_unit',
       width: 100,
-      render: (unit: string) => (
-        <Tag color={unit === 'metric' ? 'blue' : 'green'}>
-          {unit === 'metric' ? '公制' : '英制'}
-        </Tag>
-      ),
+      render: (unit: string) => {
+        const safeUnit = unit || 'metric';
+        return (
+          <Tag color={safeUnit === 'metric' ? 'blue' : 'green'}>
+            {safeUnit === 'metric' ? '公制' : '英制'}
+          </Tag>
+        );
+      },
     },
     {
       title: '状态',
@@ -215,11 +224,15 @@ const UsersPage: React.FC = () => {
           inactive: { color: 'default', text: '未激活' },
           suspended: { color: 'error', text: '已暂停' },
         };
-        const config = statusConfig[status as keyof typeof statusConfig];
+        
+        // 更强的错误处理
+        const safeStatus = status || 'inactive';
+        const config = statusConfig[safeStatus as keyof typeof statusConfig] || { color: 'default', text: safeStatus || '未知' };
+        
         return (
           <Badge
-            status={config.color as any}
-            text={config.text}
+            status={config?.color as any || 'default'}
+            text={config?.text || '未知'}
           />
         );
       },
@@ -284,6 +297,24 @@ const UsersPage: React.FC = () => {
   }, [selectedRole, selectedStatus, selectedCountry, selectedUnit, updateParams]);
 
   const users = (userData as any)?.items || [];
+  
+  // 数据验证和清理
+  const validUsers = users.filter((user: any) => user && typeof user === 'object').map((user: any) => ({
+    ...user,
+    id: user.id || 0,
+    username: user.username || '',
+    email: user.email || '',
+    customer_code: user.customer_code || '',
+    role: user.role || 'customer',
+    country: user.country || '',
+    region: user.region || '',
+    company_logo: user.company_logo || '',
+    status: user.status || 'inactive',
+    preferred_unit: user.preferred_unit || 'metric',
+    created_at: user.created_at || '',
+    updated_at: user.updated_at || ''
+  }));
+  
   const pagination = {
     page: (userData as any)?.page || 1,
     per_page: (userData as any)?.page_size || 10,
@@ -348,6 +379,8 @@ const UsersPage: React.FC = () => {
           { title: '用户管理' }
         ]}
       />
+      
+      <UserManagementTabs />
       
       <Card>
         {/* 筛选工具栏 */}
@@ -463,7 +496,7 @@ const UsersPage: React.FC = () => {
         {/* 用户表格 */}
         <Table
           columns={columns}
-          dataSource={users}
+          dataSource={validUsers}
           rowKey="id"
           loading={usersLoading}
           scroll={{ x: 1200 }}

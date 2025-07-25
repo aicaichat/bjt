@@ -14,6 +14,13 @@
   "pageTitle": "Machine Selection",
   "addToCart": "Add to Cart",
   "noPermissionAdd": "No permission to add",
+  "breadcrumb": {
+    "home": "Home",
+    "productLine": "Product Line",
+    "selectMachine": "Please select a machine model",
+    "selectAccessory": "Please select accessories",
+    "currentLevel": "Current Level"
+  },
   "filters": {
     "title": "Filters",
     "all": "All",

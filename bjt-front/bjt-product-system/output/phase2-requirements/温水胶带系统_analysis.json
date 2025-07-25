@@ -1,0 +1,96 @@
+{
+  "system_name": "温水胶带系统",
+  "total_count": 7,
+  "requirements": [
+    {
+      "id": "温水胶带系统_1",
+      "system": "温水胶带系统",
+      "description": "温水胶带机机与备件",
+      "category": "",
+      "priority": "",
+      "status": "",
+      "estimated_days": 1.0,
+      "complexity": "medium",
+      "type": "feature"
+    },
+    {
+      "id": "温水胶带系统_2",
+      "system": "温水胶带系统",
+      "description": "温水胶带机选项",
+      "category": "",
+      "priority": "",
+      "status": "",
+      "estimated_days": 1.0,
+      "complexity": "medium",
+      "type": "feature"
+    },
+    {
+      "id": "温水胶带系统_3",
+      "system": "温水胶带系统",
+      "description": "温水胶带机选项",
+      "category": "",
+      "priority": "",
+      "status": "",
+      "estimated_days": 1.0,
+      "complexity": "medium",
+      "type": "feature"
+    },
+    {
+      "id": "温水胶带系统_4",
+      "system": "温水胶带系统",
+      "description": "温水胶带机选项",
+      "category": "",
+      "priority": "",
+      "status": "",
+      "estimated_days": 1.0,
+      "complexity": "medium",
+      "type": "feature"
+    }
+  ],
+  "categories": {},
+  "priorities": {},
+  "estimated_workload": 4.0,
+  "columns_analysis": {
+    "total_columns": 8,
+    "columns": [
+      "温水缴纳系统",
+      "bug描述",
+      "bug图片",
+      "人员",
+      "日期",
+      "预期正确的值",
+      "是否已完成",
+      "开发情况说明"
+    ],
+    "data_types": {
+      "温水缴纳系统": "object",
+      "bug描述": "float64",
+      "bug图片": "float64",
+      "人员": "float64",
+      "日期": "float64",
+      "预期正确的值": "float64",
+      "是否已完成": "object",
+      "开发情况说明": "float64"
+    },
+    "missing_data": {
+      "温水缴纳系统": 0,
+      "bug描述": 7,
+      "bug图片": 7,
+      "人员": 7,
+      "日期": 7,
+      "预期正确的值": 7,
+      "是否已完成": 0,
+      "开发情况说明": 7
+    },
+    "unique_values": {
+      "温水缴纳系统": {
+        "温水胶带机选项": 3,
+        "备件": 3,
+        "温水胶带机机与备件": 1
+      },
+      "是否已完成": {
+        "□": 7
+      }
+    }
+  }
+}

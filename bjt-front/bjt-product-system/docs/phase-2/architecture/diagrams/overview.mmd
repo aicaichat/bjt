@@ -1,0 +1,36 @@
+graph TD
+  subgraph Frontend
+    F1[["React SPA (Vite + AntD)"]]
+  end
+
+  subgraph WordPress Stack
+    WP[["WordPress Core (PHP)"]]
+    WC[["WooCommerce"]]
+    Plugins[["Custom Plugins\n(Phase-2 APIs, Bridge, RMA, Inventory, Price)"]]
+  end
+
+  subgraph Services
+    CRM[["CRM System\nInventory / Price API"]]
+    Payment[["Payment Gateways\n(PayPal, Regional)"]]
+    Logistics[["Logistics API\n(Tracking)"]]
+  end
+
+  subgraph Database
+    MySQL[("MySQL 8.x")]
+  end
+
+  %% Data Flow
+  F1 -- "REST /wp-json/bjt/v1" --> WP
+  WP -- "Route /phase2/*" --> Plugins
+  Plugins -- "Bridge Order →" --> WC
+  WC -- "Status & Hooks" --> WP
+  Plugins -- "Cache & Sync" --> CRM
+  Plugins -- "Process Payment" --> Payment
+  Plugins -- "Sync Tracking" --> Logistics
+
+  WP -. "WPDB" .-> MySQL
+  WC -. "WC Tables" .-> MySQL
+  Plugins -. "Custom Tables" .-> MySQL
+
+  F1 <-- "Webhooks & Updates" --> Plugins
+  F1 -- "Auth/JWT" --> WP 

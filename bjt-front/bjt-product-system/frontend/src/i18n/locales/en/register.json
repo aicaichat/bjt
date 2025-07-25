@@ -1,0 +1,26 @@
+{
+  "createAccount": "Create Account",
+  "firstName": "First Name",
+  "lastName": "Last Name",
+  "email": "Email",
+  "password": "Password",
+  "confirmPassword": "Confirm Password",
+  "role": "Role",
+  "country": "Country/Region",
+  "countryPlaceholder": "Please select country/region",
+  "unitSystem": "Unit System",
+  "unit": {
+    "metric": "Metric",
+    "imperial": "Imperial"
+  },
+  "rolePlaceholder": "Select role",
+  "roles": {
+    "customer": "End User Customer",
+    "dealer": "Distributor"
+  },
+  "register": "Register",
+  "passwordMismatch": "Passwords do not match",
+  "registerFailed": "Register failed",
+  "submittedSuccess": "Submitted! Waiting for approval.",
+  "backToLogin": "Back to Login?"
+} 

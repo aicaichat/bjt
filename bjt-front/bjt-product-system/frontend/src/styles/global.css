@@ -1309,3 +1309,57 @@ pre code {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--bjt-text-tertiary);
 }
+
+/* 主内容区域样式 */
+.main-content {
+  margin-left: 280px;
+  transition: all var(--bjt-transition-normal);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content.sidebar-collapsed {
+  margin-left: 80px;
+}
+
+/* 移动端主内容区域 */
+@media (max-width: 768px) {
+  .main-content,
+  .main-content.sidebar-collapsed {
+    margin-left: 0;
+    padding-top: 80px;
+  }
+}
+
+/* 大屏设备优化 */
+@media (min-width: 1200px) {
+  .main-content {
+    margin-left: 300px;
+  }
+  
+  .main-content.sidebar-collapsed {
+    margin-left: 80px;
+  }
+}
+
+/* 页面容器样式 */
+.page-container {
+  flex: 1;
+  padding: var(--bjt-space-lg);
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .page-container {
+    padding: var(--bjt-space-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .page-container {
+    padding: var(--bjt-space-sm);
+  }
+}

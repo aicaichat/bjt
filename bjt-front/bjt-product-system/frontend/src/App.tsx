@@ -28,9 +28,29 @@ import SqlExcelConverterPage from './pages/SqlExcelConverter';
 import DebugOrderPage from './pages/Order/DebugOrder';
 // 导入示例组件
 import OrderListExample from './examples/OrderListExample';
+import OrderDetailDemo from './pages/OrderList/OrderDetailDemo';
 // 导入测试页面
 import { UnitSystemTestPage } from './pages/UnitSystemTestPage';
 import { UnitDisplayDemo } from './pages/UnitDisplayDemo';
+
+// 导入产品线专用页面
+import ProductLine1Page from './pages/Machines/ProductLine1Page';
+import ProductLine2Page from './pages/Machines/ProductLine2Page';
+import ProductLine3Page from './pages/Machines/ProductLine3Page';
+import ProductLine2ConsumablesPage from './pages/Consumables/ProductLine2ConsumablesPage';
+import ProductLine3ConsumablesPage from './pages/Consumables/ProductLine3ConsumablesPage';
+
+// 导入注册和售后服务页面
+import RegisterPage from './pages/Register/index';
+import RmaDetailPage from './pages/rma/RmaDetailPage';
+import RmaListPage from './pages/rma/RmaListPage';
+import RmaCreatePage from './pages/rma/RmaCreatePage';
+import ContactPage from './pages/Contact/ContactPage';
+import SupportPage from './pages/Support/SupportPage';
+
+// 导入维修工单系统页面
+import RepairTicketSystemPage from './pages/repair/RepairTicketSystemPage';
+
 // 其他页面组件（占位符）
 const Checkout = () => <div className="container mx-auto p-4">结账页面（待实现）</div>;
 const OrderDetail = () => <div className="container mx-auto p-4">订单详情页面（待实现）</div>;
@@ -179,6 +199,38 @@ const AppContent: React.FC = () => {
           }
         />
         
+        {/* 产品线专用主机选购页面 */}
+        <Route
+          path="/machines/product-line-1"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <ProductLine1Page />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/machines/product-line-2"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <ProductLine2Page />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/machines/product-line-3"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <ProductLine3Page />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        
         {/* 耗材选择页面 */}
         <Route
           path="/consumables"
@@ -186,6 +238,28 @@ const AppContent: React.FC = () => {
             <ProtectedRoute>
               <MainLayout>
                 <Consumables />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        {/* 产品线专用耗材选购页面 */}
+        <Route
+          path="/consumables/product-line-2"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <ProductLine2ConsumablesPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/consumables/product-line-3"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <ProductLine3ConsumablesPage />
               </MainLayout>
             </ProtectedRoute>
           }
@@ -343,6 +417,16 @@ const AppContent: React.FC = () => {
           }
         />
         
+        {/* 订单详情展开功能演示 */}
+        <Route
+          path="/example/order-detail-demo"
+          element={
+            <MainLayout>
+              <OrderDetailDemo />
+            </MainLayout>
+          }
+        />
+        
         {/* 用户资料页面 */}
         <Route
           path="/profile"
@@ -358,6 +442,29 @@ const AppContent: React.FC = () => {
         {/* 登录页面 */}
         <Route path="/login" element={<Login />} />
         
+        {/* 注册页面 */}
+        <Route path="/register" element={<RegisterPage />} />
+        
+        {/* 联系我们页面 */}
+        <Route 
+          path="/contact" 
+          element={
+            <MainLayout>
+              <ContactPage />
+            </MainLayout>
+          } 
+        />
+        
+        {/* 支持页面 */}
+        <Route 
+          path="/support" 
+          element={
+            <MainLayout>
+              <SupportPage />
+            </MainLayout>
+          } 
+        />
+        
         {/* 产品详情页面 */}
         <Route
           path="/product/:id"
@@ -365,6 +472,50 @@ const AppContent: React.FC = () => {
             <ProtectedRoute>
               <MainLayout>
                 <ProductDetail />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        {/* 维修工单系统页面 */}
+        <Route
+          path="/repair-system"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <RepairTicketSystemPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        {/* 维修工单页面（合并单页） */}
+        <Route
+          path="/rma"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <RepairTicketSystemPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/rma/create"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <RmaCreatePage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/rma/:id"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <RmaDetailPage />
               </MainLayout>
             </ProtectedRoute>
           }

@@ -74,6 +74,7 @@ const AdminSidebar: React.FC = () => {
         { key: 'product-line-1', label: t('productLine1', { ns: 'navigation' }), path: '/admin/product-lines/edit/1' },
         { key: 'product-line-2', label: t('productLine2', { ns: 'navigation' }), path: '/admin/product-lines/edit/2' },
         { key: 'product-line-3', label: t('productLine3', { ns: 'navigation' }), path: '/admin/product-lines/edit/3' },
+        { key: 'product-line-4', label: t('productLine4', { ns: 'navigation' }), path: '/admin/product-lines/edit/4' },
       ],
     },
     {

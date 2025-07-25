@@ -1,0 +1,104 @@
+{
+  "system_name": "纸垫系统",
+  "total_count": 7,
+  "requirements": [
+    {
+      "id": "纸垫系统_1",
+      "system": "纸垫系统",
+      "description": "纸垫机与备件",
+      "category": "",
+      "priority": "",
+      "status": "",
+      "estimated_days": 1.0,
+      "complexity": "medium",
+      "type": "feature"
+    },
+    {
+      "id": "纸垫系统_2",
+      "system": "纸垫系统",
+      "description": "纸垫膜选项",
+      "category": "",
+      "priority": "",
+      "status": "",
+      "estimated_days": 1.0,
+      "complexity": "medium",
+      "type": "feature"
+    },
+    {
+      "id": "纸垫系统_3",
+      "system": "纸垫系统",
+      "description": "纸垫膜选项",
+      "category": "",
+      "priority": "",
+      "status": "",
+      "estimated_days": 1.0,
+      "complexity": "medium",
+      "type": "feature"
+    },
+    {
+      "id": "纸垫系统_4",
+      "system": "纸垫系统",
+      "description": "纸垫膜选项",
+      "category": "",
+      "priority": "",
+      "status": "",
+      "estimated_days": 1.0,
+      "complexity": "medium",
+      "type": "feature"
+    },
+    {
+      "id": "纸垫系统_5",
+      "system": "纸垫系统",
+      "description": "纸垫膜选项",
+      "category": "",
+      "priority": "",
+      "status": "",
+      "estimated_days": 1.0,
+      "complexity": "medium",
+      "type": "feature"
+    }
+  ],
+  "categories": {},
+  "priorities": {},
+  "estimated_workload": 5.0,
+  "columns_analysis": {
+    "total_columns": 7,
+    "columns": [
+      "气垫系统",
+      "bug描述",
+      "bug图片",
+      "人员",
+      "日期",
+      "是否已完成",
+      "开发情况说明"
+    ],
+    "data_types": {
+      "气垫系统": "object",
+      "bug描述": "float64",
+      "bug图片": "float64",
+      "人员": "float64",
+      "日期": "float64",
+      "是否已完成": "object",
+      "开发情况说明": "float64"
+    },
+    "missing_data": {
+      "气垫系统": 0,
+      "bug描述": 7,
+      "bug图片": 7,
+      "人员": 7,
+      "日期": 7,
+      "是否已完成": 0,
+      "开发情况说明": 7
+    },
+    "unique_values": {
+      "气垫系统": {
+        "纸垫膜选项": 4,
+        "备件": 2,
+        "纸垫机与备件": 1
+      },
+      "是否已完成": {
+        "□": 7
+      }
+    }
+  }
+}

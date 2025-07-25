@@ -1,0 +1,55 @@
+{
+  "system_name": "气垫系统",
+  "total_count": 0,
+  "requirements": [],
+  "categories": {},
+  "priorities": {},
+  "estimated_workload": 0,
+  "columns_analysis": {
+    "total_columns": 9,
+    "columns": [
+      "气垫系统",
+      "bug描述",
+      "bug图片",
+      "人员",
+      "日期",
+      "预期正确的值",
+      "是否已完成",
+      "bug复测描述",
+      "开发情况说明"
+    ],
+    "data_types": {
+      "气垫系统": "object",
+      "bug描述": "object",
+      "bug图片": "object",
+      "人员": "object",
+      "日期": "object",
+      "预期正确的值": "object",
+      "是否已完成": "object",
+      "bug复测描述": "object",
+      "开发情况说明": "object"
+    },
+    "missing_data": {
+      "气垫系统": 0,
+      "bug描述": 0,
+      "bug图片": 0,
+      "人员": 0,
+      "日期": 0,
+      "预期正确的值": 0,
+      "是否已完成": 0,
+      "bug复测描述": 0,
+      "开发情况说明": 0
+    },
+    "unique_values": {
+      "气垫系统": {},
+      "bug描述": {},
+      "bug图片": {},
+      "人员": {},
+      "日期": {},
+      "预期正确的值": {},
+      "是否已完成": {},
+      "bug复测描述": {},
+      "开发情况说明": {}
+    }
+  }
+}

@@ -1,0 +1,14 @@
+flowchart TD
+  A[User Center - Order Detail] --> B[Click "Return / RMA"]
+  B --> C[Submit RMA Form + Attachments]
+  C --> API[POST /rma/create]
+  API --> D[bjt_rma_ticket (status=Submitted)]
+  D -->|Email| Staff[After-Sales Staff]
+  Staff --> E[Admin RMA UI]
+  E --> F[Change Status: Accepted / Rejected]
+  F --> G[Process Return Logistics]
+  G --> H[Update Status: In-Transit → Completed]
+  H --> API2[PATCH /rma/:id]
+  API2 --> D
+  D -->|Status Webhook| FrontendUser[User Center]
+  FrontendUser -->|Poll /rma/status| D 

@@ -87,6 +87,8 @@ require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-spare-part-contro
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-part-controller.php';
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-cart-controller.php';
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-order-controller.php';
+require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-rma-controller.php';
+require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-contact-controller.php';
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-price-controller.php';
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-inventory-controller.php';
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-dictionary-controller.php';
@@ -146,6 +148,8 @@ function bjt_api_register_routes() {
         'BJT_Part_Controller',
         'BJT_Cart_Controller',
         'BJT_Order_Controller',
+        'BJT_RMA_Controller',
+        'BJT_Contact_Controller',
         'BJT_Price_Controller',
         'BJT_Inventory_Controller',
         'BJT_Dictionary_Controller',

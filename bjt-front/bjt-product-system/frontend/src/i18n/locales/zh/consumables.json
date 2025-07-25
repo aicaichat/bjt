@@ -278,6 +278,39 @@
     "close": "关闭",
     "model": "型号"
   },
+  "productLine2": {
+    "title": "产品线2 - 纸垫机耗材",
+    "subtitle": "为您的纸垫机选择合适的耗材",
+    "totalProducts": "共 {{count}} 个产品",
+    "filter": {
+      "title": "产品筛选",
+      "description": "选择产品类型和适用机型",
+      "reset": "重置筛选",
+      "productType": "产品类型",
+      "compatibleModel": "适用机型",
+      "allTypes": "全部类型",
+      "allModels": "全部机型",
+      "allModelsDesc": "显示所有机型的耗材",
+      "filling": "填充",
+      "cushioning": "缓冲", 
+      "wrapping": "包裹"
+    },
+    "productDetails": {
+      "title": "产品详情",
+      "price": "价格",
+      "inventory": "库存",
+      "compatibleModel": "适用机型",
+      "material": "材质"
+    },
+    "pagination": {
+      "previous": "上一页",
+      "next": "下一页",
+      "pageInfo": "第 {{current}} / {{total}} 页"
+    },
+    "buttons": {
+      "addToCart": "加入购物车"
+    }
+  },
   "button": {
     "cart": "查看购物车"
   },

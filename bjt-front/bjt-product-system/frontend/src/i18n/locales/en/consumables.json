@@ -394,5 +394,38 @@
     "packageGrossWeight": "Gross Weight",
     "palletHeight": "Pallet Height",
     "palletGrossWeight": "GW per Pallet"
+  },
+  "productLine2": {
+    "title": "Product Line 2 - Paper Cushion Machine Consumables",
+    "subtitle": "Choose the right consumables for your paper cushion machine",
+    "totalProducts": "Total {{count}} products",
+    "filter": {
+      "title": "Product Filter",
+      "description": "Select product type and compatible model",
+      "reset": "Reset Filter",
+      "productType": "Product Type",
+      "compatibleModel": "Compatible Model",
+      "allTypes": "All Types",
+      "allModels": "All Models",
+      "allModelsDesc": "Show consumables for all models",
+      "filling": "Filling",
+      "cushioning": "Cushioning",
+      "wrapping": "Wrapping"
+    },
+    "productDetails": {
+      "title": "Product Details",
+      "price": "Price",
+      "inventory": "Inventory",
+      "compatibleModel": "Compatible Model",
+      "material": "Material"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "pageInfo": "Page {{current}} of {{total}}"
+    },
+    "buttons": {
+      "addToCart": "Add to Cart"
+    }
   }
 } 

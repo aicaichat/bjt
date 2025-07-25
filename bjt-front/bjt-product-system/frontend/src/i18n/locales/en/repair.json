@@ -1,0 +1,43 @@
+{
+  "pageTitle": "Repair Ticket System",
+  "pageDescription": "Complete repair ticket management, submit tickets online.",
+  "labels": {
+    "customerName": "Contact Name",
+    "customerEmail": "Email Address",
+    "customerPhone": "Phone Number",
+    "companyName": "Company Name",
+    "deviceModel": "Device Model",
+    "deviceSerial": "Device Serial Number",
+    "description": "Problem Description",
+    "customerNotes": "Additional Notes",
+    "uploadFiles": "Upload Attachments",
+    "fileUploadNote": "File Upload Instructions",
+    "submitSuccess": "Repair ticket submitted successfully!"
+  },
+  "placeholders": {
+    "customerName": "Enter your name",
+    "customerEmail": "Enter email address",
+    "customerPhone": "Enter phone number (optional)",
+    "companyName": "Enter company (optional)",
+    "deviceModel": "Enter device model",
+    "deviceSerial": "Enter serial number",
+    "description": "Describe the issue in detail",
+    "customerNotes": "Any other details (optional)"
+  },
+  "titles": {
+    "createTicket": "Create Repair Ticket"
+  },
+  "buttons": {
+    "submit": "Submit Ticket",
+    "next": "Next",
+    "prev": "Previous",
+    "cancel": "Cancel",
+    "upload": "Upload Files"
+  },
+  "uploadInfo": {
+    "supportedFormats": "Supported formats: images (jpg, png, gif), videos (mp4, mov), PDF, Word, text files",
+    "sizeLimit": "Maximum file size 10MB per file",
+    "tip": "Please upload files or images related to the issue to help our engineers diagnose faster",
+    "security": "Uploaded files are securely stored and used only for diagnostics"
+  }
+} 

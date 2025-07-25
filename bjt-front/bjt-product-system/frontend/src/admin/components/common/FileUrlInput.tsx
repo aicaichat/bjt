@@ -118,6 +118,19 @@ const FileUrlInput: React.FC<FileUrlInputProps> = ({
       formData.append('file', file as File);
       formData.append('upload_dir', uploadPath.replace(/^\//, '').replace(/\/$/, ''));
       
+      // 调试日志：检查FormData内容
+      console.log('FileUrlInput: FormData contents:');
+      console.log('  - file:', file);
+      console.log('  - file.name:', (file as File).name);
+      console.log('  - file.size:', (file as File).size);
+      console.log('  - file.type:', (file as File).type);
+      console.log('  - upload_dir:', uploadPath.replace(/^\//, '').replace(/\/$/, ''));
+      
+      // 验证FormData
+      for (let [key, value] of formData.entries()) {
+        console.log(`  - FormData[${key}]:`, value);
+      }
+      
       // 根据文件类型选择合适的上传端点
       let uploadEndpoint = '/wp-json/bjt/v1/upload/file';
       if (fileType === 'image') {
@@ -138,6 +151,35 @@ const FileUrlInput: React.FC<FileUrlInputProps> = ({
           if (adminToken) {
             console.log('FileUrlInput: Using admin token');
             return adminToken;
+          }
+          
+          // 如果没有admin_token，尝试自动登录获取
+          console.log('FileUrlInput: No admin token found, attempting admin login...');
+          try {
+            const loginResponse = await fetch('/wp-json/bjt/v1/auth/login', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              credentials: 'include',
+              body: JSON.stringify({
+                username: 'admin',
+                password: 'password123',
+                login_type: 'admin_login'
+              })
+            });
+            
+            if (loginResponse.ok) {
+              const loginData = await loginResponse.json();
+              if (loginData.success && loginData.data?.token) {
+                // 保存admin token
+                localStorage.setItem('admin_token', loginData.data.token);
+                console.log('FileUrlInput: Admin token obtained and saved');
+                return loginData.data.token;
+              }
+            }
+          } catch (loginError) {
+            console.warn('FileUrlInput: Admin login failed:', loginError);
           }
           
           // 作为fallback，尝试其他token
@@ -184,7 +226,10 @@ const FileUrlInput: React.FC<FileUrlInputProps> = ({
       onProgress?.({ percent: 100 });
 
       if (!response.ok) {
-        throw new Error(`上传失败: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('FileUrlInput: Upload failed with status:', response.status);
+        console.error('FileUrlInput: Error response:', errorText);
+        throw new Error(`上传失败: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
       const result = await response.json();

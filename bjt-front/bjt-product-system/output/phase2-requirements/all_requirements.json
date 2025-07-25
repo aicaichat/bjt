@@ -1,0 +1,92 @@
+{
+  "选型网站首页": {
+    "total_count": 0,
+    "requirements": []
+  },
+  "购物流程": {
+    "total_count": 2,
+    "requirements": [
+      {
+        "id": "购物流程_1",
+        "sheet": "购物流程",
+        "description": "购物流程-备件",
+        "category": "",
+        "priority": "",
+        "status": "",
+        "estimated_days": 3.0
+      },
+      {
+        "id": "购物流程_2",
+        "sheet": "购物流程",
+        "description": "购物流程-备件",
+        "category": "",
+        "priority": "",
+        "status": "",
+        "estimated_days": 3.0
+      }
+    ]
+  },
+  "气垫系统": {
+    "total_count": 0,
+    "requirements": []
+  },
+  "纸垫系统": {
+    "total_count": 1,
+    "requirements": [
+      {
+        "id": "纸垫系统_1",
+        "sheet": "纸垫系统",
+        "description": "纸垫机与备件",
+        "category": "",
+        "priority": "",
+        "status": "",
+        "estimated_days": 1.0
+      }
+    ]
+  },
+  "温水胶带系统": {
+    "total_count": 4,
+    "requirements": [
+      {
+        "id": "温水胶带系统_1",
+        "sheet": "温水胶带系统",
+        "description": "温水胶带机机与备件",
+        "category": "",
+        "priority": "",
+        "status": "",
+        "estimated_days": 1.0
+      },
+      {
+        "id": "温水胶带系统_2",
+        "sheet": "温水胶带系统",
+        "description": "温水胶带机选项",
+        "category": "",
+        "priority": "",
+        "status": "",
+        "estimated_days": 1.0
+      },
+      {
+        "id": "温水胶带系统_3",
+        "sheet": "温水胶带系统",
+        "description": "温水胶带机选项",
+        "category": "",
+        "priority": "",
+        "status": "",
+        "estimated_days": 1.0
+      },
+      {
+        "id": "温水胶带系统_4",
+        "sheet": "温水胶带系统",
+        "description": "温水胶带机选项",
+        "category": "",
+        "priority": "",
+        "status": "",
+        "estimated_days": 1.0
+      }
+    ]
+  },
+  "后台": {
+    "total_count": 0,
+    "requirements": []
+  }
+}

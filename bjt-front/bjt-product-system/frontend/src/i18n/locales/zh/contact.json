@@ -1,0 +1,50 @@
+{
+  "contact": {
+    "title": "联系我们",
+    "leaveMessage": "留言",
+    "form": {
+      "name": "*您的姓名",
+      "email": "*邮箱",
+      "phone": "电话",
+      "company": "公司",
+      "content": "*内容",
+      "submit": "提交",
+      "nameRequired": "请输入您的姓名",
+      "emailRequired": "请输入您的邮箱",
+      "emailInvalid": "请输入有效的邮箱地址",
+      "contentRequired": "请输入留言内容",
+      "submitSuccess": "您的留言已发送成功！",
+      "submitError": "留言发送失败，请稍后再试。"
+    },
+    "info": {
+      "email": "邮箱：info@lockedair.com",
+      "phone": "电话：+86(0)571 8616 9196"
+    },
+    "offices": {
+      "australia": {
+        "title": "澳大利亚",
+        "company": "BJT Pack Pty Ltd",
+        "address": "Unit 5, 273 Fowler Road, Illawong NSW 2234 Australia",
+        "phone": "+61 474 032 663"
+      },
+      "usa": {
+        "title": "美国",
+        "company": "BJT Pack, Inc.",
+        "address": "5275 Naiman Parkway, Suite B, Solon, Ohio 44139",
+        "phone": "+1 440 318 1777"
+      },
+      "germany": {
+        "title": "德国",
+        "company": "BJT Pack GmbH",
+        "address": "Hall 9L, Industriestr 2 Rheinbach, 53359",
+        "phone": "+49 15222378992"
+      },
+      "japan": {
+        "title": "日本",
+        "company": "BJT JAPAN 合同会社",
+        "address": "1-11-17 Dojo, Rou-ku, Saitama",
+        "phone": "+81-48-711-3789"
+      }
+    }
+  }
+} 

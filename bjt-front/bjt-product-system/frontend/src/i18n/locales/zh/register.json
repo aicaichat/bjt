@@ -1,0 +1,26 @@
+{
+  "createAccount": "创建账户",
+  "firstName": "名",
+  "lastName": "姓",
+  "email": "邮箱",
+  "password": "密码",
+  "confirmPassword": "确认密码",
+  "role": "角色",
+  "country": "国家/地区",
+  "countryPlaceholder": "请选择国家/地区",
+  "unitSystem": "单位制",
+  "unit": {
+    "metric": "公制",
+    "imperial": "英制"
+  },
+  "rolePlaceholder": "请选择角色",
+  "roles": {
+    "customer": "终端客户",
+    "dealer": "分销商"
+  },
+  "register": "注册",
+  "passwordMismatch": "两次密码不一致",
+  "registerFailed": "注册失败",
+  "submittedSuccess": "提交成功！等待审批。",
+  "backToLogin": "返回登录？"
+} 

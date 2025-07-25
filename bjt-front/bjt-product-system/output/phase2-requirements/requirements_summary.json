@@ -1,0 +1,39 @@
+{
+  "generated_at": "2025-07-24T09:11:04.799041",
+  "total_systems": 6,
+  "total_requirements": 7,
+  "total_workload_days": 11.0,
+  "estimated_months": 0.6,
+  "systems": {
+    "选型网站首页": {
+      "requirements_count": 0,
+      "workload_days": 0,
+      "avg_days_per_requirement": 0
+    },
+    "购物流程": {
+      "requirements_count": 2,
+      "workload_days": 6.0,
+      "avg_days_per_requirement": 3.0
+    },
+    "气垫系统": {
+      "requirements_count": 0,
+      "workload_days": 0,
+      "avg_days_per_requirement": 0
+    },
+    "纸垫系统": {
+      "requirements_count": 1,
+      "workload_days": 1.0,
+      "avg_days_per_requirement": 1.0
+    },
+    "温水胶带系统": {
+      "requirements_count": 4,
+      "workload_days": 4.0,
+      "avg_days_per_requirement": 1.0
+    },
+    "后台": {
+      "requirements_count": 0,
+      "workload_days": 0,
+      "avg_days_per_requirement": 0
+    }
+  }
+}

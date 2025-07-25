@@ -3347,15 +3347,169 @@ const MachinesPage: React.FC = () => {
     }
   }, [currentLanguage]); // 只监听语言变化
 
+  // 渲染面包屑导航
+  const renderBreadcrumb = () => {
+    console.log('renderBreadcrumb called', {
+      selectedMachine,
+      hostModels: hostModels?.length,
+      category,
+      selectedAccessories: Object.keys(selectedAccessories)
+    });
+
+    // 总是显示面包屑，即使没有数据
+    const productLineName = hostModels?.find(model => model.id.toString() === category)?.name || '产品线1';
+    
+    // 如果没有选择主机，显示简单的产品线信息
+    if (!selectedMachine) {
+      return (
+        <div className="bg-white p-3 rounded-lg shadow-sm mb-4 flex items-center border border-gray-200">
+          <span className="text-xs px-1.5 py-0.5 bg-gray-100 rounded mr-2">产品线</span>
+          <span className="text-gray-800">{productLineName}</span>
+          <div className="mt-2 ml-4 text-sm text-gray-500">
+            <span className="flex items-center">
+              <InfoCircleOutlined className="mr-1" />
+              请选择主机型号
+            </span>
+          </div>
+        </div>
+      );
+    }
+
+    // 如果选择了主机，显示主机和配件信息
+    const machine = machines.find(m => m.id.toString() === selectedMachine);
+    const machineName = machine ? getMachineName(machine) : '未知主机';
+
+    // 获取当前配件层级
+    const currentLevel = Object.keys(selectedAccessories).length + 1;
+    const currentLevelText = `Level ${currentLevel} Accessory`;
+
+    // 获取当前选择的配件名称（如果有的话）
+    let currentAccessoryName = '';
+    if (Object.keys(selectedAccessories).length > 0) {
+      const lastLevel = Math.max(...Object.keys(selectedAccessories).map(key => parseInt(key.replace('level', ''))));
+      const accessoryId = selectedAccessories[`level${lastLevel}`];
+      
+      const accessoryLists = [
+        accessories,           // level 1
+        level2Accessories,     // level 2
+        level3Accessories,     // level 3
+        level4Accessories,     // level 4
+        level5Accessories      // level 5
+      ];
+      
+      if (lastLevel >= 1 && lastLevel <= 5) {
+        const targetList = accessoryLists[lastLevel - 1];
+        const accessory = targetList.find(acc => acc.id.toString() === accessoryId);
+        if (accessory) {
+          currentAccessoryName = getAccessoryName(accessory);
+        }
+      }
+    }
+
+    return (
+      <div className="bg-white p-3 rounded-lg shadow-sm mb-4 flex items-center border border-gray-200">
+        <span className="text-xs px-1.5 py-0.5 bg-gray-100 rounded mr-2">Host</span>
+        <span className="text-gray-800">{machineName}</span>
+        <span className="mx-2 text-gray-400">
+          <RightOutlined style={{ fontSize: '10px' }} />
+        </span>
+        <span className="text-blue-600 font-medium">
+          {currentAccessoryName || currentLevelText}
+        </span>
+        
+        {/* 状态提示 */}
+        {Object.keys(selectedAccessories).length === 0 && (
+          <div className="mt-2 ml-4 text-sm text-gray-500">
+            <span className="flex items-center">
+              <InfoCircleOutlined className="mr-1" />
+              请选择配件
+            </span>
+          </div>
+        )}
+        {Object.keys(selectedAccessories).length > 0 && (
+          <div className="mt-2 ml-4 text-sm text-gray-500">
+            <span className="flex items-center">
+              <InfoCircleOutlined className="mr-1" />
+              当前层级: {currentLevel}
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // Return the main component JSX
   return (
     <div className="machines-page min-h-screen bg-gray-50 text-gray-900">
       {/* SQL Mock服务状态组件 */}
       <MockServiceStatus position="top-right" compact={true} hidden={true} />
       
+      {/* 面包屑导航 - 优化版本，支持点击交互 */}
+      <div className="bg-white p-3 rounded-lg shadow-sm mb-4 flex items-center border border-gray-200">
+        <span 
+          className="text-xs px-1.5 py-0.5 bg-gray-100 rounded mr-2 cursor-pointer hover:bg-gray-200 transition-colors"
+          onClick={() => {
+            // 返回产品线选择页面
+            window.history.back();
+          }}
+        >
+          产品线
+        </span>
+        <span className="text-gray-800">产品线1</span>
+        {selectedMachine && (
+          <>
+            <span className="mx-2 text-gray-400">
+              <RightOutlined style={{ fontSize: '10px' }} />
+            </span>
+            <span className="text-xs px-1.5 py-0.5 bg-gray-100 rounded mr-2">Host</span>
+            <span 
+              className="text-gray-800 cursor-pointer hover:text-blue-600 transition-colors"
+              onClick={() => {
+                setSelectedMachine('');
+                setSelectedAccessories({});
+              }}
+            >
+              {machines.find(m => m.id.toString() === selectedMachine)?.name || '未知主机'}
+            </span>
+            <span className="mx-2 text-gray-400">
+              <RightOutlined style={{ fontSize: '10px' }} />
+            </span>
+            <span className="text-blue-600 font-medium">
+              {Object.keys(selectedAccessories).length > 0 ? '已选择配件' : 'Level 1 Accessory'}
+            </span>
+          </>
+        )}
+        {!selectedMachine && (
+          <div className="mt-2 ml-4 text-sm text-gray-500">
+            <span className="flex items-center">
+              <InfoCircleOutlined className="mr-1" />
+              请选择主机型号
+            </span>
+          </div>
+        )}
+        {selectedMachine && Object.keys(selectedAccessories).length === 0 && (
+          <div className="mt-2 ml-4 text-sm text-gray-500">
+            <span className="flex items-center">
+              <InfoCircleOutlined className="mr-1" />
+              请选择配件
+            </span>
+          </div>
+        )}
+        {selectedMachine && Object.keys(selectedAccessories).length > 0 && (
+          <div className="mt-2 ml-4 text-sm text-gray-500">
+            <span className="flex items-center">
+              <InfoCircleOutlined className="mr-1" />
+              当前层级: {Object.keys(selectedAccessories).length + 1}
+            </span>
+          </div>
+        )}
+      </div>
+      
       {/* Filter Section */}
       <div className="bg-white rounded-lg shadow-md p-4 mb-6 text-gray-900 border border-gray-200 transition-colors duration-300">
-        <h1 className="text-xl font-bold mb-4 text-gray-800">{t('pageTitle')}</h1>
+        <h1 className="text-xl font-bold mb-4 text-gray-800">
+          {selectedMachine ? '配件选择' : '主机选择'}
+        </h1>
         
         <div className="flex flex-wrap gap-4">
           {/* Voltage Filter */}

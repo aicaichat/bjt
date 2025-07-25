@@ -1,0 +1,22 @@
+sequenceDiagram
+  participant User
+  participant Frontend
+  participant API as WP /phase2/checkout
+  participant WC as WooCommerce
+  participant Pay as Payment Gateway
+  participant Webhook as WP Webhook
+
+  User->>Frontend: Click Checkout (Order mode)
+  Frontend->>API: POST /checkout {cart, shipping, mode=order}
+  API->>WC: Create WC Order
+  WC-->>API: OrderID, pay_url
+  API-->>Frontend: pay_url
+  Frontend->>Pay: Redirect user to pay_url
+  Pay-->>User: Payment UI
+  User->>Pay: Complete Payment
+  Pay-->>Webhook: POST /wc/webhook/payment
+  Webhook->>WC: Verify Order Status
+  WC-->>Webhook: status=paid
+  Webhook->>API: Update bjt_order status=paid
+  API-->>Frontend: WS / poll order paid
+  Frontend-->>User: Show Payment Success 

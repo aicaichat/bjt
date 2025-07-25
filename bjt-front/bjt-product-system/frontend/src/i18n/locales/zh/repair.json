@@ -1,0 +1,43 @@
+{
+  "pageTitle": "维修工单系统",
+  "pageDescription": "完整的维修工单管理系统，支持在线填写维修工单。",
+  "labels": {
+    "customerName": "联系人姓名",
+    "customerEmail": "邮箱地址",
+    "customerPhone": "联系电话",
+    "companyName": "公司名称",
+    "deviceModel": "设备型号",
+    "deviceSerial": "设备序列号",
+    "description": "问题详细描述",
+    "customerNotes": "补充说明",
+    "uploadFiles": "上传附件",
+    "fileUploadNote": "文件上传说明",
+    "submitSuccess": "维修工单提交成功！"
+  },
+  "placeholders": {
+    "customerName": "请输入您的姓名",
+    "customerEmail": "请输入邮箱地址",
+    "customerPhone": "请输入联系电话（可选）",
+    "companyName": "请输入公司名称（可选）",
+    "deviceModel": "请输入设备型号",
+    "deviceSerial": "请输入设备序列号",
+    "description": "请详细描述遇到的问题",
+    "customerNotes": "如有其他需要说明的情况，请在此填写（可选）"
+  },
+  "titles": {
+    "createTicket": "创建维修工单"
+  },
+  "buttons": {
+    "submit": "提交工单",
+    "next": "下一步",
+    "prev": "上一步",
+    "cancel": "取消",
+    "upload": "上传文件"
+  },
+  "uploadInfo": {
+    "supportedFormats": "支持的文件格式：图片(jpg, png, gif)、视频(mp4, mov)、PDF、Word文档、文本文件",
+    "sizeLimit": "单个文件大小不超过10MB",
+    "tip": "建议上传问题相关的图片或文档，有助于技术人员快速定位问题",
+    "security": "上传的文件将被安全保存，仅用于问题诊断"
+  }
+} 

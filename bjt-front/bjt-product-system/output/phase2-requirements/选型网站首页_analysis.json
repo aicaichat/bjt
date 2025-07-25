@@ -1,0 +1,46 @@
+{
+  "system_name": "选型网站首页",
+  "total_count": 5,
+  "requirements": [],
+  "categories": {},
+  "priorities": {},
+  "estimated_workload": 0,
+  "columns_analysis": {
+    "total_columns": 7,
+    "columns": [
+      "首页",
+      "bug描述",
+      "bug图片",
+      "人员",
+      "日期",
+      "是否已完成",
+      "开发情况说明"
+    ],
+    "data_types": {
+      "首页": "object",
+      "bug描述": "float64",
+      "bug图片": "float64",
+      "人员": "float64",
+      "日期": "float64",
+      "是否已完成": "object",
+      "开发情况说明": "float64"
+    },
+    "missing_data": {
+      "首页": 0,
+      "bug描述": 5,
+      "bug图片": 5,
+      "人员": 5,
+      "日期": 5,
+      "是否已完成": 0,
+      "开发情况说明": 5
+    },
+    "unique_values": {
+      "首页": {
+        "首页": 5
+      },
+      "是否已完成": {
+        "□": 5
+      }
+    }
+  }
+}

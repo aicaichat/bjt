@@ -21,6 +21,7 @@ class BJT_Product_Controller extends BJT_API_Controller {
         'description_en',
         'subitem1_zh',
         'subitem1_en',
+        'subitem1_link',    // 新增：子项1链接字段
         'subitem2_zh',
         'subitem2_en',
         'subitem3_zh',
@@ -390,6 +391,12 @@ class BJT_Product_Controller extends BJT_API_Controller {
                     'type' => 'string',
                     'context' => ['view', 'edit', 'embed'],
                 ],
+                'subitem1_link' => [
+                    'description' => __('Subitem 1 link URL.', 'bjt'),
+                    'type' => 'string',
+                    'format' => 'uri',
+                    'context' => ['view', 'edit', 'embed'],
+                ],
                 'subitem2_zh' => [
                     'description' => __('Subitem 2 Chinese name.', 'bjt'),
                     'type' => 'string',
@@ -469,6 +476,7 @@ class BJT_Product_Controller extends BJT_API_Controller {
             'description_en' => 'description_en',
             'subitem1_zh' => 'subitem1_zh',
             'subitem1_en' => 'subitem1_en',
+            'subitem1_link' => 'subitem1_link', // 新增：子项1链接字段
             'subitem2_zh' => 'subitem2_zh',
             'subitem2_en' => 'subitem2_en',
             'subitem3_zh' => 'subitem3_zh',
@@ -482,7 +490,7 @@ class BJT_Product_Controller extends BJT_API_Controller {
         foreach ($field_map as $api_field => $db_field) {
             if (isset($params[$api_field]) && in_array($db_field, $this->fillable_fields)) {
                 $value = $params[$api_field];
-                if (in_array($db_field, ['title_zh', 'title_en', 'description_zh', 'description_en', 'subitem1_zh', 'subitem1_en', 'subitem2_zh', 'subitem2_en', 'subitem3_zh', 'subitem3_en', 'image_url', 'status', 'code'])) {
+                if (in_array($db_field, ['title_zh', 'title_en', 'description_zh', 'description_en', 'subitem1_zh', 'subitem1_en', 'subitem1_link', 'subitem2_zh', 'subitem2_en', 'subitem3_zh', 'subitem3_en', 'image_url', 'status', 'code'])) {
                     $mapped_data[$db_field] = sanitize_text_field($value);
                 } elseif ($db_field === 'sort_order') {
                     $mapped_data[$db_field] = absint($value);
@@ -514,6 +522,7 @@ class BJT_Product_Controller extends BJT_API_Controller {
             'description_en',
             'subitem1_zh',
             'subitem1_en',
+            'subitem1_link',
             'subitem2_zh',
             'subitem2_en',
             'subitem3_zh',

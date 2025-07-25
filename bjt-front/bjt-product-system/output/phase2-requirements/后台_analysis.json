@@ -1,0 +1,50 @@
+{
+  "system_name": "后台",
+  "total_count": 9,
+  "requirements": [],
+  "categories": {},
+  "priorities": {},
+  "estimated_workload": 0,
+  "columns_analysis": {
+    "total_columns": 8,
+    "columns": [
+      "后台",
+      "bug描述",
+      "bug图片",
+      "人员",
+      "日期",
+      "预期正确的值",
+      "是否已完成",
+      "开发情况说明"
+    ],
+    "data_types": {
+      "后台": "object",
+      "bug描述": "float64",
+      "bug图片": "float64",
+      "人员": "float64",
+      "日期": "float64",
+      "预期正确的值": "float64",
+      "是否已完成": "object",
+      "开发情况说明": "float64"
+    },
+    "missing_data": {
+      "后台": 3,
+      "bug描述": 9,
+      "bug图片": 9,
+      "人员": 9,
+      "日期": 9,
+      "预期正确的值": 9,
+      "是否已完成": 0,
+      "开发情况说明": 9
+    },
+    "unique_values": {
+      "后台": {
+        "胶带机": 5,
+        "纸机": 1
+      },
+      "是否已完成": {
+        "□": 9
+      }
+    }
+  }
+}

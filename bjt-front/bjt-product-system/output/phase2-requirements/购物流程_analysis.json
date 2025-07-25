@@ -1,0 +1,75 @@
+{
+  "system_name": "购物流程",
+  "total_count": 3,
+  "requirements": [
+    {
+      "id": "购物流程_1",
+      "system": "购物流程",
+      "description": "购物流程-备件",
+      "category": "",
+      "priority": "",
+      "status": "",
+      "estimated_days": 3.0,
+      "complexity": "high",
+      "type": "feature"
+    },
+    {
+      "id": "购物流程_2",
+      "system": "购物流程",
+      "description": "购物流程-备件",
+      "category": "",
+      "priority": "",
+      "status": "",
+      "estimated_days": 3.0,
+      "complexity": "high",
+      "type": "feature"
+    }
+  ],
+  "categories": {},
+  "priorities": {},
+  "estimated_workload": 6.0,
+  "columns_analysis": {
+    "total_columns": 9,
+    "columns": [
+      "购物流程",
+      "bug描述",
+      "bug图片",
+      "人员",
+      "日期",
+      "预期正确的值",
+      "是否已完成",
+      "复测bug描述",
+      "开发情况说明"
+    ],
+    "data_types": {
+      "购物流程": "object",
+      "bug描述": "float64",
+      "bug图片": "float64",
+      "人员": "float64",
+      "日期": "float64",
+      "预期正确的值": "float64",
+      "是否已完成": "object",
+      "复测bug描述": "float64",
+      "开发情况说明": "float64"
+    },
+    "missing_data": {
+      "购物流程": 1,
+      "bug描述": 3,
+      "bug图片": 3,
+      "人员": 3,
+      "日期": 3,
+      "预期正确的值": 3,
+      "是否已完成": 0,
+      "复测bug描述": 3,
+      "开发情况说明": 3
+    },
+    "unique_values": {
+      "购物流程": {
+        "购物流程-备件": 2
+      },
+      "是否已完成": {
+        "□": 3
+      }
+    }
+  }
+}

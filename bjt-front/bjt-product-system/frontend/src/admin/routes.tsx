@@ -27,8 +27,10 @@ import SparePartEditPage from './pages/spare-parts/SparePartEditPage';
 import SparePartModelEditPage from './pages/spare-parts/SparePartModelEditPage';
 import UsersPage from './pages/users/UsersPage';
 import UserEditPage from './pages/users/UserEditPage';
+import RegistrationsPage from './pages/RegistrationsPage';
 import SettingsPage from './pages/settings/SettingsPage';
 import DebugPage from './pages/DebugPage';
+import RepairTicketManagementPage from './pages/repair/RepairTicketManagementPage';
 
 const AdminRoutes: React.FC = () => {
   return (
@@ -116,11 +118,21 @@ const AdminRoutes: React.FC = () => {
             <Route path="models/edit/:id" element={<SparePartModelEditPage mode="edit" />} />
           </Route>
           
+          {/* 维修工单管理 */}
+          <Route path="repair-tickets">
+            <Route index element={<RepairTicketManagementPage />} />
+          </Route>
+          
           {/* 用户管理 */}
           <Route path="users">
             <Route index element={<UsersPage />} />
             <Route path="create" element={<UserEditPage />} />
             <Route path="edit/:id" element={<UserEditPage />} />
+          </Route>
+          
+          {/* 注册管理 */}
+          <Route path="registrations">
+            <Route index element={<RegistrationsPage />} />
           </Route>
           
           {/* 系统设置 - 默认页面 */}

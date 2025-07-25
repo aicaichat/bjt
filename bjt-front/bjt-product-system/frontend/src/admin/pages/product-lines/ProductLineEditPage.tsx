@@ -17,6 +17,7 @@ import { SaveOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import AdminPageHeader from '../../components/common/AdminPageHeader';
 import MultilingualInput, { MultilingualValue } from '../../components/common/MultilingualInput';
 import FileUrlInput from '../../components/common/FileUrlInput';
+import SubItemLinkInput from '../../components/common/SubItemLinkInput';
 import adminProductLineService, { ProductLineFormData } from '../../services/admin-product-line.service';
 import { useAdminI18n } from '../../i18n/hooks/useAdminI18n';
 
@@ -39,6 +40,8 @@ interface ExtendedProductLineFormData {
   sort_order: number;            // 排序
   created_at?: string;           // 只读
   updated_at?: string;           // 只读
+  // 产品线4特殊字段
+  subitem1_link?: string;        // 子项1编辑链接 (仅产品线4使用)
 }
 
 const { Option } = Select;
@@ -88,7 +91,7 @@ const ProductLineEditPage: React.FC = () => {
       console.log('[ProductLineEditPage] API返回的原始数据:', data);
       
       // 转换数据格式以适应表单 - 处理API字段映射
-      const formValues = {
+      const formValues: any = {
         code: data.id?.toString() || id,  // 显示产品线ID
         title: {
           // API可能返回title_zh/title_en 或 name_cn/name_en
@@ -100,22 +103,33 @@ const ProductLineEditPage: React.FC = () => {
           zh: data.description_zh || data.description_cn || '',
           en: data.description_en || ''
         },
-        subitem1: {
-          zh: data.subitem1_zh || '耗材',
-          en: data.subitem1_en || 'Consumables'
-        },
-        subitem2: {
-          zh: data.subitem2_zh || '备件',
-          en: data.subitem2_en || 'Spare Parts'
-        },
-        subitem3: {
-          zh: data.subitem3_zh || '',
-          en: data.subitem3_en || ''
-        },
         image_url: data.image_url || '',
         status: data.status || 'publish',
         sort_order: data.sort_order || data.menu_order || 1,  // 处理menu_order字段映射
       };
+
+      // 产品线4特殊处理：只有一个子项，且子项可点击编辑
+      if (productLineId === 4) {
+        formValues.subitem1_special = {
+          zh: data.subitem1_zh || '气柱袋产品',
+          en: data.subitem1_en || 'Air Column Products',
+          link: data.subitem1_link || ''
+        };
+      } else {
+        // 其他产品线的常规子项处理
+        formValues.subitem1 = {
+          zh: data.subitem1_zh || '耗材',
+          en: data.subitem1_en || 'Consumables'
+        };
+        formValues.subitem2 = {
+          zh: data.subitem2_zh || '备件',
+          en: data.subitem2_en || 'Spare Parts'
+        };
+        formValues.subitem3 = {
+          zh: data.subitem3_zh || '',
+          en: data.subitem3_en || ''
+        };
+      }
       
       console.log('[ProductLineEditPage] 转换后的表单数据:', formValues);
       
@@ -154,17 +168,30 @@ const ProductLineEditPage: React.FC = () => {
         name_en: values.title?.en || '',           // API期望name_en，映射到数据库title_en
         description_cn: values.description?.zh || '', // API期望description_cn，映射到数据库description_zh
         description_en: values.description?.en || '',
-        // 子项字段映射
-        subitem1_zh: values.subitem1?.zh || '',
-        subitem1_en: values.subitem1?.en || '',
-        subitem2_zh: values.subitem2?.zh || '',
-        subitem2_en: values.subitem2?.en || '',
-        subitem3_zh: values.subitem3?.zh || '',
-        subitem3_en: values.subitem3?.en || '',
         image_url: values.image_url || '',
         status: values.status || 'publish',        // 默认为publish而不是draft
         menu_order: values.sort_order || 1,       // API期望menu_order，映射到数据库sort_order
       };
+
+      // 产品线4特殊处理：只有一个子项，且包含链接
+      if (parseInt(id || '0') === 4) {
+        formData.subitem1_zh = values.subitem1_special?.zh || '';
+        formData.subitem1_en = values.subitem1_special?.en || '';
+        formData.subitem1_link = values.subitem1_special?.link || '';
+        // 清空其他子项
+        formData.subitem2_zh = '';
+        formData.subitem2_en = '';
+        formData.subitem3_zh = '';
+        formData.subitem3_en = '';
+      } else {
+        // 其他产品线的常规子项处理
+        formData.subitem1_zh = values.subitem1?.zh || '';
+        formData.subitem1_en = values.subitem1?.en || '';
+        formData.subitem2_zh = values.subitem2?.zh || '';
+        formData.subitem2_en = values.subitem2?.en || '';
+        formData.subitem3_zh = values.subitem3?.zh || '';
+        formData.subitem3_en = values.subitem3?.en || '';
+      }
 
       console.log('[ProductLineEditPage] 转换后的API数据:', formData);
 
@@ -326,63 +353,93 @@ const ProductLineEditPage: React.FC = () => {
               <DividerComponent orientation="left">子项目设置 (Sub-items Configuration)</DividerComponent>
             </ColComponent>
 
-            <ColComponent span={12}>
-              <FormItemComponent
-                label="子项目1 (Sub-item 1) - 通常为耗材"
-                name="subitem1"
-                rules={[
-                  {
-                    validator: (_: any, value: any) => {
-                      if (!value?.zh || !value?.en) {
-                        return Promise.reject('请输入中英文子项目1名称');
+            {/* 产品线4特殊处理：只有一个子项，且可点击编辑 */}
+            {parseInt(id || '0') === 4 ? (
+              <ColComponent span={24}>
+                <FormItemComponent
+                  label="子项目 (Sub-item) - 气柱袋产品"
+                  name="subitem1_special"
+                  rules={[
+                    {
+                      validator: (_: any, value: any) => {
+                        if (!value?.zh || !value?.en) {
+                          return Promise.reject('请输入中英文子项目名称');
+                        }
+                        if (!value?.link) {
+                          return Promise.reject('请输入编辑链接');
+                        }
+                        return Promise.resolve();
                       }
-                      return Promise.resolve();
                     }
-                  }
-                ]}
-              >
-                <MultilingualInput
-                  type="input"
-                  required
-                  placeholder={{ zh: '如：耗材', en: 'e.g., Consumables' }}
-                />
-              </FormItemComponent>
-            </ColComponent>
-
-            <ColComponent span={12}>
-              <FormItemComponent
-                label="子项目2 (Sub-item 2) - 通常为备件"
-                name="subitem2"
-                rules={[
-                  {
-                    validator: (_: any, value: any) => {
-                      if (!value?.zh || !value?.en) {
-                        return Promise.reject('请输入中英文子项目2名称');
+                  ]}
+                >
+                  <SubItemLinkInput
+                    placeholder={{ zh: '如：气柱袋产品', en: 'e.g., Air Column Products' }}
+                  />
+                </FormItemComponent>
+              </ColComponent>
+            ) : (
+              <>
+                {/* 其他产品线的常规子项处理 */}
+                <ColComponent span={12}>
+                  <FormItemComponent
+                    label="子项目1 (Sub-item 1) - 通常为耗材"
+                    name="subitem1"
+                    rules={[
+                      {
+                        validator: (_: any, value: any) => {
+                          if (!value?.zh || !value?.en) {
+                            return Promise.reject('请输入中英文子项目1名称');
+                          }
+                          return Promise.resolve();
+                        }
                       }
-                      return Promise.resolve();
-                    }
-                  }
-                ]}
-              >
-                <MultilingualInput
-                  type="input"
-                  required
-                  placeholder={{ zh: '如：备件', en: 'e.g., Spare Parts' }}
-                />
-              </FormItemComponent>
-            </ColComponent>
+                    ]}
+                  >
+                    <MultilingualInput
+                      type="input"
+                      required
+                      placeholder={{ zh: '如：耗材', en: 'e.g., Consumables' }}
+                    />
+                  </FormItemComponent>
+                </ColComponent>
 
-            <ColComponent span={12}>
-              <FormItemComponent
-                label="子项目3 (Sub-item 3) - 可选"
-                name="subitem3"
-              >
-                <MultilingualInput
-                  type="input"
-                  placeholder={{ zh: '可选的第三个子项目', en: 'Optional third sub-item' }}
-                />
-              </FormItemComponent>
-            </ColComponent>
+                <ColComponent span={12}>
+                  <FormItemComponent
+                    label="子项目2 (Sub-item 2) - 通常为备件"
+                    name="subitem2"
+                    rules={[
+                      {
+                        validator: (_: any, value: any) => {
+                          if (!value?.zh || !value?.en) {
+                            return Promise.reject('请输入中英文子项目2名称');
+                          }
+                          return Promise.resolve();
+                        }
+                      }
+                    ]}
+                  >
+                    <MultilingualInput
+                      type="input"
+                      required
+                      placeholder={{ zh: '如：备件', en: 'e.g., Spare Parts' }}
+                    />
+                  </FormItemComponent>
+                </ColComponent>
+
+                <ColComponent span={12}>
+                  <FormItemComponent
+                    label="子项目3 (Sub-item 3) - 可选"
+                    name="subitem3"
+                  >
+                    <MultilingualInput
+                      type="input"
+                      placeholder={{ zh: '可选的第三个子项目', en: 'Optional third sub-item' }}
+                    />
+                  </FormItemComponent>
+                </ColComponent>
+              </>
+            )}
 
             {/* 产品线图片 */}
             <ColComponent span={24}>

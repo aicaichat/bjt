@@ -12,8 +12,19 @@
   "noAccessories": "暂无配件",
   "allPartNumbers": "所有型号",
   "pageTitle": "设备选型",
+  "pageTitles": {
+    "machineSelection": "主机选择",
+    "accessorySelection": "配件选择"
+  },
   "addToCart": "加入购物车",
   "noPermissionAdd": "无权限添加",
+  "breadcrumb": {
+    "home": "首页",
+    "productLine": "产品线",
+    "selectMachine": "请选择主机型号",
+    "selectAccessory": "请选择配件",
+    "currentLevel": "当前层级"
+  },
   "filters": {
     "title": "筛选",
     "voltage": "电压",

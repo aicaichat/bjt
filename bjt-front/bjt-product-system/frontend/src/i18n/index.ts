@@ -33,6 +33,14 @@ import enOrder from './locales/en/order.json';
 import zhOrder from './locales/zh/order.json';
 import enLogin from './locales/en/login.json';
 import zhLogin from './locales/zh/login.json';
+import enContact from './locales/en/contact.json';
+import zhContact from './locales/zh/contact.json';
+
+// Register page translations
+import enRegister from './locales/en/register.json';
+import zhRegister from './locales/zh/register.json';
+import enRepair from './locales/en/repair.json';
+import zhRepair from './locales/zh/repair.json';
 
 i18n
   .use(LanguageDetector)
@@ -50,7 +58,10 @@ i18n
         products: enProducts,
         cart: enCart,
         order: enOrder,
-        login: enLogin
+        login: enLogin,
+        contact: enContact,
+        register: enRegister,
+        repair: enRepair
       },
       zh: {
         translation: zhTranslation,
@@ -63,7 +74,10 @@ i18n
         products: zhProducts,
         cart: zhCart,
         order: zhOrder,
-        login: zhLogin
+        login: zhLogin,
+        contact: zhContact,
+        register: zhRegister,
+        repair: zhRepair
       },
       ja: {
         translation: jaTranslation,
@@ -86,7 +100,7 @@ i18n
     nsSeparator: false,
     returnObjects: true, // Allow returning objects for nested translations
     defaultNS: 'translation',
-    ns: ['translation', 'home', 'consumables', 'orderList', 'po', 'spareParts', 'machines', 'products', 'cart', 'order', 'login'],
+    ns: ['translation', 'home', 'consumables', 'orderList', 'po', 'spareParts', 'machines', 'products', 'cart', 'order', 'login', 'contact', 'register', 'repair'],
     detection: {
       order: ['localStorage', 'navigator'],
       caches: ['localStorage'],

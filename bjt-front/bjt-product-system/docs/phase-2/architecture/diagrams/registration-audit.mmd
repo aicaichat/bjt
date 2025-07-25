@@ -1,0 +1,19 @@
+sequenceDiagram
+  participant Visitor as Visitor
+  participant Frontend as React SPA
+  participant API as WP REST /phase2/auth
+  participant DB as MySQL
+  participant Admin as Admin User
+  Note over Visitor,Frontend: Registration Request
+  Visitor->>Frontend: Fill Registration Form
+  Frontend->>API: POST /register {name, email, pwd, region, unit}
+  API->>DB: INSERT pending record
+  API-->>Frontend: 202 Accepted
+  API-->>Admin: Email "New Registration"
+  Admin->>WP Admin UI: Review pending list
+  Admin->>DB: UPDATE status=approved, role, customer_code
+  DB-->>API: Row updated
+  API-->>Visitor: Email "Account Approved"
+  Visitor->>Frontend: Login
+  Frontend->>API: POST /login
+  API-->>Frontend: JWT Token 
