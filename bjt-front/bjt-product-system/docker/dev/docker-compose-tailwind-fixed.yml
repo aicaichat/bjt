@@ -1,14 +1,17 @@
-# 产品管理系统开发环境配置
+# 产品管理系统开发环境配置 - Tailwind CSS 修复版
 
 services:
-  # 前端开发服务器
+  # 前端开发服务器 - 修复Tailwind CSS配置
   frontend:
     build:
       context: ../../frontend
       dockerfile: Dockerfile.dev
-    image: dev-frontend:latest
+      args:
+        - NODE_ENV=development
+        - TAILWIND_MODE=watch
+    image: dev-frontend-tailwind-fixed:latest
     ports:
-      - "5173:5173"  # 将容器的5173端口映射到主机的5173端口
+      - "5173:5173"
     networks:
       bjt_network:
         aliases:
@@ -16,6 +19,9 @@ services:
     volumes:
       - ../../frontend:/app
       - /app/node_modules
+      # 确保PostCSS配置不被覆盖
+      - ../../frontend/postcss.config.js:/app/postcss.config.js:ro
+      - ../../frontend/tailwind.config.js:/app/tailwind.config.js:ro
     environment:
       - NODE_ENV=development
       - DOCKER_ENV=true
@@ -24,6 +30,7 @@ services:
       - VITE_USE_PROXY=true
       - VITE_HOST=0.0.0.0
       - TAILWIND_MODE=watch
+      - POSTCSS_CONFIG_PATH=/app/postcss.config.js
     healthcheck:
       test: ["CMD", "curl", "-f", "http://0.0.0.0:5173"]
       interval: 30s
@@ -36,6 +43,13 @@ services:
         max-size: "10m"
         max-file: "3"
     restart: unless-stopped
+    command: >
+      sh -c "
+        echo '🔧 修复Tailwind CSS配置...' &&
+        npm install --save-dev @tailwindcss/postcss tailwindcss@latest postcss@latest autoprefixer@latest postcss-import@latest postcss-nested@latest postcss-preset-env@latest &&
+        echo '✅ Tailwind CSS配置修复完成' &&
+        npm run dev -- --host 0.0.0.0
+      "
 
   # WordPress开发服务器（使用官方 WordPress 镜像）
   wordpress:
