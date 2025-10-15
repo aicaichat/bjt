@@ -4,18 +4,11 @@ FROM node:18-alpine as frontend-builder
 # 设置工作目录
 WORKDIR /app
 
-# 复制前端package文件
-COPY frontend/package.json ./
-
-# 尝试复制 package-lock.json（如果存在）
-COPY frontend/package-lock.jso[n] ./ 2>/dev/null || true
+# 复制前端 package 文件（同时支持有/无 lock 文件）
+COPY frontend/package*.json ./
 
 # 安装依赖：如果有 lock 文件用 npm ci，否则用 npm install
-RUN if [ -f package-lock.json ]; then \
-      npm ci --prefer-online; \
-    else \
-      npm install --legacy-peer-deps; \
-    fi
+RUN sh -c '[ -f package-lock.json ] && npm ci --prefer-online || npm install --legacy-peer-deps'
 
 # 复制前端源代码
 COPY frontend/ ./
