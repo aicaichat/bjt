@@ -11,6 +11,9 @@ COPY frontend/package*.json ./
 # 添加 --force 解决 rollup optional dependencies 问题（Alpine Linux）
 RUN sh -c '[ -f package-lock.json ] && npm ci --prefer-online --force || npm install --legacy-peer-deps --force'
 
+# 显式安装 rollup 的 Alpine Linux 原生模块（解决 optional dependencies bug）
+RUN npm install --save-optional @rollup/rollup-linux-x64-musl --force || true
+
 # 复制前端源代码
 COPY frontend/ ./
 
