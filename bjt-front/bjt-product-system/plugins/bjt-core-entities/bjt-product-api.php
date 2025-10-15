@@ -18,6 +18,9 @@ if (file_exists(__DIR__ . '/vendor/autoload.php')) {
 // Include the BJT_JWT_Handler class
 require_once __DIR__ . '/includes/class-bjt-jwt-handler.php';
 
+// Include the plugin auto-activation protection
+require_once __DIR__ . '/prevent-auto-deactivate.php';
+
 // Define a constant for the plugin directory path
 if ( ! defined( 'BJT_CORE_ENTITIES_PLUGIN_DIR' ) ) {
     define( 'BJT_CORE_ENTITIES_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
