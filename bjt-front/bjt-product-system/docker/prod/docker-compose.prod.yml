@@ -19,8 +19,6 @@ services:
       - ../../frontend/dist:/usr/share/nginx/html:ro
       - ../../plugins:/var/www/html/wp-content/plugins:ro
       - ../../frontend:/var/www/html/frontend:ro
-      # 上传文件目录挂载 - 统一使用volume避免权限冲突
-      - uploads_data:/usr/share/nginx/html/uploads:rw
     depends_on:
       - wordpress
     environment:
