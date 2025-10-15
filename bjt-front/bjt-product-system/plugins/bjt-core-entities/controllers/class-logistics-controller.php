@@ -114,41 +114,47 @@ class BJT_Logistics_Controller extends BJT_API_Controller {
         
         // Track by number route
         register_rest_route($this->namespace, '/logistics/track/(?P<tracking_number>[a-zA-Z0-9-_]+)', array(
-            'methods' => WP_REST_Server::READABLE,
-            'callback' => array($this, 'track_by_number'),
-            'permission_callback' => '__return_true', // Public endpoint
+            array(
+                'methods' => WP_REST_Server::READABLE,
+                'callback' => array($this, 'track_by_number'),
+                'permission_callback' => '__return_true', // Public endpoint
+            )
         ));
         
         // Update tracking status
         register_rest_route($this->namespace, '/logistics/tracking/(?P<id>\d+)/update', array(
-            'methods' => WP_REST_Server::CREATABLE,
-            'callback' => array($this, 'update_tracking_status'),
-            'permission_callback' => array($this, 'check_write_permission'),
-            'args' => array(
-                'status' => array(
-                    'required' => true,
-                    'sanitize_callback' => 'sanitize_text_field',
+            array(
+                'methods' => WP_REST_Server::CREATABLE,
+                'callback' => array($this, 'update_tracking_status'),
+                'permission_callback' => array($this, 'check_write_permission'),
+                'args' => array(
+                    'status' => array(
+                        'required' => true,
+                        'sanitize_callback' => 'sanitize_text_field',
+                    ),
+                    'event_description' => array(
+                        'sanitize_callback' => 'sanitize_text_field',
+                    ),
+                    'location' => array(
+                        'sanitize_callback' => 'sanitize_text_field',
+                    ),
                 ),
-                'event_description' => array(
-                    'sanitize_callback' => 'sanitize_text_field',
-                ),
-                'location' => array(
-                    'sanitize_callback' => 'sanitize_text_field',
-                ),
-            ),
+            )
         ));
         
         // Bulk tracking update
         register_rest_route($this->namespace, '/logistics/tracking/bulk-update', array(
-            'methods' => WP_REST_Server::CREATABLE,
-            'callback' => array($this, 'bulk_update_tracking'),
-            'permission_callback' => array($this, 'check_admin_permission'),
-            'args' => array(
-                'tracking_numbers' => array(
-                    'required' => true,
-                    'type' => 'array',
+            array(
+                'methods' => WP_REST_Server::CREATABLE,
+                'callback' => array($this, 'bulk_update_tracking'),
+                'permission_callback' => array($this, 'check_admin_permission'),
+                'args' => array(
+                    'tracking_numbers' => array(
+                        'required' => true,
+                        'type' => 'array',
+                    ),
                 ),
-            ),
+            )
         ));
         
         // Providers management
@@ -186,16 +192,20 @@ class BJT_Logistics_Controller extends BJT_API_Controller {
         
         // Tracking events
         register_rest_route($this->namespace, '/logistics/tracking/(?P<id>\d+)/events', array(
-            'methods' => WP_REST_Server::READABLE,
-            'callback' => array($this, 'get_tracking_events'),
-            'permission_callback' => array($this, 'check_read_permission'),
+            array(
+                'methods' => WP_REST_Server::READABLE,
+                'callback' => array($this, 'get_tracking_events'),
+                'permission_callback' => array($this, 'check_read_permission'),
+            )
         ));
         
         // Statistics and reports
         register_rest_route($this->namespace, '/logistics/stats', array(
-            'methods' => WP_REST_Server::READABLE,
-            'callback' => array($this, 'get_logistics_stats'),
-            'permission_callback' => array($this, 'check_read_permission'),
+            array(
+                'methods' => WP_REST_Server::READABLE,
+                'callback' => array($this, 'get_logistics_stats'),
+                'permission_callback' => array($this, 'check_read_permission'),
+            )
         ));
         
         // Settings management

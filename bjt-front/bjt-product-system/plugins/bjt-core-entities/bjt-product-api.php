@@ -170,7 +170,7 @@ function bjt_api_register_routes() {
     }
 
     // TEST CHARSET ROUTE
-    register_rest_route('bjt/v1', '/test-charset', [
+    register_rest_route('bjt/v1', '/test-charset', [[
         'methods' => WP_REST_Server::READABLE, // Or 'GET'
         'callback' => function() {
             global $wpdb;
@@ -189,14 +189,14 @@ function bjt_api_register_routes() {
             return new WP_REST_Response($response_data, 200);
         },
         'permission_callback' => '__return_true',
-    ]);
+    ]]);
 
     // DIAGNOSTIC ROUTE for remote debugging
-    register_rest_route('bjt/v1', '/diagnostic', array(
-        'methods' => 'GET',
+    register_rest_route('bjt/v1', '/diagnostic', [[
+        'methods' => WP_REST_Server::READABLE,
         'callback' => 'bjt_diagnostic_endpoint',
         'permission_callback' => '__return_true', // 公开访问以便远程诊断
-    ));
+    ]]);
 }
 add_action('rest_api_init', 'bjt_api_register_routes');
 
@@ -302,83 +302,87 @@ register_deactivation_hook(__FILE__, 'bjt_api_deactivate');
 function bjt_register_debug_endpoint() {
     // Simple health check endpoint 
     register_rest_route('bjt/v1', '/healthcheck', array(
-        'methods' => 'GET',
-        'callback' => function() {
-            return new WP_REST_Response(array(
-                'success' => true,
-                'status' => 'ok',
-                'message' => 'API is functioning correctly',
-                'timestamp' => current_time('mysql')
-            ), 200);
-        },
-        'permission_callback' => '__return_true'
+        array(
+            'methods' => 'GET',
+            'callback' => function() {
+                return new WP_REST_Response(array(
+                    'success' => true,
+                    'status' => 'ok',
+                    'message' => 'API is functioning correctly',
+                    'timestamp' => current_time('mysql')
+                ), 200);
+            },
+            'permission_callback' => '__return_true'
+        )
     ));
 
     register_rest_route('bjt/v1', '/__debug_test_endpoint__', array(
-        'methods' => 'GET',
-        'callback' => function() {
-            global $wp_rest_server;
-            
-            // Get all registered routes
-            $routes = $wp_rest_server->get_routes();
-            $bjt_routes = [];
-            
-            // Filter for BJT routes only
-            foreach ($routes as $route => $handlers) {
-                if (strpos($route, 'bjt/v1') === 0) {
-                    $methods = [];
-                    foreach ($handlers as $handler) {
-                        if (isset($handler['methods'])) {
-                            $methods = array_merge($methods, array_keys($handler['methods']));
-                        }
-                    }
-                    $bjt_routes[$route] = array(
-                        'url' => rest_url($route),
-                        'methods' => array_unique($methods)
-                    );
-                }
-            }
-            
-            // Get all registered controller instances
-            $controllers = [
-                'product_lines' => new BJT_Product_Controller(),
-                'host_models' => new BJT_Machine_Controller(),
-                'machines' => new BJT_Machine_Controller(),
-                'accessories' => new BJT_Accessory_Controller(),
-                'consumables' => new BJT_Consumable_Controller(),
-                'spare_parts' => new BJT_Spare_Part_Controller(),
-                'cart' => new BJT_Cart_Controller(),
-                'product_lookup' => new BJT_Product_Lookup_Controller(),
-            ];
-            
-            // Manual route registration for debug purposes
-            $manual_routes = [];
-            foreach ($controllers as $name => $controller) {
-                // Convert underscores to hyphens for all route names
-                $route_name = str_replace('_', '-', $name);
+        array(
+            'methods' => 'GET',
+            'callback' => function() {
+                global $wp_rest_server;
                 
-                $manual_routes[$name] = [
-                    'url' => rest_url('bjt/v1/' . $route_name),
-                    'controller_class' => get_class($controller),
-                    'resource_name' => isset($controller->resource_name) ? $controller->resource_name : 'unknown'
+                // Get all registered routes
+                $routes = $wp_rest_server->get_routes();
+                $bjt_routes = [];
+                
+                // Filter for BJT routes only
+                foreach ($routes as $route => $handlers) {
+                    if (strpos($route, 'bjt/v1') === 0) {
+                        $methods = [];
+                        foreach ($handlers as $handler) {
+                            if (isset($handler['methods'])) {
+                                $methods = array_merge($methods, array_keys($handler['methods']));
+                            }
+                        }
+                        $bjt_routes[$route] = array(
+                            'url' => rest_url($route),
+                            'methods' => array_unique($methods)
+                        );
+                    }
+                }
+                
+                // Get all registered controller instances
+                $controllers = [
+                    'product_lines' => new BJT_Product_Controller(),
+                    'host_models' => new BJT_Machine_Controller(),
+                    'machines' => new BJT_Machine_Controller(),
+                    'accessories' => new BJT_Accessory_Controller(),
+                    'consumables' => new BJT_Consumable_Controller(),
+                    'spare_parts' => new BJT_Spare_Part_Controller(),
+                    'cart' => new BJT_Cart_Controller(),
+                    'product_lookup' => new BJT_Product_Lookup_Controller(),
                 ];
+                
+                // Manual route registration for debug purposes
+                $manual_routes = [];
+                foreach ($controllers as $name => $controller) {
+                    // Convert underscores to hyphens for all route names
+                    $route_name = str_replace('_', '-', $name);
+                    
+                    $manual_routes[$name] = [
+                        'url' => rest_url('bjt/v1/' . $route_name),
+                        'controller_class' => get_class($controller),
+                        'resource_name' => isset($controller->resource_name) ? $controller->resource_name : 'unknown'
+                    ];
+                }
+                
+                return new WP_REST_Response(array(
+                    'success' => true,
+                    'message' => 'Debug endpoint is working',
+                    'registered_routes' => array(
+                        'product_lines' => rest_url('bjt/v1/product-lines'),
+                        'host_models' => rest_url('bjt/v1/host-models'),
+                        'machines' => rest_url('bjt/v1/machines')
+                    ),
+                    'all_bjt_routes' => $bjt_routes,
+                    'manual_routes' => $manual_routes
+                ), 200);
+            },
+            'permission_callback' => function() {
+                return true;
             }
-            
-            return new WP_REST_Response(array(
-                'success' => true,
-                'message' => 'Debug endpoint is working',
-                'registered_routes' => array(
-                    'product_lines' => rest_url('bjt/v1/product-lines'),
-                    'host_models' => rest_url('bjt/v1/host-models'),
-                    'machines' => rest_url('bjt/v1/machines')
-                ),
-                'all_bjt_routes' => $bjt_routes,
-                'manual_routes' => $manual_routes
-            ), 200);
-        },
-        'permission_callback' => function() {
-            return true;
-        }
+        )
     ));
 }
 

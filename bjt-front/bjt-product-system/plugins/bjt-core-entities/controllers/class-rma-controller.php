@@ -135,9 +135,11 @@ class BJT_RMA_Controller extends BJT_API_Controller {
         
         // 附件上传端点
         register_rest_route($this->namespace, '/' . $this->resource_name . '/(?P<id>\d+)/attachments', array(
-            'methods' => WP_REST_Server::CREATABLE,
-            'callback' => array($this, 'upload_attachment'),
-            'permission_callback' => array($this, 'check_upload_permission'),
+            array(
+                'methods' => WP_REST_Server::CREATABLE,
+                'callback' => array($this, 'upload_attachment'),
+                'permission_callback' => array($this, 'check_upload_permission'),
+            )
         ));
     }
     
