@@ -21,6 +21,9 @@ require_once __DIR__ . '/includes/class-bjt-jwt-handler.php';
 // Include the plugin auto-activation protection
 require_once __DIR__ . '/prevent-auto-deactivate.php';
 
+// Include auto-fix configuration
+require_once __DIR__ . '/auto-fix-config.php';
+
 // Define a constant for the plugin directory path
 if ( ! defined( 'BJT_CORE_ENTITIES_PLUGIN_DIR' ) ) {
     define( 'BJT_CORE_ENTITIES_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
