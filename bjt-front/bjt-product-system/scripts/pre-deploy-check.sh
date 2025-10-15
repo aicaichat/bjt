@@ -1,233 +1,166 @@
 #!/bin/bash
+# 部署前检查脚本 - 快速评估当前状态
 
-# BJT产品管理系统 - 部署前检查脚本
-# 使用方法: ./scripts/pre-deploy-check.sh
+echo "=========================================="
+echo "  部署前环境检查"
+echo "=========================================="
+echo ""
 
-# 颜色定义
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
+# 1. 磁盘空间
+echo "【1】磁盘空间检查"
+echo "--------------------------------------"
+DISK_USAGE=$(df / | awk 'NR==2 {print $5}' | sed 's/%//')
+DISK_AVAIL=$(df -h / | awk 'NR==2 {print $4}')
 
-print_success() {
-    echo -e "${GREEN}✅ $1${NC}"
-}
+echo "使用率: ${DISK_USAGE}%"
+echo "可用空间: ${DISK_AVAIL}"
 
-print_error() {
-    echo -e "${RED}❌ $1${NC}"
-}
-
-print_warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
-}
-
-echo "========================================"
-echo "🔍 BJT产品管理系统 - 部署前检查"
-echo "========================================"
-
-# 检查基本要求
-check_passed=true
-
-# 检查磁盘空间（至少10GB可用）
-echo "1. 检查磁盘空间..."
-DISK_USAGE=$(df / | tail -1 | awk '{print $5}' | sed 's/%//')
-DISK_AVAIL=$(df -h / | tail -1 | awk '{print $4}')
-if [ $DISK_USAGE -gt 80 ]; then
-    print_error "磁盘空间不足: 使用率${DISK_USAGE}%, 可用${DISK_AVAIL}"
-    check_passed=false
+if [ "$DISK_USAGE" -gt 85 ]; then
+    echo "❌ 磁盘空间不足，建议先清理"
+    echo "   运行: sudo ./scripts/cleanup-disk-space.sh"
+elif [ "$DISK_USAGE" -gt 75 ]; then
+    echo "⚠️  磁盘空间紧张，建议清理后再部署"
 else
-    print_success "磁盘空间充足: 使用率${DISK_USAGE}%, 可用${DISK_AVAIL}"
+    echo "✅ 磁盘空间充足"
 fi
+echo ""
 
-# 检查内存（至少2GB可用）
-echo "2. 检查可用内存..."
-if command -v free >/dev/null 2>&1; then
-    MEMORY_FREE=$(free -m | grep Available | awk '{print $2}')
-    if [ -z "$MEMORY_FREE" ]; then
-        MEMORY_FREE=$(free -m | grep "^Mem:" | awk '{print $4}')
-    fi
-    if [ $MEMORY_FREE -lt 2048 ]; then
-        print_error "可用内存不足: ${MEMORY_FREE}MB (建议至少2GB)"
-        check_passed=false
-    else
-        print_success "内存充足: ${MEMORY_FREE}MB"
-    fi
+# 2. Docker 状态
+echo "【2】Docker 服务状态"
+echo "--------------------------------------"
+if systemctl is-active --quiet docker; then
+    echo "✅ Docker 服务运行中"
 else
-    print_warning "无法检查内存状态"
+    echo "❌ Docker 服务未运行"
 fi
+echo ""
 
-# 检查端口占用
-echo "3. 检查端口占用..."
-port_conflicts=false
+# 3. 容器状态
+echo "【3】当前容器状态"
+echo "--------------------------------------"
+docker-compose -f docker/prod/docker-compose.prod.yml ps
+echo ""
 
-if netstat -tulpn 2>/dev/null | grep -q :80; then
-    PORT_80_PROC=$(netstat -tulpn 2>/dev/null | grep :80 | head -1 | awk '{print $7}')
-    print_error "端口80被占用: $PORT_80_PROC"
-    port_conflicts=true
-fi
+# 4. 数据库连接
+echo "【4】数据库连接测试"
+echo "--------------------------------------"
+DB_TEST=$(docker-compose -f docker/prod/docker-compose.prod.yml exec -T mysql \
+    mysql -u root -pbjtpassword123 -e "SELECT 1" 2>/dev/null || echo "FAILED")
 
-if netstat -tulpn 2>/dev/null | grep -q :443; then
-    PORT_443_PROC=$(netstat -tulpn 2>/dev/null | grep :443 | head -1 | awk '{print $7}')
-    print_error "端口443被占用: $PORT_443_PROC"
-    port_conflicts=true
-fi
-
-if [ "$port_conflicts" = false ]; then
-    print_success "端口80和443可用"
+if [ "$DB_TEST" = "FAILED" ]; then
+    echo "❌ 数据库连接失败"
 else
-    check_passed=false
+    echo "✅ 数据库连接正常"
 fi
+echo ""
 
-# 检查Docker
-echo "4. 检查Docker..."
-if command -v docker >/dev/null 2>&1; then
-    if docker info >/dev/null 2>&1; then
-        DOCKER_VERSION=$(docker --version | cut -d' ' -f3 | cut -d',' -f1)
-        print_success "Docker已安装并运行: $DOCKER_VERSION"
-    else
-        print_error "Docker已安装但未运行，请启动Docker服务"
-        check_passed=false
-    fi
-else
-    print_error "Docker未安装，请先安装Docker"
-    check_passed=false
-fi
+# 5. 关键数据库表
+echo "【5】关键数据库表检查"
+echo "--------------------------------------"
+TABLES=(
+    "wp_bjt_products"
+    "wp_bjt_product_lines"
+    "wp_bjt_machines"
+    "wp_bjt_parts"
+    "wp_bjt_consumables"
+)
 
-# 检查Docker Compose
-echo "5. 检查Docker Compose..."
-if command -v docker-compose >/dev/null 2>&1; then
-    COMPOSE_VERSION=$(docker-compose --version | cut -d' ' -f3 | cut -d',' -f1)
-    print_success "Docker Compose已安装: $COMPOSE_VERSION"
-elif docker compose version >/dev/null 2>&1; then
-    COMPOSE_VERSION=$(docker compose version --short)
-    print_success "Docker Compose已安装: $COMPOSE_VERSION"
-else
-    print_error "Docker Compose未安装，请先安装Docker Compose"
-    check_passed=false
-fi
-
-# 检查环境配置文件
-echo "6. 检查环境配置文件..."
-if [ -f ".env.production" ]; then
-    print_success ".env.production 配置文件存在"
+MISSING=0
+for table in "${TABLES[@]}"; do
+    EXISTS=$(docker-compose -f docker/prod/docker-compose.prod.yml exec -T mysql \
+        mysql -u root -pbjtpassword123 bjt \
+        -e "SHOW TABLES LIKE '$table';" 2>/dev/null | grep -c "$table" || echo "0")
     
-    # 检查关键配置项
-    missing_vars=()
-    for var in DOMAIN_NAME MYSQL_ROOT_PASSWORD MYSQL_DATABASE JWT_AUTH_SECRET_KEY; do
-        if ! grep -q "^${var}=" .env.production; then
-            missing_vars+=("$var")
-        fi
-    done
-    
-    if [ ${#missing_vars[@]} -gt 0 ]; then
-        print_error "缺少环境变量: ${missing_vars[*]}"
-        check_passed=false
+    if [ "$EXISTS" = "0" ]; then
+        echo "❌ $table - 丢失"
+        MISSING=$((MISSING + 1))
     else
-        print_success "环境变量配置完整"
-    fi
-else
-    print_error ".env.production 文件不存在"
-    echo "         请复制 env.production.example 并配置："
-    echo "         cp env.production.example .env.production"
-    check_passed=false
-fi
-
-# 检查SSL证书
-echo "7. 检查SSL证书..."
-if [ -f "nginx/ssl/cert.pem" ] && [ -f "nginx/ssl/private.key" ]; then
-    print_success "SSL证书文件存在"
-    
-    # 检查证书有效期
-    if command -v openssl >/dev/null 2>&1; then
-        EXPIRE_DATE=$(openssl x509 -in nginx/ssl/cert.pem -noout -enddate 2>/dev/null | cut -d= -f2)
-        if [ $? -eq 0 ]; then
-            EXPIRE_TIMESTAMP=$(date -d "$EXPIRE_DATE" +%s 2>/dev/null || date -j -f "%b %d %T %Y %Z" "$EXPIRE_DATE" +%s 2>/dev/null)
-            CURRENT_TIMESTAMP=$(date +%s)
-            if [ ! -z "$EXPIRE_TIMESTAMP" ] && [ $EXPIRE_TIMESTAMP -gt $CURRENT_TIMESTAMP ]; then
-                DAYS_TO_EXPIRE=$(( (EXPIRE_TIMESTAMP - CURRENT_TIMESTAMP) / 86400 ))
-                if [ $DAYS_TO_EXPIRE -lt 30 ]; then
-                    print_warning "SSL证书即将过期，剩余 $DAYS_TO_EXPIRE 天"
-                else
-                    print_success "SSL证书有效，剩余 $DAYS_TO_EXPIRE 天"
-                fi
-            else
-                print_warning "SSL证书已过期或无法解析有效期"
-            fi
-        else
-            print_warning "无法读取SSL证书信息"
-        fi
-    fi
-else
-    print_error "SSL证书文件缺失: nginx/ssl/cert.pem 或 nginx/ssl/private.key"
-    echo "         请生成或上传SSL证书文件"
-    check_passed=false
-fi
-
-# 验证docker-compose配置
-echo "8. 验证Docker Compose配置..."
-if [ -f "docker/prod/docker-compose.prod.yml" ]; then
-    if docker-compose -f docker/prod/docker-compose.prod.yml config >/dev/null 2>&1; then
-        print_success "Docker Compose配置文件有效"
-    else
-        print_error "Docker Compose配置文件有语法错误"
-        check_passed=false
-    fi
-else
-    print_error "Docker Compose配置文件不存在: docker/prod/docker-compose.prod.yml"
-    check_passed=false
-fi
-
-# 检查前端依赖
-echo "9. 检查前端依赖..."
-if [ -f "frontend/package.json" ]; then
-    print_success "前端项目存在"
-    if [ -d "frontend/node_modules" ]; then
-        print_success "前端依赖已安装"
-    else
-        print_warning "前端依赖未安装，部署时会自动安装"
-    fi
-else
-    print_error "前端项目不存在: frontend/package.json"
-    check_passed=false
-fi
-
-# 检查后端插件
-echo "10. 检查后端插件..."
-plugin_missing=false
-for plugin in bjt-core-entities bjt-product-admin; do
-    if [ -d "plugins/$plugin" ]; then
-        print_success "插件存在: $plugin"
-    else
-        print_error "插件缺失: $plugin"
-        plugin_missing=true
+        echo "✅ $table"
     fi
 done
 
-if [ "$plugin_missing" = true ]; then
-    check_passed=false
+if [ "$MISSING" -gt 0 ]; then
+    echo ""
+    echo "⚠️  检测到 $MISSING 个表丢失"
+fi
+echo ""
+
+# 6. 备份检查
+echo "【6】最近的备份"
+echo "--------------------------------------"
+if [ -d /var/bjt/backups ]; then
+    LATEST=$(find /var/bjt/backups -name "*.sql" -type f -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1)
+    if [ -n "$LATEST" ]; then
+        BACKUP_FILE=$(echo "$LATEST" | cut -d' ' -f2)
+        BACKUP_TIME=$(stat -c %y "$BACKUP_FILE" | cut -d'.' -f1)
+        BACKUP_SIZE=$(du -h "$BACKUP_FILE" | cut -f1)
+        echo "✅ 最新备份: $BACKUP_FILE"
+        echo "   时间: $BACKUP_TIME"
+        echo "   大小: $BACKUP_SIZE"
+    else
+        echo "⚠️  未找到备份文件"
+    fi
+else
+    echo "❌ 备份目录不存在"
+fi
+echo ""
+
+# 7. 网络连接
+echo "【7】网络连接测试"
+echo "--------------------------------------"
+if ping -c 1 -W 2 8.8.8.8 &> /dev/null; then
+    echo "✅ 外网连接正常"
+else
+    echo "⚠️  外网连接异常"
 fi
 
-echo "========================================"
-
-# 最终结果
-if [ "$check_passed" = true ]; then
-    print_success "🎉 所有检查通过，可以开始部署！"
-    echo ""
-    echo "建议的部署命令："
-    echo "  ./deploy-production.sh"
-    echo ""
-    echo "如果遇到问题，请查看故障排除指南："
-    echo "  📚 PRODUCTION_TROUBLESHOOTING_GUIDE.md"
-    exit 0
+if curl -s -o /dev/null -w "%{http_code}" http://localhost 2>&1 | grep -q "200"; then
+    echo "✅ Nginx 响应正常"
 else
-    print_error "❌ 部署前检查失败，请解决上述问题后重试"
+    echo "⚠️  Nginx 响应异常"
+fi
+echo ""
+
+# 8. 总结
+echo "=========================================="
+echo "  检查总结"
+echo "=========================================="
+echo ""
+
+ISSUES=0
+
+if [ "$DISK_USAGE" -gt 85 ]; then
+    echo "⚠️  磁盘空间不足"
+    ISSUES=$((ISSUES + 1))
+fi
+
+if [ "$DB_TEST" = "FAILED" ]; then
+    echo "⚠️  数据库连接失败"
+    ISSUES=$((ISSUES + 1))
+fi
+
+if [ "$MISSING" -gt 0 ]; then
+    echo "⚠️  数据库表丢失"
+    ISSUES=$((ISSUES + 1))
+fi
+
+if [ "$ISSUES" -eq 0 ]; then
+    echo "✅ 所有检查通过，可以安全部署"
     echo ""
-    echo "常见解决方案："
-    echo "1. 释放磁盘空间: docker system prune -a"
-    echo "2. 停止占用端口的服务: sudo fuser -k 80/tcp 443/tcp"
-    echo "3. 配置环境变量: nano .env.production"
-    echo "4. 生成SSL证书: ./scripts/setup-ssl.sh your-domain.com"
+    echo "执行部署:"
+    echo "  sudo ./scripts/safe-recovery-deploy.sh"
+else
+    echo "❌ 发现 $ISSUES 个问题，建议先解决后再部署"
     echo ""
-    echo "详细故障排除: 📚 PRODUCTION_TROUBLESHOOTING_GUIDE.md"
-    exit 1
-fi 
+    echo "建议操作:"
+    if [ "$DISK_USAGE" -gt 85 ]; then
+        echo "  1. 清理磁盘: sudo ./scripts/cleanup-disk-space.sh"
+    fi
+    if [ "$DB_TEST" = "FAILED" ]; then
+        echo "  2. 重启数据库: docker-compose -f docker/prod/docker-compose.prod.yml restart mysql"
+    fi
+    if [ "$MISSING" -gt 0 ]; then
+        echo "  3. 执行恢复部署: sudo ./scripts/safe-recovery-deploy.sh"
+    fi
+fi
+echo ""
