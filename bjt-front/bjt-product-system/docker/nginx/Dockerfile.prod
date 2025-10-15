@@ -8,7 +8,8 @@ WORKDIR /app
 COPY frontend/package*.json ./
 
 # 安装依赖：如果有 lock 文件用 npm ci，否则用 npm install
-RUN sh -c '[ -f package-lock.json ] && npm ci --prefer-online || npm install --legacy-peer-deps'
+# 添加 --force 解决 rollup optional dependencies 问题（Alpine Linux）
+RUN sh -c '[ -f package-lock.json ] && npm ci --prefer-online --force || npm install --legacy-peer-deps --force'
 
 # 复制前端源代码
 COPY frontend/ ./
