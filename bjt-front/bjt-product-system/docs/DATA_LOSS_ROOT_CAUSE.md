@@ -4,6 +4,8 @@
 
 **是的，在清理磁盘空间时，我们不小心删除了数据库数据！**
 
+**而且，所有用户上传的图片文件也可能一并被删除了！**
+
 ## 💥 **问题发生过程**
 
 ### 时间线回顾
@@ -29,9 +31,13 @@
    ```
 
 3. **致命错误**
-   - 容器停止后，`prod_mysql_data` volume 变成"未使用"状态
-   - `docker volume prune -f` 将其删除
+   - 容器停止后，以下 volumes 变成"未使用"状态：
+     * `prod_mysql_data` - MySQL 数据库
+     * `prod_uploads_data` - 用户上传的图片
+     * `prod_redis_data` - Redis 缓存
+   - `docker volume prune -f` 将它们全部删除
    - **所有 MySQL 数据永久丢失**
+   - **所有用户上传的产品图片永久丢失**
 
 ## 🔍 **为什么会发生这个问题？**
 
@@ -79,18 +85,19 @@ volumes:
 
 ## 📊 **数据丢失确认方法**
 
-请在服务器上运行验证脚本：
+请在服务器上运行完整评估脚本：
 
 ```bash
-# 上传验证脚本
+# 进入项目目录
 cd /var/bjt/www/bjt/bjt-front/bjt-product-system
 
-# 运行验证
-bash scripts/verify-data-loss.sh
+# 运行完整评估（检查数据库+图片）
+bash scripts/assess-total-data-loss.sh
 ```
 
 ### 判断标准：
 
+#### 数据库数据：
 1. **如果 `prod_mysql_data` volume 创建时间是最近的（清理之后）**
    - ✅ 确认：数据已丢失
    
@@ -99,6 +106,16 @@ bash scripts/verify-data-loss.sh
    
 3. **如果 `SHOW TABLES` 返回 0 个或很少表**
    - ✅ 确认：数据已丢失
+
+#### 上传图片：
+1. **如果 `prod_uploads_data` volume 不存在**
+   - ✅ 确认：所有图片已丢失
+
+2. **如果 volume 存在但没有图片文件（*.jpg, *.png等）**
+   - ✅ 确认：图片已丢失
+
+3. **如果 volume 大小很小（< 10MB）**
+   - ⚠️  可能：大部分图片已丢失
 
 ## 💾 **恢复方案**
 
@@ -120,7 +137,7 @@ docker-compose exec mysql mysql -u root -p bjt < /backup/latest.sql
 1. **重建数据库表结构**
    ```bash
    # db-init 服务会自动创建表
-   docker-compose up db-init
+   docker-compose -f docker/prod/docker-compose.prod.yml --env-file .env.production up db-init
    ```
 
 2. **创建管理员用户**
@@ -135,7 +152,12 @@ docker-compose exec mysql mysql -u root -p bjt < /backup/latest.sql
    );
    ```
 
-3. **重新导入业务数据**（如果有其他来源）
+3. **重新上传所有产品图片**
+   - 需要联系业务团队获取原始图片
+   - 通过管理后台重新上传
+   - 或者从其他备份源恢复
+
+4. **重新导入业务数据**（如果有其他来源）
 
 ### 方案 C: 联系云服务商（最后希望）
 

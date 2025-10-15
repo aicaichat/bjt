@@ -5,26 +5,23 @@ class BJT_Settings_Controller extends BJT_API_Controller {
     protected $rest_base = 'settings';
 
     public function register_routes() {
-        register_rest_route($this->namespace, '/' . $this->rest_base, [
-            [
-                'methods' => WP_REST_Server::READABLE,
-                'callback' => [$this, 'get_settings'],
-                'permission_callback' => [$this, 'check_read_permission'],
-            ],
-            [
-                'methods' => WP_REST_Server::EDITABLE,
-                'callback' => [$this, 'update_settings'],
-                'permission_callback' => [$this, 'check_write_permission'],
-                'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::EDITABLE),
-            ]
-        ]);
+        register_rest_route($this->namespace, '/' . $this->rest_base, [[
+            'methods' => WP_REST_Server::READABLE,
+            'callback' => [$this, 'get_settings'],
+            'permission_callback' => [$this, 'check_read_permission'],
+        ], [
+            'methods' => WP_REST_Server::EDITABLE,
+            'callback' => [$this, 'update_settings'],
+            'permission_callback' => [$this, 'check_write_permission'],
+            'args' => $this->get_endpoint_args_for_item_schema(WP_REST_Server::EDITABLE),
+        ]]);
         
         // 添加测试端点
-        register_rest_route($this->namespace, '/' . $this->rest_base . '/test', [
+        register_rest_route($this->namespace, '/' . $this->rest_base . '/test', [[
             'methods' => WP_REST_Server::READABLE,
             'callback' => [$this, 'test_settings'],
             'permission_callback' => '__return_true', // 公开访问用于测试
-        ]);
+        ]]);
     }
 
     /**

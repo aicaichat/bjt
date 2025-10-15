@@ -155,7 +155,7 @@ class BJT_Part_Controller extends BJT_API_Controller {
         ]);
 
         // 🆕 获取主机必选备件详情端点
-        register_rest_route($this->namespace, '/' . $this->resource_name . '/(?P<id>\d+)/required-parts', [
+        register_rest_route($this->namespace, '/' . $this->resource_name . '/(?P<id>\d+)/required-parts', [[
             'methods' => WP_REST_Server::READABLE,
             'callback' => [$this, 'get_required_parts'],
             'permission_callback' => [$this, 'check_read_permission'],
@@ -174,7 +174,7 @@ class BJT_Part_Controller extends BJT_API_Controller {
                     'sanitize_callback' => 'sanitize_text_field',
                 ],
             ],
-        ]);
+        ]]);
     }
 
     public function get_item_schema() {

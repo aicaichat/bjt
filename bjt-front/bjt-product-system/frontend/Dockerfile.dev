@@ -16,30 +16,7 @@ RUN npm cache clean --force && \
 # 复制所有文件
 COPY . .
 
-# 修复Tailwind CSS和PostCSS配置
-RUN echo "修复PostCSS配置..." && \
-    cat > postcss.config.js << 'EOF' && \
-export default { && \
-  plugins: { && \
-    'postcss-import': {}, && \
-    'tailwindcss/nesting': 'postcss-nested', && \
-    'tailwindcss': {}, && \
-    'autoprefixer': {}, && \
-    'postcss-preset-env': { && \
-      features: { && \
-        'nesting-rules': false && \
-      } && \
-    } && \
-  } && \
-} && \
-EOF
-
-# 确保Tailwind CSS依赖已安装
-RUN npm install --save-dev @tailwindcss/postcss tailwindcss@latest postcss@latest autoprefixer@latest postcss-import@latest postcss-nested@latest postcss-preset-env@latest
-
-# 验证配置
-RUN node -e "import('./postcss.config.js').then(() => console.log('PostCSS config OK')).catch(e => console.error('PostCSS config error:', e.message))" && \
-    node -e "import('./tailwind.config.js').then(() => console.log('Tailwind config OK')).catch(e => console.error('Tailwind config error:', e.message))"
+# 依赖和配置由宿主机挂载的文件与 package.json 提供，无需在镜像内覆盖 postcss.config.js
 
 EXPOSE 5173
 
