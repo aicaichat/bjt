@@ -39,7 +39,9 @@ if command -v docker &> /dev/null; then
     docker image prune -a -f
     
     echo "清理未使用的卷..."
-    docker volume prune -f
+    # ❌ DISABLED: 这会删除数据库数据！永远不要在生产环境使用！
+    # docker volume prune -f
+    echo "⚠️  Volume 清理已禁用以保护数据库"
     
     echo "清理未使用的网络..."
     docker network prune -f

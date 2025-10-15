@@ -75,7 +75,9 @@ docker network prune -f
 
 # 5. 删除未使用的卷
 echo "5️⃣  删除未使用的卷..."
-docker volume prune -f
+# ❌ DISABLED: 这会删除数据库数据！
+# docker volume prune -f
+echo "⚠️  Volume 清理已禁用以保护生产数据"
 
 # 6. 清理构建缓存
 echo "6️⃣  清理构建缓存..."
