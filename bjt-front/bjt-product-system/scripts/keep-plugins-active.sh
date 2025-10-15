@@ -1,59 +1,67 @@
 #!/bin/bash
-# 确保关键插件始终保持激活状态
+# 脚本：keep-plugins-active.sh
+# 描述：确保 BJT 核心插件在 WordPress 生产环境中保持激活状态。
 
 set -e
 
-echo "=========================================="
-echo "  确保关键插件保持激活"
-echo "=========================================="
-echo ""
-
-PROJECT_DIR="/var/bjt/www/bjt/bjt-front/bjt-product-system"
-COMPOSE_FILE="docker/prod/docker-compose.prod.yml"
-
-cd "$PROJECT_DIR" || exit 1
-
+# 项目根目录
+PROJECT_ROOT="/var/bjt/www/bjt/bjt-front/bjt-product-system"
+# Docker Compose 文件路径
+DOCKER_COMPOSE_FILE="${PROJECT_ROOT}/docker/prod/docker-compose.prod.yml"
+# WordPress 服务名称
+WORDPRESS_SERVICE="wordpress"
 # 关键插件列表
-REQUIRED_PLUGINS=(
+CRITICAL_PLUGINS=(
     "bjt-core-entities/bjt-product-api.php"
     "bjt-cors/bjt-cors.php"
+    # 添加其他需要保持激活的插件路径
 )
 
-echo "检查并激活关键插件..."
-echo "--------------------------------------"
+echo "=== 确保 BJT 核心插件激活 ==="
 
-for plugin in "${REQUIRED_PLUGINS[@]}"; do
-    echo "检查插件: $plugin"
-    
-    # 检查插件是否激活
-    IS_ACTIVE=$(docker-compose -f "$COMPOSE_FILE" exec -T mysql \
-        mysql -u root -pbjtpassword123 bjt \
-        -e "SELECT option_value FROM wp_options WHERE option_name = 'active_plugins';" 2>/dev/null | grep -c "$plugin" || echo "0")
-    
-    if [ "$IS_ACTIVE" = "0" ]; then
-        echo "❌ 插件未激活: $plugin"
-        echo "正在激活..."
-        
-        # 获取当前激活的插件列表
-        CURRENT_PLUGINS=$(docker-compose -f "$COMPOSE_FILE" exec -T mysql \
-            mysql -u root -pbjtpassword123 bjt \
-            -e "SELECT option_value FROM wp_options WHERE option_name = 'active_plugins';" 2>/dev/null | tail -n 1)
-        
-        # 添加插件到激活列表
-        docker-compose -f "$COMPOSE_FILE" exec -T mysql \
-            mysql -u root -pbjtpassword123 bjt \
-            -e "UPDATE wp_options SET option_value = 'a:2:{i:0;s:37:\"bjt-core-entities/bjt-product-api.php\";i:1;s:22:\"bjt-cors/bjt-cors.php\";}' WHERE option_name = 'active_plugins';" 2>/dev/null
-        
-        echo "✅ 插件已激活"
+# 检查 Docker Compose 文件是否存在
+if [ ! -f "$DOCKER_COMPOSE_FILE" ]; then
+    echo "❌ 错误: Docker Compose 文件未找到: $DOCKER_COMPOSE_FILE"
+    exit 1
+fi
+
+# 检查 WordPress 容器是否运行
+if ! docker-compose -f "$DOCKER_COMPOSE_FILE" ps -q "$WORDPRESS_SERVICE" > /dev/null; then
+    echo "⚠️ 警告: WordPress 容器未运行。尝试启动..."
+    docker-compose -f "$DOCKER_COMPOSE_FILE" up -d "$WORDPRESS_SERVICE"
+    sleep 10 # 等待容器启动
+    if ! docker-compose -f "$DOCKER_COMPOSE_FILE" ps -q "$WORDPRESS_SERVICE" > /dev/null; then
+        echo "❌ 错误: 无法启动 WordPress 容器。请手动检查。"
+        exit 1
+    fi
+    echo "✅ WordPress 容器已启动。"
+fi
+
+# 激活关键插件
+for plugin in "${CRITICAL_PLUGINS[@]}"; do
+    echo "-> 检查并激活插件: $plugin"
+    # 使用 wp-cli 检查插件状态并激活
+    if ! docker-compose -f "$DOCKER_COMPOSE_FILE" exec "$WORDPRESS_SERVICE" wp plugin is-active "$plugin" --allow-root &> /dev/null; then
+        echo "   激活插件: $plugin"
+        docker-compose -f "$DOCKER_COMPOSE_FILE" exec "$WORDPRESS_SERVICE" wp plugin activate "$plugin" --allow-root
+        if [ $? -eq 0 ]; then
+            echo "   ✅ 插件 $plugin 已激活。"
+        else
+            echo "   ❌ 错误: 无法激活插件 $plugin。请手动检查 WordPress 日志。"
+        fi
     else
-        echo "✅ 插件已激活"
+        echo "   ✅ 插件 $plugin 已处于激活状态。"
     fi
 done
 
-echo ""
-echo "重启 WordPress 使更改生效..."
-docker-compose -f "$COMPOSE_FILE" restart wordpress
+# 刷新 WordPress 重写规则
+echo "-> 刷新 WordPress 重写规则..."
+docker-compose -f "$DOCKER_COMPOSE_FILE" exec "$WORDPRESS_SERVICE" wp rewrite flush --allow-root
+if [ $? -eq 0 ]; then
+    echo "✅ WordPress 重写规则已刷新。"
+else
+    echo "❌ 错误: 无法刷新 WordPress 重写规则。请手动检查。"
+fi
 
+echo "=== 插件激活检查和修复完成 ==="
 echo ""
-echo "✅ 完成"
-

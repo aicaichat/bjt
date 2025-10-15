@@ -1,53 +1,44 @@
 #!/bin/bash
-# 设置插件监控 cron 任务
+# 脚本：setup-plugin-monitoring.sh
+# 描述：设置一个 cron 任务来定期运行 monitor-plugins.sh 脚本。
 
-echo "=========================================="
-echo "  设置插件监控"
-echo "=========================================="
-echo ""
+set -e
 
-PROJECT_DIR="/var/bjt/www/bjt/bjt-front/bjt-product-system"
+# 项目根目录
+PROJECT_ROOT="/var/bjt/www/bjt/bjt-front/bjt-product-system"
+# 监控脚本路径
+MONITOR_SCRIPT="${PROJECT_ROOT}/scripts/monitor-plugins.sh"
+# 日志文件
+LOG_FILE="/var/log/bjt-plugin-monitor.log"
 
-# 1. 赋予监控脚本执行权限
-chmod +x "$PROJECT_DIR/scripts/monitor-plugins.sh"
-chmod +x "$PROJECT_DIR/scripts/keep-plugins-active.sh"
+echo "=== 设置 BJT 插件监控 Cron 任务 ==="
 
-# 2. 创建日志目录
-mkdir -p /var/log
+# 确保监控脚本存在且可执行
+if [ ! -f "$MONITOR_SCRIPT" ]; then
+    echo "❌ 错误: 监控脚本未找到: $MONITOR_SCRIPT"
+    exit 1
+fi
+chmod +x "$MONITOR_SCRIPT"
+echo "✅ 监控脚本权限已设置。"
 
-# 3. 添加 cron 任务（每5分钟检查一次）
-CRON_JOB="*/5 * * * * $PROJECT_DIR/scripts/monitor-plugins.sh"
+# 确保日志文件存在
+touch "$LOG_FILE"
+chmod 644 "$LOG_FILE"
+echo "✅ 日志文件 $LOG_FILE 已准备。"
 
-# 检查 cron 任务是否已存在
-if crontab -l 2>/dev/null | grep -q "monitor-plugins.sh"; then
-    echo "✅ Cron 任务已存在"
+# 添加或更新 cron 任务
+CRON_JOB="*/5 * * * * $MONITOR_SCRIPT >> $LOG_FILE 2>&1"
+(crontab -l 2>/dev/null | grep -v -F "$MONITOR_SCRIPT"; echo "$CRON_JOB") | crontab -
+
+if [ $? -eq 0 ]; then
+    echo "✅ Cron 任务已设置，每 5 分钟运行一次 $MONITOR_SCRIPT。"
+    echo "   日志输出到: $LOG_FILE"
+    echo "   当前 Cron 任务列表:"
+    crontab -l | grep "$MONITOR_SCRIPT"
 else
-    echo "添加 Cron 任务..."
-    (crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
-    echo "✅ Cron 任务已添加（每5分钟检查一次）"
+    echo "❌ 错误: 无法设置 Cron 任务。请手动检查 crontab 配置。"
+    exit 1
 fi
 
-# 4. 显示当前 cron 任务
+echo "=== BJT 插件监控设置完成 ==="
 echo ""
-echo "当前 Cron 任务："
-crontab -l | grep "bjt"
-
-echo ""
-echo "=========================================="
-echo "  设置完成"
-echo "=========================================="
-echo ""
-echo "监控功能："
-echo "  - 每5分钟自动检查插件状态"
-echo "  - 如果插件被禁用，自动重新激活"
-echo "  - 日志记录在 /var/log/bjt-plugin-monitor.log"
-echo ""
-echo "手动检查命令："
-echo "  $PROJECT_DIR/scripts/monitor-plugins.sh"
-echo ""
-echo "查看日志："
-echo "  tail -f /var/log/bjt-plugin-monitor.log"
-echo ""
-echo "立即执行一次检查："
-$PROJECT_DIR/scripts/monitor-plugins.sh
-
