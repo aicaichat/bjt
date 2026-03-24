@@ -8,9 +8,9 @@ export default {
     extend: {
       colors: {
         primary: {
-          light: 'var(--primary-light)',
-          DEFAULT: 'var(--color-primary)',
-          dark: 'var(--color-primary-dark)',
+          light: '#3154b3',
+          DEFAULT: '#012583',
+          dark: '#001a5d',
         },
         secondary: {
           light: 'var(--secondary-light)',
@@ -18,18 +18,18 @@ export default {
           dark: 'var(--secondary-dark)',
         },
         gray: {
-          lightest: 'var(--gray-50)',
-          light: 'var(--gray-100)',
-          DEFAULT: 'var(--gray-300)',
-          dark: 'var(--gray-500)',
-          darker: 'var(--gray-700)',
-          darkest: 'var(--gray-900)',
+          lightest: '#f8fafc',
+          light: '#f1f5f9',
+          DEFAULT: '#cbd5e1',
+          dark: '#64748b',
+          darker: '#334155',
+          darkest: '#0f172a',
         },
         success: 'var(--success)',
         warning: 'var(--warning)',
         danger: 'var(--error)',
         info: 'var(--info)',
-        background: 'var(--color-background)',
+        background: '#F1F5F9',
         card: {
           DEFAULT: 'var(--color-card-bg)',
           alt: 'var(--color-input-bg)',

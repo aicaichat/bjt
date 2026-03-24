@@ -1934,98 +1934,86 @@ const MachinesPage: React.FC = () => {
   const renderMachinesTable = () => {
     return (
       <div className="grid grid-cols-1 gap-6">
-        {filteredMachines.map(machine => (
-          <div 
-            key={`machine-${machine.id}-${machine.part_number}`} 
-            className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 overflow-hidden"
-          >
-            <div className="flex flex-col md:flex-row p-6">
-              {/* Column 1: Image & Selection */}
-              <div className="w-full md:w-1/5 flex flex-col items-center md:items-start mb-6 md:mb-0 md:pr-6">
-                <div className="relative mb-4">
-                  <img 
-                    src={machine.image_url || DEFAULT_IMAGE} 
-                    alt={machine.part_number}
-                    className="w-32 h-32 object-contain border-2 border-gray-200 rounded-lg bg-gray-50 p-2 shadow-sm hover:shadow-md transition-shadow duration-200"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      console.log('❌ [Image Error] Failed to load image:', {
-                        originalSrc: target.src,
-                        machineId: machine.id,
-                        machinePartNumber: machine.part_number,
-                        originalImageFields: {
-                          image1_url: (machine as any).image1_url,
-                          image_url: machine.image_url,
-                          model_image1_url: machine.model_image1_url
-                        },
-                        willFallback: target.src !== DEFAULT_IMAGE,
-                        defaultImage: DEFAULT_IMAGE
-                      });
-                      if (target.src !== DEFAULT_IMAGE) {
-                        target.src = DEFAULT_IMAGE;
-                      }
-                    }}
-                    onLoad={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      console.log('✅ [Image Loaded] Successfully loaded image:', {
-                        src: target.src,
-                        machineId: machine.id,
-                        machinePartNumber: machine.part_number,
-                        isDefault: target.src === DEFAULT_IMAGE
-                      });
-                    }}
-                  />
+        {filteredMachines.map(machine => {
+          const isSelected = selectedMachine === machine.id.toString();
+          return (
+            <div 
+              key={`machine-${machine.id}-${machine.part_number}`} 
+              className={`group bg-white rounded-xl transition-all duration-300 border-2 overflow-hidden ${
+                isSelected 
+                ? 'border-primary shadow-lg bg-blue-50/10' 
+                : 'border-gray-light shadow-sm hover:shadow-md hover:border-primary/20'
+              }`}
+            >
+              <div className="flex flex-col md:flex-row p-6 items-start">
+                {/* Column 1: Image & Selection */}
+                <div className="w-full md:w-1/4 flex flex-col items-center md:items-start mb-6 md:mb-0 md:pr-8">
+                  <div className="relative mb-4 bg-gray-lightest rounded-lg p-4 border border-gray-light group-hover:border-primary/20 transition-colors">
+                    <img 
+                      src={machine.image_url || DEFAULT_IMAGE} 
+                      alt={machine.part_number}
+                      className="w-40 h-40 object-contain mix-blend-multiply"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        if (target.src !== DEFAULT_IMAGE) {
+                          target.src = DEFAULT_IMAGE;
+                        }
+                      }}
+                    />
+                  </div>
+                  <button
+                    onClick={() => handleMachineSelection(machine.id)}
+                    className={`w-full py-3 rounded-lg font-bold transition-all duration-300 flex items-center justify-center gap-2 ${
+                      isSelected
+                      ? 'bg-primary text-white shadow-md'
+                      : 'bg-white text-primary border-2 border-primary hover:bg-primary hover:text-white'
+                    }`}
+                  >
+                    {isSelected ? t('actions.selected') || 'Selected' : t('actions.selectMachine')}
+                    <RightOutlined className={isSelected ? 'rotate-90' : ''} />
+                  </button>
                 </div>
-                <label className="inline-flex items-center cursor-pointer bg-gray-100 px-3 py-2 rounded-lg hover:bg-blue-500 hover:text-white transition-colors duration-200">
-                  <input 
-                    type="radio" 
-                    name="machine" 
-                    className="form-radio text-blue-500 mr-2"
-                    checked={selectedMachine === machine.id.toString()}
-                    onChange={() => handleMachineSelection(machine.id)}
-                    aria-label={`${t('actions.selectMachine')} ${machine.part_number}`}
-                  />
-                  <span className="text-sm font-medium">{t('actions.selectMachine')}</span>
-                </label>
-              </div>
-                
-              {/* Column 2: Info & Specs */}
-              <div className="w-full md:w-3/5 md:px-6">
-                <div className="mb-4">
-                  <span className="inline-block bg-blue-500 text-white px-3 py-1 text-sm font-bold rounded-lg shadow-sm">{machine.part_number}</span>
-                  <h3 className="text-xl font-bold text-gray-900 mt-2 leading-tight">{getMachineName(machine)}</h3>
-                </div>
-                
-                <div className="bg-gray-50 rounded-lg p-4 mt-3 shadow-sm">
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="flex items-center">
-                      <strong className="w-24 text-gray-600 font-medium">{t('tableHeaders.model')}:</strong>
-                      <span className="text-gray-800 font-medium">{machine.model}</span>
+                  
+                {/* Column 2: Info & Specs */}
+                <div className="w-full md:w-3/4">
+                  <div className="mb-4 flex flex-wrap items-center gap-3">
+                    <span className="bg-primary text-white px-3 py-1 text-sm font-bold rounded-md shadow-sm">
+                      {machine.part_number}
+                    </span>
+                    <h3 className="text-2xl font-bold text-gray-darkest group-hover:text-primary transition-colors leading-tight">
+                      {getMachineName(machine)}
+                    </h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm mt-6">
+                    <div className="flex flex-col p-3 bg-gray-lightest rounded-lg border border-gray-light hover:border-primary/20 transition-colors">
+                      <span className="text-gray-dark font-medium mb-1">{t('tableHeaders.model')}</span>
+                      <span className="text-gray-darkest font-bold text-base">{machine.model || 'N/A'}</span>
                     </div>
-                    <div className="flex items-center">
-                      <strong className="w-24 text-gray-600 font-medium">{getFieldWithUnit('voltage', 'voltage')}:</strong>
-                      <span className="text-gray-800 font-medium">{machine.voltage ? removeUnitFromValue(machine.voltage) : 'N/A'}</span>
+                    <div className="flex flex-col p-3 bg-gray-lightest rounded-lg border border-gray-light hover:border-primary/20 transition-colors">
+                      <span className="text-gray-dark font-medium mb-1">{getFieldWithUnit('voltage', 'voltage')}</span>
+                      <span className="text-primary font-bold text-base">{machine.voltage ? removeUnitFromValue(machine.voltage) : 'N/A'}</span>
                     </div>
-                    <div className="flex items-center">
-                      <strong className="w-24 text-gray-600 font-medium">{t('tableHeaders.pcsPerBox')}:</strong>
-                      <span className="text-gray-800 font-medium">{machine.pcs_per_box !== null && machine.pcs_per_box !== undefined ? machine.pcs_per_box : 'N/A'}</span>
+                    <div className="flex flex-col p-3 bg-gray-lightest rounded-lg border border-gray-light hover:border-primary/20 transition-colors">
+                      <span className="text-gray-dark font-medium mb-1">{t('tableHeaders.pcsPerBox')}</span>
+                      <span className="text-gray-darkest font-bold text-base">{machine.pcs_per_box ?? 'N/A'}</span>
                     </div>
-                    <div className="flex items-center">
-                      <strong className="w-24 text-gray-600 font-medium">{t('tableHeaders.pcsPerPallet')}:</strong>
-                      <span className="text-gray-800 font-medium">{machine.pcs_per_pallet !== null && machine.pcs_per_pallet !== undefined ? machine.pcs_per_pallet : 'N/A'}</span>
+                    <div className="flex flex-col p-3 bg-gray-lightest rounded-lg border border-gray-light hover:border-primary/20 transition-colors">
+                      <span className="text-gray-dark font-medium mb-1">{t('tableHeaders.pcsPerPallet')}</span>
+                      <span className="text-gray-darkest font-bold text-base">{machine.pcs_per_pallet ?? 'N/A'}</span>
                     </div>
-                    <div className="flex items-center">
-                      <strong className="w-24 text-gray-600 font-medium">{getFieldWithUnit('palletSize', 'size')}:</strong>
-                      <span className="text-gray-800 font-medium">
+                    <div className="flex flex-col p-3 bg-gray-lightest rounded-lg border border-gray-light hover:border-primary/20 transition-colors">
+                      <span className="text-gray-dark font-medium mb-1">{getFieldWithUnit('palletSize', 'size')}</span>
+                      <span className="text-gray-darkest font-bold text-base">
                         {unitSystem === 'metric' 
                           ? removeUnitFromValue(machine.pallet_size_cm)
                           : removeUnitFromValue(machine.pallet_size_inch)
                         }
                       </span>
                     </div>
-                    <div className="flex items-center">
-                      <strong className="w-24 text-gray-600 font-medium">{getFieldWithUnit('packageSize', 'size')}:</strong>
-                      <span className="text-gray-800 font-medium">
+                    <div className="flex flex-col p-3 bg-gray-lightest rounded-lg border border-gray-light hover:border-primary/20 transition-colors">
+                      <span className="text-gray-dark font-medium mb-1">{getFieldWithUnit('packageSize', 'size')}</span>
+                      <span className="text-gray-darkest font-bold text-base">
                         {unitSystem === 'metric' 
                           ? removeUnitFromValue(machine.package_size_cm)
                           : removeUnitFromValue(machine.package_size_inch)
@@ -2033,21 +2021,18 @@ const MachinesPage: React.FC = () => {
                       </span>
                     </div>
                   </div>
-                </div>
 
-                <div className="mt-4 flex gap-3">
-                  {/* 规格说明按钮 - 放在前面，和主机一样 */}
-                  <Button 
-                    size="small"
-                    icon={<InfoCircleOutlined />}
-                    onClick={() => {
-                      // 从主机型号表中查找对应的PDF - 改进匹配逻辑
-                      const hostModel = hostModels.find(model => {
-                        // 清理字符串函数 - 去除多余的引号和空格
-                        const cleanString = (str: string) => {
-                          if (!str) return '';
-                          return str.replace(/^["']+|["']+$/g, '').trim(); // 去除开头和结尾的引号
-                        };
+                  <div className="mt-8 flex flex-wrap gap-4 items-center">
+                    <div className="flex-grow flex gap-3">
+                      <Button 
+                        icon={<InfoCircleOutlined />}
+                        className="rounded-lg border-gray-300 text-gray-darkest hover:border-primary hover:text-primary transition-all px-4 h-10 flex items-center"
+                        onClick={() => {
+                          const hostModel = hostModels.find(model => {
+                            const cleanString = (str: string) => {
+                              if (!str) return '';
+                              return str.replace(/^["']+|["']+$/g, '').trim();
+                            };
                         
                         // 清理机器和主机型号的字符串
                         const cleanMachineModel = cleanString(machine.model || '');
@@ -2713,30 +2698,30 @@ const MachinesPage: React.FC = () => {
               <span className="inline-block bg-blue-500 text-white px-3 py-1 text-sm font-bold rounded-lg shadow-sm">{getPartNumber()}</span>
               <h3 
                 key={`accessory-title-${accessory.id}-${currentLanguage}-${forceRender}`}
-                className="text-xl font-bold text-gray-800 mt-2 leading-tight"
+                className="text-xl font-bold text-gray-darkest mt-2 leading-tight group-hover:text-primary transition-colors"
               >
                 {getAccessoryNameDebug(accessory, 'h3-title')}
               </h3>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4 mt-3 shadow-sm">
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="flex items-center">
-                  <strong className="w-24 text-gray-600 font-medium">{t('fields.model') || '型号'}:</strong>
-                  <span className="text-gray-800 font-medium">{accessory.model || getFieldValue('model')}</span>
+            <div className="bg-gray-lightest rounded-lg p-5 mt-4 border border-gray-light group-hover:border-primary/20 transition-colors">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 text-sm">
+                <div className="flex flex-col">
+                  <span className="text-gray-dark font-medium mb-1">{t('fields.model') || '型号'}</span>
+                  <span className="text-gray-darkest font-bold">{accessory.model || getFieldValue('model')}</span>
                 </div>
                 {/* 只有当电气配件时才显示电压 */}
                 {isElectricalAccessory() && getFieldValue('voltage') !== 'N/A' && (
-                  <div className="flex items-center">
-                    <strong className="w-24 text-gray-600 font-medium">{getFieldWithUnit('voltage', 'voltage')}:</strong>
-                    <span className="text-gray-800 font-medium">{removeUnitFromValue(getFieldValue('voltage'))}</span>
+                  <div className="flex flex-col">
+                    <span className="text-gray-dark font-medium mb-1">{getFieldWithUnit('voltage', 'voltage')}</span>
+                    <span className="text-primary font-bold">{removeUnitFromValue(getFieldValue('voltage'))}</span>
                   </div>
                 )}
-                {/* 频率字段强调显示，只有当电气配件时才显示 */}
+                {/* 频率字段强调显示 */}
                 {isElectricalAccessory() && getFieldValue('frequency') !== 'N/A' && (
-                  <div className="flex items-center frequency-highlight px-3 py-2 rounded-lg border-l-4 border-yellow-400 col-span-2">
-                    <strong className="w-24 text-gray-600 font-bold text-yellow-800">⚡ {getFieldWithUnit('frequency', 'frequency')}:</strong>
-                    <span className="text-yellow-900 font-bold text-lg ml-2">{removeUnitFromValue(getFieldValue('frequency'))}</span>
+                  <div className="flex flex-col p-2 bg-blue-50 rounded border-l-4 border-primary">
+                    <span className="text-primary font-bold text-xs uppercase tracking-wider mb-1">⚡ {getFieldWithUnit('frequency', 'frequency')}</span>
+                    <span className="text-primary font-extrabold text-lg">{removeUnitFromValue(getFieldValue('frequency'))}</span>
                   </div>
                 )}
                 <div className="flex items-center">
@@ -3444,112 +3429,128 @@ const MachinesPage: React.FC = () => {
       {/* SQL Mock服务状态组件 */}
       <MockServiceStatus position="top-right" compact={true} hidden={true} />
       
-      {/* 面包屑导航 - 优化版本，支持点击交互 */}
-      <div className="bg-white p-3 rounded-lg shadow-sm mb-4 flex items-center border border-gray-200">
-        <span 
-          className="text-xs px-1.5 py-0.5 bg-gray-100 rounded mr-2 cursor-pointer hover:bg-gray-200 transition-colors"
-          onClick={() => {
-            // 返回产品线选择页面
-            window.history.back();
-          }}
-        >
-          产品线
-        </span>
-        <span className="text-gray-800">产品线1</span>
-        {selectedMachine && (
-          <>
-            <span className="mx-2 text-gray-400">
-              <RightOutlined style={{ fontSize: '10px' }} />
-            </span>
-            <span className="text-xs px-1.5 py-0.5 bg-gray-100 rounded mr-2">Host</span>
-            <span 
-              className="text-gray-800 cursor-pointer hover:text-blue-600 transition-colors"
-              onClick={() => {
-                setSelectedMachine('');
-                setSelectedAccessories({});
+      {/* Figma 风格 Hero Section */}
+      <section className="bg-white px-10 py-10 mb-8 border-b border-gray-light shadow-sm">
+        <div className="max-w-[1440px] mx-auto flex flex-col lg:flex-row items-center gap-12">
+          {/* 左侧文字与分类 */}
+          <div className="flex-1 space-y-8 text-left">
+            <div className="space-y-4">
+              <h1 className="text-4xl font-bold text-primary tracking-tight">
+                {category === '1' ? 'Air Cushion Machine' : 'Product Solutions'}
+              </h1>
+              <p className="text-gray-dark leading-relaxed max-w-2xl text-lg">
+                Lockedair focuses on packaging solutions. We have many different types of air cushioning system. 
+                We also have many options for air cushioning machines and void filling systems to meet your needs.
+              </p>
+            </div>
+
+            {/* 分类磁贴按钮 - Figma 风格 */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button 
+                onClick={() => navigate('/machines?category=1')}
+                className={`flex-1 px-8 py-4 rounded-lg border-2 transition-all duration-300 text-center font-medium text-lg ${
+                  category === '1' 
+                  ? 'border-primary bg-white text-primary shadow-md' 
+                  : 'border-gray-light bg-gray-lightest text-gray-dark hover:border-primary/50'
+                }`}
+              >
+                Machine & Accessory
+              </button>
+              <button 
+                onClick={() => navigate('/consumables')}
+                className="flex-1 px-8 py-4 rounded-lg border-2 border-gray-light bg-gray-lightest text-gray-dark transition-all duration-300 hover:border-primary/50 text-center font-medium text-lg"
+              >
+                Paper options
+              </button>
+              <button 
+                onClick={() => navigate('/spare-parts')}
+                className="flex-1 px-8 py-4 rounded-lg border-2 border-gray-light bg-gray-lightest text-gray-dark transition-all duration-300 hover:border-primary/50 text-center font-medium text-lg"
+              >
+                Spare parts
+              </button>
+            </div>
+          </div>
+
+          {/* 右侧 Banner 图 */}
+          <div className="flex-1 w-full lg:w-1/2 h-[329px] relative overflow-hidden rounded-lg shadow-xl">
+            <img 
+              src="https://lockedair.com/wp-content/uploads/2023/10/banner-machine.jpg" 
+              alt="Banner" 
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.currentTarget.src = DEFAULT_IMAGE;
               }}
-            >
-              {machines.find(m => m.id.toString() === selectedMachine)?.name || '未知主机'}
-            </span>
-            <span className="mx-2 text-gray-400">
-              <RightOutlined style={{ fontSize: '10px' }} />
-            </span>
-            <span className="text-blue-600 font-medium">
-              {Object.keys(selectedAccessories).length > 0 ? '已选择配件' : 'Level 1 Accessory'}
-            </span>
-          </>
-        )}
-        {!selectedMachine && (
-          <div className="mt-2 ml-4 text-sm text-gray-500">
-            <span className="flex items-center">
-              <InfoCircleOutlined className="mr-1" />
-              请选择主机型号
-            </span>
-          </div>
-        )}
-        {selectedMachine && Object.keys(selectedAccessories).length === 0 && (
-          <div className="mt-2 ml-4 text-sm text-gray-500">
-            <span className="flex items-center">
-              <InfoCircleOutlined className="mr-1" />
-              请选择配件
-            </span>
-          </div>
-        )}
-        {selectedMachine && Object.keys(selectedAccessories).length > 0 && (
-          <div className="mt-2 ml-4 text-sm text-gray-500">
-            <span className="flex items-center">
-              <InfoCircleOutlined className="mr-1" />
-              当前层级: {Object.keys(selectedAccessories).length + 1}
-            </span>
-          </div>
-        )}
-      </div>
-      
-      {/* Filter Section */}
-      <div className="bg-white rounded-lg shadow-md p-4 mb-6 text-gray-900 border border-gray-200 transition-colors duration-300">
-        <h1 className="text-xl font-bold mb-4 text-gray-800">
-          {selectedMachine ? '配件选择' : '主机选择'}
-        </h1>
-        
-        <div className="flex flex-wrap gap-4">
-          {/* Voltage Filter */}
-          <div className="flex flex-col">
-            <label className="mb-1 text-sm font-medium text-label">
-              {t('filters.voltage')}
-            </label>
-            <Select
-              value={selectedVoltage}
-              onChange={handleVoltageChange}
-              style={{ width: 120 }}
-              className="bg-input text-content border-border hover:border-primary"
-              options={[
-                { value: 'ALL', label: t('filters.allVoltages') || '全部电压' },
-                { value: '110V', label: '110V' },
-                { value: '220V', label: '220V' }
-              ]}
-            />
-          </div>
-          
-          {/* Type Filter */}
-          <div className="flex flex-col">
-            <label className="mb-1 text-sm font-medium text-gray-600">
-              {t('filters.model')}
-            </label>
-            <Select
-              value={filterType}
-              onChange={(value: string) => setFilterType(value)}
-              style={{ width: 180 }}
-              className="bg-white text-gray-900 border-gray-300 hover:border-blue-500"
-              options={modelOptions}
             />
           </div>
         </div>
+      </section>
+
+      {/* 筛选工具栏 - 现代化样式 */}
+      <div className="max-w-[1440px] mx-auto px-10 mb-6">
+        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-light flex flex-wrap items-center justify-between gap-6">
+          <div className="flex items-center gap-6">
+            <h2 className="text-xl font-semibold text-gray-darkest">
+              {selectedMachine ? '配件选择' : '主机选择'}
+            </h2>
+            
+            <div className="flex items-center gap-4">
+              {/* Voltage Filter */}
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-gray-dark">{t('filters.voltage')}:</span>
+                <Select
+                  value={selectedVoltage}
+                  onChange={handleVoltageChange}
+                  style={{ width: 140 }}
+                  className="modern-select"
+                  options={[
+                    { value: 'ALL', label: t('filters.allVoltages') || '全部电压' },
+                    { value: '110V', label: '110V' },
+                    { value: '220V', label: '220V' }
+                  ]}
+                />
+              </div>
+              
+              {/* Type Filter */}
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-gray-dark">{t('filters.model')}:</span>
+                <Select
+                  value={filterType}
+                  onChange={(value: string) => setFilterType(value)}
+                  style={{ width: 200 }}
+                  className="modern-select"
+                  options={modelOptions}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 路径指示器 (替代面包屑) */}
+          {selectedMachine && (
+            <div className="flex items-center bg-gray-lightest px-4 py-2 rounded-full border border-gray-light">
+              <span className="text-xs font-bold text-primary uppercase mr-2 tracking-wider">Host</span>
+              <span className="text-sm font-medium text-gray-dark">
+                {machines.find(m => m.id.toString() === selectedMachine)?.name || 'Machine'}
+              </span>
+              <button 
+                onClick={() => {
+                  setSelectedMachine('');
+                  setSelectedAccessories({});
+                }}
+                className="ml-3 text-gray-dark hover:text-danger transition-colors"
+              >
+                <DeleteOutlined />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
       
-      {/* Main Content */}
-      <main className="mb-8">
-        {loading ? showLoading() : error ? showErrorState() : renderMachinesTable()}
-      </main>
+      {/* Main Content Area */}
+      <div className="max-w-[1440px] mx-auto px-10">
+        <main className="mb-12">
+          {loading ? showLoading() : error ? showErrorState() : renderMachinesTable()}
+        </main>
+      </div>
       
       {/* Accessories Section */}
       <div id="accessory-level-1" className="accessory-level mt-6" style={{display: 'none'}}>
