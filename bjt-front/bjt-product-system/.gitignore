@@ -69,3 +69,4 @@ frontend/public/uploads/*
 !frontend/public/uploads/.gitkeep
 !frontend/public/uploads/README.md
 uploads_backup_*
+*.pem
