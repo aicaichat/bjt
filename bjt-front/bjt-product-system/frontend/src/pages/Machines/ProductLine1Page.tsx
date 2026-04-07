@@ -5,7 +5,7 @@ import { useCart } from '../../contexts/CartContext';
 import ThumbnailGallery from '../../components/ThumbnailGallery';
 import '../../styles/thumbnail-gallery.css';
 import '../../styles/machine-compare-alignment.css';
-import { Button, Select, InputNumber, Tabs, Tag, Tooltip, Divider, Row, Col } from 'antd';
+import { Button, Select, InputNumber, Tabs, Tag, Tooltip, Divider, Row, Col, Pagination } from 'antd';
 import { ShoppingCartOutlined, InfoCircleOutlined, PlusOutlined, ExclamationCircleOutlined, ReloadOutlined, RightOutlined, MenuOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import MockServiceStatus from '../../components/MockServiceStatus';
@@ -884,12 +884,16 @@ const ProductLine1Page: React.FC = () => {
   }, [category]);
 
   useEffect(() => {
-    fetchMachines();
     fetchHostModels();
-  }, [category, currentLanguage, filterRegion, selectedVoltage]);
+  }, [category, currentLanguage]);
+
+  useEffect(() => {
+    fetchMachines();
+  }, [category, currentLanguage, filterRegion, selectedVoltage, currentPage]);
 
   // ✅ 新增：监听语言变化，强制重新渲染配件路径
   useEffect(() => {
+    setCurrentPage(1);
     console.log('🔄 [Language Change] Clearing cached accessory names for language switch:', {
       currentLanguage,
       selectedAccessoriesCount: Object.keys(selectedAccessories).length,
@@ -1401,6 +1405,7 @@ const ProductLine1Page: React.FC = () => {
   // 处理电压选择
   const handleVoltageChange = (value: string) => {
     setSelectedVoltage(value);
+    setCurrentPage(1);
   };
 
   // ✅ 新增：单位处理函数
@@ -2518,6 +2523,17 @@ const ProductLine1Page: React.FC = () => {
             </div>
           </div>
         ))}
+        {!selectedMachine && totalPages > 1 && (
+          <div className="flex justify-center mt-6">
+            <Pagination
+              current={currentPage}
+              pageSize={pageSize}
+              total={total}
+              onChange={(page) => setCurrentPage(page)}
+              showSizeChanger={false}
+            />
+          </div>
+        )}
       </div>
     );
   };
@@ -3177,11 +3193,6 @@ const ProductLine1Page: React.FC = () => {
       timestamp: new Date().toISOString()
     });
   }, [hostModels]);
-
-  useEffect(() => {
-    fetchMachines();
-    fetchHostModels();
-  }, [category, currentLanguage, filterRegion, selectedVoltage]);
 
   // ✅ 监听语言变化，强制重新渲染和重新加载数据
   useEffect(() => {
