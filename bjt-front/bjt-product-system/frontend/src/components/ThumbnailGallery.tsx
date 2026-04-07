@@ -26,6 +26,7 @@ const ThumbnailGallery: React.FC<ThumbnailGalleryProps> = ({
   }
 
   // Ensure we have at least 3 images by repeating the first image if necessary
+  const THUMB_ROW_MAX = 4;
   const displayImages = [...validImages];
   while (displayImages.length < 3 && validImages.length > 0) {
     displayImages.push(validImages[0]);
@@ -91,7 +92,7 @@ const ThumbnailGallery: React.FC<ThumbnailGalleryProps> = ({
 
           {/* Small Thumbnails */}
           <div className="thumbnails-row">
-            {displayImages.slice(0, 3).map((image, index) => (
+            {displayImages.slice(0, THUMB_ROW_MAX).map((image, index) => (
               <div
                 key={index}
                 className={`thumbnail-small ${index === currentImageIndex ? 'active' : ''}`}
@@ -212,7 +213,7 @@ const ThumbnailGallery: React.FC<ThumbnailGalleryProps> = ({
       {/* Original Thumbnail Grid */}
       <div className={`thumbnail-gallery ${className}`}>
         <div className="flex flex-wrap gap-2">
-          {validImages.slice(0, 3).map((image, index) => (
+          {validImages.slice(0, THUMB_ROW_MAX).map((image, index) => (
             <div
               key={index}
               className="w-20 h-20 cursor-pointer relative overflow-hidden rounded-lg border-2 border-gray-200 hover:border-blue-500 transition-all duration-200 bg-gray-50 p-1 shadow-sm hover:shadow-md group"

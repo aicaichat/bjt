@@ -69,12 +69,42 @@ import { getSimpleProductName } from '../../utils/simpleProductName';
 
 /** 顶部「主机型号对比」单张示意图：后端未配置时使用 */
 const DEFAULT_COMPARE_DIAGRAM = '/static/machine-model-compare.svg';
-const MODEL_AREAS = [
-  // 假设有3个主机型号，实际可根据数据动态生成
-  { partNumber: 'LA-E4S', left: 20, top: 20, width: 120, height: 160 },
-  { partNumber: 'LA-E6S', left: 160, top: 20, width: 120, height: 160 },
-  { partNumber: 'LA-E8S', left: 300, top: 20, width: 120, height: 160 },
+
+/** 对比条热点：相对示意图容器的百分比，随缩放对齐（H4） */
+const COMPARE_HOTSPOT_SLOTS_PCT = [
+  { leftPct: 3, topPct: 6, widthPct: 28, heightPct: 78 },
+  { leftPct: 36, topPct: 6, widthPct: 28, heightPct: 78 },
+  { leftPct: 69, topPct: 6, widthPct: 28, heightPct: 78 },
 ];
+
+function normalizeMachineGalleryUrls(
+  machine: Record<string, unknown>,
+  abs: (u: string | null) => string | null
+): string[] {
+  const raw = machine.gallery_image_urls;
+  if (Array.isArray(raw) && raw.length > 0) {
+    const out: string[] = [];
+    for (const u of raw) {
+      if (typeof u !== 'string') continue;
+      const a = abs(u);
+      if (a && !out.includes(a)) out.push(a);
+    }
+    if (out.length > 0) return out;
+  }
+  const out: string[] = [];
+  const push = (u: unknown) => {
+    if (u == null || typeof u !== 'string') return;
+    const a = abs(u);
+    if (a && !out.includes(a)) out.push(a);
+  };
+  push(machine.image_url);
+  push(machine.image1_url);
+  push(machine.host_image1_url);
+  push(machine.host_image2_url);
+  push(machine.model_image1_url);
+  push(machine.model_image2_url);
+  return out;
+}
 
 const ProductLine1Page: React.FC = () => {
   const { t, i18n } = useTranslation(['machines', 'common']);
@@ -559,7 +589,7 @@ const ProductLine1Page: React.FC = () => {
                   return imageUrl; // Assume it's a valid URL
                 };
 
-                return {
+                const mapped = {
                   ...machine,
                   image_url: getAbsoluteImageUrl(machine.image1_url) || getAbsoluteImageUrl(machine.image_url),
                   model_image1_url: getAbsoluteImageUrl(machine.image1_url) || getAbsoluteImageUrl(machine.model_image1_url),
@@ -568,6 +598,10 @@ const ProductLine1Page: React.FC = () => {
                   spec_pdf: getAbsoluteImageUrl(machine.spec_pdf),
                   explosion_diagram_pdf: getAbsoluteImageUrl(machine.explosion_diagram_pdf),
                   model_explosion_diagram_pdf: getAbsoluteImageUrl(machine.spec_pdf) || getAbsoluteImageUrl(machine.explosion_diagram_pdf) || getAbsoluteImageUrl(machine.model_explosion_diagram_pdf)
+                };
+                return {
+                  ...mapped,
+                  gallery_image_urls: normalizeMachineGalleryUrls({ ...machine, ...mapped }, getAbsoluteImageUrl),
                 };
               });
               
@@ -777,7 +811,7 @@ const ProductLine1Page: React.FC = () => {
               return imageUrl; // Assume it's a valid URL
             };
 
-            return {
+            const mapped = {
               ...machine,
               image_url: getAbsoluteImageUrl(machine.image1_url) || getAbsoluteImageUrl(machine.image_url),
               model_image1_url: getAbsoluteImageUrl(machine.image1_url) || getAbsoluteImageUrl(machine.model_image1_url),
@@ -786,6 +820,10 @@ const ProductLine1Page: React.FC = () => {
               spec_pdf: getAbsoluteImageUrl(machine.spec_pdf),
               explosion_diagram_pdf: getAbsoluteImageUrl(machine.explosion_diagram_pdf),
               model_explosion_diagram_pdf: getAbsoluteImageUrl(machine.spec_pdf) || getAbsoluteImageUrl(machine.explosion_diagram_pdf) || getAbsoluteImageUrl(machine.model_explosion_diagram_pdf)
+            };
+            return {
+              ...mapped,
+              gallery_image_urls: normalizeMachineGalleryUrls({ ...machine, ...mapped }, getAbsoluteImageUrl),
             };
           });
 
@@ -2006,6 +2044,12 @@ const ProductLine1Page: React.FC = () => {
                 <div className="relative mb-4">
                   <ThumbnailGallery
                     images={(() => {
+                      const fromApi = machine.gallery_image_urls?.filter(
+                        (img): img is string => typeof img === 'string' && img.trim() !== ''
+                      );
+                      if (fromApi && fromApi.length > 0) {
+                        return fromApi;
+                      }
                       const baseImage = machine.image_url || DEFAULT_IMAGE;
                       const images = [];
                       
@@ -3475,8 +3519,12 @@ const ProductLine1Page: React.FC = () => {
               boxShadow: '0 2px 4px rgba(59, 130, 246, 0.3)'
             }}
             onClick={() => window.history.back()}
-            onMouseOver={(e) => e.target.style.backgroundColor = '#2563eb'}
-            onMouseOut={(e) => e.target.style.backgroundColor = '#3b82f6'}
+            onMouseOver={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#2563eb';
+            }}
+            onMouseOut={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#3b82f6';
+            }}
           >
             产品线
           </button>
@@ -3526,14 +3574,17 @@ const ProductLine1Page: React.FC = () => {
                   setSelectedMachine('');
                   setSelectedAccessories({});
                 }}
-                onMouseOver={(e) => e.target.style.backgroundColor = '#f3f4f6'}
-                onMouseOut={(e) => e.target.style.backgroundColor = '#f9fafb'}
+                onMouseOver={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#f3f4f6';
+                }}
+                onMouseOut={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#f9fafb';
+                }}
               >
                 {(() => {
                   const machine = machines.find(m => m.id.toString() === selectedMachine);
                   if (machine) {
-                    const name = machine.name_zh || machine.name_en || machine.title_zh || machine.title_en || machine.model || machine.part_number || '未知主机';
-                    return name;
+                    return getMachineName(machine) || machine.model || machine.part_number || '未知主机';
                   }
                   return '未知主机';
                 })()}
@@ -3607,12 +3658,14 @@ const ProductLine1Page: React.FC = () => {
                               setSelectedAccessories(newSelectedAccessories);
                             }}
                             onMouseOver={(e) => {
-                              e.target.style.backgroundColor = '#dbeafe';
-                              e.target.style.borderColor = '#3b82f6';
+                              const el = e.currentTarget as HTMLButtonElement;
+                              el.style.backgroundColor = '#dbeafe';
+                              el.style.borderColor = '#3b82f6';
                             }}
                             onMouseOut={(e) => {
-                              e.target.style.backgroundColor = '#eff6ff';
-                              e.target.style.borderColor = '#dbeafe';
+                              const el = e.currentTarget as HTMLButtonElement;
+                              el.style.backgroundColor = '#eff6ff';
+                              el.style.borderColor = '#dbeafe';
                             }}
                             title={`点击移除 ${levelNum}级配件: ${accessoryName}`}
                           >
@@ -3761,16 +3814,17 @@ const ProductLine1Page: React.FC = () => {
               {filteredMachines.slice(0, 3).map((machine, index) => {
                 const partNumber = machine.part_number || machine.model || getMachineName(machine);
                 const isSelected = selectedMachine === machine.id.toString();
+                const slot = COMPARE_HOTSPOT_SLOTS_PCT[index] ?? COMPARE_HOTSPOT_SLOTS_PCT[0];
                 
                 return (
                   <div
                     key={`model-area-${machine.id}`}
                     style={{
                       position: 'absolute',
-                      left: `${20 + index * 180}px`,
-                      top: '20px',
-                      width: '160px',
-                      height: '200px',
+                      left: `${slot.leftPct}%`,
+                      top: `${slot.topPct}%`,
+                      width: `${slot.widthPct}%`,
+                      height: `${slot.heightPct}%`,
                       cursor: 'pointer',
                       border: isSelected ? '3px solid #3b82f6' : '2px solid transparent',
                       borderRadius: '8px',
