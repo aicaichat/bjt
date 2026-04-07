@@ -161,6 +161,29 @@ class AuthService {
   private userKey = 'user';
 
   /**
+   * 解析 fetch 响应体为 JSON。避免 response.json() 在空 body 上抛出
+   * 「Unexpected end of JSON input」（常见于后端未启动、代理失败或返回空错误页）。
+   */
+  private async parseJsonBody(response: Response): Promise<any> {
+    const text = await response.text();
+    if (text == null || !String(text).trim()) {
+      throw new Error(
+        `接口返回空内容（HTTP ${response.status} ${response.statusText}）。`
+          + `请确认 WordPress 已运行且 API 可达。当前 API 基址: ${this.baseURL}。`
+          + ` 本地开发可在 frontend/.env.development 中设置 VITE_USE_PROXY=true，通过 Vite 代理请求 /wp-json。`
+      );
+    }
+    try {
+      return JSON.parse(text);
+    } catch {
+      const preview = text.length > 160 ? `${text.slice(0, 160)}…` : text;
+      throw new Error(
+        `接口返回非 JSON（HTTP ${response.status}）。请检查地址是否指向 /wp-json/bjt/v1。预览: ${preview.replace(/\s+/g, ' ')}`
+      );
+    }
+  }
+
+  /**
    * 用户登录
    */
   async login(credentials: LoginRequest): Promise<LoginResponse> {
@@ -180,7 +203,7 @@ class AuthService {
 
       console.log('🔐 [AuthService] Login response status:', response.status);
 
-      const data = await response.json();
+      const data = await this.parseJsonBody(response);
       console.log('🔐 [AuthService] Login response data:', data);
 
       if (!response.ok) {
@@ -199,6 +222,11 @@ class AuthService {
       }
     } catch (error) {
       console.error('❌ [AuthService] Login failed:', error);
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error(
+          `无法连接登录接口（${this.baseURL}）。请确认后端已启动，或配置 VITE_USE_PROXY=true 走开发代理。(${error.message})`
+        );
+      }
       throw error;
     }
   }
@@ -281,7 +309,7 @@ class AuthService {
         body: JSON.stringify(profileData),
       });
 
-      const data = await response.json();
+      const data = await this.parseJsonBody(response);
 
       if (!response.ok) {
         throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
@@ -319,7 +347,7 @@ class AuthService {
         },
       });
 
-      const data = await response.json();
+      const data = await this.parseJsonBody(response);
 
       if (!response.ok) {
         throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
