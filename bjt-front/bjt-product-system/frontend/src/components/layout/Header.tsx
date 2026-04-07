@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import '../../styles/global.css';
 import '../../styles/header.css';
+import '../../styles/header-search-right.css';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage, getI18nLanguage } from '../../contexts/LanguageContext';
 import { useTranslation } from 'react-i18next';
@@ -171,24 +171,28 @@ const Header = ({
   return (
     <header ref={headerRef} className={classNames('main-header', className)}>
       <div className="container mx-auto flex items-center justify-between py-4 px-4">
-        {/* 搜索框 - 现在占据左侧空间 */}
-        <div className="search-container">
-          <Input
-            placeholder={t('header.searchPlaceholder', '搜索产品...')}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onPressEnter={handleSearchSubmit}
-            onFocus={() => setIsSearchFocused(true)}
-            onBlur={() => setIsSearchFocused(false)}
-            prefix={<SearchOutlined />}
-            className={classNames('search-input', {
-              'search-focused': isSearchFocused
-            })}
-            allowClear
-          />
+        {/* 左侧空白区域或其他内容 */}
+        <div className="left-section flex items-center">
+          {/* 可以在这里添加其他左侧内容 */}
         </div>
 
         <div className="right-section flex items-center space-x-4">
+          {/* 搜索框 - 移动到右侧 */}
+          <div className="search-container-right">
+            <Input
+              placeholder={t('header.searchPlaceholder', '搜索产品...')}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onPressEnter={handleSearchSubmit}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setIsSearchFocused(false)}
+              prefix={<SearchOutlined />}
+              className={classNames('search-input-right', {
+                'search-focused': isSearchFocused
+              })}
+              allowClear
+            />
+          </div>
           {/* 语言切换 */}
           <Dropdown 
             menu={{ items: languageMenuItems }} 

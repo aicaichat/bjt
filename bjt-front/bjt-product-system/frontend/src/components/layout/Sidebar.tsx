@@ -13,8 +13,11 @@ import {
   HomeOutlined,
   AppstoreOutlined,
   CustomerServiceOutlined,
-  ContactsOutlined,
-  CloseOutlined
+  PhoneOutlined,
+  RocketOutlined,
+  FileTextOutlined,
+  SettingOutlined,
+  GiftOutlined
 } from '@ant-design/icons';
 import { safeRender } from '../../utils/renderUtils';
 import classNames from 'classnames';
@@ -66,41 +69,45 @@ const Sidebar: React.FC<SidebarProps> = ({
       requiresAuth: false 
     },
     { 
-      label: 'nav.products',
-      path: '/products',
-      icon: <AppstoreOutlined />,
+      label: 'menu.Air Cushioning System',
+      path: '/air-cushioning',
+      icon: <RocketOutlined />,
       requiresAuth: false,
-      children: [
-        { 
-          title: 'menu.Air Cushioning System',
-          items: [
-            { label: 'menu.Air Cushion Machine & Accessory', url: '/machines/product-line-1' },
-            { label: 'menu.Film options', url: '/consumables?category=1' },
-            { label: 'menu.Spare parts', url: '/spare-parts?category=1' },
-          ] 
-        },
-        { 
-          title: 'menu.Paper Cushioning System',
-          items: [
-            { label: 'menu.Paper Cushion Machine & Accessory', url: '/machines/product-line-2' },
-            { label: 'menu.Paper options', url: '/consumables/product-line-2' },
-            { label: 'menu.Spare parts', url: '/spare-parts?category=2' },
-          ] 
-        },
-        { 
-          title: 'menu.Water Activated Tape System',
-          items: [
-            { label: 'menu.Water Activated Tape Dispenser & Accessory', url: '/machines/product-line-3' },
-            { label: 'menu.Water Activated Tape options', url: '/consumables/product-line-3' },
-            { label: 'menu.Spare parts', url: '/spare-parts?category=3' },
-          ] 
-        },
-        { 
-          title: 'menu.Air Column Bag System',
-          items: [
-            { label: 'menu.Air Column Bag Products', url: 'https://www.lockedair.com/water-activated-tape-dispenser1/' },
-          ] 
-        }
+      simpleDropdown: [
+        { label: 'menu.Air Cushion Machine & Accessory', url: '/machines/product-line-1' },
+        { label: 'menu.Film options', url: '/consumables?category=1' },
+        { label: 'menu.Spare parts', url: '/spare-parts?category=1' },
+      ]
+    },
+    { 
+      label: 'menu.Paper Cushioning System',
+      path: '/paper-cushioning',
+      icon: <FileTextOutlined />,
+      requiresAuth: false,
+      simpleDropdown: [
+        { label: 'menu.Paper Cushion Machine & Accessory', url: '/machines/product-line-2' },
+        { label: 'menu.Paper options', url: '/consumables/product-line-2' },
+        { label: 'menu.Spare parts', url: '/spare-parts?category=2' },
+      ]
+    },
+    { 
+      label: 'menu.Water Activated Tape System',
+      path: '/water-tape',
+      icon: <SettingOutlined />,
+      requiresAuth: false,
+      simpleDropdown: [
+        { label: 'menu.Water Activated Tape Dispenser & Accessory', url: '/machines/product-line-3' },
+        { label: 'menu.Water Activated Tape options', url: '/consumables/product-line-3' },
+        { label: 'menu.Spare parts', url: '/spare-parts?category=3' },
+      ]
+    },
+    { 
+      label: 'menu.Air Column Bag System',
+      path: '/air-column-bag',
+      icon: <GiftOutlined />,
+      requiresAuth: false,
+      simpleDropdown: [
+        { label: 'menu.Air Column Bag Products', url: 'https://www.lockedair.com/water-activated-tape-dispenser1/' },
       ]
     },
     { 
@@ -117,7 +124,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     { 
       label: 'nav.contactUs', 
       path: '/contact', 
-      icon: <ContactsOutlined />,
+      icon: <PhoneOutlined />,
       requiresAuth: false 
     }
   ];
@@ -269,7 +276,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           </div>
           {!collapsed && (
             <button className="sidebar-toggle" onClick={toggleCollapsed}>
-              <CloseOutlined />
+              <MenuOutlined />
             </button>
           )}
         </div>

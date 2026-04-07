@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import '../styles/global.css';
 import UIComponentsExample from './ui-components-example';
 
 const GuideIndex: React.FC = () => {

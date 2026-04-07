@@ -91,6 +91,7 @@ require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-price-controller.
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-inventory-controller.php';
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-dictionary-controller.php';
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-machine-part-controller.php';
+require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-machine-model-compare-controller.php';
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-relation-controller.php';
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-user-controller.php';
 require_once BJT_CORE_ENTITIES_PLUGIN_DIR . 'controllers/class-settings-controller.php';
@@ -150,6 +151,7 @@ function bjt_api_register_routes() {
         'BJT_Inventory_Controller',
         'BJT_Dictionary_Controller',
         'BJT_Machine_Part_Controller',
+        'BJT_Machine_Model_Compare_Controller',
         'BJT_Relation_Controller',
         'BJT_User_Controller',
         'BJT_Settings_Controller',

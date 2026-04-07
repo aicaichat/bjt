@@ -1,5 +1,4 @@
 import React from 'react';
-import '../../styles/global.css';
 
 export interface CardProps {
   title?: React.ReactNode;

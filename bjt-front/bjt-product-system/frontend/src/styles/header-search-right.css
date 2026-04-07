@@ -1,0 +1,217 @@
+/* Header Right-side Search Box Styles */
+
+/* 右侧搜索容器 */
+.search-container-right {
+  width: 320px;
+  margin-right: 16px;
+  position: relative;
+}
+
+/* 右侧搜索输入框 */
+.search-input-right {
+  width: 100% !important;
+  height: 42px !important;
+  border-radius: 24px !important;
+  border: 2px solid #e5e7eb !important;
+  background: #ffffff !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+  overflow: hidden !important;
+}
+
+.search-input-right:hover {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15) !important;
+  transform: translateY(-1px) !important;
+}
+
+.search-input-right:focus-within,
+.search-input-right.search-focused {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1), 0 4px 12px rgba(59, 130, 246, 0.15) !important;
+  transform: translateY(-1px) !important;
+}
+
+.search-input-right .ant-input {
+  border: none !important;
+  box-shadow: none !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  padding: 12px 16px !important;
+  height: 38px !important;
+  background: transparent !important;
+  color: #374151 !important;
+}
+
+.search-input-right .ant-input::placeholder {
+  color: #9ca3af !important;
+  font-style: italic !important;
+  font-weight: 400 !important;
+}
+
+/* 搜索图标样式 */
+.search-input-right .ant-input-prefix {
+  color: #6b7280 !important;
+  margin-right: 8px !important;
+  font-size: 16px !important;
+}
+
+.search-input-right:hover .ant-input-prefix,
+.search-input-right.search-focused .ant-input-prefix {
+  color: #3b82f6 !important;
+}
+
+/* 清空按钮样式 */
+.search-input-right .ant-input-clear-icon {
+  color: #9ca3af !important;
+  font-size: 14px !important;
+  transition: all 0.3s ease !important;
+}
+
+.search-input-right .ant-input-clear-icon:hover {
+  color: #6b7280 !important;
+  background: #f3f4f6 !important;
+  border-radius: 50% !important;
+}
+
+/* 搜索建议/结果下拉框样式 */
+.search-dropdown {
+  margin-top: 8px !important;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+  border: 1px solid #e5e7eb !important;
+  overflow: hidden !important;
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+  .search-container-right {
+    width: 280px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .search-container-right {
+    width: 240px;
+    margin-right: 12px;
+  }
+  
+  .search-input-right {
+    height: 38px !important;
+  }
+  
+  .search-input-right .ant-input {
+    font-size: 13px !important;
+    padding: 10px 14px !important;
+    height: 34px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .search-container-right {
+    width: 200px;
+    margin-right: 8px;
+  }
+  
+  .search-input-right {
+    height: 36px !important;
+    border-radius: 18px !important;
+  }
+  
+  .search-input-right .ant-input {
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+    height: 32px !important;
+  }
+  
+  .search-input-right .ant-input::placeholder {
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .search-container-right {
+    width: 160px;
+    margin-right: 4px;
+  }
+  
+  .search-input-right .ant-input::placeholder {
+    content: "搜索..." !important;
+  }
+}
+
+/* 特殊状态样式 */
+.search-input-right.ant-input-affix-wrapper-disabled {
+  background: #f3f4f6 !important;
+  border-color: #d1d5db !important;
+  cursor: not-allowed !important;
+}
+
+.search-input-right.ant-input-affix-wrapper-disabled .ant-input {
+  background: transparent !important;
+  color: #9ca3af !important;
+}
+
+/* 搜索框焦点时的动画效果 */
+@keyframes searchPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+.search-input-right.search-focused {
+  animation: searchPulse 1.5s ease-in-out;
+}
+
+/* 与其他header元素的协调样式 */
+.right-section .search-container-right + * {
+  margin-left: 8px;
+}
+
+/* 确保搜索框在header中正确对齐 */
+.main-header .container {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.main-header .right-section {
+  align-items: center;
+  flex-wrap: nowrap;
+  display: flex;
+  gap: 12px;
+}
+
+/* 左侧区域样式 */
+.left-section {
+  flex: 1;
+  justify-content: flex-start;
+  display: flex;
+  align-items: center;
+}
+
+/* 确保right-section不被压缩 */
+.right-section {
+  flex-shrink: 0;
+  min-width: fit-content;
+}
+
+/* 覆盖可能冲突的现有搜索框样式 */
+.search-container-right .search-input-right.ant-input-affix-wrapper {
+  border-radius: 24px !important;
+  border: 2px solid #e5e7eb !important;
+  background: #ffffff !important;
+}
+
+/* 确保新的搜索框样式优先级更高 */
+.main-header .search-container-right {
+  position: relative !important;
+  z-index: 10 !important;
+} 

@@ -1,0 +1,222 @@
+/* Order Details Page Improvements */
+
+/* 改善订单卡片头部布局 */
+.order-card .order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-bottom: 1px solid #dee2e6;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.order-card .order-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* 优化展开/收起按钮样式和位置 */
+.order-card .header-expand-button {
+  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+  color: white;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(23, 162, 184, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.order-card .header-expand-button:hover {
+  background: linear-gradient(135deg, #138496 0%, #0f6674 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(23, 162, 184, 0.3);
+}
+
+.order-card .header-expand-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(23, 162, 184, 0.2);
+}
+
+.order-card .header-expand-button .expand-icon {
+  font-size: 12px;
+  transition: transform 0.3s ease;
+  font-weight: bold;
+}
+
+/* 展开状态时的图标旋转 */
+.order-card .header-expand-button .expand-icon {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 优化订单状态徽章 */
+.order-card .order-status {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 改善订单详情区域的过渡效果 */
+.order-card .order-details,
+.order-card .order-actions,
+.order-card .order-items {
+  transition: all 0.3s ease;
+}
+
+/* 当订单收起时隐藏内容 */
+.order-card:not(.expanded) .order-details,
+.order-card:not(.expanded) .order-actions,
+.order-card:not(.expanded) .order-items {
+  display: none;
+}
+
+/* 展开动画效果 */
+.order-card.expanded .order-details,
+.order-card.expanded .order-actions,
+.order-card.expanded .order-items {
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    max-height: 1000px;
+    transform: translateY(0);
+  }
+}
+
+/* 改善订单商品列表样式 */
+.order-card .order-items {
+  background-color: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+}
+
+.order-card .order-items-header {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid #dee2e6;
+  background-color: #fff;
+}
+
+.order-card .order-items-header h4 {
+  margin: 0;
+  color: #495057;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.order-card .enhanced-item-wrapper {
+  padding: 12px 20px;
+  border-bottom: 1px solid #dee2e6;
+  background-color: #fff;
+}
+
+.order-card .enhanced-item-wrapper:last-child {
+  border-bottom: none;
+}
+
+.order-card .product-card {
+  background: none;
+  border: none;
+  box-shadow: none;
+  margin: 0;
+  padding: 0;
+}
+
+.order-card .product-card-content {
+  padding: 8px 0;
+}
+
+.order-card .product-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #212529;
+  margin-bottom: 4px;
+}
+
+.order-card .product-card-subtitle {
+  font-size: 13px;
+  color: #6c757d;
+  margin-bottom: 6px;
+}
+
+.order-card .product-card-specs {
+  font-size: 12px;
+  color: #868e96;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.order-card .product-card-price {
+  font-size: 14px;
+  color: #495057;
+  font-weight: 500;
+}
+
+/* 无商品信息时的样式 */
+.order-card .no-items {
+  padding: 20px;
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+  background-color: #fff;
+  border-top: 1px solid #dee2e6;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .order-card .order-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .order-card .order-header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .order-card .header-expand-button {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}
+
+/* 优化Export PO按钮样式 */
+.order-card .secondary-button {
+  background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+  color: white;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(108, 117, 125, 0.2);
+}
+
+.order-card .secondary-button:hover {
+  background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+} 

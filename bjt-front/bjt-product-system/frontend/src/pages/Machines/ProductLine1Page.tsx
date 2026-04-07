@@ -2,6 +2,9 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
+import ThumbnailGallery from '../../components/ThumbnailGallery';
+import '../../styles/thumbnail-gallery.css';
+import '../../styles/machine-compare-alignment.css';
 import { Button, Select, InputNumber, Tabs, Tag, Tooltip, Divider, Row, Col } from 'antd';
 import { ShoppingCartOutlined, InfoCircleOutlined, PlusOutlined, ExclamationCircleOutlined, ReloadOutlined, RightOutlined, MenuOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
@@ -64,7 +67,8 @@ export interface ConsumableSpecs {
 // 统一产品名称工具
 import { getSimpleProductName } from '../../utils/simpleProductName';
 
-const MODEL_COMPARE_IMAGE = '/static/machine-model-compare.png'; // 假设图片已放在 public/static 目录下
+/** 顶部「主机型号对比」单张示意图：后端未配置时使用 */
+const DEFAULT_COMPARE_DIAGRAM = '/static/machine-model-compare.svg';
 const MODEL_AREAS = [
   // 假设有3个主机型号，实际可根据数据动态生成
   { partNumber: 'LA-E4S', left: 20, top: 20, width: 120, height: 160 },
@@ -137,7 +141,8 @@ const ProductLine1Page: React.FC = () => {
   const [filterType, setFilterType] = useState<string>('all');
   const [filterRegion, setFilterRegion] = useState<string>('');
   const [selectedVoltage, setSelectedVoltage] = useState<string>('ALL');
-  
+  const [compareDiagramSrc, setCompareDiagramSrc] = useState<string>(DEFAULT_COMPARE_DIAGRAM);
+
   // 主机型号相关状态
   const [hostModels, setHostModels] = useState<Array<{ id: number; model: string; title_zh: string; title_en: string; type?: string }>>([]);
   const [hostModelsLoading, setHostModelsLoading] = useState(false);
@@ -842,6 +847,41 @@ const ProductLine1Page: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1';
+    const siteOrigin = apiBase.replace(/\/wp-json\/bjt\/v1\/?$/, '');
+
+    (async () => {
+      try {
+        const res = await fetch(
+          `${apiBase}/machine-model-compare?product_line_id=${encodeURIComponent(category)}`
+        );
+        const json = await res.json();
+        if (cancelled) return;
+        const raw =
+          json?.success && json?.data?.diagram_url ? String(json.data.diagram_url).trim() : '';
+        if (!raw) {
+          setCompareDiagramSrc(DEFAULT_COMPARE_DIAGRAM);
+          return;
+        }
+        const absolute =
+          raw.startsWith('http://') || raw.startsWith('https://')
+            ? raw
+            : raw.startsWith('/')
+              ? `${siteOrigin}${raw}`
+              : raw;
+        setCompareDiagramSrc(absolute);
+      } catch {
+        if (!cancelled) setCompareDiagramSrc(DEFAULT_COMPARE_DIAGRAM);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [category]);
 
   useEffect(() => {
     fetchMachines();
@@ -1957,38 +1997,43 @@ const ProductLine1Page: React.FC = () => {
             <div className="flex flex-col md:flex-row p-6">
               {/* Column 1: Image & Selection */}
               <div className="w-full md:w-1/5 flex flex-col items-center md:items-start mb-6 md:mb-0 md:pr-6">
+                {/* Thumbnail Gallery */}
                 <div className="relative mb-4">
-                  <img 
-                    src={machine.image_url || DEFAULT_IMAGE} 
-                    alt={machine.part_number}
-                    className="w-32 h-32 object-contain border-2 border-gray-200 rounded-lg bg-gray-50 p-2 shadow-sm hover:shadow-md transition-shadow duration-200"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      console.log('❌ [Image Error] Failed to load image:', {
-                        originalSrc: target.src,
-                        machineId: machine.id,
-                        machinePartNumber: machine.part_number,
-                        originalImageFields: {
-                          image1_url: (machine as any).image1_url,
-                          image_url: machine.image_url,
-                          model_image1_url: machine.model_image1_url
-                        },
-                        willFallback: target.src !== DEFAULT_IMAGE,
-                        defaultImage: DEFAULT_IMAGE
-                      });
-                      if (target.src !== DEFAULT_IMAGE) {
-                        target.src = DEFAULT_IMAGE;
+                  <ThumbnailGallery
+                    images={(() => {
+                      const baseImage = machine.image_url || DEFAULT_IMAGE;
+                      const images = [];
+                      
+                      // Always add the main image first
+                      images.push(baseImage);
+                      
+                      // For demo purposes, create additional image variants based on machine ID
+                      if (machine.image_url && machine.image_url.includes('picsum.photos')) {
+                        // Create additional variants with different random seeds for picsum images
+                        images.push(
+                          `https://picsum.photos/400/400?random=${machine.id}01`,
+                          `https://picsum.photos/400/400?random=${machine.id}02`
+                        );
+                      } else {
+                        // For other images or default image, create variations
+                        images.push(
+                          baseImage, // Repeat the same image
+                          baseImage  // Repeat the same image again
+                        );
                       }
-                    }}
-                    onLoad={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      console.log('✅ [Image Loaded] Successfully loaded image:', {
-                        src: target.src,
-                        machineId: machine.id,
-                        machinePartNumber: machine.part_number,
-                        isDefault: target.src === DEFAULT_IMAGE
-                      });
-                    }}
+                      
+                      // Add any additional image fields that might exist
+                      if (machine.model_image1_url) images.push(machine.model_image1_url);
+                      if (machine.model_image2_url) images.push(machine.model_image2_url);
+                      if ((machine as any).image2_url) images.push((machine as any).image2_url);
+                      
+                      // Filter out empty/null values and ensure we have exactly 3 images for demo
+                      const validImages = images.filter(img => img && img.trim() !== '');
+                      return validImages.length > 0 ? validImages : [DEFAULT_IMAGE, DEFAULT_IMAGE, DEFAULT_IMAGE];
+                    })()}
+                    altText={(machine as any).code || (machine as any).part_number || `Machine ${machine.id}`}
+                    layout="main-with-thumbnails"
+                    className="machine-gallery"
                   />
                 </div>
                 <label className="inline-flex items-center cursor-pointer bg-gray-100 px-3 py-2 rounded-lg hover:bg-blue-500 hover:text-white transition-colors duration-200">
@@ -3644,17 +3689,17 @@ const ProductLine1Page: React.FC = () => {
         
         {/* 主机型号对比图片区域 */}
         {!selectedMachine && (
-          <div style={{
+          <div className="machine-comparison-container" style={{
             width: '100%',
-            maxWidth: '800px',
+            maxWidth: '1200px',
             margin: '0 auto 24px auto',
             position: 'relative',
-            borderRadius: '12px',
+            borderRadius: '16px',
             boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-            background: '#fff',
+            background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
             border: '1px solid #e5e7eb',
             overflow: 'hidden',
-            padding: '16px'
+            padding: '20px'
           }}>
             <div style={{
               textAlign: 'center',
@@ -3666,17 +3711,33 @@ const ProductLine1Page: React.FC = () => {
               主机型号对比选择
             </div>
             
-            <div style={{ position: 'relative', display: 'inline-block' }}>
+            <div className="machine-comparison-image-container" style={{ 
+              position: 'relative', 
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              width: '100%',
+              maxWidth: '1000px',
+              margin: '0 auto'
+            }}>
               <img
                 ref={imageRef}
-                src="/static/machine-model-compare.svg"
+                src={compareDiagramSrc}
                 alt="主机型号对比"
+                className="machine-comparison-image"
                 style={{ 
                   width: '100%', 
-                  maxWidth: '600px',
+                  maxWidth: '900px',
+                  height: '300px',
+                  objectFit: 'contain',
                   display: 'block', 
-                  borderRadius: '8px',
-                  cursor: 'pointer'
+                  borderRadius: '12px',
+                  border: '2px solid #e5e7eb',
+                  background: '#f9fafb',
+                  cursor: 'pointer',
+                  padding: '8px',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                  transition: 'all 0.3s ease'
                 }}
                 onError={(e) => {
                   // 如果图片加载失败，显示默认的对比图

@@ -1,0 +1,300 @@
+/* Thumbnail Gallery Styles */
+
+.thumbnail-gallery {
+  position: relative;
+}
+
+.thumbnail-gallery .machine-gallery {
+  margin: 0;
+}
+
+/* New Main Image + Thumbnails Layout */
+.thumbnail-gallery-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+/* Main Image Container */
+.main-image-container {
+  position: relative;
+  width: 100%;
+  max-width: 240px;
+}
+
+.main-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  background: #f9fafb;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.main-image-wrapper:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  transform: translateY(-1px);
+}
+
+.main-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 8px;
+  transition: transform 0.3s ease;
+}
+
+.main-image-wrapper:hover .main-image {
+  transform: scale(1.05);
+}
+
+/* Main Image Overlay */
+.main-image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  opacity: 0;
+}
+
+.main-image-wrapper:hover .main-image-overlay {
+  background: rgba(0, 0, 0, 0.3);
+  opacity: 1;
+}
+
+.enlarge-hint {
+  background: rgba(255, 255, 255, 0.9);
+  color: #374151;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(10px);
+  transition: transform 0.3s ease;
+}
+
+.main-image-wrapper:hover .enlarge-hint {
+  transform: translateY(0);
+}
+
+/* Thumbnails Row */
+.thumbnails-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  width: 100%;
+}
+
+.thumbnail-small {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  background: #f9fafb;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.thumbnail-small:hover {
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.2);
+}
+
+.thumbnail-small.active {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px #3b82f6;
+  background: #eff6ff;
+}
+
+.thumbnail-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 4px;
+  transition: transform 0.3s ease;
+}
+
+.thumbnail-small:hover .thumbnail-image {
+  transform: scale(1.1);
+}
+
+/* Active Indicator */
+.active-indicator {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  background: #3b82f6;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px white;
+}
+
+/* Modal overlay improvements */
+.image-modal .ant-modal-content {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.image-modal .ant-modal-body {
+  padding: 0 !important;
+}
+
+.image-modal .ant-modal-close {
+  top: 10px !important;
+  right: 10px !important;
+  color: white !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  border-radius: 50% !important;
+  width: 40px !important;
+  height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.image-modal .ant-modal-close:hover {
+  background: rgba(0, 0, 0, 0.7) !important;
+  color: white !important;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .thumbnail-gallery-main {
+    max-width: 100%;
+    gap: 10px;
+  }
+  
+  .main-image-container {
+    max-width: 200px;
+  }
+  
+  .main-image-wrapper {
+    height: 150px;
+  }
+  
+  .thumbnail-small {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .thumbnails-row {
+    gap: 6px;
+  }
+  
+  .image-modal .ant-modal {
+    width: 95vw !important;
+    max-width: 95vw !important;
+  }
+  
+  .image-modal .ant-modal-body {
+    padding: 10px !important;
+  }
+}
+
+/* Loading state for images */
+.thumbnail-gallery img,
+.thumbnail-gallery-main img {
+  background: linear-gradient(90deg, #f0f0f0 25%, transparent 37%, transparent 63%, #f0f0f0 75%);
+  background-size: 400% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.thumbnail-gallery img[src],
+.thumbnail-gallery-main img[src] {
+  animation: none;
+  background: none;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Machine gallery container adjustments */
+.machine-gallery {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.machine-gallery .thumbnail-gallery-main {
+  margin: 0;
+  max-width: 280px;
+  width: 100%;
+}
+
+/* Adjust for machine card layout */
+.machine-gallery .main-image-wrapper {
+  height: 160px;
+  max-width: 220px;
+}
+
+.machine-gallery .thumbnails-row {
+  max-width: 220px;
+}
+
+/* Improve the main image display in modal */
+.image-modal img {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+}
+
+/* Better navigation button styling */
+.image-modal button {
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.image-modal button:hover {
+  backdrop-filter: blur(15px);
+  transform: scale(1.05);
+}
+
+/* Original grid layout styles (for fallback) */
+.thumbnail-gallery .flex {
+  justify-content: center;
+}
+
+.thumbnail-gallery .group img {
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.thumbnail-gallery .group:hover img {
+  filter: brightness(1.1);
+}
+
+/* Ensure consistent sizing for both layouts */
+.thumbnail-gallery,
+.thumbnail-gallery-main {
+  max-width: 300px;
+  margin: 0 auto;
+} 

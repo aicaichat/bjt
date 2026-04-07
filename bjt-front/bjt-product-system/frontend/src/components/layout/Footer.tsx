@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import '../../styles/global.css';
 import { IMAGE_BASE_URL } from '../../config/env';
 import { IMAGES } from '@/config/constants';
 

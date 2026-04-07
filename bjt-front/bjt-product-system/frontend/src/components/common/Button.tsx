@@ -1,5 +1,4 @@
 import React from 'react';
-import '../../styles/global.css';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline';
 type ButtonSize = 'sm' | 'md' | 'lg';

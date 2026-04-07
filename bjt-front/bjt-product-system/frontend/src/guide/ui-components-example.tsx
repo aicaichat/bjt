@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import '../styles/global.css';
 
 // Import React components if available
 import Button from '../components/common/Button';

@@ -1,0 +1,95 @@
+/* Content Layout Fix */
+
+/* Ensure proper page structure */
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: hidden !important;
+}
+
+#root {
+  width: 100% !important;
+  min-height: 100vh !important;
+}
+
+/* Main Layout Container */
+.main-layout,
+.flex.flex-col.min-h-screen {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 100vh !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  position: relative !important;
+}
+
+/* Layout Flex Container */
+.flex.flex-1 {
+  display: flex !important;
+  flex: 1 !important;
+  width: 100% !important;
+  position: relative !important;
+}
+
+/* Main Content Area Final Fix */
+main.flex-1 {
+  flex: 1 !important;
+  margin-left: 280px !important;
+  margin-top: 0 !important;
+  padding-top: 70px !important;
+  min-height: 100vh !important;
+  background-color: #f9fafb !important;
+  width: calc(100% - 280px) !important;
+  transition: all 0.3s ease !important;
+}
+
+/* When sidebar is collapsed */
+.sidebar.collapsed ~ * main.flex-1,
+.sidebar-collapsed main.flex-1 {
+  margin-left: 80px !important;
+  width: calc(100% - 80px) !important;
+}
+
+/* Content within main */
+.flex-grow {
+  flex-grow: 1 !important;
+  width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+/* Home page container fix */
+.home-page {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background-color: #f9fafb !important;
+  min-height: calc(100vh - 70px) !important;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  main.flex-1 {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding-top: 70px !important;
+  }
+  
+  .sidebar.collapsed ~ * main.flex-1,
+  .sidebar-collapsed main.flex-1 {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+}
+
+/* Fix for any margin/padding issues */
+.main-content,
+main {
+  box-sizing: border-box !important;
+}
+
+/* Ensure content doesn't get cut off */
+.min-h-full {
+  min-height: 100% !important;
+} 

@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
-import './styles/global.css'
+import './index.css'
 import './i18n' // Import i18n configuration
 import { safeRender } from './utils/renderUtils'
 import { cacheManager } from './utils/cacheManager'

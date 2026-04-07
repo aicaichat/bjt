@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import Header, { HeaderProps } from './Header';
 import Sidebar from './Sidebar';
 import Footer, { FooterProps } from './Footer';
-import '../../styles/global.css';
 import '../../styles/sidebar.css';
 
 interface MainLayoutProps {
