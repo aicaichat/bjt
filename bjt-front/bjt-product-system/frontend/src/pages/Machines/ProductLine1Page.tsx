@@ -5,6 +5,7 @@ import { useCart } from '../../contexts/CartContext';
 import ThumbnailGallery from '../../components/ThumbnailGallery';
 import '../../styles/thumbnail-gallery.css';
 import '../../styles/machine-compare-alignment.css';
+import '../../styles/machine-selection-figma.css';
 import { Button, Select, InputNumber, Tabs, Tag, Tooltip, Divider, Row, Col, Pagination } from 'antd';
 import { ShoppingCartOutlined, InfoCircleOutlined, PlusOutlined, ExclamationCircleOutlined, ReloadOutlined, RightOutlined, MenuOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
@@ -3482,103 +3483,30 @@ const ProductLine1Page: React.FC = () => {
   // Return the main component JSX
   return (
     <>
-      {/* 面包屑导航 - 固定在黄框位置，去除黄色边框 */}
-      <div 
-        style={{
-          position: 'fixed',
-          top: '80px', // 调整到黄框位置
-          left: '280px', // 考虑左侧导航栏宽度
-          right: '20px', // 留出右边距
-          zIndex: 9999,
-          backgroundColor: '#ffffff',
-          border: '1px solid #e5e7eb', // 改为简洁的灰色边框
-          borderRadius: '8px',
-          padding: '12px 16px',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', // 改为简洁的阴影
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          minHeight: '50px',
-          fontFamily: 'Arial, sans-serif',
-          background: '#ffffff' // 改为纯白背景
-        }}
-      >
-        {/* 左侧导航路径 */}
-        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          {/* 产品线 */}
-          <button 
-            style={{
-              fontSize: '14px',
-              padding: '8px 12px',
-              backgroundColor: '#3b82f6',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontWeight: '600',
-              boxShadow: '0 2px 4px rgba(59, 130, 246, 0.3)'
-            }}
+      <div className="ms-breadcrumb-bar">
+        <div className="ms-breadcrumb-path">
+          <button
+            type="button"
+            className="ms-breadcrumb-btn ms-breadcrumb-btn--primary"
             onClick={() => window.history.back()}
-            onMouseOver={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#2563eb';
-            }}
-            onMouseOut={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#3b82f6';
-            }}
           >
             产品线
           </button>
-          
-          {/* 分隔符 */}
-          <span style={{ color: '#6b7280', fontSize: '16px', fontWeight: 'bold' }}>→</span>
-          
-          {/* 气垫机 */}
-          <span style={{ 
-            color: '#374151', 
-            fontWeight: '600', 
-            fontSize: '16px',
-            padding: '8px 12px',
-            backgroundColor: '#f3f4f6',
-            borderRadius: '6px'
-          }}>
-            {t('productLines.airCushion')}
-          </span>
-          
-          {/* 如果选择了主机，显示主机信息 */}
+
+          <span className="ms-breadcrumb-chev" aria-hidden>→</span>
+
+          <span className="ms-breadcrumb-chip">{t('productLines.airCushion')}</span>
+
           {selectedMachine && (
             <>
-              <span style={{ color: '#6b7280', fontSize: '16px', fontWeight: 'bold' }}>→</span>
-              <span style={{
-                fontSize: '14px',
-                padding: '8px 12px',
-                backgroundColor: '#10b981',
-                color: '#ffffff',
-                borderRadius: '6px',
-                fontWeight: '600'
-              }}>
-                Host
-              </span>
-              <button 
-                style={{
-                  color: '#374151',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                  fontSize: '16px',
-                  padding: '8px 12px',
-                  backgroundColor: '#f9fafb',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '6px',
-                  textDecoration: 'none'
-                }}
+              <span className="ms-breadcrumb-chev" aria-hidden>→</span>
+              <span className="ms-breadcrumb-chip ms-breadcrumb-chip--host">Host</span>
+              <button
+                type="button"
+                className="ms-breadcrumb-btn ms-breadcrumb-btn--ghost"
                 onClick={() => {
                   setSelectedMachine('');
                   setSelectedAccessories({});
-                }}
-                onMouseOver={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#f3f4f6';
-                }}
-                onMouseOut={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#f9fafb';
                 }}
               >
                 {(() => {
@@ -3589,19 +3517,16 @@ const ProductLine1Page: React.FC = () => {
                   return '未知主机';
                 })()}
               </button>
-              
-              {/* 如果选择了配件，显示配件信息 */}
+
               {Object.keys(selectedAccessories).length > 0 && (
                 <>
-                  {/* 逐级显示所有选择的配件 */}
                   {Object.entries(selectedAccessories)
                     .sort(([a], [b]) => parseInt(a.replace('level', '')) - parseInt(b.replace('level', '')))
-                    .map(([level, accessoryId], index) => {
+                    .map(([level, accessoryId]) => {
                       const levelNum = parseInt(level.replace('level', ''));
                       let accessoryList;
-                      
-                      // 根据层级获取对应的配件列表
-                      switch(levelNum) {
+
+                      switch (levelNum) {
                         case 1:
                           accessoryList = accessories;
                           break;
@@ -3620,34 +3545,24 @@ const ProductLine1Page: React.FC = () => {
                         default:
                           accessoryList = [];
                       }
-                      
+
                       const accessory = accessoryList.find(acc => acc.id === accessoryId);
-                      const accessoryName = accessory ? 
-                        (accessory.name_zh || accessory.name_en || accessory.title_zh || accessory.title_en || accessory.part_number || '未知配件') : 
-                        '未知配件';
-                      
+                      const accessoryName = accessory
+                        ? accessory.name_zh ||
+                          accessory.name_en ||
+                          accessory.title_zh ||
+                          accessory.title_en ||
+                          accessory.part_number ||
+                          '未知配件'
+                        : '未知配件';
+
                       return (
                         <React.Fragment key={level}>
-                          <span style={{ color: '#6b7280', fontSize: '16px', fontWeight: 'bold' }}>→</span>
+                          <span className="ms-breadcrumb-chev" aria-hidden>→</span>
                           <button
-                            style={{
-                              color: '#3b82f6',
-                              cursor: 'pointer',
-                              fontWeight: '600',
-                              fontSize: '14px',
-                              padding: '6px 10px',
-                              backgroundColor: '#eff6ff',
-                              border: '1px solid #dbeafe',
-                              borderRadius: '6px',
-                              textDecoration: 'none',
-                              transition: 'all 0.2s ease',
-                              maxWidth: '200px',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap'
-                            }}
+                            type="button"
+                            className="ms-breadcrumb-btn ms-breadcrumb-btn--accessory"
                             onClick={() => {
-                              // 移除当前层级及之后的所有配件选择
                               const newSelectedAccessories = { ...selectedAccessories };
                               Object.keys(newSelectedAccessories).forEach(key => {
                                 const keyLevel = parseInt(key.replace('level', ''));
@@ -3656,16 +3571,6 @@ const ProductLine1Page: React.FC = () => {
                                 }
                               });
                               setSelectedAccessories(newSelectedAccessories);
-                            }}
-                            onMouseOver={(e) => {
-                              const el = e.currentTarget as HTMLButtonElement;
-                              el.style.backgroundColor = '#dbeafe';
-                              el.style.borderColor = '#3b82f6';
-                            }}
-                            onMouseOut={(e) => {
-                              const el = e.currentTarget as HTMLButtonElement;
-                              el.style.backgroundColor = '#eff6ff';
-                              el.style.borderColor = '#dbeafe';
                             }}
                             title={`点击移除 ${levelNum}级配件: ${accessoryName}`}
                           >
@@ -3676,250 +3581,98 @@ const ProductLine1Page: React.FC = () => {
                     })}
                 </>
               )}
-              
-              {/* 如果没有选择配件，显示提示 */}
+
               {Object.keys(selectedAccessories).length === 0 && (
                 <>
-                  <span style={{ color: '#6b7280', fontSize: '16px', fontWeight: 'bold' }}>→</span>
-                  <span style={{ 
-                    color: '#f59e0b', 
-                    fontWeight: '600', 
-                    fontSize: '16px',
-                    padding: '8px 12px',
-                    backgroundColor: '#fef3c7',
-                    borderRadius: '6px'
-                  }}>
-                    Level 1 Accessory
-                  </span>
+                  <span className="ms-breadcrumb-chev" aria-hidden>→</span>
+                  <span className="ms-breadcrumb-pill-warn">Level 1 Accessory</span>
                 </>
               )}
             </>
           )}
         </div>
-        
-        {/* 右侧状态提示 */}
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+
+        <div className="ms-breadcrumb-status">
           {!selectedMachine && (
-            <div style={{ 
-              fontSize: '14px', 
-              color: '#6b7280', 
-              display: 'flex', 
-              alignItems: 'center',
-              padding: '8px 12px',
-              backgroundColor: '#f3f4f6',
-              borderRadius: '6px',
-              fontWeight: '500'
-            }}>
+            <div className="ms-breadcrumb-status-pill ms-breadcrumb-status-pill--neutral">
               📋 请选择主机型号
             </div>
           )}
           {selectedMachine && Object.keys(selectedAccessories).length === 0 && (
-            <div style={{ 
-              fontSize: '14px', 
-              color: '#f59e0b', 
-              display: 'flex', 
-              alignItems: 'center',
-              padding: '8px 12px',
-              backgroundColor: '#fef3c7',
-              borderRadius: '6px',
-              fontWeight: '500'
-            }}>
-              📋 请选择配件
-            </div>
+            <div className="ms-breadcrumb-status-pill ms-breadcrumb-status-pill--warn">📋 请选择配件</div>
           )}
           {selectedMachine && Object.keys(selectedAccessories).length > 0 && (
-            <div style={{ 
-              fontSize: '14px', 
-              color: '#10b981', 
-              fontWeight: '600', 
-              display: 'flex', 
-              alignItems: 'center',
-              padding: '8px 12px',
-              backgroundColor: '#d1fae5',
-              borderRadius: '6px'
-            }}>
+            <div className="ms-breadcrumb-status-pill ms-breadcrumb-status-pill--ok">
               📋 当前层级: {Object.keys(selectedAccessories).length + 1}
             </div>
           )}
         </div>
       </div>
-      
-      {/* 为固定定位的面包屑添加占位空间 */}
-      <div style={{ height: '150px' }}></div>
-      
-      <div className="machines-page min-h-screen bg-gray-50 text-gray-900">
-        {/* SQL Mock服务状态组件 */}
+
+      <div className="ms-breadcrumb-spacer" aria-hidden />
+
+      <div className="machines-page min-h-screen bg-gray-50 text-gray-900 ms-product-line-layout">
         <MockServiceStatus position="top-right" compact={true} hidden={true} />
+
+        <div className="ms-content-column">
         
         {/* 主机型号对比图片区域 */}
         {!selectedMachine && (
-          <div className="machine-comparison-container" style={{
-            width: '100%',
-            maxWidth: '1200px',
-            margin: '0 auto 24px auto',
-            position: 'relative',
-            borderRadius: '16px',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-            background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-            border: '1px solid #e5e7eb',
-            overflow: 'hidden',
-            padding: '20px'
-          }}>
-            <div style={{
-              textAlign: 'center',
-              marginBottom: '12px',
-              fontSize: '16px',
-              fontWeight: '600',
-              color: '#374151'
-            }}>
-              主机型号对比选择
-            </div>
-            
-            <div className="machine-comparison-image-container" style={{ 
-              position: 'relative', 
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              width: '100%',
-              maxWidth: '1000px',
-              margin: '0 auto'
-            }}>
+          <div className="machine-comparison-container">
+            <h2 className="machine-comparison-heading">主机型号对比选择</h2>
+            <div className="machine-comparison-image-container">
               <img
                 ref={imageRef}
                 src={compareDiagramSrc}
                 alt="主机型号对比"
                 className="machine-comparison-image"
-                style={{ 
-                  width: '100%', 
-                  maxWidth: '900px',
-                  height: '300px',
-                  objectFit: 'contain',
-                  display: 'block', 
-                  borderRadius: '12px',
-                  border: '2px solid #e5e7eb',
-                  background: '#f9fafb',
-                  cursor: 'pointer',
-                  padding: '8px',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                  transition: 'all 0.3s ease'
-                }}
                 onError={(e) => {
-                  // 如果图片加载失败，显示默认的对比图
                   const target = e.target as HTMLImageElement;
                   target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDYwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI2MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjMwMCIgeT0iMTUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiM5N0EzQjMiPuaWsOWKoOiuvuWkhOeQhuS4juWbvueJh+WcqOaTjeS9nO+8jOivt+eojeWQjuS4jeWQjO+8jOaJgOacieWbvueJh+WcqOaTjeS9nDwvdGV4dD4KPC9zdmc+';
                 }}
               />
-              
-              {/* 动态生成点击区域 */}
+
               {filteredMachines.slice(0, 3).map((machine, index) => {
                 const partNumber = machine.part_number || machine.model || getMachineName(machine);
                 const isSelected = selectedMachine === machine.id.toString();
                 const slot = COMPARE_HOTSPOT_SLOTS_PCT[index] ?? COMPARE_HOTSPOT_SLOTS_PCT[0];
-                
+
                 return (
                   <div
                     key={`model-area-${machine.id}`}
+                    className={`ms-compare-hotspot${isSelected ? ' ms-compare-hotspot--selected' : ''}`}
                     style={{
-                      position: 'absolute',
                       left: `${slot.leftPct}%`,
                       top: `${slot.topPct}%`,
                       width: `${slot.widthPct}%`,
                       height: `${slot.heightPct}%`,
-                      cursor: 'pointer',
-                      border: isSelected ? '3px solid #3b82f6' : '2px solid transparent',
-                      borderRadius: '8px',
-                      boxShadow: isSelected ? '0 0 0 4px #dbeafe' : 'none',
-                      transition: 'all 0.2s ease',
-                      zIndex: 2,
-                      backgroundColor: isSelected ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
                     }}
                     title={`点击选择 ${getMachineName(machine)}`}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => handleImageModelSelection(partNumber)}
-                    onMouseOver={(e) => {
-                      if (!isSelected) {
-                        (e.currentTarget as HTMLDivElement).style.borderColor = '#60a5fa';
-                        (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(96, 165, 250, 0.1)';
-                      }
-                    }}
-                    onMouseOut={(e) => {
-                      if (!isSelected) {
-                        (e.currentTarget as HTMLDivElement).style.borderColor = 'transparent';
-                        (e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent';
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleImageModelSelection(partNumber);
                       }
                     }}
                   >
-                    {/* 型号名称显示 */}
-                    <div style={{
-                      position: 'absolute',
-                      bottom: '8px',
-                      left: '0',
-                      width: '100%',
-                      textAlign: 'center',
-                      color: isSelected ? '#2563eb' : '#374151',
-                      fontWeight: '700',
-                      fontSize: '14px',
-                      textShadow: '0 1px 4px #fff',
-                      pointerEvents: 'none',
-                      userSelect: 'none',
-                      padding: '4px',
-                      backgroundColor: 'rgba(255,255,255,0.9)',
-                      borderRadius: '4px',
-                      margin: '0 4px'
-                    }}>
-                      {partNumber}
-                    </div>
-                    
-                    {/* 选中状态指示器 */}
-                    {isSelected && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '8px',
-                        right: '8px',
-                        width: '20px',
-                        height: '20px',
-                        backgroundColor: '#3b82f6',
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'white',
-                        fontSize: '12px',
-                        fontWeight: 'bold'
-                      }}>
-                        ✓
-                      </div>
-                    )}
+                    <div className="ms-compare-hotspot-label">{partNumber}</div>
+                    {isSelected && <div className="ms-compare-hotspot-check">✓</div>}
                   </div>
                 );
               })}
-              
-              {/* 交互提示 */}
-              <div style={{
-                position: 'absolute',
-                right: '12px',
-                top: '12px',
-                background: 'rgba(255,255,255,0.9)',
-                color: '#3b82f6',
-                borderRadius: '6px',
-                padding: '4px 8px',
-                fontSize: '12px',
-                fontWeight: '500',
-                zIndex: 3,
-                border: '1px solid #dbeafe'
-              }}>
-                💡 点击图片区域选择主机型号
-              </div>
+
+              <div className="machine-comparison-hint">💡 点击图片区域选择主机型号</div>
             </div>
           </div>
         )}
-        
-        {/* Filter Section */}
-        <div className="bg-white rounded-lg shadow-md p-4 mb-6 text-gray-900 border border-gray-200 transition-colors duration-300">
-          <h1 className="text-xl font-bold mb-4 text-gray-800">
-            {selectedMachine ? '配件选择' : '主机选择'}
-          </h1>
-          
-          <div className="flex flex-wrap gap-4">
+
+        <div className="ms-filter-card">
+          <h1 className="ms-filter-card__title">{selectedMachine ? '配件选择' : '主机选择'}</h1>
+
+          <div className="ms-filter-card__row">
             {/* Voltage Filter */}
             <div className="flex flex-col">
               <label className="mb-1 text-sm font-medium text-label">
@@ -4246,7 +3999,8 @@ const ProductLine1Page: React.FC = () => {
         {/* 购物车通知浮层 */}
         {/* {showNotification && ( ... )} */}
 
-        {/* 3. 页面底部渲染<CartAnimation /> */}
+        </div>
+
         <CartAnimation
           isActive={cartAnimation.isActive}
           startElement={cartAnimation.startElement}

@@ -32,10 +32,10 @@
   box-shadow: var(--mc-shadow-hover);
 }
 
-/* title text */
-.machines-page .machine-comparison-container > div:first-child {
+/* title — 使用 class，避免与容器内其它首子元素冲突 */
+.machines-page .machine-comparison-heading {
   text-align: center;
-  margin-bottom: 12px;
+  margin: 0 0 12px 0;
   font-size: 18px;
   line-height: 26px;
   font-weight: 700;
@@ -74,8 +74,12 @@
   transform: translateY(-1px);
 }
 
-/* the hint bubble in top-right of image area */
-.machines-page .machine-comparison-image-container > div:last-child {
+/* 右上角提示 — 独立 class（Figma 对齐 §1B） */
+.machines-page .machine-comparison-hint {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  z-index: 3;
   border-radius: var(--mc-radius-sm);
   border: 1px solid #dbeafe;
   background: rgba(255, 255, 255, 0.95);
@@ -110,7 +114,7 @@
     height: 180px;
   }
 
-  .machines-page .machine-comparison-container > div:first-child {
+  .machines-page .machine-comparison-heading {
     font-size: 16px;
     line-height: 24px;
   }
