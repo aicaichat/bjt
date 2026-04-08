@@ -20,16 +20,17 @@
   /* 二级区底：稿面为白 #FFFFFF */
   --sd-submenu-bg: var(--ff-surface);
   --sd-font: var(--ff-font);
-  width: var(--bjt-sidebar-width, 303px);
+  width: var(--bjt-sidebar-width, var(--ff-ms-sidebar-width, 303px));
   background-color: var(--sd-bg) !important;
   border-right: none !important;
+  /* Dev：分割線-右 inset -0.5px 0 0 rgba(0,0,0,0.16) → --ff-sidebar-divider */
   box-shadow: inset -0.5px 0 0 var(--ff-sidebar-divider) !important;
   font-family: var(--sd-font);
-  /* Figma 侧栏容器：column + gap 24 + 底 padding 13 */
+  /* Figma「侧面导航栏」：flex column, align-items flex-start, gap 24, padding 0 0 13 */
   flex-direction: column !important;
-  align-items: stretch !important;
-  gap: 24px;
-  padding: 0 0 13px !important;
+  align-items: flex-start !important;
+  gap: var(--ff-ms-sidebar-nav-gap, 24px);
+  padding: 0 0 var(--ff-ms-sidebar-nav-pad-bottom, 13px) !important;
   box-sizing: border-box !important;
 }
 
@@ -47,32 +48,66 @@
 }
 
 .sidebar.sidebar--figma .sidebar-header {
+  width: 100%;
+  box-sizing: border-box;
   background-color: var(--sd-header-bg) !important;
   border-bottom: none !important;
   box-shadow: inset 0 -0.5px 0 var(--ff-sidebar-divider) !important;
 }
 
-/* 双品牌：BJT 标 + Locked Air / LOCKED PAPER（收起时仅 BJT） */
-/* Frame 86 / 153 / 87：303×109、水平 padding 24、logo 区 vertical padding 10 50 */
+/*
+ * 侧栏顶区外壳：与收折按钮并排，本身不再加左右 padding（避免与 Frame 86 的 24px 叠加）。
+ */
 .sidebar.sidebar--figma .sidebar-header--figma-brand {
   display: flex !important;
   flex-direction: row !important;
-  align-items: center;
-  justify-content: space-between;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  padding: 0 !important;
+  gap: 20px !important;
   width: 100%;
-  box-sizing: border-box;
-  flex-shrink: 0;
-  gap: 20px;
-  min-height: 109px;
-  padding: 0 24px !important;
+  max-width: 303px;
+  box-sizing: border-box !important;
+  flex-shrink: 0 !important;
+  align-self: stretch !important;
+  min-height: 109px !important;
+  height: 109px !important;
 }
 
-.sidebar.sidebar--figma .sidebar-header--figma-brand .sidebar-brand {
-  flex: 1;
-  min-width: 0;
-  justify-content: center;
-  padding: 10px 50px;
-  box-sizing: border-box;
+/*
+ * Figma「Frame 86」— 这一段对应 Dev 里 **整块 303×109** 的 auto layout：
+ * column + center + padding 0 24 + gap 20。
+ * 注意：composite 标是「左 BJT | 右字标叠字」横向组合，横向关系在子级 `.sidebar-brand`（row），不是把 BJT 与整列字标再竖排。
+ */
+.sidebar.sidebar--figma .sidebar-header__frame86 {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 0 24px !important;
+  gap: 20px !important;
+  width: 100%;
+  height: 109px !important;
+  min-height: 109px !important;
+  max-height: 109px !important;
+  box-sizing: border-box !important;
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  align-self: stretch !important;
+}
+
+/* 与稿面一致：一行内 BJT（图标+字）与右侧 Locked / PAPER 字标区 */
+.sidebar.sidebar--figma .sidebar-header__frame86 .sidebar-brand {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
 }
 
 .sidebar.sidebar--figma .sidebar-brand {
@@ -80,7 +115,6 @@
   align-items: center;
   gap: 10px;
   min-width: 0;
-  flex: 1;
 }
 
 .sidebar.sidebar--figma .sidebar-brand__bjt {
@@ -106,6 +140,12 @@
   line-height: 1.15;
 }
 
+/* Frame 86 内字标不参与纵向撑满，避免居中漂移 */
+.sidebar.sidebar--figma .sidebar-header__frame86 .sidebar-brand__wordmark {
+  flex: 0 0 auto !important;
+  align-items: center !important;
+}
+
 .sidebar.sidebar--figma .sidebar-brand__line1 {
   font-size: 11px;
   font-weight: 700;
@@ -129,19 +169,38 @@
 }
 
 .sidebar.sidebar--figma.collapsed .sidebar-header--figma-brand {
-  min-height: 72px;
+  min-height: 72px !important;
+  height: auto !important;
   padding: 8px 12px !important;
   gap: 8px;
   justify-content: center;
 }
 
-.sidebar.sidebar--figma.collapsed .sidebar-header--figma-brand .sidebar-brand {
-  padding: 8px 6px;
+.sidebar.sidebar--figma.collapsed .sidebar-header__frame86 {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding: 0 12px !important;
+}
+
+.sidebar.sidebar--figma.collapsed .sidebar-header__frame86 .sidebar-brand {
+  padding: 8px 6px !important;
+  flex-direction: row !important;
+  gap: 8px !important;
+}
+
+.sidebar.sidebar--figma.collapsed .sidebar-header--figma-brand .sidebar-toggle {
+  margin-right: 12px !important;
 }
 
 .sidebar.sidebar--figma.collapsed .sidebar-brand__bjt img {
   max-width: 44px;
   height: 32px;
+}
+
+.sidebar.sidebar--figma .sidebar-header--figma-brand .sidebar-toggle {
+  flex-shrink: 0 !important;
+  margin-right: 24px !important;
 }
 
 .sidebar.sidebar--figma .sidebar-toggle {

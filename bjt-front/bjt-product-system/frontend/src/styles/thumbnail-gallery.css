@@ -18,6 +18,10 @@
   margin: 0;
 }
 
+.thumbnail-gallery-left--main-only {
+  gap: 0;
+}
+
 .thumbnail-gallery-left .thumbnails-column {
   display: flex;
   flex-direction: column;
@@ -277,29 +281,35 @@
   }
 }
 
-/* Machine gallery container adjustments */
-.machine-gallery {
+/*
+ * ThumbnailGallery 把 className（如 machine-gallery）叠在同一根节点上，
+ * 不要用「.machine-gallery .thumbnail-gallery-left」子代选择器（永远匹配不到）。
+ * 左侧缩略图布局的尺寸由 machine-selection-figma（--air / --paper）接管。
+ */
+.thumbnail-gallery-left.machine-gallery {
+  /* 默认由 .thumbnail-gallery-left 提供 flex 行布局；此处去掉 380 上限，交给选型卡片 Figma 层 */
+  max-width: none;
+  width: 100%;
+  margin: 0;
+}
+
+.thumbnail-gallery-main.machine-gallery {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
   width: 100%;
-}
-
-.machine-gallery .thumbnail-gallery-main,
-.machine-gallery .thumbnail-gallery-left {
-  margin: 0;
   max-width: 380px;
-  width: 100%;
+  margin: 0 auto;
 }
 
-/* Adjust for machine card layout */
-.machine-gallery .main-image-wrapper {
+/* 仅「主图在下」布局的兜底尺寸，勿作用于 thumbnails-left（否则会盖掉 Figma 212/232 稿） */
+.thumbnail-gallery-main.machine-gallery .main-image-wrapper {
   height: 160px;
   max-width: 220px;
 }
 
-.machine-gallery .thumbnails-row {
+.thumbnail-gallery-main.machine-gallery .thumbnails-row {
   max-width: 220px;
 }
 

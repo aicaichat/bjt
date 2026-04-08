@@ -47,6 +47,13 @@ const { Option } = Select;
 // 默认图片 - 灰色背景带X的SVG
 const DEFAULT_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDEyOCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik00MCA0MEw4OCA4OE00MCA4OEw4OCA0MCIgc3Ryb2tlPSIjOTdBM0IzIiBzdHJva2Utd2lkdGg9IjIiLz4KPHN2Zz4K';
 
+/** 列表缩略图：空 URL 用内联 SVG；本地缺失的 /images/machines/* 由 onError 回退 */
+const resolveMachineCardImageSrc = (machine: MachinePart): string => {
+  const raw = machine.image_url || (machine as { model_image1_url?: string }).model_image1_url;
+  if (raw == null || String(raw).trim() === '') return DEFAULT_IMAGE;
+  return String(raw).trim();
+};
+
 // 常量定义
 const DEFAULT_REGION = 'CN';
 
@@ -630,7 +637,7 @@ const MachinesPage: React.FC = () => {
                 product_line_id: 1,
                 model: 'LA-E4S',
                 voltage: '220V',
-                image_url: '/images/machines/LA-E4S.jpg',
+                image_url: '/images/spare-parts/default.svg',
                 part_number: '60A01140',
                 name_zh: t('models.E4S.nameZh'),
                 name_en: t('models.E4S.nameEn'),
@@ -685,7 +692,7 @@ const MachinesPage: React.FC = () => {
                 product_line_id: 1,
                 model: 'LA-E5P',
                 voltage: '220V',
-                image_url: '/images/machines/LA-E5P.jpg',
+                image_url: '/images/spare-parts/default.svg',
                 part_number: '60A01150',
                 name_zh: t('models.E5P.nameZh'),
                 name_en: t('models.E5P.nameEn'),
@@ -1939,43 +1946,22 @@ const MachinesPage: React.FC = () => {
             key={`machine-${machine.id}-${machine.part_number}`} 
             className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 overflow-hidden"
           >
-            <div className="flex flex-col md:flex-row p-6">
+            <div className="machine-list-card__row">
               {/* Column 1: Image & Selection */}
-              <div className="w-full md:w-1/5 flex flex-col items-center md:items-start mb-6 md:mb-0 md:pr-6">
-                <div className="relative mb-4">
-                  <img 
-                    src={machine.image_url || DEFAULT_IMAGE} 
-                    alt={machine.part_number}
-                    className="w-32 h-32 object-contain border-2 border-gray-200 rounded-lg bg-gray-50 p-2 shadow-sm hover:shadow-md transition-shadow duration-200"
+              <div className="machine-list-card__thumb">
+                <figure className="machine-list-card__figure" aria-label={machine.part_number}>
+                  <img
+                    src={resolveMachineCardImageSrc(machine)}
+                    alt=""
+                    decoding="async"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
-                      console.log('❌ [Image Error] Failed to load image:', {
-                        originalSrc: target.src,
-                        machineId: machine.id,
-                        machinePartNumber: machine.part_number,
-                        originalImageFields: {
-                          image1_url: (machine as any).image1_url,
-                          image_url: machine.image_url,
-                          model_image1_url: machine.model_image1_url
-                        },
-                        willFallback: target.src !== DEFAULT_IMAGE,
-                        defaultImage: DEFAULT_IMAGE
-                      });
                       if (target.src !== DEFAULT_IMAGE) {
                         target.src = DEFAULT_IMAGE;
                       }
                     }}
-                    onLoad={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      console.log('✅ [Image Loaded] Successfully loaded image:', {
-                        src: target.src,
-                        machineId: machine.id,
-                        machinePartNumber: machine.part_number,
-                        isDefault: target.src === DEFAULT_IMAGE
-                      });
-                    }}
                   />
-                </div>
+                </figure>
                 <label className="inline-flex items-center cursor-pointer bg-gray-100 px-3 py-2 rounded-lg hover:bg-blue-500 hover:text-white transition-colors duration-200">
                   <input 
                     type="radio" 
@@ -1988,16 +1974,16 @@ const MachinesPage: React.FC = () => {
                   <span className="text-sm font-medium">{t('actions.selectMachine')}</span>
                 </label>
               </div>
-                
+
               {/* Column 2: Info & Specs */}
-              <div className="w-full md:w-3/5 md:px-6">
+              <div className="machine-list-card__body">
                 <div className="mb-4">
                   <span className="inline-block bg-blue-500 text-white px-3 py-1 text-sm font-bold rounded-lg shadow-sm">{machine.part_number}</span>
                   <h3 className="text-xl font-bold text-gray-900 mt-2 leading-tight">{getMachineName(machine)}</h3>
                 </div>
                 
                 <div className="bg-gray-50 rounded-lg p-4 mt-3 shadow-sm">
-                  <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm">
                     <div className="flex items-center">
                       <strong className="w-24 text-gray-600 font-medium">{t('tableHeaders.model')}:</strong>
                       <span className="text-gray-800 font-medium">{machine.model}</span>
@@ -2385,7 +2371,7 @@ const MachinesPage: React.FC = () => {
               </div>
 
               {/* Column 3: Price, Stock, Actions */}
-              <div className="w-full md:w-1/5 md:pl-6 mt-6 md:mt-0 border-t md:border-t-0 md:border-l border-gray-200 pt-6 md:pt-0">
+              <div className="machine-list-card__side">
                 <div className="mb-4">
                   <div className="font-medium text-sm text-gray-600 mb-2">
                     {t('tableHeaders.price') || 'Price'}:
@@ -3440,67 +3426,62 @@ const MachinesPage: React.FC = () => {
 
   // Return the main component JSX
   return (
-    <div className="machines-page min-h-screen bg-gray-50 text-gray-900">
+    <div className="machines-page machines-index-page min-h-screen bg-gray-50 text-gray-900">
       {/* SQL Mock服务状态组件 */}
       <MockServiceStatus position="top-right" compact={true} hidden={true} />
       
-      {/* 面包屑导航 - 优化版本，支持点击交互 */}
-      <div className="bg-white p-3 rounded-lg shadow-sm mb-4 flex items-center border border-gray-200">
-        <span 
-          className="text-xs px-1.5 py-0.5 bg-gray-100 rounded mr-2 cursor-pointer hover:bg-gray-200 transition-colors"
-          onClick={() => {
-            // 返回产品线选择页面
-            window.history.back();
-          }}
-        >
-          产品线
-        </span>
-        <span className="text-gray-800">产品线1</span>
-        {selectedMachine && (
-          <>
-            <span className="mx-2 text-gray-400">
-              <RightOutlined style={{ fontSize: '10px' }} />
-            </span>
-            <span className="text-xs px-1.5 py-0.5 bg-gray-100 rounded mr-2">Host</span>
-            <span 
-              className="text-gray-800 cursor-pointer hover:text-blue-600 transition-colors"
-              onClick={() => {
-                setSelectedMachine('');
-                setSelectedAccessories({});
-              }}
-            >
-              {machines.find(m => m.id.toString() === selectedMachine)?.name || '未知主机'}
-            </span>
-            <span className="mx-2 text-gray-400">
-              <RightOutlined style={{ fontSize: '10px' }} />
-            </span>
-            <span className="text-blue-600 font-medium">
-              {Object.keys(selectedAccessories).length > 0 ? '已选择配件' : 'Level 1 Accessory'}
-            </span>
-          </>
-        )}
+      {/* 面包屑：路径与提示分行，避免单行 flex 挤成一团 */}
+      <div className="bg-white p-3 rounded-lg shadow-sm mb-4 border border-gray-200">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span 
+            className="text-xs px-1.5 py-0.5 bg-gray-100 rounded cursor-pointer hover:bg-gray-200 transition-colors"
+            onClick={() => {
+              window.history.back();
+            }}
+          >
+            产品线
+          </span>
+          <span className="text-gray-800">产品线1</span>
+          {selectedMachine && (
+            <>
+              <span className="text-gray-400">
+                <RightOutlined style={{ fontSize: '10px' }} />
+              </span>
+              <span className="text-xs px-1.5 py-0.5 bg-gray-100 rounded">Host</span>
+              <span 
+                className="text-gray-800 cursor-pointer hover:text-blue-600 transition-colors"
+                onClick={() => {
+                  setSelectedMachine('');
+                  setSelectedAccessories({});
+                }}
+              >
+                {machines.find(m => m.id.toString() === selectedMachine)?.name || '未知主机'}
+              </span>
+              <span className="text-gray-400">
+                <RightOutlined style={{ fontSize: '10px' }} />
+              </span>
+              <span className="text-blue-600 font-medium">
+                {Object.keys(selectedAccessories).length > 0 ? '已选择配件' : 'Level 1 Accessory'}
+              </span>
+            </>
+          )}
+        </div>
         {!selectedMachine && (
-          <div className="mt-2 ml-4 text-sm text-gray-500">
-            <span className="flex items-center">
-              <InfoCircleOutlined className="mr-1" />
-              请选择主机型号
-            </span>
+          <div className="machines-index-breadcrumb__hint">
+            <InfoCircleOutlined />
+            <span>请选择主机型号</span>
           </div>
         )}
         {selectedMachine && Object.keys(selectedAccessories).length === 0 && (
-          <div className="mt-2 ml-4 text-sm text-gray-500">
-            <span className="flex items-center">
-              <InfoCircleOutlined className="mr-1" />
-              请选择配件
-            </span>
+          <div className="machines-index-breadcrumb__hint">
+            <InfoCircleOutlined />
+            <span>请选择配件</span>
           </div>
         )}
         {selectedMachine && Object.keys(selectedAccessories).length > 0 && (
-          <div className="mt-2 ml-4 text-sm text-gray-500">
-            <span className="flex items-center">
-              <InfoCircleOutlined className="mr-1" />
-              当前层级: {Object.keys(selectedAccessories).length + 1}
-            </span>
+          <div className="machines-index-breadcrumb__hint">
+            <InfoCircleOutlined />
+            <span>当前层级: {Object.keys(selectedAccessories).length + 1}</span>
           </div>
         )}
       </div>

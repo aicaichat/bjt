@@ -18,6 +18,7 @@
   },
   "figma": {
     "machineAndAccessory": "机器与配件",
+    "breadcrumbBack": "返回",
     "modelParamComparison": "机型参数对比表",
     "machineSelection": "主机选择",
     "showOptionalAccessories": "显示可选配件",
@@ -32,9 +33,6 @@
     "filmOptionsLink": "薄膜选项",
     "introductionModalTitle": "机型简介",
     "introductionEmpty": "暂无简介，可打开「规格说明」查看 PDF。",
-    "statusSelectMachine": "请选择主机型号",
-    "statusSelectAccessory": "请选择配件",
-    "statusCurrentLevel": "当前层级：{{level}}",
     "compareColModel": "型号",
     "compareColPicture": "图片",
     "compareColType": "类型",
@@ -43,7 +41,8 @@
     "compareColFilmType": "薄膜类型",
     "compareColFilmWidth": "膜宽",
     "compareColMaxRoll": "最大卷径",
-    "compareDataPending": "—"
+    "compareDataPending": "—",
+    "perPage": "每页"
   },
   "addToCart": "加入购物车",
   "noPermissionAdd": "无权限添加",

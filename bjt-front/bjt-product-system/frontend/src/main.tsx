@@ -2,7 +2,10 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './styles/figma-design-tokens.css'
+import './styles/figma-tokens-machine-selection.css'
 import './index.css'
+/** 须在 Tailwind(index) 之后加载，否则 utilities 与 .machine-gallery 会覆盖选型卡片图库尺寸 */
+import './styles/machine-selection-figma.css'
 import './i18n' // Import i18n configuration
 import { safeRender } from './utils/renderUtils'
 import { cacheManager } from './utils/cacheManager'

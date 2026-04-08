@@ -233,6 +233,41 @@
 
 **本次环境**：MCP 账号已连通，但 `get_metadata` 曾触发上述额度提示，**未在对话内做完整板自动导出**；已用你提供的画板截图落入 `docs/screenshots/figma-nav-components-library.png`，并与 §9.2 宽度说明闭环。额度正常时可在 Cursor 中对各 `nodeId` 连续调用 MCP 做导出。
 
+### 9.4 Frame 544 面包屑（Dev Mode）与「严格按 Figma」实现提示词
+
+#### 与当前稿一致的事实描述
+
+- **Frame 544**（你提供的 Dev Mode）：`display: flex; flex-direction: row; align-items: center; padding: 0 0 0 48px; position: relative; height: 60px; background: #012583`；稿内 **1617px** 为画板内宽度，实现侧用主栏 **`width: 100%`**。
+- **右侧无独立状态文案/胶囊**（与导出视觉一致）。历史实现里曾在 `.ms-breadcrumb-status` 显示 `figma.statusSelectMachine` 等，**已移除**；对应 i18n 键已从 `en` / `zh` `machines.json` 删除。
+- 条状样式见 `machine-selection-figma.css` 中 `.figma-front .ms-breadcrumb-bar.ms-breadcrumb-bar--figma`（相对定位覆盖通用白底 `fixed` 面包屑）。
+
+---
+
+#### 可复制提示词（中文，给 Cursor / 其他 AI 或外包前端）
+
+请将下方整块复制到任务说明中；**把 `node-id`、Frame 名、截图路径**换成你手头的最新设计交付物。
+
+```text
+你是前端实现。本任务只允许还原 Figma，禁止 UI 自由发挥。
+
+范围：丙甲 UI 文件中 Frame 544（面包屑条 / 深蓝条）。以 Dev Mode 下选定节点的数值为唯一权威：Fill、Typography、Auto layout（方向、对齐、gap、padding）、position、高度与宽度行为。凡稿中不存在的元素（例如额外的右侧“状态”文案或胶囊），一律不得添加。
+
+具体检查项：
+1) 条背景 `#012583`、高 `60px`、左 padding `48px`（右为 0，除非稿后续变更）、`position` 与主栏内宽度（100%，非写死 1617px）是否与稿一致。
+2) 左侧返回控件（若有）尺寸、白底、图标颜色是否与稿一致。
+3) 中间路径：分隔符、各级 chip/按钮样式是否仅使用稿中 token。
+4) 勿恢复已删除的右侧 `.ms-breadcrumb-status`；引导 copy 若需要应放在稿中指定 Frame（例如列表区 `compareSelectHint`），不得自行挂到面包屑右端。
+5) 色值与间距优先写入 `figma-design-tokens.css`（`--ff-*`）再在 `machine-selection-figma.css` 引用。
+
+验收：1920px 宽度下与设计稿或导出的 Frame 544 PNG 叠图，偏差仅限 ±1px 舍入；文案以设计稿与产品文案表为准。
+```
+
+#### Short English variant (same rules)
+
+```text
+You implement only what exists in Figma. Scope: breadcrumb bar Frame 544 (navy strip). Use Dev Mode as source of truth for fill, typography, auto-layout spacing, and behavior. Do not add status chips, pills, or extra chrome unless the Figma layer exists. Map colors and spacing to shared CSS tokens (--ff-*), not ad-hoc literals. If the right-side hint text is absent in Figma, remove it from the DOM.
+```
+
 ---
 
 ## 10. 相关文件索引

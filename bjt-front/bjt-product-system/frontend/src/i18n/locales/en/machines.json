@@ -14,6 +14,7 @@
   "pageTitle": "Machine Selection",
   "figma": {
     "machineAndAccessory": "Machine & Accessory",
+    "breadcrumbBack": "Back",
     "modelParamComparison": "Model Parameter Comparison Table",
     "machineSelection": "Machine Selection",
     "showOptionalAccessories": "Show Optional Accessories",
@@ -28,9 +29,6 @@
     "filmOptionsLink": "Film options",
     "introductionModalTitle": "Model introduction",
     "introductionEmpty": "No introduction available. Open Specifications for the PDF.",
-    "statusSelectMachine": "Select a host model",
-    "statusSelectAccessory": "Select accessories",
-    "statusCurrentLevel": "Current level: {{level}}",
     "compareColModel": "Model",
     "compareColPicture": "Picture",
     "compareColType": "Type",
@@ -39,7 +37,8 @@
     "compareColFilmType": "Film type",
     "compareColFilmWidth": "Film width",
     "compareColMaxRoll": "Max roll diameter",
-    "compareDataPending": "—"
+    "compareDataPending": "—",
+    "perPage": "Per page"
   },
   "addToCart": "Add to Cart",
   "noPermissionAdd": "No permission to add",

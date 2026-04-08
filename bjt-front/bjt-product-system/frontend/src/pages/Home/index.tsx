@@ -151,7 +151,8 @@ const Home: React.FC = () => {
 
   return (
     <div className="home-page home-page--figma">
-      <main className="home-main container">
+      {/* 主列 class 勿用全局 .container，避免 Home.override 旧 1200px 规则干扰 */}
+      <main className="home-main home-frame-529">
         {/* 产品线展示 — 标题仅在顶栏色带展示，与 Figma Home 一致 */}
         {productLines && productLines.map((line: any) => (
           <div 

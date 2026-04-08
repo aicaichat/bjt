@@ -58,12 +58,13 @@ body {
   width: 100%;
   max-width: 100%;
   min-height: 100vh;
-  background-color: var(--ff-content-canvas-bg, #f1f5f9);
+  background-color: var(--ff-content-canvas-bg, #f5f7fa);
   padding: 0;
   margin: 0;
 }
 
-.home-page .container {
+/* 仅非 Figma 首页：Figma 版用 .home-frame-529（1617 + gutter 40，见 Home.css） */
+.home-page:not(.home-page--figma) .container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem 1rem;
@@ -198,7 +199,7 @@ body {
     transform: translateX(0);
   }
   
-  .home-page .container {
+  .home-page:not(.home-page--figma) .container {
     padding: 1rem 0.5rem;
   }
   
@@ -224,7 +225,7 @@ body {
 }
 
 @media (max-width: 640px) {
-  .home-page .container {
+  .home-page:not(.home-page--figma) .container {
     padding: 0.5rem;
   }
   

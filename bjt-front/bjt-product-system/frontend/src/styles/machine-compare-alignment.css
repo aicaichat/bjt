@@ -1,16 +1,19 @@
 /* Machine Comparison - stable baseline for Figma alignment */
 
 .machines-page {
-  /* 默认；产品线 1 在 machine-selection-figma 内置为 Figma 1440×606 */
-  --mc-container-max-width: 1200px;
-  --mc-image-max-width: 1200px;
-  --mc-image-max-height: 720px;
   --mc-radius-lg: 16px;
   --mc-radius-md: 12px;
   --mc-radius-sm: 8px;
   --mc-border-color: #e5e7eb;
   --mc-shadow-soft: 0 4px 16px rgba(0, 0, 0, 0.08);
   --mc-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* 尺寸默认仅非 Figma 产品线页；`.ms-product-line-layout` 在 machine-selection-figma 中设 1440×606 */
+.machines-page:not(.ms-product-line-layout) {
+  --mc-container-max-width: 1200px;
+  --mc-image-max-width: 1200px;
+  --mc-image-max-height: 720px;
 }
 
 /* comparison card */
@@ -21,7 +24,7 @@
   position: relative;
   border-radius: var(--mc-radius-lg);
   border: 1px solid var(--mc-border-color);
-  background: linear-gradient(135deg, var(--ff-surface, #ffffff) 0%, var(--ff-page-bg, #f1f5f9) 100%);
+  background: linear-gradient(135deg, var(--ff-surface, #ffffff) 0%, var(--ff-page-bg, #f5f7fa) 100%);
   box-shadow: var(--mc-shadow-soft);
   padding: 20px;
   overflow: hidden;
@@ -79,7 +82,7 @@
   transform: translateY(-1px);
 }
 
-/* 右上角提示 — 独立 class（Figma 对齐 §1B） */
+/* 右上角提示 — 独立 class（Figma 对齐 1B） */
 .machines-page .machine-comparison-hint {
   position: absolute;
   right: 12px;

@@ -335,17 +335,20 @@ const Sidebar: React.FC<SidebarProps> = ({
       >
         {/* 侧边栏头部 */}
         <div className="sidebar-header sidebar-header--figma-brand">
-          <div className="sidebar-brand">
-            <div className="sidebar-brand__bjt">
-              <img src="/images/logo-1.webp" alt="BJT" />
-            </div>
-            {!collapsed && !isMobile && (
-              <div className="sidebar-brand__wordmark">
-                <span className="sidebar-brand__line1">Locked Air®</span>
-                <span className="sidebar-brand__rule" aria-hidden />
-                <span className="sidebar-brand__line2">L@CKED PAPER™</span>
+          {/* Figma Frame 86：303×109 品牌区（列、居中、gap 20）；收折按钮在框外同排 */}
+          <div className="sidebar-header__frame86">
+            <div className="sidebar-brand">
+              <div className="sidebar-brand__bjt">
+                <img src="/images/logo-1.webp" alt="BJT" />
               </div>
-            )}
+              {!collapsed && !isMobile && (
+                <div className="sidebar-brand__wordmark">
+                  <span className="sidebar-brand__line1">Locked Air®</span>
+                  <span className="sidebar-brand__rule" aria-hidden />
+                  <span className="sidebar-brand__line2">LOCKED PAPER™</span>
+                </div>
+              )}
+            </div>
           </div>
           {!isMobile && (
             <button

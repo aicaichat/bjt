@@ -188,7 +188,7 @@
   color: #334155;
   margin: 0 0 12px 0;
   padding: 8px 12px;
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, #f5f7fa 0%, #e2e8f0 100%);
   border-radius: 8px;
   border-left: 3px solid var(--ff-accent);
 }
@@ -336,7 +336,7 @@
 }
 
 .consumable-tooltip ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #f5f7fa;
   border-radius: 3px;
 }
 

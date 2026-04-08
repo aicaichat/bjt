@@ -2622,7 +2622,7 @@ header .container {
   display: inline-flex;
   align-items: center;
   padding: 8px 16px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #f5f7fa 100%);
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   color: #475569;
@@ -2737,7 +2737,7 @@ header .container {
 
 .spec-details-btn:disabled:hover,
 .more-info-btn:disabled:hover {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #f5f7fa 100%);
   border-color: #e2e8f0;
   color: #475569;
   transform: none;
@@ -3092,4 +3092,119 @@ header .container {
     font-size: 0.75rem;
     padding: 0.25rem 0.5rem;
   }
+}
+
+/* ---- /machines（Machines/index）列表卡片：显式 flex，避免全局 Tailwind .flex 合并规则影响对齐 ---- */
+.machines-page.machines-index-page {
+  max-width: min(1280px, 100%);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.machines-page.machines-index-page .machine-list-card__row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 1.5rem;
+}
+
+.machines-page.machines-index-page .machine-list-card__thumb {
+  flex: 0 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.machines-page.machines-index-page .machine-list-card__figure {
+  width: 8rem;
+  height: 8rem;
+  flex-shrink: 0;
+  margin-bottom: 1rem;
+  border-radius: 0.5rem;
+  border: 2px solid #e5e7eb;
+  background: #f9fafb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.machines-page.machines-index-page .machine-list-card__figure img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 0.5rem;
+  display: block;
+}
+
+.machines-page.machines-index-page .machine-list-card__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+}
+
+.machines-page.machines-index-page .machine-list-card__body .grid {
+  min-width: 0;
+}
+
+.machines-page.machines-index-page .machine-list-card__side {
+  flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+@media (min-width: 768px) {
+  .machines-page.machines-index-page .machine-list-card__row {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .machines-page.machines-index-page .machine-list-card__thumb {
+    flex: 0 0 20%;
+    width: 20%;
+    max-width: 20%;
+    margin-bottom: 0;
+    align-items: flex-start;
+    padding-right: 1.5rem;
+    box-sizing: border-box;
+  }
+
+  .machines-page.machines-index-page .machine-list-card__figure {
+    margin-bottom: 1rem;
+  }
+
+  .machines-page.machines-index-page .machine-list-card__body {
+    flex: 1 1 60%;
+    width: 60%;
+    max-width: 60%;
+    padding-right: 1.5rem;
+    box-sizing: border-box;
+  }
+
+  .machines-page.machines-index-page .machine-list-card__side {
+    flex: 0 0 20%;
+    width: 20%;
+    max-width: 20%;
+    margin-top: 0;
+    padding-top: 0;
+    padding-left: 1.5rem;
+    border-top: none;
+    border-left: 1px solid #e5e7eb;
+    box-sizing: border-box;
+  }
+}
+
+.machines-page.machines-index-page .machines-index-breadcrumb__hint {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }

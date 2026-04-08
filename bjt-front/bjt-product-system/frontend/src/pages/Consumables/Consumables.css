@@ -722,7 +722,7 @@
   display: inline-flex;
   align-items: center;
   padding: 8px 16px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #f5f7fa 100%);
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   color: #475569;
@@ -772,7 +772,7 @@
   display: inline-flex;
   align-items: center;
   padding: 8px 16px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #f5f7fa 100%);
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   color: #475569;
@@ -1564,7 +1564,7 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #f5f7fa;
   border-radius: 2px;
 }
 
@@ -1619,7 +1619,7 @@
 /* 价格阶梯滚动区域 */
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 #f1f5f9;
+  scrollbar-color: #cbd5e1 #f5f7fa;
 }
 
 /* 库存状态动画 */
@@ -2813,7 +2813,7 @@
 }
 
 .consumable-tooltip ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #f5f7fa;
   border-radius: 3px;
 }
 

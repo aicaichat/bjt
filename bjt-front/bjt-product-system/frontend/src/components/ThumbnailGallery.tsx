@@ -2,6 +2,13 @@ import React, { useState } from 'react';
 import { Modal } from 'antd';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 
+/** 缩略图/主图加载失败时占位，避免留白盒 */
+const IMAGE_FALLBACK_SRC =
+  'data:image/svg+xml,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><rect width="128" height="128" fill="#f3f4f6"/><path d="M40 40L88 88M40 88L88 40" stroke="#9ca3af" stroke-width="2"/></svg>'
+  );
+
 interface ThumbnailGalleryProps {
   images: string[];
   altText?: string;
@@ -19,19 +26,24 @@ const ThumbnailGallery: React.FC<ThumbnailGalleryProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Filter out empty or invalid image URLs
-  const validImages = images.filter(img => img && img.trim() !== '');
+  const validImages = images.filter((img) => img && img.trim() !== '');
+  const displayImages = [...new Set(validImages.map((s) => s.trim()))].slice(0, 4);
 
-  if (validImages.length === 0) {
+  if (displayImages.length === 0) {
     return null;
   }
 
-  // Ensure we have at least 3 images by repeating the first image if necessary
   const THUMB_ROW_MAX = 4;
-  const displayImages = [...validImages];
-  while (displayImages.length < 3 && validImages.length > 0) {
-    displayImages.push(validImages[0]);
-  }
+
+  /** thumbnails-left：最多 3 张缩略图 = 除当前主图外的图（4 张素材时即「3 小 + 1 大」） */
+  const leftColumnThumbSlots = (() => {
+    if (layout !== 'thumbnails-left' || displayImages.length <= 1) return [];
+    return displayImages
+      .map((img, i) => ({ img, i }))
+      .filter(({ i }) => i !== currentImageIndex)
+      .sort((a, b) => a.i - b.i)
+      .slice(0, 3);
+  })();
 
   const openModal = (index: number) => {
     setCurrentImageIndex(index);
@@ -76,7 +88,9 @@ const ThumbnailGallery: React.FC<ThumbnailGalleryProps> = ({
           className="main-image"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
-            target.style.display = 'none';
+            if (target.src !== IMAGE_FALLBACK_SRC) {
+              target.src = IMAGE_FALLBACK_SRC;
+            }
           }}
         />
         <div className="main-image-overlay">
@@ -110,7 +124,9 @@ const ThumbnailGallery: React.FC<ThumbnailGalleryProps> = ({
             className="thumbnail-image"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
-              target.style.display = 'none';
+              if (target.src !== IMAGE_FALLBACK_SRC) {
+                target.src = IMAGE_FALLBACK_SRC;
+              }
             }}
           />
           {index === currentImageIndex && direction === 'row' && (
@@ -127,8 +143,43 @@ const ThumbnailGallery: React.FC<ThumbnailGalleryProps> = ({
   if (layout === 'thumbnails-left') {
     return (
       <>
-        <div className={`thumbnail-gallery-left ${className}`}>
-          {thumbsRow('column')}
+        <div
+          className={`thumbnail-gallery-left ${className} ${
+            leftColumnThumbSlots.length === 0 ? 'thumbnail-gallery-left--main-only' : ''
+          }`.trim()}
+        >
+          {leftColumnThumbSlots.length > 0 && (
+            <div className="thumbnails-column">
+              {leftColumnThumbSlots.map(({ img, i }) => (
+                <div
+                  key={i}
+                  className="thumbnail-small"
+                  onClick={() => setCurrentImageIndex(i)}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${altText} ${i + 1}`}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setCurrentImageIndex(i);
+                    }
+                  }}
+                >
+                  <img
+                    src={img}
+                    alt={`${altText} ${i + 1}`}
+                    className="thumbnail-image"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      if (target.src !== IMAGE_FALLBACK_SRC) {
+                        target.src = IMAGE_FALLBACK_SRC;
+                      }
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
           {mainBlock}
         </div>
         {/* Image Modal — same as main-with-thumbnails */}

@@ -1,0 +1,85 @@
+{
+  "$comment": "与 figma-tokens-machine-selection.css 同源；可用 Tokens Studio / Figma Variables 导出覆盖，再同步到 CSS。单位：设计稿 px。",
+  "meta": {
+    "figmaFileKey": "QluTLuKXbauHIiCN8AZUGJ",
+    "figmaProtoUrl": "https://www.figma.com/proto/QluTLuKXbauHIiCN8AZUGJ/%E4%B8%99%E7%94%B2UI?node-id=2679-22612&m=draw&scaling=min-zoom&content-scaling=fixed&page-id=2443%3A17459&starting-point-node-id=2679%3A24930",
+    "designViewportWidth": 1920,
+    "machineCardFrameNodeId": "2679:22612",
+    "pageNodeId": "2443:17459",
+    "startingPointNodeId": "2679:24930"
+  },
+  "viewport": {
+    "designWidthPx": 1920,
+    "contentMaxWidthPx": 1617,
+    "frame529MinHeightPx": 1638,
+    "sidebarNavGapPx": 24,
+    "sidebarNavPaddingBottomPx": 13,
+    "pageGutterPx": 40,
+    "frame3PaddingTopPx": 16,
+    "sidebarWidthPx": 303
+  },
+  "airCushionMachineList": {
+    "listRowWidthPx": 1537,
+    "listRowHeightPx": 280,
+    "linkHintColor": "#2A7DFA",
+    "pnPillBackground": "#D9DFED",
+    "moreInfoBubbleBackground": "#D9DFED",
+    "moreInfoBubbleBorder": "#C4DCFF",
+    "stockPanelBackground": "#EBF3FF",
+    "stockPositiveColor": "#05A126",
+    "stockNegativeColor": "#FF0101",
+    "galleryThumbPx": 68,
+    "galleryMainPx": 212,
+    "galleryThumbColumnGapPx": 4,
+    "galleryMainGapPx": 8,
+    "imageBorderColor": "#DEDEDE",
+    "imageBorderRadiusPx": 8,
+    "rowPaddingXPx": 24,
+    "rowPaddingYPx": 16,
+    "rowInnerGapPx": 24,
+    "titleSizePx": 18,
+    "titleLinePx": 21,
+    "bodySizePx": 16,
+    "bodyLinePx": 19
+  },
+  "machineListCard": {
+    "widthPx": 1491,
+    "heightPx": 280,
+    "background": "#FFFFFF",
+    "borderRadiusPx": 12,
+    "borderColor": "#E5E7EB",
+    "paddingXPx": 16,
+    "paddingYPx": 12,
+    "rowMinWidthPx": 1491
+  },
+  "machineListCardColumns": {
+    "galleryFlexBasisPx": null,
+    "galleryFlexPercent": 20,
+    "mainFlexPercent": 60,
+    "actionsFlexPercent": 20,
+    "galleryPaddingRightPx": 20,
+    "mainPaddingRightPx": 20,
+    "actionsPaddingLeftPx": 20
+  },
+  "gallery": {
+    "thumbSizePx": 48,
+    "mainImageHeightPx": 232,
+    "wrapBorderRadiusPx": 12,
+    "wrapPaddingPx": 8,
+    "thumbGapPx": 8,
+    "thumbMainGapPx": 12
+  },
+  "typography": {
+    "productTitleFontFamily": "Roboto",
+    "productTitleSizePx": 22,
+    "productTitleWeight": 700,
+    "productTitleLineHeightPx": 28,
+    "specLabelSizePx": 13,
+    "specValueSizePx": 13,
+    "linkSizePx": 14
+  },
+  "assets": {
+    "exportBasePath": "/figma-assets/machine-selection/",
+    "notes": "导出 PNG@1x/@2x 或 SVG 后放入 public/figma-assets/…，名称与这里 key 对齐"
+  }
+}

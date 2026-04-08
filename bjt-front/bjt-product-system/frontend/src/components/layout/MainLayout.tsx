@@ -56,9 +56,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({
       style={figmaLayoutStyle}
     >
       {/* Header - 包含搜索、语言切换、购物车、用户信息 */}
-      <Header 
-        {...headerProps} 
-        className="site-header" 
+      <Header
+        {...headerProps}
+        className="site-header"
         onSearch={handleSearch}
       />
       

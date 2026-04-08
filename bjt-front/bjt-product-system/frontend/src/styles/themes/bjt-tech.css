@@ -2,17 +2,17 @@
 
 :root {
   /* === Brand Colors from BJT Tech Logo === */
-  --bjt-primary-blue: #012583;
-  --bjt-primary-blue-light: #011f5c;
-  --bjt-primary-blue-dark: #011845;
+  --bjt-primary-blue: #00338d;
+  --bjt-primary-blue-light: #3358a3;
+  --bjt-primary-blue-dark: #002244;
   --bjt-secondary-orange: #ff6b35;
   --bjt-secondary-orange-light: #ff8559;
   --bjt-secondary-orange-dark: #e55a2b;
   
   /* === Interactive Colors === */
-  --bjt-interactive-blue: #012583;
-  --bjt-interactive-blue-hover: #011b52;
-  --bjt-interactive-blue-active: #011845;
+  --bjt-interactive-blue: #00338d;
+  --bjt-interactive-blue-hover: #002a70;
+  --bjt-interactive-blue-active: #002244;
   
   /* === Background Colors === */
   --bjt-bg-primary: #ffffff;
@@ -33,7 +33,7 @@
   /* === Border Colors === */
   --bjt-border-primary: #e5e7eb;
   --bjt-border-secondary: #d1d5db;
-  --bjt-border-focus: #012583;
+  --bjt-border-focus: #00338d;
   --bjt-border-error: #ef4444;
   --bjt-border-success: #10b981;
   --bjt-border-warning: #f59e0b;
@@ -48,17 +48,17 @@
   --bjt-error: #ef4444;
   --bjt-error-light: #f87171;
   --bjt-error-dark: #dc2626;
-  --bjt-info: #012583;
+  --bjt-info: #00338d;
   --bjt-info-light: #e8eef9;
-  --bjt-info-dark: #011845;
+  --bjt-info-dark: #002244;
   
   /* === Shadows === */
-  --bjt-shadow-sm: 0 1px 2px 0 rgba(1, 37, 131, 0.05);
-  --bjt-shadow-md: 0 4px 6px -1px rgba(1, 37, 131, 0.1), 0 2px 4px -1px rgba(1, 37, 131, 0.06);
-  --bjt-shadow-lg: 0 10px 15px -3px rgba(1, 37, 131, 0.1), 0 4px 6px -2px rgba(1, 37, 131, 0.05);
-  --bjt-shadow-xl: 0 20px 25px -5px rgba(1, 37, 131, 0.1), 0 10px 10px -5px rgba(1, 37, 131, 0.04);
-  --bjt-shadow-card: 0 2px 8px rgba(1, 37, 131, 0.08);
-  --bjt-shadow-card-hover: 0 4px 16px rgba(1, 37, 131, 0.12);
+  --bjt-shadow-sm: 0 1px 2px 0 rgba(0, 51, 141, 0.05);
+  --bjt-shadow-md: 0 4px 6px -1px rgba(0, 51, 141, 0.1), 0 2px 4px -1px rgba(0, 51, 141, 0.06);
+  --bjt-shadow-lg: 0 10px 15px -3px rgba(0, 51, 141, 0.1), 0 4px 6px -2px rgba(0, 51, 141, 0.05);
+  --bjt-shadow-xl: 0 20px 25px -5px rgba(0, 51, 141, 0.1), 0 10px 10px -5px rgba(0, 51, 141, 0.04);
+  --bjt-shadow-card: 0 2px 8px rgba(0, 51, 141, 0.08);
+  --bjt-shadow-card-hover: 0 4px 16px rgba(0, 51, 141, 0.12);
   
   /* === Spacing (8px grid system) === */
   --bjt-space-xs: 0.25rem;   /* 4px */
