@@ -1,0 +1,90 @@
+/**
+ * 机器选型页 — Figma 专用令牌（A：单一数据源）
+ * - 与 src/figma-tokens/machine-selection.json 保持含义一致；改稿时二选一作为主副本，再同步另一份。
+ * - 加载顺序：须在 figma-design-tokens.css 之后、index.css（Tailwind）之前；machine-selection-figma.css 须在 index.css 之后（见 main.tsx）。
+ */
+:root {
+  /* ========== 验收与设计基准 ========== */
+  --ff-ms-design-viewport-width: 1920px;
+  --ff-ms-content-max-width: 1617px;
+  /* Frame 529（Dev）：文档型页面叠图用最小高度，真实页面可超出滚动 */
+  --ff-ms-frame-529-min-height: 1638px;
+  /* 与 machine-selection.json viewport.pageGutterPx、machine-selection-figma --ms-page-gutter 一致 */
+  --ff-ms-page-gutter: 40px;
+  /* Figma：侧栏列（Dev「侧面导航栏」— 303×853 等为稿面示例高度） */
+  --ff-ms-sidebar-width: 303px;
+  /* 侧栏 Auto layout：align-items flex-start、gap 24、padding 0 0 13 */
+  --ff-ms-sidebar-nav-gap: 24px;
+  --ff-ms-sidebar-nav-pad-bottom: 13px;
+  /* Figma：分隔线（顶栏下、列表行下） */
+  --ff-ms-hairline-divider: rgba(0, 0, 0, 0.25);
+
+  /* ========== 气垫机列表行（Dev Mode「机器页面组件」Frame 471 / 1537×280） ========== */
+  --ff-ms-air-row-width: 1537px;
+  --ff-ms-air-row-height: 280px;
+  --ff-ms-air-row-shadow: 0 0.5px 0 var(--ff-ms-hairline-divider);
+  --ff-ms-air-link-hint: #2a7dfa;
+  --ff-ms-air-pn-bg: #d9dfed;
+  --ff-ms-air-bubble-border: #c4dcff;
+  --ff-ms-air-moreinfo-bg: #d9dfed;
+  /* 与叠图参考 machine-selection-figma-reference-layout.png 库存面板一致 */
+  --ff-ms-air-stock-bg: #ebf3ff;
+  --ff-ms-air-stock-positive: #05a126;
+  --ff-ms-air-stock-negative: #ff0101;
+  --ff-ms-air-gallery-thumb: 68px;
+  --ff-ms-air-gallery-main: 212px;
+  --ff-ms-air-gallery-thumb-col-gap: 4px;
+  --ff-ms-air-gallery-main-gap: 8px;
+  --ff-ms-air-image-border: #dedede;
+  --ff-ms-air-image-radius: 8px;
+  --ff-ms-air-row-pad-x: 24px;
+  --ff-ms-air-row-pad-y: 16px;
+  --ff-ms-air-row-inner-gap: 24px;
+  --ff-ms-air-title-size: 18px;
+  --ff-ms-air-title-line: 21px;
+  --ff-ms-air-body-size: 16px;
+  --ff-ms-air-body-line: 19px;
+  --ff-ms-air-h2-size: 20px;
+  --ff-ms-air-h2-line: 23px;
+
+  /* ========== 主机列表单卡（纸垫 Frame 1491×280；气垫用 --ff-ms-air-*） ========== */
+  --ff-ms-card-width: 1491px;
+  --ff-ms-card-height: 280px;
+  --ff-ms-card-bg: #ffffff;
+  --ff-ms-card-radius: 12px;
+  --ff-ms-card-border-color: var(--ff-border, #e5e7eb);
+  --ff-ms-card-padding-x: 16px;
+  --ff-ms-card-padding-y: 12px;
+  /** 桌面端卡片内行：与 Figma 定宽一致时用于横向滚动 */
+  --ff-ms-card-row-min-width: var(--ff-ms-card-width);
+
+  /* ========== 三列（与 Auto Layout 百分比一致；若 Dev Mode 给固定宽可改成 px） ========== */
+  --ff-ms-col-gallery: 20%;
+  --ff-ms-col-main: 60%;
+  --ff-ms-col-actions: 20%;
+  --ff-ms-col-gallery-pr: 20px;
+  --ff-ms-col-main-pr: 20px;
+  --ff-ms-col-actions-pl: 20px;
+
+  /* ========== 图库（thumbnails-left） ========== */
+  --ff-ms-gallery-thumb: 48px;
+  --ff-ms-gallery-main-h: 232px;
+  --ff-ms-gallery-wrap-radius: 12px;
+  --ff-ms-gallery-wrap-pad-x: 8px;
+  --ff-ms-gallery-wrap-pad-y: 6px;
+  --ff-ms-gallery-thumb-gap: 8px;
+  --ff-ms-gallery-thumb-main-gap: 12px;
+
+  /* ========== 字阶（从 Figma Text 面板逐项替换） ========== */
+  --ff-ms-font-title: var(--ff-font);
+  --ff-ms-title-size: 1.375rem;
+  --ff-ms-title-weight: 700;
+  --ff-ms-title-line-height: 1.3;
+  --ff-ms-spec-label-size: 13px;
+  --ff-ms-spec-value-size: 13px;
+  --ff-ms-link-size: 14px;
+
+  /* ========== 兼容旧名（全站搜索仍可能引用；勿删直至替换完毕） ========== */
+  --ff-paper-machine-card-max-w: var(--ff-ms-card-width);
+  --ff-paper-machine-card-h: var(--ff-ms-card-height);
+}

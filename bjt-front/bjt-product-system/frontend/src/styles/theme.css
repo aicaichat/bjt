@@ -32,11 +32,11 @@
 }
 
 :root {
-  /* 品牌主色调 - 现代科技蓝 */
-  --primary-color: #1E88E5;
-  --primary-light: #64B5F6;
-  --primary-dark: #0D47A1;
-  --primary-bg: #F5F9FF;
+  /* 品牌主色调 — 与 Figma Dev Mode（--ff-*）一致，见 figma-global.css 最终覆盖 */
+  --primary-color: var(--ff-accent, #00338d);
+  --primary-light: var(--ff-tint-blue, #e8eef9);
+  --primary-dark: var(--ff-accent-mid, #002a70);
+  --primary-bg: var(--ff-tint-blue, #e8eef9);
   
   /* 辅助色系 */
   --secondary-color: #455A64;
@@ -67,9 +67,9 @@
   --gray-900: #212121;
   
   /* 背景色 */
-  --bg-color: #FAFAFA;
-  --bg-card: #FFFFFF;
-  --bg-elevated: #FFFFFF;
+  --bg-color: var(--ff-page-bg, #f5f7fa);
+  --bg-card: var(--ff-surface, #ffffff);
+  --bg-elevated: var(--ff-surface, #ffffff);
   --bg-inset: #F5F5F5;
   
   /* Theme Switcher specific colors */
@@ -78,17 +78,17 @@
   --background-active: #E0E0E0;
   
   /* 文本颜色 */
-  --text-primary: #212121;
-  --text-secondary: #757575;
+  --text-primary: var(--ff-text, rgba(0, 0, 0, 0.85));
+  --text-secondary: var(--ff-text-muted, rgba(0, 0, 0, 0.65));
   --text-tertiary: #9E9E9E;
   --text-disabled: #BDBDBD;
   --text-on-primary: #FFFFFF;
   --text-on-dark: #FFFFFF;
   
   /* 边框 */
-  --border-color: #E0E0E0;
-  --border-light: #EEEEEE;
-  --border-focus: var(--primary-color);
+  --border-color: var(--ff-border, #e5e7eb);
+  --border-light: #eeeeee;
+  --border-focus: var(--ff-accent, #00338d);
   --border-radius-sm: 4px;
   --border-radius-md: 8px;
   --border-radius-lg: 12px;
@@ -112,7 +112,16 @@
   --spacing-3xl: 64px;
   
   /* 字体 */
-  --font-family: 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-family: var(
+    --ff-font,
+    'Roboto',
+    'Inter',
+    'Segoe UI',
+    'PingFang SC',
+    'Hiragino Sans GB',
+    'Microsoft YaHei',
+    sans-serif
+  );
   --font-size-xs: 12px;
   --font-size-sm: 14px;
   --font-size-md: 16px;
@@ -150,7 +159,7 @@
 
   /* 中性色系统 - 配合品牌色彩 */
   --neutral-50: #f9fafc;
-  --neutral-100: #f1f5f9;
+  --neutral-100: #f5f7fa;
   --neutral-200: #e2e8f0;
   --neutral-300: #cbd5e1;
   --neutral-400: #94a3b8;

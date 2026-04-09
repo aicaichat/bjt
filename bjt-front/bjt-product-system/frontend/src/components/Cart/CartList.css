@@ -83,8 +83,8 @@
 }
 
 .cart-item.selected {
-  border-color: #3b82f6;
-  background-color: #eff6ff;
+  border-color: var(--ff-accent);
+  background-color: var(--ff-tint-blue);
 }
 
 .cart-item.dragging {
@@ -156,7 +156,7 @@
 .tooltip-btn {
   background: none;
   border: none;
-  color: #3b82f6;
+  color: var(--ff-accent);
   font-size: 1rem;
   cursor: pointer;
   padding: 0.25rem;
@@ -167,7 +167,7 @@
 }
 
 .tooltip-btn:hover {
-  background-color: #eff6ff;
+  background-color: var(--ff-tint-blue);
   opacity: 1;
   transform: scale(1.1);
 }
@@ -293,7 +293,7 @@
 
 .quantity-input:focus {
   outline: none;
-  background-color: #f0f9ff;
+  background-color: color-mix(in srgb, var(--ff-tint-blue) 65%, white);
 }
 
 /* 🚫 空购物车状态 */

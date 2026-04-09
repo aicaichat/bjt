@@ -6,7 +6,7 @@
   top: 0; /* 置顶显示，从页面顶部开始 */
   left: 0;
   height: 100vh; /* 占满整个视口高度 */
-  width: 280px;
+  width: var(--bjt-sidebar-width, 303px);
   background-color: var(--bjt-bg-primary);
   border-right: 1px solid var(--bjt-border-primary);
   box-shadow: var(--bjt-shadow-lg);
@@ -18,7 +18,7 @@
 }
 
 .sidebar.collapsed {
-  width: 80px;
+  width: var(--bjt-sidebar-collapsed-width, 80px);
 }
 
 /* 移动端样式 */
@@ -27,7 +27,7 @@
     top: 0;
     height: 100vh;
     transform: translateX(-100%);
-    width: 280px;
+    width: var(--bjt-sidebar-width, 303px);
   }
   
   .sidebar.mobile-open {
@@ -35,7 +35,7 @@
   }
   
   .sidebar.collapsed {
-    width: 280px;
+    width: var(--bjt-sidebar-width, 303px);
   }
 }
 
@@ -305,7 +305,7 @@
 
 /* 主内容区域调整 */
 .main-content {
-  margin-left: 280px;
+  margin-left: var(--bjt-sidebar-width, 303px);
   margin-top: 80px; /* 为Header留出空间 */
   transition: all var(--bjt-transition-normal);
   min-height: calc(100vh - 80px);
@@ -416,18 +416,18 @@
   outline-offset: 2px;
 }
 
-/* 大屏设备优化 */
+/* 大屏设备优化 — 与 .figma-front --bjt-sidebar-width 同源 */
 @media (min-width: 1200px) {
   .sidebar {
-    width: 300px;
+    width: var(--bjt-sidebar-width, 303px);
   }
   
   .sidebar.collapsed {
-    width: 80px;
+    width: var(--bjt-sidebar-collapsed-width, 80px);
   }
   
   .main-content {
-    margin-left: 300px;
+    margin-left: var(--bjt-sidebar-width, 303px);
   }
   
   .main-content.sidebar-collapsed {

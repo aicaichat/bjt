@@ -1,0 +1,252 @@
+/* BJT Product System App Styles */
+
+/* Global Layout Reset */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(
+    --ff-font,
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif
+  );
+}
+
+/* Layout Components */
+.main-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8fafc;
+}
+
+/* Sidebar Styles */
+.sidebar {
+  width: 280px;
+  background-color: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  position: fixed;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar.collapsed {
+  width: 80px;
+}
+
+/* Main Content Area */
+.main-content {
+  flex: 1;
+  margin-left: 280px;
+  min-height: 100vh;
+  transition: margin-left 0.3s ease;
+}
+
+.main-content.sidebar-collapsed {
+  margin-left: 80px;
+}
+
+/* Home Page Specific Styles */
+.home-page {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100vh;
+  background-color: var(--ff-content-canvas-bg, #f5f7fa);
+  padding: 0;
+  margin: 0;
+}
+
+/* 仅非 Figma 首页：Figma 版用 .home-frame-529（1617 + gutter 40，见 Home.css） */
+.home-page:not(.home-page--figma) .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+/* Product Section Styles */
+.product-section {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.product-section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.section-header {
+  background: linear-gradient(135deg, var(--ff-accent) 0%, var(--ff-accent-mid) 100%);
+  color: #ffffff;
+  padding: 1.5rem 2rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.section-content {
+  display: flex;
+  gap: 2rem;
+  padding: 2rem;
+  align-items: center;
+}
+
+.section-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.section-text h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 1rem;
+}
+
+.section-text p {
+  color: #6b7280;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+/* Product Links */
+.product-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.product-link {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background-color: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #374151;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.product-link:hover {
+  background-color: var(--ff-tint-blue);
+  border-color: var(--ff-accent);
+  color: var(--ff-accent-mid);
+  text-decoration: none;
+  transform: translateX(4px);
+}
+
+.product-link-text {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 0.875rem;
+}
+
+.external-icon {
+  margin-left: 0.5rem;
+  opacity: 0.6;
+}
+
+/* Product Image */
+.section-image {
+  flex-shrink: 0;
+  width: 300px;
+  height: 200px;
+}
+
+.section-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+/* Divider */
+.divider {
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--ff-accent), #8b5cf6);
+  margin: 0.5rem 0 1rem 0;
+  border-radius: 2px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+  }
+  
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+  
+  .home-page:not(.home-page--figma) .container {
+    padding: 1rem 0.5rem;
+  }
+  
+  .section-content {
+    flex-direction: column;
+    padding: 1.5rem;
+    gap: 1.5rem;
+  }
+  
+  .section-image {
+    width: 100%;
+    height: 180px;
+  }
+  
+  .product-links {
+    width: 100%;
+  }
+  
+  .section-header {
+    padding: 1rem 1.5rem;
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .home-page:not(.home-page--figma) .container {
+    padding: 0.5rem;
+  }
+  
+  .product-section {
+    margin-bottom: 1rem;
+    border-radius: 8px;
+  }
+  
+  .section-content {
+    padding: 1rem;
+  }
+  
+  .section-image {
+    height: 160px;
+  }
+  
+  .product-link {
+    padding: 0.625rem 0.75rem;
+  }
+  
+  .product-link-text {
+    font-size: 0.8rem;
+  }
+}

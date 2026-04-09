@@ -187,6 +187,8 @@ export interface MachineProduct {
     model_image1_url: string | null; // Main image from host_models
     model_image2_url: string | null; // Secondary image from host_models
     model_explosion_diagram_pdf: string | null;
+    /** From API: part + host model images, deduplicated (optional). */
+    gallery_image_urls?: string[];
 
     // --- Pricing & Inventory (to be populated) ---
     prices: PriceTier[]; 

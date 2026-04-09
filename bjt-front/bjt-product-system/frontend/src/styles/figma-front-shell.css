@@ -1,0 +1,369 @@
+/**
+ * 前台整站壳层（仅挂在 MainLayout 根节点 .figma-front）
+ * Admin 使用 AdminLayout，不引入此文件，保持后台不变。
+ */
+
+.figma-front {
+  /* Figma 桌面验收 Frame 宽度：叠图 / 对比时请将浏览器视口置为此值（或 DevTools 设备栏自定义） */
+  --ff-viewport-design: 1920px;
+  /* 侧面导航栏固定宽（Figma 组件约 303px；顶栏/主区须与此同源，见 sidebar-figma.css、MainLayout） */
+  --bjt-sidebar-width: 303px;
+  /* 收起宽度，与 Tailwind ml-20 / Ant inlineCollapsed 一致 */
+  --bjt-sidebar-collapsed-width: 80px;
+  /* 由 MainLayout 按桌面展开|收起|移动端写入；未写入时等同完整宽度 */
+  --bjt-sidebar-effective-width: var(--bjt-sidebar-width);
+  /* 色值见 figma-design-tokens.css :root */
+  font-family: var(--ff-font);
+}
+
+/* 顶栏：白底 + Figma 下分割线 0.5px rgba(0,0,0,0.25)（覆盖 header-layout-fix 磨砂/重阴影） */
+.figma-front .main-header,
+.figma-front .main-header.site-header {
+  background: var(--ff-surface) !important;
+  border-bottom: none !important;
+  box-shadow: 0 0.5px 0 var(--ff-header-divider) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* 与左侧 Menu 同源：顶栏 left/width 随 --bjt-sidebar-effective-width（覆盖 header-layout-fix 的 300px） */
+.figma-front .main-header.site-header {
+  left: var(--bjt-sidebar-effective-width) !important;
+  width: calc(100% - var(--bjt-sidebar-effective-width)) !important;
+  z-index: 10000;
+}
+
+/*
+ * 顶栏内层：
+ * - 桌面：不展示顶栏品牌（与 Figma 一致：BJT / Locked Air 仅在侧栏 header 出现一次）；仅工具区右对齐。
+ * - 移动端：「品牌 | 横向入口 | 工具区」（抽屉侧栏时顶栏保留一处品牌）。
+ */
+.figma-front .main-header .main-header__inner {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 24px !important;
+  width: 100% !important;
+  max-width: none !important;
+  height: 100% !important;
+  min-height: var(--ff-site-header-height, 72px) !important;
+  margin: 0 !important;
+  padding: 0 var(--ff-ms-page-gutter, 40px) !important;
+  box-sizing: border-box !important;
+}
+
+@media (min-width: 769px) {
+  /* 避免与 Sidebar `.sidebar-brand` 重复同一套 logo-1.webp */
+  .figma-front .main-header .header-figma-brand {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .figma-front .main-header .main-header__inner {
+    display: grid !important;
+    flex-direction: unset !important;
+    justify-content: unset !important;
+    grid-template-columns: auto minmax(0, 1fr) auto !important;
+    column-gap: 12px !important;
+  }
+}
+
+/* Figma：顶栏品牌（仅移动端可见；桌面见 @media min-width 769px） */
+.figma-front .header-figma-brand {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex-shrink: 0 !important;
+  justify-self: start !important;
+}
+
+.figma-front .header-figma-brand__logos {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+}
+
+.figma-front .header-figma-brand__bjt-img {
+  display: block !important;
+  height: 26px !important;
+  width: auto !important;
+  max-width: 152px !important;
+  object-fit: contain !important;
+}
+
+.figma-front .header-figma-brand__wordmark {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  gap: 0 !important;
+  line-height: 1.12 !important;
+  min-width: 0 !important;
+}
+
+.figma-front .header-figma-brand__line1 {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  color: var(--ff-accent) !important;
+  letter-spacing: 0.02em !important;
+  white-space: nowrap !important;
+}
+
+.figma-front .header-figma-brand__line2 {
+  font-size: 8px !important;
+  font-weight: 600 !important;
+  color: #374151 !important;
+  letter-spacing: 0.04em !important;
+  white-space: nowrap !important;
+}
+
+@media (max-width: 1100px) {
+  .figma-front .header-figma-brand__wordmark {
+    display: none !important;
+  }
+}
+
+/* 顶栏中部：主导航（网格第二列，视口居中） */
+.figma-front .main-header .header-top-nav {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  justify-self: center !important;
+  max-width: 100% !important;
+  mask-image: linear-gradient(to right, #000 92%, transparent 100%);
+  justify-content: center !important;
+}
+
+.figma-front .main-header .header-top-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.figma-front .header-top-nav__link {
+  flex-shrink: 0;
+  color: var(--ff-toolbar-text);
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 1.25;
+  padding: 7px 16px;
+  border-radius: 999px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.figma-front .header-top-nav__link:hover {
+  color: var(--ff-accent);
+  background: rgba(235, 243, 255, 0.75);
+}
+
+.figma-front .header-top-nav__link--active {
+  color: var(--ff-accent);
+  font-weight: 600;
+  background: var(--ff-nav-pill-bg, #ebf3ff);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ff-accent) 14%, transparent);
+}
+
+/* 顶栏右侧：搜索 → Cart → 语言 → 用户 */
+.figma-front .main-header .header-toolbar-figma {
+  gap: 4px;
+  flex-shrink: 0;
+  justify-self: end !important;
+  justify-content: flex-end !important;
+}
+
+/* 右侧工具：无描边文本按钮，贴近稿面 */
+.figma-front .main-header .header-toolbar-figma .header-toolbar-btn.ant-btn,
+.figma-front .main-header .header-toolbar-figma .action-button.ant-btn {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.figma-front .main-header .header-toolbar-figma .header-toolbar-btn.ant-btn:hover,
+.figma-front .main-header .header-toolbar-figma .action-button.ant-btn:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  color: var(--ff-accent) !important;
+  background: var(--ff-nav-pill-bg, #ebf3ff) !important;
+}
+
+.figma-front .main-header .header-toolbar-btn.ant-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center;
+  min-height: 40px;
+  height: auto !important;
+  padding: 0 10px !important;
+  font-weight: 500 !important;
+  color: var(--ff-toolbar-text) !important;
+}
+
+.figma-front .main-header .header-toolbar-login-icon.ant-btn {
+  padding: 0 12px !important;
+}
+
+.figma-front .main-header .language-button.header-toolbar-btn {
+  min-width: auto;
+}
+
+/* 顶栏搜索区：加宽、与导航留白（覆盖 header-search-right 固定 320px） */
+.figma-front .main-header .search-container-right {
+  width: min(420px, 36vw) !important;
+  max-width: 100% !important;
+  margin-right: 8px !important;
+}
+
+@media (max-width: 1200px) {
+  .figma-front .main-header .search-container-right {
+    width: min(320px, 34vw) !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .figma-front .main-header .search-container-right {
+    width: min(240px, 42vw) !important;
+    margin-right: 4px !important;
+  }
+}
+
+/* 搜索：Figma 高 32、白底、线框 #DEDEDE、圆角 8px、占位符 #DEDEDE */
+.figma-front .search-input-right.ant-input-affix-wrapper {
+  height: 32px !important;
+  min-height: 32px !important;
+  border-radius: 8px !important;
+  border-width: 1px !important;
+  border-color: var(--ff-border-muted) !important;
+  background: var(--ff-surface) !important;
+  box-shadow: none !important;
+}
+
+.figma-front .search-input-right:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: var(--ff-accent) !important;
+}
+
+.figma-front .search-input-right:focus-within,
+.figma-front .search-input-right.search-focused {
+  border-color: var(--ff-accent) !important;
+  box-shadow: 0 0 0 3px var(--ff-focus-ring) !important;
+  transform: none !important;
+}
+
+.figma-front .search-input-right .ant-input {
+  height: 30px !important;
+  padding: 4px 10px 4px 6px !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
+}
+
+.figma-front .search-input-right .ant-input::placeholder {
+  color: var(--ff-border-muted) !important;
+  font-style: normal !important;
+}
+
+.figma-front .search-input-right .ant-input-prefix {
+  color: #6b7280 !important;
+}
+
+.figma-front .search-input-right:hover .ant-input-prefix,
+.figma-front .search-input-right:focus-within .ant-input-prefix,
+.figma-front .search-input-right.search-focused .ant-input-prefix {
+  color: var(--ff-accent) !important;
+}
+
+/* 顶栏外正文区仍可用带描边的 action-button（订单列表等；顶栏内由更高优先级覆盖为无边框） */
+.figma-front .action-button {
+  border-color: #b2b2b2 !important;
+  border-radius: 6px !important;
+  color: var(--ff-toolbar-text) !important;
+}
+
+.figma-front .action-button:hover {
+  border-color: var(--ff-accent) !important;
+  color: var(--ff-accent-dark) !important;
+  background: var(--ff-tint-blue) !important;
+}
+
+.figma-front .language-button.action-button {
+  border-color: #bfbcbc !important;
+}
+
+.figma-front .main-header .user-info {
+  border: none !important;
+  border-radius: 999px !important;
+  padding: 4px 8px 4px 4px !important;
+  gap: 8px !important;
+}
+
+.figma-front .main-header .user-info:hover,
+.figma-front .main-header .user-info:focus {
+  background: var(--ff-nav-pill-bg, #ebf3ff) !important;
+  transform: none !important;
+}
+
+.figma-front .user-avatar {
+  background-color: var(--ff-accent-dark) !important;
+}
+
+.figma-front .login-button {
+  background: var(--ff-accent-dark) !important;
+  border-color: var(--ff-accent-dark) !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+}
+
+.figma-front .login-button:hover,
+.figma-front .login-button:focus {
+  background: var(--ff-btn-primary-hover) !important;
+  border-color: var(--ff-btn-primary-hover) !important;
+}
+
+/*
+ * 主内容区 — 对应 Figma Frame 529（Dev Mode）
+ * - Auto layout: flex column, align-items flex-start, padding 0；设计宽 1617 = 1920 − 303，由子列 max-width 实现
+ * - align-self: stretch; flex-grow: 1；min-height 稿值见 --ff-ms-frame-529-min-height（选型页内容列）
+ * - 主画布 bg：--ff-content-canvas-bg；列底内边距由 inner 的 padding-bottom 承担（Frame 3 与 529 叠层时以稿为准）
+ */
+.figma-front main.figma-front-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  align-self: stretch;
+  flex: 1 1 auto;
+  padding: 0;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+  background-color: var(--ff-content-canvas-bg);
+}
+
+.figma-front main.figma-front-main > .figma-front-main__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  align-self: stretch;
+  gap: var(--ff-main-stack-gap);
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-grow: 1;
+  padding: 0 0 var(--ff-main-column-pad-bottom);
+  box-sizing: border-box;
+}
+
+/*
+ * 主内容插槽（MainLayout 包住 {children} 的 flex-grow 层）：
+ * 父列 align-items:flex-start 时，子项默认不参与交叉轴拉伸；须显式 stretch + width 100%，
+ * 否则选型页等子树可能横向收缩，侧栏右侧出现大块空白、像「内容浮在中间」。
+ */
+.figma-front .figma-front-main__inner > .flex-grow.min-w-0 {
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
+}
+

@@ -1,9 +1,21 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import classNames from 'classnames';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
-import { Button, Select, InputNumber, Tabs, Tag, Tooltip, Divider, Row, Col } from 'antd';
-import { ShoppingCartOutlined, InfoCircleOutlined, PlusOutlined, ExclamationCircleOutlined, ReloadOutlined, RightOutlined, MenuOutlined, DeleteOutlined } from '@ant-design/icons';
+import ThumbnailGallery from '../../components/ThumbnailGallery';
+import '../../styles/thumbnail-gallery.css';
+import '../../styles/machine-compare-alignment.css';
+import {
+  ShoppingCartOutlined,
+  InfoCircleOutlined,
+  ExclamationCircleOutlined,
+  ReloadOutlined,
+  RightOutlined,
+  DeleteOutlined,
+  PictureOutlined,
+  LeftOutlined,
+} from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import MockServiceStatus from '../../components/MockServiceStatus';
 
@@ -42,8 +54,8 @@ interface FlattenedAccessory extends MachineAccessory {
 import './Machines.css';
 import './accessibility.css';
 import './breadcrumb.css';
-
-const { Option } = Select;
+import { MachineCompareFigmaTable } from './components/MachineCompareFigmaTable';
+import { MsFigmaPagination } from './components/MsFigmaPagination';
 
 // 默认图片 - 灰色背景带X的SVG
 const DEFAULT_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDEyOCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik00MCA0MEw4OCA4OE00MCA4OEw4OCA0MCIgc3Ryb2tlPSIjOTdBM0IzIiBzdHJva2Utd2lkdGg9IjIiLz4KPHN2Zz4K';
@@ -63,14 +75,47 @@ export interface ConsumableSpecs {
 
 // 统一产品名称工具
 import { getSimpleProductName } from '../../utils/simpleProductName';
+import { findHostModelForMachinePart, openMachineSpecificationPdf, type HostModelRow } from './hostModelPdf';
 
-const MODEL_COMPARE_IMAGE = '/static/machine-model-compare.png'; // 假设图片已放在 public/static 目录下
-const MODEL_AREAS = [
-  // 假设有3个主机型号，实际可根据数据动态生成
-  { partNumber: 'LA-E4S', left: 20, top: 20, width: 120, height: 160 },
-  { partNumber: 'LA-E6S', left: 160, top: 20, width: 120, height: 160 },
-  { partNumber: 'LA-E8S', left: 300, top: 20, width: 120, height: 160 },
-];
+/** 顶部对比图：Figma 导出 1x/2x PNG 放在 public/static，文件名与此一致；未配置时由本地静态图兜底 */
+/** 默认对比示意图：Figma 参数对比表（无热点；可被 machine-model-compare API 覆盖） */
+const DEFAULT_COMPARE_DIAGRAM = '/static/machine-model-compare-table.png';
+
+/** 外链 diagram 加载失败时的 UTF-8 占位（避免 base64 中文乱码） */
+const COMPARE_DIAGRAM_ERROR_PLACEHOLDER =
+  'data:image/svg+xml;charset=utf-8,' +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="300" viewBox="0 0 900 300"><rect width="900" height="300" fill="#f3f4f6"/><text x="450" y="155" text-anchor="middle" font-family="system-ui,-apple-system,sans-serif" font-size="16" fill="#64748b">无法加载对比示意图，请检查后台图片地址或网络后刷新</text></svg>`
+  );
+
+function normalizeMachineGalleryUrls(
+  machine: Record<string, unknown>,
+  abs: (u: string | null) => string | null
+): string[] {
+  const raw = machine.gallery_image_urls;
+  if (Array.isArray(raw) && raw.length > 0) {
+    const out: string[] = [];
+    for (const u of raw) {
+      if (typeof u !== 'string') continue;
+      const a = abs(u);
+      if (a && !out.includes(a)) out.push(a);
+    }
+    if (out.length > 0) return out;
+  }
+  const out: string[] = [];
+  const push = (u: unknown) => {
+    if (u == null || typeof u !== 'string') return;
+    const a = abs(u);
+    if (a && !out.includes(a)) out.push(a);
+  };
+  push(machine.image_url);
+  push(machine.image1_url);
+  push(machine.host_image1_url);
+  push(machine.host_image2_url);
+  push(machine.model_image1_url);
+  push(machine.model_image2_url);
+  return out;
+}
 
 const ProductLine1Page: React.FC = () => {
   const { t, i18n } = useTranslation(['machines', 'common']);
@@ -135,9 +180,12 @@ const ProductLine1Page: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedMachine, setSelectedMachine] = useState<string>('');
   const [filterType, setFilterType] = useState<string>('all');
+  /** Figma「产品类型」— 对应数据 model_type */
+  const [filterProductType, setFilterProductType] = useState<string>('all');
   const [filterRegion, setFilterRegion] = useState<string>('');
   const [selectedVoltage, setSelectedVoltage] = useState<string>('ALL');
-  
+  const [compareDiagramSrc, setCompareDiagramSrc] = useState<string>(DEFAULT_COMPARE_DIAGRAM);
+
   // 主机型号相关状态
   const [hostModels, setHostModels] = useState<Array<{ id: number; model: string; title_zh: string; title_en: string; type?: string }>>([]);
   const [hostModelsLoading, setHostModelsLoading] = useState(false);
@@ -174,6 +222,55 @@ const ProductLine1Page: React.FC = () => {
   
   // ✅ 新增：强制重新渲染的状态
   const [forceRender, setForceRender] = useState<number>(0);
+
+  const [introductionModalOpen, setIntroductionModalOpen] = useState(false);
+  const [introductionModalText, setIntroductionModalText] = useState('');
+  const introductionDialogRef = useRef<HTMLDialogElement | null>(null);
+  /** 列表卡「更多信息」弹出层（每机一行，一次只开一个） */
+  const [moreInfoOpenId, setMoreInfoOpenId] = useState<string | null>(null);
+  /** 配件卡「更多信息」 */
+  const [accessoryMoreInfoKey, setAccessoryMoreInfoKey] = useState<string | null>(null);
+  /** 机型对比折叠（替代 Ant Collapse） */
+  const [compareSectionOpen, setCompareSectionOpen] = useState(true);
+
+  useEffect(() => {
+    const d = introductionDialogRef.current;
+    if (!d) return;
+    if (introductionModalOpen) {
+      if (!d.open) d.showModal();
+    } else if (d.open) {
+      d.close();
+    }
+  }, [introductionModalOpen]);
+
+  useEffect(() => {
+    if (moreInfoOpenId == null && accessoryMoreInfoKey == null) return;
+    const onDocDown = (e: MouseEvent) => {
+      const t = e.target as HTMLElement;
+      if (moreInfoOpenId != null) {
+        const m = t.closest('[data-ms-moreinfo-root]');
+        if (m?.getAttribute('data-ms-moreinfo-root') === moreInfoOpenId) return;
+        setMoreInfoOpenId(null);
+      }
+      if (accessoryMoreInfoKey != null) {
+        const a = t.closest('[data-ms-accessory-moreinfo]');
+        if (a?.getAttribute('data-ms-accessory-moreinfo') === accessoryMoreInfoKey) return;
+        setAccessoryMoreInfoKey(null);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setMoreInfoOpenId(null);
+        setAccessoryMoreInfoKey(null);
+      }
+    };
+    document.addEventListener('mousedown', onDocDown, true);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDocDown, true);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [moreInfoOpenId, accessoryMoreInfoKey]);
   
   // ✅ 修复：将currentLanguage改为真正的状态
   const [currentLanguage, setCurrentLanguage] = useState<'zh' | 'en'>(
@@ -219,7 +316,6 @@ const ProductLine1Page: React.FC = () => {
     productName: ''
   });
 
-  const imageRef = useRef<HTMLImageElement>(null);
 
   /**
    * 获取主机名称（多语言）——统一由 getSimpleProductName 处理
@@ -395,41 +491,18 @@ const ProductLine1Page: React.FC = () => {
     }
   };
 
-  // ----- ⚡ 性能缓存配置 -----
-  const MACHINE_CACHE_TTL = 5 * 60 * 1000; // 5分钟
-  const getMachineCacheKey = (category: string, region: string, voltage: string) => `machines_${category}_${region}_${voltage}`;
-
   // 获取机器数据
   const fetchMachines = async () => {
     setLoading(true);
     setError(null);
 
-    const cacheKey = getMachineCacheKey(category, filterRegion, selectedVoltage);
-    try {
-      // 1️⃣ 尝试读取缓存
-      const cachedRaw = localStorage.getItem(cacheKey);
-      if (cachedRaw) {
-        const cached = JSON.parse(cachedRaw) as { timestamp: number; data: any[] };
-        if (Date.now() - cached.timestamp < MACHINE_CACHE_TTL) {
-          console.log('⚡ [fetchMachines] Using cached machines:', cached.data.length);
-          setMachines(cached.data);
-          setTotal(cached.data.length);
-          setTotalPages(Math.max(1, Math.ceil(cached.data.length / pageSize)));
-          setLoading(false);
-          return;
-        } else {
-          console.log('ℹ️ [fetchMachines] Cache expired, fetch fresh');
-        }
-      }
-    } catch (cacheErr) {
-      console.warn('⚠️ [fetchMachines] Failed to read cache:', cacheErr);
-    }
-    
     console.log('🚀 [fetchMachines] Starting API call with params:', {
       category,
       currentLanguage,
       filterRegion,
       selectedVoltage,
+      filterType,
+      filterProductType,
       currentPage,
       pageSize
     });
@@ -462,7 +535,23 @@ const ProductLine1Page: React.FC = () => {
       const fetchWithRetry = async (retryCount = 0) => {
         try {
           const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1';
-          const apiUrl = `${baseUrl}/machineparts?page=${currentPage}&per_page=${pageSize}&product_line_id=${category}&lang=${currentLanguage}&status=publish`;
+          const qp = new URLSearchParams({
+            page: String(currentPage),
+            per_page: String(pageSize),
+            product_line_id: String(category),
+            lang: currentLanguage,
+            status: 'publish',
+          });
+          if (filterType !== 'all') {
+            qp.set('model', filterType);
+          }
+          if (filterProductType !== 'all') {
+            qp.set('model_type', filterProductType);
+          }
+          if (selectedVoltage && selectedVoltage !== 'ALL') {
+            qp.set('voltage', selectedVoltage);
+          }
+          const apiUrl = `${baseUrl}/machineparts?${qp.toString()}`;
           
           console.log('🌐 [fetchWithRetry] Making API request:', {
             apiUrl,
@@ -554,7 +643,7 @@ const ProductLine1Page: React.FC = () => {
                   return imageUrl; // Assume it's a valid URL
                 };
 
-                return {
+                const mapped = {
                   ...machine,
                   image_url: getAbsoluteImageUrl(machine.image1_url) || getAbsoluteImageUrl(machine.image_url),
                   model_image1_url: getAbsoluteImageUrl(machine.image1_url) || getAbsoluteImageUrl(machine.model_image1_url),
@@ -563,6 +652,10 @@ const ProductLine1Page: React.FC = () => {
                   spec_pdf: getAbsoluteImageUrl(machine.spec_pdf),
                   explosion_diagram_pdf: getAbsoluteImageUrl(machine.explosion_diagram_pdf),
                   model_explosion_diagram_pdf: getAbsoluteImageUrl(machine.spec_pdf) || getAbsoluteImageUrl(machine.explosion_diagram_pdf) || getAbsoluteImageUrl(machine.model_explosion_diagram_pdf)
+                };
+                return {
+                  ...mapped,
+                  gallery_image_urls: normalizeMachineGalleryUrls({ ...machine, ...mapped }, getAbsoluteImageUrl),
                 };
               });
               
@@ -602,16 +695,6 @@ const ProductLine1Page: React.FC = () => {
 
               setMachines(transformedMachines);
 
-              // 🚀 写入缓存
-              try {
-                localStorage.setItem(
-                  getMachineCacheKey(category, filterRegion, selectedVoltage),
-                  JSON.stringify({ timestamp: Date.now(), data: transformedMachines })
-                );
-              } catch (cacheSaveErr) {
-                console.warn('⚠️ [fetchMachines] Failed to save cache:', cacheSaveErr);
-              }
-              
               // 调试：显示所有机器的图片URL情况
               console.log('🔍 [DEBUG] All machines image URLs:', transformedMachines.map(m => ({
                 id: m.id,
@@ -626,9 +709,7 @@ const ProductLine1Page: React.FC = () => {
               })));
               
               setTotal(transformedMachines.length);
-              setCurrentPage(1);
-              setPageSize(10);
-              setTotalPages(Math.ceil(transformedMachines.length / 10));
+              setTotalPages(Math.max(1, Math.ceil(transformedMachines.length / pageSize)));
               return;
             }
             
@@ -772,7 +853,7 @@ const ProductLine1Page: React.FC = () => {
               return imageUrl; // Assume it's a valid URL
             };
 
-            return {
+            const mapped = {
               ...machine,
               image_url: getAbsoluteImageUrl(machine.image1_url) || getAbsoluteImageUrl(machine.image_url),
               model_image1_url: getAbsoluteImageUrl(machine.image1_url) || getAbsoluteImageUrl(machine.model_image1_url),
@@ -781,6 +862,10 @@ const ProductLine1Page: React.FC = () => {
               spec_pdf: getAbsoluteImageUrl(machine.spec_pdf),
               explosion_diagram_pdf: getAbsoluteImageUrl(machine.explosion_diagram_pdf),
               model_explosion_diagram_pdf: getAbsoluteImageUrl(machine.spec_pdf) || getAbsoluteImageUrl(machine.explosion_diagram_pdf) || getAbsoluteImageUrl(machine.model_explosion_diagram_pdf)
+            };
+            return {
+              ...mapped,
+              gallery_image_urls: normalizeMachineGalleryUrls({ ...machine, ...mapped }, getAbsoluteImageUrl),
             };
           });
 
@@ -844,12 +929,60 @@ const ProductLine1Page: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchMachines();
+    let cancelled = false;
+    const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1';
+    const siteOrigin = apiBase.replace(/\/wp-json\/bjt\/v1\/?$/, '');
+
+    (async () => {
+      try {
+        const res = await fetch(
+          `${apiBase}/machine-model-compare?product_line_id=${encodeURIComponent(category)}`
+        );
+        const json = await res.json();
+        if (cancelled) return;
+        const raw =
+          json?.success && json?.data?.diagram_url ? String(json.data.diagram_url).trim() : '';
+        if (!raw) {
+          setCompareDiagramSrc(DEFAULT_COMPARE_DIAGRAM);
+          return;
+        }
+        const absolute =
+          raw.startsWith('http://') || raw.startsWith('https://')
+            ? raw
+            : raw.startsWith('/')
+              ? `${siteOrigin}${raw}`
+              : raw;
+        setCompareDiagramSrc(absolute);
+      } catch {
+        if (!cancelled) setCompareDiagramSrc(DEFAULT_COMPARE_DIAGRAM);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [category]);
+
+  useEffect(() => {
     fetchHostModels();
-  }, [category, currentLanguage, filterRegion, selectedVoltage]);
+  }, [category, currentLanguage]);
+
+  useEffect(() => {
+    fetchMachines();
+  }, [
+    category,
+    currentLanguage,
+    filterRegion,
+    selectedVoltage,
+    currentPage,
+    pageSize,
+    filterType,
+    filterProductType,
+  ]);
 
   // ✅ 新增：监听语言变化，强制重新渲染配件路径
   useEffect(() => {
+    setCurrentPage(1);
     console.log('🔄 [Language Change] Clearing cached accessory names for language switch:', {
       currentLanguage,
       selectedAccessoriesCount: Object.keys(selectedAccessories).length,
@@ -1361,6 +1494,7 @@ const ProductLine1Page: React.FC = () => {
   // 处理电压选择
   const handleVoltageChange = (value: string) => {
     setSelectedVoltage(value);
+    setCurrentPage(1);
   };
 
   // ✅ 新增：单位处理函数
@@ -1407,45 +1541,38 @@ const ProductLine1Page: React.FC = () => {
       .trim();
   };
 
-  // 过滤产品
-  const filteredMachines = React.useMemo(() => {
-    if (!Array.isArray(machines)) return [];
-    return machines.filter(machine => {
-      // 型号筛选
-      const modelMatch = filterType === 'all' || machine.model === filterType;
-      // 电压筛选
-      const voltageMatch = selectedVoltage === 'ALL' || !selectedVoltage || machine.voltage === selectedVoltage;
-      return modelMatch && voltageMatch;
-    });
-  }, [machines, filterType, selectedVoltage]);
+  /** 筛选由 machineparts API（model / model_type / voltage）与分页完成 */
+  const filteredMachines = machines;
 
+  /** 型号 / 产品类型选项来自 host-models API，与后端数据源一致 */
   const modelOptions = React.useMemo(() => {
-    console.log('🔍 [DEBUG] Computing modelOptions:', {
-      machinesIsArray: Array.isArray(machines),
-      machinesLength: machines.length,
-      machinesData: machines.slice(0, 3) // 显示前3个机器数据
-    });
-    
-    if (!Array.isArray(machines)) return [];
-    const uniqueModels = Array.from(new Set(machines.map(m => m.model).filter(Boolean)));
-    
-    const options = [
+    if (!Array.isArray(hostModels) || hostModels.length === 0) {
+      return [{ value: 'all', label: t('filters.allModels') }];
+    }
+    const uniqueModels = Array.from(new Set(hostModels.map(h => h.model).filter(Boolean))) as string[];
+    uniqueModels.sort();
+    return [
       { value: 'all', label: t('filters.allModels') },
-      ...uniqueModels.map(model => ({
-        value: model,
-        label: model
-      }))
+      ...uniqueModels.map(model => ({ value: model, label: model })),
     ];
-    
-    console.log('🔍 [DEBUG] Generated modelOptions:', {
-      optionsCount: options.length,
-      uniqueModelsCount: uniqueModels.length,
-      uniqueModels: uniqueModels,
-      finalOptions: options
-    });
-    
-    return options;
-  }, [machines, t]);
+  }, [hostModels, t]);
+
+  const productTypeOptions = React.useMemo(() => {
+    if (!Array.isArray(hostModels) || hostModels.length === 0) {
+      return [{ value: 'all', label: t('filters.allTypes') }];
+    }
+    const types = Array.from(
+      new Set(
+        hostModels
+          .map(h => h.type)
+          .filter((v): v is string => typeof v === 'string' && v.trim() !== '')
+      )
+    ).sort() as string[];
+    return [
+      { value: 'all', label: t('filters.allTypes') },
+      ...types.map(ty => ({ value: ty, label: ty })),
+    ];
+  }, [hostModels, t]);
 
   // 添加到购物车
   const handleAddToCart = async (product: MachinePart | MachineAccessory, productType: 'machine' | 'accessory' = 'machine') => {
@@ -1948,485 +2075,301 @@ const ProductLine1Page: React.FC = () => {
       : filteredMachines;
     
     return (
-      <div className="grid grid-cols-1 gap-6">
+      <div className="ms-figma-machine-grid">
         {machinesToShow.map(machine => (
           <div 
             key={`machine-${machine.id}-${machine.part_number}`} 
-            className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 overflow-hidden"
+            className="ms-figma-machine-card ms-figma-machine-card--air"
           >
-            <div className="flex flex-col md:flex-row p-6">
-              {/* Column 1: Image & Selection */}
-              <div className="w-full md:w-1/5 flex flex-col items-center md:items-start mb-6 md:mb-0 md:pr-6">
-                <div className="relative mb-4">
-                  <img 
-                    src={machine.image_url || DEFAULT_IMAGE} 
-                    alt={machine.part_number}
-                    className="w-32 h-32 object-contain border-2 border-gray-200 rounded-lg bg-gray-50 p-2 shadow-sm hover:shadow-md transition-shadow duration-200"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      console.log('❌ [Image Error] Failed to load image:', {
-                        originalSrc: target.src,
-                        machineId: machine.id,
-                        machinePartNumber: machine.part_number,
-                        originalImageFields: {
-                          image1_url: (machine as any).image1_url,
-                          image_url: machine.image_url,
-                          model_image1_url: machine.model_image1_url
-                        },
-                        willFallback: target.src !== DEFAULT_IMAGE,
-                        defaultImage: DEFAULT_IMAGE
+            <div className="ms-figma-machine-card__row">
+              {/* Column 1: 图库 — URL 去重，最多 4 张，与视觉稿一致 */}
+              <div className="ms-figma-machine-card__col-gallery">
+                <div className="relative">
+                  <ThumbnailGallery
+                    images={(() => {
+                      const urls: string[] = [];
+                      const add = (u?: string | null) => {
+                        if (u == null || typeof u !== 'string' || !u.trim()) return;
+                        const s = u.trim();
+                        if (!urls.includes(s)) urls.push(s);
+                      };
+                      machine.gallery_image_urls?.forEach((img) => {
+                        if (typeof img === 'string' && img.trim()) add(img);
                       });
-                      if (target.src !== DEFAULT_IMAGE) {
-                        target.src = DEFAULT_IMAGE;
+                      add(machine.image_url);
+                      if (machine.image_url?.includes('picsum.photos')) {
+                        add(`https://picsum.photos/400/400?random=${machine.id}01`);
+                        add(`https://picsum.photos/400/400?random=${machine.id}02`);
                       }
-                    }}
-                    onLoad={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      console.log('✅ [Image Loaded] Successfully loaded image:', {
-                        src: target.src,
-                        machineId: machine.id,
-                        machinePartNumber: machine.part_number,
-                        isDefault: target.src === DEFAULT_IMAGE
-                      });
-                    }}
+                      add(machine.model_image1_url);
+                      add(machine.model_image2_url);
+                      add((machine as { image2_url?: string }).image2_url);
+                      if (urls.length === 0) add(DEFAULT_IMAGE);
+                      return urls.slice(0, 4);
+                    })()}
+                    altText={(machine as any).code || (machine as any).part_number || `Machine ${machine.id}`}
+                    layout="thumbnails-left"
+                    className="machine-gallery"
                   />
                 </div>
-                <label className="inline-flex items-center cursor-pointer bg-gray-100 px-3 py-2 rounded-lg hover:bg-blue-500 hover:text-white transition-colors duration-200">
-                  <input 
-                    type="radio" 
-                    name="machine" 
-                    className="form-radio text-blue-500 mr-2"
-                    checked={selectedMachine === machine.id.toString()}
-                    onChange={() => handleMachineSelection(machine.id)}
-                    aria-label={`${t('actions.selectMachine')} ${machine.part_number}`}
-                  />
-                  <span className="text-sm font-medium">{t('actions.selectMachine')}</span>
-                </label>
               </div>
-                
-              {/* Column 2: Info & Specs */}
-              <div className="w-full md:w-3/5 md:px-6">
-                <div className="mb-4">
-                  <span className="inline-block bg-blue-500 text-white px-3 py-1 text-sm font-bold rounded-lg shadow-sm">{machine.part_number}</span>
-                  <h3 className="text-xl font-bold text-gray-900 mt-2 leading-tight">{getMachineName(machine)}</h3>
+
+              {/* Column 2: Info & Specs — Figma：标题行 型号 + PN + 配件链接；规格两列栅格 */}
+              <div className="ms-figma-machine-card__col-main">
+                <div className="ms-figma-product-title-row">
+                  <div className="ms-figma-product-title-group">
+                    <h3 className="ms-figma-product-title">{getMachineName(machine)}</h3>
+                    <span className="ms-figma-pn-pill">
+                      {t('tableHeaders.pnPrefix')}: {machine.part_number}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className="ms-figma-link-accessories-inline"
+                    onClick={() => {
+                      handleMachineSelection(machine.id);
+                      window.setTimeout(() => {
+                        document.getElementById('accessory-level-1')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }, 200);
+                    }}
+                  >
+                    {t('figma.showOptionalAccessories')}
+                  </button>
                 </div>
-                
-                <div className="bg-gray-50 rounded-lg p-4 mt-3 shadow-sm">
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="flex items-center">
-                      <strong className="w-24 text-gray-600 font-medium">{t('tableHeaders.model')}:</strong>
-                      <span className="text-gray-800 font-medium">{machine.model}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <strong className="w-24 text-gray-600 font-medium">{getFieldWithUnit('voltage', 'voltage')}:</strong>
-                      <span className="text-gray-800 font-medium">{machine.voltage ? removeUnitFromValue(machine.voltage) : 'N/A'}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <strong className="w-24 text-gray-600 font-medium">{t('tableHeaders.pcsPerBox')}:</strong>
-                      <span className="text-gray-800 font-medium">{machine.pcs_per_box !== null && machine.pcs_per_box !== undefined ? machine.pcs_per_box : 'N/A'}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <strong className="w-24 text-gray-600 font-medium">{t('tableHeaders.pcsPerPallet')}:</strong>
-                      <span className="text-gray-800 font-medium">{machine.pcs_per_pallet !== null && machine.pcs_per_pallet !== undefined ? machine.pcs_per_pallet : 'N/A'}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <strong className="w-24 text-gray-600 font-medium">{getFieldWithUnit('palletSize', 'size')}:</strong>
-                      <span className="text-gray-800 font-medium">
-                        {unitSystem === 'metric' 
-                          ? removeUnitFromValue(machine.pallet_size_cm)
-                          : removeUnitFromValue(machine.pallet_size_inch)
-                        }
+
+                <div className="ms-figma-spec-grid">
+                  <div className="ms-figma-spec-grid-inner">
+                    <div className="ms-figma-spec-span-full">
+                      <span className="ms-figma-spec-k">{t('tableHeaders.itemDescription')}</span>
+                      <span className="ms-figma-spec-v">
+                        {(currentLanguage === 'zh'
+                          ? machine.spec
+                          : machine.spec_imperial || machine.spec) ||
+                          getMachineName(machine) ||
+                          '—'}
                       </span>
                     </div>
-                    <div className="flex items-center">
-                      <strong className="w-24 text-gray-600 font-medium">{getFieldWithUnit('packageSize', 'size')}:</strong>
-                      <span className="text-gray-800 font-medium">
-                        {unitSystem === 'metric' 
-                          ? removeUnitFromValue(machine.package_size_cm)
-                          : removeUnitFromValue(machine.package_size_inch)
-                        }
-                      </span>
+                    <div className="ms-figma-spec-two-col">
+                      <div className="ms-figma-spec-pair">
+                        <span className="ms-figma-spec-k">{getFieldWithUnit('palletSize', 'size')}</span>
+                        <span className="ms-figma-spec-v">
+                          {unitSystem === 'metric'
+                            ? removeUnitFromValue(machine.pallet_size_cm) || '—'
+                            : removeUnitFromValue(machine.pallet_size_inch) || '—'}
+                        </span>
+                      </div>
+                      <div className="ms-figma-spec-pair">
+                        <span className="ms-figma-spec-k">{getFieldWithUnit('voltage', 'voltage')}</span>
+                        <span className="ms-figma-spec-v">
+                          {machine.voltage ? removeUnitFromValue(machine.voltage) : '—'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="ms-figma-spec-two-col">
+                      <div className="ms-figma-spec-pair">
+                        <span className="ms-figma-spec-k">{t('tableHeaders.pcsPerBox')}</span>
+                        <span className="ms-figma-spec-v">
+                          {machine.pcs_per_box !== null && machine.pcs_per_box !== undefined
+                            ? machine.pcs_per_box
+                            : '—'}
+                        </span>
+                      </div>
+                      <div className="ms-figma-spec-pair">
+                        <span className="ms-figma-spec-k">{t('tableHeaders.pcsPerPallet')}</span>
+                        <span className="ms-figma-spec-v">
+                          {machine.pcs_per_pallet !== null && machine.pcs_per_pallet !== undefined
+                            ? machine.pcs_per_pallet
+                            : '—'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="ms-figma-spec-two-col">
+                      <div className="ms-figma-spec-pair">
+                        <span className="ms-figma-spec-k">{t('tableHeaders.packagingMethod')}</span>
+                        <span className="ms-figma-spec-v">{machine.unit || '—'}</span>
+                      </div>
+                      <div className="ms-figma-spec-pair">
+                        <span className="ms-figma-spec-k">{getFieldWithUnit('packageSize', 'size')}</span>
+                        <span className="ms-figma-spec-v">
+                          {unitSystem === 'metric'
+                            ? removeUnitFromValue(machine.package_size_cm) || '—'
+                            : removeUnitFromValue(machine.package_size_inch) || '—'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-4 flex gap-3">
-                  {/* 规格说明按钮 - 放在前面，和主机一样 */}
-                  <Button 
-                    size="small"
-                    icon={<InfoCircleOutlined />}
-                    onClick={() => {
-                      // 从主机型号表中查找对应的PDF - 改进匹配逻辑
-                      const hostModel = hostModels.find(model => {
-                        // 清理字符串函数 - 去除多余的引号和空格
-                        const cleanString = (str: string) => {
-                          if (!str) return '';
-                          return str.replace(/^["']+|["']+$/g, '').trim(); // 去除开头和结尾的引号
-                        };
-                        
-                        // 清理机器和主机型号的字符串
-                        const cleanMachineModel = cleanString(machine.model || '');
-                        const cleanMachineName = cleanString(machine.name_zh || '');
-                        const cleanHostModel = cleanString(model.model || '');
-                        const cleanHostCode = cleanString((model as any).code || '');
-                        const cleanHostTitleZh = cleanString(model.title_zh || '');
-                        const cleanHostTitleEn = cleanString(model.title_en || '');
-                        
-                        console.log('🔍 [String Cleaning Debug]:', {
-                          original_machine_model: machine.model,
-                          cleaned_machine_model: cleanMachineModel,
-                          original_host_code: (model as any).code,
-                          cleaned_host_code: cleanHostCode,
-                          model_id: model.id,
-                          exact_code_match: cleanHostCode === cleanMachineModel,
-                          exact_model_match: cleanHostModel === cleanMachineModel
-                        });
-                        
-                        // 优先策略1: ID匹配（如果主机型号表中有对应的机器ID）
-                        if ((model as any).machine_id === machine.id) return true;
-                        if ((model as any).part_number === machine.part_number) return true;
-                        
-                        // 优先策略2: 精确完整匹配 - 最高优先级，包括括号内容
-                        if (cleanHostCode && cleanMachineModel && cleanHostCode === cleanMachineModel) {
-                          console.log('✅ [Exact Match Found] Code匹配成功:', {
-                            cleanHostCode,
-                            cleanMachineModel,
-                            model_id: model.id
-                          });
-                          return true;
-                        }
-                        if (cleanHostModel && cleanMachineModel && cleanHostModel === cleanMachineModel) {
-                          console.log('✅ [Exact Match Found] Model匹配成功:', {
-                            cleanHostModel,
-                            cleanMachineModel,
-                            model_id: model.id
-                          });
-                          return true;
-                        }
-                        if (cleanHostTitleZh && cleanMachineName && cleanHostTitleZh === cleanMachineName) return true;
-                        if (cleanHostTitleEn && cleanMachineName && cleanHostTitleEn === cleanMachineName) return true;
-                        
-                        // 策略3: 去除版本号和测试后缀的匹配 - 但保留括号内容
-                        const cleanVersionMachineModel = cleanMachineModel?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
-                        const cleanVersionHostModel = cleanHostModel?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
-                        const cleanVersionHostCode = cleanHostCode?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
-                        
-                        // 更严格的匹配：只有当清理后的字符串完全相同且长度大于3时才匹配
-                        if (cleanVersionMachineModel && cleanVersionHostModel && cleanVersionMachineModel.length > 3 && cleanVersionMachineModel === cleanVersionHostModel) return true;
-                        if (cleanVersionMachineModel && cleanVersionHostCode && cleanVersionMachineModel.length > 3 && cleanVersionMachineModel === cleanVersionHostCode) return true;
-                        
-                        // 策略4: 基础型号匹配（去除括号内容）- 降低优先级，只有在没有精确匹配时才使用
-                        const getBaseModel = (modelStr: string) => {
-                          if (!modelStr) return '';
-                          // 去除括号及其内容，例如 "LA-E4S(paper)" -> "LA-E4S"
-                          return modelStr.split('(')[0].trim();
-                        };
-                        
-                        const machineBaseModel = getBaseModel(cleanMachineModel);
-                        const hostBaseModel = getBaseModel(cleanHostModel);
-                        const hostBaseCode = getBaseModel(cleanHostCode);
-                        
-                        // 基础型号匹配（降低优先级，且要求更严格的条件）
-                        if (machineBaseModel && hostBaseModel && machineBaseModel.length > 6 && machineBaseModel === hostBaseModel) {
-                          // 额外检查：确保原始字符串没有精确匹配项存在
-                          const hasExactMatch = hostModels.some(m => 
-                            cleanString((m as any).code || '') === cleanMachineModel ||
-                            cleanString(m.model || '') === cleanMachineModel
-                          );
-                          if (!hasExactMatch) {
-                            console.log('🔍 [Base Match] 基础型号匹配:', {
-                              machineBaseModel,
-                              hostBaseModel,
-                              model_id: model.id,
-                              no_exact_match_available: !hasExactMatch
-                            });
-                            return true;
-                          }
-                        }
-                        if (machineBaseModel && hostBaseCode && machineBaseModel.length > 6 && machineBaseModel === hostBaseCode) {
-                          // 额外检查：确保原始字符串没有精确匹配项存在
-                          const hasExactMatch = hostModels.some(m => 
-                            cleanString((m as any).code || '') === cleanMachineModel ||
-                            cleanString(m.model || '') === cleanMachineModel
-                          );
-                          if (!hasExactMatch) {
-                            console.log('🔍 [Base Match] 基础code匹配:', {
-                              machineBaseModel,
-                              hostBaseCode,
-                              model_id: model.id,
-                              no_exact_match_available: !hasExactMatch
-                            });
-                            return true;
-                          }
-                        }
-                        
-                        // 策略5: 分段匹配 (例如 LA-E4S) - 最低优先级
-                        const baseMachineModel = cleanMachineModel?.split(/[\s\(]/)[0]; // 取第一部分
-                        const baseHostModel = cleanHostModel?.split(/[\s\(]/)[0];
-                        const baseHostCode = cleanHostCode?.split(/[\s\(]/)[0];
-                        
-                        // 只有当基础型号长度大于4且完全匹配时才认为匹配，且没有更好的匹配
-                        if (baseMachineModel && baseHostModel && baseMachineModel.length > 4 && baseMachineModel === baseHostModel) {
-                          const hasExactMatch = hostModels.some(m => 
-                            cleanString((m as any).code || '') === cleanMachineModel ||
-                            cleanString(m.model || '') === cleanMachineModel
-                          );
-                          if (!hasExactMatch) return true;
-                        }
-                        if (baseMachineModel && baseHostCode && baseMachineModel.length > 4 && baseMachineModel === baseHostCode) {
-                          const hasExactMatch = hostModels.some(m => 
-                            cleanString((m as any).code || '') === cleanMachineModel ||
-                            cleanString(m.model || '') === cleanMachineModel
-                          );
-                          if (!hasExactMatch) return true;
-                        }
-                        
-                        return false;
-                      });
-                      
-                      console.log('🔍 [Machine PDF Debug] Looking for host model PDF:', {
-                        machine_id: machine.id,
-                        machine_model: machine.model,
-                        machine_name_zh: machine.name_zh,
-                        machine_part_number: machine.part_number,
-                        available_host_models: hostModels.map(h => ({
-                          id: h.id,
-                          model: h.model,
-                          code: (h as any).code, // 添加code字段显示
-                          title_zh: h.title_zh,
-                          title_en: h.title_en,
-                          spec_pdf: (h as any).spec_pdf,
-                          explosion_diagram_pdf: (h as any).explosion_diagram_pdf
-                        })),
-                        found_host_model: hostModel,
-                        host_model_pdf: hostModel ? (hostModel as any).spec_pdf || (hostModel as any).explosion_diagram_pdf : null,
-                        matching_details: {
-                          exact_model_match: hostModels.some(h => h.model === machine.model),
-                          exact_code_match: hostModels.some(h => (h as any).code === machine.model), // 添加code匹配检查
-                          exact_title_zh_match: hostModels.some(h => h.title_zh === machine.name_zh),
-                          clean_model_match: hostModels.some(h => {
-                            const cleanMachineModel = machine.model?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
-                            const cleanHostModel = h.model?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
-                            return cleanMachineModel === cleanHostModel;
-                          }),
-                          clean_code_match: hostModels.some(h => {
-                            const cleanMachineModel = machine.model?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
-                            const cleanHostCode = (h as any).code?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
-                            return cleanMachineModel === cleanHostCode;
-                          }),
-                          base_model_match: hostModels.some(h => {
-                            const baseMachineModel = machine.model?.split(/[\s\(]/)[0];
-                            const baseHostModel = h.model?.split(/[\s\(]/)[0];
-                            return baseMachineModel === baseHostModel;
-                          })
-                        }
-                      });
-                      
-                      // 详细匹配过程调试
-                      console.log('🔍 [Machine PDF Debug] Detailed matching process:', {
-                        machine_model: machine.model,
-                        step_by_step_checks: hostModels.map(h => ({
-                          host_id: h.id,
-                          host_model: h.model,
-                          host_code: (h as any).code,
-                          host_title_zh: h.title_zh,
-                          host_title_en: h.title_en,
-                          host_spec_pdf: (h as any).spec_pdf,
-                          host_explosion_pdf: (h as any).explosion_diagram_pdf,
-                          checks: {
-                            exact_model: h.model === machine.model,
-                            exact_code: (h as any).code === machine.model,
-                            exact_title_zh: h.title_zh === machine.name_zh,
-                            exact_title_en: h.title_en === machine.name_en,
-                            clean_model: (() => {
-                              const cleanMachineModel = machine.model?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
-                              const cleanHostModel = h.model?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
-                              return cleanMachineModel === cleanHostModel;
-                            })(),
-                            clean_code: (() => {
-                              const cleanMachineModel = machine.model?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
-                              const cleanHostCode = (h as any).code?.replace(/\s*(V\d+\.?\d*|测试|test)$/i, '').trim();
-                              return cleanMachineModel === cleanHostCode;
-                            })(),
-                            base_model: (() => {
-                              const baseMachineModel = machine.model?.split(/[\s\(]/)[0];
-                              const baseHostModel = h.model?.split(/[\s\(]/)[0];
-                              return baseMachineModel === baseHostModel;
-                            })()
-                          },
-                          is_match: h === hostModel
-                        }))
-                      });
-                      
-                      const pdfUrl = hostModel ? 
-                        (hostModel as any).spec_pdf || 
-                        (hostModel as any).explosion_diagram_pdf ||
-                        (hostModel as any).model_explosion_diagram_pdf : null;
-                      
-                      console.log('🔍 [Machine PDF Debug] PDF URL processing:', {
-                        hostModel: hostModel ? {
-                          id: hostModel.id,
-                          model: hostModel.model,
-                          spec_pdf: (hostModel as any).spec_pdf,
-                          explosion_diagram_pdf: (hostModel as any).explosion_diagram_pdf,
-                          model_explosion_diagram_pdf: (hostModel as any).model_explosion_diagram_pdf
-                        } : null,
-                        found_pdf_url: pdfUrl,
-                        current_url: window.location.href,
-                        env_vars: {
-                          VITE_API_URL: import.meta.env.VITE_API_URL,
-                          DEV: import.meta.env.DEV,
-                          MODE: import.meta.env.MODE
-                        }
-                      });
-                      
-                      if (pdfUrl && !pdfUrl.includes('placeholder')) {
-                        let finalPdfUrl = pdfUrl;
-                        
-                        // 如果不是绝对URL，则转换为绝对URL
-                        if (!pdfUrl.startsWith('http://') && !pdfUrl.startsWith('https://')) {
-                          // 简化URL构建逻辑
-                          const baseUrl = window.location.origin;  // 使用当前页面的域名
-                          
-                          // 确保路径以/开头
-                          let cleanPath = pdfUrl;
-                          if (!cleanPath.startsWith('/')) {
-                            cleanPath = '/' + cleanPath;
-                          }
-                          
-                          // 移除可能的多余前缀
-                          cleanPath = cleanPath.replace('/frontend/public', '');
-                          
-                          finalPdfUrl = baseUrl + cleanPath;
-                        }
-                        
-                        console.log('✅ [Machine PDF Debug] Opening PDF:', {
-                          original_url: pdfUrl,
-                          final_url: finalPdfUrl,
-                          is_absolute: pdfUrl.startsWith('http'),
-                          base_url: window.location.origin
-                        });
-                        
-                        // 尝试打开PDF
-                        window.open(finalPdfUrl, '_blank');
-                      } else {
-                        showInfoToast(t('noSpecPdf') || '暂无规格说明文档');
-                        console.warn('🔍 [Machine PDF Debug] No valid PDF found:', {
-                          machine_part_number: machine.part_number,
-                          machine_model: machine.model,
-                          host_model_found: !!hostModel,
-                          pdf_url: pdfUrl,
-                          host_model_data: hostModel
-                        });
-                      }
-                    }}
-                    className="bg-gray-100 text-gray-600 hover:bg-gray-600 hover:text-white border-gray-300 transition-colors duration-200"
-                  >
-                    {t('specDetails')}
-                  </Button>
-                  
-                  <Tooltip
-                    title={
-                      <div className="p-3 bg-white rounded-lg shadow-lg border border-gray-200">
-                        <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
-                          <InfoCircleOutlined className="text-blue-500 mr-2" />
-                          <span className="font-bold text-gray-800 text-sm">{t('moreInfo')}</span>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center py-1">
-                            <span className="text-gray-600 font-medium text-xs">
-                              {getFieldWithUnit('packageSize', 'size')}:
-                            </span>
-                            <span className="text-gray-800 font-semibold text-xs bg-blue-50 px-2 py-1 rounded">
-                              {unitSystem === 'metric' ? removeUnitFromValue(machine.package_size_cm) : removeUnitFromValue(machine.package_size_inch)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center py-1">
-                            <span className="text-gray-600 font-medium text-xs">
-                              {getFieldWithUnit('netWeight', 'weight')}:
-                            </span>
-                            <span className="text-gray-800 font-semibold text-xs bg-green-50 px-2 py-1 rounded">
-                              {unitSystem === 'metric' 
-                                ? (machine.net_weight_kg !== null && machine.net_weight_kg !== undefined ? machine.net_weight_kg : t('pending'))
-                                : (machine.net_weight_lbs !== null && machine.net_weight_lbs !== undefined ? machine.net_weight_lbs : t('pending'))
-                              }
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center py-1">
-                            <span className="text-gray-600 font-medium text-xs">
-                              {getFieldWithUnit('palletHeight', 'size')}:
-                            </span>
-                            <span className="text-gray-800 font-semibold text-xs bg-yellow-50 px-2 py-1 rounded">
-                              {unitSystem === 'metric' 
-                                ? (machine.pallet_height_cm !== null && machine.pallet_height_cm !== undefined ? machine.pallet_height_cm : t('pending'))
-                                : (machine.pallet_height_inch !== null && machine.pallet_height_inch !== undefined ? machine.pallet_height_inch : t('pending'))
-                              }
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center py-1">
-                            <span className="text-gray-600 font-medium text-xs">
-                              {getFieldWithUnit('palletGrossWeight', 'weight')}:
-                            </span>
-                            <span className="text-gray-800 font-semibold text-xs bg-purple-50 px-2 py-1 rounded">
-                              {unitSystem === 'metric' 
-                                ? (machine.pallet_gross_weight_kg !== null && machine.pallet_gross_weight_kg !== undefined ? machine.pallet_gross_weight_kg : t('pending'))
-                                : (machine.pallet_gross_weight_lbs !== null && machine.pallet_gross_weight_lbs !== undefined ? machine.pallet_gross_weight_lbs : t('pending'))
-                              }
-                            </span>
-                          </div>
-                        </div>
-                        <div className="mt-3 pt-2 border-t border-gray-100 text-center">
-                          <span className="text-xs text-gray-500">{t('tooltip.hoverInfo') || '💡 悬停查看详细规格信息'}</span>
-                        </div>
-                      </div>
-                    }
-                    placement="topRight"
-                    overlayStyle={{ 
-                      maxWidth: '350px',
-                      zIndex: 1000
-                    }}
-                    color="white"
-                    arrow={true}
-                  >
-                    <Button 
-                      size="small"
-                      icon={<InfoCircleOutlined />}
-                      className="bg-blue-100 text-blue-600 hover:bg-blue-500 hover:text-white border-blue-300 transition-colors duration-200"
+                <div className="ms-figma-machine-spec-actions flex flex-col gap-3">
+                  <div className="flex flex-wrap gap-3 items-center">
+                    <div
+                      className="ms-figma-moreinfo relative"
+                      data-ms-moreinfo-root={String(machine.id)}
                     >
-                      {t('moreInfo')}
-                    </Button>
-                  </Tooltip>
+                      <button
+                        type="button"
+                        className="ms-figma-moreinfo-trigger"
+                        aria-expanded={moreInfoOpenId === String(machine.id)}
+                        aria-haspopup="dialog"
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={() =>
+                          setMoreInfoOpenId((id) => (id === String(machine.id) ? null : String(machine.id)))
+                        }
+                      >
+                        <InfoCircleOutlined className="ms-figma-moreinfo-trigger__icon" aria-hidden />
+                        {t('moreInfo')}
+                      </button>
+                      {moreInfoOpenId === String(machine.id) && (
+                        <div
+                          className="ms-figma-moreinfo-panel"
+                          role="dialog"
+                          aria-label={t('moreInfo')}
+                        >
+                          <div className="ms-figma-moreinfo-panel__head">
+                            <InfoCircleOutlined className="ms-figma-moreinfo-panel__head-icon" aria-hidden />
+                            <span className="ms-figma-moreinfo-panel__title">{t('moreInfo')}</span>
+                          </div>
+                          <dl className="ms-figma-moreinfo-panel__rows">
+                            <div className="ms-figma-moreinfo-panel__row">
+                              <dt>{getFieldWithUnit('packageSize', 'size')}</dt>
+                              <dd>
+                                {unitSystem === 'metric'
+                                  ? removeUnitFromValue(machine.package_size_cm)
+                                  : removeUnitFromValue(machine.package_size_inch)}
+                              </dd>
+                            </div>
+                            <div className="ms-figma-moreinfo-panel__row">
+                              <dt>{getFieldWithUnit('netWeight', 'weight')}</dt>
+                              <dd>
+                                {unitSystem === 'metric'
+                                  ? machine.net_weight_kg !== null && machine.net_weight_kg !== undefined
+                                    ? machine.net_weight_kg
+                                    : t('pending')
+                                  : machine.net_weight_lbs !== null && machine.net_weight_lbs !== undefined
+                                    ? machine.net_weight_lbs
+                                    : t('pending')}
+                              </dd>
+                            </div>
+                            <div className="ms-figma-moreinfo-panel__row">
+                              <dt>{getFieldWithUnit('palletHeight', 'size')}</dt>
+                              <dd>
+                                {unitSystem === 'metric'
+                                  ? machine.pallet_height_cm !== null && machine.pallet_height_cm !== undefined
+                                    ? machine.pallet_height_cm
+                                    : t('pending')
+                                  : machine.pallet_height_inch !== null && machine.pallet_height_inch !== undefined
+                                    ? machine.pallet_height_inch
+                                    : t('pending')}
+                              </dd>
+                            </div>
+                            <div className="ms-figma-moreinfo-panel__row">
+                              <dt>{getFieldWithUnit('palletGrossWeight', 'weight')}</dt>
+                              <dd>
+                                {unitSystem === 'metric'
+                                  ? machine.pallet_gross_weight_kg !== null &&
+                                    machine.pallet_gross_weight_kg !== undefined
+                                    ? machine.pallet_gross_weight_kg
+                                    : t('pending')
+                                  : machine.pallet_gross_weight_lbs !== null &&
+                                      machine.pallet_gross_weight_lbs !== undefined
+                                    ? machine.pallet_gross_weight_lbs
+                                    : t('pending')}
+                              </dd>
+                            </div>
+                          </dl>
+                          <p className="ms-figma-moreinfo-panel__hint">
+                            {t('tooltip.hoverInfo') || ''}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="ms-figma-spec-action-links">
+                    <button
+                      type="button"
+                      className="ms-figma-link-accessories-inline"
+                      onClick={() =>
+                        openMachineSpecificationPdf(machine, hostModels as HostModelRow[], showInfoToast, t)
+                      }
+                    >
+                      {t('figma.viewDetailedSpecifications')}
+                    </button>
+                    <button
+                      type="button"
+                      className="ms-figma-link-accessories-inline"
+                      onClick={() => {
+                        const hostRow = findHostModelForMachinePart(machine, hostModels as HostModelRow[]) as Record<
+                          string,
+                          unknown
+                        > | undefined;
+                        const fromPart =
+                          currentLanguage === 'zh'
+                            ? machine.model_description_zh
+                            : machine.model_description_en;
+                        const fromHost =
+                          currentLanguage === 'zh'
+                            ? (hostRow?.model_description_zh as string | null | undefined)
+                            : (hostRow?.model_description_en as string | null | undefined);
+                        const body = (fromPart || fromHost || '').trim();
+                        const fallback =
+                          currentLanguage === 'zh'
+                            ? machine.spec || ''
+                            : machine.spec_imperial || machine.spec || '';
+                        const text = (body || fallback).trim();
+                        if (!text) {
+                          showInfoToast(t('figma.introductionEmpty'));
+                          return;
+                        }
+                        setIntroductionModalText(safeTextContent(text));
+                        setIntroductionModalOpen(true);
+                      }}
+                    >
+                      {t('figma.introductionLink')}
+                    </button>
+                    <button
+                      type="button"
+                      className="ms-figma-link-accessories-inline"
+                      onClick={() => navigate(`/consumables?category=${category}`)}
+                    >
+                      {t('figma.filmOptionsLink')}
+                    </button>
+                  </div>
                 </div>
               </div>
 
               {/* Column 3: Price, Stock, Actions */}
-              <div className="w-full md:w-1/5 md:pl-6 mt-6 md:mt-0 border-t md:border-t-0 md:border-l border-gray-200 pt-6 md:pt-0">
+              <div className="ms-figma-machine-card__col-actions ms-figma-machine-card__actions">
+                <div className="ms-figma-purchase-rail">
                 <div className="mb-4">
-                  <div className="font-medium text-sm text-gray-600 mb-2">
+                  <div className="font-medium text-sm text-gray-600 mb-1">
                     {t('tableHeaders.price') || 'Price'}:
                   </div>
                   
-                  <div className="text-2xl font-bold text-blue-600 mb-2">
+                  <div className="ms-figma-price-value mb-2">
                     {getCurrencySymbol(userRegion)}{formatPrice(machine.prices?.[0]?.tiers?.[0]?.base_price || 0)}
                   </div>
                 </div>
                 
                 {isSales && (
-                  <div className="mb-4">
-                    <div className="font-medium text-sm text-gray-600 mb-2">
-                      {t('tableHeaders.stock')}:
+                  <div className="mb-4 ms-figma-stock-panel">
+                    <div className="ms-figma-stock-heading">{t('figma.stockStatus')}</div>
+                    <div className="font-semibold text-sm text-gray-800 mb-2">
+                      {t('inventory.total')}:{' '}
+                      {(Object.keys(REGIONS) as Array<keyof typeof REGIONS>).reduce(
+                        (sum, regionKey) => sum + getRegionInventory(machine, regionKey.toString()),
+                        0
+                      )}
                     </div>
-                    <div className="flex flex-wrap gap-1">
+                    <div className="ms-figma-stock-tags">
                       {(Object.keys(REGIONS) as Array<keyof typeof REGIONS>).map((regionKey) => {
                         const stockStatus = getStockStatus(getRegionInventory(machine, regionKey.toString()));
                         return (
-                          <Tag 
+                          <span
                             key={`${machine.id}-inventory-${regionKey}`}
-                            color={stockStatus.color}
-                            className="text-xs"
+                            className={classNames('ms-figma-stock-pill', `ms-figma-stock-pill--${stockStatus.color}`)}
                           >
                             {REGIONS[regionKey].nameCn}: {getRegionInventory(machine, regionKey.toString())}
-                          </Tag>
+                          </span>
                         );
                       })}
                     </div>
@@ -2434,27 +2377,46 @@ const ProductLine1Page: React.FC = () => {
                 )}
                 
                 <div className="space-y-3">
-                  <div className="flex items-center justify-center gap-2 bg-gray-50 rounded-lg p-2">
-                    <Button 
-                      icon={<MenuOutlined />}
-                      onClick={() => handleQuantityChange(machine.id.toString(), (quantities[machine.id.toString()] || 1) - 1)}
+                  <div className="ms-figma-qty-stepper">
+                    <button
+                      type="button"
+                      className="ms-figma-qty-btn"
+                      onClick={() =>
+                        handleQuantityChange(
+                          machine.id.toString(),
+                          (quantities[machine.id.toString()] || 1) - 1
+                        )
+                      }
                       disabled={(quantities[machine.id.toString()] || 1) <= 1}
-                      size="small"
-                      className="hover:border-blue-500 hover:bg-blue-500 hover:text-white transition-colors duration-200"
-                    />
-                    <InputNumber
+                      aria-label="−"
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
                       min={1}
-                      value={quantities[machine.id.toString()] || 1}
-                      onChange={(value: number | null) => handleQuantityChange(machine.id.toString(), value as number)}
-                      className="w-16 text-center"
-                      size="small"
+                      className="ms-figma-qty-input"
+                      value={quantities[machine.id.toString()] ?? 1}
+                      onChange={(e) => {
+                        const v = parseInt(e.target.value, 10);
+                        if (!Number.isFinite(v) || v < 1) return;
+                        handleQuantityChange(machine.id.toString(), v);
+                      }}
+                      aria-label={t('tableHeaders.quantity')}
                     />
-                    <Button 
-                      icon={<PlusOutlined />}
-                      onClick={() => handleQuantityChange(machine.id.toString(), (quantities[machine.id.toString()] || 1) + 1)}
-                      size="small"
-                      className="hover:border-blue-500 hover:bg-blue-500 hover:text-white transition-colors duration-200"
-                    />
+                    <button
+                      type="button"
+                      className="ms-figma-qty-btn"
+                      onClick={() =>
+                        handleQuantityChange(
+                          machine.id.toString(),
+                          (quantities[machine.id.toString()] || 1) + 1
+                        )
+                      }
+                      aria-label="+"
+                    >
+                      +
+                    </button>
                   </div>
                   
                   {/* 🎯 智能购物车按钮 - 替换原有按钮 */}
@@ -2463,16 +2425,34 @@ const ProductLine1Page: React.FC = () => {
                     productType="machines"
                     onAddToCart={() => handleAddToCart(machine, 'machine')}
                     disabled={!canAddToCart}
-                    className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 h-10 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+                    className="ms-figma-primary-cart w-full py-2 h-10 rounded-lg shadow-md transition-all duration-200"
                   >
                     <ShoppingCartOutlined className="mr-2" />
                     {canAddToCart ? t('addToCart') : t('noPermissionAdd')}
                   </SmartAddToCartButton>
                 </div>
+                </div>
               </div>
             </div>
           </div>
         ))}
+        {!selectedMachine && total > 0 && (
+          <div className="flex justify-center ms-figma-pagination-wrap">
+            <MsFigmaPagination
+              current={currentPage}
+              pageSize={pageSize}
+              total={total}
+              pageSizeOptions={['10', '20', '50']}
+              perPageLabel={t('figma.perPage')}
+              onPageChange={(page) => setCurrentPage(page)}
+              onPageSizeChange={(size) => {
+                setPageSize(size);
+                setCurrentPage(1);
+              }}
+              showTotal={(tot, range) => `${range[0]}-${range[1]} / ${tot}`}
+            />
+          </div>
+        )}
       </div>
     );
   };
@@ -2501,14 +2481,14 @@ const ProductLine1Page: React.FC = () => {
         <p className="text-gray-600 mb-4 text-center max-w-md">
           {error || t('error')}
         </p>
-        <Button 
-          type="primary" 
-          icon={<ReloadOutlined />}
-          onClick={() => window.location.reload()} 
-          className="bg-blue-500 hover:bg-blue-600 border-none"
+        <button
+          type="button"
+          className="ms-figma-retry-btn"
+          onClick={() => window.location.reload()}
         >
+          <ReloadOutlined className="mr-2" aria-hidden />
           {t('retry')}
-        </Button>
+        </button>
       </div>
     );
   };
@@ -2691,8 +2671,10 @@ const ProductLine1Page: React.FC = () => {
       return voltage !== 'N/A' || frequency !== 'N/A';
     };
 
+    const accessoryMoreKey = `${level}-${accessory.id}`;
+
     return (
-      <div key={`accessory-level-${level}-${accessory.id}-${accessoryPart?.part_number || 'no-part'}-${index}-${currentLanguage}-${forceRender}`} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 text-gray-900 mb-4 overflow-hidden">
+      <div key={`accessory-level-${level}-${accessory.id}-${accessoryPart?.part_number || 'no-part'}-${index}-${currentLanguage}-${forceRender}`} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 text-gray-900 mb-4 overflow-visible">
         <div className="flex flex-col md:flex-row p-6">
           {/* Column 1: Image & Selection */}
           <div className="w-full md:w-1/5 flex flex-col items-center md:items-start mb-6 md:mb-0 md:pr-6">
@@ -2783,20 +2765,18 @@ const ProductLine1Page: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-4 flex gap-3">
-              {/* 规格说明按钮 - 和主机一样 */}
-              <Button 
-                size="small"
-                icon={<InfoCircleOutlined />}
+            <div className="mt-4 flex flex-wrap gap-3 items-center">
+              <button
+                type="button"
+                className="ms-figma-accessory-spec-btn"
                 onClick={() => {
-                  // 查找配件的PDF文档
-                  const accessoryPdfUrl = 
-                    (accessoryPart as any)?.spec_pdf || 
-                    (accessory as any).spec_pdf || 
-                    (accessoryPart as any)?.explosion_diagram_pdf || 
+                  const accessoryPdfUrl =
+                    (accessoryPart as any)?.spec_pdf ||
+                    (accessory as any).spec_pdf ||
+                    (accessoryPart as any)?.explosion_diagram_pdf ||
                     (accessory as any).explosion_diagram_pdf ||
                     (accessory as any).pdf_url;
-                  
+
                   console.log('🔍 [Accessory PDF Debug] Looking for accessory PDF:', {
                     accessory_id: accessory.id,
                     accessory_part_number: getPartNumber(),
@@ -2807,34 +2787,28 @@ const ProductLine1Page: React.FC = () => {
                       accessory_spec_pdf: (accessory as any).spec_pdf,
                       accessoryPart_explosion_pdf: (accessoryPart as any)?.explosion_diagram_pdf,
                       accessory_explosion_pdf: (accessory as any).explosion_diagram_pdf,
-                      accessory_pdf_url: (accessory as any).pdf_url
+                      accessory_pdf_url: (accessory as any).pdf_url,
                     },
-                    found_pdf_url: accessoryPdfUrl
+                    found_pdf_url: accessoryPdfUrl,
                   });
-                  
+
                   if (accessoryPdfUrl && !accessoryPdfUrl.includes('placeholder')) {
-                    // 修复PDF URL转换逻辑
                     let absolutePdfUrl = accessoryPdfUrl;
-                    
+
                     if (!accessoryPdfUrl.startsWith('http')) {
-                      // 修复基础URL计算
                       const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/wp-json/bjt/v1';
                       let serverBaseUrl = '';
-                      
+
                       if (apiBaseUrl.includes('/wp-json/bjt/v1')) {
                         serverBaseUrl = apiBaseUrl.replace('/wp-json/bjt/v1', '');
                       } else {
-                        // 如果API URL格式不对，使用默认值
                         serverBaseUrl = 'http://localhost:8080';
                       }
-                      
-                      // 修复：当VITE_API_URL是相对路径时的处理
+
                       if (!serverBaseUrl || serverBaseUrl === '') {
-                        // 使用当前窗口的origin作为基础URL
                         serverBaseUrl = window.location.origin;
                       }
-                      
-                      // 清理路径：移除多余的前缀
+
                       let cleanPath = accessoryPdfUrl;
                       if (cleanPath.startsWith('/frontend/public')) {
                         cleanPath = cleanPath.replace('/frontend/public', '');
@@ -2842,16 +2816,16 @@ const ProductLine1Page: React.FC = () => {
                       if (!cleanPath.startsWith('/')) {
                         cleanPath = '/' + cleanPath;
                       }
-                      
+
                       absolutePdfUrl = serverBaseUrl + cleanPath;
                     }
-                    
+
                     console.log('✅ [Accessory PDF Debug] Opening PDF:', {
                       original_pdf_url: accessoryPdfUrl,
                       cleaned_pdf_url: absolutePdfUrl,
-                      api_base_url: import.meta.env.VITE_API_URL
+                      api_base_url: import.meta.env.VITE_API_URL,
                     });
-                    
+
                     window.open(absolutePdfUrl, '_blank');
                   } else {
                     showInfoToast(t('noAccessorySpecPdf') || '暂无该配件的规格说明文档');
@@ -2859,87 +2833,97 @@ const ProductLine1Page: React.FC = () => {
                       accessory_part_number: getPartNumber(),
                       accessory_title: getAccessoryName(accessory),
                       accessory_model: accessory.model,
-                      pdf_url: accessoryPdfUrl
+                      pdf_url: accessoryPdfUrl,
                     });
                   }
                 }}
-                className="bg-gray-100 text-gray-600 hover:bg-gray-600 hover:text-white border-gray-300 transition-colors duration-200"
               >
+                <InfoCircleOutlined className="mr-1" aria-hidden />
                 {t('specDetails') || '规格详情'}
-              </Button>
+              </button>
 
-              <Tooltip
-                title={
-                  <div className="p-3 bg-white rounded-lg shadow-lg border border-gray-200">
-                    <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
-                      <InfoCircleOutlined className="text-blue-500 mr-2" />
-                      <span className="font-bold text-gray-800 text-sm">{t('moreInfo')}</span>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center py-1">
-                        <span className="text-gray-600 font-medium text-xs">📦 {getFieldWithUnit('packageSize', 'size')}:</span>
-                        <span className="text-gray-800 font-semibold text-xs bg-blue-50 px-2 py-1 rounded">
-                          {unitSystem === 'metric' ? removeUnitFromValue(getFieldValue('package_size_cm')) : removeUnitFromValue(getFieldValue('package_size_inch'))}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center py-1">
-                        <span className="text-gray-600 font-medium text-xs">⚖️ {getFieldWithUnit('netWeight', 'weight')}:</span>
-                        <span className="text-gray-800 font-semibold text-xs bg-green-50 px-2 py-1 rounded">
-                          {unitSystem === 'metric' 
-                            ? (getFieldValue('net_weight_kg') !== 'N/A' ? getFieldValue('net_weight_kg') : 'N/A')
-                            : (getFieldValue('net_weight_lbs') !== 'N/A' ? getFieldValue('net_weight_lbs') : 'N/A')
-                          }
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center py-1">
-                        <span className="text-gray-600 font-medium text-xs">📊 {getFieldWithUnit('grossWeight', 'weight')}:</span>
-                        <span className="text-gray-800 font-semibold text-xs bg-orange-50 px-2 py-1 rounded">
-                          {unitSystem === 'metric' 
-                            ? (getFieldValue('gross_weight_kg') !== 'N/A' ? getFieldValue('gross_weight_kg') : 'N/A')
-                            : (getFieldValue('gross_weight_lbs') !== 'N/A' ? getFieldValue('gross_weight_lbs') : 'N/A')
-                          }
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center py-1">
-                        <span className="text-gray-600 font-medium text-xs">📏 {getFieldWithUnit('palletHeight', 'size')}:</span>
-                        <span className="text-gray-800 font-semibold text-xs bg-yellow-50 px-2 py-1 rounded">
-                          {unitSystem === 'metric' 
-                            ? (getFieldValue('pallet_height_cm') !== 'N/A' ? getFieldValue('pallet_height_cm') : 'N/A')
-                            : (getFieldValue('pallet_height_inch') !== 'N/A' ? getFieldValue('pallet_height_inch') : 'N/A')
-                          }
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center py-1">
-                        <span className="text-gray-600 font-medium text-xs">🏗️ {getFieldWithUnit('palletGrossWeight', 'weight')}:</span>
-                        <span className="text-gray-800 font-semibold text-xs bg-purple-50 px-2 py-1 rounded">
-                          {unitSystem === 'metric' 
-                            ? (getFieldValue('pallet_gross_weight_kg') !== 'N/A' ? getFieldValue('pallet_gross_weight_kg') : 'N/A')
-                            : (getFieldValue('pallet_gross_weight_lbs') !== 'N/A' ? getFieldValue('pallet_gross_weight_lbs') : 'N/A')
-                          }
-                        </span>
-                      </div>
-                    </div>
-                    <div className="mt-3 pt-2 border-t border-gray-100 text-center">
-                      <span className="text-xs text-gray-500">{t('tooltip.hoverInfo') || '💡 悬停查看详细规格信息'}</span>
-                    </div>
-                  </div>
-                }
-                placement="topRight"
-                overlayStyle={{ 
-                  maxWidth: '350px',
-                  zIndex: 1000
-                }}
-                color="white"
-                arrow={true}
-              >
-                <Button 
-                  size="small"
-                  icon={<InfoCircleOutlined />}
-                  className="bg-blue-100 text-blue-600 hover:bg-blue-500 hover:text-white border-blue-300 transition-colors duration-200"
+              <div className="ms-figma-moreinfo relative" data-ms-accessory-moreinfo={accessoryMoreKey}>
+                <button
+                  type="button"
+                  className="ms-figma-moreinfo-trigger"
+                  aria-expanded={accessoryMoreInfoKey === accessoryMoreKey}
+                  aria-haspopup="dialog"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={() =>
+                    setAccessoryMoreInfoKey((k) => (k === accessoryMoreKey ? null : accessoryMoreKey))
+                  }
                 >
+                  <InfoCircleOutlined className="ms-figma-moreinfo-trigger__icon" aria-hidden />
                   {t('moreInfo') || '更多信息'}
-                </Button>
-              </Tooltip>
+                </button>
+                {accessoryMoreInfoKey === accessoryMoreKey && (
+                  <div className="ms-figma-moreinfo-panel" role="dialog" aria-label={t('moreInfo')}>
+                    <div className="ms-figma-moreinfo-panel__head">
+                      <InfoCircleOutlined className="ms-figma-moreinfo-panel__head-icon" aria-hidden />
+                      <span className="ms-figma-moreinfo-panel__title">{t('moreInfo')}</span>
+                    </div>
+                    <dl className="ms-figma-moreinfo-panel__rows">
+                      <div className="ms-figma-moreinfo-panel__row">
+                        <dt>{getFieldWithUnit('packageSize', 'size')}</dt>
+                        <dd>
+                          {unitSystem === 'metric'
+                            ? removeUnitFromValue(getFieldValue('package_size_cm'))
+                            : removeUnitFromValue(getFieldValue('package_size_inch'))}
+                        </dd>
+                      </div>
+                      <div className="ms-figma-moreinfo-panel__row">
+                        <dt>{getFieldWithUnit('netWeight', 'weight')}</dt>
+                        <dd>
+                          {unitSystem === 'metric'
+                            ? getFieldValue('net_weight_kg') !== 'N/A'
+                              ? getFieldValue('net_weight_kg')
+                              : 'N/A'
+                            : getFieldValue('net_weight_lbs') !== 'N/A'
+                              ? getFieldValue('net_weight_lbs')
+                              : 'N/A'}
+                        </dd>
+                      </div>
+                      <div className="ms-figma-moreinfo-panel__row">
+                        <dt>{getFieldWithUnit('grossWeight', 'weight')}</dt>
+                        <dd>
+                          {unitSystem === 'metric'
+                            ? getFieldValue('gross_weight_kg') !== 'N/A'
+                              ? getFieldValue('gross_weight_kg')
+                              : 'N/A'
+                            : getFieldValue('gross_weight_lbs') !== 'N/A'
+                              ? getFieldValue('gross_weight_lbs')
+                              : 'N/A'}
+                        </dd>
+                      </div>
+                      <div className="ms-figma-moreinfo-panel__row">
+                        <dt>{getFieldWithUnit('palletHeight', 'size')}</dt>
+                        <dd>
+                          {unitSystem === 'metric'
+                            ? getFieldValue('pallet_height_cm') !== 'N/A'
+                              ? getFieldValue('pallet_height_cm')
+                              : 'N/A'
+                            : getFieldValue('pallet_height_inch') !== 'N/A'
+                              ? getFieldValue('pallet_height_inch')
+                              : 'N/A'}
+                        </dd>
+                      </div>
+                      <div className="ms-figma-moreinfo-panel__row">
+                        <dt>{getFieldWithUnit('palletGrossWeight', 'weight')}</dt>
+                        <dd>
+                          {unitSystem === 'metric'
+                            ? getFieldValue('pallet_gross_weight_kg') !== 'N/A'
+                              ? getFieldValue('pallet_gross_weight_kg')
+                              : 'N/A'
+                            : getFieldValue('pallet_gross_weight_lbs') !== 'N/A'
+                              ? getFieldValue('pallet_gross_weight_lbs')
+                              : 'N/A'}
+                        </dd>
+                      </div>
+                    </dl>
+                    <p className="ms-figma-moreinfo-panel__hint">{t('tooltip.hoverInfo') || ''}</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -2962,33 +2946,35 @@ const ProductLine1Page: React.FC = () => {
                 <div className="font-medium text-sm text-gray-600 mb-2">
                   {t('tableHeaders.stock') || '库存'}:
                 </div>
-                <div className="flex flex-wrap gap-1">
-                  {/* 优先显示accessoryPart的inventory */}
+                <div className="ms-figma-stock-tags ms-figma-stock-tags--accessory">
                   {partInventory && partInventory.length > 0 ? (
                     partInventory.map((inv, invIndex) => {
                       const stockStatus = getStockStatus(inv.amount || 0);
                       return (
-                        <Tag 
+                        <span
                           key={`accessory-${accessory.id}-level-${level}-index-${index}-part-inventory-${inv.region}-${invIndex}`}
-                          color={stockStatus.color}
-                          className="text-xs"
+                          className={classNames(
+                            'ms-figma-stock-pill',
+                            `ms-figma-stock-pill--${stockStatus.color}`
+                          )}
                         >
                           {inv.region}: {inv.amount || 0}
-                        </Tag>
+                        </span>
                       );
                     })
                   ) : (
-                    /* 如果没有库存数据，显示默认区域库存 */
                     (Object.keys(REGIONS) as Array<keyof typeof REGIONS>).map((regionKey) => {
-                      const stockStatus = getStockStatus(0); // 默认为0库存
+                      const stockStatus = getStockStatus(0);
                       return (
-                        <Tag 
+                        <span
                           key={`accessory-${accessory.id}-level-${level}-index-${index}-default-inventory-${regionKey}`}
-                          color={stockStatus.color}
-                          className="text-xs"
+                          className={classNames(
+                            'ms-figma-stock-pill',
+                            `ms-figma-stock-pill--${stockStatus.color}`
+                          )}
                         >
                           {REGIONS[regionKey].nameCn}: 0
-                        </Tag>
+                        </span>
                       );
                     })
                   )}
@@ -2998,43 +2984,46 @@ const ProductLine1Page: React.FC = () => {
             
             {/* Actions */}
             <div className="space-y-3">
-              <div className="flex items-center justify-center gap-2 bg-gray-50 rounded-lg p-2">
-                <Button 
-                  icon={<MenuOutlined />}
-                  onClick={() => handleQuantityChange(accessory.id.toString(), (quantities[accessory.id.toString()] || 1) - 1)}
+              <div className="ms-figma-qty-stepper">
+                <button
+                  type="button"
+                  className="ms-figma-qty-btn"
+                  onClick={() =>
+                    handleQuantityChange(
+                      accessory.id.toString(),
+                      (quantities[accessory.id.toString()] || 1) - 1
+                    )
+                  }
                   disabled={(quantities[accessory.id.toString()] || 1) <= 1}
-                  size="small"
-                  style={{
-                    backgroundColor: '#f3f4f6',
-                    borderColor: '#d1d5db',
-                    color: '#374151'
-                  }}
-                  className="hover:border-blue-500 hover:bg-blue-500 hover:text-white transition-colors duration-200"
-                />
-                <InputNumber
+                  aria-label="−"
+                >
+                  −
+                </button>
+                <input
+                  type="number"
                   min={1}
-                  value={quantities[accessory.id.toString()] || 1}
-                  onChange={(value: number | null) => handleQuantityChange(accessory.id.toString(), value as number)}
-                  className="w-20 text-center quantity-input-field"
-                  size="small"
-                  style={{
-                    backgroundColor: '#ffffff',
-                    color: '#333333',
-                    borderColor: '#d1d5db',
-                    width: '80px'
+                  className="ms-figma-qty-input ms-figma-qty-input--accessory"
+                  value={quantities[accessory.id.toString()] ?? 1}
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value, 10);
+                    if (!Number.isFinite(v) || v < 1) return;
+                    handleQuantityChange(accessory.id.toString(), v);
                   }}
+                  aria-label={t('tableHeaders.quantity')}
                 />
-                <Button 
-                  icon={<PlusOutlined />}
-                  onClick={() => handleQuantityChange(accessory.id.toString(), (quantities[accessory.id.toString()] || 1) + 1)}
-                  size="small"
-                  style={{
-                    backgroundColor: '#f3f4f6',
-                    borderColor: '#d1d5db',
-                    color: '#374151'
-                  }}
-                  className="hover:border-blue-500 hover:bg-blue-500 hover:text-white transition-colors duration-200"
-                />
+                <button
+                  type="button"
+                  className="ms-figma-qty-btn"
+                  onClick={() =>
+                    handleQuantityChange(
+                      accessory.id.toString(),
+                      (quantities[accessory.id.toString()] || 1) + 1
+                    )
+                  }
+                  aria-label="+"
+                >
+                  +
+                </button>
               </div>
               
               {/* 🎯 智能购物车按钮 - 替换配件按钮 */}
@@ -3132,11 +3121,6 @@ const ProductLine1Page: React.FC = () => {
       timestamp: new Date().toISOString()
     });
   }, [hostModels]);
-
-  useEffect(() => {
-    fetchMachines();
-    fetchHostModels();
-  }, [category, currentLanguage, filterRegion, selectedVoltage]);
 
   // ✅ 监听语言变化，强制重新渲染和重新加载数据
   useEffect(() => {
@@ -3362,139 +3346,97 @@ const ProductLine1Page: React.FC = () => {
     }
   }, [currentLanguage]); // 只监听语言变化
 
-  // 处理图片点击选择主机型号
-  const handleImageModelSelection = (partNumber: string) => {
-    // 找到对应的主机ID
-    const targetMachine = filteredMachines.find(machine => 
-      machine.part_number === partNumber || 
-      machine.model === partNumber ||
-      getMachineName(machine).includes(partNumber)
-    );
-    
-    if (targetMachine) {
-      handleMachineSelection(targetMachine.id.toString());
-      success(`已选择主机型号: ${getMachineName(targetMachine)}`);
-    } else {
-      warning(`未找到型号 ${partNumber} 对应的主机`);
-    }
-  };
-
   // Return the main component JSX
   return (
     <>
-      {/* 面包屑导航 - 固定在黄框位置，去除黄色边框 */}
-      <div 
-        style={{
-          position: 'fixed',
-          top: '80px', // 调整到黄框位置
-          left: '280px', // 考虑左侧导航栏宽度
-          right: '20px', // 留出右边距
-          zIndex: 9999,
-          backgroundColor: '#ffffff',
-          border: '1px solid #e5e7eb', // 改为简洁的灰色边框
-          borderRadius: '8px',
-          padding: '12px 16px',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', // 改为简洁的阴影
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          minHeight: '50px',
-          fontFamily: 'Arial, sans-serif',
-          background: '#ffffff' // 改为纯白背景
-        }}
+      <dialog
+        ref={introductionDialogRef}
+        className="ms-figma-dialog"
+        onClose={() => setIntroductionModalOpen(false)}
       >
-        {/* 左侧导航路径 */}
-        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          {/* 产品线 */}
-          <button 
-            style={{
-              fontSize: '14px',
-              padding: '8px 12px',
-              backgroundColor: '#3b82f6',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontWeight: '600',
-              boxShadow: '0 2px 4px rgba(59, 130, 246, 0.3)'
-            }}
-            onClick={() => window.history.back()}
-            onMouseOver={(e) => e.target.style.backgroundColor = '#2563eb'}
-            onMouseOut={(e) => e.target.style.backgroundColor = '#3b82f6'}
+        <div className="ms-figma-dialog__surface">
+          <header className="ms-figma-dialog__header">
+            <h2 className="ms-figma-dialog__title">{t('figma.introductionModalTitle')}</h2>
+            <button
+              type="button"
+              className="ms-figma-dialog__icon-close"
+              onClick={() => introductionDialogRef.current?.close()}
+              aria-label={t('close')}
+            >
+              ×
+            </button>
+          </header>
+          <div className="ms-figma-dialog__body max-h-[60vh] overflow-y-auto whitespace-pre-wrap text-gray-800 text-sm">
+            {introductionModalText}
+          </div>
+          <footer className="ms-figma-dialog__footer">
+            <button
+              type="button"
+              className="ms-figma-dialog__primary"
+              onClick={() => introductionDialogRef.current?.close()}
+            >
+              {t('close')}
+            </button>
+          </footer>
+        </div>
+      </dialog>
+
+      <div className="ms-breadcrumb-bar ms-breadcrumb-bar--figma">
+        <div className="ms-breadcrumb-path">
+          <button
+            type="button"
+            className="ms-breadcrumb-back"
+            onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/machines'))}
+            aria-label={t('figma.breadcrumbBack')}
           >
-            产品线
+            <LeftOutlined />
           </button>
-          
-          {/* 分隔符 */}
-          <span style={{ color: '#6b7280', fontSize: '16px', fontWeight: 'bold' }}>→</span>
-          
-          {/* 气垫机 */}
-          <span style={{ 
-            color: '#374151', 
-            fontWeight: '600', 
-            fontSize: '16px',
-            padding: '8px 12px',
-            backgroundColor: '#f3f4f6',
-            borderRadius: '6px'
-          }}>
-            {t('productLines.airCushion')}
+          <button
+            type="button"
+            className="ms-breadcrumb-btn ms-breadcrumb-btn--primary"
+            onClick={() => navigate('/machines')}
+          >
+            {t('figma.machineAndAccessory')}
+          </button>
+
+          <span className="ms-breadcrumb-chev" aria-hidden>
+            &gt;
           </span>
-          
-          {/* 如果选择了主机，显示主机信息 */}
+
+          <span className="ms-breadcrumb-chip">{t('types.airCushion')}</span>
+
           {selectedMachine && (
             <>
-              <span style={{ color: '#6b7280', fontSize: '16px', fontWeight: 'bold' }}>→</span>
-              <span style={{
-                fontSize: '14px',
-                padding: '8px 12px',
-                backgroundColor: '#10b981',
-                color: '#ffffff',
-                borderRadius: '6px',
-                fontWeight: '600'
-              }}>
-                Host
+              <span className="ms-breadcrumb-chev" aria-hidden>
+                &gt;
               </span>
-              <button 
-                style={{
-                  color: '#374151',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                  fontSize: '16px',
-                  padding: '8px 12px',
-                  backgroundColor: '#f9fafb',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '6px',
-                  textDecoration: 'none'
-                }}
+              <span className="ms-breadcrumb-chip ms-breadcrumb-chip--host">{t('figma.hostLabel')}</span>
+              <button
+                type="button"
+                className="ms-breadcrumb-btn ms-breadcrumb-btn--ghost"
                 onClick={() => {
                   setSelectedMachine('');
                   setSelectedAccessories({});
                 }}
-                onMouseOver={(e) => e.target.style.backgroundColor = '#f3f4f6'}
-                onMouseOut={(e) => e.target.style.backgroundColor = '#f9fafb'}
               >
                 {(() => {
                   const machine = machines.find(m => m.id.toString() === selectedMachine);
                   if (machine) {
-                    const name = machine.name_zh || machine.name_en || machine.title_zh || machine.title_en || machine.model || machine.part_number || '未知主机';
-                    return name;
+                    return getMachineName(machine) || machine.model || machine.part_number || t('figma.unknownHost');
                   }
-                  return '未知主机';
+                  return t('figma.unknownHost');
                 })()}
               </button>
-              
-              {/* 如果选择了配件，显示配件信息 */}
+
               {Object.keys(selectedAccessories).length > 0 && (
                 <>
-                  {/* 逐级显示所有选择的配件 */}
                   {Object.entries(selectedAccessories)
                     .sort(([a], [b]) => parseInt(a.replace('level', '')) - parseInt(b.replace('level', '')))
-                    .map(([level, accessoryId], index) => {
+                    .map(([level, accessoryId]) => {
                       const levelNum = parseInt(level.replace('level', ''));
                       let accessoryList;
-                      
-                      // 根据层级获取对应的配件列表
-                      switch(levelNum) {
+
+                      switch (levelNum) {
                         case 1:
                           accessoryList = accessories;
                           break;
@@ -3513,34 +3455,26 @@ const ProductLine1Page: React.FC = () => {
                         default:
                           accessoryList = [];
                       }
-                      
+
                       const accessory = accessoryList.find(acc => acc.id === accessoryId);
-                      const accessoryName = accessory ? 
-                        (accessory.name_zh || accessory.name_en || accessory.title_zh || accessory.title_en || accessory.part_number || '未知配件') : 
-                        '未知配件';
-                      
+                      const accessoryName = accessory
+                        ? accessory.name_zh ||
+                          accessory.name_en ||
+                          accessory.title_zh ||
+                          accessory.title_en ||
+                          accessory.part_number ||
+                          t('figma.unknownAccessory')
+                        : t('figma.unknownAccessory');
+
                       return (
                         <React.Fragment key={level}>
-                          <span style={{ color: '#6b7280', fontSize: '16px', fontWeight: 'bold' }}>→</span>
+                          <span className="ms-breadcrumb-chev" aria-hidden>
+                            &gt;
+                          </span>
                           <button
-                            style={{
-                              color: '#3b82f6',
-                              cursor: 'pointer',
-                              fontWeight: '600',
-                              fontSize: '14px',
-                              padding: '6px 10px',
-                              backgroundColor: '#eff6ff',
-                              border: '1px solid #dbeafe',
-                              borderRadius: '6px',
-                              textDecoration: 'none',
-                              transition: 'all 0.2s ease',
-                              maxWidth: '200px',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap'
-                            }}
+                            type="button"
+                            className="ms-breadcrumb-btn ms-breadcrumb-btn--accessory"
                             onClick={() => {
-                              // 移除当前层级及之后的所有配件选择
                               const newSelectedAccessories = { ...selectedAccessories };
                               Object.keys(newSelectedAccessories).forEach(key => {
                                 const keyLevel = parseInt(key.replace('level', ''));
@@ -3549,14 +3483,6 @@ const ProductLine1Page: React.FC = () => {
                                 }
                               });
                               setSelectedAccessories(newSelectedAccessories);
-                            }}
-                            onMouseOver={(e) => {
-                              e.target.style.backgroundColor = '#dbeafe';
-                              e.target.style.borderColor = '#3b82f6';
-                            }}
-                            onMouseOut={(e) => {
-                              e.target.style.backgroundColor = '#eff6ff';
-                              e.target.style.borderColor = '#dbeafe';
                             }}
                             title={`点击移除 ${levelNum}级配件: ${accessoryName}`}
                           >
@@ -3567,263 +3493,147 @@ const ProductLine1Page: React.FC = () => {
                     })}
                 </>
               )}
-              
-              {/* 如果没有选择配件，显示提示 */}
+
               {Object.keys(selectedAccessories).length === 0 && (
                 <>
-                  <span style={{ color: '#6b7280', fontSize: '16px', fontWeight: 'bold' }}>→</span>
-                  <span style={{ 
-                    color: '#f59e0b', 
-                    fontWeight: '600', 
-                    fontSize: '16px',
-                    padding: '8px 12px',
-                    backgroundColor: '#fef3c7',
-                    borderRadius: '6px'
-                  }}>
-                    Level 1 Accessory
+                  <span className="ms-breadcrumb-chev" aria-hidden>
+                    &gt;
                   </span>
+                  <span className="ms-breadcrumb-pill-warn">{t('figma.levelOneAccessory')}</span>
                 </>
               )}
             </>
           )}
         </div>
-        
-        {/* 右侧状态提示 */}
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          {!selectedMachine && (
-            <div style={{ 
-              fontSize: '14px', 
-              color: '#6b7280', 
-              display: 'flex', 
-              alignItems: 'center',
-              padding: '8px 12px',
-              backgroundColor: '#f3f4f6',
-              borderRadius: '6px',
-              fontWeight: '500'
-            }}>
-              📋 请选择主机型号
-            </div>
-          )}
-          {selectedMachine && Object.keys(selectedAccessories).length === 0 && (
-            <div style={{ 
-              fontSize: '14px', 
-              color: '#f59e0b', 
-              display: 'flex', 
-              alignItems: 'center',
-              padding: '8px 12px',
-              backgroundColor: '#fef3c7',
-              borderRadius: '6px',
-              fontWeight: '500'
-            }}>
-              📋 请选择配件
-            </div>
-          )}
-          {selectedMachine && Object.keys(selectedAccessories).length > 0 && (
-            <div style={{ 
-              fontSize: '14px', 
-              color: '#10b981', 
-              fontWeight: '600', 
-              display: 'flex', 
-              alignItems: 'center',
-              padding: '8px 12px',
-              backgroundColor: '#d1fae5',
-              borderRadius: '6px'
-            }}>
-              📋 当前层级: {Object.keys(selectedAccessories).length + 1}
-            </div>
-          )}
-        </div>
       </div>
-      
-      {/* 为固定定位的面包屑添加占位空间 */}
-      <div style={{ height: '150px' }}></div>
-      
-      <div className="machines-page min-h-screen bg-gray-50 text-gray-900">
-        {/* SQL Mock服务状态组件 */}
+
+      <div className="ms-breadcrumb-spacer" aria-hidden />
+
+      <div className="machines-page min-h-screen bg-gray-50 text-gray-900 ms-product-line-layout">
         <MockServiceStatus position="top-right" compact={true} hidden={true} />
+
+        <div className="ms-content-column">
         
         {/* 主机型号对比图片区域 */}
         {!selectedMachine && (
-          <div style={{
-            width: '100%',
-            maxWidth: '800px',
-            margin: '0 auto 24px auto',
-            position: 'relative',
-            borderRadius: '12px',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-            background: '#fff',
-            border: '1px solid #e5e7eb',
-            overflow: 'hidden',
-            padding: '16px'
-          }}>
-            <div style={{
-              textAlign: 'center',
-              marginBottom: '12px',
-              fontSize: '16px',
-              fontWeight: '600',
-              color: '#374151'
-            }}>
-              主机型号对比选择
-            </div>
-            
-            <div style={{ position: 'relative', display: 'inline-block' }}>
-              <img
-                ref={imageRef}
-                src="/static/machine-model-compare.svg"
-                alt="主机型号对比"
-                style={{ 
-                  width: '100%', 
-                  maxWidth: '600px',
-                  display: 'block', 
-                  borderRadius: '8px',
-                  cursor: 'pointer'
-                }}
-                onError={(e) => {
-                  // 如果图片加载失败，显示默认的对比图
-                  const target = e.target as HTMLImageElement;
-                  target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDYwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI2MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjMwMCIgeT0iMTUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiM5N0EzQjMiPuaWsOWKoOiuvuWkhOeQhuS4juWbvueJh+WcqOaTjeS9nO+8jOivt+eojeWQjuS4jeWQjO+8jOaJgOacieWbvueJh+WcqOaTjeS9nDwvdGV4dD4KPC9zdmc+';
-                }}
-              />
-              
-              {/* 动态生成点击区域 */}
-              {filteredMachines.slice(0, 3).map((machine, index) => {
-                const partNumber = machine.part_number || machine.model || getMachineName(machine);
-                const isSelected = selectedMachine === machine.id.toString();
-                
-                return (
-                  <div
-                    key={`model-area-${machine.id}`}
-                    style={{
-                      position: 'absolute',
-                      left: `${20 + index * 180}px`,
-                      top: '20px',
-                      width: '160px',
-                      height: '200px',
-                      cursor: 'pointer',
-                      border: isSelected ? '3px solid #3b82f6' : '2px solid transparent',
-                      borderRadius: '8px',
-                      boxShadow: isSelected ? '0 0 0 4px #dbeafe' : 'none',
-                      transition: 'all 0.2s ease',
-                      zIndex: 2,
-                      backgroundColor: isSelected ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
-                    }}
-                    title={`点击选择 ${getMachineName(machine)}`}
-                    onClick={() => handleImageModelSelection(partNumber)}
-                    onMouseOver={(e) => {
-                      if (!isSelected) {
-                        (e.currentTarget as HTMLDivElement).style.borderColor = '#60a5fa';
-                        (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(96, 165, 250, 0.1)';
-                      }
-                    }}
-                    onMouseOut={(e) => {
-                      if (!isSelected) {
-                        (e.currentTarget as HTMLDivElement).style.borderColor = 'transparent';
-                        (e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent';
-                      }
-                    }}
-                  >
-                    {/* 型号名称显示 */}
-                    <div style={{
-                      position: 'absolute',
-                      bottom: '8px',
-                      left: '0',
-                      width: '100%',
-                      textAlign: 'center',
-                      color: isSelected ? '#2563eb' : '#374151',
-                      fontWeight: '700',
-                      fontSize: '14px',
-                      textShadow: '0 1px 4px #fff',
-                      pointerEvents: 'none',
-                      userSelect: 'none',
-                      padding: '4px',
-                      backgroundColor: 'rgba(255,255,255,0.9)',
-                      borderRadius: '4px',
-                      margin: '0 4px'
-                    }}>
-                      {partNumber}
-                    </div>
-                    
-                    {/* 选中状态指示器 */}
-                    {isSelected && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '8px',
-                        right: '8px',
-                        width: '20px',
-                        height: '20px',
-                        backgroundColor: '#3b82f6',
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'white',
-                        fontSize: '12px',
-                        fontWeight: 'bold'
-                      }}>
-                        ✓
+          <div className="ms-compare-disclosure ms-compare-disclosure--figma-frame">
+            <button
+              type="button"
+              className="ms-compare-disclosure__header"
+              aria-expanded={compareSectionOpen}
+              onClick={() => setCompareSectionOpen((o) => !o)}
+            >
+              <span className="inline-flex items-center gap-2">
+                <PictureOutlined className="text-blue-600" aria-hidden />
+                {t('figma.modelParamComparison')}
+              </span>
+              <span className="ms-compare-disclosure__chev" aria-hidden>
+                {compareSectionOpen ? '▾' : '▸'}
+              </span>
+            </button>
+            {compareSectionOpen && (
+              <div className="ms-compare-disclosure__panel">
+                <div className="ms-figma-compare-inner">
+                  <div className="ms-compare-canvas">
+                    <div className="machine-comparison-container ms-compare-canvas-table-shell">
+                      <div
+                        className={classNames('machine-comparison-image-container', {
+                          'ms-compare-visual--data-table': filteredMachines.length > 0,
+                        })}
+                      >
+                        {filteredMachines.length > 0 ? (
+                          <MachineCompareFigmaTable
+                            machines={filteredMachines}
+                            locale={currentLanguage === 'zh' ? 'zh' : 'en'}
+                            unitSystem={unitSystem}
+                          />
+                        ) : (
+                          <img
+                            src={compareDiagramSrc}
+                            alt="主机型号对比"
+                            className="machine-comparison-image"
+                            onError={(e) => {
+                              const el = e.target as HTMLImageElement;
+                              const defaultUrl = new URL(DEFAULT_COMPARE_DIAGRAM, window.location.origin).href;
+                              if (!el.dataset.compareImgFallback) {
+                                el.dataset.compareImgFallback = '1';
+                                if (el.src !== defaultUrl && !el.src.endsWith(DEFAULT_COMPARE_DIAGRAM)) {
+                                  el.src = defaultUrl;
+                                  return;
+                                }
+                              }
+                              el.src = COMPARE_DIAGRAM_ERROR_PLACEHOLDER;
+                            }}
+                          />
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
-                );
-              })}
-              
-              {/* 交互提示 */}
-              <div style={{
-                position: 'absolute',
-                right: '12px',
-                top: '12px',
-                background: 'rgba(255,255,255,0.9)',
-                color: '#3b82f6',
-                borderRadius: '6px',
-                padding: '4px 8px',
-                fontSize: '12px',
-                fontWeight: '500',
-                zIndex: 3,
-                border: '1px solid #dbeafe'
-              }}>
-                💡 点击图片区域选择主机型号
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
-        
-        {/* Filter Section */}
-        <div className="bg-white rounded-lg shadow-md p-4 mb-6 text-gray-900 border border-gray-200 transition-colors duration-300">
-          <h1 className="text-xl font-bold mb-4 text-gray-800">
-            {selectedMachine ? '配件选择' : '主机选择'}
+
+        <div className="ms-filter-card">
+          <h1 className="ms-filter-card__title">
+            {selectedMachine ? t('pageTitles.accessorySelection') : t('figma.machineSelection')}
           </h1>
-          
-          <div className="flex flex-wrap gap-4">
-            {/* Voltage Filter */}
-            <div className="flex flex-col">
-              <label className="mb-1 text-sm font-medium text-label">
-                {t('filters.voltage')}
+
+          <div className="ms-filter-card__row">
+            <div className="ms-figma-filter-field flex flex-col min-w-[140px]">
+              <label className="ms-figma-filter-field__label">
+                {t('filters.productType')}
               </label>
-              <Select
-                value={selectedVoltage}
-                onChange={handleVoltageChange}
-                style={{ width: 120 }}
-                className="bg-input text-content border-border hover:border-primary"
-                options={[
-                  { value: 'ALL', label: t('filters.allVoltages') || '全部电压' },
-                  { value: '110V', label: '110V' },
-                  { value: '220V', label: '220V' }
-                ]}
-              />
+              <select
+                value={filterProductType}
+                onChange={(e) => {
+                  setFilterProductType(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="ms-figma-native-select"
+              >
+                {productTypeOptions.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
             </div>
-            
-            {/* Type Filter */}
-            <div className="flex flex-col">
-              <label className="mb-1 text-sm font-medium text-gray-600">
+
+            <div className="ms-figma-filter-field flex flex-col min-w-[140px]">
+              <label className="ms-figma-filter-field__label">
                 {t('filters.model')}
               </label>
-              <Select
+              <select
                 value={filterType}
-                onChange={(value: string) => setFilterType(value)}
-                style={{ width: 180 }}
-                className="bg-white text-gray-900 border-gray-300 hover:border-blue-500"
-                options={modelOptions}
-              />
+                onChange={(e) => {
+                  setFilterType(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="ms-figma-native-select"
+              >
+                {modelOptions.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="ms-figma-filter-field flex flex-col min-w-[120px]">
+              <label className="ms-figma-filter-field__label">
+                {t('filters.voltage')}
+              </label>
+              <select
+                value={selectedVoltage}
+                onChange={(e) => handleVoltageChange(e.target.value)}
+                className="ms-figma-native-select ms-figma-native-select--narrow"
+              >
+                <option value="ALL">{t('filters.allVoltages') || '全部电压'}</option>
+                <option value="110V">110V</option>
+                <option value="220V">220V</option>
+              </select>
             </div>
           </div>
         </div>
@@ -3843,16 +3653,17 @@ const ProductLine1Page: React.FC = () => {
               </h2>
               <span id="level1-context-message" className="text-sm text-gray-500"></span>
             </div>
-            <Button 
-              icon={<DeleteOutlined />} 
+            <button
+              type="button"
+              className="ms-figma-accessory-close"
               onClick={() => {
                 const accessoryDiv = document.getElementById('accessory-level-1');
                 if (accessoryDiv) accessoryDiv.style.display = 'none';
               }}
-              className="bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200"
             >
+              <DeleteOutlined className="mr-1" aria-hidden />
               {t('actions.close')}
-            </Button>
+            </button>
           </div>
           
           <div className="accessory-content">
@@ -3919,16 +3730,17 @@ const ProductLine1Page: React.FC = () => {
               </h2>
               <span id="level2-context-message" className="text-sm text-gray-500"></span>
             </div>
-            <Button 
-              icon={<DeleteOutlined />} 
+            <button
+              type="button"
+              className="ms-figma-accessory-close"
               onClick={() => {
                 const accessoryDiv = document.getElementById('accessory-level-2');
                 if (accessoryDiv) accessoryDiv.style.display = 'none';
               }}
-              className="bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200"
             >
+              <DeleteOutlined className="mr-1" aria-hidden />
               {t('actions.close')}
-            </Button>
+            </button>
           </div>
           
           <div className="accessory-content">
@@ -3971,16 +3783,17 @@ const ProductLine1Page: React.FC = () => {
               </h2>
               <span id="level3-context-message" className="text-sm text-gray-500"></span>
             </div>
-            <Button 
-              icon={<DeleteOutlined />} 
+            <button
+              type="button"
+              className="ms-figma-accessory-close"
               onClick={() => {
                 const accessoryDiv = document.getElementById('accessory-level-3');
                 if (accessoryDiv) accessoryDiv.style.display = 'none';
               }}
-              className="bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200"
             >
+              <DeleteOutlined className="mr-1" aria-hidden />
               {t('actions.close')}
-            </Button>
+            </button>
           </div>
           
           <div className="accessory-content">
@@ -4023,16 +3836,17 @@ const ProductLine1Page: React.FC = () => {
               </h2>
               <span id="level4-context-message" className="text-sm text-gray-500"></span>
             </div>
-            <Button 
-              icon={<DeleteOutlined />} 
+            <button
+              type="button"
+              className="ms-figma-accessory-close"
               onClick={() => {
                 const accessoryDiv = document.getElementById('accessory-level-4');
                 if (accessoryDiv) accessoryDiv.style.display = 'none';
               }}
-              className="bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200"
             >
+              <DeleteOutlined className="mr-1" aria-hidden />
               {t('actions.close')}
-            </Button>
+            </button>
           </div>
           
           <div className="accessory-content">
@@ -4075,16 +3889,17 @@ const ProductLine1Page: React.FC = () => {
               </h2>
               <span id="level5-context-message" className="text-sm text-gray-500"></span>
             </div>
-            <Button 
-              icon={<DeleteOutlined />} 
+            <button
+              type="button"
+              className="ms-figma-accessory-close"
               onClick={() => {
                 const accessoryDiv = document.getElementById('accessory-level-5');
                 if (accessoryDiv) accessoryDiv.style.display = 'none';
               }}
-              className="bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200"
             >
+              <DeleteOutlined className="mr-1" aria-hidden />
               {t('actions.close')}
-            </Button>
+            </button>
           </div>
           
           <div className="accessory-content">
@@ -4120,7 +3935,8 @@ const ProductLine1Page: React.FC = () => {
         {/* 购物车通知浮层 */}
         {/* {showNotification && ( ... )} */}
 
-        {/* 3. 页面底部渲染<CartAnimation /> */}
+        </div>
+
         <CartAnimation
           isActive={cartAnimation.isActive}
           startElement={cartAnimation.startElement}

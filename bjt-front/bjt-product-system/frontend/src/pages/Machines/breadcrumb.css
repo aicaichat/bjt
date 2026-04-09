@@ -65,8 +65,8 @@
 }
 
 .breadcrumb-sticky-container .bg-blue-50 {
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-  border: 1px solid #bfdbfe;
+  background: linear-gradient(135deg, var(--ff-tint-blue) 0%, color-mix(in srgb, var(--ff-accent) 16%, var(--ff-tint-blue)) 100%);
+  border: 1px solid color-mix(in srgb, var(--ff-accent) 28%, white);
 }
 
 .breadcrumb-sticky-container .bg-green-50 {
@@ -75,9 +75,9 @@
 }
 
 .breadcrumb-sticky-container .bg-blue-50:hover {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--ff-accent) 16%, var(--ff-tint-blue)) 0%, color-mix(in srgb, var(--ff-accent) 28%, white) 100%);
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 2px 4px rgba(var(--ff-accent-rgb), 0.2);
 }
 
 /* 响应式面包屑 */
@@ -122,7 +122,7 @@
   bottom: 0;
   left: 0;
   height: 2px;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #3b82f6);
+  background: linear-gradient(90deg, var(--ff-accent), #8b5cf6, var(--ff-accent));
   background-size: 200% 100%;
   animation: scrollIndicator 2s ease-in-out infinite;
   border-radius: 1px;

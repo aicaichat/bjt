@@ -1,0 +1,137 @@
+/* Machine Comparison - stable baseline for Figma alignment */
+
+.machines-page {
+  --mc-radius-lg: 16px;
+  --mc-radius-md: 12px;
+  --mc-radius-sm: 8px;
+  --mc-border-color: #e5e7eb;
+  --mc-shadow-soft: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --mc-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* 尺寸默认仅非 Figma 产品线页；`.ms-product-line-layout` 在 machine-selection-figma 中设 1440×606 */
+.machines-page:not(.ms-product-line-layout) {
+  --mc-container-max-width: 1200px;
+  --mc-image-max-width: 1200px;
+  --mc-image-max-height: 720px;
+}
+
+/* comparison card */
+.machines-page .machine-comparison-container {
+  width: 100%;
+  max-width: var(--mc-container-max-width);
+  margin: 0 auto 24px;
+  position: relative;
+  border-radius: var(--mc-radius-lg);
+  border: 1px solid var(--mc-border-color);
+  background: linear-gradient(135deg, var(--ff-surface, #ffffff) 0%, var(--ff-page-bg, #f5f7fa) 100%);
+  box-shadow: var(--mc-shadow-soft);
+  padding: 20px;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.machines-page .machine-comparison-container:hover {
+  border-color: #d1d5db;
+  box-shadow: var(--mc-shadow-hover);
+}
+
+/* title — 使用 class，避免与容器内其它首子元素冲突 */
+.machines-page .machine-comparison-heading {
+  text-align: center;
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: var(--ff-text, #1f2937);
+}
+
+/* image area */
+.machines-page .machine-comparison-image-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.machines-page .machine-comparison-image {
+  width: 100%;
+  max-width: var(--mc-image-max-width);
+  height: auto;
+  max-height: var(--mc-image-max-height);
+  object-fit: contain;
+  object-position: center top;
+  display: block;
+  border-radius: var(--mc-radius-md);
+  border: 2px solid var(--mc-border-color);
+  background: var(--ff-surface-muted, #f9fafb);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 8px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.machines-page .machine-comparison-image:hover {
+  border-color: var(--ff-accent);
+  box-shadow: 0 4px 12px rgba(var(--ff-accent-rgb), 0.15);
+  transform: translateY(-1px);
+}
+
+/* 右上角提示 — 独立 class（Figma 对齐 1B） */
+.machines-page .machine-comparison-hint {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  z-index: 3;
+  border-radius: var(--mc-radius-sm);
+  border: 1px solid color-mix(in srgb, var(--ff-accent) 16%, var(--ff-tint-blue));
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--ff-accent);
+  box-shadow: 0 2px 8px rgba(var(--ff-accent-rgb), 0.15);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+  padding: 6px 12px;
+}
+
+@media (max-width: 1024px) {
+  .machines-page .machine-comparison-container {
+    max-width: 95%;
+    padding: 16px;
+  }
+
+  .machines-page .machine-comparison-image {
+    max-width: 700px;
+    max-height: 420px;
+  }
+}
+
+@media (max-width: 768px) {
+  .machines-page .machine-comparison-container {
+    margin-bottom: 16px;
+    padding: 12px;
+  }
+
+  .machines-page .machine-comparison-image {
+    padding: 6px;
+    max-width: 100%;
+    max-height: 360px;
+  }
+
+  .machines-page .machine-comparison-heading {
+    font-size: 16px;
+    line-height: 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .machines-page .machine-comparison-image {
+    max-height: 280px;
+    border-radius: var(--mc-radius-sm);
+  }
+}

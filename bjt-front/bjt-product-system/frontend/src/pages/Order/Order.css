@@ -803,6 +803,6 @@ body {
 .item-total {
     font-size: 1.1rem;
     font-weight: 600;
-    color: #1d4ed8;
+    color: var(--ff-accent-mid);
     margin-top: 0.5rem;
 } 

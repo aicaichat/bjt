@@ -9,7 +9,7 @@
   --primary-color: #0f172a;
   --primary-light: #1e293b;
   --primary-dark: #020617;
-  --primary-bg: #f1f5f9;
+  --primary-bg: #f5f7fa;
   
   /* 辅助色系 - 科技蓝 */
   --secondary-color: #0284c7;
@@ -25,7 +25,7 @@
   --success-color: #16a34a;
   --error-color: #dc2626;
   --warning-color: #ea580c;
-  --info-color: #2563eb;
+  --info-color: var(--ff-btn-primary-hover);
   
   /* 中性色调 - 纯净 */
   --gray-50: #f9fafb;
@@ -56,7 +56,7 @@
   /* 边框 - 锐利 */
   --border-color: #e5e7eb;
   --border-light: #f3f4f6;
-  --border-focus: #2563eb;
+  --border-focus: var(--ff-btn-primary-hover);
   
   /* 阴影 - 精确 */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);

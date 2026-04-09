@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './OrderList.css';
+import '../../styles/order-details-improvements.css';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
@@ -25,7 +26,7 @@ import {
 const OrderListPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useTranslation(['orderList', 'common']);
+  const { t, i18n } = useTranslation(['orderList', 'common']);
   const { user } = useAuth();
   const notification = useNotification();
   
@@ -700,8 +701,8 @@ const OrderListPage: React.FC = () => {
   
   // 渲染订单卡片
   const renderOrderCard = (order: UnifiedOrder) => {
-    // 默认展开所有订单
-    const isExpanded = true;
+    // 使用expandedOrders状态，默认为true
+    const isExpanded = expandedOrders[order.id] ?? true;
     
     return (
       <div className={`order-card ${isExpanded ? 'expanded' : ''}`} key={order.id}>
@@ -724,80 +725,84 @@ const OrderListPage: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="order-details">
-          <div className="detail-row">
-            <div>
-              <span className="detail-label">{t('orderCard.totalAmount')}</span>
-              <span className="detail-value">{formatPrice(order.total)}</span>
-            </div>
-            <div>
-              <span className="detail-label">{t('orderCard.paymentMethod')}</span>
-              <span className="detail-value">{order.paymentMethod}</span>
-            </div>
-          </div>
-          <div className="detail-row">
-            <div>
-              <span className="detail-label">{t('orderCard.shippingInfo')}</span>
-              <span className="detail-value">
-                {typeof order.shippingInfo === 'object' 
-                  ? formatShippingInfo(order.shippingInfo)
-                  : order.shippingInfo}
-              </span>
-            </div>
-          </div>
-        </div>
-        <div className="order-actions">
-          {/* Export PO按钮移到操作区域 */}
-          <button 
-            className="action-button secondary-button" 
-            onClick={() => handleViewOrderDetail(order.id)}
-          >
-            {t('actions.exportPO', 'Export PO')}
-          </button>
-        </div>
-        {/* 订单商品列表 - 默认展开显示 */}
-        <div className="order-items">
-          {order.items.length > 0 ? (
-            <>
-              <div className="order-items-header">
-                <h4>{t('orderCard.orderItems', '订购商品')} ({order.items.length}件)</h4>
+        
+        {/* 只有展开时才显示订单详情 */}
+        {isExpanded && (
+          <>
+            <div className="order-details">
+              <div className="detail-row">
+                <div>
+                  <span className="detail-label">{t('orderCard.totalAmount')}</span>
+                  <span className="detail-value">{formatPrice(order.total)}</span>
+                </div>
+                <div>
+                  <span className="detail-label">{t('orderCard.paymentMethod')}</span>
+                  <span className="detail-value">{order.paymentMethod}</span>
+                </div>
               </div>
-              {order.items.map(item => (
-                <div key={item.id} className="enhanced-item-wrapper">
-                  <div className="product-card">
-                    <div className="product-card-content">
-                      <div className="product-card-title">
-                        {item.name || item.item_name || item.part_number || '未知商品'}
-                      </div>
-                      <div className="product-card-subtitle">
-                        型号: {item.part_number || item.code || item.sku || 'N/A'}
-                      </div>
-                      {item.specs && typeof item.specs === 'object' && Object.keys(item.specs).length > 0 && (
-                        <div className="product-card-specs">
-                          {Object.entries(item.specs).map(([key, value]) => (
-                            <span key={key}>{key}: {value} </span>
-                          ))}
+              <div className="detail-row">
+                <div>
+                  <span className="detail-label">{t('orderCard.shippingInfo')}</span>
+                  <span className="detail-value">
+                    {typeof order.shippingInfo === 'object' 
+                      ? formatShippingInfo(order.shippingInfo)
+                      : order.shippingInfo}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="order-actions">
+              {/* Export PO按钮移到操作区域 */}
+              <button 
+                className="action-button secondary-button" 
+                onClick={() => handleViewOrderDetail(order.id)}
+              >
+                {t('actions.exportPO', 'Export PO')}
+              </button>
+            </div>
+          </>
+        )}
+        
+        {/* 订单商品列表 - 只有展开时才显示 */}
+        {isExpanded && (
+          <div className="order-items">
+            {Array.isArray(order.items) && order.items.length > 0 ? (
+              <>
+                <div className="order-items-header">
+                  <h4>{t('orderCard.orderItems', '订购商品')} ({order.items.length}件)</h4>
+                </div>
+                {order.items.map((item: any, itemIndex: number) => {
+                  const currentLanguage = i18n.language.startsWith('zh') ? 'zh' : 'en';
+                  const productName = item.name || item.item_name || `Product ${itemIndex + 1}`;
+                  const partNumber = item.part_number || item.item_id || 'N/A';
+                  const price = item.price || item.unit_price || 0;
+                  
+                  return (
+                    <div key={item.id || itemIndex} className="enhanced-item-wrapper">
+                      <div className="product-card">
+                        <div className="product-card-content">
+                          <div className="product-card-title">{productName}</div>
+                          <div className="product-card-subtitle">型号: {partNumber}</div>
+                          <div className="product-card-specs">
+                            {item.target_type && <span>类型: {item.target_type} </span>}
+                            {item.item_type && <span>产品类型: {item.item_type} </span>}
+                          </div>
+                          <div className="product-card-price">
+                            数量: {item.quantity} | 单价: {formatPrice(price)} | 小计: {formatPrice(price * item.quantity)}
+                          </div>
                         </div>
-                      )}
-                      {item.spec && (
-                        <div className="product-card-specs">
-                          {item.spec}
-                        </div>
-                      )}
-                      <div className="product-card-price">
-                        数量: {item.quantity} | 单价: {formatPrice(item.price || item.unit_price || 0)} | 小计: {formatPrice((item.price || item.unit_price || 0) * item.quantity)}
                       </div>
                     </div>
-                  </div>
-                </div>
-              ))}
-            </>
-          ) : (
-            <div className="no-items-message">
-              {t('orderCard.noItems', '暂无商品信息')}
-            </div>
-          )}
-        </div>
+                  );
+                })}
+              </>
+            ) : (
+              <div className="no-items">
+                <span>{t('orderCard.noItems', '暂无商品信息')}</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     );
   };

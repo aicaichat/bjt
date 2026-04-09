@@ -1,0 +1,360 @@
+/* Sidebar Hierarchy Fix - 确保菜单层级正确 */
+
+/* 侧边栏基础样式 */
+.sidebar {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 280px !important;
+  height: 100vh !important;
+  background-color: #ffffff !important;
+  border-right: 1px solid #e5e7eb !important;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04) !important;
+  z-index: 1001 !important;
+  overflow-y: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* 侧边栏头部 */
+.sidebar-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px 16px !important;
+  border-bottom: 1px solid #f3f4f6 !important;
+  background-color: #fafbfc !important;
+  min-height: 80px !important;
+  flex-shrink: 0 !important;
+}
+
+.sidebar-logo img {
+  height: 36px !important;
+  width: auto !important;
+  max-width: 200px !important;
+  object-fit: contain !important;
+}
+
+/* 菜单容器 */
+.sidebar-menu {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  padding: 16px 0 !important;
+  background-color: #ffffff !important;
+}
+
+.sidebar-menu .ant-menu {
+  background-color: transparent !important;
+  border: none !important;
+  font-size: 15px !important;
+  line-height: 1.4 !important;
+}
+
+/* ========== 一级菜单项样式 ========== */
+.sidebar-menu > .ant-menu > .ant-menu-item,
+.sidebar-menu > .ant-menu > .ant-menu-submenu {
+  margin: 4px 12px !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+}
+
+/* 一级菜单项（无子菜单） */
+.sidebar-menu > .ant-menu > .ant-menu-item {
+  padding: 0 !important;
+  height: auto !important;
+  line-height: normal !important;
+  background-color: transparent !important;
+  border: none !important;
+}
+
+.sidebar-menu > .ant-menu > .ant-menu-item a {
+  display: flex !important;
+  align-items: center !important;
+  padding: 14px 16px !important;
+  color: #374151 !important;
+  text-decoration: none !important;
+  font-weight: 500 !important;
+  font-size: 15px !important;
+  transition: all 0.2s ease !important;
+  border-radius: 8px !important;
+  background-color: transparent !important;
+}
+
+.sidebar-menu > .ant-menu > .ant-menu-item:hover {
+  background-color: #f8fafc !important;
+}
+
+.sidebar-menu > .ant-menu > .ant-menu-item:hover a {
+  color: #1f2937 !important;
+  background-color: transparent !important;
+}
+
+.sidebar-menu > .ant-menu > .ant-menu-item-selected {
+  background-color: var(--ff-tint-blue) !important;
+}
+
+.sidebar-menu > .ant-menu > .ant-menu-item-selected a {
+  color: var(--ff-accent-mid) !important;
+  font-weight: 600 !important;
+}
+
+/* ========== 一级菜单（有子菜单）样式 ========== */
+.sidebar-menu > .ant-menu > .ant-menu-submenu > .ant-menu-submenu-title {
+  padding: 14px 16px !important;
+  margin: 0 !important;
+  color: #374151 !important;
+  font-weight: 600 !important;
+  font-size: 15px !important;
+  background-color: transparent !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+  height: auto !important;
+  line-height: 1.4 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.sidebar-menu > .ant-menu > .ant-menu-submenu:hover > .ant-menu-submenu-title {
+  background-color: #f8fafc !important;
+  color: #1f2937 !important;
+}
+
+.sidebar-menu > .ant-menu > .ant-menu-submenu-open > .ant-menu-submenu-title {
+  background-color: var(--ff-tint-blue) !important;
+  color: var(--ff-accent-mid) !important;
+  font-weight: 600 !important;
+}
+
+/* 展开箭头 */
+.sidebar-menu > .ant-menu > .ant-menu-submenu .ant-menu-submenu-arrow {
+  color: #9ca3af !important;
+  font-size: 12px !important;
+  transition: all 0.2s ease !important;
+  right: 16px !important;
+}
+
+.sidebar-menu > .ant-menu > .ant-menu-submenu-open .ant-menu-submenu-arrow {
+  color: var(--ff-accent-mid) !important;
+  transform: rotate(180deg) !important;
+}
+
+/* ========== 子菜单容器样式 ========== */
+.sidebar-menu > .ant-menu > .ant-menu-submenu .ant-menu-sub {
+  background-color: #f8fafc !important;
+  margin: 8px 12px 12px 12px !important;
+  border-radius: 8px !important;
+  padding: 12px 0 !important;
+  border-left: 3px solid color-mix(in srgb, var(--ff-accent) 16%, var(--ff-tint-blue)) !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* ========== 子菜单分组标题样式 ========== */
+.sidebar-menu .ant-menu-item-group-title {
+  padding: 12px 20px 8px 20px !important;
+  color: #6b7280 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  margin: 0 !important;
+  background-color: transparent !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  margin-bottom: 8px !important;
+  line-height: 1.2 !important;
+}
+
+/* ========== 子菜单项样式 ========== */
+.sidebar-menu .ant-menu-sub .ant-menu-item {
+  margin: 2px 8px !important;
+  padding: 0 !important;
+  border-radius: 6px !important;
+  background-color: transparent !important;
+  height: auto !important;
+  line-height: normal !important;
+}
+
+.sidebar-menu .ant-menu-sub .ant-menu-item a {
+  display: flex !important;
+  align-items: center !important;
+  padding: 10px 16px 10px 24px !important;
+  font-size: 13px !important;
+  color: #6b7280 !important;
+  font-weight: 400 !important;
+  border-radius: 6px !important;
+  transition: all 0.2s ease !important;
+  text-decoration: none !important;
+  position: relative !important;
+}
+
+.sidebar-menu .ant-menu-sub .ant-menu-item a::before {
+  content: '•' !important;
+  position: absolute !important;
+  left: 12px !important;
+  color: #d1d5db !important;
+  font-size: 14px !important;
+  line-height: 1 !important;
+}
+
+.sidebar-menu .ant-menu-sub .ant-menu-item:hover {
+  background-color: #ffffff !important;
+}
+
+.sidebar-menu .ant-menu-sub .ant-menu-item:hover a {
+  color: #374151 !important;
+  background-color: transparent !important;
+  transform: translateX(2px) !important;
+}
+
+.sidebar-menu .ant-menu-sub .ant-menu-item:hover a::before {
+  color: var(--ff-accent) !important;
+}
+
+.sidebar-menu .ant-menu-sub .ant-menu-item-selected {
+  background-color: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+.sidebar-menu .ant-menu-sub .ant-menu-item-selected a {
+  color: #1f2937 !important;
+  font-weight: 500 !important;
+}
+
+.sidebar-menu .ant-menu-sub .ant-menu-item-selected a::before {
+  color: var(--ff-accent) !important;
+  content: '▶' !important;
+  font-size: 10px !important;
+}
+
+/* ========== 菜单图标样式 ========== */
+.sidebar-menu > .ant-menu > .ant-menu-item .anticon,
+.sidebar-menu > .ant-menu > .ant-menu-submenu > .ant-menu-submenu-title .anticon {
+  font-size: 18px !important;
+  margin-right: 12px !important;
+  color: inherit !important;
+  transition: all 0.2s ease !important;
+  min-width: 18px !important;
+}
+
+/* ========== 外部链接样式 ========== */
+.sidebar-menu .ant-menu-sub .ant-menu-item a[target="_blank"] span {
+  opacity: 0.6 !important;
+  margin-left: 4px !important;
+  font-size: 10px !important;
+  transition: opacity 0.2s ease !important;
+}
+
+.sidebar-menu .ant-menu-sub .ant-menu-item:hover a[target="_blank"] span {
+  opacity: 1 !important;
+}
+
+/* ========== 移除默认样式 ========== */
+.sidebar-menu .ant-menu-item::after,
+.sidebar-menu .ant-menu-submenu-title::after {
+  display: none !important;
+  border: none !important;
+}
+
+.sidebar-menu .ant-menu-item-group {
+  margin: 0 !important;
+}
+
+.sidebar-menu .ant-menu-item-group-list {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* ========== 折叠状态 ========== */
+.sidebar.collapsed {
+  width: 80px !important;
+}
+
+.sidebar.collapsed .sidebar-logo img {
+  max-width: 32px !important;
+  height: 32px !important;
+}
+
+.sidebar.collapsed .sidebar-menu > .ant-menu > .ant-menu-item a,
+.sidebar.collapsed .sidebar-menu > .ant-menu > .ant-menu-submenu > .ant-menu-submenu-title {
+  padding-left: 28px !important;
+  padding-right: 28px !important;
+  justify-content: center !important;
+}
+
+.sidebar.collapsed .sidebar-menu > .ant-menu > .ant-menu-item .anticon,
+.sidebar.collapsed .sidebar-menu > .ant-menu > .ant-menu-submenu .anticon {
+  margin-right: 0 !important;
+  margin-left: 0 !important;
+}
+
+.sidebar.collapsed .sidebar-menu .ant-menu-sub {
+  display: none !important;
+}
+
+/* ========== 滚动条样式 ========== */
+.sidebar-menu::-webkit-scrollbar {
+  width: 6px !important;
+}
+
+.sidebar-menu::-webkit-scrollbar-track {
+  background: #f8fafc !important;
+  border-radius: 3px !important;
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb {
+  background: #d1d5db !important;
+  border-radius: 3px !important;
+  transition: background 0.2s ease !important;
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af !important;
+}
+
+/* ========== 响应式设计 ========== */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%) !important;
+    top: 0 !important;
+    width: 280px !important;
+  }
+  
+  .sidebar.mobile-open {
+    transform: translateX(0) !important;
+  }
+  
+  .sidebar-menu > .ant-menu > .ant-menu-item a,
+  .sidebar-menu > .ant-menu > .ant-menu-submenu > .ant-menu-submenu-title {
+    padding: 16px 16px !important;
+    font-size: 16px !important;
+  }
+  
+  .sidebar-menu .ant-menu-sub .ant-menu-item a {
+    padding: 12px 16px 12px 28px !important;
+    font-size: 14px !important;
+  }
+  
+  .sidebar-menu .ant-menu-item-group-title {
+    padding: 14px 20px 10px 20px !important;
+    font-size: 13px !important;
+  }
+}
+
+/* ========== 确保文本不换行 ========== */
+.sidebar-menu .ant-menu-item a,
+.sidebar-menu .ant-menu-submenu-title,
+.sidebar-menu .ant-menu-item-group-title {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* ========== 动画效果 ========== */
+.sidebar-menu .ant-menu-sub {
+  transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1) !important;
+  transform-origin: top !important;
+}
+
+.sidebar-menu .ant-menu-item,
+.sidebar-menu .ant-menu-submenu-title {
+  transition: all 0.2s ease !important;
+} 

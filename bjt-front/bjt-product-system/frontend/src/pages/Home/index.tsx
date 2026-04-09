@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import "./Home.override.css";
 import './Home.css';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -149,10 +150,11 @@ const Home: React.FC = () => {
   }
 
   return (
-    <div className="home-page">
-      <main className="container">
-        {/* 产品线展示 */}
-        {productLines && productLines.map((line: any, lineIndex: number) => (
+    <div className="home-page home-page--figma">
+      {/* 主列 class 勿用全局 .container，避免 Home.override 旧 1200px 规则干扰 */}
+      <main className="home-main home-frame-529">
+        {/* 产品线展示 — 标题仅在顶栏色带展示，与 Figma Home 一致 */}
+        {productLines && productLines.map((line: any) => (
           <div 
             key={line.id} 
             className="product-section"
@@ -163,9 +165,7 @@ const Home: React.FC = () => {
             </div>
             <div className="section-content">
               <div className="section-text">
-                <h3 className="introduction">{getTitle(line)}</h3>
-                <div className="divider"></div>
-                <p>{getDescription(line)}</p>
+                <p className="home-line-description">{getDescription(line)}</p>
                 
                 {/* 革命性的产品链接设计 */}
                 <div className="product-links">

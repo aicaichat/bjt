@@ -189,9 +189,9 @@ const MockServiceStatus: React.FC<MockServiceStatusProps> = ({
             <button
               onClick={() => handleDataSourceSwitch('sql-mock')}
               style={{
-                background: currentDataSource === 'sql-mock' ? '#3b82f6' : 'rgba(59, 130, 246, 0.3)',
+                background: currentDataSource === 'sql-mock' ? '#00338d' : 'rgba(0, 51, 141, 0.3)',
                 color: 'white',
-                border: currentDataSource === 'sql-mock' ? '1px solid #3b82f6' : '1px solid rgba(59, 130, 246, 0.5)',
+                border: currentDataSource === 'sql-mock' ? '1px solid #00338d' : '1px solid rgba(0, 51, 141, 0.5)',
                 padding: '4px 8px',
                 borderRadius: '4px',
                 fontSize: '10px',

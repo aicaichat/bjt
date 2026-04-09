@@ -12,19 +12,19 @@
 }
 
 .product-model-card:hover {
-  border-color: #3b82f6;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  border-color: var(--ff-accent);
+  box-shadow: 0 4px 12px rgba(var(--ff-accent-rgb), 0.15);
   transform: translateY(-2px);
 }
 
 .product-model-card.selected {
-  border-color: #3b82f6;
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.25);
+  border-color: var(--ff-accent);
+  background: linear-gradient(135deg, var(--ff-tint-blue) 0%, color-mix(in srgb, var(--ff-accent) 16%, var(--ff-tint-blue)) 100%);
+  box-shadow: 0 4px 16px rgba(var(--ff-accent-rgb), 0.25);
 }
 
 .product-model-card.selected .model-name {
-  color: #1d4ed8;
+  color: var(--ff-accent-mid);
   font-weight: 600;
 }
 

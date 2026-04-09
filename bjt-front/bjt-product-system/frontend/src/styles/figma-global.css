@@ -1,0 +1,18 @@
+/**
+ * 在 figma-design-tokens.css（main.tsx 已加载）之后应用，
+ * 将 theme / 旧组件用法统一到 Figma 令牌，并放在 App 中所有「fix」样式之后。
+ */
+:root {
+  --primary-color: var(--ff-accent);
+  --primary-light: var(--ff-tint-blue);
+  --primary-dark: var(--ff-accent-mid);
+  --primary-bg: var(--ff-tint-blue);
+  --border-focus: var(--ff-accent);
+  --bg-color: var(--ff-page-bg);
+  --bg-card: var(--ff-surface);
+  --bg-elevated: var(--ff-surface);
+  --text-primary: var(--ff-text);
+  --text-secondary: var(--ff-text-muted);
+  --border-color: var(--ff-border);
+  --font-family: var(--ff-font);
+}

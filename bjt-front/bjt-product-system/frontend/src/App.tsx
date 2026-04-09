@@ -1,7 +1,11 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import './styles/global.css';
 import './styles/theme.css';
+import './styles/sidebar-functional-fix.css';
+import './styles/page-layout-fix.css';
+import './styles/products-submenu-fix.css';
+import './styles/header-layout-fix.css';
+import './styles/figma-global.css';
 
 // 导入 BJT Tech 主题
 import { ThemeProvider } from './contexts/ThemeContext';

@@ -1,5 +1,4 @@
 import React, { forwardRef } from 'react';
-import '../../styles/global.css';
 
 export interface SelectOption {
   value: string | number;

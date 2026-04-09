@@ -202,19 +202,19 @@
 }
 
 .toast-info {
-  border-left: 4px solid #3b82f6;
+  border-left: 4px solid var(--ff-accent);
 }
 
 .toast-info .toast-icon-wrapper {
-  color: #3b82f6;
+  color: var(--ff-accent);
 }
 
 .toast-info .toast-action {
-  color: #3b82f6;
+  color: var(--ff-accent);
 }
 
 .toast-info .toast-progress-bar {
-  background-color: #3b82f6;
+  background-color: var(--ff-accent);
 }
 
 /* 响应式设计 */

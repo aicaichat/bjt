@@ -1,54 +1,103 @@
-import { User } from '../api';
+// 扩展用户接口，添加密码字段用于mock认证
+interface MockUser {
+  id: string;
+  username: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'sales' | 'partner' | 'customer';
+  password: string;
+}
 
-// 用户模拟数据
-export const mockUsers: User[] = [
+// 用户模拟数据 - 对应SQL文件中的测试用户
+export const mockUsers: MockUser[] = [
+  // 管理员用户
   {
     id: 'usr-001',
     username: 'admin',
     name: '系统管理员',
-    email: 'admin@bjt-packaging.com',
-    role: 'admin'
+    email: 'admin@bjt.com',
+    role: 'admin',
+    password: 'password123'
   },
+  // 销售用户
   {
     id: 'usr-002',
-    username: 'user',
-    name: '普通用户',
-    email: 'user@bjt-packaging.com',
-    role: 'customer'
+    username: 'sales_user',
+    name: '销售代表',
+    email: 'sales@bjt.com',
+    role: 'sales',
+    password: 'password123'
   },
+  // 合作伙伴用户
   {
     id: 'usr-003',
-    username: 'partner',
+    username: 'partner_user',
     name: '合作伙伴',
-    email: 'partner@bjt-packaging.com',
-    role: 'partner'
+    email: 'partner@bjt.com',
+    role: 'partner',
+    password: 'password123'
   },
+  // 客户用户
   {
     id: 'usr-004',
-    username: 'sales',
-    name: '销售代表',
-    email: 'sales@bjt-packaging.com',
-    role: 'sales'
+    username: 'customer_user',
+    name: '客户用户',
+    email: 'customer@bjt.com',
+    role: 'customer',
+    password: 'password123'
   },
+  // 测试用户（英制单位）
   {
     id: 'usr-005',
-    username: 'eurouser',
-    name: 'European User',
-    email: 'eu-customer@bjt-packaging.com',
-    role: 'customer'
+    username: 'test_imperial',
+    name: '英制测试用户',
+    email: 'test.imperial@bjt.com',
+    role: 'customer',
+    password: 'password123'
   },
+  // 销售经理
   {
     id: 'usr-006',
-    username: 'ususer',
-    name: 'US Customer',
-    email: 'northamerica-customer@bjt-packaging.com',
-    role: 'customer'
+    username: 'sales_manager',
+    name: '销售经理',
+    email: 'sales.manager@bjt.com',
+    role: 'sales',
+    password: 'password123'
   },
+  // 技术支持
   {
     id: 'usr-007',
-    username: 'auuser',
-    name: 'Australian User',
-    email: 'au-customer@bjt-packaging.com',
-    role: 'customer'
+    username: 'tech_support',
+    name: '技术支持',
+    email: 'tech.support@bjt.com',
+    role: 'customer',
+    password: 'password123'
+  },
+  // 代理商
+  {
+    id: 'usr-008',
+    username: 'agent_user',
+    name: '代理商',
+    email: 'agent@bjt.com',
+    role: 'partner',
+    password: 'password123'
+  },
+  // 区域客户
+  {
+    id: 'usr-009',
+    username: 'regional_customer',
+    name: '区域客户',
+    email: 'regional.customer@bjt.com',
+    role: 'customer',
+    password: 'password123'
+  },
+  // 企业客户
+  {
+    id: 'usr-010',
+    username: 'enterprise_client',
+    name: '企业客户',
+    email: 'enterprise@bjt.com',
+    role: 'customer',
+    password: 'password123'
   }
 ]; 

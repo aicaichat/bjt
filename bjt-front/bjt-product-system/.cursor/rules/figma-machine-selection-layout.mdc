@@ -1,0 +1,61 @@
+---
+description: 机器选型页 Figma 布局 — 1920 视口、1617 主栏、1537 内容区与 flex 链对齐（禁止假居中/双 gutter）
+globs:
+  - frontend/src/pages/Machines/**/*
+  - frontend/src/styles/machine-selection-figma.css
+  - frontend/src/styles/figma-tokens-machine-selection.css
+  - frontend/src/styles/figma-design-tokens.css
+  - frontend/src/styles/figma-front-shell.css
+  - frontend/src/components/layout/MainLayout.tsx
+  - frontend/src/figma-tokens/machine-selection.json
+  - MACHINE_SELECTION_FIGMA_ALIGNMENT_PLAN.md
+alwaysApply: false
+---
+
+# 机器选型页 — Figma 布局对齐规则
+
+在修改「机器选型 / Product Line」（`ProductLine1Page`、`ProductLine2Page`、`machine-selection-figma.css`、`figma-front-shell.css`、`MainLayout`、相关 token）时，必须遵守下列约束，避免侧栏右侧大块空白、主内容「浮在中间」或与 Figma 宽度不一致。
+
+## 设计基数（与 token 一致，禁止随意改近似值）
+
+| 项 | 值 | 来源 |
+|----|-----|------|
+| 设计视口 | 1920px | `--ff-ms-design-viewport-width` |
+| 侧栏宽 | 303px | `--bjt-sidebar-width` / `--bjt-sidebar-effective-width` |
+| 侧栏右侧主列宽 | **1617px** | `1920 − 303`；`contentMaxWidthPx` / `--ms-frame-529-width` |
+| 主列内水平 gutter | 左右各 **40px** | `pageGutterPx` / `--ms-page-gutter` |
+| Frame 529 叠图 min-height | **1638px** | `frame529MinHeightPx` / `--ff-ms-frame-529-min-height` / `--ms-frame-529-min-height` |
+| 扣除 gutter 后排版宽 | **1537px** | 气垫 `listRowWidthPx`、`--ff-ms-air-row-width` |
+| 纸垫单卡最大宽 | **1491px** | `--ff-ms-card-width` |
+
+画板高度 **1599px** 仅作参考：页面必须可滚动，禁止对整页使用固定 `height: 1599px` 截断内容。
+
+## 色票（前台全局，与选型叠图一致）
+
+主色、主画布、焦点环等以 **`frontend/src/styles/figma-design-tokens.css`** 的 `:root` 为准（当前：**`--ff-accent` #00338D**、**`--ff-content-canvas-bg` #F5F7FA**）。顶栏、侧栏、Home、选型页共用这些变量；**勿**在单个页面再覆写 `--ff-accent` 造成分叉。叠图参考：`docs/screenshots/machine-selection-figma-reference-layout.png`。
+
+## DOM 与盒模型（必须）
+
+1. **布局链**：`.figma-front` → `main.figma-front-main`（`margin-left` = 侧栏有效宽）→ `.figma-front-main__inner`（`flex` 列 + `align-items: flex-start`）→ 包住路由页面的子层须 **`align-self: stretch`** + **`width: 100%`** + **`min-width: 0`**，避免子列按内容收缩导致右侧空白。
+2. **`.machines-page.ms-product-line-layout`**：横向 **不要** 再叠加整页 `padding-left/right`（避免在 1617 内二次吃掉 80px）。水平 inset **只** 放在 **`.ms-content-column`**：`padding: 0 var(--ms-page-gutter)`，`box-sizing: border-box`，使内侧排版宽约 **1537**。
+3. **`.ms-content-column`**：`width: 100%`，`max-width: 1617px`，**禁止** `margin-left/right: auto` 做整块水平居中；子项 `align-items: flex-start`。
+4. **禁止** 在页面根或 `figma-front-main__inner` 上使用 `justify-content: center`、`mx-auto`、或 `max-width` + `margin-inline: auto` 让整块主内容居中（分页等局部居中除外）。
+5. **固定面包屑**：`left: calc(var(--bjt-sidebar-effective-width) + var(--ms-page-gutter))`，`right: var(--ms-page-gutter)`，与内容区 40px inset 对齐。
+
+## 修改后自检（DevTools）
+
+- 视口 1920px、侧栏展开：`main.figma-front-main` 的 computed **width ≈ 1617px**。
+- 包住页面 children 的 flex 子层：computed **width = 100%** 父级宽，不得远小于 main。
+- `.ms-content-column`：总宽 ≤1617，**padding 内**宽度与 1537 行卡片一致。
+
+## 常见错误（出现即需处理）
+
+- 已对主区让出侧栏后，又给 `.machines-page` 加左右 40px，导致有效宽错乱。
+- `.figma-front-main__inner` 使用 `align-items: flex-start` 但未让页面插槽 `align-self: stretch`。
+- token 分叉：JSON `pageGutterPx` 与 `--ff-ms-page-gutter`、 `--ms-page-gutter` 不一致。
+
+## 相关文件
+
+- 样式：`frontend/src/styles/machine-selection-figma.css`、`frontend/src/styles/figma-front-shell.css`、`frontend/src/styles/figma-tokens-machine-selection.css`
+- 数据：`frontend/src/figma-tokens/machine-selection.json`
+- 计划：`MACHINE_SELECTION_FIGMA_ALIGNMENT_PLAN.md`

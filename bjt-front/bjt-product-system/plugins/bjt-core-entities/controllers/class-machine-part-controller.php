@@ -123,6 +123,7 @@ class BJT_Machine_Part_Controller extends BJT_API_Controller {
         $name_search = $request->get_param('name_search');
         $brand = $request->get_param('brand');
         $voltage = $request->get_param('voltage');
+        $model_type_filter = $request->get_param('model_type');
         $status_filter = $request->get_param('status');
         $orderby = $request->get_param('orderby') ?: 'id';
         $order = $request->get_param('order') ?: 'DESC';
@@ -136,52 +137,60 @@ class BJT_Machine_Part_Controller extends BJT_API_Controller {
             $order = 'DESC';
         }
 
-        $base_query = "FROM {$this->table_name}";
+        $parts_table = $this->table_name;
+        $host_table = $wpdb->prefix . 'bjt_host_models';
+        $host_join = " LEFT JOIN {$host_table} hm ON hm.id = (SELECT MIN(h2.id) FROM {$host_table} h2 WHERE h2.product_line_id = p.product_line_id AND h2.model = p.model)";
+        $base_from = "FROM {$parts_table} p{$host_join}";
+
         $where_clauses = ["1=1"];
         $query_params = [];
 
         if (!empty($product_line_id)) {
-            $where_clauses[] = "product_line_id = %d";
+            $where_clauses[] = "p.product_line_id = %d";
             $query_params[] = absint($product_line_id);
         }
         if (!empty($model)) {
-            $where_clauses[] = "model = %s";
+            $where_clauses[] = "p.model = %s";
             $query_params[] = sanitize_text_field($model);
         }
+        if (!empty($model_type_filter)) {
+            $where_clauses[] = "hm.type = %s";
+            $query_params[] = sanitize_text_field($model_type_filter);
+        }
         if (!empty($part_number_filter)) {
-            $where_clauses[] = "part_number = %s";
+            $where_clauses[] = "p.part_number = %s";
             $query_params[] = sanitize_text_field($part_number_filter);
         }
         if (!empty($name_search)) {
             $search_term = '%' . $wpdb->esc_like($name_search) . '%';
-            $where_clauses[] = "(name_zh LIKE %s OR name_en LIKE %s)";
+            $where_clauses[] = "(p.name_zh LIKE %s OR p.name_en LIKE %s)";
             $query_params[] = $search_term;
             $query_params[] = $search_term;
         }
         if (!empty($brand)) {
-            $where_clauses[] = "brand = %s";
+            $where_clauses[] = "p.brand = %s";
             $query_params[] = sanitize_text_field($brand);
         }
         if (!empty($voltage)) {
-            $where_clauses[] = "voltage = %s";
+            $where_clauses[] = "p.voltage = %s";
             $query_params[] = sanitize_text_field($voltage);
         }
         if (!empty($status_filter)) {
-            $where_clauses[] = "status = %s";
+            $where_clauses[] = "p.status = %s";
             $query_params[] = sanitize_text_field($status_filter);
         }
 
         $where_sql = implode(" AND ", $where_clauses);
 
-        $total_items_query = "SELECT COUNT(id) {$base_query} WHERE {$where_sql}";
+        $total_items_query = "SELECT COUNT(p.id) {$base_from} WHERE {$where_sql}";
         if (!empty($query_params)) {
             $total_items = $wpdb->get_var($wpdb->prepare($total_items_query, $query_params));
         } else {
             $total_items = $wpdb->get_var($total_items_query);
         }
-        
 
-        $items_query = "SELECT * {$base_query} WHERE {$where_sql} ORDER BY {$orderby} {$order} LIMIT %d OFFSET %d";
+        $order_sql = strtoupper($order) === 'ASC' ? 'ASC' : 'DESC';
+        $items_query = "SELECT p.*, hm.image1_url AS host_image1_url, hm.image2_url AS host_image2_url, hm.type AS model_type {$base_from} WHERE {$where_sql} ORDER BY p.{$orderby} {$order_sql} LIMIT %d OFFSET %d";
         $full_query_params = array_merge($query_params, [$per_page, $offset]);
         $items_db = $wpdb->get_results($wpdb->prepare($items_query, $full_query_params));
 
@@ -217,7 +226,7 @@ class BJT_Machine_Part_Controller extends BJT_API_Controller {
             return new WP_Error('INVALID_ID', 'Invalid machine part ID.', ['status' => 400, 'success' => false]);
         }
 
-        $item_db = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->table_name} WHERE id = %d", $id));
+        $item_db = $this->get_part_row_with_host_join($id);
 
         if (!$item_db) {
             return new WP_Error('NOT_FOUND', "Machine part with ID {$id} not found.", ['status' => 404, 'success' => false]);
@@ -294,7 +303,7 @@ class BJT_Machine_Part_Controller extends BJT_API_Controller {
         }
 
         $new_id = $wpdb->insert_id;
-        $new_item_db = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->table_name} WHERE id = %d", $new_id));
+        $new_item_db = $this->get_part_row_with_host_join($new_id);
         if (!$new_item_db) {
             return new WP_Error(
                 'FETCH_AFTER_CREATE_FAILED', 
@@ -325,7 +334,7 @@ class BJT_Machine_Part_Controller extends BJT_API_Controller {
             return new WP_Error('INVALID_ID', 'Invalid machine part ID for update.', ['status' => 400, 'success' => false]);
         }
 
-        $existing_item_db = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->table_name} WHERE id = %d", $id));
+        $existing_item_db = $this->get_part_row_with_host_join($id);
         if (!$existing_item_db) {
             return new WP_Error('NOT_FOUND', "Machine part with ID {$id} not found.", ['status' => 404, 'success' => false]);
         }
@@ -383,7 +392,7 @@ class BJT_Machine_Part_Controller extends BJT_API_Controller {
         }
         
         // If $result is 0, it means no rows were affected (data might be the same as existing)
-        $updated_item_db = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->table_name} WHERE id = %d", $id));
+        $updated_item_db = $this->get_part_row_with_host_join($id);
          if (!$updated_item_db) {
             return new WP_Error(
                 'FETCH_AFTER_UPDATE_FAILED', 
@@ -466,6 +475,56 @@ class BJT_Machine_Part_Controller extends BJT_API_Controller {
     }
     
     /**
+     * Load a part row with host model images (LEFT JOIN wp_bjt_host_models).
+     *
+     * @param int $id Part ID.
+     * @return object|null
+     */
+    protected function get_part_row_with_host_join($id) {
+        global $wpdb;
+        $id = absint($id);
+        if ($id <= 0) {
+            return null;
+        }
+        $host_table = $wpdb->prefix . 'bjt_host_models';
+        return $wpdb->get_row($wpdb->prepare(
+            "SELECT p.*, hm.image1_url AS host_image1_url, hm.image2_url AS host_image2_url, hm.type AS model_type
+             FROM {$this->table_name} p
+             LEFT JOIN {$host_table} hm ON hm.id = (SELECT MIN(h2.id) FROM {$host_table} h2 WHERE h2.product_line_id = p.product_line_id AND h2.model = p.model)
+             WHERE p.id = %d",
+            $id
+        ));
+    }
+
+    /**
+     * Build ordered unique gallery URLs for storefront (part image + host model images).
+     *
+     * @param object $obj Row with optional image_url, host_image1_url, host_image2_url.
+     * @return string[]
+     */
+    protected function compute_gallery_image_urls($obj) {
+        if (!$obj) {
+            return [];
+        }
+        $urls = [];
+        $candidates = [
+            isset($obj->image_url) ? $obj->image_url : '',
+            isset($obj->host_image1_url) ? $obj->host_image1_url : '',
+            isset($obj->host_image2_url) ? $obj->host_image2_url : '',
+        ];
+        foreach ($candidates as $u) {
+            if (!is_string($u)) {
+                continue;
+            }
+            $u = trim($u);
+            if ($u !== '' && !in_array($u, $urls, true)) {
+                $urls[] = $u;
+            }
+        }
+        return $urls;
+    }
+
+    /**
      * Formats a database object for the API response.
      *
      * @param object $item_db_object The database object.
@@ -480,6 +539,9 @@ class BJT_Machine_Part_Controller extends BJT_API_Controller {
         $schema = $this->get_item_schema($request); // Get schema for properties
         
         foreach ($schema['properties'] as $field_name => $field_schema) {
+            if ($field_name === 'gallery_image_urls') {
+                continue;
+            }
             if (property_exists($item_db_object, $field_name)) {
                 $value = $item_db_object->$field_name;
                 // Cast to correct type based on schema (simple casting)
@@ -499,6 +561,8 @@ class BJT_Machine_Part_Controller extends BJT_API_Controller {
         // ✨ 统一名称字段，直接使用name_zh/name_en字段
         $data['name_zh'] = $item_db_object->name_zh ?? '';
         $data['name_en'] = $item_db_object->name_en ?? '';
+
+        $data['gallery_image_urls'] = $this->compute_gallery_image_urls($item_db_object);
 
         return $data;
     }
@@ -542,6 +606,12 @@ class BJT_Machine_Part_Controller extends BJT_API_Controller {
         ];
         $params['voltage'] = [
             'description' => __('Filter by Voltage.', 'bjt'),
+            'type' => 'string',
+            'sanitize_callback' => 'sanitize_text_field',
+            'validate_callback' => 'rest_validate_request_arg',
+        ];
+        $params['model_type'] = [
+            'description' => __('Filter by host model type (wp_bjt_host_models.type).', 'bjt'),
             'type' => 'string',
             'sanitize_callback' => 'sanitize_text_field',
             'validate_callback' => 'rest_validate_request_arg',
@@ -595,6 +665,11 @@ class BJT_Machine_Part_Controller extends BJT_API_Controller {
                     'type'        => 'string',
                     'context'     => ['view', 'edit', 'embed'],
                     'required'    => true,
+                ],
+                'model_type' => [
+                    'description' => __('Host model type from linked wp_bjt_host_models.', 'bjt'),
+                    'type'        => ['string', 'null'],
+                    'context'     => ['view', 'edit', 'embed'],
                 ],
                 'voltage' => [
                     'description' => __('Voltage specification.', 'bjt'),
@@ -736,6 +811,13 @@ class BJT_Machine_Part_Controller extends BJT_API_Controller {
                     'type'        => 'string',
                     'format'      => 'date-time',
                     'context'     => ['view', 'edit', 'embed'],
+                    'readonly'    => true,
+                ],
+                'gallery_image_urls' => [
+                    'description' => __('Ordered unique image URLs: part image plus host model gallery.', 'bjt'),
+                    'type'        => 'array',
+                    'items'       => ['type' => 'string'],
+                    'context'     => ['view', 'embed'],
                     'readonly'    => true,
                 ],
             ],

@@ -16,6 +16,34 @@
     "machineSelection": "主机选择",
     "accessorySelection": "配件选择"
   },
+  "figma": {
+    "machineAndAccessory": "机器与配件",
+    "breadcrumbBack": "返回",
+    "modelParamComparison": "机型参数对比表",
+    "machineSelection": "主机选择",
+    "showOptionalAccessories": "显示可选配件",
+    "stockStatus": "库存状态",
+    "hostLabel": "主机",
+    "unknownHost": "未知主机",
+    "unknownAccessory": "未知配件",
+    "levelOneAccessory": "一级配件",
+    "compareSelectHint": "请从下方主机列表中选择型号",
+    "viewDetailedSpecifications": "查看详细规格",
+    "introductionLink": "简介",
+    "filmOptionsLink": "薄膜选项",
+    "introductionModalTitle": "机型简介",
+    "introductionEmpty": "暂无简介，可打开「规格说明」查看 PDF。",
+    "compareColModel": "型号",
+    "compareColPicture": "图片",
+    "compareColType": "类型",
+    "compareColSpeed": "速度",
+    "compareColMaterial": "材料",
+    "compareColFilmType": "薄膜类型",
+    "compareColFilmWidth": "膜宽",
+    "compareColMaxRoll": "最大卷径",
+    "compareDataPending": "—",
+    "perPage": "每页"
+  },
   "addToCart": "加入购物车",
   "noPermissionAdd": "无权限添加",
   "breadcrumb": {
@@ -36,7 +64,9 @@
     "clear": "清除筛选",
     "model": "型号",
     "allModels": "所有型号",
-    "allVoltages": "全部电压"
+    "allVoltages": "全部电压",
+    "productType": "产品类型",
+    "allTypes": "全部类型"
   },
   "tableHeaders": {
     "index": "序号",
@@ -60,9 +90,12 @@
     "stock": "库存",
     "pcsPerBox": "单箱数量",
     "pcsPerPallet": "一托数量",
+    "itemDescription": "项目说明",
+    "packagingMethod": "包装方式",
     "frequency": "频率",
     "voltage": "电压",
-    "priceRange": "价格区间"
+    "priceRange": "价格区间",
+    "pnPrefix": "PN"
   },
   "table": {
     "model": "型号",

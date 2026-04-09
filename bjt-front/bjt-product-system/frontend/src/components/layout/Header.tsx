@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import '../../styles/global.css';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import '../../styles/header.css';
+import '../../styles/header-search-right.css';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage, getI18nLanguage } from '../../contexts/LanguageContext';
 import { useTranslation } from 'react-i18next';
 import { Menu, Dropdown, Button, Space, Divider, Badge, Input } from 'antd';
-import { DownOutlined, MenuOutlined, UserOutlined, ShoppingCartOutlined, GlobalOutlined, SearchOutlined } from '@ant-design/icons';
+import { DownOutlined, UserOutlined, ShoppingCartOutlined, GlobalOutlined, SearchOutlined } from '@ant-design/icons';
 // 导入环境变量
 import { IMAGE_BASE_URL } from '../../config/env';
 import { IMAGES } from '../../config/constants';
@@ -61,7 +61,6 @@ const Header = ({
   onSearch,
 }: HeaderProps) => {
   const { t, i18n } = useTranslation();
-  const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { language, setLanguage, getI18nLanguage } = useLanguage();
@@ -168,59 +167,108 @@ const Header = ({
   // 修复语言显示
   const currentLanguageDisplay = language === 'cn' ? '中文' : 'English';
 
+  /**
+   * 顶栏横向入口：仅移动端渲染（侧栏为抽屉时需快捷跳转）。
+   * 桌面端完整 IA 在 Sidebar，避免与侧栏 Home / 各产品线 / Support / Contact 重复堆叠。
+   */
+  const topNavItems = useMemo(
+    (): Array<{ to: string; labelKey: string; end?: boolean }> => [
+      { to: '/', labelKey: 'nav.home', end: true },
+      { to: '/machines', labelKey: 'nav.machines' },
+      { to: '/consumables', labelKey: 'nav.consumables' },
+      { to: '/support', labelKey: 'nav.support' },
+      { to: '/contact', labelKey: 'nav.contactUs' },
+    ],
+    []
+  );
+
   return (
     <header ref={headerRef} className={classNames('main-header', className)}>
-      <div className="container mx-auto flex items-center justify-between py-4 px-4">
-        {/* 搜索框 - 现在占据左侧空间 */}
-        <div className="search-container">
-          <Input
-            placeholder={t('header.searchPlaceholder', '搜索产品...')}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onPressEnter={handleSearchSubmit}
-            onFocus={() => setIsSearchFocused(true)}
-            onBlur={() => setIsSearchFocused(false)}
-            prefix={<SearchOutlined />}
-            className={classNames('search-input', {
-              'search-focused': isSearchFocused
-            })}
-            allowClear
-          />
+      <div className="main-header__inner">
+        {/* 品牌：桌面由 figma-front-shell 隐藏，仅侧栏出现一次 logo；移动端侧栏为抽屉时此处保留 */}
+        <div className="header-figma-brand">
+          <div className="header-figma-brand__logos">
+            <img src="/images/logo-1.webp" alt="BJT" className="header-figma-brand__bjt-img" />
+            {!isMobile && (
+              <div className="header-figma-brand__wordmark" aria-hidden={false}>
+                <span className="header-figma-brand__line1">Locked Air®</span>
+                <span className="header-figma-brand__line2">LOCKED PAPER™</span>
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="right-section flex items-center space-x-4">
-          {/* 语言切换 */}
-          <Dropdown 
-            menu={{ items: languageMenuItems }} 
+        {isMobile ? (
+          <nav
+            className="header-top-nav left-section flex min-w-0 items-center justify-center gap-1 overflow-x-auto sm:gap-3"
+            aria-label={t('header.topNavAria')}
+          >
+            {topNavItems.map(({ to, labelKey, end: navEnd }) => (
+              <NavLink
+                key={to}
+                to={to}
+                end={navEnd ?? false}
+                className={({ isActive }) =>
+                  classNames('header-top-nav__link', {
+                    'header-top-nav__link--active': isActive,
+                  })
+                }
+              >
+                {t(labelKey)}
+              </NavLink>
+            ))}
+          </nav>
+        ) : null}
+
+        {/* Figma 顺序：搜索 → 购物车 → 语言 → 用户 */}
+        <div className="right-section header-toolbar-figma flex shrink-0 flex-nowrap items-center">
+          <div className="search-container-right shrink min-w-0">
+            <Input
+              placeholder={t('header.searchPlaceholder', '搜索产品')}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onPressEnter={handleSearchSubmit}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setIsSearchFocused(false)}
+              prefix={<SearchOutlined />}
+              className={classNames('search-input-right', {
+                'search-focused': isSearchFocused
+              })}
+              allowClear
+            />
+          </div>
+
+          <Link to="/cart" className="cart-link shrink-0">
+            <Badge count={itemCount} size="small">
+              <Button type="text" icon={<ShoppingCartOutlined />} className="action-button header-toolbar-btn">
+                {!isMobile && <span>{safeRender(t('header.cart'))}</span>}
+              </Button>
+            </Badge>
+          </Link>
+
+          <Dropdown
+            menu={{ items: languageMenuItems }}
             trigger={['click']}
             placement="bottomRight"
           >
-            <Button type="text" icon={<GlobalOutlined />} className="action-button language-button">
-              <SafeContent>
-                {safeRender(currentLanguageDisplay)}
-              </SafeContent>
+            <Button
+              type="text"
+              icon={<GlobalOutlined />}
+              className="action-button language-button header-toolbar-btn shrink-0"
+            >
+              {!isMobile && (
+                <SafeContent>{safeRender(currentLanguageDisplay)}</SafeContent>
+              )}
             </Button>
           </Dropdown>
 
-          {/* 购物车 */}
-          {(user || location.pathname !== '/') && (
-            <Link to="/cart" className="cart-link">
-              <Badge count={itemCount} size="small">
-                <Button type="text" icon={<ShoppingCartOutlined />} className="action-button">
-                  {!isMobile && safeRender(t('header.cart'))}
-                </Button>
-              </Badge>
-            </Link>
-          )}
-
-          {/* 用户菜单 */}
           {user ? (
             <Dropdown
               menu={{ items: userMenuItems }}
               trigger={['click']}
               placement="bottomRight"
             >
-              <Button type="text" className="user-info">
+              <Button type="text" className="user-info header-toolbar-btn shrink-0">
                 <div className="user-avatar">
                   {safeRender(user.name).charAt(0).toUpperCase()}
                 </div>
@@ -228,9 +276,13 @@ const Header = ({
               </Button>
             </Dropdown>
           ) : (
-            <button className="login-button" onClick={handleLogin}>
-              {safeRender(t('header.login'))}
-            </button>
+            <Button
+              type="text"
+              icon={<UserOutlined />}
+              className="action-button header-toolbar-btn header-toolbar-login-icon shrink-0"
+              onClick={handleLogin}
+              aria-label={safeRender(t('header.login'))}
+            />
           )}
         </div>
       </div>

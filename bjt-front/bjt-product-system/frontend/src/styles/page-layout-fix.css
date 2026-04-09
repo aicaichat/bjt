@@ -1,0 +1,424 @@
+/* Page Layout Fix - 确保所有页面都能正确适配左侧导航栏 */
+
+/* ========== 全局页面布局适配 ========== */
+
+/* 为所有页面内容添加左边距，以避免被侧边栏遮挡 */
+.App {
+  width: 100% !important;
+  min-height: 100vh !important;
+  background-color: var(--ff-app-bg, #ffffff) !important;
+}
+
+/* ========== 登录页面特殊处理 ========== */
+/* 登录页面需要全屏显示，不需要侧边栏 */
+.login-page {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  z-index: 2000 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+}
+
+.login-page::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%) !important;
+  pointer-events: none !important;
+}
+
+.login-container {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(20px) !important;
+  border-radius: 20px !important;
+  padding: 48px !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  max-width: 420px !important;
+  width: 100% !important;
+  margin: 20px !important;
+  position: relative !important;
+  z-index: 10 !important;
+}
+
+/* ========== 注册页面特殊处理 ========== */
+.register-page {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  z-index: 2000 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: auto !important;
+}
+
+.register-container {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(20px) !important;
+  border-radius: 20px !important;
+  padding: 48px !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  max-width: 420px !important;
+  width: 100% !important;
+  margin: 20px !important;
+  position: relative !important;
+  z-index: 10 !important;
+}
+
+/* ========== 非MainLayout页面的通用处理 ========== */
+/* 对于没有使用MainLayout的页面，添加适当的边距 */
+.page-container {
+  margin-left: 300px !important;
+  margin-top: 72px !important;
+  min-height: calc(100vh - 72px) !important;
+  padding: 32px !important;
+  background: var(--ff-page-bg, #f5f7fa) !important;
+  width: calc(100% - 300px) !important;
+  transition: all 0.3s ease !important;
+}
+
+/* ========== 首页内容区域修复（仅非 Figma 首页） ========== */
+/* .home-page--figma 由 Home.css 精确对齐 Figma；此处 !important 曾整页覆盖导致假首页永远不像稿 */
+.home-page:not(.home-page--figma) {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background-color: transparent !important;
+  min-height: calc(100vh - 72px) !important;
+}
+
+.home-page:not(.home-page--figma) .container {
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+  padding: 32px 24px !important;
+  width: 100% !important;
+}
+
+/* ========== 产品页面布局修复（仅旧版首页 DOM） ========== */
+.home-page:not(.home-page--figma) .product-section {
+  background: #ffffff !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+  margin-bottom: 32px !important;
+  overflow: hidden !important;
+  transition: all 0.3s ease !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.home-page:not(.home-page--figma) .product-section:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12) !important;
+}
+
+.home-page:not(.home-page--figma) .section-header {
+  background: linear-gradient(135deg, var(--ff-accent) 0%, var(--ff-accent-mid) 100%) !important;
+  color: #ffffff !important;
+  padding: 24px 32px !important;
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+  position: relative !important;
+}
+
+.home-page:not(.home-page--figma) .section-header::after {
+  content: '' !important;
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 2px !important;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.3) 0%, transparent 100%) !important;
+}
+
+.home-page:not(.home-page--figma) .section-content {
+  display: flex !important;
+  gap: 32px !important;
+  padding: 32px !important;
+  align-items: center !important;
+}
+
+.home-page:not(.home-page--figma) .section-text {
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.home-page:not(.home-page--figma) .section-text h3 {
+  font-size: 1.375rem !important;
+  font-weight: 600 !important;
+  color: #1f2937 !important;
+  margin-bottom: 16px !important;
+  line-height: 1.3 !important;
+}
+
+.home-page:not(.home-page--figma) .section-text p {
+  color: #6b7280 !important;
+  line-height: 1.7 !important;
+  margin-bottom: 24px !important;
+  font-size: 1rem !important;
+}
+
+/* ========== 产品链接样式 ========== */
+.home-page:not(.home-page--figma) .product-links {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+}
+
+.home-page:not(.home-page--figma) .product-link {
+  display: flex !important;
+  align-items: center !important;
+  padding: 16px 20px !important;
+  background: var(--ff-page-bg, #f5f7fa) !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  text-decoration: none !important;
+  color: #374151 !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.home-page:not(.home-page--figma) .product-link::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: linear-gradient(135deg, var(--ff-accent) 0%, var(--ff-accent-mid) 100%) !important;
+  opacity: 0 !important;
+  transition: opacity 0.3s ease !important;
+}
+
+.home-page:not(.home-page--figma) .product-link:hover::before {
+  opacity: 1 !important;
+}
+
+.home-page:not(.home-page--figma) .product-link:hover {
+  color: #ffffff !important;
+  text-decoration: none !important;
+  transform: translateX(8px) !important;
+  border-color: var(--ff-accent) !important;
+  box-shadow: 0 6px 20px rgba(var(--ff-accent-rgb), 0.3) !important;
+}
+
+.home-page:not(.home-page--figma) .product-link-text {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  font-size: 0.875rem !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+.home-page:not(.home-page--figma) .external-icon {
+  margin-left: 8px !important;
+  opacity: 0.7 !important;
+  transition: all 0.3s ease !important;
+}
+
+.home-page:not(.home-page--figma) .product-link:hover .external-icon {
+  opacity: 1 !important;
+  transform: scale(1.1) !important;
+}
+
+/* ========== 产品图片样式 ========== */
+.home-page:not(.home-page--figma) .section-image {
+  flex-shrink: 0 !important;
+  width: 350px !important;
+  height: 240px !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.home-page:not(.home-page--figma) .section-image img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  transition: transform 0.3s ease !important;
+}
+
+.home-page:not(.home-page--figma) .section-image:hover img {
+  transform: scale(1.05) !important;
+}
+
+/* ========== 分割线样式 ========== */
+.divider {
+  width: 80px !important;
+  height: 4px !important;
+  background: linear-gradient(90deg, var(--ff-accent), #8b5cf6) !important;
+  margin: 8px 0 20px 0 !important;
+  border-radius: 2px !important;
+}
+
+/* ========== 响应式设计 ========== */
+@media (max-width: 1024px) {
+  .page-container {
+    margin-left: var(--bjt-sidebar-width, 303px) !important;
+    width: calc(100% - var(--bjt-sidebar-width, 303px)) !important;
+    padding: 24px !important;
+  }
+  
+  .home-page:not(.home-page--figma) .section-content {
+    gap: 24px !important;
+    padding: 24px !important;
+  }
+  
+  .home-page:not(.home-page--figma) .section-image {
+    width: 300px !important;
+    height: 200px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  /* 移动端时，不需要左边距 */
+  .page-container {
+    margin-left: 0 !important;
+    margin-top: 64px !important;
+    width: 100% !important;
+    padding: 16px !important;
+    min-height: calc(100vh - 64px) !important;
+  }
+  
+  .home-page:not(.home-page--figma) .container {
+    padding: 16px 12px !important;
+  }
+  
+  .home-page:not(.home-page--figma) .section-content {
+    flex-direction: column !important;
+    padding: 20px !important;
+    gap: 20px !important;
+  }
+  
+  .home-page:not(.home-page--figma) .section-image {
+    width: 100% !important;
+    height: 200px !important;
+  }
+  
+  .home-page:not(.home-page--figma) .product-links {
+    width: 100% !important;
+  }
+  
+  .home-page:not(.home-page--figma) .section-header {
+    padding: 16px 20px !important;
+    font-size: 1.25rem !important;
+  }
+  
+  .login-container,
+  .register-container {
+    margin: 10px !important;
+    padding: 32px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .home-page:not(.home-page--figma) .container {
+    padding: 12px 8px !important;
+  }
+  
+  .home-page:not(.home-page--figma) .product-section {
+    margin-bottom: 20px !important;
+    border-radius: 12px !important;
+  }
+  
+  .home-page:not(.home-page--figma) .section-content {
+    padding: 16px !important;
+  }
+  
+  .home-page:not(.home-page--figma) .section-image {
+    height: 180px !important;
+  }
+  
+  .home-page:not(.home-page--figma) .product-link {
+    padding: 14px 16px !important;
+  }
+  
+  .home-page:not(.home-page--figma) .product-link-text {
+    font-size: 0.8rem !important;
+  }
+  
+  .login-container,
+  .register-container {
+    padding: 24px !important;
+  }
+}
+
+/* ========== 确保侧边栏在登录/注册页面时隐藏 ========== */
+.login-page ~ .sidebar,
+.register-page ~ .sidebar {
+  display: none !important;
+}
+
+/* ========== 加载和错误状态 ========== */
+.loading-container {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 400px !important;
+  background-color: #ffffff !important;
+  border-radius: 12px !important;
+  margin: 32px 0 !important;
+}
+
+.error-container {
+  text-align: center !important;
+  padding: 48px 32px !important;
+  color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+  border: 1px solid #fecaca !important;
+  border-radius: 12px !important;
+  margin: 32px 0 !important;
+}
+
+/* ========== 确保内容不被截断 ========== */
+.content-wrapper {
+  min-height: calc(100vh - 72px) !important;
+  width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+/* ========== 修复可能的z-index问题 ========== */
+.main-content,
+.page-content {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* ========== 滚动优化 ========== */
+.page-container,
+.home-page {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* ========== 确保文本可读性 ========== */
+.page-container h1,
+.page-container h2,
+.page-container h3 {
+  color: #1f2937 !important;
+  line-height: 1.3 !important;
+}
+
+.page-container p {
+  color: #4b5563 !important;
+  line-height: 1.6 !important;
+} 

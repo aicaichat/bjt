@@ -1,0 +1,557 @@
+/* Modern Sidebar Design - 现代化左侧导航设计 */
+
+/* ========== 全局布局重构 ========== */
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: hidden !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  background-color: #fafbfc !important;
+}
+
+#root {
+  width: 100% !important;
+  min-height: 100vh !important;
+  display: flex !important;
+  flex-direction: row !important;
+}
+
+/* ========== 现代化侧边栏设计 ========== */
+.sidebar {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 300px !important;
+  height: 100vh !important;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%) !important;
+  border-right: 1px solid #e2e8f0 !important;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08) !important;
+  z-index: 1001 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1) !important;
+}
+
+.sidebar.collapsed {
+  width: 80px !important;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* ========== 侧边栏头部区域 ========== */
+.sidebar-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 24px 20px !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: #ffffff !important;
+  min-height: 88px !important;
+  flex-shrink: 0 !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.sidebar-header::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.2) 0%, transparent 50%) !important;
+  pointer-events: none !important;
+}
+
+.sidebar-logo {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+.sidebar-logo img {
+  height: 42px !important;
+  width: auto !important;
+  max-width: 220px !important;
+  object-fit: contain !important;
+  filter: brightness(1.1) contrast(1.05) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1)) !important;
+  transition: all 0.3s ease !important;
+}
+
+.sidebar.collapsed .sidebar-logo img {
+  max-width: 36px !important;
+  height: 36px !important;
+}
+
+/* ========== 导航菜单区域 ========== */
+.sidebar-menu {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  padding: 20px 0 24px 0 !important;
+  background-color: transparent !important;
+}
+
+.sidebar-menu .ant-menu {
+  background-color: transparent !important;
+  border: none !important;
+  font-size: 15px !important;
+  line-height: 1.5 !important;
+}
+
+/* ========== 一级菜单项设计 ========== */
+.sidebar-menu > .ant-menu > .ant-menu-item,
+.sidebar-menu > .ant-menu > .ant-menu-submenu {
+  margin: 6px 16px !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+/* 一级菜单项（无子菜单）*/
+.sidebar-menu > .ant-menu > .ant-menu-item {
+  padding: 0 !important;
+  height: auto !important;
+  line-height: normal !important;
+  background-color: transparent !important;
+  border: none !important;
+  position: relative !important;
+}
+
+.sidebar-menu > .ant-menu > .ant-menu-item::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.4) 100%) !important;
+  opacity: 0 !important;
+  transition: all 0.3s ease !important;
+  border-radius: 12px !important;
+}
+
+.sidebar-menu > .ant-menu > .ant-menu-item a {
+  display: flex !important;
+  align-items: center !important;
+  padding: 16px 20px !important;
+  color: #334155 !important;
+  text-decoration: none !important;
+  font-weight: 500 !important;
+  font-size: 15px !important;
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1) !important;
+  border-radius: 12px !important;
+  background-color: transparent !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+.sidebar-menu > .ant-menu > .ant-menu-item:hover::before {
+  opacity: 1 !important;
+}
+
+.sidebar-menu > .ant-menu > .ant-menu-item:hover a {
+  color: #1e293b !important;
+  transform: translateX(4px) !important;
+}
+
+.sidebar-menu > .ant-menu > .ant-menu-item-selected {
+  background: linear-gradient(135deg, var(--ff-accent) 0%, var(--ff-accent-mid) 100%) !important;
+  box-shadow: 0 4px 12px rgba(var(--ff-accent-rgb), 0.3) !important;
+}
+
+.sidebar-menu > .ant-menu > .ant-menu-item-selected::before {
+  display: none !important;
+}
+
+.sidebar-menu > .ant-menu > .ant-menu-item-selected a {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  transform: translateX(0) !important;
+}
+
+/* ========== 一级菜单（有子菜单）设计 ========== */
+.sidebar-menu > .ant-menu > .ant-menu-submenu > .ant-menu-submenu-title {
+  padding: 16px 20px !important;
+  margin: 0 !important;
+  color: #334155 !important;
+  font-weight: 600 !important;
+  font-size: 15px !important;
+  background-color: transparent !important;
+  border-radius: 12px !important;
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1) !important;
+  height: auto !important;
+  line-height: 1.5 !important;
+  display: flex !important;
+  align-items: center !important;
+  position: relative !important;
+}
+
+.sidebar-menu > .ant-menu > .ant-menu-submenu::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.4) 100%) !important;
+  opacity: 0 !important;
+  transition: all 0.3s ease !important;
+  border-radius: 12px !important;
+  z-index: 1 !important;
+}
+
+.sidebar-menu > .ant-menu > .ant-menu-submenu:hover::before {
+  opacity: 1 !important;
+}
+
+.sidebar-menu > .ant-menu > .ant-menu-submenu:hover > .ant-menu-submenu-title {
+  color: #1e293b !important;
+  transform: translateX(4px) !important;
+}
+
+.sidebar-menu > .ant-menu > .ant-menu-submenu-open {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--ff-tint-blue) 65%, white) 0%, var(--ff-tint-blue) 100%) !important;
+  border: 1px solid #bae6fd !important;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15) !important;
+}
+
+.sidebar-menu > .ant-menu > .ant-menu-submenu-open::before {
+  display: none !important;
+}
+
+.sidebar-menu > .ant-menu > .ant-menu-submenu-open > .ant-menu-submenu-title {
+  color: #0369a1 !important;
+  font-weight: 700 !important;
+  transform: translateX(0) !important;
+}
+
+/* 展开箭头设计 */
+.sidebar-menu > .ant-menu > .ant-menu-submenu .ant-menu-submenu-arrow {
+  color: #94a3b8 !important;
+  font-size: 12px !important;
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1) !important;
+  right: 20px !important;
+}
+
+.sidebar-menu > .ant-menu > .ant-menu-submenu-open .ant-menu-submenu-arrow {
+  color: #0369a1 !important;
+  transform: rotate(180deg) scale(1.1) !important;
+}
+
+/* ========== 子菜单容器设计 ========== */
+.sidebar-menu > .ant-menu > .ant-menu-submenu .ant-menu-sub {
+  background: linear-gradient(180deg, #f8fafc 0%, #f5f7fa 100%) !important;
+  margin: 12px 16px 16px 16px !important;
+  border-radius: 12px !important;
+  padding: 16px 0 !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+  position: relative !important;
+}
+
+.sidebar-menu > .ant-menu > .ant-menu-submenu .ant-menu-sub::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 4px !important;
+  width: 3px !important;
+  height: 100% !important;
+  background: linear-gradient(180deg, var(--ff-accent) 0%, var(--ff-accent-mid) 100%) !important;
+  border-radius: 2px !important;
+}
+
+/* ========== 子菜单分组标题设计 ========== */
+.sidebar-menu .ant-menu-item-group-title {
+  padding: 16px 24px 12px 24px !important;
+  color: #64748b !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  margin: 0 !important;
+  background-color: transparent !important;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.6) !important;
+  margin-bottom: 12px !important;
+  line-height: 1.2 !important;
+  position: relative !important;
+}
+
+.sidebar-menu .ant-menu-item-group-title::after {
+  content: '' !important;
+  position: absolute !important;
+  bottom: -1px !important;
+  left: 24px !important;
+  width: 40px !important;
+  height: 2px !important;
+  background: linear-gradient(90deg, var(--ff-accent) 0%, var(--ff-accent-mid) 100%) !important;
+  border-radius: 1px !important;
+}
+
+/* ========== 子菜单项设计 ========== */
+.sidebar-menu .ant-menu-sub .ant-menu-item {
+  margin: 3px 12px !important;
+  padding: 0 !important;
+  border-radius: 8px !important;
+  background-color: transparent !important;
+  height: auto !important;
+  line-height: normal !important;
+  position: relative !important;
+}
+
+.sidebar-menu .ant-menu-sub .ant-menu-item a {
+  display: flex !important;
+  align-items: center !important;
+  padding: 12px 16px 12px 28px !important;
+  font-size: 13px !important;
+  color: #64748b !important;
+  font-weight: 400 !important;
+  border-radius: 8px !important;
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1) !important;
+  text-decoration: none !important;
+  position: relative !important;
+  background-color: transparent !important;
+}
+
+.sidebar-menu .ant-menu-sub .ant-menu-item a::before {
+  content: '•' !important;
+  position: absolute !important;
+  left: 16px !important;
+  color: #cbd5e1 !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+  transition: all 0.3s ease !important;
+}
+
+.sidebar-menu .ant-menu-sub .ant-menu-item:hover {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.sidebar-menu .ant-menu-sub .ant-menu-item:hover a {
+  color: #334155 !important;
+  transform: translateX(4px) !important;
+}
+
+.sidebar-menu .ant-menu-sub .ant-menu-item:hover a::before {
+  color: var(--ff-accent) !important;
+  transform: scale(1.2) !important;
+}
+
+.sidebar-menu .ant-menu-sub .ant-menu-item-selected {
+  background: linear-gradient(135deg, var(--ff-accent) 0%, var(--ff-accent-mid) 100%) !important;
+  box-shadow: 0 3px 10px rgba(var(--ff-accent-rgb), 0.4) !important;
+  border: 1px solid var(--ff-btn-primary-hover) !important;
+}
+
+.sidebar-menu .ant-menu-sub .ant-menu-item-selected a {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+  transform: translateX(0) !important;
+}
+
+.sidebar-menu .ant-menu-sub .ant-menu-item-selected a::before {
+  color: #ffffff !important;
+  content: '▶' !important;
+  font-size: 10px !important;
+  transform: scale(1) !important;
+}
+
+/* ========== 菜单图标设计 ========== */
+.sidebar-menu > .ant-menu > .ant-menu-item .anticon,
+.sidebar-menu > .ant-menu > .ant-menu-submenu > .ant-menu-submenu-title .anticon {
+  font-size: 18px !important;
+  margin-right: 14px !important;
+  color: inherit !important;
+  transition: all 0.3s ease !important;
+  min-width: 18px !important;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1)) !important;
+}
+
+/* ========== 头部工具栏调整 ========== */
+.site-header,
+.main-header,
+header {
+  position: fixed !important;
+  top: 0 !important;
+  left: 300px !important;
+  right: 0 !important;
+  width: calc(100% - 300px) !important;
+  height: 72px !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+  z-index: 1000 !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 0 32px !important;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+.sidebar.collapsed ~ .site-header,
+.sidebar.collapsed ~ .main-header {
+  left: 80px !important;
+  width: calc(100% - 80px) !important;
+}
+
+/* ========== 主内容区域调整 ========== */
+main.flex-1,
+.main-content {
+  flex: 1 !important;
+  margin-left: 300px !important;
+  margin-top: 72px !important;
+  min-height: calc(100vh - 72px) !important;
+  padding: 32px !important;
+  background: linear-gradient(135deg, #f8fafc 0%, #f5f7fa 100%) !important;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1) !important;
+  width: calc(100% - 300px) !important;
+  overflow-x: hidden !important;
+}
+
+.sidebar.collapsed ~ main.flex-1,
+.sidebar.collapsed ~ .main-content {
+  margin-left: 80px !important;
+  width: calc(100% - 80px) !important;
+}
+
+/* ========== 折叠状态优化 ========== */
+.sidebar.collapsed .sidebar-header {
+  padding: 24px 16px !important;
+}
+
+.sidebar.collapsed .sidebar-menu > .ant-menu > .ant-menu-item a,
+.sidebar.collapsed .sidebar-menu > .ant-menu > .ant-menu-submenu > .ant-menu-submenu-title {
+  padding: 16px 20px !important;
+  justify-content: center !important;
+}
+
+.sidebar.collapsed .sidebar-menu > .ant-menu > .ant-menu-item .anticon,
+.sidebar.collapsed .sidebar-menu > .ant-menu > .ant-menu-submenu .anticon {
+  margin-right: 0 !important;
+  margin-left: 0 !important;
+}
+
+.sidebar.collapsed .sidebar-menu .ant-menu-sub {
+  display: none !important;
+}
+
+/* ========== 滚动条美化 ========== */
+.sidebar-menu::-webkit-scrollbar {
+  width: 8px !important;
+}
+
+.sidebar-menu::-webkit-scrollbar-track {
+  background: rgba(248, 250, 252, 0.8) !important;
+  border-radius: 4px !important;
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #cbd5e1 0%, #94a3b8 100%) !important;
+  border-radius: 4px !important;
+  transition: background 0.3s ease !important;
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%) !important;
+}
+
+/* ========== 响应式设计 ========== */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 280px !important;
+  }
+  
+  .site-header,
+  .main-header {
+    left: 280px !important;
+    width: calc(100% - 280px) !important;
+  }
+  
+  main.flex-1,
+  .main-content {
+    margin-left: 280px !important;
+    width: calc(100% - 280px) !important;
+    padding: 24px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%) !important;
+    top: 0 !important;
+    width: 300px !important;
+    z-index: 1050 !important;
+  }
+  
+  .sidebar.mobile-open {
+    transform: translateX(0) !important;
+  }
+  
+  .site-header,
+  .main-header {
+    left: 0 !important;
+    width: 100% !important;
+    height: 64px !important;
+    padding: 0 20px !important;
+  }
+  
+  main.flex-1,
+  .main-content {
+    margin-left: 0 !important;
+    margin-top: 64px !important;
+    width: 100% !important;
+    padding: 20px !important;
+    min-height: calc(100vh - 64px) !important;
+  }
+}
+
+/* ========== 动画效果 ========== */
+.sidebar-menu .ant-menu-sub {
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1) !important;
+  transform-origin: top !important;
+}
+
+.sidebar-menu .ant-menu-item,
+.sidebar-menu .ant-menu-submenu-title {
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1) !important;
+}
+
+/* ========== 去除默认样式 ========== */
+.sidebar-menu .ant-menu-item::after,
+.sidebar-menu .ant-menu-submenu-title::after {
+  display: none !important;
+}
+
+.sidebar-menu .ant-menu-item-group {
+  margin: 0 !important;
+}
+
+.sidebar-menu .ant-menu-item-group-list {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* ========== 确保文本不换行 ========== */
+.sidebar-menu .ant-menu-item a,
+.sidebar-menu .ant-menu-submenu-title,
+.sidebar-menu .ant-menu-item-group-title {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* ========== 侧边栏遮罩 ========== */
+.sidebar-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: linear-gradient(45deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.6) 100%) !important;
+  z-index: 1040 !important;
+  backdrop-filter: blur(8px) !important;
+} 

@@ -164,14 +164,11 @@ test.describe('首页 E2E 测试', () => {
       - DOM加载完成: ${metrics.domContentLoaded}ms`);
   });
 
-  test('应该显示页脚信息', async ({ page }) => {
-    // 滚动到页面底部
+  test('全站页脚已移除（MainLayout 不再渲染 Footer）', async ({ page }) => {
     await homePage.scrollToBottom();
-    
-    // 检查页脚是否显示
-    expect(await homePage.hasFooterLinks()).toBe(true);
-    
-    console.log('✅ 页脚显示正常');
+    await expect(page.locator('main.figma-front-main footer')).toHaveCount(0);
+    await expect(page.getByText('杭州丙甲科技有限公司')).toHaveCount(0);
+    console.log('✅ 全站页脚未挂载');
   });
 
   test('应该处理网络错误', async ({ page }) => {
