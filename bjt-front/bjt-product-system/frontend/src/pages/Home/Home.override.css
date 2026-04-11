@@ -22,14 +22,14 @@ body {
 .main-layout {
   display: flex;
   min-height: 100vh;
-  background-color: #f8fafc;
+  background-color: var(--ff-content-canvas-bg);
 }
 
 /* Sidebar Styles */
 .sidebar {
   width: 280px;
-  background-color: #ffffff;
-  border-right: 1px solid #e5e7eb;
+  background-color: var(--ff-surface);
+  border-right: 1px solid var(--ff-border);
   position: fixed;
   height: 100vh;
   overflow-y: auto;
@@ -58,7 +58,7 @@ body {
   width: 100%;
   max-width: 100%;
   min-height: 100vh;
-  background-color: var(--ff-content-canvas-bg, #f5f7fa);
+  background-color: var(--ff-content-canvas-bg);
   padding: 0;
   margin: 0;
 }
@@ -72,7 +72,7 @@ body {
 
 /* Product Section Styles */
 .product-section {
-  background: #ffffff;
+  background: var(--ff-surface);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
@@ -87,7 +87,7 @@ body {
 
 .section-header {
   background: linear-gradient(135deg, var(--ff-accent) 0%, var(--ff-accent-mid) 100%);
-  color: #ffffff;
+  color: var(--ff-surface);
   padding: 1.5rem 2rem;
   font-size: 1.5rem;
   font-weight: 600;
@@ -109,12 +109,12 @@ body {
 .section-text h3 {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--ff-text);
   margin-bottom: 1rem;
 }
 
 .section-text p {
-  color: #6b7280;
+  color: var(--ff-text-muted);
   line-height: 1.6;
   margin-bottom: 1.5rem;
 }
@@ -130,11 +130,11 @@ body {
   display: flex;
   align-items: center;
   padding: 0.75rem 1rem;
-  background-color: #f8fafc;
-  border: 1px solid #e5e7eb;
+  background-color: var(--ff-content-canvas-bg);
+  border: 1px solid var(--ff-border);
   border-radius: 8px;
   text-decoration: none;
-  color: #374151;
+  color: var(--ff-toolbar-text);
   font-weight: 500;
   transition: all 0.2s ease;
 }
@@ -172,14 +172,14 @@ body {
   height: 100%;
   object-fit: cover;
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--ff-border);
 }
 
 /* Divider */
 .divider {
   width: 60px;
   height: 3px;
-  background: linear-gradient(90deg, var(--ff-accent), #8b5cf6);
+  background: linear-gradient(90deg, var(--ff-accent), var(--ff-accent-mid));
   margin: 0.5rem 0 1rem 0;
   border-radius: 2px;
 }

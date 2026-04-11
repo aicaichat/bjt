@@ -1,6 +1,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import './styles/theme.css';
+import './styles/app-scope.css';
 import './styles/sidebar-functional-fix.css';
 import './styles/page-layout-fix.css';
 import './styles/products-submenu-fix.css';
@@ -122,6 +123,9 @@ const AppContent: React.FC = () => {
   const [isMockManagerOpen, setIsMockManagerOpen] = useState(false);
   const { user } = useAuth();
   const location = useLocation();
+  const appScopeClass = location.pathname.startsWith('/admin')
+    ? 'app-scope--admin'
+    : 'app-scope--storefront';
 
   // 打开购物车
   const openCart = () => {
@@ -137,7 +141,7 @@ const AppContent: React.FC = () => {
   const shouldShowCart = user || location.pathname !== '/';
 
   return (
-    <div className="App">
+    <div className={`App ${appScopeClass}`}>
       {/* Mock数据管理组件 */}
       <MockDataManager 
         isOpen={isMockManagerOpen} 

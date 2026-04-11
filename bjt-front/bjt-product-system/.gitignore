@@ -54,6 +54,12 @@ __pycache__/
 wp-config.php
 .htaccess
 
+# Playwright / E2E 生成物（勿提交）
+frontend/playwright-report/
+frontend/test-results/
+frontend/e2e-results.json
+frontend/e2e-results.xml
+
 # Temporary files
 *.tmp
 *.temp

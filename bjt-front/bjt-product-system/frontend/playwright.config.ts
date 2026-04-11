@@ -6,6 +6,7 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './e2e',
+  snapshotPathTemplate: '{testDir}/snapshots/{testFilePath}/{arg}{ext}',
   /* 并行运行测试 */
   fullyParallel: true,
   /* 在CI上禁用重试 */
@@ -50,6 +51,14 @@ export default defineConfig({
   /* 测试项目配置 */
   projects: [
     {
+      name: 'visual-chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1920, height: 1080 },
+        deviceScaleFactor: 1,
+      },
+    },
+    {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
@@ -78,6 +87,11 @@ export default defineConfig({
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000, // 2分钟启动超时
+    env: {
+      ...process.env,
+      // 与 e2e/global-setup 一致，保证机器页等列表数据可复现（视觉基线稳定）
+      VITE_DATA_SOURCE: 'sql-mock',
+    },
   },
 
   /* 全局设置和清理 */

@@ -1,0 +1,11 @@
+/**
+ * 前台 / 后台根作用域：便于将历史全局 *fix.css 逐步限定在 .app-scope--storefront，
+ * 避免误伤 /admin。类名在 App.tsx 的 AppContent 根节点上切换。
+ */
+.app-scope--storefront {
+  /* 占位：后续可把 legacy 覆盖规则嵌套在此选择器下 */
+}
+
+.app-scope--admin {
+  /* 后台独立主题时可在此收敛 */
+}
