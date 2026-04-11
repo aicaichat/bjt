@@ -51,6 +51,7 @@
 | 文件 | 作用 |
 |------|------|
 | `src/styles/figma-design-tokens.css` | 全站色、侧栏/顶栏等 **全局** token |
+| `src/figma-tokens/site-wide.json` | 全站 token 的 JSON 单一事实源（与 `figma-design-tokens.css` 同步） |
 | `src/styles/figma-tokens-machine-selection.css` | **仅机器选型**布局与单卡尺寸（本流程 A） |
 | `src/styles/machine-selection-figma.css` | 选型页 **组件类**样式；应逐步改为引用 `--ff-ms-*` |
 | `machine-selection.json` | 文档化 + 可与 Figma 插件 JSON 对齐 |

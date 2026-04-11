@@ -1,0 +1,39 @@
+{
+  "$comment": "全站视觉令牌总表（与 figma-design-tokens.css 同源）。当 Figma Variables 更新时，优先更新本文件，再同步 CSS。",
+  "meta": {
+    "figmaFileKey": "QluTLuKXbauHIiCN8AZUGJ",
+    "designViewportWidth": 1920,
+    "sourceCss": "src/styles/figma-design-tokens.css",
+    "owner": "frontend"
+  },
+  "color": {
+    "surface": "#FFFFFF",
+    "surfaceMuted": "#F9FAFB",
+    "contentCanvasBg": "#F5F7FA",
+    "textPrimary": "rgba(0,0,0,0.85)",
+    "textSecondary": "rgba(0,0,0,0.65)",
+    "toolbarText": "#333333",
+    "borderDefault": "#E5E7EB",
+    "borderMuted": "#DEDEDE",
+    "accent": "#00338D",
+    "accentMid": "#002A70",
+    "accentDark": "#002A70",
+    "navTop": "#00338D",
+    "navBottom": "#002244",
+    "tintBlue": "#E8EEF9",
+    "navPillBg": "#EBF3FF",
+    "headerDivider": "rgba(0,0,0,0.25)",
+    "sidebarDivider": "rgba(0,0,0,0.16)",
+    "focusRing": "rgba(0,51,141,0.18)"
+  },
+  "layout": {
+    "siteHeaderHeightPx": 72,
+    "mainStackGapPx": 24,
+    "mainColumnPadBottomPx": 24,
+    "sidebarWidthPx": 303,
+    "sidebarCollapsedWidthPx": 80
+  },
+  "typography": {
+    "fontFamily": "'Roboto','Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI','Helvetica Neue',Arial,sans-serif"
+  }
+}
