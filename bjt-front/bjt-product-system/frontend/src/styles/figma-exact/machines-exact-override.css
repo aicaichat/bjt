@@ -1,0 +1,1319 @@
+/**
+ * Machines 页面 - Figma 精确覆盖层
+ * 策略: 保持现有类名，覆盖为 Figma 精确值
+ * 优先级: 最高（最后加载）
+ */
+
+/* ========================================
+   机器卡片精确覆盖 - Frame 471
+   ======================================== */
+/*
+ * Frame 957 定宽 1465px 仅用于纸垫等；气垫 --air 走 token --ff-ms-air-row-width（1537），勿与此处冲突。
+ */
+.ms-figma-machine-card.ms-figma-machine-card--paper {
+  display: flex !important;
+  flex-direction: row !important;
+  width: 1465px !important;
+  min-height: 285px !important;
+  background: #ffffff !important;
+  box-shadow: 0px 0.5px 0px rgba(0, 0, 0, 0.25) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  position: relative !important;
+  box-sizing: border-box !important;
+  margin-bottom: 0 !important;
+  overflow: visible !important;
+}
+
+/*
+ * Frame 471：机器卡片根节点
+ * 稿面值: 1537×280, #FFFFFF, box-shadow, position: relative(给absolute子元素做参照)
+ * 使用绝对定位布局：图库 left:0, 中间 left:304, 右栏 right:0
+ */
+.machines-page.ms-product-line-layout .ms-figma-machine-card.ms-figma-machine-card--air {
+  display: block !important;
+  position: relative !important;
+  width: 1537px !important;
+  height: 280px !important;
+  background: #ffffff !important;
+  box-shadow: 0px 0.5px 0px rgba(0, 0, 0, 0.25) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  margin-bottom: 0 !important;
+  overflow: visible !important;
+  box-sizing: border-box !important;
+}
+
+/* Frame 205 - 图库列（在 __row 内，非卡片直接子元素） */
+.machines-page.ms-product-line-layout .ms-figma-machine-card.ms-figma-machine-card--air .ms-figma-machine-card__row > .ms-figma-machine-card__col-gallery {
+  position: absolute !important;
+  left: 0 !important;
+  top: 1px !important;
+  width: 288px !important;
+  height: 212px !important;
+  padding: 0 !important;
+  background: #ffffff !important;
+}
+
+/* Frame 527 - 中间列文字区（严格 Figma；在 __row 内） */
+.machines-page.ms-product-line-layout .ms-figma-machine-card.ms-figma-machine-card--air .ms-figma-machine-card__row > .ms-figma-machine-card__col-main {
+  position: absolute !important;
+  left: var(--ff-ms-air-frame527-left, 351px) !important;
+  right: var(--ff-ms-air-frame527-right, 321px) !important;
+  top: 0 !important;
+  height: var(--ff-ms-air-frame527-height, 248px) !important;
+  max-height: var(--ff-ms-air-frame527-height, 248px) !important;
+  padding: var(--ff-ms-air-frame527-pad, 16px 16px 0) !important;
+  gap: var(--ff-ms-air-frame527-gap, 16px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  background: #ffffff !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+}
+
+/* Frame 913 / 471：右栏在行内绝对定位；列底通栏 #EFF7FF（与 token --ff-ms-air-stock-bg） */
+.machines-page.ms-product-line-layout .ms-figma-machine-card.ms-figma-machine-card--air .ms-figma-machine-card__row > .ms-figma-machine-card__col-actions {
+  position: absolute !important;
+  right: 0 !important;
+  top: 0 !important;
+  width: 321px !important;
+  height: 280px !important;
+  background: var(--ff-ms-air-stock-bg, #eff7ff) !important;
+  box-sizing: border-box !important;
+}
+
+/* Frame 471 行容器：确保列对齐不把外框撑高 */
+@media (min-width: 768px) {
+  .machines-page.ms-product-line-layout .ms-figma-machine-card.ms-figma-machine-card--air > .ms-figma-machine-card__row {
+    display: flex !important;
+    flex-direction: row !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
+    align-items: stretch !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Frame 527：勿用 flex:1 撑满行容器 */
+  .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-machine-card__col-main {
+    position: absolute !important;
+    left: var(--ff-ms-air-frame527-left, 351px) !important;
+    right: var(--ff-ms-air-frame527-right, 321px) !important;
+    top: 0 !important;
+    height: var(--ff-ms-air-frame527-height, 248px) !important;
+    padding: var(--ff-ms-air-frame527-pad, 16px 16px 0) !important;
+    gap: var(--ff-ms-air-frame527-gap, 16px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    flex: none !important;
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-height: var(--ff-ms-air-frame527-height, 248px) !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 右栏 Frame 913: width 321（padding/gap 见 machine-selection + token） */
+  .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-machine-card__col-actions.ms-figma-machine-card__actions {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 0 0 321px !important;
+    width: 321px !important;
+    max-width: 321px !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 767px) {
+  .machines-page.ms-product-line-layout .ms-figma-machine-card.ms-figma-machine-card--air {
+    height: auto !important;
+    max-height: none !important;
+    min-height: var(--ff-ms-air-row-height, 280px) !important;
+    flex-shrink: 1 !important;
+    overflow: visible !important;
+  }
+}
+
+/* ========================================
+   Frame 205 - 图片库 (position: absolute)
+   稿面值: 288×212, left: 0, top: 1, gap: 8
+   ======================================== */
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-machine-card__col-gallery {
+  position: absolute !important;
+  width: 288px !important;
+  height: 212px !important;
+  left: 0px !important;
+  top: 1px !important;
+  flex: none !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+  padding: 0 !important;
+  background: #ffffff !important;
+}
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-machine-card__col-gallery > .relative {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 288px !important;
+  height: 212px !important;
+}
+
+/* ========================================
+   Frame 983 - 标题行
+   稿面值: gap: 156px, height: 47px, box-shadow
+   ======================================== */
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-product-title-row {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  width: 100% !important;
+  min-height: 47px !important;
+  padding: 0 0 16px 0 !important;
+  gap: 156px !important;
+  box-shadow: inset 0px -0.5px 0px rgba(0, 0, 0, 0.25) !important;
+  box-sizing: border-box !important;
+}
+
+/* ========================================
+   Frame 921 - More Info 按钮
+   稿面值: padding: 6px 12px, bg: #D9DFED, radius: 8px
+   ======================================== */
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-moreinfo-pill,
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-moreinfo-pill.ant-btn,
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-moreinfo-pill.ant-btn-sm {
+  padding: 6px 12px !important;
+  background: #d9dfed !important;
+  border-radius: 8px !important;
+  border: none !important;
+  font-size: 16px !important;
+  line-height: 19px !important;
+  font-weight: 400 !important;
+  color: rgba(0, 0, 0, 0.85) !important;
+  box-sizing: border-box !important;
+}
+
+/* ========================================
+   Frame 148 - 库存面板 (右栏内部)
+   稿面值: padding: 16px 10px, bg: #EFF7FF, radius: 8px
+   ======================================== */
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-purchase-rail .ms-figma-stock-panel {
+  padding: 16px 10px !important;
+  background: #eff7ff !important;
+  border-radius: 8px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* 卡片行 */
+.ms-figma-machine-card__row {
+  display: flex !important;
+  flex-direction: row !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+  align-items: stretch !important;
+  overflow: hidden !important;
+}
+
+/*
+ * 图库列：只做定位父级（position:relative），勿把 Frame 205 的 flex/gap 写在这里（会与稿面 absolute 根冲突）。
+ * 气垫 Frame 205 见 machine-selection-figma.css（.thumbnail-gallery-left.machine-gallery）。
+ */
+.ms-figma-machine-card__col-gallery {
+  position: relative !important;
+  width: 288px !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+  padding: 0 !important;
+}
+
+/* 纸垫卡：沿用整列白底占位（非 Frame 205 absolute 模式） */
+.ms-figma-machine-card--paper .ms-figma-machine-card__col-gallery {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  gap: 8px !important;
+  height: 212px !important;
+  background: #ffffff !important;
+  top: 1px !important;
+}
+
+/* 缩略图列表 */
+.ms-figma-machine-card__col-gallery .thumbnail-list,
+.ms-figma-machine-card__col-gallery [class*="thumbnail-list"] {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  padding: 0px !important;
+  gap: 4px !important;
+  width: 68px !important;
+  height: 212px !important;
+}
+
+.ms-figma-machine-card__col-gallery .thumbnail,
+.ms-figma-machine-card__col-gallery [class*="thumbnail"] {
+  box-sizing: border-box !important;
+  width: 68px !important;
+  height: 68px !important;
+  border: 1px solid #DEDEDE !important;
+  border-radius: 8px !important;
+  background: #FFFFFF !important;
+}
+
+/* 主图 */
+.ms-figma-machine-card__col-gallery .main-image,
+.ms-figma-machine-card__col-gallery [class*="main-image"] {
+  box-sizing: border-box !important;
+  width: 212px !important;
+  height: 212px !important;
+  border: 1px solid #DEDEDE !important;
+  border-radius: 8px !important;
+  background: #FFFFFF !important;
+}
+
+/* 主内容区 - Frame 487 - 自适应宽度 */
+.ms-figma-machine-card__col-main {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  padding: 16px 24px !important;
+  gap: 24px !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  background: #FFFFFF !important;
+  box-sizing: border-box !important;
+}
+
+/* 卡片标题区 - Frame 983 */
+.ms-figma-product-title-row,
+.ms-figma-machine-card__col-main [class*="title-row"] {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 0px 0px 16px !important;
+  gap: 16px !important;
+  width: 100% !important;
+  background: #FFFFFF !important;
+  box-sizing: border-box !important;
+}
+
+/* 机器名称 */
+.ms-figma-product-title,
+.ms-figma-machine-name {
+  font-family: 'Roboto', sans-serif !important;
+  font-style: normal !important;
+  font-weight: 700 !important;
+  font-size: 18px !important;
+  line-height: 21px !important;
+  color: rgba(0, 0, 0, 0.85) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* PN 标签 */
+.ms-figma-pn-pill,
+.ms-figma-machine-card__col-main [class*="pn-"] {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 6px 12px !important;
+  gap: 4px !important;
+  background: #D9DFED !important;
+  border-radius: 4px !important;
+  font-family: 'Roboto', sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  color: rgba(0, 0, 0, 0.85) !important;
+  white-space: nowrap !important;
+}
+
+/* 配件链接 */
+.ms-figma-link-accessories,
+.ms-figma-link-accessories-inline {
+  font-family: 'Roboto', sans-serif !important;
+  font-style: normal !important;
+  font-weight: 400 !important;
+  font-size: 16px !important;
+  line-height: 19px !important;
+  text-align: center !important;
+  color: #2A7DFA !important;
+  text-decoration: none !important;
+  white-space: nowrap !important;
+}
+
+/* 规格网格 - Figma Frame 831 定义 gap: 8px, padding-bottom: 16px */
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-spec-grid {
+  gap: 8px !important;
+  padding: 0px 0px 16px !important;
+  box-shadow: 0px 0.5px 0px rgba(0, 0, 0, 0.25) !important;
+  margin-top: 0px !important;
+}
+
+/* Frame 831：描述行(Frame 827) 与 双列(Frame 830) 之间 gap: 8px */
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-spec-grid-inner {
+  gap: 8px !important;
+}
+
+/* Frame 827：无额外 padding-bottom；与 machine-selection-figma 一致 */
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-spec-span-full {
+  gap: 8px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* 规格行 - Frame 830：两列间距 24px */
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-spec-row,
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-spec-dual-cols {
+  gap: 24px !important;
+}
+
+/* 规格列 - Figma Frame 828 定义 gap: 4px */
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-spec-col {
+  gap: 4px !important;
+}
+
+.ms-figma-spec-pair {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.ms-figma-spec-k,
+.ms-figma-spec-label {
+  font-family: 'Roboto', sans-serif !important;
+  font-style: normal !important;
+  font-weight: 700 !important;
+  font-size: 16px !important;
+  line-height: 19px !important;
+  color: rgba(0, 0, 0, 0.45) !important;
+}
+
+.ms-figma-spec-v,
+.ms-figma-spec-value {
+  font-family: 'Roboto', sans-serif !important;
+  font-style: normal !important;
+  font-weight: 400 !important;
+  font-size: 16px !important;
+  line-height: 19px !important;
+  color: rgba(0, 0, 0, 0.85) !important;
+}
+
+/*
+ * 气垫 Frame 471：覆盖上文 .ms-figma-spec-pair { display:flex !important }，
+ * 否则与主样式里 flex-wrap 叠用会把键值拆成两行；双列各占中间区一半，避免 205px 死宽撑破换行。
+ */
+/* Frame 488：行内无 gap */
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-spec-pair {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  justify-content: space-between !important;
+  align-items: baseline !important;
+  gap: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-spec-pair .ms-figma-spec-k {
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-spec-pair .ms-figma-spec-v {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  text-align: right !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-spec-col {
+  width: auto !important;
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+/*
+ * 气垫右栏 Frame 913 子栈 / 148 / 1084 — 仅 gap + flex-start；勿 space-between
+ */
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-purchase-rail {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  align-items: stretch !important;
+  gap: var(--ff-ms-air-rail-inner-gap) !important;
+  padding: 0 !important;
+  background: transparent !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  border-radius: 0 !important;
+  border: none !important;
+  box-sizing: border-box !important;
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-purchase-rail__price {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  align-items: baseline !important;
+  justify-content: flex-start !important;
+  gap: 8px 12px !important;
+  width: 100% !important;
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-purchase-rail__price .ms-figma-price-label {
+  margin: 0 !important;
+  font-family: var(--ff-font, 'Roboto', sans-serif) !important;
+  font-size: var(--ff-ms-air-title-size) !important;
+  line-height: var(--ff-ms-air-title-line) !important;
+  font-weight: 400 !important;
+  color: rgba(0, 0, 0, 0.65) !important;
+  text-align: left !important;
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-purchase-rail__price .ms-figma-price-value {
+  margin: 0 !important;
+  font-family: var(--ff-font, 'Roboto', sans-serif) !important;
+  font-size: var(--ff-ms-air-title-size) !important;
+  line-height: var(--ff-ms-air-title-line) !important;
+  font-weight: 400 !important;
+  color: rgba(0, 0, 0, 0.85) !important;
+  text-align: left !important;
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-stock-panel {
+  padding: var(--ff-ms-air-stock-panel-pad-y) var(--ff-ms-air-stock-panel-pad-x) !important;
+  gap: var(--ff-ms-air-stock-panel-gap) !important;
+  border-radius: var(--ff-ms-air-stock-panel-radius) !important;
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-stock-panel .ms-figma-stock-heading {
+  font-size: var(--ff-ms-air-title-size) !important;
+  line-height: var(--ff-ms-air-title-line) !important;
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-stock-panel .ms-figma-stock-total {
+  text-align: left !important;
+  font-size: var(--ff-ms-air-title-size) !important;
+  line-height: var(--ff-ms-air-title-line) !important;
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-stock-tags {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: var(--ff-ms-air-stock-tags-gap-row) var(--ff-ms-air-stock-tags-gap-col) !important;
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-stock-tags .ms-figma-stock-pill {
+  font-family: var(--ff-ms-air-stock-pill-font-family) !important;
+  font-size: var(--ff-ms-air-stock-pill-font-size) !important;
+  line-height: var(--ff-ms-air-stock-pill-line-height) !important;
+  padding: var(--ff-ms-air-stock-pill-pad-y) var(--ff-ms-air-stock-pill-pad-x) !important;
+  border-radius: var(--ff-ms-air-stock-pill-radius) !important;
+  background: #ffffff !important;
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-purchase-actions-row {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: var(--ff-ms-air-purchase-actions-gap-row) var(--ff-ms-air-purchase-actions-gap-col) !important;
+  min-height: var(--ff-ms-air-purchase-actions-min-height) !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+@media (min-width: 768px) {
+  .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-purchase-actions-row {
+    flex-wrap: nowrap !important;
+  }
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-purchase-actions-row .ms-figma-qty-stepper {
+  margin: 0 !important;
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-purchase-actions-row .ms-figma-primary-cart,
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-purchase-actions-row button.ms-figma-primary-cart {
+  margin: 0 !important;
+  min-width: var(--ff-ms-air-primary-cart-min-width) !important;
+  /* 主按钮 - Frame 1084 / Dev: bg #012583, radius 8px */
+  background: #012583 !important;
+  border-radius: 8px !important;
+  border: none !important;
+  color: #ffffff !important;
+  font-size: 16px !important;
+  line-height: 19px !important;
+  font-weight: 500 !important;
+  box-sizing: border-box !important;
+}
+
+/* 非气垫卡右栏占位（气垫由 Frame 913 + .machines-page…--air 覆盖，勿用此块顶掉稿面） */
+.ms-figma-machine-card:not(.ms-figma-machine-card--air) .ms-figma-machine-card__col-actions,
+.ms-figma-machine-card:not(.ms-figma-machine-card--air) .ms-figma-machine-card__actions {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
+  padding: 16px 24px !important;
+  gap: 16px !important;
+  width: 321px !important;
+  background: #ffffff !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* 价格区 */
+.ms-figma-purchase-rail {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  padding: 12px 16px !important;
+  gap: 8px !important;
+  width: 100% !important;
+  background: #EFF7FF !important;
+  border-radius: 4px !important;
+  box-sizing: border-box !important;
+}
+
+.ms-figma-price-label,
+.ms-figma-purchase-rail__price [class*="label"] {
+  font-family: 'Roboto', sans-serif !important;
+  font-style: normal !important;
+  font-weight: 400 !important;
+  font-size: 18px !important;
+  line-height: 21px !important;
+  color: rgba(0, 0, 0, 0.65) !important;
+}
+
+.ms-figma-price-value,
+.ms-figma-purchase-rail__price [class*="value"] {
+  font-family: 'Roboto', sans-serif !important;
+  font-style: normal !important;
+  font-weight: 400 !important;
+  font-size: 18px !important;
+  line-height: 21px !important;
+  text-align: center !important;
+  color: rgba(0, 0, 0, 0.85) !important;
+}
+
+/* 库存面板 */
+.ms-figma-stock-panel {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  padding: 12px 16px !important;
+  gap: 8px !important;
+  width: 100% !important;
+  background: #EFF7FF !important;
+  border-radius: 4px !important;
+  box-sizing: border-box !important;
+}
+
+.ms-figma-stock-heading {
+  font-family: 'Roboto', sans-serif !important;
+  font-style: normal !important;
+  font-weight: 400 !important;
+  font-size: 18px !important;
+  line-height: 21px !important;
+  color: rgba(0, 0, 0, 0.65) !important;
+}
+
+.ms-figma-stock-total {
+  font-family: 'Roboto', sans-serif !important;
+  font-style: normal !important;
+  font-weight: 400 !important;
+  font-size: 18px !important;
+  line-height: 21px !important;
+  text-align: center !important;
+  color: rgba(0, 0, 0, 0.85) !important;
+}
+
+.ms-figma-stock-tags {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+.ms-figma-stock-pill {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 5px 20px !important;
+  gap: 10px !important;
+  background: #FFFFFF !important;
+  border-radius: 4px !important;
+  white-space: nowrap !important;
+}
+
+.ms-figma-stock-pill--green span,
+.ms-figma-stock-pill--green {
+  color: #05A126 !important;
+}
+
+.ms-figma-stock-pill--red span,
+.ms-figma-stock-pill--red {
+  color: #FF0101 !important;
+}
+
+/* 数量选择器 */
+.ms-figma-qty-stepper {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  padding: 0px !important;
+  margin: 0 auto !important;
+  width: 108px !important;
+  height: 32px !important;
+}
+
+.ms-figma-qty-btn {
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 0px !important;
+  width: 32px !important;
+  height: 32px !important;
+  background: #FFFFFF !important;
+  border: 1px solid #DEDEDE !important;
+  cursor: pointer !important;
+  font-family: 'Roboto', sans-serif !important;
+  font-size: 16px !important;
+  line-height: 19px !important;
+  text-align: center !important;
+  color: rgba(0, 0, 0, 0.65) !important;
+}
+
+.ms-figma-qty-btn:first-child {
+  border-radius: 4px 0px 0px 4px !important;
+  margin: 0px -1px !important;
+}
+
+.ms-figma-qty-btn:last-child {
+  border-radius: 0px 4px 4px 0px !important;
+  margin: 0px -1px !important;
+}
+
+.ms-figma-qty-input {
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 0px !important;
+  width: 46px !important;
+  height: 32px !important;
+  background: #FFFFFF !important;
+  border: 1px solid #DEDEDE !important;
+  margin: 0px -1px !important;
+  text-align: center !important;
+  font-family: 'Roboto', sans-serif !important;
+  font-size: 16px !important;
+  line-height: 19px !important;
+  color: rgba(0, 0, 0, 0.85) !important;
+}
+
+/* 加入购物车按钮 */
+.ms-figma-primary-cart,
+.ms-figma-add-to-cart-btn {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 12px 24px !important;
+  gap: 12px !important;
+  margin: 0 auto !important;
+  min-height: 44px !important;
+  background: #012583 !important;
+  border-radius: 8px !important;
+  border: none !important;
+  cursor: pointer !important;
+}
+
+.ms-figma-primary-cart span,
+.ms-figma-add-to-cart-btn span {
+  font-family: 'Roboto', sans-serif !important;
+  font-style: normal !important;
+  font-weight: 700 !important;
+  font-size: 16px !important;
+  line-height: 19px !important;
+  color: #FFFFFF !important;
+  white-space: nowrap !important;
+}
+
+/* ========================================
+   配件卡片精确覆盖
+   ======================================== */
+.ms-figma-accessory-card {
+  display: flex !important;
+  flex-direction: row !important;
+  width: 1465px !important;
+  min-height: 240px !important;
+  background: #FFFFFF !important;
+  border: 1px solid #DEDEDE !important;
+  border-radius: 0 !important;
+  box-shadow: 0px 0.5px 0px rgba(0, 0, 0, 0.25) !important;
+  box-sizing: border-box !important;
+  margin-bottom: 0 !important;
+  overflow: visible !important;
+}
+
+.ms-figma-accessory-card__row {
+  display: flex !important;
+  flex-direction: row !important;
+  width: 100% !important;
+  height: 100% !important;
+  padding: 0 !important;
+  gap: 0 !important;
+}
+
+.ms-figma-accessory-card__col-gallery {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  padding: 16px !important;
+  gap: 12px !important;
+  width: 288px !important;
+  flex-shrink: 0 !important;
+}
+
+.ms-figma-accessory-card__image {
+  width: 212px !important;
+  height: 212px !important;
+  border: 1px solid #DEDEDE !important;
+  border-radius: 8px !important;
+  object-fit: contain !important;
+}
+
+.ms-figma-accessory-card__select {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  padding: 8px 16px !important;
+  gap: 8px !important;
+  height: 32px !important;
+  background: #F1F5F9 !important;
+  border: 1px solid #DEDEDE !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+}
+
+.ms-figma-accessory-card__col-main {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  padding: 16px 24px !important;
+  gap: 12px !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  border-left: 1px solid #DEDEDE !important;
+  border-right: 1px solid #DEDEDE !important;
+}
+
+.ms-figma-accessory-card__pn {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 4px 12px !important;
+  background: #D9DFED !important;
+  border-radius: 6px !important;
+  font-family: 'Roboto', sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: rgba(0, 0, 0, 0.85) !important;
+  white-space: nowrap !important;
+}
+
+.ms-figma-accessory-card__title {
+  font-family: 'Roboto', sans-serif !important;
+  font-style: normal !important;
+  font-weight: 700 !important;
+  font-size: 18px !important;
+  line-height: 21px !important;
+  color: rgba(0, 0, 0, 0.85) !important;
+}
+
+.ms-figma-accessory-card__col-actions {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  padding: 16px !important;
+  gap: 16px !important;
+  width: 321px !important;
+  flex-shrink: 0 !important;
+}
+
+/* 配件规格网格 */
+.ms-figma-accessory-card__spec-grid {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  gap: 24px !important;
+  width: 100% !important;
+}
+
+.ms-figma-accessory-card__spec-item {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.ms-figma-accessory-card__spec-label {
+  font-family: 'Roboto', sans-serif !important;
+  font-size: 16px !important;
+  font-weight: 400 !important;
+  color: rgba(0, 0, 0, 0.85) !important;
+}
+
+.ms-figma-accessory-card__spec-value {
+  font-family: 'Roboto', sans-serif !important;
+  font-size: 16px !important;
+  font-weight: 400 !important;
+  color: rgba(0, 0, 0, 0.65) !important;
+}
+
+/* ========================================
+   页面布局精确覆盖
+   ======================================== */
+.machines-page.ms-product-line-layout {
+  --ms-page-gutter: 40px !important;
+  --ms-content-max: 1617px !important;
+  background-color: #F1F5F9 !important;
+}
+
+.ms-content-column {
+  padding: 16px 40px 24px 40px !important;
+  gap: 24px !important;
+  width: 100% !important;
+  max-width: 1617px !important;
+  background: #F1F5F9 !important;
+}
+
+/* 机器网格 - Frame 957 */
+.ms-figma-machine-grid {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  padding: 0px !important;
+  width: 1465px !important;
+  gap: 0 !important;
+}
+
+/* ========================================
+   More Info 面板精确覆盖
+   ======================================== */
+.ms-figma-moreinfo {
+  position: relative !important;
+}
+
+.ms-figma-moreinfo-trigger {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  padding: 6px 16px !important;
+  gap: 8px !important;
+  min-height: 36px !important;
+  background: #D9DFED !important;
+  border: 1px solid #C4DCFF !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+}
+
+.ms-figma-moreinfo-trigger span,
+.ms-figma-moreinfo-trigger {
+  font-family: 'Roboto', sans-serif !important;
+  font-style: normal !important;
+  font-weight: 700 !important;
+  font-size: 18px !important;
+  line-height: 21px !important;
+  color: #012583 !important;
+}
+
+.ms-figma-moreinfo-panel {
+  position: absolute !important;
+  z-index: 100 !important;
+  width: 320px !important;
+  background: #FFFFFF !important;
+  border: 1px solid #DEDEDE !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  padding: 16px !important;
+}
+
+.ms-figma-moreinfo-panel__head {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding-bottom: 12px !important;
+  border-bottom: 1px solid #DEDEDE !important;
+  margin-bottom: 12px !important;
+}
+
+.ms-figma-moreinfo-panel__title {
+  font-family: 'Roboto', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 16px !important;
+  color: rgba(0, 0, 0, 0.85) !important;
+}
+
+.ms-figma-moreinfo-panel__row {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
+  padding: 8px 0 !important;
+  border-bottom: 1px solid #F1F5F9 !important;
+}
+
+.ms-figma-moreinfo-panel__row dt {
+  font-family: 'Roboto', sans-serif !important;
+  font-size: 14px !important;
+  color: rgba(0, 0, 0, 0.65) !important;
+}
+
+.ms-figma-moreinfo-panel__row dd {
+  font-family: 'Roboto', sans-serif !important;
+  font-size: 14px !important;
+  color: rgba(0, 0, 0, 0.85) !important;
+}
+
+/* ========================================
+   分页精确覆盖
+   ======================================== */
+.ms-figma-pagination-wrap {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 0px !important;
+  gap: 10px !important;
+  min-height: 40px !important;
+  margin: 24px auto !important;
+}
+
+/* 面包屑 Frame 982：由 machine-selection-figma.css 中 .figma-front .ms-breadcrumb-bar--figma 定义，勿在此用泛化 .ms-breadcrumb-bar !important 压稿面 padding */
+
+/* ========================================
+   新类名覆盖 - figma-exact-*
+   ======================================== */
+
+/* M4：列表宿主 — padding 与主列 gutter 同源（figma-machine-selection-layout / --ff-ms-page-gutter） */
+.figma-exact-content {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  padding: var(--ff-ms-air-list-host-pad-y) var(--ff-ms-air-list-host-pad-x) !important;
+  gap: var(--ff-ms-air-row-inner-gap) !important;
+  width: 100% !important;
+  max-width: var(--ff-ms-content-max-width) !important;
+  background: var(--ff-content-canvas-bg) !important;
+  box-sizing: border-box !important;
+}
+
+/* Product Line 1 主机行：Frame 471 无外圈 padding；Frame 487 的 16×24 只在中间列（见下） */
+.figma-exact-machine-card {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  width: 100% !important;
+  max-width: var(--ff-ms-air-row-width) !important;
+  min-height: var(--ff-ms-air-row-height) !important;
+  padding: 0 !important;
+  gap: var(--ff-ms-air-gallery-to-main-gap) !important;
+  background: var(--ff-ms-card-bg) !important;
+  box-shadow: var(--ff-ms-air-row-shadow) !important;
+  position: relative !important;
+  box-sizing: border-box !important;
+  margin-bottom: 0 !important;
+}
+
+/* Frame 487：中间列独占 16px 24px padding（docs/.../machine-selection-figma-dev-export-2026-04-12.css） */
+.figma-exact-machine-card > .ms-figma-machine-card__col-main {
+  padding: var(--ff-ms-air-row-pad-y) var(--ff-ms-air-row-pad-x) !important;
+  box-sizing: border-box !important;
+}
+
+/* Frame 913：与稿一致；禁止 1017 的 space-between + 白底整列（避免竖向掏空） */
+.figma-exact-machine-card .ms-figma-machine-card__col-actions.ms-figma-machine-card__actions {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
+  padding: var(--ff-ms-air-frame913-pad, 16px 16px 0 0) !important;
+  gap: var(--ff-ms-air-rail-inner-gap) !important;
+  min-height: var(--ff-ms-air-rail-min-height) !important;
+  background: var(--ff-ms-air-stock-bg, #eff7ff) !important;
+}
+
+.figma-exact-machine-card
+  .ms-figma-machine-card__col-actions.ms-figma-machine-card__actions
+  > .ms-figma-purchase-rail {
+  align-self: stretch !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.figma-exact-machine-card .ms-figma-purchase-rail {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  align-items: stretch !important;
+  background: transparent !important;
+  padding: 0 !important;
+  gap: var(--ff-ms-air-rail-inner-gap) !important;
+  width: 100% !important;
+  border-radius: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Frame 148 */
+.figma-exact-machine-card .ms-figma-stock-panel {
+  padding: var(--ff-ms-air-stock-panel-pad-y) var(--ff-ms-air-stock-panel-pad-x) !important;
+  gap: var(--ff-ms-air-stock-panel-gap) !important;
+  border-radius: var(--ff-ms-air-stock-panel-radius) !important;
+  margin: 0 auto !important;
+  width: 100% !important;
+  max-width: var(--ff-ms-air-rail-width) !important;
+  box-sizing: border-box !important;
+}
+
+/* Frame 983 */
+.figma-exact-machine-card .ms-figma-product-title-row {
+  align-items: flex-start !important;
+  padding: 0 0 var(--ff-ms-air-title-row-pad-bottom) !important;
+  gap: var(--ff-ms-air-title-row-gap) !important;
+  box-shadow: var(--ff-ms-air-section-hairline-shadow) !important;
+  height: auto !important;
+  min-height: var(--ff-ms-air-title-row-min-height) !important;
+}
+
+/* Frame 835 / #PN */
+.figma-exact-machine-card .ms-figma-pn-pill {
+  border-radius: var(--ff-ms-air-pn-pill-radius) !important;
+  font-size: var(--ff-ms-air-body-size) !important;
+  line-height: var(--ff-ms-air-body-line) !important;
+  font-weight: var(--ff-ms-air-pn-pill-weight) !important;
+}
+
+/* Frame 830 / 488：两列与中缝；键值同行，标签 0.85 / 数值 0.65 */
+.figma-exact-machine-card .ms-figma-spec-dual-cols {
+  align-items: center !important;
+}
+
+.figma-exact-machine-card .ms-figma-spec-k {
+  font-weight: var(--ff-ms-air-pn-pill-weight) !important;
+  color: var(--ff-text) !important;
+}
+
+.figma-exact-machine-card .ms-figma-spec-v {
+  color: var(--ff-text-muted) !important;
+  flex: 1 1 auto !important;
+  text-align: right !important;
+}
+
+.figma-exact-machine-card .ms-figma-spec-pair {
+  justify-content: space-between !important;
+  gap: var(--ff-ms-air-spec-pair-gap) !important;
+  width: 100% !important;
+}
+
+/* Frame 831 描述区底部分割线 */
+.figma-exact-machine-card .ms-figma-spec-span-full {
+  padding: 0 0 var(--ff-ms-air-spec-title-to-block-gap) !important;
+  gap: var(--ff-ms-air-spec-inner-gap) !important;
+  box-shadow: var(--ff-ms-air-section-hairline-shadow) !important;
+}
+
+/* Frame 1084：步进器 + 加购（与 air 卡片一致，figma-exact 未挂 --air） */
+.figma-exact-machine-card .ms-figma-purchase-actions-row {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: var(--ff-ms-air-purchase-actions-gap-row) var(--ff-ms-air-purchase-actions-gap-col) !important;
+  width: 100% !important;
+  max-width: var(--ff-ms-air-rail-width) !important;
+  margin: 0 auto !important;
+  min-height: var(--ff-ms-air-purchase-actions-min-height) !important;
+}
+
+.figma-exact-machine-card .ms-figma-purchase-actions-row .ms-figma-qty-stepper {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+}
+
+.figma-exact-machine-card .ms-figma-purchase-actions-row .ms-figma-primary-cart {
+  flex: 0 0 auto !important;
+  min-width: var(--ff-ms-air-primary-cart-min-width) !important;
+}
+
+.figma-exact-machine-card .ms-figma-stock-tags {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: var(--ff-ms-air-stock-tags-gap-row) var(--ff-ms-air-stock-tags-gap-col) !important;
+  width: 100% !important;
+}
+
+.figma-exact-machine-card .ms-figma-stock-tags .ms-figma-stock-pill {
+  background: var(--ff-ms-air-stock-pill-bg) !important;
+  border: none !important;
+  border-radius: var(--ff-ms-air-stock-pill-radius) !important;
+  font-family: var(--ff-ms-air-stock-pill-font-family) !important;
+  font-size: var(--ff-ms-air-stock-pill-font-size) !important;
+  line-height: var(--ff-ms-air-stock-pill-line-height) !important;
+  padding: var(--ff-ms-air-stock-pill-pad-y) var(--ff-ms-air-stock-pill-pad-x) !important;
+}
+
+.figma-exact-card-gallery {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  padding: 0px !important;
+  gap: var(--ff-ms-air-gallery-main-gap) !important;
+  width: var(--ff-ms-air-gallery-track-width) !important;
+  max-width: var(--ff-ms-air-gallery-track-width) !important;
+  flex: 0 0 var(--ff-ms-air-gallery-track-width) !important;
+  height: var(--ff-ms-air-gallery-frame-height) !important;
+  background: var(--ff-ms-card-bg) !important;
+  flex-shrink: 0 !important;
+  position: relative !important;
+}
+
+/* ========================================
+   Machines.css 实际使用类名覆盖 - Frame 518 (1537px) + Frame 957 (1465px)
+   ======================================== */
+
+/* Frame 518 - 主容器 */
+.machines-page.machines-index-page .machine-list-card__row {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  padding: 0 !important;
+  width: 1465px !important;
+  min-height: 285px !important;
+  background: #FFFFFF !important;
+  box-sizing: border-box !important;
+}
+
+/* Frame 205 - 图片区 288px */
+.machines-page.machines-index-page .machine-list-card__thumb {
+  flex: 0 0 288px !important;
+  width: 288px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  padding: 16px !important;
+  gap: 12px !important;
+  margin-bottom: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.machines-page.machines-index-page .machine-list-card__figure {
+  width: 212px !important;
+  height: 212px !important;
+  border: 1px solid #DEDEDE !important;
+  border-radius: 8px !important;
+  background: #FFFFFF !important;
+  margin-bottom: 0 !important;
+}
+
+.machines-page.machines-index-page .machine-list-card__figure img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  padding: 8px !important;
+}
+
+/* Frame 487 - 主内容区 弹性填充 */
+.machines-page.machines-index-page .machine-list-card__body {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  padding: 16px 24px !important;
+  box-sizing: border-box !important;
+}
+
+/* Frame 1017 - 操作区 321px */
+.machines-page.machines-index-page .machine-list-card__side {
+  flex: 0 0 321px !important;
+  width: 321px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  padding: 16px 24px !important;
+  gap: 16px !important;
+  margin-top: 0 !important;
+  padding-top: 16px !important;
+  border-top: none !important;
+  border-left: 1px solid #E5E7EB !important;
+  box-sizing: border-box !important;
+}
+
+/* 覆盖响应式样式 */
+@media (min-width: 768px) {
+  .machines-page.machines-index-page .machine-list-card__row {
+    flex-direction: row !important;
+    align-items: stretch !important;
+  }
+
+  .machines-page.machines-index-page .machine-list-card__thumb {
+    flex: 0 0 288px !important;
+    width: 288px !important;
+    max-width: none !important;
+    padding-right: 0 !important;
+  }
+
+  .machines-page.machines-index-page .machine-list-card__body {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    max-width: none !important;
+    padding-right: 24px !important;
+  }
+
+  .machines-page.machines-index-page .machine-list-card__side {
+    flex: 0 0 321px !important;
+    width: 321px !important;
+    max-width: none !important;
+    padding-left: 24px !important;
+    border-left: 1px solid #E5E7EB !important;
+  }
+}

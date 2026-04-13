@@ -13,7 +13,7 @@ import {
   ReloadOutlined,
   RightOutlined,
   DeleteOutlined,
-  PictureOutlined,
+  FileImageOutlined,
   LeftOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
@@ -51,9 +51,8 @@ interface FlattenedAccessory extends MachineAccessory {
   children: []; // 展开后清空children
 }
 
-import './Machines.css';
-import './accessibility.css';
-import './breadcrumb.css';
+// Figma 像素级精确覆盖层（保持现有类名，覆盖为 Figma 精确值）
+import '../../styles/figma-exact/machines-exact-override.css';
 import { MachineCompareFigmaTable } from './components/MachineCompareFigmaTable';
 import { MsFigmaPagination } from './components/MsFigmaPagination';
 
@@ -180,8 +179,6 @@ const ProductLine1Page: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedMachine, setSelectedMachine] = useState<string>('');
   const [filterType, setFilterType] = useState<string>('all');
-  /** Figma「产品类型」— 对应数据 model_type */
-  const [filterProductType, setFilterProductType] = useState<string>('all');
   const [filterRegion, setFilterRegion] = useState<string>('');
   const [selectedVoltage, setSelectedVoltage] = useState<string>('ALL');
   const [compareDiagramSrc, setCompareDiagramSrc] = useState<string>(DEFAULT_COMPARE_DIAGRAM);
@@ -502,7 +499,6 @@ const ProductLine1Page: React.FC = () => {
       filterRegion,
       selectedVoltage,
       filterType,
-      filterProductType,
       currentPage,
       pageSize
     });
@@ -544,9 +540,6 @@ const ProductLine1Page: React.FC = () => {
           });
           if (filterType !== 'all') {
             qp.set('model', filterType);
-          }
-          if (filterProductType !== 'all') {
-            qp.set('model_type', filterProductType);
           }
           if (selectedVoltage && selectedVoltage !== 'ALL') {
             qp.set('voltage', selectedVoltage);
@@ -977,7 +970,6 @@ const ProductLine1Page: React.FC = () => {
     currentPage,
     pageSize,
     filterType,
-    filterProductType,
   ]);
 
   // ✅ 新增：监听语言变化，强制重新渲染配件路径
@@ -1541,10 +1533,10 @@ const ProductLine1Page: React.FC = () => {
       .trim();
   };
 
-  /** 筛选由 machineparts API（model / model_type / voltage）与分页完成 */
+  /** 筛选由 machineparts API（model / voltage）与分页完成 */
   const filteredMachines = machines;
 
-  /** 型号 / 产品类型选项来自 host-models API，与后端数据源一致 */
+  /** 型号选项来自 host-models API，与后端数据源一致 */
   const modelOptions = React.useMemo(() => {
     if (!Array.isArray(hostModels) || hostModels.length === 0) {
       return [{ value: 'all', label: t('filters.allModels') }];
@@ -1554,23 +1546,6 @@ const ProductLine1Page: React.FC = () => {
     return [
       { value: 'all', label: t('filters.allModels') },
       ...uniqueModels.map(model => ({ value: model, label: model })),
-    ];
-  }, [hostModels, t]);
-
-  const productTypeOptions = React.useMemo(() => {
-    if (!Array.isArray(hostModels) || hostModels.length === 0) {
-      return [{ value: 'all', label: t('filters.allTypes') }];
-    }
-    const types = Array.from(
-      new Set(
-        hostModels
-          .map(h => h.type)
-          .filter((v): v is string => typeof v === 'string' && v.trim() !== '')
-      )
-    ).sort() as string[];
-    return [
-      { value: 'all', label: t('filters.allTypes') },
-      ...types.map(ty => ({ value: ty, label: ty })),
     ];
   }, [hostModels, t]);
 
@@ -1730,12 +1705,17 @@ const ProductLine1Page: React.FC = () => {
         ? getMachineName(product as MachinePart) 
         : getAccessoryName(product as MachineAccessory);
         
-      // 2. 在handleAddToCart成功后触发动画
-      // 获取购物车icon元素
-      const cartIcon = document.querySelector('.anticon-shopping-cart') || document.querySelector('.shopping-cart-icon');
+      // 2. 加入购物车飞入动画：起点为当前「加入购物车」按钮，终点为顶栏或悬浮购物车图标
+      const dataProductTypeAttr = productType === 'machine' ? 'machines' : 'accessories';
+      const startEl = document.querySelector(
+        `[data-add-to-cart-anchor="${String(product.id)}"][data-product-type="${dataProductTypeAttr}"]`
+      ) as HTMLElement | null;
+      const cartIcon =
+        (document.querySelector('.anticon-shopping-cart') ||
+          document.querySelector('.shopping-cart-icon')) as HTMLElement | null;
       setCartAnimation({
         isActive: true,
-        startElement: null, // 可根据实际传递按钮ref
+        startElement: startEl,
         targetElement: cartIcon,
         productImage: product.image_url || DEFAULT_IMAGE,
         productName: productType === 'machine' ? getMachineName(product as MachinePart) : getAccessoryName(product as MachineAccessory)
@@ -2067,7 +2047,7 @@ const ProductLine1Page: React.FC = () => {
     }
   };
 
-  // 渲染机器表格
+  /** Product Line 1 — 主机列表（Figma M4–M9；配件树另见 M11，不在此渲染函数内） */
   const renderMachinesTable = () => {
     // 如果选择了主机，只显示选中的主机
     const machinesToShow = selectedMachine 
@@ -2075,15 +2055,24 @@ const ProductLine1Page: React.FC = () => {
       : filteredMachines;
     
     return (
-      <div className="ms-figma-machine-grid">
+      <div className="ms-figma-machine-grid" data-ms-pl1-host="true" style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2, width: 1537}}>
         {machinesToShow.map(machine => (
-          <div 
-            key={`machine-${machine.id}-${machine.part_number}`} 
+          <div
+            key={`machine-${machine.id}-${machine.part_number}`}
             className="ms-figma-machine-card ms-figma-machine-card--air"
+            style={{
+              position: 'relative',
+              width: 1537,
+              height: 280,
+              background: '#ffffff',
+              boxShadow: '0px 0.5px 0px rgba(0,0,0,0.25)',
+              marginBottom: 0
+            }}
           >
-            <div className="ms-figma-machine-card__row">
-              {/* Column 1: 图库 — URL 去重，最多 4 张，与视觉稿一致 */}
-              <div className="ms-figma-machine-card__col-gallery">
+            {/* 与 machine-selection-figma 气垫链一致：须挂 --air，图库才命中 .thumbnail-gallery-left.machine-gallery 的 Frame 205 覆盖 */}
+            <div className="ms-figma-machine-card__row" style={{display: 'flex', flexDirection: 'row'}}>
+            {/* Column 1: 图库 - Frame 205 - 288px */}
+            <div className="ms-figma-machine-card__col-gallery" style={{position: 'absolute', left: 0, top: 1, width: 288, height: 212, background: '#fff'}}>
                 <div className="relative">
                   <ThumbnailGallery
                     images={(() => {
@@ -2115,17 +2104,19 @@ const ProductLine1Page: React.FC = () => {
               </div>
 
               {/* Column 2: Info & Specs — Figma：标题行 型号 + PN + 配件链接；规格两列栅格 */}
+              {/* Figma Frame 527：尺寸与间距见 figma-tokens-machine-selection.css + machines-exact-override.css */}
               <div className="ms-figma-machine-card__col-main">
                 <div className="ms-figma-product-title-row">
                   <div className="ms-figma-product-title-group">
-                    <h3 className="ms-figma-product-title">{getMachineName(machine)}</h3>
-                    <span className="ms-figma-pn-pill">
+                    <h3 className="ms-figma-product-title" style={{fontFamily: 'Roboto', fontWeight: 700, fontSize: 18, lineHeight: 21, color: 'rgba(0,0,0,0.85)', margin: 0}}>{getMachineName(machine)}</h3>
+                    <span className="ms-figma-pn-pill" style={{fontFamily: 'Roboto', fontWeight: 400, fontSize: 16, lineHeight: 19, color: 'rgba(0,0,0,0.85)', background: '#d9dfed', borderRadius: 8, padding: '4px 8px'}}>
                       {t('tableHeaders.pnPrefix')}: {machine.part_number}
                     </span>
                   </div>
                   <button
                     type="button"
                     className="ms-figma-link-accessories-inline"
+                    style={{fontFamily: 'Roboto', fontSize: 16, color: '#2a7dfa', border: 'none', background: 'transparent', cursor: 'pointer'}}
                     onClick={() => {
                       handleMachineSelection(machine.id);
                       window.setTimeout(() => {
@@ -2149,59 +2140,62 @@ const ProductLine1Page: React.FC = () => {
                           '—'}
                       </span>
                     </div>
-                    <div className="ms-figma-spec-two-col">
-                      <div className="ms-figma-spec-pair">
-                        <span className="ms-figma-spec-k">{getFieldWithUnit('palletSize', 'size')}</span>
-                        <span className="ms-figma-spec-v">
-                          {unitSystem === 'metric'
-                            ? removeUnitFromValue(machine.pallet_size_cm) || '—'
-                            : removeUnitFromValue(machine.pallet_size_inch) || '—'}
-                        </span>
+                    {/*
+                      Figma Frame 830：两列竖栈（与稿面一致；左列顺序同 Dev：包装方式 → 单箱数量 → 托盘尺寸）
+                      右：电压 → 单托数量 → 外箱包装尺寸
+                    */}
+                    <div className="ms-figma-spec-dual-cols">
+                      <div className="ms-figma-spec-col">
+                        <div className="ms-figma-spec-pair">
+                          <span className="ms-figma-spec-k">{t('tableHeaders.packagingMethod')}</span>
+                          <span className="ms-figma-spec-v">{machine.unit || '—'}</span>
+                        </div>
+                        <div className="ms-figma-spec-pair">
+                          <span className="ms-figma-spec-k">{t('tableHeaders.pcsPerBox')}</span>
+                          <span className="ms-figma-spec-v">
+                            {machine.pcs_per_box !== null && machine.pcs_per_box !== undefined
+                              ? machine.pcs_per_box
+                              : '—'}
+                          </span>
+                        </div>
+                        <div className="ms-figma-spec-pair">
+                          <span className="ms-figma-spec-k">{getFieldWithUnit('palletSize', 'size')}</span>
+                          <span className="ms-figma-spec-v">
+                            {unitSystem === 'metric'
+                              ? removeUnitFromValue(machine.pallet_size_cm) || '—'
+                              : removeUnitFromValue(machine.pallet_size_inch) || '—'}
+                          </span>
+                        </div>
                       </div>
-                      <div className="ms-figma-spec-pair">
-                        <span className="ms-figma-spec-k">{getFieldWithUnit('voltage', 'voltage')}</span>
-                        <span className="ms-figma-spec-v">
-                          {machine.voltage ? removeUnitFromValue(machine.voltage) : '—'}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="ms-figma-spec-two-col">
-                      <div className="ms-figma-spec-pair">
-                        <span className="ms-figma-spec-k">{t('tableHeaders.pcsPerBox')}</span>
-                        <span className="ms-figma-spec-v">
-                          {machine.pcs_per_box !== null && machine.pcs_per_box !== undefined
-                            ? machine.pcs_per_box
-                            : '—'}
-                        </span>
-                      </div>
-                      <div className="ms-figma-spec-pair">
-                        <span className="ms-figma-spec-k">{t('tableHeaders.pcsPerPallet')}</span>
-                        <span className="ms-figma-spec-v">
-                          {machine.pcs_per_pallet !== null && machine.pcs_per_pallet !== undefined
-                            ? machine.pcs_per_pallet
-                            : '—'}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="ms-figma-spec-two-col">
-                      <div className="ms-figma-spec-pair">
-                        <span className="ms-figma-spec-k">{t('tableHeaders.packagingMethod')}</span>
-                        <span className="ms-figma-spec-v">{machine.unit || '—'}</span>
-                      </div>
-                      <div className="ms-figma-spec-pair">
-                        <span className="ms-figma-spec-k">{getFieldWithUnit('packageSize', 'size')}</span>
-                        <span className="ms-figma-spec-v">
-                          {unitSystem === 'metric'
-                            ? removeUnitFromValue(machine.package_size_cm) || '—'
-                            : removeUnitFromValue(machine.package_size_inch) || '—'}
-                        </span>
+                      <div className="ms-figma-spec-col">
+                        <div className="ms-figma-spec-pair">
+                          <span className="ms-figma-spec-k">{getFieldWithUnit('voltage', 'voltage')}</span>
+                          <span className="ms-figma-spec-v">
+                            {machine.voltage ? removeUnitFromValue(machine.voltage) : '—'}
+                          </span>
+                        </div>
+                        <div className="ms-figma-spec-pair">
+                          <span className="ms-figma-spec-k">{t('tableHeaders.pcsPerPallet')}</span>
+                          <span className="ms-figma-spec-v">
+                            {machine.pcs_per_pallet !== null && machine.pcs_per_pallet !== undefined
+                              ? machine.pcs_per_pallet
+                              : '—'}
+                          </span>
+                        </div>
+                        <div className="ms-figma-spec-pair">
+                          <span className="ms-figma-spec-k">{getFieldWithUnit('packageSize', 'size')}</span>
+                          <span className="ms-figma-spec-v">
+                            {unitSystem === 'metric'
+                              ? removeUnitFromValue(machine.package_size_cm) || '—'
+                              : removeUnitFromValue(machine.package_size_inch) || '—'}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="ms-figma-machine-spec-actions flex flex-col gap-3">
-                  <div className="flex flex-wrap gap-3 items-center">
+                <div className="ms-figma-machine-spec-actions">
                     <div
                       className="ms-figma-moreinfo relative"
                       data-ms-moreinfo-root={String(machine.id)}
@@ -2215,6 +2209,7 @@ const ProductLine1Page: React.FC = () => {
                         onClick={() =>
                           setMoreInfoOpenId((id) => (id === String(machine.id) ? null : String(machine.id)))
                         }
+                        style={{fontFamily: 'Roboto', fontSize: 16, fontWeight: 400, color: 'rgba(0,0,0,0.85)', background: '#d9dfed', border: '1px solid #c4dcff', borderRadius: 8, padding: '6px 12px'}}
                       >
                         <InfoCircleOutlined className="ms-figma-moreinfo-trigger__icon" aria-hidden />
                         {t('moreInfo')}
@@ -2283,7 +2278,6 @@ const ProductLine1Page: React.FC = () => {
                         </div>
                       )}
                     </div>
-                  </div>
                   <div className="ms-figma-spec-action-links">
                     <button
                       type="button"
@@ -2337,23 +2331,16 @@ const ProductLine1Page: React.FC = () => {
                 </div>
               </div>
 
-              {/* Column 3: Price, Stock, Actions */}
-              <div className="ms-figma-machine-card__col-actions ms-figma-machine-card__actions">
+              {/* Column 3: Stock + Actions（列表右栏不展示单价，避免 ¥0 占位） */}
+              <div
+                className="ms-figma-machine-card__col-actions ms-figma-machine-card__actions"
+                style={{ position: 'absolute', right: 0, top: 0, width: 321, height: 280 }}
+              >
                 <div className="ms-figma-purchase-rail">
-                <div className="mb-4">
-                  <div className="font-medium text-sm text-gray-600 mb-1">
-                    {t('tableHeaders.price') || 'Price'}:
-                  </div>
-                  
-                  <div className="ms-figma-price-value mb-2">
-                    {getCurrencySymbol(userRegion)}{formatPrice(machine.prices?.[0]?.tiers?.[0]?.base_price || 0)}
-                  </div>
-                </div>
-                
                 {isSales && (
-                  <div className="mb-4 ms-figma-stock-panel">
+                  <div className="ms-figma-stock-panel">
                     <div className="ms-figma-stock-heading">{t('figma.stockStatus')}</div>
-                    <div className="font-semibold text-sm text-gray-800 mb-2">
+                    <div className="ms-figma-stock-total">
                       {t('inventory.total')}:{' '}
                       {(Object.keys(REGIONS) as Array<keyof typeof REGIONS>).reduce(
                         (sum, regionKey) => sum + getRegionInventory(machine, regionKey.toString()),
@@ -2375,8 +2362,8 @@ const ProductLine1Page: React.FC = () => {
                     </div>
                   </div>
                 )}
-                
-                <div className="space-y-3">
+
+                <div className="ms-figma-purchase-actions-row">
                   <div className="ms-figma-qty-stepper">
                     <button
                       type="button"
@@ -2425,7 +2412,7 @@ const ProductLine1Page: React.FC = () => {
                     productType="machines"
                     onAddToCart={() => handleAddToCart(machine, 'machine')}
                     disabled={!canAddToCart}
-                    className="ms-figma-primary-cart w-full py-2 h-10 rounded-lg shadow-md transition-all duration-200"
+                    className="ms-figma-primary-cart transition-colors duration-200"
                   >
                     <ShoppingCartOutlined className="mr-2" />
                     {canAddToCart ? t('addToCart') : t('noPermissionAdd')}
@@ -2674,15 +2661,15 @@ const ProductLine1Page: React.FC = () => {
     const accessoryMoreKey = `${level}-${accessory.id}`;
 
     return (
-      <div key={`accessory-level-${level}-${accessory.id}-${accessoryPart?.part_number || 'no-part'}-${index}-${currentLanguage}-${forceRender}`} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 text-gray-900 mb-4 overflow-visible">
-        <div className="flex flex-col md:flex-row p-6">
+      <div key={`accessory-level-${level}-${accessory.id}-${accessoryPart?.part_number || 'no-part'}-${index}-${currentLanguage}-${forceRender}`} className="ms-figma-accessory-card">
+        <div className="ms-figma-accessory-card__row">
           {/* Column 1: Image & Selection */}
-          <div className="w-full md:w-1/5 flex flex-col items-center md:items-start mb-6 md:mb-0 md:pr-6">
+          <div className="ms-figma-accessory-card__col-gallery">
             <div className="relative mb-4">
-              <img 
-                src={accessory.image_url || DEFAULT_IMAGE} 
+              <img
+                src={accessory.image_url || DEFAULT_IMAGE}
                 alt={getAccessoryName(accessory)}
-                className="w-32 h-32 object-contain border-2 border-gray-200 rounded-lg bg-gray-50 p-2 shadow-sm hover:shadow-md transition-shadow duration-200"
+                className="ms-figma-accessory-card__image"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   // 避免无限循环：只有当前不是DEFAULT_IMAGE时才设置为DEFAULT_IMAGE
@@ -2692,9 +2679,9 @@ const ProductLine1Page: React.FC = () => {
                 }}
               />
             </div>
-            <label className="inline-flex items-center cursor-pointer bg-gray-100 px-3 py-2 rounded-lg hover:bg-blue-500 hover:text-white transition-colors duration-200">
-              <input 
-                type="radio" 
+            <label className="ms-figma-accessory-card__select">
+              <input
+                type="radio"
                 name={`accessory-level-${level}`}
                 className="form-radio text-blue-500 mr-2"
                 checked={selectedAccessories[`level${level}`] === accessory.id.toString()}
@@ -2705,62 +2692,62 @@ const ProductLine1Page: React.FC = () => {
           </div>
 
           {/* Column 2: Info & Specs */}
-          <div className="w-full md:w-3/5 md:px-6">
+          <div className="ms-figma-accessory-card__col-main">
             <div className="mb-4">
-              <span className="inline-block bg-blue-500 text-white px-3 py-1 text-sm font-bold rounded-lg shadow-sm">{getPartNumber()}</span>
-              <h3 
+              <span className="ms-figma-accessory-card__pn">{getPartNumber()}</span>
+              <h3
                 key={`accessory-title-${accessory.id}-${currentLanguage}-${forceRender}`}
-                className="text-xl font-bold text-gray-800 mt-2 leading-tight"
+                className="ms-figma-accessory-card__title"
               >
                 {getAccessoryNameDebug(accessory, 'h3-title')}
               </h3>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4 mt-3 shadow-sm">
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="flex items-center">
-                  <strong className="w-24 text-gray-600 font-medium">{t('fields.model') || '型号'}:</strong>
-                  <span className="text-gray-800 font-medium">{accessory.model || getFieldValue('model')}</span>
+            <div className="ms-figma-accessory-card__specs">
+              <div className="ms-figma-accessory-card__spec-grid">
+                <div className="ms-figma-accessory-card__spec-item">
+                  <strong className="ms-figma-accessory-card__spec-label">{t('fields.model') || '型号'}:</strong>
+                  <span className="ms-figma-accessory-card__spec-value">{accessory.model || getFieldValue('model')}</span>
                 </div>
                 {/* 只有当电气配件时才显示电压 */}
                 {isElectricalAccessory() && getFieldValue('voltage') !== 'N/A' && (
-                  <div className="flex items-center">
-                    <strong className="w-24 text-gray-600 font-medium">{getFieldWithUnit('voltage', 'voltage')}:</strong>
-                    <span className="text-gray-800 font-medium">{removeUnitFromValue(getFieldValue('voltage'))}</span>
+                  <div className="ms-figma-accessory-card__spec-item">
+                    <strong className="ms-figma-accessory-card__spec-label">{getFieldWithUnit('voltage', 'voltage')}:</strong>
+                    <span className="ms-figma-accessory-card__spec-value">{removeUnitFromValue(getFieldValue('voltage'))}</span>
                   </div>
                 )}
                 {/* 频率字段强调显示，只有当电气配件时才显示 */}
                 {isElectricalAccessory() && getFieldValue('frequency') !== 'N/A' && (
-                  <div className="flex items-center frequency-highlight px-3 py-2 rounded-lg border-l-4 border-yellow-400 col-span-2">
-                    <strong className="w-24 text-gray-600 font-bold text-yellow-800">⚡ {getFieldWithUnit('frequency', 'frequency')}:</strong>
-                    <span className="text-yellow-900 font-bold text-lg ml-2">{removeUnitFromValue(getFieldValue('frequency'))}</span>
+                  <div className="ms-figma-accessory-card__freq-highlight">
+                    <strong className="freq-label">⚡ {getFieldWithUnit('frequency', 'frequency')}:</strong>
+                    <span className="freq-value">{removeUnitFromValue(getFieldValue('frequency'))}</span>
                   </div>
                 )}
-                <div className="flex items-center">
-                  <strong className="w-24 text-gray-600 font-medium">{getFieldWithUnit('packageSize', 'size')}:</strong>
-                  <span className="text-gray-800 font-medium">
-                    {unitSystem === 'metric' 
+                <div className="ms-figma-accessory-card__spec-item">
+                  <strong className="ms-figma-accessory-card__spec-label">{getFieldWithUnit('packageSize', 'size')}:</strong>
+                  <span className="ms-figma-accessory-card__spec-value">
+                    {unitSystem === 'metric'
                       ? removeUnitFromValue(getFieldValue('package_size_cm'))
                       : removeUnitFromValue(getFieldValue('package_size_inch'))
                     }
                   </span>
                 </div>
-                <div className="flex items-center">
-                  <strong className="w-24 text-gray-600 font-medium">{t('fields.pcsPerBox') || '单箱数量'}:</strong>
-                  <span className="text-gray-800 font-medium">{getFieldValue('pcs_per_box')}</span>
+                <div className="ms-figma-accessory-card__spec-item">
+                  <strong className="ms-figma-accessory-card__spec-label">{t('fields.pcsPerBox') || '单箱数量'}:</strong>
+                  <span className="ms-figma-accessory-card__spec-value">{getFieldValue('pcs_per_box')}</span>
                 </div>
-                <div className="flex items-center">
-                  <strong className="w-24 text-gray-600 font-medium">{getFieldWithUnit('palletSize', 'size')}:</strong>
-                  <span className="text-gray-800 font-medium">
-                    {unitSystem === 'metric' 
+                <div className="ms-figma-accessory-card__spec-item">
+                  <strong className="ms-figma-accessory-card__spec-label">{getFieldWithUnit('palletSize', 'size')}:</strong>
+                  <span className="ms-figma-accessory-card__spec-value">
+                    {unitSystem === 'metric'
                       ? removeUnitFromValue(getFieldValue('pallet_size_cm'))
                       : removeUnitFromValue(getFieldValue('pallet_size_inch'))
                     }
                   </span>
                 </div>
-                <div className="flex items-center">
-                  <strong className="w-24 text-gray-600 font-medium">{t('fields.pcsPerPallet') || '一托数量'}:</strong>
-                  <span className="text-gray-800 font-medium">{getFieldValue('pcs_per_pallet')}</span>
+                <div className="ms-figma-accessory-card__spec-item">
+                  <strong className="ms-figma-accessory-card__spec-label">{t('fields.pcsPerPallet') || '一托数量'}:</strong>
+                  <span className="ms-figma-accessory-card__spec-value">{getFieldValue('pcs_per_pallet')}</span>
                 </div>
               </div>
             </div>
@@ -2928,22 +2915,22 @@ const ProductLine1Page: React.FC = () => {
           </div>
 
           {/* Column 3: Price, Stock, Actions */}
-          <div className="w-full md:w-1/5 md:pl-6 mt-6 md:mt-0 border-t md:border-t-0 md:border-l border-gray-200 pt-6 md:pt-0">
+          <div className="ms-figma-accessory-card__col-actions">
             {/* Price */}
             <div className="mb-4">
-              <div className="font-medium text-sm text-gray-600 mb-2">
+              <div className="ms-figma-accessory-card__price-label">
                 {t('tableHeaders.price') || 'Price'}:
               </div>
-              
-              <div className="text-2xl font-bold text-blue-600 mb-2">
+
+              <div className="ms-figma-accessory-card__price">
                 {getCurrencySymbol(userRegion)}{formatPrice(partPrices?.base || 0)}
               </div>
             </div>
-            
+
             {/* Inventory (Sales View) */}
             {isSales && (
               <div className="mb-4">
-                <div className="font-medium text-sm text-gray-600 mb-2">
+                <div className="ms-figma-stock-heading">
                   {t('tableHeaders.stock') || '库存'}:
                 </div>
                 <div className="ms-figma-stock-tags ms-figma-stock-tags--accessory">
@@ -3381,6 +3368,8 @@ const ProductLine1Page: React.FC = () => {
         </div>
       </dialog>
 
+      {/* Frame 264 主列 1617：面包屑(Frame 982)+页面与 Figma 同宽左对齐，避免宽屏下相对主区居中缩窄 */}
+      <div className="ms-pl1-main-stack">
       <div className="ms-breadcrumb-bar ms-breadcrumb-bar--figma">
         <div className="ms-breadcrumb-path">
           <button
@@ -3509,7 +3498,7 @@ const ProductLine1Page: React.FC = () => {
 
       <div className="ms-breadcrumb-spacer" aria-hidden />
 
-      <div className="machines-page min-h-screen bg-gray-50 text-gray-900 ms-product-line-layout">
+      <div className="machines-page min-h-screen text-gray-900 ms-product-line-layout">
         <MockServiceStatus position="top-right" compact={true} hidden={true} />
 
         <div className="ms-content-column">
@@ -3524,7 +3513,7 @@ const ProductLine1Page: React.FC = () => {
               onClick={() => setCompareSectionOpen((o) => !o)}
             >
               <span className="inline-flex items-center gap-2">
-                <PictureOutlined className="text-blue-600" aria-hidden />
+                <FileImageOutlined className="text-blue-600" aria-hidden />
                 {t('figma.modelParamComparison')}
               </span>
               <span className="ms-compare-disclosure__chev" aria-hidden>
@@ -3581,31 +3570,12 @@ const ProductLine1Page: React.FC = () => {
           </h1>
 
           <div className="ms-filter-card__row">
-            <div className="ms-figma-filter-field flex flex-col min-w-[140px]">
-              <label className="ms-figma-filter-field__label">
-                {t('filters.productType')}
-              </label>
-              <select
-                value={filterProductType}
-                onChange={(e) => {
-                  setFilterProductType(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="ms-figma-native-select"
-              >
-                {productTypeOptions.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="ms-figma-filter-field flex flex-col min-w-[140px]">
-              <label className="ms-figma-filter-field__label">
+            <div className="ms-figma-filter-field">
+              <label className="ms-figma-filter-field__label" htmlFor="ms-pl1-filter-model">
                 {t('filters.model')}
               </label>
               <select
+                id="ms-pl1-filter-model"
                 value={filterType}
                 onChange={(e) => {
                   setFilterType(e.target.value);
@@ -3621,11 +3591,12 @@ const ProductLine1Page: React.FC = () => {
               </select>
             </div>
 
-            <div className="ms-figma-filter-field flex flex-col min-w-[120px]">
-              <label className="ms-figma-filter-field__label">
+            <div className="ms-figma-filter-field">
+              <label className="ms-figma-filter-field__label" htmlFor="ms-pl1-filter-voltage">
                 {t('filters.voltage')}
               </label>
               <select
+                id="ms-pl1-filter-voltage"
                 value={selectedVoltage}
                 onChange={(e) => handleVoltageChange(e.target.value)}
                 className="ms-figma-native-select ms-figma-native-select--narrow"
@@ -3943,8 +3914,16 @@ const ProductLine1Page: React.FC = () => {
           targetElement={cartAnimation.targetElement}
           productImage={cartAnimation.productImage}
           productName={cartAnimation.productName}
-          onComplete={() => setCartAnimation({ ...cartAnimation, isActive: false })}
+          onComplete={() =>
+            setCartAnimation((prev) => ({
+              ...prev,
+              isActive: false,
+              startElement: null,
+              targetElement: null
+            }))
+          }
         />
+      </div>
       </div>
     </>
   );
