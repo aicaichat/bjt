@@ -247,6 +247,11 @@
   overflow: hidden !important;
 }
 
+/* 气垫行：覆盖上行 stretch；否则 flex 行在交叉轴拉满 280，绝对定位右栏获得满高，库存与加购行被纵向拉开 */
+.ms-figma-machine-card.ms-figma-machine-card--air .ms-figma-machine-card__row {
+  align-items: flex-start !important;
+}
+
 /*
  * 图库列：只做定位父级（position:relative），勿把 Frame 205 的 flex/gap 写在这里（会与稿面 absolute 根冲突）。
  * 气垫 Frame 205 见 machine-selection-figma.css（.thumbnail-gallery-left.machine-gallery）。
@@ -500,6 +505,17 @@
   box-sizing: border-box !important;
 }
 
+/* 右栏唯一子栈：强制高度=内容，避免父级被 stretch 后子块纵向「假满高」 */
+.machines-page.ms-product-line-layout
+  .ms-figma-machine-card.ms-figma-machine-card--air
+  .ms-figma-machine-card__row
+  > .ms-figma-machine-card__col-actions
+  > .ms-figma-purchase-rail {
+  height: fit-content !important;
+  min-height: 0 !important;
+  align-self: stretch !important;
+}
+
 .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-purchase-rail__price {
   display: flex !important;
   flex-direction: row !important;
@@ -534,6 +550,7 @@
   padding: var(--ff-ms-air-stock-panel-pad-y) var(--ff-ms-air-stock-panel-pad-x) !important;
   gap: var(--ff-ms-air-stock-panel-gap) !important;
   border-radius: var(--ff-ms-air-stock-panel-radius) !important;
+  flex: none !important;
 }
 
 .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-stock-panel .ms-figma-stock-heading {

@@ -3506,7 +3506,8 @@ button.ms-figma-qty-btn:disabled {
 .ms-figma-machine-card.ms-figma-machine-card--air .ms-figma-machine-card__row {
   display: flex;
   flex-direction: row;
-  align-items: stretch;
+  /* 与产品线一致：stretch 会把绝对定位右栏在侧轴拉满行高，购物车栏内出现大块空白 */
+  align-items: flex-start;
   gap: 16px;
   width: 100%;
 }
