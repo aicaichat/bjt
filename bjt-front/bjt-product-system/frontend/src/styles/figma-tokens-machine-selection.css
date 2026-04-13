@@ -28,7 +28,8 @@
    * 行与行之间的「下分割线」（与标题行 inset 底边线同源 --ff-ms-hairline-divider）。
    * 列表 grid 为 gap:0 时，外阴影 0 0.5px 0 会被下一行白底盖住；改用 inset 画在卡片内底，行间始终可见。
    */
-  --ff-ms-air-row-shadow: inset 0 -0.5px 0 0 var(--ff-ms-hairline-divider);
+  /* 略加粗于 0.5px Dev 外阴影，保证 gap:0 叠行时行间线肉眼可见 */
+  --ff-ms-air-row-shadow: inset 0 -1px 0 0 var(--ff-ms-hairline-divider);
   --ff-ms-air-link-hint: #2a7dfa;
   --ff-ms-air-pn-bg: #d9dfed;
   --ff-ms-air-bubble-border: #c4dcff;
@@ -96,6 +97,9 @@
   --ff-ms-air-rail-column-bg: #ffffff;
   --ff-ms-air-rail-inner-gap: var(--ff-ms-air-row-inner-gap);
   --ff-ms-air-rail-min-height: 254px;
+  /* 产品线右栏：Frame 148 与 Frame 1084 之间收紧（稿 24px 在真机库存块下空白体感过大） */
+  --ff-ms-air-rail-stack-gap-pl: 12px;
+  --ff-ms-air-stock-panel-pad-bottom-pl: 8px;
   /* Frame 148 库存面板 */
   --ff-ms-air-stock-panel-pad-y: var(--ff-ms-air-row-pad-y);
   --ff-ms-air-stock-panel-pad-x: 10px;

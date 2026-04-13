@@ -78,21 +78,23 @@
   box-sizing: border-box !important;
 }
 
-/* Frame 913 / 471：右栏购物车 — 行框仍固定 280，本栏不撑满 280，仅内容高 + top:0 顶对齐 */
+/*
+ * Frame 1017：321 宽、列底 #FFF；#EFF7FF 仅 Frame 148。
+ * 高度随内容（≤ 行 280），避免定高 254 + hidden 裁切加购行。
+ */
 .machines-page.ms-product-line-layout .ms-figma-machine-card.ms-figma-machine-card--air .ms-figma-machine-card__row > .ms-figma-machine-card__col-actions {
   position: absolute !important;
   right: 0 !important;
   top: 0 !important;
-  width: 321px !important;
-  height: auto !important;
-  min-height: 0 !important;
-  max-height: var(--ff-ms-air-row-height, 280px) !important;
-  /* 关键：勿让 flex 行 align-items:stretch 把绝对定位右栏在交叉轴上拉到 280，否则 rail 被拉高、库存与加购行被 space-between 式拉开 */
+  width: var(--ff-ms-air-rail-width, 321px) !important;
   align-self: flex-start !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
   justify-content: flex-start !important;
-  align-content: flex-start !important;
-  background: var(--ff-ms-air-stock-bg, #eff7ff) !important;
+  padding: 0 !important;
   box-sizing: border-box !important;
+  background: var(--ff-ms-air-rail-column-bg, #ffffff) !important;
 }
 
 /* Frame 471 行容器：确保列对齐不把外框撑高 */
@@ -105,7 +107,9 @@
     height: 100% !important;
     min-height: 0 !important;
     max-height: 100% !important;
-    overflow: hidden !important;
+    /* 勿 overflow:hidden：会裁切绝对定位右栏底部的加购行（库存区实际高度常 > 稿面 254） */
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
     /* stretch 会使绝对定位子项在侧轴获得行高(280)，右栏购物车被拉高 → 栏内出现大块竖向空白 */
     align-items: flex-start !important;
     box-sizing: border-box !important;
@@ -134,21 +138,60 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  /* 右栏 Frame 913: width 321（padding/gap 见 machine-selection + token） */
+  /*
+   * Frame 1017：稿面 254 为设计高度；真实库存块常更高。定高 + overflow:hidden 会裁切「加入购物车」。
+   * 用内容高度 + max-height ≤ 行高 280，flex-start + gap:24（等同 Dev 间距意图，避免 space-between 在定高内拉爆）。
+   */
+  .machines-page.ms-product-line-layout .ms-figma-machine-card.ms-figma-machine-card--air .ms-figma-machine-card__row > .ms-figma-machine-card__col-actions {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: var(--ff-ms-air-row-height, 280px) !important;
+  }
+
   .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-machine-card__col-actions.ms-figma-machine-card__actions {
     display: flex !important;
     flex-direction: column !important;
-    flex: 0 0 321px !important;
-    width: 321px !important;
-    max-width: 321px !important;
+    flex: 0 0 var(--ff-ms-air-rail-width, 321px) !important;
+    width: var(--ff-ms-air-rail-width, 321px) !important;
+    max-width: var(--ff-ms-air-rail-width, 321px) !important;
+    height: auto !important;
     min-height: 0 !important;
-    max-height: 100% !important;
+    max-height: var(--ff-ms-air-row-height, 280px) !important;
     align-self: flex-start !important;
     justify-content: flex-start !important;
+    align-items: center !important;
     box-sizing: border-box !important;
+    background: var(--ff-ms-air-rail-column-bg, #ffffff) !important;
     overflow-x: hidden !important;
+    /* 库存区变高时：可滚动见加购行；勿 hidden 裁切 */
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
+  }
+
+  /*
+   * 内栈：gap 24 与 Dev 一致；勿 height:100% + space-between（父定高时易顶底撕开或配合 hidden 裁切）
+   */
+  .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-purchase-rail {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+    align-content: flex-start !important;
+    flex: 0 1 auto !important;
+    flex-grow: 0 !important;
+    flex-shrink: 1 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    gap: var(--ff-ms-air-rail-stack-gap-pl, 12px) !important;
+    row-gap: var(--ff-ms-air-rail-stack-gap-pl, 12px) !important;
+    padding: 0 !important;
+    background: transparent !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 0 !important;
+    border: none !important;
+    box-sizing: border-box !important;
   }
 }
 
@@ -159,6 +202,20 @@
     min-height: var(--ff-ms-air-row-height, 280px) !important;
     flex-shrink: 1 !important;
     overflow: visible !important;
+  }
+
+  .machines-page.ms-product-line-layout
+    .ms-figma-machine-card.ms-figma-machine-card--air
+    .ms-figma-machine-card__row
+    > .ms-figma-machine-card__col-actions {
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-purchase-rail {
+    height: auto !important;
+    max-height: none !important;
+    justify-content: flex-start !important;
   }
 }
 
@@ -226,7 +283,8 @@
    稿面值: padding: 16px 10px, bg: #EFF7FF, radius: 8px
    ======================================== */
 .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-purchase-rail .ms-figma-stock-panel {
-  padding: 16px 10px !important;
+  padding: var(--ff-ms-air-stock-panel-pad-y, 16px) var(--ff-ms-air-stock-panel-pad-x, 10px)
+    var(--ff-ms-air-stock-panel-pad-bottom-pl, 8px) !important;
   background: #eff7ff !important;
   border-radius: 8px !important;
   width: 100% !important;
@@ -478,44 +536,6 @@
   max-width: none !important;
 }
 
-/*
- * 气垫右栏 Frame 913 子栈 / 148 / 1084 — 仅 gap + flex-start；勿 space-between
- */
-.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-purchase-rail {
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: flex-start !important;
-  align-items: stretch !important;
-  align-content: flex-start !important;
-  flex-grow: 0 !important;
-  flex-shrink: 0 !important;
-  flex-basis: auto !important;
-  min-height: 0 !important;
-  height: auto !important;
-  max-height: none !important;
-  /* 与 Frame 1017 一致；勿让 gap 回落到未定义变量 */
-  gap: var(--ff-ms-air-rail-inner-gap, var(--ff-ms-air-row-inner-gap, 24px)) !important;
-  row-gap: var(--ff-ms-air-rail-inner-gap, var(--ff-ms-air-row-inner-gap, 24px)) !important;
-  padding: 0 !important;
-  background: transparent !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  border-radius: 0 !important;
-  border: none !important;
-  box-sizing: border-box !important;
-}
-
-/* 右栏唯一子栈：强制高度=内容，避免父级被 stretch 后子块纵向「假满高」 */
-.machines-page.ms-product-line-layout
-  .ms-figma-machine-card.ms-figma-machine-card--air
-  .ms-figma-machine-card__row
-  > .ms-figma-machine-card__col-actions
-  > .ms-figma-purchase-rail {
-  height: fit-content !important;
-  min-height: 0 !important;
-  align-self: stretch !important;
-}
-
 .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-purchase-rail__price {
   display: flex !important;
   flex-direction: row !important;
@@ -588,6 +608,7 @@
   align-content: flex-start !important;
   margin-top: 0 !important;
   margin-bottom: 0 !important;
+  padding-top: 0 !important;
   flex-grow: 0 !important;
   flex-shrink: 0 !important;
   gap: var(--ff-ms-air-purchase-actions-gap-row, var(--ff-ms-air-row-inner-gap, 24px))
@@ -1115,17 +1136,22 @@
   box-sizing: border-box !important;
 }
 
-/* Frame 913：与稿一致；禁止 1017 的 space-between + 白底整列（避免竖向掏空） */
+/* Frame 1017：白底列；内栈 gap 24 + 内容高（勿定高裁切） */
 .figma-exact-machine-card .ms-figma-machine-card__col-actions.ms-figma-machine-card__actions {
   display: flex !important;
   flex-direction: column !important;
   justify-content: flex-start !important;
   align-items: center !important;
   box-sizing: border-box !important;
-  padding: var(--ff-ms-air-frame913-pad, 16px 16px 0 0) !important;
-  gap: var(--ff-ms-air-rail-inner-gap) !important;
-  min-height: var(--ff-ms-air-rail-min-height) !important;
-  background: var(--ff-ms-air-stock-bg, #eff7ff) !important;
+  padding: var(--ff-ms-air-rail-column-pad, 0px) !important;
+  gap: 0 !important;
+  width: var(--ff-ms-air-rail-width, 321px) !important;
+  height: auto !important;
+  max-height: var(--ff-ms-air-row-height, 280px) !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  background: var(--ff-ms-air-rail-column-bg, #ffffff) !important;
 }
 
 .figma-exact-machine-card
@@ -1141,6 +1167,9 @@
   flex-direction: column !important;
   justify-content: flex-start !important;
   align-items: stretch !important;
+  flex: 0 1 auto !important;
+  min-height: 0 !important;
+  height: auto !important;
   background: transparent !important;
   padding: 0 !important;
   gap: var(--ff-ms-air-rail-inner-gap) !important;
@@ -1366,8 +1395,7 @@
 }
 
 /* =============================================================================
- * Product Line 1 主机列表（data-ms-pl1-host）：兜底，防其它表单项晚加载覆盖 align-items
- * Frame 471 行高 280 仅在卡片根；右栏仅内容高度 + top:0，禁止 flex stretch 假满高
+ * Product Line 1 主机列表（data-ms-pl1-host）：兜底 align-items + Frame 1017 右栏
  * ============================================================================= */
 .machines-page.ms-product-line-layout
   .ms-figma-machine-grid[data-ms-pl1-host]
@@ -1381,12 +1409,12 @@
   .ms-figma-machine-card.ms-figma-machine-card--air
   .ms-figma-machine-card__row
   > .ms-figma-machine-card__col-actions {
-  height: fit-content !important;
-  min-height: 0 !important;
+  height: auto !important;
   max-height: var(--ff-ms-air-row-height, 280px) !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  background: var(--ff-ms-air-rail-column-bg, #ffffff) !important;
   align-self: flex-start !important;
-  justify-content: flex-start !important;
-  align-content: flex-start !important;
 }
 
 .machines-page.ms-product-line-layout
@@ -1395,9 +1423,8 @@
   .ms-figma-machine-card__row
   > .ms-figma-machine-card__col-actions
   > .ms-figma-purchase-rail {
-  flex-grow: 0 !important;
-  flex-shrink: 0 !important;
   justify-content: flex-start !important;
-  height: fit-content !important;
+  height: auto !important;
+  flex: 0 1 auto !important;
   min-height: 0 !important;
 }
