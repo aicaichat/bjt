@@ -40,7 +40,7 @@
   min-height: var(--ff-ms-air-row-height, 280px) !important;
   max-height: var(--ff-ms-air-row-height, 280px) !important;
   background: #ffffff !important;
-  box-shadow: 0px 0.5px 0px rgba(0, 0, 0, 0.25) !important;
+  box-shadow: var(--ff-ms-air-row-shadow) !important;
   border: none !important;
   border-radius: 0 !important;
   margin-bottom: 0 !important;
@@ -1363,4 +1363,41 @@
     padding-left: 24px !important;
     border-left: 1px solid #E5E7EB !important;
   }
+}
+
+/* =============================================================================
+ * Product Line 1 主机列表（data-ms-pl1-host）：兜底，防其它表单项晚加载覆盖 align-items
+ * Frame 471 行高 280 仅在卡片根；右栏仅内容高度 + top:0，禁止 flex stretch 假满高
+ * ============================================================================= */
+.machines-page.ms-product-line-layout
+  .ms-figma-machine-grid[data-ms-pl1-host]
+  .ms-figma-machine-card.ms-figma-machine-card--air
+  > .ms-figma-machine-card__row {
+  align-items: flex-start !important;
+}
+
+.machines-page.ms-product-line-layout
+  .ms-figma-machine-grid[data-ms-pl1-host]
+  .ms-figma-machine-card.ms-figma-machine-card--air
+  .ms-figma-machine-card__row
+  > .ms-figma-machine-card__col-actions {
+  height: fit-content !important;
+  min-height: 0 !important;
+  max-height: var(--ff-ms-air-row-height, 280px) !important;
+  align-self: flex-start !important;
+  justify-content: flex-start !important;
+  align-content: flex-start !important;
+}
+
+.machines-page.ms-product-line-layout
+  .ms-figma-machine-grid[data-ms-pl1-host]
+  .ms-figma-machine-card.ms-figma-machine-card--air
+  .ms-figma-machine-card__row
+  > .ms-figma-machine-card__col-actions
+  > .ms-figma-purchase-rail {
+  flex-grow: 0 !important;
+  flex-shrink: 0 !important;
+  justify-content: flex-start !important;
+  height: fit-content !important;
+  min-height: 0 !important;
 }

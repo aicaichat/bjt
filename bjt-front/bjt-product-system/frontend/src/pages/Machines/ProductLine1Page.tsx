@@ -2068,7 +2068,7 @@ const ProductLine1Page: React.FC = () => {
               minHeight: 280,
               maxHeight: 280,
               background: '#ffffff',
-              boxShadow: '0px 0.5px 0px rgba(0,0,0,0.25)',
+              /* 行间底部分割线：--ff-ms-air-row-shadow（inset，见 figma-tokens-machine-selection.css） */
               marginBottom: 0
             }}
           >

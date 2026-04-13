@@ -24,8 +24,11 @@
   --ff-ms-air-row-width: 1537px;
   --ff-ms-air-row-height: 280px;
   --ff-ms-air-row-bg: #ffffff;
-  /* Dev 原文：box-shadow: 0px 0.5px 0px rgba(0, 0, 0, 0.25) */
-  --ff-ms-air-row-shadow: 0px 0.5px 0px var(--ff-ms-hairline-divider);
+  /*
+   * 行与行之间的「下分割线」（与标题行 inset 底边线同源 --ff-ms-hairline-divider）。
+   * 列表 grid 为 gap:0 时，外阴影 0 0.5px 0 会被下一行白底盖住；改用 inset 画在卡片内底，行间始终可见。
+   */
+  --ff-ms-air-row-shadow: inset 0 -0.5px 0 0 var(--ff-ms-hairline-divider);
   --ff-ms-air-link-hint: #2a7dfa;
   --ff-ms-air-pn-bg: #d9dfed;
   --ff-ms-air-bubble-border: #c4dcff;
