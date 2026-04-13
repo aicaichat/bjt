@@ -41,6 +41,8 @@ interface FlattenedAccessory extends MachineAccessory {
 
 import './Machines.css';
 import './accessibility.css';
+// Figma 像素级精确覆盖层
+import '../../styles/figma-exact/machines-exact-override.css';
 
 const { Option } = Select;
 
@@ -1615,12 +1617,17 @@ const ProductLine3Page: React.FC = () => {
         ? getMachineName(product as MachinePart) 
         : getAccessoryName(product as MachineAccessory);
         
-      // 2. 在handleAddToCart成功后触发动画
-      // 获取购物车icon元素
-      const cartIcon = document.querySelector('.anticon-shopping-cart') || document.querySelector('.shopping-cart-icon');
+      // 2. 加入购物车飞入动画：起点为当前「加入购物车」按钮，终点为顶栏或悬浮购物车图标
+      const dataProductTypeAttr = productType === 'machine' ? 'machines' : 'accessories';
+      const startEl = document.querySelector(
+        `[data-add-to-cart-anchor="${String(product.id)}"][data-product-type="${dataProductTypeAttr}"]`
+      ) as HTMLElement | null;
+      const cartIcon =
+        (document.querySelector('.anticon-shopping-cart') ||
+          document.querySelector('.shopping-cart-icon')) as HTMLElement | null;
       setCartAnimation({
         isActive: true,
-        startElement: null, // 可根据实际传递按钮ref
+        startElement: startEl,
         targetElement: cartIcon,
         productImage: product.image_url || DEFAULT_IMAGE,
         productName: productType === 'machine' ? getMachineName(product as MachinePart) : getAccessoryName(product as MachineAccessory)
@@ -2406,18 +2413,8 @@ const ProductLine3Page: React.FC = () => {
                 </div>
               </div>
 
-              {/* Column 3: Price, Stock, Actions */}
+              {/* Column 3: Stock, Actions（不展示列表价） */}
               <div className="w-full md:w-1/5 md:pl-6 mt-6 md:mt-0 border-t md:border-t-0 md:border-l border-gray-200 pt-6 md:pt-0">
-                <div className="mb-4">
-                  <div className="font-medium text-sm text-gray-600 mb-2">
-                    {t('tableHeaders.price') || 'Price'}:
-                  </div>
-                  
-                  <div className="text-2xl font-bold text-blue-600 mb-2">
-                    {getCurrencySymbol(userRegion)}{formatPrice(machine.prices?.[0]?.tiers?.[0]?.base_price || 0)}
-                  </div>
-                </div>
-                
                 {isSales && (
                   <div className="mb-4">
                     <div className="font-medium text-sm text-gray-600 mb-2">
@@ -3732,7 +3729,14 @@ const ProductLine3Page: React.FC = () => {
         targetElement={cartAnimation.targetElement}
         productImage={cartAnimation.productImage}
         productName={cartAnimation.productName}
-        onComplete={() => setCartAnimation({ ...cartAnimation, isActive: false })}
+        onComplete={() =>
+          setCartAnimation((prev) => ({
+            ...prev,
+            isActive: false,
+            startElement: null,
+            targetElement: null
+          }))
+        }
       />
     </div>
   );

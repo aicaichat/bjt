@@ -1,0 +1,888 @@
+/**
+ * 机器选型页（ProductLine1）— Figma 精确对齐层
+ * 来源: Figma Dev Mode - Node 1699:2614
+ * 更新日期: 2026-04-12
+ *
+ * Figma 文件: QluTLuKXbauHIiCN8AZUGJ
+ * 主色调: #012583
+ * 页面背景: #F1F5F9
+ * 卡片背景: #FFFFFF
+ */
+
+/* ========================================
+   设计令牌 - 从 Figma 精确提取
+   ======================================== */
+:root {
+  /* 主色调 */
+  --ms-primary: #012583;
+  --ms-primary-hover: #011d6b;
+
+  /* 文字颜色 */
+  --ms-text-primary: rgba(0, 0, 0, 0.85);
+  --ms-text-secondary: rgba(0, 0, 0, 0.65);
+  --ms-text-white: #FFFFFF;
+  --ms-text-muted: #B0B0B0;
+
+  /* 背景颜色 */
+  --ms-bg-page: #F1F5F9;
+  --ms-bg-card: #FFFFFF;
+  --ms-bg-sidebar: #FFFFFF;
+  --ms-bg-stock: #EFF7FF;
+  --ms-bg-bubble: #D9DFED;
+
+  /* 边框颜色 */
+  --ms-border: #DEDEDE;
+  --ms-border-light: #B2B2B2;
+  --ms-border-muted: #BFBCBC;
+  --ms-bubble-border: #C4DCFF;
+
+  /* 状态颜色 */
+  --ms-link: #2A7DFA;
+  --ms-in-stock: #05A126;
+  --ms-out-of-stock: #FF0101;
+
+  /* 字体系统 */
+  --ms-font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  --ms-font-size-sm: 14px;
+  --ms-font-size-base: 16px;
+  --ms-font-size-lg: 18px;
+  --ms-font-size-xl: 20px;
+  --ms-font-weight-normal: 400;
+  --ms-font-weight-medium: 500;
+  --ms-font-weight-bold: 700;
+  --ms-line-height: 1.1875; /* 19px/16px */
+
+  /* 尺寸系统 */
+  --ms-sidebar-width: 303px;
+  --ms-content-width: 1617px;
+  --ms-content-padding: 40px;
+  --ms-card-height: 280px;
+  --ms-card-main-width: 864px;
+  --ms-card-actions-width: 321px;
+  --ms-card-gallery-width: 288px;
+
+  /* 间距 */
+  --ms-gap-xs: 4px;
+  --ms-gap-sm: 8px;
+  --ms-gap-md: 16px;
+  --ms-gap-lg: 24px;
+  --ms-gap-xl: 32px;
+
+  /* 圆角 */
+  --ms-radius-sm: 4px;
+  --ms-radius-md: 6px;
+  --ms-radius-lg: 8px;
+
+  /* 阴影 */
+  --ms-shadow-sidebar: inset -0.5px 0px 0px rgba(0, 0, 0, 0.16);
+  --ms-shadow-divider: 0px 0.5px 0px rgba(0, 0, 0, 0.25);
+  --ms-shadow-toolbar: 0px 0.5px 0px rgba(0, 0, 0, 0.25);
+}
+
+/* ========================================
+   页面布局
+   ======================================== */
+.ms-product-line-layout {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  min-height: 100vh;
+  background: var(--ms-bg-page);
+}
+
+/* ========================================
+   Sidebar 侧边栏
+   ======================================== */
+.ms-sidebar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px 0px 16px;
+  gap: var(--ms-gap-xs);
+  width: var(--ms-sidebar-width);
+  min-height: 100vh;
+  background: var(--ms-bg-sidebar);
+  box-shadow: var(--ms-shadow-sidebar);
+  flex-shrink: 0;
+}
+
+.ms-sidebar-header {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0px 24px;
+  gap: var(--ms-gap-lg);
+  width: var(--ms-sidebar-width);
+  height: 109px;
+}
+
+.ms-sidebar-logo {
+  width: 177px;
+  height: 28.26px;
+}
+
+.ms-sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px 10px;
+  width: 100%;
+}
+
+/* 菜单项 */
+.ms-menu-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px 0px 0px 10px;
+  gap: 5px;
+  width: 283px;
+  height: 55px;
+  background: var(--ms-bg-sidebar);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ms-menu-item:hover {
+  background: rgba(1, 37, 131, 0.04);
+}
+
+.ms-menu-item.active {
+  background: var(--ms-primary);
+}
+
+.ms-menu-item .icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.ms-menu-item .label {
+  font-family: var(--ms-font-family);
+  font-size: var(--ms-font-size-base);
+  font-weight: var(--ms-font-weight-normal);
+  line-height: var(--ms-line-height);
+  color: var(--ms-text-primary);
+}
+
+.ms-menu-item.active .label {
+  color: var(--ms-text-white);
+}
+
+/* 子菜单 */
+.ms-submenu {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  width: 279px;
+}
+
+.ms-submenu-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 10px 8px 10px 27px;
+  gap: var(--ms-gap-lg);
+  width: 279px;
+  height: 45px;
+  background: var(--ms-bg-sidebar);
+  border-radius: var(--ms-radius-lg);
+  cursor: pointer;
+}
+
+.ms-submenu-item.active {
+  background: var(--ms-primary);
+}
+
+.ms-submenu-item .label {
+  font-family: var(--ms-font-family);
+  font-size: var(--ms-font-size-base);
+  font-weight: var(--ms-font-weight-normal);
+  line-height: var(--ms-line-height);
+  color: var(--ms-text-secondary);
+}
+
+.ms-submenu-item.active .label {
+  color: var(--ms-text-white);
+}
+
+/* ========================================
+   主内容区
+   ======================================== */
+.ms-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 0;
+  background: var(--ms-bg-page);
+}
+
+/* 顶部工具栏 */
+.ms-toolbar {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 16px 90px 16px 0px;
+  gap: var(--ms-gap-md);
+  width: 100%;
+  height: 68px;
+  background: var(--ms-bg-card);
+  box-shadow: var(--ms-shadow-toolbar);
+}
+
+.ms-search-box {
+  box-sizing: border-box;
+  width: 271px;
+  height: 32px;
+  background: var(--ms-bg-card);
+  border: 1px solid var(--ms-border);
+  border-radius: var(--ms-radius-lg);
+  padding: 0 12px;
+  font-family: var(--ms-font-family);
+  font-size: var(--ms-font-size-base);
+}
+
+.ms-toolbar-btn {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 4px 8px;
+  gap: 3px;
+  height: 32px;
+  background: var(--ms-bg-card);
+  border: 0.8px solid var(--ms-border-light);
+  border-radius: var(--ms-radius-md);
+  font-family: var(--ms-font-family);
+  font-size: var(--ms-font-size-base);
+  color: #333333;
+  cursor: pointer;
+}
+
+/* 面包屑导航栏 */
+.ms-breadcrumb-bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px 0px 0px 48px;
+  width: 100%;
+  height: 60px;
+  background: var(--ms-primary);
+}
+
+.ms-breadcrumb-item {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  gap: 10px;
+  min-width: 140px;
+  height: 43px;
+  border-radius: var(--ms-radius-lg);
+  font-family: var(--ms-font-family);
+  font-size: var(--ms-font-size-xl);
+  font-weight: var(--ms-font-weight-normal);
+  line-height: 23px;
+  color: var(--ms-text-white);
+}
+
+/* ========================================
+   机器列表区
+   ======================================== */
+.ms-machine-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: var(--ms-gap-md) var(--ms-content-padding);
+  gap: var(--ms-gap-lg);
+  width: 100%;
+  background: var(--ms-bg-page);
+  flex: 1;
+}
+
+/* 查看详情头部 */
+.ms-view-details-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px 0px 0px 10px;
+  gap: 8px;
+  width: 100%;
+  height: 70px;
+  background: var(--ms-bg-card);
+}
+
+.ms-view-details-header span {
+  font-family: var(--ms-font-family);
+  font-size: var(--ms-font-size-xl);
+  font-weight: var(--ms-font-weight-normal);
+  line-height: 23px;
+  color: var(--ms-text-primary);
+}
+
+/* 筛选区 */
+.ms-filter-area {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: var(--ms-gap-md) 20px;
+  gap: var(--ms-gap-lg);
+  width: 100%;
+  background: var(--ms-bg-card);
+}
+
+.ms-filter-title {
+  font-family: var(--ms-font-family);
+  font-size: var(--ms-font-size-xl);
+  font-weight: var(--ms-font-weight-bold);
+  line-height: 23px;
+  color: var(--ms-text-primary);
+}
+
+.ms-filter-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 27px;
+}
+
+.ms-select {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  gap: 38px;
+  width: 208px;
+  height: 40px;
+  background: var(--ms-bg-card);
+  border: 1px solid var(--ms-border);
+  border-radius: var(--ms-radius-sm);
+  font-family: var(--ms-font-family);
+  font-size: var(--ms-font-size-sm);
+  color: var(--ms-text-primary);
+}
+
+/* ========================================
+   机器卡片
+   ======================================== */
+.ms-machine-card {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  width: 100%;
+  height: var(--ms-card-height);
+  background: var(--ms-bg-card);
+  box-shadow: var(--ms-shadow-divider);
+  position: relative;
+}
+
+/* 图片画廊 */
+.ms-card-gallery {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 8px;
+  position: absolute;
+  width: var(--ms-card-gallery-width);
+  height: 212px;
+  left: 0px;
+  top: 1px;
+  background: var(--ms-bg-card);
+}
+
+.ms-thumbnail-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  gap: var(--ms-gap-xs);
+  width: 68px;
+  height: 212px;
+}
+
+.ms-thumbnail {
+  box-sizing: border-box;
+  width: 68px;
+  height: 68px;
+  border: 1px solid var(--ms-border);
+  border-radius: var(--ms-radius-lg);
+  object-fit: cover;
+}
+
+.ms-main-image {
+  box-sizing: border-box;
+  width: 212px;
+  height: 212px;
+  border: 1px solid var(--ms-border);
+  border-radius: var(--ms-radius-lg);
+  object-fit: cover;
+}
+
+/* 卡片主内容区 */
+.ms-card-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: var(--ms-gap-md) var(--ms-gap-lg);
+  gap: var(--ms-gap-lg);
+  position: absolute;
+  height: 240px;
+  left: 304px;
+  right: 321px;
+  top: 0px;
+}
+
+/* 卡片头部 */
+.ms-card-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0px 0px var(--ms-gap-md);
+  gap: 156px;
+  width: 100%;
+  background: var(--ms-bg-card);
+  box-shadow: var(--ms-shadow-divider);
+}
+
+.ms-card-title-section {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px;
+  gap: var(--ms-gap-md);
+}
+
+.ms-machine-name {
+  font-family: var(--ms-font-family);
+  font-size: var(--ms-font-size-lg);
+  font-weight: var(--ms-font-weight-bold);
+  line-height: 21px;
+  color: var(--ms-text-primary);
+}
+
+.ms-pn-badge {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 6px 12px;
+  gap: 10px;
+  background: var(--ms-bg-bubble);
+  border-radius: var(--ms-radius-lg);
+  font-family: var(--ms-font-family);
+  font-size: var(--ms-font-size-base);
+  font-weight: var(--ms-font-weight-normal);
+  line-height: var(--ms-line-height);
+  color: var(--ms-text-primary);
+}
+
+.ms-accessories-link {
+  font-family: var(--ms-font-family);
+  font-size: var(--ms-font-size-base);
+  font-weight: var(--ms-font-weight-normal);
+  line-height: var(--ms-line-height);
+  color: var(--ms-link);
+  cursor: pointer;
+}
+
+/* 机器详情 */
+.ms-card-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px 0px var(--ms-gap-md);
+  gap: 8px;
+  width: 100%;
+  background: var(--ms-bg-card);
+  box-shadow: var(--ms-shadow-divider);
+}
+
+.ms-detail-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 0px;
+  width: 100%;
+}
+
+.ms-detail-label {
+  font-family: var(--ms-font-family);
+  font-size: var(--ms-font-size-base);
+  font-weight: var(--ms-font-weight-normal);
+  line-height: var(--ms-line-height);
+  color: var(--ms-text-primary);
+  min-width: 80px;
+}
+
+.ms-detail-value {
+  font-family: var(--ms-font-family);
+  font-size: var(--ms-font-size-base);
+  font-weight: var(--ms-font-weight-normal);
+  line-height: var(--ms-line-height);
+  color: var(--ms-text-secondary);
+}
+
+/* 规格信息 */
+.ms-specs-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px;
+  gap: var(--ms-gap-lg);
+  width: 100%;
+}
+
+.ms-spec-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  gap: var(--ms-gap-xs);
+  min-width: 190px;
+}
+
+.ms-spec-label {
+  font-family: var(--ms-font-family);
+  font-size: var(--ms-font-size-base);
+  font-weight: var(--ms-font-weight-normal);
+  line-height: var(--ms-line-height);
+  color: var(--ms-text-primary);
+}
+
+.ms-spec-value {
+  font-family: var(--ms-font-family);
+  font-size: var(--ms-font-size-base);
+  font-weight: var(--ms-font-weight-normal);
+  line-height: var(--ms-line-height);
+  color: var(--ms-text-secondary);
+}
+
+/* 卡片操作区 */
+.ms-card-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0px;
+  gap: var(--ms-gap-lg);
+  position: absolute;
+  width: var(--ms-card-actions-width);
+  height: 254px;
+  right: 0px;
+  top: 0px;
+  background: var(--ms-bg-card);
+}
+
+/* 库存状态卡片 */
+.ms-stock-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: var(--ms-gap-md) 10px;
+  gap: var(--ms-gap-md);
+  width: 100%;
+  height: 186px;
+  background: var(--ms-bg-stock);
+  border-radius: var(--ms-radius-lg);
+}
+
+.ms-stock-title {
+  font-family: var(--ms-font-family);
+  font-size: var(--ms-font-size-lg);
+  font-weight: var(--ms-font-weight-normal);
+  line-height: 21px;
+  color: var(--ms-text-secondary);
+}
+
+.ms-stock-total {
+  font-family: var(--ms-font-family);
+  font-size: var(--ms-font-size-lg);
+  font-weight: var(--ms-font-weight-normal);
+  line-height: 21px;
+  text-align: center;
+  color: var(--ms-text-primary);
+  width: 100%;
+}
+
+.ms-stock-grid {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  gap: var(--ms-gap-md);
+  width: 100%;
+}
+
+.ms-stock-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px;
+  gap: 10px;
+  width: 100%;
+}
+
+.ms-stock-tag {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 5px 20px;
+  gap: 10px;
+  flex: 1;
+  height: 26px;
+  background: var(--ms-bg-card);
+  border-radius: var(--ms-radius-sm);
+  font-family: 'Arial', sans-serif;
+  font-size: var(--ms-font-size-sm);
+  font-weight: var(--ms-font-weight-normal);
+  line-height: 16px;
+  text-align: center;
+}
+
+.ms-stock-tag.in-stock {
+  color: var(--ms-in-stock);
+}
+
+.ms-stock-tag.out-of-stock {
+  color: var(--ms-out-of-stock);
+}
+
+/* 数量选择器 */
+.ms-quantity-section {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0px;
+  width: 100%;
+}
+
+.ms-quantity-selector {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px;
+}
+
+.ms-qty-btn {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0px;
+  width: 32px;
+  height: 32px;
+  background: var(--ms-bg-card);
+  border: 1px solid var(--ms-border);
+  font-family: var(--ms-font-family);
+  font-size: var(--ms-font-size-base);
+  color: var(--ms-text-secondary);
+  cursor: pointer;
+}
+
+.ms-qty-btn:first-child {
+  border-radius: var(--ms-radius-sm) 0px 0px var(--ms-radius-sm);
+  margin: 0px -1px;
+}
+
+.ms-qty-btn:last-child {
+  border-radius: 0px var(--ms-radius-sm) var(--ms-radius-sm) 0px;
+}
+
+.ms-qty-input {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0px;
+  width: 46px;
+  height: 32px;
+  background: var(--ms-bg-card);
+  border: 1px solid var(--ms-border);
+  margin: 0px -1px;
+  font-family: var(--ms-font-family);
+  font-size: var(--ms-font-size-base);
+  color: var(--ms-text-primary);
+  text-align: center;
+}
+
+/* 加入购物车按钮 */
+.ms-add-to-cart-btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 12px;
+  gap: 12px;
+  background: var(--ms-primary);
+  border-radius: var(--ms-radius-lg);
+  border: none;
+  cursor: pointer;
+  font-family: var(--ms-font-family);
+  font-size: var(--ms-font-size-base);
+  font-weight: var(--ms-font-weight-bold);
+  line-height: var(--ms-line-height);
+  color: var(--ms-text-white);
+}
+
+.ms-add-to-cart-btn:hover {
+  background: var(--ms-primary-hover);
+}
+
+/* 更多操作按钮 */
+.ms-card-footer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px;
+  gap: 32px;
+  width: 100%;
+}
+
+.ms-more-info-btn {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 6px 12px;
+  gap: 8px;
+  background: var(--ms-bg-bubble);
+  border: 1px solid var(--ms-bubble-border);
+  border-radius: var(--ms-radius-lg);
+  font-family: var(--ms-font-family);
+  font-size: var(--ms-font-size-lg);
+  font-weight: var(--ms-font-weight-bold);
+  line-height: 21px;
+  color: var(--ms-primary);
+  cursor: pointer;
+}
+
+.ms-detail-links {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px;
+  gap: 24px;
+}
+
+.ms-detail-link {
+  font-family: var(--ms-font-family);
+  font-size: var(--ms-font-size-base);
+  font-weight: var(--ms-font-weight-normal);
+  line-height: var(--ms-line-height);
+  color: var(--ms-link);
+  cursor: pointer;
+}
+
+/* ========================================
+   分页
+   ======================================== */
+.ms-pagination {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 0px;
+  gap: 10px;
+  width: 100%;
+  height: 40px;
+}
+
+.ms-page-btn {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  background: var(--ms-bg-card);
+  border: 1px solid var(--ms-border);
+  border-radius: 2px;
+  font-family: var(--ms-font-family);
+  font-size: var(--ms-font-size-base);
+  font-weight: var(--ms-font-weight-normal);
+  color: var(--ms-text-primary);
+  cursor: pointer;
+}
+
+.ms-page-btn.active {
+  background: var(--ms-primary);
+  color: var(--ms-text-white);
+}
+
+.ms-page-btn.prev,
+.ms-page-btn.next {
+  width: 86px;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F1F1F1 100%);
+  border-radius: var(--ms-radius-sm);
+}
+
+/* ========================================
+   响应式
+   ======================================== */
+@media (max-width: 1280px) {
+  :root {
+    --ms-sidebar-width: 260px;
+    --ms-content-padding: 24px;
+  }
+
+  .ms-card-main {
+    left: 260px;
+    right: 280px;
+  }
+
+  .ms-card-actions {
+    width: 280px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .ms-product-line-layout {
+    flex-direction: column;
+  }
+
+  .ms-sidebar {
+    width: 100%;
+    min-height: auto;
+    box-shadow: none;
+    border-bottom: 1px solid var(--ms-border);
+  }
+
+  .ms-machine-card {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .ms-card-gallery,
+  .ms-card-main,
+  .ms-card-actions {
+    position: relative;
+    width: 100%;
+    left: 0;
+    right: 0;
+  }
+
+  .ms-card-gallery {
+    order: 1;
+  }
+
+  .ms-card-main {
+    order: 2;
+  }
+
+  .ms-card-actions {
+    order: 3;
+    height: auto;
+  }
+}

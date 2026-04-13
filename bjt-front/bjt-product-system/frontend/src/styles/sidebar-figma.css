@@ -6,19 +6,19 @@
 
 .sidebar.sidebar--figma {
   /* 继承 MainLayout .figma-front 的 --ff-*，单点改 token */
-  --sd-bg: var(--ff-surface);
-  --sd-header-bg: var(--ff-surface);
-  --sd-border: var(--ff-border);
-  --sd-text: var(--ff-text);
-  --sd-text-secondary: var(--ff-text-muted);
-  --sd-accent: var(--ff-accent);
-  --sd-accent-dark: var(--ff-accent-mid);
-  --sd-hover-bg: #f3f4f6;
-  /* 展开的一级行：稿面为白底主色字，不用浅蓝底 */
-  --sd-active-bg: var(--ff-surface);
-  --sd-nav-pill-bg: var(--ff-accent-dark);
-  /* 二级区底：稿面为白 #FFFFFF */
-  --sd-submenu-bg: var(--ff-surface);
+  --sd-bg: #ffffff;  /* 白色背景 - 根据 Figma */
+  --sd-header-bg: #ffffff;
+  --sd-border: #dedede;
+  --sd-text: #333333;  /* 深灰色文字 - 根据 Figma */
+  --sd-text-secondary: #666666;  /* 次要文字 */
+  --sd-accent: #012583;  /* 选中项深蓝色 */
+  --sd-accent-dark: #002a70;
+  --sd-hover-bg: #f3f4f6;  /* hover 浅灰 */
+  /* 展开的一级行 */
+  --sd-active-bg: #012583;  /* 选中项背景深蓝色 */
+  --sd-nav-pill-bg: #012583;
+  /* 二级区底（Figma 导出：inactive 行 #FFFFFF） */
+  --sd-submenu-bg: #ffffff;
   --sd-font: var(--ff-font);
   width: var(--bjt-sidebar-width, var(--ff-ms-sidebar-width, 303px));
   background-color: var(--sd-bg) !important;
@@ -26,11 +26,15 @@
   /* Dev：分割線-右 inset -0.5px 0 0 rgba(0,0,0,0.16) → --ff-sidebar-divider */
   box-shadow: inset -0.5px 0 0 var(--ff-sidebar-divider) !important;
   font-family: var(--sd-font);
-  /* Figma「侧面导航栏」：flex column, align-items flex-start, gap 24, padding 0 0 13 */
+  /*
+   * Frame 1013（用户粘贴 Dev CSS）：column、align flex-start、padding 0 0 16px、gap 4px、宽 303、白底、右内描边
+   * 高度 875 为画板稿值，实现用 100vh，不写死 height。
+   */
+  display: flex !important;
   flex-direction: column !important;
   align-items: flex-start !important;
-  gap: var(--ff-ms-sidebar-nav-gap, 24px);
-  padding: 0 0 var(--ff-ms-sidebar-nav-pad-bottom, 13px) !important;
+  gap: 4px !important;
+  padding: 0 0 16px !important;
   box-sizing: border-box !important;
 }
 
@@ -216,29 +220,153 @@
   background: var(--sd-hover-bg) !important;
 }
 
+/* 窄条模式：仅保留 BJT 标，字标收起 */
+.sidebar.sidebar--figma.collapsed .sidebar-brand__wordmark {
+  display: none !important;
+}
+
+/* 一级旁 chevron：展开/收起二级（按钮，非链接） */
+.sidebar.sidebar--figma .sidebar-l1-chevron-btn {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: inherit !important;
+  line-height: 0 !important;
+  flex-shrink: 0 !important;
+}
+
+.sidebar.sidebar--figma .sidebar-l1-chevron-btn svg {
+  transition: transform 0.2s ease;
+  display: block;
+}
+
+/* 二级收起：chevron 朝右 */
+.sidebar.sidebar--figma .sidebar-figma-nav__item--l1--section-collapsed .sidebar-l1-chevron-btn svg {
+  transform: rotate(-90deg);
+}
+
+/* 桌面侧栏收为图标列：单列点击热区 */
+.sidebar.sidebar--figma .sidebar-figma-nav__collapsed-link {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 55px;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 8px;
+  text-decoration: none !important;
+  color: inherit;
+  padding: 0 6px;
+}
+
+.sidebar.sidebar--figma .sidebar-figma-nav__item--collapsed-icon {
+  justify-content: center !important;
+}
+
 /* Frame 574：菜单区左右 10px，纵向滚动占满剩余高度 */
 .sidebar.sidebar--figma .sidebar-menu {
   padding: 0 10px !important;
   margin: 0 !important;
+  margin-top: 0 !important;
   background: var(--sd-bg);
   flex: 1 1 auto;
   min-height: 0;
+  /* 允许长英文标题换行；仅裁切横向溢出动画，避免整列文字被 ellipsis */
   overflow-x: hidden !important;
   overflow-y: auto !important;
   width: 100%;
   box-sizing: border-box;
 }
 
-.sidebar.sidebar--figma .sidebar-menu-content {
+
+/*
+ * 侧栏导航：原生 <nav>/<ul>/<li>（无 Ant Design Menu）。
+ * 注意：列表项必须写成 .sidebar-figma-nav__list > .sidebar-figma-nav__item，
+ * 不能写成 nav > li（中间有一层 ul），否则 flex 行布局不会生效。
+ * 压过 sidebar.css 里旧菜单链路的 BJT 规则。
+ */
+.sidebar.sidebar--figma nav.sidebar-menu-content.sidebar-figma-nav {
   background: transparent !important;
   font-family: var(--sd-font) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100%;
+  box-sizing: border-box;
+  border: none !important;
 }
 
-.sidebar.sidebar--figma .sidebar-menu-content.ant-menu-inline {
-  border-inline-end: none !important;
+.sidebar.sidebar--figma .sidebar-figma-nav__list {
+  list-style: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100%;
 }
 
-/* 自定义 Figma 对齐图标（sidebarNavIcons.tsx）：与 Ant 图标同槽位、统一 16px */
+.sidebar.sidebar--figma:not(.collapsed) .sidebar-figma-nav__list > .sidebar-figma-nav__item {
+  margin: 2px 2px !important;
+  width: calc(100% - 4px) !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  border-radius: 8px !important;
+  overflow: visible !important;
+}
+
+.sidebar.sidebar--figma .sidebar-figma-nav__list > .sidebar-figma-nav__item {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  line-height: normal !important;
+  padding: 0 !important;
+}
+
+.sidebar.sidebar--figma.collapsed .sidebar-figma-nav__list > .sidebar-figma-nav__item {
+  max-width: none !important;
+  width: auto !important;
+}
+
+.sidebar.sidebar--figma .sidebar-figma-nav__item--l2 {
+  height: auto !important;
+}
+
+.sidebar.sidebar--figma .sidebar-figma-nav__body {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  white-space: normal !important;
+}
+
+.sidebar.sidebar--figma .sidebar-figma-nav__icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-inline-end: 5px !important;
+  color: rgba(0, 0, 0, 0.85) !important;
+  font-size: 18px !important;
+  width: 18px !important;
+  min-width: 18px !important;
+  line-height: 1 !important;
+}
+
+.sidebar.sidebar--figma .sidebar-figma-nav__item--l2 .sidebar-figma-nav__icon {
+  display: none !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+}
+
+.sidebar.sidebar--figma .sidebar-figma-nav__item:hover .sidebar-figma-nav__icon {
+  color: var(--sd-accent) !important;
+}
+
+.sidebar.sidebar--figma .sidebar-figma-nav__item--selected .sidebar-figma-nav__icon {
+  color: #ffffff !important;
+}
+
 .sidebar.sidebar--figma .sidebar-nav-icon-svg {
   display: inline-flex;
   align-items: center;
@@ -253,64 +381,144 @@
   display: block;
 }
 
-/* 图标与文案间距 Figma gap 5 */
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item-icon {
-  margin-inline-end: 5px !important;
+.sidebar.sidebar--figma .sidebar-figma-nav__item a {
+  padding: 0 !important;
+  margin: 0 !important;
+  font-weight: 400 !important;
+  font-size: inherit !important;
+  border-radius: inherit !important;
+  border-right: none !important;
+  height: auto !important;
+  line-height: inherit !important;
 }
 
-/* 一级直达（Home / Contact）：标题色 rgba(0,0,0,0.85)，图标 18×18 */
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item .ant-menu-item-icon {
-  color: rgba(0, 0, 0, 0.85) !important;
-  font-size: 18px !important;
-  width: 18px !important;
-  min-width: 18px !important;
-  line-height: 1 !important;
+.sidebar.sidebar--figma .sidebar-figma-nav__item a:hover {
+  background-color: transparent !important;
 }
 
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item:hover .ant-menu-item-icon {
+.sidebar.sidebar--figma .sidebar-figma-nav__item--selected a {
+  background-color: transparent !important;
+  border-right: none !important;
+  font-weight: inherit !important;
+}
+
+.sidebar.sidebar--figma .sidebar-figma-nav__list > .sidebar-figma-nav__item--l1 .sidebar-l1-row {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  width: 100%;
+  min-height: 55px;
+  box-sizing: border-box;
+}
+
+.sidebar.sidebar--figma .sidebar-figma-nav__list > .sidebar-figma-nav__item--l1 .sidebar-l1-row .sidebar-top-link {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  width: auto !important;
+  max-width: 100% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.sidebar.sidebar--figma .sidebar-figma-nav__list > .sidebar-figma-nav__item--l1 .sidebar-l1-chevron {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.sidebar.sidebar--figma
+  .sidebar-figma-nav__item--l1.sidebar-figma-nav__item--child-route-active:not(.sidebar-figma-nav__item--selected)
+  .sidebar-l1-row
+  .sidebar-top-link {
   color: var(--sd-accent) !important;
 }
 
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item-selected .ant-menu-item-icon {
+.sidebar.sidebar--figma
+  .sidebar-figma-nav__item--l1.sidebar-figma-nav__item--child-route-active:not(.sidebar-figma-nav__item--selected)
+  .sidebar-l1-chevron {
+  color: var(--sd-accent) !important;
+}
+
+.sidebar.sidebar--figma
+  .sidebar-figma-nav__item--l1.sidebar-figma-nav__item--child-route-active:not(.sidebar-figma-nav__item--selected)
+  .sidebar-figma-nav__icon {
+  color: var(--sd-accent) !important;
+}
+
+.sidebar.sidebar--figma .sidebar-figma-nav__list > .sidebar-figma-nav__item--l2 .sidebar-sub-link,
+.sidebar.sidebar--figma .sidebar-figma-nav__list > .sidebar-figma-nav__item--l2 .sidebar-sub-external {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 10px 8px 10px 27px !important;
+  margin: 0 !important;
+  border-radius: 8px !important;
+  font-size: 16px !important;
+  line-height: 19px !important;
+  color: rgba(0, 0, 0, 0.65) !important;
+  font-weight: 400 !important;
+  text-decoration: none !important;
+  background: #ffffff !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  min-height: 0 !important;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sidebar.sidebar--figma .sidebar-figma-nav__list > .sidebar-figma-nav__item--l2 .sidebar-sub-link-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar.sidebar--figma .sidebar-figma-nav__list > .sidebar-figma-nav__item--l2 .sidebar-sub-leading-anticon {
+  font-size: 14px;
+  color: inherit;
+}
+
+.sidebar.sidebar--figma .sidebar-figma-nav__list > .sidebar-figma-nav__item--l2 .sidebar-ext-icon {
+  margin-left: 4px;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.sidebar.sidebar--figma
+  .sidebar-figma-nav__item--l2:not(.sidebar-figma-nav__item--selected)
+  .sidebar-sub-link:hover,
+.sidebar.sidebar--figma
+  .sidebar-figma-nav__item--l2:not(.sidebar-figma-nav__item--selected)
+  .sidebar-sub-external:hover {
+  color: var(--sd-accent) !important;
+  background-color: transparent !important;
+}
+
+.sidebar.sidebar--figma .sidebar-figma-nav__list > .sidebar-figma-nav__item--l2.sidebar-figma-nav__item--selected .sidebar-sub-link,
+.sidebar.sidebar--figma .sidebar-figma-nav__list > .sidebar-figma-nav__item--l2.sidebar-figma-nav__item--selected .sidebar-sub-external {
+  background-color: var(--sd-nav-pill-bg) !important;
   color: #ffffff !important;
-}
-
-/* 含子级一级：图一默认黑字黑图标，展开或子项被选中时再主色 */
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-submenu > .ant-menu-submenu-title .ant-menu-item-icon {
-  color: rgba(0, 0, 0, 0.85) !important;
-  font-size: 18px !important;
-  width: 18px !important;
-  min-width: 18px !important;
-  line-height: 1 !important;
-}
-
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-submenu > .ant-menu-submenu-title:hover .ant-menu-item-icon {
-  color: var(--sd-accent) !important;
-}
-
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-submenu-open > .ant-menu-submenu-title .ant-menu-item-icon,
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-submenu-selected > .ant-menu-submenu-title .ant-menu-item-icon {
-  color: var(--sd-accent) !important;
-}
-
-/* 内容宽约 279（Frame 574：303 − 左右 10×2 − margin） */
-.sidebar.sidebar--figma:not(.collapsed) .sidebar-menu-content > .ant-menu > .ant-menu-item,
-.sidebar.sidebar--figma:not(.collapsed) .sidebar-menu-content > .ant-menu > .ant-menu-submenu {
-  margin: 2px 2px !important;
-  width: calc(100% - 4px) !important;
-  max-width: 279px !important;
-  box-sizing: border-box !important;
+  font-weight: 400 !important;
   border-radius: 8px !important;
 }
 
-.sidebar.sidebar--figma.collapsed .sidebar-menu-content .ant-menu-item,
-.sidebar.sidebar--figma.collapsed .sidebar-menu-content .ant-menu-submenu {
-  max-width: none !important;
-  width: auto !important;
+.sidebar.sidebar--figma
+  .sidebar-figma-nav__item--l2.sidebar-figma-nav__item--selected
+  .sidebar-sub-leading-wrap,
+.sidebar.sidebar--figma
+  .sidebar-figma-nav__item--l2.sidebar-figma-nav__item--selected
+  .sidebar-sub-leading-anticon {
+  color: #ffffff !important;
 }
 
-/* 一级直达项（Home / Contact）：Figma 55px 高、16/19、400、左内边距 10px */
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item .sidebar-top-link {
+.sidebar.sidebar--figma .sidebar-figma-nav__item .sidebar-top-link {
   display: flex;
   align-items: center;
   min-height: 55px;
@@ -321,87 +529,66 @@
   line-height: 19px !important;
   border-radius: 8px !important;
   text-decoration: none !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item .sidebar-top-link:hover {
+.sidebar.sidebar--figma .sidebar-figma-nav__item .sidebar-top-link:hover {
   color: var(--sd-accent) !important;
   background-color: var(--sd-hover-bg) !important;
 }
 
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item-selected {
-  background: transparent !important;
+.sidebar.sidebar--figma .sidebar-figma-nav__list > .sidebar-figma-nav__item--selected {
+  background: var(--sd-nav-pill-bg) !important;
+  border-radius: 8px !important;
 }
 
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item-selected .sidebar-top-link {
-  background-color: var(--sd-nav-pill-bg) !important;
+.sidebar.sidebar--figma .sidebar-figma-nav__list > .sidebar-figma-nav__item--selected .sidebar-top-link {
+  background-color: transparent !important;
   color: #ffffff !important;
   font-weight: 400 !important;
   box-shadow: none !important;
 }
 
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item-selected .sidebar-top-link:hover {
-  background-color: var(--sd-nav-pill-bg) !important;
+.sidebar.sidebar--figma .sidebar-figma-nav__list > .sidebar-figma-nav__item--selected a.sidebar-top-link {
+  background-color: transparent !important;
+  background: transparent !important;
+  color: #ffffff !important;
+  border-right: none !important;
+  font-weight: 400 !important;
+}
+
+.sidebar.sidebar--figma .sidebar-figma-nav__list > .sidebar-figma-nav__item--selected .sidebar-top-link:hover {
+  background-color: transparent !important;
   color: #ffffff !important;
 }
 
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-submenu > .ant-menu-submenu-title {
-  padding: 0 0 0 10px !important;
-  margin: 0 !important;
-  min-height: 55px !important;
-  height: auto !important;
-  display: flex !important;
-  align-items: center !important;
-  color: rgba(0, 0, 0, 0.85) !important;
-  font-weight: 400 !important;
-  font-size: 16px !important;
-  line-height: 19px !important;
-  border-radius: 8px !important;
+.sidebar.sidebar--figma .sidebar-figma-nav__list > .sidebar-figma-nav__item--selected .sidebar-top-link--external {
+  color: #ffffff !important;
+  background-color: transparent !important;
 }
 
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-submenu > .ant-menu-submenu-title:hover {
-  color: var(--sd-accent) !important;
-  background-color: var(--sd-hover-bg) !important;
+.sidebar.sidebar--figma .sidebar-figma-nav__item--l1.sidebar-figma-nav__item--selected .sidebar-l1-chevron {
+  color: #ffffff !important;
 }
 
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-submenu-open > .ant-menu-submenu-title,
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-submenu-selected > .ant-menu-submenu-title {
-  color: var(--sd-accent) !important;
-  background-color: var(--sd-active-bg) !important;
-  font-weight: 400 !important;
-}
-
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-submenu > .ant-menu-submenu-title .ant-menu-submenu-arrow {
-  color: rgba(0, 0, 0, 0.45) !important;
-  font-size: 12px !important;
-}
-
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-submenu > .ant-menu-submenu-title:hover .ant-menu-submenu-arrow {
-  color: var(--sd-accent) !important;
-}
-
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-submenu-open > .ant-menu-submenu-title .ant-menu-submenu-arrow,
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-submenu-selected > .ant-menu-submenu-title .ant-menu-submenu-arrow {
-  color: var(--sd-accent) !important;
-}
-
-/* 气柱袋图标：一级选中态白底 + 深蓝条，避免整图标刷白后条纹消失 */
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item-selected .sidebar-nav-icon--aircol-frame {
+.sidebar.sidebar--figma .sidebar-figma-nav__item--selected .sidebar-nav-icon--aircol-frame {
   fill: #ffffff !important;
 }
 
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item-selected .sidebar-nav-icon--aircol-stripe {
+.sidebar.sidebar--figma .sidebar-figma-nav__item--selected .sidebar-nav-icon--aircol-stripe {
   fill: var(--sd-nav-pill-bg) !important;
 }
 
-/* 顶栏外链（气柱袋）：与 Home 同行高、↗ 紧跟文案 */
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item .sidebar-top-link--external {
+.sidebar.sidebar--figma .sidebar-figma-nav__item .sidebar-top-link--external {
   display: inline-flex !important;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   flex-wrap: wrap;
   box-sizing: border-box;
-  min-height: 55px;
-  padding: 0 10px !important;
+  min-height: 51px !important;
+  padding: 16px 0 16px 10px !important;
   width: 100%;
   color: var(--sd-text) !important;
   font-weight: 400 !important;
@@ -411,96 +598,15 @@
   text-decoration: none !important;
 }
 
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item .sidebar-top-link--external:hover {
+.sidebar.sidebar--figma .sidebar-figma-nav__item .sidebar-top-link--external:hover {
   color: var(--sd-accent) !important;
   background-color: var(--sd-hover-bg) !important;
 }
 
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-item .sidebar-top-link--external .sidebar-ext-icon {
+.sidebar.sidebar--figma .sidebar-figma-nav__item .sidebar-top-link--external .sidebar-ext-icon {
   font-size: 12px;
   opacity: 0.85;
   line-height: 1;
-}
-
-/* 子级：左侧缩进 + 浅底，贴近 Figma 二级列表 */
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-sub {
-  background-color: var(--sd-submenu-bg) !important;
-  border-left: none !important;
-  margin-left: 0 !important;
-  padding: 4px 0 8px !important;
-  border-radius: 0 0 8px 8px !important;
-}
-
-.sidebar.sidebar--figma:not(.collapsed) .sidebar-menu-content .ant-menu-sub .ant-menu-item {
-  margin: 2px 2px !important;
-  padding-inline-start: 0 !important;
-  padding-inline-end: 0 !important;
-  max-width: 279px !important;
-  height: auto !important;
-}
-
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-sub.ant-menu-inline {
-  background: var(--sd-submenu-bg) !important;
-}
-
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-sub .ant-menu-item .sidebar-sub-link,
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-sub .ant-menu-item .sidebar-sub-external {
-  display: flex !important;
-  align-items: center !important;
-  padding: 10px 8px 10px 32px !important;
-  margin: 0 !important;
-  border-radius: 0 !important;
-  font-size: 14px !important;
-  color: var(--ff-text-muted) !important;
-  font-weight: 400 !important;
-  text-decoration: none !important;
-  line-height: 1.35 !important;
-  background: var(--ff-surface) !important;
-}
-
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-sub .ant-menu-item .sidebar-sub-link-inner {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-sub .ant-menu-item .sidebar-sub-leading-anticon {
-  font-size: 14px;
-  color: inherit;
-}
-
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-sub .ant-menu-item .sidebar-ext-icon {
-  margin-left: 4px;
-  font-size: 12px;
-  opacity: 0.85;
-}
-
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-sub .ant-menu-item:not(.ant-menu-item-selected) .sidebar-sub-link:hover,
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-sub .ant-menu-item:not(.ant-menu-item-selected) .sidebar-sub-external:hover {
-  color: var(--sd-accent) !important;
-  background-color: transparent !important;
-}
-
-/* Figma：二级选中 = 深蓝底 + 白字 */
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-sub .ant-menu-item-selected .sidebar-sub-link,
-.sidebar.sidebar--figma .sidebar-menu-content .ant-menu-sub .ant-menu-item-selected .sidebar-sub-external {
-  background-color: var(--sd-nav-pill-bg) !important;
-  color: #ffffff !important;
-  font-weight: 400 !important;
-  border-radius: 8px !important;
-}
-
-.sidebar.sidebar--figma
-  .sidebar-menu-content
-  .ant-menu-sub
-  .ant-menu-item-selected
-  .sidebar-sub-leading-wrap,
-.sidebar.sidebar--figma
-  .sidebar-menu-content
-  .ant-menu-sub
-  .ant-menu-item-selected
-  .sidebar-sub-leading-anticon {
-  color: #ffffff !important;
 }
 
 .sidebar.sidebar--figma .sidebar-menu::-webkit-scrollbar-track {
@@ -516,9 +622,7 @@
   background: #9ca3af;
 }
 
-/* 收起仍可点图标 */
-.sidebar.sidebar--figma.collapsed .sidebar-menu-content .ant-menu-item .ant-menu-item-icon,
-.sidebar.sidebar--figma.collapsed .sidebar-menu-content .ant-menu-submenu-title .ant-menu-item-icon {
+.sidebar.sidebar--figma.collapsed .sidebar-figma-nav__icon {
   line-height: 1 !important;
 }
 

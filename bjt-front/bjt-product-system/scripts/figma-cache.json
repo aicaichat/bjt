@@ -1,0 +1,53 @@
+{
+  "_meta": {
+    "lastUpdated": "2026-04-12",
+    "fileKey": "QluTLuKXbauHIiCN8AZUGJ",
+    "note": "Figma 设计数据缓存 - 用于减少 API 调用"
+  },
+  "pages": {
+    "2679:24930": {
+      "name": "Home",
+      "route": "/",
+      "dimensions": { "width": 1920, "height": 1638 }
+    },
+    "2679:22612": {
+      "name": "Machines - Product Line 1",
+      "route": "/machines/product-line-1",
+      "dimensions": { "width": 1920, "height": 1599 }
+    },
+    "2700:20514": {
+      "name": "Machines - Product Line 2",
+      "route": "/machines/product-line-2",
+      "dimensions": { "width": 1920, "height": 1359 }
+    },
+    "2679:22464": {
+      "name": "Consumables - Film",
+      "route": "/consumables",
+      "dimensions": { "width": 1920, "height": 2554 }
+    },
+    "2700:16715": {
+      "name": "Shopping Cart",
+      "route": "/cart",
+      "dimensions": { "width": 1920, "height": 2565 }
+    }
+  },
+  "tokens": {
+    "colors": {
+      "--ff-accent": "#00338d",
+      "--ff-accent-mid": "#002a70",
+      "--ff-content-canvas-bg": "#f5f7fa",
+      "--ff-surface": "#ffffff",
+      "--ff-border": "#e5e7eb",
+      "--ff-text": "rgba(0,0,0,0.85)",
+      "--ff-text-muted": "rgba(0,0,0,0.65)"
+    },
+    "layout": {
+      "sidebarWidth": 303,
+      "contentMaxWidth": 1617,
+      "pageGutter": 40,
+      "headerHeight": 60,
+      "cardRadius": 12,
+      "buttonRadius": 8
+    }
+  }
+}

@@ -1,0 +1,119 @@
+/**
+ * 耗材页 /consumables — Figma Dev 数值令牌
+ * 信源：docs/visual-upgrade/sources/consumables-figma-dev-export-2026-04-13.css
+ * 加载顺序：figma-design-tokens.css 之后、consumables-figma.css 之前（main.tsx）
+ */
+:root {
+  /* 主列与内排版宽（1920 − 303 侧栏） */
+  --cons-column-max-width: 1617px;
+  --cons-inner-width: 1537px;
+  --cons-inset-pad-x: 16px;
+  --cons-filter-row-inner: 1505px;
+
+  /* Frame 389 结果白区外壳 */
+  --cons-frame-389-gap: 16px;
+  --cons-frame-389-bg: #ffffff;
+
+  /* Frame 3 主内容画布 */
+  --cons-page-pad-y: 20px;
+  --cons-page-gutter-x: 40px;
+  --cons-stack-gap: 24px;
+  --cons-canvas-bg: #f1f5f9;
+
+  /* 主色与语义色（与 --ff-accent 一致） */
+  --cons-primary: #012583;
+  --cons-text-title: rgba(0, 0, 0, 0.85);
+  --cons-text-sub: rgba(0, 0, 0, 0.65);
+  --cons-text-strong: rgba(0, 0, 0, 0.97);
+  --cons-text-placeholder: #dedede;
+  --cons-text-muted-gray: #b0b0b0;
+  --cons-line-border: #dedede;
+  --cons-border-soft: rgba(0, 0, 0, 0.25);
+  --cons-smart-filter-tint: rgba(42, 125, 250, 0.26);
+  --cons-surface: #ffffff;
+  --cons-film-tile-bg: #eaedef;
+  --cons-chip-bg: #d9dfed;
+  --cons-chip-border: #c4dcff;
+
+  /* 标题与正文（Roboto / Arial） */
+  --cons-font-ui: var(--ff-font, 'Roboto', sans-serif);
+  --cons-font-subtitle: Arial, sans-serif;
+  --cons-h1-size: 24px;
+  --cons-h1-lh: 28px;
+  --cons-h1-weight: 700;
+  --cons-lead-size: 20px;
+  --cons-lead-lh: 23px;
+  --cons-body-size: 16px;
+  --cons-body-lh: 19px;
+  --cons-caption-size: 14px;
+  --cons-caption-lh: 16px;
+  --cons-more-info-size: 18px;
+  --cons-more-info-lh: 21px;
+  --cons-view-cart-font-size: 14px;
+  --cons-view-cart-lh: 16px;
+
+  /* 圆角 */
+  --cons-radius-xs: 2px;
+  --cons-radius-sm: 4px;
+  --cons-radius-md: 8px;
+  --cons-radius-pill: 18px;
+
+  /* 顶栏工具（Frame 17，供耗材页内若需对齐参考） */
+  --cons-header-row-h: 68px;
+  --cons-search-h: 32px;
+  --cons-search-w: 271px;
+  --cons-toolbar-btn-h: 32px;
+
+  /* 按钮与条 */
+  --cons-view-cart-w: 114px;
+  --cons-view-cart-h: 40px;
+  --cons-filter-icon-circle: 32px;
+  --cons-model-row-pad-y: 16px;
+  --cons-model-row-pad-x: 12px;
+  --cons-model-row-gap: 40px;
+  --cons-select-w-model: 208px;
+  --cons-select-h: 40px;
+  --cons-select-w-dim: 288px;
+
+  /* 产品行（膜页面组件）：1537×300、#FFF、下分割线（Dev 膜页面组件） */
+  --cons-product-row-min-h: 300px;
+  --cons-product-row-h: 300px;
+  --cons-product-thumb: 68px;
+  --cons-product-hero: 212px;
+  --cons-product-gallery-gap: 8px;
+  --cons-product-content-pad-x: 24px;
+  --cons-product-content-pad-t: 16px;
+  /* 底栏与「More info」紧贴分割线：由 more-row 的 padding-top 控制间距 */
+  --cons-product-content-pad-b: 0px;
+  /* 主行三列间距：图区—文案 16px；文案—价格 24px（对齐 Dev 绝对布局 304−288） */
+  --cons-product-gap-gallery-info: 16px;
+  --cons-product-gap-info-price: 24px;
+  /* 右侧购买列宽约 321px（稿面主列 right:321） */
+  --cons-product-price-col-w: 321px;
+  /* Frame 297 文案区：Dev 摘录 gap:16（与 padding 16 24 0 同帧） */
+  --cons-product-info-stack-gap: 16px;
+  /* Frame 833 元数据行内间距 */
+  --cons-product-meta-inner-gap: 8px;
+  /* More Info 行左侧留白：图区 288 + 图—文 16 = 304，与文案列左缘对齐 */
+  --cons-product-more-row-gutter: calc(
+    var(--cons-product-thumb) + var(--cons-product-gallery-gap) + var(--cons-product-hero) +
+      var(--cons-product-gap-gallery-info)
+  );
+  --cons-product-header-gap: 16px;
+  --cons-pn-chip-h: 31px;
+  --cons-pn-chip-pad-x: 12px;
+  --cons-meta-row-gap: 24px;
+  --cons-more-info-w: 135px;
+  --cons-more-info-h: 36px;
+  /* 分割线与 More info 按钮之间（避免与购物车中间大块留白叠加） */
+  --cons-product-more-row-pad-top: 8px;
+
+  /* 分割线 */
+  --cons-divider-bottom: 0 0.5px 0 rgba(0, 0, 0, 0.25);
+
+  /* 分页 */
+  --cons-page-btn-w: 86px;
+  --cons-page-btn-h: 40px;
+  --cons-page-num-size: 40px;
+  --cons-page-num-gap: 10px;
+}

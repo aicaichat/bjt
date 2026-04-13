@@ -46,5 +46,12 @@
     "back": "返回登录",
     "success": "重置链接发送成功",
     "error": "发送重置链接失败"
-  }
+  },
+  "pageTitle": "登录",
+  "signInToAccessYourAccount": "登录后即可访问您的账户",
+  "username": "用户名",
+  "password": "密码",
+  "login": "登录",
+  "passwordShow": "显示密码",
+  "passwordHide": "隐藏密码"
 } 

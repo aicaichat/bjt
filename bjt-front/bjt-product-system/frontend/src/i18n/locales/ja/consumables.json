@@ -126,7 +126,11 @@
   "length": "長さ",
   "thickness": "厚さ",
   "weight": "グラム重量",
-  "ui": "[オブジェクトオブジェクト]",
+  "ui": {
+    "selectFilmType": "フィルムタイプを選択",
+    "selectMaterialType": "材質タイプを選択",
+    "results": "結果"
+  },
   "button": "[オブジェクトオブジェクト]",
   "warning": "[オブジェクトオブジェクト]",
   "common": "[オブジェクトオブジェクト]",

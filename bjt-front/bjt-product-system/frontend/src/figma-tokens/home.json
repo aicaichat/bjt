@@ -1,0 +1,77 @@
+{
+  "$comment": "与 frontend/src/styles/figma-tokens-home.css 同源；信源见 docs/visual-upgrade/sources/home-figma-dev-export-2026-04-12.css",
+  "meta": {
+    "page": "Home",
+    "contentColumnFrame": "529",
+    "designViewportWidthPx": 1920
+  },
+  "shell": {
+    "frame3PadYPx": 16,
+    "frame3PadXPx": 40,
+    "horizontalPaddingPx": 0,
+    "headerBelowGapPx": 0,
+    "mainColumnMaxWidthPx": 1617,
+    "mainColumnMinHeightLgPx": 1570,
+    "stackGapPx": 32
+  },
+  "productCard": {
+    "padYPx": 40,
+    "padXPx": 40,
+    "innerGapPx": 16,
+    "radiusPx": 0
+  },
+  "sectionHeader": {
+    "frame738PadXPx": 16,
+    "gapPx": 10,
+    "minHeightPx": 68,
+    "radiusPx": 8,
+    "titleSizePx": 24,
+    "titleLinePx": 28,
+    "titleWeight": 700
+  },
+  "frame740": {
+    "figmaFrameId": 740,
+    "widthPx": 1457,
+    "minHeightPxByLine": { "1": 303, "2": 329, "3": 318 },
+    "paddingPx": 0,
+    "gapPx": 32,
+    "alignItemsDefault": "center",
+    "alignItemsLinePaper": "center",
+    "alignItemsLineWaterTape": "flex-start"
+  },
+  "sectionText": {
+    "maxWidthPx": 875,
+    "gapPx": 74
+  },
+  "description": {
+    "sizePx": 16,
+    "linePx": 19,
+    "weight": 400,
+    "minHeightPxByLine": { "default": 57, "3": 19 }
+  },
+  "linkStack": {
+    "gapPx": 20,
+    "padXPx": 80,
+    "minHeightPx": 130
+  },
+  "productLinks": {
+    "outerMaxWidthPx": 286,
+    "labelMaxWidthPx": 262,
+    "heightPx": 45,
+    "paddingPx": 12,
+    "radiusPx": 8,
+    "fontSizePx": 18,
+    "linePx": 21,
+    "fontWeight": 400
+  },
+  "imageColumn": {
+    "widthPx": 550,
+    "columnGapPx": 10,
+    "wrapPaddingPx": 0,
+    "heightPxByLine": { "1": 305, "2": 329, "3": 318 },
+    "imgRadiusPx": 8
+  },
+  "pagination": {
+    "$comment": "Dev 未给分页；样式与 Frame 805 共用变量，不新增 px"
+  }
+}

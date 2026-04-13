@@ -284,13 +284,66 @@
 /*
  * ThumbnailGallery 把 className（如 machine-gallery）叠在同一根节点上，
  * 不要用「.machine-gallery .thumbnail-gallery-left」子代选择器（永远匹配不到）。
- * 左侧缩略图布局的尺寸由 machine-selection-figma（--air / --paper）接管。
+ * Frame 205 基准：row gap 8px；Frame 1018 竖列 gap 4px；68 缩略 + 212 主图 → 宽 288。
  */
 .thumbnail-gallery-left.machine-gallery {
-  /* 默认由 .thumbnail-gallery-left 提供 flex 行布局；此处去掉 380 上限，交给选型卡片 Figma 层 */
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 8px;
   max-width: none;
   width: 100%;
   margin: 0;
+  padding: 0;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.thumbnail-gallery-left.machine-gallery .thumbnails-column {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 4px;
+}
+
+.thumbnail-gallery-left.machine-gallery .thumbnail-small {
+  width: 68px;
+  height: 68px;
+  border-width: 1px;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.thumbnail-gallery-left.machine-gallery .thumbnail-image {
+  padding: 0;
+}
+
+.thumbnail-gallery-left.machine-gallery .main-image-container {
+  flex: 0 0 212px;
+  width: 212px;
+  max-width: 212px;
+  min-width: 0;
+}
+
+.thumbnail-gallery-left.machine-gallery .main-image-wrapper {
+  width: 212px;
+  height: 212px;
+  max-width: 212px;
+  border-width: 1px;
+  border-radius: 8px;
+  box-shadow: none;
+  box-sizing: border-box;
+}
+
+.thumbnail-gallery-left.machine-gallery .main-image {
+  padding: 0;
+}
+
+.thumbnail-gallery-left.machine-gallery.thumbnail-gallery-left--main-only {
+  gap: 0;
+  width: 212px;
+  max-width: 212px;
 }
 
 .thumbnail-gallery-main.machine-gallery {

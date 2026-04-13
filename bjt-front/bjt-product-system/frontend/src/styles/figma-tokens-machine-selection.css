@@ -2,6 +2,7 @@
  * 机器选型页 — Figma 专用令牌（A：单一数据源）
  * - 与 src/figma-tokens/machine-selection.json 保持含义一致；改稿时二选一作为主副本，再同步另一份。
  * - 加载顺序：须在 figma-design-tokens.css 之后、index.css（Tailwind）之前；machine-selection-figma.css 须在 index.css 之后（见 main.tsx）。
+ * - 流程与纪律：docs/visual-upgrade/figma-variables-tokens-best-practices.md
  */
 :root {
   /* ========== 验收与设计基准 ========== */
@@ -13,43 +14,137 @@
   --ff-ms-page-gutter: 40px;
   /* Figma：侧栏列（Dev「侧面导航栏」— 303×853 等为稿面示例高度） */
   --ff-ms-sidebar-width: 303px;
-  /* 侧栏 Auto layout：align-items flex-start、gap 24、padding 0 0 13 */
-  --ff-ms-sidebar-nav-gap: 24px;
-  --ff-ms-sidebar-nav-pad-bottom: 13px;
+  /* 侧栏 Frame 1013：gap 4px、padding 0 0 16px（与 Figma Dev 导出一致） */
+  --ff-ms-sidebar-nav-gap: 4px;
+  --ff-ms-sidebar-nav-pad-bottom: 16px;
   /* Figma：分隔线（顶栏下、列表行下） */
   --ff-ms-hairline-divider: rgba(0, 0, 0, 0.25);
 
-  /* ========== 气垫机列表行（Dev Mode「机器页面组件」Frame 471 / 1537×280） ========== */
+  /* ========== 气垫机列表行（Frame 471 Dev：1537×280、#FFF、下分割线；与 machine-selection.json listRow* 一致） ========== */
   --ff-ms-air-row-width: 1537px;
   --ff-ms-air-row-height: 280px;
-  --ff-ms-air-row-shadow: 0 0.5px 0 var(--ff-ms-hairline-divider);
+  --ff-ms-air-row-bg: #ffffff;
+  /* Dev 原文：box-shadow: 0px 0.5px 0px rgba(0, 0, 0, 0.25) */
+  --ff-ms-air-row-shadow: 0px 0.5px 0px var(--ff-ms-hairline-divider);
   --ff-ms-air-link-hint: #2a7dfa;
   --ff-ms-air-pn-bg: #d9dfed;
   --ff-ms-air-bubble-border: #c4dcff;
   --ff-ms-air-moreinfo-bg: #d9dfed;
-  /* 与叠图参考 machine-selection-figma-reference-layout.png 库存面板一致 */
-  --ff-ms-air-stock-bg: #ebf3ff;
+  /* Frame 148 库存内衬（Figma 导出 #EFF7FF） */
+  --ff-ms-air-stock-bg: #eff7ff;
   --ff-ms-air-stock-positive: #05a126;
   --ff-ms-air-stock-negative: #ff0101;
   --ff-ms-air-gallery-thumb: 68px;
   --ff-ms-air-gallery-main: 212px;
+  /* Frame 205：整区 288×212；Dev position absolute left:0 top:1px（相对父级图库列） */
+  --ff-ms-air-gallery-frame-height: 212px;
+  --ff-ms-air-gallery-frame-left: 0px;
+  --ff-ms-air-gallery-frame-top: 1px;
   --ff-ms-air-gallery-thumb-col-gap: 4px;
   --ff-ms-air-gallery-main-gap: 8px;
   --ff-ms-air-image-border: #dedede;
   --ff-ms-air-image-radius: 8px;
+  /* Frame 487 中间列 padding（历史稿；与 Frame 527 并存时以 Frame 527 为准） */
   --ff-ms-air-row-pad-x: 24px;
   --ff-ms-air-row-pad-y: 16px;
+  /* Frame 527 中间文字列（Dev Auto layout：absolute + column + gap 16 + pad 16 16 0 + h 248） */
+  --ff-ms-air-frame527-left: 351px;
+  --ff-ms-air-frame527-right: 321px;
+  --ff-ms-air-frame527-height: 248px;
+  --ff-ms-air-frame527-pad: 16px 16px 0px;
+  --ff-ms-air-frame527-gap: 16px;
+  /* Frame 471 行容器：外圈 0；勿与中间列 padding 混在同一层 */
+  --ff-ms-air-card-row-pad-x: 0px;
+  --ff-ms-air-card-row-pad-y: 0px;
   --ff-ms-air-row-inner-gap: 24px;
+  /* 行内定宽（与 Figma Frame 471/205/1017 一致，勿用 20/60/20% 代替） */
+  --ff-ms-air-gallery-track-width: 288px;
+  --ff-ms-air-rail-width: 321px;
+  --ff-ms-air-gallery-to-main-gap: 16px;
   --ff-ms-air-title-size: 18px;
   --ff-ms-air-title-line: 21px;
   --ff-ms-air-body-size: 16px;
   --ff-ms-air-body-line: 19px;
   --ff-ms-air-h2-size: 20px;
   --ff-ms-air-h2-line: 23px;
+  /* Frame 1019 / 831 / 830：标题区与规格文案栅格
+   * - Frame 831：整块 specs 内「描述行」与「双列」之间 gap:8px；底 padding:0 0 16px
+   * - Frame 828：单列内三行键值竖向 gap:4px
+   * - Frame 830：左右两列之间 gap:24px */
+  --ff-ms-air-spec-title-to-block-gap: 16px;
+  --ff-ms-air-spec-inner-gap: 8px;
+  --ff-ms-air-spec-cols-gap: 24px;
+  --ff-ms-air-spec-col-gap: 4px;
+  --ff-ms-air-spec-col-width: 205px;
+  --ff-ms-air-spec-col-min: 190px;
+  --ff-ms-air-spec-actions-gap: 32px;
+  --ff-ms-air-spec-links-gap: 24px;
+  /* Frame 983 标题行（machine-selection-figma-dev-export-2026-04-12.css） */
+  --ff-ms-air-title-row-gap: 156px;
+  --ff-ms-air-title-row-min-height: 47px;
+  --ff-ms-air-title-row-pad-bottom: var(--ff-ms-air-spec-title-to-block-gap);
+  /* 与卡片底部分割线同源 */
+  --ff-ms-air-section-hairline-shadow: var(--ff-ms-air-row-shadow);
+  /*
+   * 右栏：以入库 Dev 为准 docs/visual-upgrade/sources/machine-selection-figma-dev-export-2026-04-12.css
+   * Frame 1017：padding 0、gap 24、height 254、bg #FFF；子层仅 Frame 148 + Frame 1084（价格须在 148 内，勿作 rail 第三子以免多一道 gap）
+   */
+  --ff-ms-air-rail-column-pad: 0px;
+  --ff-ms-air-rail-column-bg: #ffffff;
+  --ff-ms-air-rail-inner-gap: var(--ff-ms-air-row-inner-gap);
+  --ff-ms-air-rail-min-height: 254px;
+  /* Frame 148 库存面板 */
+  --ff-ms-air-stock-panel-pad-y: var(--ff-ms-air-row-pad-y);
+  --ff-ms-air-stock-panel-pad-x: 10px;
+  /* Frame 148：列内 stack gap 16（非 1017 子块间距 24） */
+  --ff-ms-air-stock-panel-gap: 16px;
+  --ff-ms-air-stock-panel-radius: var(--ff-ms-air-image-radius);
+  /* Frame 835 PN 气泡 */
+  --ff-ms-air-pn-pill-radius: var(--ff-ms-air-image-radius);
+  --ff-ms-air-pn-pill-weight: 400;
+  /* Frame 488：键值同行 flex row，Dev 无 gap（0）；勿与 Frame 828 列内竖向 gap:4px 混淆 */
+  --ff-ms-air-spec-pair-gap: 0px;
+  /* Frame 1084：gap 75、width 321（与 1017 padding:0 同宽） */
+  --ff-ms-air-purchase-actions-gap-row: var(--ff-ms-air-row-inner-gap);
+  --ff-ms-air-purchase-actions-gap-col: 75px;
+  --ff-ms-air-purchase-actions-min-height: 44px;
+  --ff-ms-air-primary-cart-min-width: 138px;
+  /* Frame 302 库存标签区：两行 pill 之间 gap 16（勿用 24） */
+  --ff-ms-air-stock-tags-gap-row: 16px;
+  --ff-ms-air-stock-tags-gap-col: 10px;
+  --ff-ms-air-stock-pill-bg: var(--ff-ms-card-bg);
+  --ff-ms-air-stock-pill-radius: 4px;
+  --ff-ms-air-stock-pill-pad-y: 5px;
+  --ff-ms-air-stock-pill-pad-x: 20px;
+  --ff-ms-air-stock-pill-font-size: 14px;
+  --ff-ms-air-stock-pill-line-height: 16px;
+  --ff-ms-air-stock-pill-font-family: Arial, Helvetica, sans-serif;
+  /* M4 列表宿主 .figma-exact-content：与主列 gutter 对齐 */
+  --ff-ms-air-list-host-pad-y: var(--ff-ms-air-row-pad-y);
+  --ff-ms-air-list-host-pad-x: var(--ff-ms-page-gutter);
 
-  /* ========== 主机列表单卡（纸垫 Frame 1491×280；气垫用 --ff-ms-air-*） ========== */
-  --ff-ms-card-width: 1491px;
-  --ff-ms-card-height: 280px;
+  /* Frame 982 面包屑栏（主列宽 1617、fixed 顶栏下须留 --ff-site-header-height） */
+  --ff-ms-breadcrumb-bar-height: 60px;
+  --ff-ms-breadcrumb-bar-pad-left: 48px;
+  --ff-ms-breadcrumb-bar-bg: var(--ff-accent);
+
+  /* Frame 458 筛选白卡片 + Frame 457 筛选行（machine-selection-figma-dev-export） */
+  --ff-ms-filter-card-pad-y: 16px;
+  --ff-ms-filter-card-pad-x: 20px;
+  --ff-ms-filter-card-stack-gap: 20px;
+  --ff-ms-filter-card-min-height: 115px;
+  --ff-ms-filter-row-gap: 27px;
+  --ff-ms-filter-row-min-height: 40px;
+
+  /* Component 175：主机对比条（Dev 与 Frame 458 同列宽 1537） */
+  --ff-ms-compare-header-min-height: 70px;
+  --ff-ms-compare-header-pad-left: 10px;
+  --ff-ms-compare-header-gap: 8px;
+  --ff-ms-compare-table-header-bg: var(--ff-accent);
+
+  /* ========== 主机列表单卡（Frame 957: 1465×285） ========== */
+  --ff-ms-card-width: 1465px;
+  --ff-ms-card-height: 285px;
   --ff-ms-card-bg: #ffffff;
   --ff-ms-card-radius: 12px;
   --ff-ms-card-border-color: var(--ff-border, #e5e7eb);
@@ -58,13 +153,16 @@
   /** 桌面端卡片内行：与 Figma 定宽一致时用于横向滚动 */
   --ff-ms-card-row-min-width: var(--ff-ms-card-width);
 
-  /* ========== 三列（与 Auto Layout 百分比一致；若 Dev Mode 给固定宽可改成 px） ========== */
-  --ff-ms-col-gallery: 20%;
-  --ff-ms-col-main: 60%;
-  --ff-ms-col-actions: 20%;
-  --ff-ms-col-gallery-pr: 20px;
-  --ff-ms-col-main-pr: 20px;
-  --ff-ms-col-actions-pl: 20px;
+  /* ========== 三列（Figma Dev Mode 定宽 - Frame 471 气垫机卡片布局） ==========
+   * Frame 471 总宽 1537px = 288px (图库) + 16px (gap) + 864px (主内容) + 321px (操作区)
+   * 与 machine-selection-figma.css 中 figma-exact 类保持一致
+   */
+  --ff-ms-col-gallery: 288px;
+  --ff-ms-col-main: 1fr;
+  --ff-ms-col-actions: 321px;
+  --ff-ms-col-gallery-pr: 0;
+  --ff-ms-col-main-pr: 0;
+  --ff-ms-col-actions-pl: 0;
 
   /* ========== 图库（thumbnails-left） ========== */
   --ff-ms-gallery-thumb: 48px;

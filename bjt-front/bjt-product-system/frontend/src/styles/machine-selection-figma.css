@@ -2,7 +2,7 @@
  * 机器选型页（ProductLine1）— Figma 对齐层
  * 与 sidebar.css / machine-compare-alignment.css 数值一致时可叠图验收。
  * Figma 文件: QluTLuKXbauHIiCN8AZUGJ（节点以计划文档 §9 为准）
- * 高保真叠图基准: docs/screenshots/machine-selection-figma-reference-layout.png（主色约 #00338D，主区底约 #F5F7FA，库存区约 #EBF3FF）
+ * 高保真叠图基准: docs/screenshots/machine-selection-figma-reference-layout.png；库存内衬以 Figma 导出 #EFF7FF 为准（见 docs/visual-upgrade/figma-machines-page-css-export-2026-04-12.css）
  *
  * 对齐注意（避免「顶栏与下方卡片左缘差一截」）：
  * 1) 固定顶栏用 left = 侧栏宽 + gutter；主内容已在 layout 里让出侧栏，再加一层 padding 时，勿让内层 max-width 区块双边 margin:auto，否则大屏上会居中，视觉上比顶栏更缩进。
@@ -20,6 +20,18 @@
   --ms-breadcrumb-spacer-h: 120px;
 }
 
+/* Product Line 1：Frame 264 主列 1617，与 Frame 982 同宽左贴齐（宽屏主区 >1617 时不再「浮在中间」） */
+.figma-front .ms-pl1-main-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  align-self: flex-start;
+  width: 100%;
+  max-width: var(--ff-ms-content-max-width);
+  min-width: 0;
+  box-sizing: border-box;
+}
+
 /* ---- 页面根：与侧栏、顶栏留白（桌面基准 ~1440 内容区） ---- */
 .machines-page.ms-product-line-layout {
   /* 与 Figma 验收 Frame 一致；像素验收时视口宽度请用 1920px（全局见 --ff-ms-design-viewport-width） */
@@ -32,15 +44,15 @@
   --ms-figma-nav-bg-bottom: var(--ff-nav-bottom, #0f2440);
   --ms-breadcrumb-top: 80px;
   --ms-breadcrumb-spacer-h: 120px;
-  /* 主栏：Figma Frame 264/529 宽 1617（1920 − 303 侧栏）；对比表卡片仍可自限 1440 */
+  /* 主栏：Figma Frame 264/529 宽 1617；对比区与 Frame 458 同列宽 1537（见 --mc-container-max-width） */
   --ms-content-max: 1617px;
   /* Frame 529（Dev Mode Auto layout）— 主内容列 */
   --ms-frame-529-width: 1617px;
   /* Frame 529 Dev：height 1638；页面为滚动文档，用 min-height 贴近稿 */
   --ms-frame-529-min-height: var(--ff-ms-frame-529-min-height, 1638px);
-  /* Figma 对比表 Frame：1440×606（状态=选中 auto layout） */
-  --mc-container-max-width: 1440px;
-  --mc-image-max-width: 1440px;
+  /* 对比表/图：与 Frame 3 内层同宽 1537（Dev Component 175 / 458），非 1440 居中留白 */
+  --mc-container-max-width: var(--ff-ms-air-row-width);
+  --mc-image-max-width: var(--ff-ms-air-row-width);
   --mc-image-max-height: 606px;
   --ms-radius-bar: 8px;
   --ms-shadow-bar: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -80,7 +92,8 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 0 var(--ms-page-gutter) 0 var(--ms-page-gutter);
+  /* Figma Frame 3：padding 16px 40px（水平与 --ms-page-gutter 一致） */
+  padding: 16px var(--ms-page-gutter) var(--ff-main-column-pad-bottom, 24px) var(--ms-page-gutter);
   gap: var(--ff-main-stack-gap, 24px);
   box-sizing: border-box;
   /* 占满侧栏右侧列，且不超过 Figma 主栏 1617 */
@@ -216,38 +229,77 @@
   flex-shrink: 0;
 }
 
-/* ---- 筛选卡片（与 Figma 卡片规范统一命名） ---- */
-.ms-filter-card {
-  background: var(--ff-surface);
-  border-radius: 12px;
-  border: 1px solid var(--ms-border);
-  box-shadow: 0 2px 12px var(--ff-header-shadow, rgba(15, 36, 64, 0.06));
-  padding: 20px 24px;
-  margin-bottom: var(--ff-main-stack-gap);
-  color: var(--ms-text-primary);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.ms-filter-card:hover {
-  border-color: color-mix(in srgb, var(--ff-accent) 20%, var(--ff-border));
-  box-shadow: 0 4px 14px rgba(15, 36, 64, 0.08);
-}
-
-.ms-filter-card__title {
-  font-size: 18px;
-  line-height: 28px;
-  font-weight: 700;
-  margin: 0 0 16px 0;
-  color: var(--ff-text, #1f2937);
-  letter-spacing: 0.01em;
-}
-
-.ms-filter-card__row {
+/* ---- 筛选卡片 — Figma Frame 458 + 内层 Frame 457（仅气垫选型页使用 .ms-filter-card） ---- */
+.machines-page.ms-product-line-layout .ms-filter-card {
   display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
+  flex-direction: column;
+  align-items: flex-start;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--ff-ms-air-row-width);
+  min-height: var(--ff-ms-filter-card-min-height);
+  padding: var(--ff-ms-filter-card-pad-y) var(--ff-ms-filter-card-pad-x);
+  gap: var(--ff-ms-filter-card-stack-gap);
+  background: var(--ff-ms-card-bg);
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  margin-bottom: 0;
+  color: var(--ff-text);
 }
 
+.machines-page.ms-product-line-layout .ms-filter-card:hover {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* Dev：H2-标题 20/23；间距由父级 gap 20 承担，勿再写 margin-bottom */
+.machines-page.ms-product-line-layout .ms-filter-card__title {
+  font-family: var(--ff-font);
+  font-size: var(--ff-ms-air-h2-size);
+  line-height: var(--ff-ms-air-h2-line);
+  font-weight: 700;
+  margin: 0;
+  align-self: stretch;
+  color: var(--ff-text);
+}
+
+/* Frame 457：单行控件区 40px 高、gap 27 */
+.machines-page.ms-product-line-layout .ms-filter-card__row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  align-self: stretch;
+  gap: var(--ff-ms-filter-row-gap);
+  width: 100%;
+  min-height: var(--ff-ms-filter-row-min-height);
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.machines-page.ms-product-line-layout .ms-filter-card .ms-figma-filter-field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* 稿面无外露标签：保留 label+htmlFor 供读屏 */
+.machines-page.ms-product-line-layout .ms-filter-card .ms-figma-filter-field__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 其它页若复用 .ms-figma-filter-field__label 仍显示标签 */
 .ms-figma-filter-field__label {
   margin-bottom: 6px;
   font-size: 14px;
@@ -507,6 +559,35 @@
   background: color-mix(in srgb, var(--ff-surface-muted) 40%, var(--ff-surface));
 }
 
+/* Figma Component 175（须在通用 __header 之后，避免被 padding 14px 18px / 15px 字级覆盖） */
+.machines-page.ms-product-line-layout .ms-compare-disclosure.ms-compare-disclosure--figma-frame {
+  width: 100%;
+  max-width: 100%;
+  align-self: stretch;
+  margin-bottom: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: var(--ff-ms-card-bg);
+  box-sizing: border-box;
+}
+
+.machines-page.ms-product-line-layout .ms-compare-disclosure--figma-frame .ms-compare-disclosure__header {
+  min-height: var(--ff-ms-compare-header-min-height);
+  padding: 0 10px 0 var(--ff-ms-compare-header-pad-left);
+  gap: var(--ff-ms-compare-header-gap);
+  font-size: var(--ff-ms-air-h2-size);
+  line-height: var(--ff-ms-air-h2-line);
+  font-weight: 400;
+  color: var(--ff-text);
+  border-bottom: none;
+  box-sizing: border-box;
+}
+
+.machines-page.ms-product-line-layout .ms-compare-disclosure--figma-frame .ms-compare-disclosure__header:hover {
+  background: var(--ff-ms-card-bg);
+}
+
 .ms-compare-disclosure__chev {
   flex-shrink: 0;
   color: var(--ff-accent);
@@ -527,30 +608,40 @@
 .machines-page.ms-product-line-layout .ms-figma-machine-grid {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   gap: var(--ff-main-stack-gap);
 }
 
+/* Frame 471 在列表中：flex none + stretch（与 Dev「Inside auto layout」一致） */
+.machines-page.ms-product-line-layout .ms-figma-machine-grid > .ms-figma-machine-card.ms-figma-machine-card--air {
+  flex: none;
+  align-self: stretch;
+}
+
 /*
- * Frame 544：flex row、align center、padding 0 0 0 48、position relative、高 60、宽随主栏 100%。
- * Dev Mode 曾为 #012583；当前以叠图 PNG 为准 #00338D。覆盖通用 .ms-breadcrumb-bar 的 fixed/白底/圆角。
+ * Frame 982（Dev）：1617×60、padding 0 0 0 48、背景 #012583。
+ * 顶栏 .site-header 为 position:fixed + z-index:10000；本条须在其下露出 → margin-top + sticky top 同源 --ff-site-header-height。
  */
 .figma-front .ms-breadcrumb-bar.ms-breadcrumb-bar--figma {
-  --ms-breadcrumb-fr544-bg: #00338d;
-  position: relative !important;
-  top: auto !important;
+  --ms-breadcrumb-fr544-bg: var(--ff-ms-breadcrumb-bar-bg);
+  position: sticky !important;
+  top: var(--ff-site-header-height) !important;
   left: auto !important;
   right: auto !important;
+  /* Frame 982：width 1617（此处 = 栈宽 100%） */
   width: 100%;
   max-width: none;
+  flex-shrink: 0;
   align-self: stretch;
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: flex-start;
   flex-wrap: wrap;
-  min-height: 60px;
-  height: 60px;
-  padding: 0 0 0 48px;
+  min-height: var(--ff-ms-breadcrumb-bar-height);
+  height: var(--ff-ms-breadcrumb-bar-height);
+  margin-top: var(--ff-site-header-height);
+  padding: 0 0 0 var(--ff-ms-breadcrumb-bar-pad-left);
   box-sizing: border-box;
   background: var(--ms-breadcrumb-fr544-bg) !important;
   border: none !important;
@@ -558,25 +649,39 @@
   box-shadow: none;
   color: #ffffff;
   gap: 10px;
-  z-index: 1;
+  /* 低于固定顶栏 10000；须低于顶栏 Dropdown 浮层 --ff-z-header-dropdown，避免盖住用户菜单 */
+  z-index: 9990;
 }
 
 .figma-front .ms-breadcrumb-bar.ms-breadcrumb-bar--figma .ms-breadcrumb-path {
   gap: 10px;
   flex: 1;
   min-width: 0;
+  font-family: var(--ff-ms-font-title, var(--ff-font));
+  font-size: var(--ff-ms-air-h2-size);
+  line-height: var(--ff-ms-air-h2-line);
+  font-weight: 400;
+}
+
+.figma-front .ms-breadcrumb-bar.ms-breadcrumb-bar--figma .ms-breadcrumb-btn,
+.figma-front .ms-breadcrumb-bar.ms-breadcrumb-bar--figma .ms-breadcrumb-chip,
+.figma-front .ms-breadcrumb-bar.ms-breadcrumb-bar--figma .ms-breadcrumb-pill-warn {
+  font-size: var(--ff-ms-air-h2-size);
+  line-height: var(--ff-ms-air-h2-line);
+  font-weight: 400;
 }
 
 .figma-front .ms-breadcrumb-bar.ms-breadcrumb-bar--figma .ms-breadcrumb-back {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  /* Dev chevron_backward：24×24，圆角 4 */
+  width: 24px;
+  height: 24px;
   margin: 0 4px 0 0;
   padding: 0;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   background: #ffffff;
   color: var(--ms-breadcrumb-fr544-bg);
   cursor: pointer;
@@ -715,16 +820,14 @@
   padding: 0 !important;
 }
 
-/*
- * Figma 状态=选中：column + align-items flex-start + padding 0；画板 1440×606（非 position:absolute，由流式布局等价实现）
- */
+/* 对比内层：全宽 1537（--mc-container-max-width），PNG 高度仍可用 --mc-image-max-height */
 .ms-figma-compare-inner {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   padding: 0;
   width: 100%;
-  max-width: var(--mc-container-max-width, 1440px);
+  max-width: var(--mc-container-max-width);
   box-sizing: border-box;
 }
 
@@ -735,7 +838,7 @@
   padding: 0 !important;
   margin: 0 !important;
   width: 100%;
-  max-width: var(--mc-container-max-width, 1440px);
+  max-width: var(--mc-container-max-width);
   border: none !important;
   background: transparent !important;
   border-radius: 0 !important;
@@ -744,6 +847,9 @@
 
 /* 白底表区（数据表或对比 PNG） */
 .ms-figma-compare-inner .ms-compare-canvas-table-shell.machine-comparison-container {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--mc-container-max-width);
   padding: 10px !important;
   background: var(--ff-surface) !important;
   border-radius: 10px !important;
@@ -756,13 +862,15 @@
 
 .ms-figma-compare-inner .machine-comparison-image-container {
   width: 100%;
-  max-width: var(--mc-container-max-width, 1440px);
+  max-width: var(--mc-container-max-width);
   height: var(--mc-image-max-height, 606px);
   min-height: var(--mc-image-max-height, 606px);
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   box-sizing: border-box;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
   background: var(--ff-page-bg, #f5f7fa);
   border-radius: 8px;
 }
@@ -772,7 +880,7 @@
 }
 
 .ms-figma-compare-inner .machine-comparison-image {
-  max-width: var(--mc-image-max-width, 1440px);
+  max-width: var(--mc-image-max-width);
   max-height: var(--mc-image-max-height, 606px);
   width: auto;
   height: auto;
@@ -818,7 +926,7 @@
 }
 
 .ms-compare-data-table th {
-  background: var(--ms-compare-table-header, #2c5282);
+  background: var(--ff-ms-compare-table-header-bg, var(--ff-accent));
   color: #fff;
   font-weight: 600;
   padding: 11px 8px;
@@ -945,8 +1053,11 @@ button.ms-figma-primary-cart:hover {
   flex-wrap: wrap;
 }
 
-/* ---- Figma 主机卡片：描边/阴影用令牌（替代 Tailwind shadow-lg） ---- */
-.ms-figma-machine-card {
+/*
+ * 默认主机卡片描边/圆角（纸垫等）。气垫 --air 走 Frame 471 扁平行 + hairline，勿继承本段。
+ * 根因：此前整段带 !important 曾与 --air 抢特异性，叠出「圆角+重阴影」与稿不符。
+ */
+.ms-figma-machine-card:not(.ms-figma-machine-card--air) {
   font-family: var(--ff-font);
   background: var(--ff-surface) !important;
   border: 1px solid var(--ff-border) !important;
@@ -989,16 +1100,16 @@ button.ms-figma-primary-cart:hover {
 
 @media (min-width: 768px) {
   .ms-figma-machine-card.ms-figma-machine-card--paper {
-    height: var(--ff-paper-machine-card-h, 280px);
+    /* 修复：改为最小高度，允许内容超出时自然增高 */
     min-height: var(--ff-paper-machine-card-h, 280px);
-    overflow-x: auto;
-    overflow-y: hidden;
+    height: auto;
+    overflow: visible;
   }
 
   .ms-figma-machine-card--paper .ms-figma-machine-card__row {
-    height: 100%;
-    min-height: 0;
-    min-width: var(--ff-paper-machine-card-max-w, 1491px);
+    min-height: var(--ff-paper-machine-card-h, 280px);
+    /* 修复：移除固定宽度限制，允许响应式布局 */
+    min-width: 0;
     flex-wrap: nowrap;
     padding: 12px 16px;
     align-items: stretch;
@@ -1013,8 +1124,8 @@ button.ms-figma-primary-cart:hover {
   .ms-figma-machine-card--paper .ms-figma-machine-card__col-main {
     min-height: 0;
     flex-shrink: 0;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    /* 修复：移除内部滚动 */
+    overflow: visible;
   }
 
   .ms-figma-machine-card--paper .ms-figma-machine-card__col-actions {
@@ -1064,11 +1175,10 @@ button.ms-figma-primary-cart:hover {
   margin-left: 0;
   margin-right: auto;
   box-sizing: border-box;
-  background: #ffffff !important;
+  background: var(--ff-ms-air-row-bg, #ffffff) !important;
   border: none !important;
   border-radius: 0 !important;
-  box-shadow: var(--ff-ms-air-row-shadow, 0 0.5px 0 rgba(0, 0, 0, 0.25)) !important;
-  min-height: var(--ff-ms-air-row-height, 280px);
+  box-shadow: var(--ff-ms-air-row-shadow, 0px 0.5px 0px rgba(0, 0, 0, 0.25)) !important;
   scrollbar-width: thin;
   scrollbar-color: color-mix(in srgb, var(--ff-text-muted, #6b7280) 45%, transparent) var(--ff-surface-muted, #f3f4f6);
 }
@@ -1088,20 +1198,28 @@ button.ms-figma-primary-cart:hover {
 }
 
 @media (min-width: 768px) {
+/*
+ * Frame 471：死高 280（--ff-ms-air-row-height）。卡片外框不增高。
+ * 右栏购物车（Frame 1017）为内容高度、顶对齐，不撑满 280；仅中间列等可在列内滚动。
+ * 卡片根节点 overflow: visible，避免「更多信息」等绝对定位浮层被外框裁切（列内仍 overflow-y: auto）。
+ */
   .ms-figma-machine-card.ms-figma-machine-card--air {
     height: var(--ff-ms-air-row-height, 280px);
     min-height: var(--ff-ms-air-row-height, 280px);
-    overflow-x: auto;
-    overflow-y: hidden;
+    max-height: var(--ff-ms-air-row-height, 280px);
+    overflow: visible;
   }
 
   .ms-figma-machine-card--air .ms-figma-machine-card__row {
     height: 100%;
     min-height: 0;
-    min-width: var(--ff-ms-air-row-width, 1537px);
+    max-height: 100%;
+    min-width: 0;
     flex-wrap: nowrap;
-    padding: var(--ff-ms-air-row-pad-y, 16px) var(--ff-ms-air-row-pad-x, 24px);
-    gap: var(--ff-ms-air-row-inner-gap, 24px);
+    overflow: hidden;
+    /* Frame 471：行外圈 0；列间距见 --ff-ms-air-gallery-to-main-gap（与定宽 288/321 合成 1537） */
+    padding: var(--ff-ms-air-card-row-pad-y, 0px) var(--ff-ms-air-card-row-pad-x, 0px);
+    gap: var(--ff-ms-air-gallery-to-main-gap, 16px);
     align-items: stretch;
     box-sizing: border-box;
   }
@@ -1114,23 +1232,31 @@ button.ms-figma-primary-cart:hover {
   .ms-figma-machine-card--air .ms-figma-machine-card__col-main {
     min-height: 0;
     flex-shrink: 0;
+    max-height: 100%;
+    overflow-x: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
 
   .ms-figma-machine-card--air .ms-figma-machine-card__col-actions {
-    align-self: stretch;
+    align-self: flex-start;
     min-height: 0;
     flex-shrink: 0;
+    max-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .ms-figma-machine-card--air .ms-figma-product-title-row,
   .ms-figma-machine-card--air .ms-figma-product-title-group {
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
   }
 
+  /* nowrap 会把多条外链挤到同一行重叠；允许换行并保持 token 间距 */
   .ms-figma-machine-card--air .ms-figma-spec-action-links {
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
+    row-gap: 10px;
     font-size: var(--ff-ms-air-body-size, 16px);
     gap: 24px;
   }
@@ -1229,26 +1355,118 @@ button.ms-figma-primary-cart:hover {
   }
 
   .ms-figma-machine-card--air .ms-figma-purchase-rail {
-    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: var(--ff-ms-air-rail-inner-gap, 24px);
+    width: 100%;
+    max-width: var(--ff-ms-air-rail-width, 321px);
+    margin: 0 auto;
+    background: transparent;
     border: none;
+    box-sizing: border-box;
+    padding: 0;
+  }
+
+  .ms-figma-machine-card--air .ms-figma-purchase-rail__price {
+    width: 100%;
+    align-self: stretch;
+    text-align: left;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: 8px 12px;
+    padding: 0 10px;
+    box-sizing: border-box;
+  }
+
+  /* 价格在 Frame 148 内：横向留白由 stock-panel 16×10 承担，勿再叠 10px */
+  .ms-figma-machine-card--air .ms-figma-stock-panel .ms-figma-purchase-rail__price,
+  .ms-figma-machine-card--air .ms-figma-stock-panel__price {
+    padding: 0;
+  }
+
+  .ms-figma-machine-card--air .ms-figma-purchase-rail__price .ms-figma-price-value,
+  .ms-figma-machine-card--air .ms-figma-purchase-rail__price .ms-figma-price-label {
+    margin: 0;
   }
 
   .ms-figma-machine-card--air .ms-figma-purchase-rail .ms-figma-stock-panel {
-    background: var(--ff-ms-air-stock-bg, #ebf3ff) !important;
+    /* Frame 1017 通栏浅蓝时，Frame 148 为白底内衬卡（与稿「库存区白卡片」一致） */
+    background: var(--ff-ms-card-bg, #ffffff) !important;
     border: none !important;
-    border-radius: 8px;
-    padding: 16px 10px;
+    border-radius: var(--ff-ms-air-stock-panel-radius, 8px);
+    padding: var(--ff-ms-air-stock-panel-pad-y, 16px) var(--ff-ms-air-stock-panel-pad-x, 10px);
+    gap: var(--ff-ms-air-stock-panel-gap, 16px);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    box-sizing: border-box;
+    width: 100%;
   }
 
+  /* Frame 142：标题行底部分割 */
   .ms-figma-machine-card--air .ms-figma-stock-panel .ms-figma-stock-heading {
     font-size: var(--ff-ms-air-title-size, 18px);
     line-height: var(--ff-ms-air-title-line, 21px);
     font-weight: 400;
     color: rgba(0, 0, 0, 0.65);
+    padding: 0 0 12px;
+    margin: 0;
+    background: rgba(140, 158, 194, 0.02);
+    box-shadow: 0 0.5px 0 rgba(0, 0, 0, 0.25);
+  }
+
+  .ms-figma-machine-card--air .ms-figma-stock-panel .ms-figma-stock-total {
+    font-size: var(--ff-ms-air-title-size, 18px);
+    line-height: var(--ff-ms-air-title-line, 21px);
+    font-weight: 400;
+    color: rgba(0, 0, 0, 0.85);
+    text-align: left;
+    margin: 0;
   }
 
   .ms-figma-machine-card--air .ms-figma-stock-tags {
-    gap: 10px 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--ff-ms-air-stock-tags-gap-row, 24px) var(--ff-ms-air-stock-tags-gap-col, 10px);
+    width: 100%;
+  }
+
+  /* Frame 1084：步进器与加购横排 space-between、nowrap（321 宽内一行排开）；步进器组无灰底描边 */
+  .ms-figma-machine-card--air .ms-figma-purchase-actions-row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--ff-ms-air-purchase-actions-gap-row, 24px) var(--ff-ms-air-purchase-actions-gap-col, 75px);
+    min-height: var(--ff-ms-air-purchase-actions-min-height, 44px);
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    box-sizing: border-box;
+  }
+
+  .ms-figma-machine-card--air .ms-figma-purchase-actions-row .ms-figma-qty-stepper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    gap: 0;
+  }
+
+  .ms-figma-machine-card--air .ms-figma-purchase-actions-row .ms-figma-primary-cart {
+    flex: 0 0 auto;
+    width: auto !important;
+    min-width: var(--ff-ms-air-primary-cart-min-width, 138px);
+    margin: 0;
   }
 
   .ms-figma-machine-card--air .ms-figma-stock-tags .ms-figma-stock-pill {
@@ -1276,6 +1494,19 @@ button.ms-figma-primary-cart:hover {
     border-radius: 8px !important;
     font-weight: 700 !important;
     font-size: var(--ff-ms-air-body-size, 16px) !important;
+    line-height: 19px !important;
+    min-height: 44px !important;
+    height: auto !important;
+    padding: 12px !important;
+    background: var(--ff-accent, #012583) !important;
+    border-color: var(--ff-accent, #012583) !important;
+    box-shadow: none !important;
+  }
+
+  .ms-figma-machine-card--air .ms-figma-primary-cart.ant-btn:hover,
+  .ms-figma-machine-card--air button.ms-figma-primary-cart:hover {
+    background: var(--ff-btn-primary-hover, #002a70) !important;
+    border-color: var(--ff-btn-primary-hover, #002a70) !important;
   }
 }
 
@@ -1283,13 +1514,13 @@ button.ms-figma-primary-cart:hover {
   background: #ffffff !important;
 }
 
-/* 纸垫稿：库存区浅蓝底，区域格白底（与参考图 #EBF3FF 一致，令牌 --ff-ms-air-stock-bg） */
+/* 纸垫稿：库存区浅蓝底，区域格白底（令牌 --ff-ms-air-stock-bg，Figma #EFF7FF） */
 .ms-figma-machine-card--paper .ms-figma-purchase-rail .ms-figma-stock-panel {
-  background: var(--ff-ms-air-stock-bg, #ebf3ff) !important;
+  background: var(--ff-ms-air-stock-bg, #eff7ff) !important;
   border: 1px solid color-mix(in srgb, var(--ff-accent) 22%, var(--ff-border));
 }
 
-.machines-page.ms-product-line-layout .ms-figma-machine-card:hover {
+.machines-page.ms-product-line-layout .ms-figma-machine-card:hover:not(.ms-figma-machine-card--air) {
   border-color: color-mix(in srgb, var(--ff-accent) 22%, var(--ff-border)) !important;
   box-shadow: 0 8px 24px rgba(15, 36, 64, 0.09) !important;
 }
@@ -1299,12 +1530,162 @@ button.ms-figma-primary-cart:hover {
   box-shadow: var(--ff-ms-air-row-shadow, 0 0.5px 0 rgba(0, 0, 0, 0.25)) !important;
 }
 
-.machines-page.ms-product-line-layout .ms-figma-machine-card__actions {
+/*
+ * 气垫行定宽三栏（Figma Frame 471）：图库 288px + 16 间距 + 中间 flex + 右栏 321px。
+ * 与通配 .ms-figma-machine-card__row 的 20/60/20 分离，避免与稿面比例差距过大。
+ */
+@media (min-width: 768px) {
+  /*
+   * 覆盖 machines-exact-override 全局 !important：行外圈 0、列宽 288 | flex | 321、右栏通栏浅蓝。
+   */
+  .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-machine-card__row {
+    padding: var(--ff-ms-air-card-row-pad-y, 0px) var(--ff-ms-air-card-row-pad-x, 0px) !important;
+    gap: var(--ff-ms-air-gallery-to-main-gap, 16px) !important;
+    /* stretch 会让流内列在定高 280 行里被拉高，与绝对定位右栏叠算时易产生「栏内假高度」感知 */
+    align-items: flex-start !important;
+  }
+
+  .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-machine-card__col-gallery {
+    flex: 0 0 var(--ff-ms-air-gallery-track-width, 288px) !important;
+    width: var(--ff-ms-air-gallery-track-width, 288px) !important;
+    max-width: var(--ff-ms-air-gallery-track-width, 288px) !important;
+    padding-right: 0 !important;
+    margin-bottom: 0 !important;
+    align-self: flex-start !important;
+  }
+
+  /* Frame 487：仅中间列 16×24 padding；min-height:0 供定高 280 行内 flex 收缩 */
+  .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-machine-card__col-main {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: none !important;
+    padding: var(--ff-ms-air-row-pad-y, 16px) var(--ff-ms-air-row-pad-x, 24px) !important;
+    box-sizing: border-box !important;
+    background: var(--ff-ms-air-row-bg, #ffffff) !important;
+    font-family: var(--ff-font) !important;
+  }
+
+  /* Frame 1017：右栏购物车内容高度（小于行高 280），勿设 height:100% 撑满行 */
+  .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-machine-card__col-actions.ms-figma-machine-card__actions {
+    flex: 0 0 var(--ff-ms-air-rail-width, 321px) !important;
+    width: var(--ff-ms-air-rail-width, 321px) !important;
+    max-width: var(--ff-ms-air-rail-width, 321px) !important;
+    min-height: 0 !important;
+    height: auto !important;
+    padding: var(--ff-ms-air-rail-column-pad, 0px) !important;
+    box-sizing: border-box !important;
+    background: var(--ff-ms-air-rail-column-bg, #ffffff) !important;
+    border-left: none !important;
+    margin-top: 0 !important;
+    align-self: flex-start !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+  }
+
+  .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-machine-card__col-actions.ms-figma-machine-card__actions > .ms-figma-purchase-rail {
+    align-self: stretch !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-product-title-row {
+    align-items: flex-start !important;
+    height: auto !important;
+    min-height: var(--ff-ms-air-title-row-min-height, 47px) !important;
+    flex-wrap: wrap !important;
+  }
+
+  .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-product-title-group {
+    flex: 1 1 200px !important;
+    min-width: 0 !important;
+  }
+
+  .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-pn-pill {
+    font-family: var(--ff-font) !important;
+    font-size: var(--ff-ms-air-body-size, 16px) !important;
+    line-height: var(--ff-ms-air-body-line, 19px) !important;
+    border-radius: var(--ff-ms-air-pn-pill-radius, 8px) !important;
+  }
+
+  /* 覆盖 machines-exact nowrap：长标题换行，避免与右侧链接、下分割线视觉叠层 */
+  .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-product-title {
+    font-family: var(--ff-font) !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+  }
+
+  .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-link-accessories-inline {
+    font-family: var(--ff-font) !important;
+    flex: 0 0 auto !important;
+    margin-left: auto !important;
+  }
+
+  .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-spec-k {
+    font-family: var(--ff-font) !important;
+    font-weight: 700 !important;
+    font-size: var(--ff-ms-air-body-size, 16px) !important;
+    line-height: var(--ff-ms-air-body-line, 19px) !important;
+    color: rgba(0, 0, 0, 0.45) !important;
+  }
+
+  .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-spec-v {
+    font-family: var(--ff-font) !important;
+    font-weight: 400 !important;
+    font-size: var(--ff-ms-air-body-size, 16px) !important;
+    line-height: var(--ff-ms-air-body-line, 19px) !important;
+    color: rgba(0, 0, 0, 0.85) !important;
+  }
+
+  .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-purchase-rail {
+    background: transparent !important;
+    padding: 0 !important;
+    max-width: none !important;
+  }
+
+  .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-purchase-rail__price .ms-figma-price-value,
+  .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-price-value {
+    text-align: left !important;
+  }
+
+  .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-moreinfo-trigger {
+    font-family: var(--ff-font) !important;
+    font-size: var(--ff-ms-air-title-size, 18px) !important;
+    line-height: var(--ff-ms-air-title-line, 21px) !important;
+    font-weight: 700 !important;
+    padding: 6px 12px !important;
+    border-radius: 8px !important;
+    background: var(--ff-ms-air-moreinfo-bg, #d9dfed) !important;
+    border: 1px solid var(--ff-ms-air-bubble-border, #c4dcff) !important;
+    color: var(--ff-accent) !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-machine-card__col-actions.ms-figma-machine-card__actions {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 1 1 auto !important;
+  }
+
+  .machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-purchase-rail {
+    max-width: 100%;
+  }
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card:not(.ms-figma-machine-card--air) .ms-figma-machine-card__actions {
   border-color: var(--ff-border) !important;
 }
 
-/* 主机卡片主行：避免依赖 Tailwind .flex 合并规则；≈ 20% / 60% / 20% */
-.ms-figma-machine-card__row {
+/*
+ * 主机卡片主行：移动栈 + 桌面 ≈20/60/20（仅非气垫卡）。
+ * 根因：此前选择器未排除 --air，与 Frame 471 定宽 288|flex|321 抢布局，列比例失真。
+ */
+.ms-figma-machine-card:not(.ms-figma-machine-card--air) .ms-figma-machine-card__row {
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -1312,7 +1693,7 @@ button.ms-figma-primary-cart:hover {
   box-sizing: border-box;
 }
 
-.ms-figma-machine-card__col-gallery {
+.ms-figma-machine-card:not(.ms-figma-machine-card--air) .ms-figma-machine-card__col-gallery {
   width: 100%;
   margin-bottom: 20px;
   display: flex;
@@ -1320,13 +1701,13 @@ button.ms-figma-primary-cart:hover {
   align-items: center;
 }
 
-.ms-figma-machine-card__col-main {
+.ms-figma-machine-card:not(.ms-figma-machine-card--air) .ms-figma-machine-card__col-main {
   flex: 1;
   min-width: 0;
   width: 100%;
 }
 
-.ms-figma-machine-card__col-actions.ms-figma-machine-card__actions {
+.ms-figma-machine-card:not(.ms-figma-machine-card--air) .ms-figma-machine-card__col-actions.ms-figma-machine-card__actions {
   width: 100%;
   margin-top: 20px;
   padding-top: 20px;
@@ -1334,12 +1715,12 @@ button.ms-figma-primary-cart:hover {
 }
 
 @media (min-width: 768px) {
-  .ms-figma-machine-card__row {
+  .ms-figma-machine-card:not(.ms-figma-machine-card--air) .ms-figma-machine-card__row {
     flex-direction: row;
     align-items: flex-start;
   }
 
-  .ms-figma-machine-card__col-gallery {
+  .ms-figma-machine-card:not(.ms-figma-machine-card--air) .ms-figma-machine-card__col-gallery {
     flex: 0 0 20%;
     width: 20%;
     max-width: 20%;
@@ -1349,7 +1730,7 @@ button.ms-figma-primary-cart:hover {
     box-sizing: border-box;
   }
 
-  .ms-figma-machine-card__col-main {
+  .ms-figma-machine-card:not(.ms-figma-machine-card--air) .ms-figma-machine-card__col-main {
     flex: 1 1 60%;
     width: 60%;
     max-width: 60%;
@@ -1357,7 +1738,7 @@ button.ms-figma-primary-cart:hover {
     box-sizing: border-box;
   }
 
-  .ms-figma-machine-card__col-actions.ms-figma-machine-card__actions {
+  .ms-figma-machine-card:not(.ms-figma-machine-card--air) .ms-figma-machine-card__col-actions.ms-figma-machine-card__actions {
     flex: 0 0 20%;
     width: 20%;
     max-width: 20%;
@@ -1483,6 +1864,25 @@ button.ms-figma-primary-cart:hover {
   gap: 12px 20px;
 }
 
+/* Figma Frame 830：两列竖栈（左/右各多行 label+value） */
+.ms-figma-spec-dual-cols {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--ff-ms-air-spec-cols-gap, 24px);
+  width: 100%;
+  align-items: flex-start;
+}
+
+.ms-figma-spec-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ff-ms-air-spec-col-gap, 4px);
+  flex: 1 1 var(--ff-ms-air-spec-col-width, 205px);
+  min-width: min(100%, var(--ff-ms-air-spec-col-min, 190px));
+  max-width: var(--ff-ms-air-spec-col-width, 205px);
+}
+
 .ms-figma-spec-pair {
   display: grid;
   grid-template-columns: minmax(5.5rem, 42%) 1fr;
@@ -1519,6 +1919,120 @@ button.ms-figma-primary-cart:hover {
   .ms-figma-spec-pair {
     grid-template-columns: minmax(5rem, 38%) 1fr;
   }
+
+  .ms-figma-spec-col {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+}
+
+/* 气垫列表行：主列文案栅格与底部操作条（对齐 Figma Frame 983 / 831 / 587） */
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-product-title-group {
+  gap: 12px;
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-product-title-row {
+  align-items: flex-start;
+  margin-bottom: 0;
+  padding-bottom: var(--ff-ms-air-spec-title-to-block-gap, 16px);
+  box-shadow: 0 0.5px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* Frame 527 父级已有 column gap:16，勿再 margin-top，否则与标题间距翻倍 */
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-spec-grid {
+  margin-top: 0;
+  background: #ffffff;
+  border: none;
+  border-radius: 0;
+  padding: 0 0 16px;
+  box-shadow: 0 0.5px 0 rgba(0, 0, 0, 0.25);
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-spec-grid-inner {
+  gap: var(--ff-ms-air-spec-inner-gap, 8px);
+}
+
+/* Frame 827：单行描述，无 padding-bottom；与下方双列间距由 Frame 831 的 gap:8 承担 */
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-spec-span-full {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+  padding-bottom: 0;
+  margin-bottom: 0;
+  border-bottom: none;
+  box-shadow: 0 0.5px 0 rgba(0, 0, 0, 0.25);
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-spec-span-full .ms-figma-spec-k {
+  flex: 0 0 auto;
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-spec-span-full .ms-figma-spec-v {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+/* Frame 488：flex row、padding 0，无 gap；键值间距由 space-between + flex 承担 */
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-spec-pair {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0;
+  min-width: 0;
+  width: 100%;
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-spec-pair .ms-figma-spec-k {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-spec-pair .ms-figma-spec-v {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Frame 527 与 spec-grid 之间已由父级 gap:16 分隔，勿再 margin/padding-top 翻倍 */
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-machine-spec-actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ff-ms-air-spec-actions-gap, 32px);
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+  box-shadow: 0 0.5px 0 rgba(0, 0, 0, 0.25);
+  position: relative;
+  z-index: 1;
+}
+
+/* 包裹层只做定位锚点，勿复用下方「兼容层」整段按钮肤（会与 trigger 叠双层、挤压流式布局） */
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-moreinfo {
+  display: block;
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+  cursor: default;
+  align-self: center;
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-spec-action-links {
+  flex-wrap: wrap !important;
+  gap: 12px var(--ff-ms-air-spec-links-gap, 24px);
 }
 
 .ms-figma-machine-spec-actions {
@@ -1596,19 +2110,24 @@ button.ms-figma-primary-cart:hover {
 .ms-figma-pagination__controls {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
+/* Figma「上一页/下一页」86×40，渐变底 + #DEDEDE 边框，radius 4 */
 .ms-figma-pagination__nav {
-  min-width: 36px;
-  height: 36px;
-  padding: 0 10px;
-  border-radius: 8px;
-  border: 1px solid var(--ff-border);
-  background: var(--ff-surface);
-  color: var(--ff-text, #111827);
-  font-size: 18px;
-  line-height: 1;
+  box-sizing: border-box;
+  min-width: 86px;
+  width: 86px;
+  height: 40px;
+  padding: 0 8px;
+  border-radius: 4px;
+  border: 1px solid #dedede;
+  background: linear-gradient(180deg, #ffffff 0%, #f1f1f1 100%);
+  color: rgba(0, 0, 0, 0.85);
+  font-family: var(--ff-font);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 19px;
   cursor: pointer;
   transition: border-color 0.15s ease, color 0.15s ease;
 }
@@ -1626,20 +2145,25 @@ button.ms-figma-primary-cart:hover {
 .ms-figma-pagination__pages {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
+/* Figma 数字按钮 40×40，radius 2，边框 #DEDEDE */
 .ms-figma-pagination__page {
-  min-width: 36px;
-  height: 36px;
-  padding: 0 8px;
-  border-radius: 8px;
-  border: 1px solid var(--ff-border);
-  background: var(--ff-surface);
-  color: var(--ff-text, #111827);
-  font-size: 14px;
-  font-weight: 600;
+  box-sizing: border-box;
+  min-width: 40px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 2px;
+  border: 1px solid #dedede;
+  background: #ffffff;
+  color: rgba(0, 0, 0, 0.85);
+  font-family: var(--ff-font);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 19px;
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
@@ -1650,14 +2174,19 @@ button.ms-figma-primary-cart:hover {
 }
 
 .ms-figma-pagination__page--active {
-  border-color: var(--ff-accent) !important;
-  background: var(--ff-accent) !important;
-  color: #fff !important;
+  border-color: #dedede !important;
+  background: var(--ff-accent, #012583) !important;
+  color: #ffffff !important;
 }
 
 .ms-figma-pagination__ellipsis {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   padding: 0 4px;
-  color: var(--ms-text-secondary);
+  color: #b0b0b0;
+  font-size: 16px;
+  line-height: 1;
   user-select: none;
 }
 
@@ -1868,13 +2397,35 @@ button.ms-figma-primary-cart:hover {
   letter-spacing: -0.02em;
 }
 
-/* 右栏：价格 + 库存 + 数量 + 加购，浅灰整块承托（对齐视觉稿侧栏） */
+.ms-figma-price-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ff-text-muted);
+  margin-bottom: 4px;
+}
+
+.ms-figma-stock-total {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ff-text);
+  margin-bottom: 8px;
+}
+
+/* 右栏：非气垫卡用浅灰承托；气垫走 Frame 1017/148/1084（入库 Dev），勿用此块 */
 .ms-figma-purchase-rail {
   background: var(--ff-surface-muted, #f3f4f6);
   border: 1px solid var(--ff-border);
   border-radius: 12px;
   padding: 16px 14px;
   box-sizing: border-box;
+}
+
+.ms-figma-machine-card.ms-figma-machine-card--air .ms-figma-purchase-rail {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  gap: var(--ff-ms-air-rail-inner-gap, 24px);
 }
 
 .ms-figma-purchase-rail .ms-figma-stock-panel {
@@ -1981,14 +2532,14 @@ button.ms-figma-qty-btn:disabled {
 
 @media (max-width: 768px) {
   .machines-page.ms-product-line-layout {
-    --ms-breadcrumb-top: 72px;
+    --ms-breadcrumb-top: 60px;
     --ms-breadcrumb-spacer-h: 140px;
     --mc-image-max-height: 360px;
   }
 
   .ms-breadcrumb-bar,
   .ms-breadcrumb-spacer {
-    --ms-breadcrumb-top: 72px;
+    --ms-breadcrumb-top: 60px;
     --ms-breadcrumb-spacer-h: 140px;
   }
 
@@ -2002,10 +2553,19 @@ button.ms-figma-qty-btn:disabled {
     height: auto;
     min-height: 52px;
     flex-wrap: wrap;
+    margin-top: var(--ff-site-header-height);
+    top: var(--ff-site-header-height);
   }
 
-  .ms-filter-card {
-    padding: 16px;
+  .figma-front .ms-pl1-main-stack {
+    max-width: none;
+    width: 100%;
+    align-self: stretch;
+  }
+
+  .machines-page.ms-product-line-layout .ms-filter-card {
+    min-height: 0;
+    padding: var(--ff-ms-filter-card-pad-y) var(--ms-page-gutter);
   }
 
   .ms-figma-compare-inner .machine-comparison-image-container {
@@ -2022,7 +2582,99 @@ button.ms-figma-qty-btn:disabled {
  * 2) className 叠在「同一节点」上时，子代选择器 `.machine-gallery .thumbnail-gallery-left` 根本匹配不到。
  * 3) machine-selection 若在入口里先于 Tailwind/其它 chunk，可能被压在最前。
  * 以下用「页面 + 卡片 + 根节点.machine-gallery」+ !important 保证 Figma 数值生效（main.tsx 已将本文件置于 index.css 之后）。
+ *
+ * Frame 205（Dev）：根节点 absolute 288×212、left:0 top:1px、flex row gap 8、padding 0、背景 #FFF。
+ * 图库列仅作包含块；内层 .relative 用 display:contents 避免零高包含块压偏定位。
  */
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-machine-card__col-gallery {
+  display: block !important;
+  flex-direction: unset !important;
+  align-items: unset !important;
+  gap: unset !important;
+  width: var(--ff-ms-air-gallery-track-width, 288px) !important;
+  max-width: var(--ff-ms-air-gallery-track-width, 288px) !important;
+  flex: 0 0 var(--ff-ms-air-gallery-track-width, 288px) !important;
+  min-height: calc(
+    var(--ff-ms-air-gallery-frame-height, 212px) + var(--ff-ms-air-gallery-frame-top, 1px)
+  ) !important;
+  height: auto !important;
+  max-height: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  top: 0 !important;
+  position: relative !important;
+  overflow: visible !important;
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .ms-figma-machine-card__col-gallery > .relative {
+  display: contents !important;
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .thumbnail-gallery-left.machine-gallery {
+  /* Frame 205 根 */
+  position: absolute !important;
+  left: var(--ff-ms-air-gallery-frame-left, 0px) !important;
+  top: var(--ff-ms-air-gallery-frame-top, 1px) !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  padding: 0 !important;
+  width: var(--ff-ms-air-gallery-track-width, 288px) !important;
+  max-width: var(--ff-ms-air-gallery-track-width, 288px) !important;
+  height: var(--ff-ms-air-gallery-frame-height, 212px) !important;
+  max-height: var(--ff-ms-air-gallery-frame-height, 212px) !important;
+  gap: var(--ff-ms-air-gallery-main-gap, 8px) !important;
+  justify-content: flex-start !important;
+  background: #ffffff !important;
+  flex-wrap: nowrap !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.machines-page.ms-product-line-layout
+  .ms-figma-machine-card--air
+  .thumbnail-gallery-left.machine-gallery.thumbnail-gallery-left--main-only {
+  left: var(--ff-ms-air-gallery-frame-left, 0px) !important;
+  top: var(--ff-ms-air-gallery-frame-top, 1px) !important;
+  width: var(--ff-ms-air-gallery-main, 212px) !important;
+  max-width: var(--ff-ms-air-gallery-main, 212px) !important;
+  height: var(--ff-ms-air-gallery-main, 212px) !important;
+  max-height: var(--ff-ms-air-gallery-main, 212px) !important;
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .thumbnail-gallery-left.machine-gallery .main-image,
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .thumbnail-gallery-left.machine-gallery .thumbnail-image {
+  padding: 0 !important;
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .thumbnail-gallery-left.machine-gallery .main-image-wrapper:hover {
+  transform: none !important;
+  border-color: var(--ff-ms-air-image-border, #dedede) !important;
+  box-shadow: none !important;
+}
+
+.machines-page.ms-product-line-layout
+  .ms-figma-machine-card--air
+  .thumbnail-gallery-left.machine-gallery
+  .main-image-wrapper:hover
+  .main-image {
+  transform: none !important;
+}
+
+.machines-page.ms-product-line-layout .ms-figma-machine-card--air .thumbnail-gallery-left.machine-gallery .thumbnail-small:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.machines-page.ms-product-line-layout
+  .ms-figma-machine-card--air
+  .thumbnail-gallery-left.machine-gallery
+  .thumbnail-small:hover
+  .thumbnail-image {
+  transform: none !important;
+}
+
 .machines-page.ms-product-line-layout .ms-figma-machine-card--air .thumbnail-gallery-left.machine-gallery .main-image-container {
   width: var(--ff-ms-air-gallery-main, 212px) !important;
   max-width: var(--ff-ms-air-gallery-main, 212px) !important;
@@ -2035,6 +2687,8 @@ button.ms-figma-qty-btn:disabled {
   height: var(--ff-ms-air-gallery-main, 212px) !important;
   max-width: var(--ff-ms-air-gallery-main, 212px) !important;
   max-height: var(--ff-ms-air-gallery-main, 212px) !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
 }
 
 .machines-page.ms-product-line-layout .ms-figma-machine-card--air .thumbnail-gallery-left.machine-gallery .thumbnail-small {
@@ -2051,5 +2705,1071 @@ button.ms-figma-qty-btn:disabled {
   .machines-page.ms-product-line-layout .ms-figma-machine-card--paper .thumbnail-gallery-left.machine-gallery .thumbnail-small {
     width: 48px !important;
     height: 48px !important;
+  }
+}
+
+/* =============================================================================
+ * 配件卡片 Figma 对齐样式 - 与主机卡片 ms-figma-machine-card 同源
+ * ============================================================================= */
+.ms-figma-accessory-card {
+  background: var(--ff-surface, #ffffff);
+  border: 1px solid var(--ff-border, #e5e7eb);
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(15, 36, 64, 0.06);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  margin-bottom: 16px;
+  overflow: visible;
+}
+
+.ms-figma-accessory-card:hover {
+  border-color: color-mix(in srgb, var(--ff-accent) 20%, var(--ff-border));
+  box-shadow: 0 4px 14px rgba(15, 36, 64, 0.08);
+}
+
+.ms-figma-accessory-card__row {
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  gap: 24px;
+}
+
+@media (min-width: 768px) {
+  .ms-figma-accessory-card__row {
+    flex-direction: row;
+    align-items: stretch;
+  }
+}
+
+/* 配件图片列 - 20% */
+.ms-figma-accessory-card__col-gallery {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+@media (min-width: 768px) {
+  .ms-figma-accessory-card__col-gallery {
+    width: 20%;
+    align-items: flex-start;
+    padding-right: 24px;
+  }
+}
+
+.ms-figma-accessory-card__image {
+  width: 128px;
+  height: 128px;
+  object-fit: contain;
+  border: 1px solid var(--ff-border);
+  border-radius: 8px;
+  background: var(--ff-surface-muted, #f9fafb);
+  padding: 8px;
+}
+
+/* 配件选择按钮 */
+.ms-figma-accessory-card__select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--ff-surface-muted);
+  border: 1px solid var(--ff-border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ff-text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ms-figma-accessory-card__select:hover {
+  background: var(--ff-tint-blue);
+  border-color: var(--ff-accent);
+  color: var(--ff-accent);
+}
+
+.ms-figma-accessory-card__select input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--ff-accent);
+}
+
+/* 配件信息列 - 60% */
+.ms-figma-accessory-card__col-main {
+  width: 100%;
+  flex: 1;
+}
+
+@media (min-width: 768px) {
+  .ms-figma-accessory-card__col-main {
+    width: 60%;
+    padding: 0 24px;
+    border-left: 1px solid var(--ff-border);
+    border-right: 1px solid var(--ff-border);
+  }
+}
+
+.ms-figma-accessory-card__pn {
+  display: inline-block;
+  background: var(--ff-accent);
+  color: #ffffff;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.ms-figma-accessory-card__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ff-text);
+  margin: 0 0 16px 0;
+  line-height: 1.3;
+}
+
+/* 配件规格网格 */
+.ms-figma-accessory-card__specs {
+  background: var(--ff-surface-muted);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.ms-figma-accessory-card__spec-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .ms-figma-accessory-card__spec-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.ms-figma-accessory-card__spec-item {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.ms-figma-accessory-card__spec-label {
+  width: 100px;
+  color: var(--ff-text-muted);
+  font-weight: 500;
+}
+
+.ms-figma-accessory-card__spec-value {
+  color: var(--ff-text);
+  font-weight: 600;
+}
+
+/* 电气配件频率高亮 */
+.ms-figma-accessory-card__freq-highlight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-left: 4px solid #f59e0b;
+  border-radius: 6px;
+  grid-column: 1 / -1;
+}
+
+.ms-figma-accessory-card__freq-highlight .freq-label {
+  color: #92400e;
+  font-weight: 700;
+}
+
+.ms-figma-accessory-card__freq-highlight .freq-value {
+  color: #78350f;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+/* 配件操作列 - 20% */
+.ms-figma-accessory-card__col-actions {
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .ms-figma-accessory-card__col-actions {
+    width: 20%;
+    padding-left: 24px;
+  }
+}
+
+.ms-figma-accessory-card__price {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ff-accent);
+  margin-bottom: 16px;
+}
+
+.ms-figma-accessory-card__price-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ff-text-muted);
+  margin-bottom: 8px;
+}
+
+.ms-figma-stock-heading {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ff-text-muted);
+  margin-bottom: 8px;
+}
+
+/* ========================================
+   兼容层 - 新旧类名映射 (Figma 精确对齐)
+   ======================================== */
+
+/* 机器卡片兼容（勿命中气垫 --air：由 Frame 471 / override 专段负责） */
+.ms-figma-machine-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ms-gap-lg, 24px);
+  width: 100%;
+}
+
+.ms-figma-machine-card:not(.ms-figma-machine-card--air) {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  min-height: 280px;
+  background: var(--ms-bg-card, #FFFFFF);
+  box-shadow: 0px 0.5px 0px rgba(0, 0, 0, 0.25);
+  position: relative;
+}
+
+.ms-figma-machine-card:not(.ms-figma-machine-card--air) .ms-figma-machine-card__row {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+}
+
+.ms-figma-machine-card:not(.ms-figma-machine-card--air) .ms-figma-machine-card__col-gallery {
+  width: 288px;
+  padding: 1px 0;
+  flex-shrink: 0;
+}
+
+.ms-figma-machine-card:not(.ms-figma-machine-card--air) .ms-figma-machine-card__col-main {
+  flex: 1;
+  padding: 16px 24px;
+  min-width: 0;
+}
+
+.ms-figma-machine-card:not(.ms-figma-machine-card--air) .ms-figma-machine-card__col-actions,
+.ms-figma-machine-card:not(.ms-figma-machine-card--air) .ms-figma-machine-card__actions {
+  width: 321px;
+  padding: 16px;
+  background: var(--ms-bg-card, #FFFFFF);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* 产品标题兼容 */
+.ms-figma-product-title-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--ms-border, #DEDEDE);
+}
+
+.ms-figma-product-title-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.ms-figma-product-title {
+  font-family: 'Roboto', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 21px;
+  color: rgba(0, 0, 0, 0.85);
+  margin: 0;
+}
+
+.ms-figma-pn-pill {
+  display: inline-flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 6px 12px;
+  gap: 10px;
+  background: #D9DFED;
+  border-radius: 8px;
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+/* 规格网格兼容 */
+.ms-figma-spec-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ms-figma-spec-grid-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.ms-figma-spec-span-full {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--ms-border, #DEDEDE);
+}
+
+.ms-figma-spec-two-col {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 24px;
+}
+
+.ms-figma-spec-pair {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  min-width: 190px;
+}
+
+.ms-figma-spec-k {
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.ms-figma-spec-v {
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+/* 链接兼容 */
+.ms-figma-link-accessories-inline {
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: #2A7DFA;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.ms-figma-link-accessories-inline:hover {
+  text-decoration: underline;
+}
+
+/* 操作按钮兼容 */
+.ms-figma-machine-spec-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+/*
+ * 勿给 .ms-figma-moreinfo 包裹层做「整颗按钮」样式：PL1 结构为 div.ms-figma-moreinfo > button.ms-figma-moreinfo-trigger，
+ * 叠肤会导致布局错位、甚至视觉上压住标题区。按钮外观仅由 .ms-figma-moreinfo-trigger 负责。
+ */
+
+/* 库存面板兼容 */
+.ms-figma-stock-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 10px;
+  background: #EFF7FF;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.ms-figma-stock-heading {
+  font-family: 'Roboto', sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.ms-figma-stock-total {
+  font-family: 'Roboto', sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.ms-figma-stock-tags {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ms-figma-stock-tags--accessory {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ms-figma-stock-pill {
+  display: inline-flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 5px 20px;
+  gap: 10px;
+  background: #FFFFFF;
+  border-radius: 4px;
+  font-family: 'Arial', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.ms-figma-stock-pill--green {
+  color: #05A126;
+}
+
+.ms-figma-stock-pill--red {
+  color: #FF0101;
+}
+
+.ms-figma-stock-pill--orange {
+  color: #f59e0b;
+}
+
+/* 数量选择器兼容 */
+.ms-figma-qty-selector {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.ms-figma-qty-btn {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 32px;
+  height: 32px;
+  background: #FFFFFF;
+  border: 1px solid #DEDEDE;
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  color: rgba(0, 0, 0, 0.65);
+  cursor: pointer;
+}
+
+.ms-figma-qty-btn:first-child {
+  border-radius: 4px 0px 0px 4px;
+  margin-right: -1px;
+}
+
+.ms-figma-qty-btn:last-child {
+  border-radius: 0px 4px 4px 0px;
+  margin-left: -1px;
+}
+
+.ms-figma-qty-input {
+  box-sizing: border-box;
+  width: 46px;
+  height: 32px;
+  background: #FFFFFF;
+  border: 1px solid #DEDEDE;
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  color: rgba(0, 0, 0, 0.85);
+  text-align: center;
+}
+
+/* 加入购物车按钮兼容 */
+.ms-figma-add-to-cart {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  gap: 12px;
+  background: #012583;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.ms-figma-add-to-cart:hover {
+  background: #011d6b;
+}
+
+/* 分页兼容 */
+.ms-figma-pagination {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 40px;
+}
+
+.ms-figma-page-btn {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  background: #FFFFFF;
+  border: 1px solid #DEDEDE;
+  border-radius: 2px;
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.85);
+  cursor: pointer;
+}
+
+.ms-figma-page-btn.active {
+  background: #012583;
+  color: #FFFFFF;
+}
+
+.ms-figma-page-btn.prev,
+.ms-figma-page-btn.next {
+  width: 86px;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F1F1F1 100%);
+  border-radius: 4px;
+}
+
+/* ========================================
+   Figma Exact 类 - TSX 实际使用的类名
+   与 Figma Dev Mode CSS 完全对齐
+   Frame 471/469/205/1017
+   ======================================== */
+
+/*
+ * 机器卡片外层 - Frame 471（Product Line 1 主机行）
+ * 尺寸仅来自 figma-tokens-machine-selection.css（与 airCushionMachineList 同源）
+ */
+.figma-exact-machine-card {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  /* Frame 471：外圈无 padding；数值见 figma-tokens-machine-selection.css */
+  padding: 0;
+  gap: var(--ff-ms-air-gallery-to-main-gap);
+  width: 100%;
+  max-width: var(--ff-ms-air-row-width);
+  min-height: var(--ff-ms-air-row-height);
+  background: var(--ff-ms-card-bg);
+  box-shadow: var(--ff-ms-air-row-shadow);
+  box-sizing: border-box;
+}
+
+/* Frame 487 → 中间列 padding（token：--ff-ms-air-row-pad-*） */
+.figma-exact-machine-card > .ms-figma-machine-card__col-main {
+  padding: var(--ff-ms-air-row-pad-y) var(--ff-ms-air-row-pad-x);
+  box-sizing: border-box;
+}
+
+/* Frame 1017（入库 Dev）：padding 0、gap 24、min-height 254、列底 #FFF */
+.figma-exact-machine-card .ms-figma-machine-card__col-actions.ms-figma-machine-card__actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  box-sizing: border-box;
+  padding: var(--ff-ms-air-rail-column-pad, 0px);
+  gap: var(--ff-ms-air-rail-inner-gap);
+  min-height: var(--ff-ms-air-rail-min-height);
+  background: var(--ff-ms-air-rail-column-bg, #ffffff);
+}
+
+.figma-exact-machine-card
+  .ms-figma-machine-card__col-actions.ms-figma-machine-card__actions
+  > .ms-figma-purchase-rail {
+  align-self: stretch;
+  width: 100%;
+  max-width: 100%;
+}
+
+.figma-exact-machine-card .ms-figma-purchase-rail {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  background: transparent;
+  padding: 0;
+  gap: var(--ff-ms-air-rail-inner-gap);
+  width: 100%;
+  border-radius: 0;
+  box-sizing: border-box;
+}
+
+/* Frame 148 */
+.figma-exact-machine-card .ms-figma-stock-panel {
+  padding: var(--ff-ms-air-stock-panel-pad-y) var(--ff-ms-air-stock-panel-pad-x);
+  gap: var(--ff-ms-air-stock-panel-gap);
+  border-radius: var(--ff-ms-air-stock-panel-radius);
+  margin: 0 auto;
+  width: 100%;
+  max-width: var(--ff-ms-air-rail-width);
+  box-sizing: border-box;
+}
+
+/* Frame 983 */
+.figma-exact-machine-card .ms-figma-product-title-row {
+  align-items: flex-start;
+  padding: 0 0 var(--ff-ms-air-title-row-pad-bottom);
+  gap: var(--ff-ms-air-title-row-gap);
+  box-shadow: var(--ff-ms-air-section-hairline-shadow);
+  height: auto;
+  min-height: var(--ff-ms-air-title-row-min-height);
+}
+
+/* 产品标题色：全局字色 token（与 Dev「标题文本字体颜色」一致） */
+.figma-exact-machine-card .ms-figma-product-title {
+  color: var(--ff-text);
+}
+
+/* Frame 835 */
+.figma-exact-machine-card .ms-figma-pn-pill {
+  border-radius: var(--ff-ms-air-pn-pill-radius);
+  font-size: var(--ff-ms-air-body-size);
+  line-height: var(--ff-ms-air-body-line);
+  font-weight: var(--ff-ms-air-pn-pill-weight);
+}
+
+/* Frame 830 / 488 */
+.figma-exact-machine-card .ms-figma-spec-dual-cols {
+  align-items: center;
+}
+
+.figma-exact-machine-card .ms-figma-spec-k {
+  font-weight: var(--ff-ms-air-pn-pill-weight);
+  color: var(--ff-text);
+}
+
+.figma-exact-machine-card .ms-figma-spec-v {
+  color: var(--ff-text-muted);
+  flex: 1 1 auto;
+  text-align: right;
+}
+
+.figma-exact-machine-card .ms-figma-spec-pair {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ff-ms-air-spec-pair-gap);
+  width: 100%;
+}
+
+/* Frame 831 */
+.figma-exact-machine-card .ms-figma-spec-span-full {
+  padding: 0 0 var(--ff-ms-air-spec-title-to-block-gap);
+  gap: var(--ff-ms-air-spec-inner-gap);
+  box-shadow: var(--ff-ms-air-section-hairline-shadow);
+}
+
+/* Frame 1084 */
+.figma-exact-machine-card .ms-figma-purchase-actions-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--ff-ms-air-purchase-actions-gap-row) var(--ff-ms-air-purchase-actions-gap-col);
+  width: 100%;
+  max-width: var(--ff-ms-air-rail-width);
+  margin: 0 auto;
+  min-height: var(--ff-ms-air-purchase-actions-min-height);
+}
+
+.figma-exact-machine-card .ms-figma-purchase-actions-row .ms-figma-qty-stepper {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.figma-exact-machine-card .ms-figma-purchase-actions-row .ms-figma-primary-cart {
+  flex: 0 0 auto;
+  min-width: var(--ff-ms-air-primary-cart-min-width);
+}
+
+.figma-exact-machine-card .ms-figma-stock-tags {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--ff-ms-air-stock-tags-gap-row) var(--ff-ms-air-stock-tags-gap-col);
+  width: 100%;
+}
+
+.figma-exact-machine-card .ms-figma-stock-tags .ms-figma-stock-pill {
+  background: var(--ff-ms-air-stock-pill-bg);
+  border: none;
+  border-radius: var(--ff-ms-air-stock-pill-radius);
+  font-family: var(--ff-ms-air-stock-pill-font-family);
+  font-size: var(--ff-ms-air-stock-pill-font-size);
+  line-height: var(--ff-ms-air-stock-pill-line-height);
+  padding: var(--ff-ms-air-stock-pill-pad-y) var(--ff-ms-air-stock-pill-pad-x);
+}
+
+/*
+ * 图库区 - Frame 205
+ */
+.figma-exact-card-gallery {
+  flex: 0 0 var(--ff-ms-air-gallery-track-width);
+  width: var(--ff-ms-air-gallery-track-width);
+  max-width: var(--ff-ms-air-gallery-track-width);
+  align-self: flex-start;
+}
+
+/* 图库内部与 ThumbnailGallery 协调 */
+.figma-exact-card-gallery .thumbnail-gallery-left {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--ff-ms-air-gallery-main-gap);
+  width: var(--ff-ms-air-gallery-track-width);
+  height: var(--ff-ms-air-gallery-frame-height);
+}
+
+/*
+ * 主内容区 - Frame 487 (中间列)
+ * 自适应宽度: left 304px (288+16), right 321px
+ * 仅限气垫卡：此前选择器全局命中，与纸垫/默认卡抢中间列 padding 与 flex。
+ */
+.ms-figma-machine-card.ms-figma-machine-card--air .ms-figma-machine-card__col-main {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  gap: var(--ff-ms-air-row-inner-gap, 24px);
+  min-width: 0;
+}
+
+/*
+ * 右栏列 - Frame 1017（仅气垫卡）。行高 280 在卡片上固定；本栏仅购物车内容高度，不撑满行。
+ */
+.ms-figma-machine-card.ms-figma-machine-card--air .ms-figma-machine-card__col-actions.ms-figma-machine-card__actions {
+  flex: 0 0 var(--ff-ms-air-rail-width);
+  width: var(--ff-ms-air-rail-width);
+  max-width: var(--ff-ms-air-rail-width);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  padding: var(--ff-ms-air-rail-column-pad, 0px);
+  box-sizing: border-box;
+  height: auto;
+  min-height: 0;
+  background: var(--ff-ms-air-rail-column-bg, #ffffff);
+}
+
+.ms-figma-machine-card.ms-figma-machine-card--air
+  .ms-figma-machine-card__col-actions.ms-figma-machine-card__actions
+  > .ms-figma-purchase-rail {
+  align-self: stretch;
+  width: 100%;
+  max-width: 100%;
+}
+
+/*
+ * 卡片行布局 - 三列结构（仅气垫卡；兼容 TSX 中的 ms-figma-machine-card__row）
+ */
+.ms-figma-machine-card.ms-figma-machine-card--air .ms-figma-machine-card__row {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 16px;
+  width: 100%;
+}
+
+/*
+ * 标题行 - Frame 983（稿面最小高度约 47px）
+ * 禁止写死 height：主机列表卡未挂 .figma-exact-machine-card 时，固定高度会让后续块仍从 47px 起算，
+ * 而标题/PN 实际更高或横向溢出，规格区与「更多信息」在视觉上叠到标题上。
+ */
+.ms-figma-product-title-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 16px;
+  width: 100%;
+  min-height: 47px;
+  flex-wrap: wrap;
+  row-gap: 8px;
+  box-sizing: border-box;
+}
+
+/* 标题组 */
+.ms-figma-product-title-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px;
+  gap: 12px;
+}
+
+/* 产品标题 - Frame 487 标题 */
+.ms-figma-product-title {
+  font-family: 'Roboto', sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 21px;
+  color: #2A7DFA;
+  margin: 0;
+}
+
+/* PN 标签 - Frame 835 */
+.ms-figma-pn-pill {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 6px 12px;
+  gap: 4px;
+  background: #D9DFED;
+  border-radius: 4px;
+  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #000000;
+}
+
+/* 配件链接按钮 */
+.ms-figma-link-accessories-inline {
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 19px;
+  color: #2A7DFA;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.ms-figma-link-accessories-inline:hover {
+  color: #011d6b;
+}
+
+/*
+ * 规格网格 - Frame 830/831
+ * 两列栅格布局
+ */
+.ms-figma-spec-grid {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 16px;
+  width: 100%;
+}
+
+.ms-figma-spec-grid-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+}
+
+/* 描述行 - 全宽 */
+.ms-figma-spec-span-full {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 8px;
+  width: 100%;
+}
+
+/* 双列规格 - Frame 830 */
+.ms-figma-spec-dual-cols {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 24px;
+  width: 100%;
+}
+
+/* 单列规格 - 205px 宽 */
+.ms-figma-spec-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 4px;
+  width: 205px;
+  min-width: 190px;
+}
+
+/* 规格键值对 */
+.ms-figma-spec-pair {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 4px;
+  width: 100%;
+}
+
+/* 规格键 (灰色标签) */
+.ms-figma-spec-k {
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 19px;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+/* 规格值 (黑色正文) */
+.ms-figma-spec-v {
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 19px;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+/*
+ * 操作区内元素
+ */
+
+/* 价格区 - Frame 1018 */
+.ms-figma-price-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 8px;
+  width: 100%;
+}
+
+/* 库存面板 - Frame 148 */
+.ms-figma-stock-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 16px;
+  gap: 16px;
+  width: 100%;
+  background: #EFF7FF;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+/* 数量步进器 - Frame 1016 */
+.ms-figma-qty-stepper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px;
+  gap: 8px;
+  width: 100%;
+}
+
+/* 主购物车按钮 - Frame 1023 */
+.ms-figma-primary-cart {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 9px 16px;
+  gap: 10px;
+  width: 100%;
+  height: 40px;
+  background: #012583;
+  border-radius: 4px;
+  border: none;
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFFFFF;
+  cursor: pointer;
+}
+
+.ms-figma-primary-cart:hover {
+  background: #011d6b;
+}
+
+/*
+ * 移动端适配
+ * 取消 PC 绝对定位，恢复流式布局
+ */
+@media (max-width: 1024px) {
+  .figma-exact-machine-card {
+    flex-direction: column;
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .figma-exact-card-gallery {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .ms-figma-machine-card__col-actions.ms-figma-machine-card__actions {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .ms-figma-spec-dual-cols {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .ms-figma-spec-col {
+    width: 100%;
+  }
+}
+
+@media (max-width: 767px) {
+  .figma-exact-machine-card {
+    padding: 12px;
+  }
+
+  .ms-figma-product-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    height: auto;
+    gap: 8px;
+  }
+
+  .ms-figma-product-title-group {
+    flex-wrap: wrap;
   }
 }

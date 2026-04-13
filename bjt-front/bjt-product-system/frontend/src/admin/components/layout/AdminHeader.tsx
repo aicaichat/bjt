@@ -76,7 +76,7 @@ const AdminHeader: React.FC = () => {
   };
 
   return (
-    <Header className="bg-white px-6 flex justify-between items-center border-b">
+    <Header className="admin-header">
       <div className="flex-1" />
       <Space size="large">
         <LanguageSwitch size="small" />

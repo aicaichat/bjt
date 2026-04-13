@@ -53,5 +53,7 @@
   "signInToAccessYourAccount": "Sign in to access your account",
   "username": "Username",
   "password": "Password",
-  "login": "Login"
+  "login": "Login",
+  "passwordShow": "Show password",
+  "passwordHide": "Hide password"
 } 

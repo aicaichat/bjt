@@ -1,0 +1,147 @@
+/**
+ * Figma 提取的设计令牌
+ * 从 machine-page.svg (Node: 1699:2614) 提取
+ * 生成时间: 2026-04-12
+ */
+
+:root {
+  /* === 颜色系统 === */
+  /* 主色 - 从 SVG 提取 */
+  --figma-primary: #012583;
+  --figma-primary-hover: #011d6b;
+
+  /* 背景色 */
+  --figma-bg-page: #F1F5F9;
+  --figma-bg-card: #FFFFFF;
+  --figma-bg-sidebar: #FFFFFF;
+
+  /* 文字色 */
+  --figma-text-primary: #333333;
+  --figma-text-secondary: #1D1B20;
+  --figma-text-white: #FFFFFF;
+
+  /* 边框/分割线 */
+  --figma-border: #DEDEDE;
+
+  /* === 尺寸系统 === */
+  /* Sidebar */
+  --figma-sidebar-width: 303px;
+  --figma-sidebar-menu-item-width: 279px;
+  --figma-sidebar-menu-item-height: 45px;
+  --figma-sidebar-menu-item-height-lg: 55px;
+  --figma-sidebar-submenu-item-height: 44px;
+
+  /* 卡片 */
+  --figma-card-width: 550px;
+  --figma-card-height-sm: 305px;
+  --figma-card-height-md: 318px;
+  --figma-card-height-lg: 329px;
+  --figma-card-border-radius: 8px;
+
+  /* 图标 */
+  --figma-icon-size: 35px;
+  --figma-icon-size-sm: 18px;
+
+  /* === 间距系统 === */
+  --figma-space-xs: 4px;
+  --figma-space-sm: 8px;
+  --figma-space-md: 16px;
+  --figma-space-lg: 24px;
+  --figma-space-xl: 32px;
+
+  /* === 字体系统 === */
+  --figma-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --figma-font-size-sm: 13px;
+  --figma-font-size-base: 14px;
+  --figma-font-size-lg: 16px;
+  --figma-font-weight-normal: 400;
+  --figma-font-weight-medium: 500;
+  --figma-font-weight-bold: 600;
+  --figma-line-height: 1.5;
+}
+
+/* === Sidebar 精确样式 === */
+.admin-sidebar--figma {
+  width: var(--figma-sidebar-width);
+  background-color: var(--figma-bg-sidebar);
+  min-height: 100vh;
+  padding: 48px 0;
+}
+
+.admin-sidebar--figma .menu-item {
+  width: var(--figma-sidebar-menu-item-width);
+  height: var(--figma-sidebar-menu-item-height);
+  border-radius: var(--figma-card-border-radius);
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  color: var(--figma-text-primary);
+  font-size: var(--figma-font-size-base);
+  font-weight: var(--figma-font-weight-normal);
+  line-height: var(--figma-line-height);
+  margin: 4px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-sidebar--figma .menu-item:hover {
+  background-color: rgba(1, 37, 131, 0.04);
+}
+
+.admin-sidebar--figma .menu-item.active {
+  background-color: var(--figma-primary);
+  color: var(--figma-text-white);
+}
+
+.admin-sidebar--figma .submenu-item {
+  width: var(--figma-sidebar-menu-item-width);
+  height: var(--figma-sidebar-submenu-item-height);
+  padding: 0 16px 0 48px;
+  display: flex;
+  align-items: center;
+  color: var(--figma-text-primary);
+  font-size: var(--figma-font-size-sm);
+  margin: 2px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.admin-sidebar--figma .submenu-item:hover {
+  background-color: rgba(1, 37, 131, 0.04);
+}
+
+/* === 机器卡片精确样式 === */
+.machine-card--figma {
+  width: 100%;
+  max-width: var(--figma-card-width);
+  background-color: var(--figma-bg-card);
+  border-radius: var(--figma-card-border-radius);
+  border: 1px solid var(--figma-border);
+  overflow: hidden;
+}
+
+.machine-card--figma.sm {
+  min-height: var(--figma-card-height-sm);
+}
+
+.machine-card--figma.md {
+  min-height: var(--figma-card-height-md);
+}
+
+.machine-card--figma.lg {
+  min-height: var(--figma-card-height-lg);
+}
+
+/* === 图标样式 === */
+.icon--figma {
+  width: var(--figma-icon-size);
+  height: var(--figma-icon-size);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon--figma-sm {
+  width: var(--figma-icon-size-sm);
+  height: var(--figma-icon-size-sm);
+}

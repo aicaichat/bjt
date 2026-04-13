@@ -1,27 +1,24 @@
 /* =============================================================================
- * Home（Figma）— 与 Frame 529 / 选型页 .ms-content-column 同源规则
- * 色：--ff-content-canvas-bg #F5F7FA、卡 #fff、海军条/描边 --ff-accent #00338D
- * 宽：529 本体 max 1617、padding 0（Dev）；左右 pageGutter 在 .home-page 壳上，内排版仍 ≈1537
+ * Home（Figma）— Frame 529 / Frame 3 / Frame 745–744
+ * 信源：用户粘贴 Dev CSS；数值经 figma-tokens-home.css 的 var(--ff-home-*)
  * ============================================================================= */
 
 .home-page.home-page--figma {
-  --home-bar-bg: var(--ff-accent);
-  --home-bar-text: var(--ff-surface);
-  --home-card-bg: var(--ff-surface);
-  --home-card-border: var(--ff-border-muted);
-  --home-card-radius: 12px;
-  --home-btn-radius: 8px;
-  --home-stack-gap: var(--ff-main-stack-gap, 24px);
-
+  /* 在 MainLayout 的 flex-col flex-grow 子级内竖向铺满（Figma Frame 529：align-self stretch + flex-grow 1） */
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
   width: 100%;
   align-self: stretch;
   min-width: 0;
   box-sizing: border-box;
-  padding-left: var(--ff-ms-page-gutter, 40px);
-  padding-right: var(--ff-ms-page-gutter, 40px);
-  padding-top: calc(var(--ff-site-header-height, 72px) + 8px);
+  padding-left: var(--ff-home-shell-pad-x);
+  padding-right: var(--ff-home-shell-pad-x);
+  /* 固定顶栏占位：Frame 1015 高度见 --ff-site-header-height */
+  padding-top: calc(var(--ff-site-header-height) + var(--ff-home-header-below-gap));
   padding-bottom: var(--ff-main-column-pad-bottom, 24px);
-  min-height: 100vh;
+  /* Frame 3 / 用户 Dev CSS：画布 #F1F5F9（与 --ff-content-canvas-bg 同源） */
   background: var(--ff-content-canvas-bg);
   font-family: var(--ff-font, 'Roboto', sans-serif);
   position: relative;
@@ -29,126 +26,157 @@
 }
 
 /*
- * Frame 529（Dev：flex column, align-items flex-start, padding 0, width 1617, height 1638,
- * align-self stretch, flex-grow 1）— 不在此层写 horizontal gutter。
+ * Frame 3：column、align flex-start、padding 16px 40px、gap 32、background #F1F5F9
+ * → .home-main.home-frame-529
  */
 .home-page.home-page--figma .home-main.home-frame-529 {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   align-self: stretch;
-  gap: var(--home-stack-gap);
+  gap: var(--ff-home-stack-gap);
+  /* 铺满 figma-front-main 整宽；稿中 Frame 3 宽 1617 等于「1920−侧栏」下的主区宽，浏览器里 main 更宽时不再居中缩窄留两侧灰带 */
   width: 100%;
-  max-width: var(--ff-ms-content-max-width, 1617px);
-  margin-left: 0;
-  margin-right: auto;
-  padding: 0;
+  max-width: 100%;
+  margin-inline: 0;
+  padding: var(--ff-home-frame3-pad-y) var(--ff-home-frame3-pad-x);
   box-sizing: border-box;
+  /* Frame 3 在 529 内 align-self: stretch；下方留白由 flex 增高区铺满画布色 */
   flex: 1 1 auto;
   flex-grow: 1;
   min-width: 0;
+  min-height: 0;
   position: relative;
   z-index: 1;
+  /* Frame 3：column、padding 16px 40px、gap、background #F1F5F9（用户粘贴 Dev CSS） */
+  background: var(--ff-content-canvas-bg);
 }
 
 @media (min-width: 1280px) {
   .home-page.home-page--figma .home-main.home-frame-529 {
-    min-height: var(--ff-ms-frame-529-min-height, 1638px);
+    min-height: var(--ff-home-main-min-height-lg);
   }
 }
 
-/* 产品线卡：白底、圆角 12、与下列间距由父级 gap 控制 */
+/* Frame 745 / 743 / 744 → .product-section */
 .home-page.home-page--figma .product-section {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
   width: 100%;
   margin: 0;
-  background: var(--home-card-bg);
-  border-radius: var(--home-card-radius);
-  overflow: hidden;
-  border: 1px solid var(--home-card-border);
-  box-shadow: 0 1px 3px rgba(15, 36, 64, 0.06);
+  padding: var(--ff-home-card-pad-y) var(--ff-home-card-pad-x);
+  gap: var(--ff-home-card-column-gap);
+  background: var(--ff-home-card-bg);
+  border-radius: var(--ff-home-card-radius);
+  overflow: visible;
+  border: none;
+  box-shadow: var(--ff-home-card-shadow);
   box-sizing: border-box;
-  transition:
-    box-shadow 0.2s ease,
-    border-color 0.2s ease;
+  transition: none;
 }
 
 .home-page.home-page--figma .product-section:hover {
-  box-shadow: 0 4px 14px rgba(15, 36, 64, 0.08);
-  border-color: color-mix(in srgb, var(--ff-accent) 22%, var(--home-card-border));
+  box-shadow: var(--ff-home-card-shadow-hover);
 }
 
-/* 海军标题条：顶栏与卡片顶角由父级 overflow hidden 裁切，条本身不再单独圆角 */
+/* Frame 738 → .section-header（稿宽 1457 与 Frame 740 一致，在卡内水平居中） */
 .home-page.home-page--figma .section-header {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  box-sizing: border-box;
-  margin: 0;
-  padding: 16px 24px;
-  min-height: 60px;
-  background: var(--home-bar-bg);
-  color: var(--home-bar-text);
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 28px;
-  letter-spacing: 0.01em;
-  border-radius: 0;
-}
-
-/* 卡体：Figma 典型 row — space-between + 竖直居中 */
-.home-page.home-page--figma .section-content {
+  flex: none;
+  order: 0;
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
   align-items: center;
-  gap: 32px;
+  padding: var(--ff-home-section-header-pad-y) var(--ff-home-section-header-pad-x);
+  gap: var(--ff-home-section-header-gap);
   width: 100%;
-  padding: 24px 24px;
+  max-width: var(--ff-home-frame-740-width);
   box-sizing: border-box;
+  margin: 0 auto;
+  min-height: var(--ff-home-section-header-min-height);
+  background: var(--ff-home-bar-bg);
+  color: var(--ff-home-bar-text);
+  font-size: var(--ff-home-section-title-size);
+  font-weight: var(--ff-home-section-title-weight);
+  line-height: var(--ff-home-section-title-line);
+  letter-spacing: var(--ff-home-section-title-tracking);
+  border-radius: var(--ff-home-section-header-radius);
 }
 
+/* Frame 740 → .section-content */
+.home-page.home-page--figma .section-content {
+  flex: none;
+  order: 1;
+  align-self: stretch;
+  display: flex;
+  flex-direction: row;
+  flex-grow: 0;
+  justify-content: flex-start;
+  align-items: var(--ff-home-frame-740-align-items);
+  gap: var(--ff-home-section-content-gap);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--ff-home-frame-740-width);
+  margin-inline: auto;
+  min-height: var(--ff-home-frame-740-min-height);
+  padding: var(--ff-home-section-content-pad-y) var(--ff-home-section-content-pad-x);
+}
+
+/* Frame 739 → .section-text */
 .home-page.home-page--figma .section-text {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  gap: 16px;
+  align-items: flex-start;
+  gap: var(--ff-home-section-text-gap);
   flex: 1 1 0;
   min-width: 0;
+  max-width: var(--ff-home-section-text-max-width);
+  width: 100%;
 }
 
+/* Frame 594 → .home-line-description */
 .home-page.home-page--figma .home-line-description {
   margin: 0;
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 19px;
-  color: var(--ff-text-muted, rgba(0, 0, 0, 0.65));
+  width: 100%;
+  min-height: var(--ff-home-desc-min-height);
+  font-size: var(--ff-home-desc-size);
+  font-weight: var(--ff-home-desc-weight);
+  line-height: var(--ff-home-desc-line);
+  color: var(--ff-home-desc-color);
 }
 
-/* 按钮堆叠：Figma 为 outline 主色按钮，文案在条内水平居中 */
+/* Frame 595 → .product-links */
 .home-page.home-page--figma .product-links {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  gap: 12px;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--ff-home-link-stack-gap);
+  padding: 0 var(--ff-home-link-stack-pad-x);
+  box-sizing: border-box;
   width: 100%;
-  max-width: 100%;
+  max-width: var(--ff-home-section-text-max-width);
+  min-height: var(--ff-home-link-stack-min-height);
 }
 
+/* Frame 805 → .product-link */
 .home-page.home-page--figma .product-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 48px;
-  padding: 12px 16px;
+  max-width: var(--ff-home-link-outer-max-width);
+  min-height: var(--ff-home-link-min-height);
+  padding: var(--ff-home-link-pad-y) var(--ff-home-link-pad-x);
   box-sizing: border-box;
   background: var(--ff-surface);
   border: 1px solid var(--ff-accent);
-  border-radius: var(--home-btn-radius);
+  border-radius: var(--ff-home-link-radius);
   color: var(--ff-accent);
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 19px;
+  font-size: var(--ff-home-link-font-size);
+  font-weight: var(--ff-home-link-font-weight);
+  line-height: var(--ff-home-link-line);
+  text-align: center;
   text-decoration: none;
   transition:
     background-color 0.15s ease,
@@ -167,38 +195,42 @@
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--ff-home-link-text-gap);
   text-align: center;
+  max-width: var(--ff-home-link-label-max-width);
+  font-size: var(--ff-home-link-font-size);
+  font-weight: var(--ff-home-link-font-weight);
+  line-height: var(--ff-home-link-line);
 }
 
-/* 右侧图：约 40–45% 列宽，上限 ~680px，圆角与稿面大图一致 */
+/* Frame 593 → .section-image */
 .home-page.home-page--figma .section-image {
-  flex: 0 0 auto;
-  width: 44%;
-  max-width: 680px;
-  min-width: 280px;
+  flex: 0 0 var(--ff-home-image-col-width);
+  width: var(--ff-home-image-col-width);
+  max-width: var(--ff-home-image-col-width);
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px;
-  background: var(--ff-surface-muted);
-  border: 1px solid var(--ff-border);
-  border-radius: 12px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ff-home-image-column-gap);
+  padding: var(--ff-home-image-wrap-pad);
+  background: var(--ff-home-image-wrap-bg);
+  border: none;
+  border-radius: var(--ff-home-image-wrap-radius);
   box-sizing: border-box;
-  min-height: 260px;
-  max-height: 400px;
+  min-height: var(--ff-home-image-min-height);
+  max-height: var(--ff-home-image-max-height);
   overflow: hidden;
 }
 
 .home-page.home-page--figma .section-image img {
   display: block;
-  max-width: 100%;
-  max-height: 360px;
-  width: auto;
+  width: 100%;
   height: auto;
+  max-width: 100%;
+  max-height: var(--ff-home-image-img-max-height);
   object-fit: contain;
   object-position: center;
-  border-radius: 8px;
+  border-radius: var(--ff-home-image-img-radius);
 }
 
 .home-page.home-page--figma .pagination {
@@ -206,25 +238,25 @@
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: 8px;
+  gap: var(--ff-home-pagination-gap);
   width: 100%;
-  margin: 8px 0 0;
+  margin: var(--ff-home-pagination-margin-top) 0 0;
   padding: 0;
 }
 
 .home-page.home-page--figma .pagination-button {
-  min-width: 40px;
-  height: 40px;
-  padding: 0 10px;
+  min-width: var(--ff-home-pagination-btn-min-width);
+  height: var(--ff-home-pagination-btn-height);
+  padding: 0 var(--ff-home-pagination-btn-pad-x);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: var(--ff-surface);
   color: var(--ff-accent);
   border: 1px solid var(--ff-border);
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
+  border-radius: var(--ff-home-pagination-btn-radius);
+  font-size: var(--ff-home-pagination-font-size);
+  font-weight: var(--ff-home-pagination-font-weight);
   cursor: pointer;
   transition:
     background-color 0.15s ease,
@@ -243,7 +275,6 @@
   border-color: var(--ff-accent);
 }
 
-/* 外部链接样式与 outline 按钮一致 */
 .home-page.home-page--figma .product-link.external-link {
   background: var(--ff-surface);
   border: 1px solid var(--ff-accent);
@@ -257,89 +288,65 @@
 
 .home-page.home-page--figma .external-icon {
   display: inline-block;
-  margin-left: 4px;
+  margin-left: var(--ff-home-external-icon-ml);
   font-size: 0.9em;
   opacity: 0.85;
 }
 
 .home-page.home-page--figma .product-section[data-product-line='4'] .section-header {
-  background: var(--home-bar-bg);
+  background: var(--ff-home-bar-bg);
 }
 
-/* === 响应式 === */
+/* 移动端：取消 PC 固定栅格 */
 @media (max-width: 1024px) {
   .home-page.home-page--figma .home-main.home-frame-529 {
     min-height: 0;
   }
 
+  .home-page.home-page--figma .section-header {
+    max-width: none;
+    width: 100%;
+    margin-inline: 0;
+  }
+
   .home-page.home-page--figma .section-content {
     flex-direction: column;
     align-items: stretch;
-    gap: var(--home-stack-gap);
+    align-self: stretch;
+    width: 100%;
+    max-width: none;
+    min-height: 0;
+    margin-inline: 0;
+    gap: var(--ff-home-section-content-gap);
+  }
+
+  .home-page.home-page--figma .section-text {
+    max-width: none;
+  }
+
+  .home-page.home-page--figma .product-links {
+    align-items: stretch;
+    min-height: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .home-page.home-page--figma .product-link {
+    max-width: none;
   }
 
   .home-page.home-page--figma .section-image {
     order: -1;
+    flex: 0 0 auto;
     width: 100%;
-    max-width: 560px;
+    max-width: var(--ff-home-image-col-width);
     margin: 0 auto;
-    min-height: 220px;
-    max-height: 340px;
+    min-height: var(--ff-home-image-min-height);
+    max-height: var(--ff-home-image-max-height);
   }
 
   .home-page.home-page--figma .section-image img {
-    max-height: 300px;
-  }
-}
-
-@media (max-width: 768px) {
-  .home-page.home-page--figma {
-    padding-top: calc(var(--ff-site-header-height, 72px));
-  }
-
-  .home-page.home-page--figma .section-content {
-    padding: 20px 16px;
-  }
-
-  .home-page.home-page--figma .section-header {
-    font-size: 18px;
-    line-height: 24px;
-    padding: 14px 16px;
-    min-height: 52px;
-  }
-
-  .home-page.home-page--figma .section-image {
-    min-height: 200px;
-    max-height: 280px;
-    padding: 10px;
-  }
-}
-
-@media (max-width: 480px) {
-  .home-page.home-page--figma {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-
-  .home-page.home-page--figma .section-content {
-    padding: 16px 12px;
-  }
-
-  .home-page.home-page--figma .section-header {
-    font-size: 16px;
-    line-height: 22px;
-  }
-
-  .home-page.home-page--figma .product-link {
-    font-size: 14px;
-    line-height: 18px;
-    min-height: 44px;
-  }
-
-  .home-page.home-page--figma .pagination-button {
-    min-width: 36px;
-    height: 36px;
-    font-size: 13px;
+    max-height: var(--ff-home-image-img-max-height);
   }
 }
 
@@ -353,7 +360,7 @@
 
 @media (prefers-contrast: high) {
   .home-page.home-page--figma .product-section {
-    border-width: 2px;
+    border-width: 1px;
   }
 
   .home-page.home-page--figma .product-link {

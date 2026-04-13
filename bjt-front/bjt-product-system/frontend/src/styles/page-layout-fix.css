@@ -9,9 +9,8 @@
   background-color: var(--ff-app-bg, #ffffff) !important;
 }
 
-/* ========== 登录页面特殊处理 ========== */
-/* 登录页面需要全屏显示，不需要侧边栏 */
-.login-page {
+/* ========== 登录页面特殊处理（旧版全屏渐变；Figma 前台登录加 .login-page--figma 排除）========== */
+.login-page:not(.login-page--figma) {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
@@ -25,7 +24,7 @@
   overflow: hidden !important;
 }
 
-.login-page::before {
+.login-page:not(.login-page--figma)::before {
   content: '' !important;
   position: absolute !important;
   top: 0 !important;
@@ -36,7 +35,8 @@
   pointer-events: none !important;
 }
 
-.login-container {
+/* 勿用全局 .login-container：会误伤 Figma 595px 卡片并导致 500px 输入框横向溢出 */
+.login-page:not(.login-page--figma) .login-container {
   background: rgba(255, 255, 255, 0.95) !important;
   backdrop-filter: blur(20px) !important;
   border-radius: 20px !important;
@@ -83,8 +83,8 @@
 /* 对于没有使用MainLayout的页面，添加适当的边距 */
 .page-container {
   margin-left: 300px !important;
-  margin-top: 72px !important;
-  min-height: calc(100vh - 72px) !important;
+  margin-top: 60px !important;
+  min-height: calc(100vh - 60px) !important;
   padding: 32px !important;
   background: var(--ff-page-bg, #f5f7fa) !important;
   width: calc(100% - 300px) !important;
@@ -99,7 +99,7 @@
   padding: 0 !important;
   margin: 0 !important;
   background-color: transparent !important;
-  min-height: calc(100vh - 72px) !important;
+  min-height: calc(100vh - 60px) !important;
 }
 
 .home-page:not(.home-page--figma) .container {
@@ -323,7 +323,7 @@
     font-size: 1.25rem !important;
   }
   
-  .login-container,
+  .login-page:not(.login-page--figma) .login-container,
   .register-container {
     margin: 10px !important;
     padding: 32px !important;
@@ -356,7 +356,7 @@
     font-size: 0.8rem !important;
   }
   
-  .login-container,
+  .login-page:not(.login-page--figma) .login-container,
   .register-container {
     padding: 24px !important;
   }
@@ -391,7 +391,7 @@
 
 /* ========== 确保内容不被截断 ========== */
 .content-wrapper {
-  min-height: calc(100vh - 72px) !important;
+  min-height: calc(100vh - 60px) !important;
   width: 100% !important;
   overflow-x: hidden !important;
 }

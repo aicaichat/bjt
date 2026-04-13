@@ -27,7 +27,25 @@ const ThumbnailGallery: React.FC<ThumbnailGalleryProps> = ({
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const validImages = images.filter((img) => img && img.trim() !== '');
-  const displayImages = [...new Set(validImages.map((s) => s.trim()))].slice(0, 4);
+  /** 先去重保留最多 4 条不同 URL（其它布局用） */
+  const uniqueUrls = [...new Set(validImages.map((s) => s.trim()))].filter(Boolean);
+  /**
+   * Figma Frame 205：左侧固定最多 3 枚缩略 + 右侧 1 枚主图 = 共 4 个槽位。
+   * 接口里多条字段常指向同一 URL，Set 去重后只剩 1 张会导致左侧整列消失。
+   * thumbnails-left 下在仅有 1～3 条不同素材时，按序循环填满 4 槽，保证结构与稿一致（重复 URL 仍合法）。
+   */
+  let displayImages =
+    layout === 'thumbnails-left' && uniqueUrls.length > 0 && uniqueUrls.length < 4
+      ? (() => {
+          const out = [...uniqueUrls];
+          let i = 0;
+          while (out.length < 4) {
+            out.push(uniqueUrls[i % uniqueUrls.length]);
+            i += 1;
+          }
+          return out.slice(0, 4);
+        })()
+      : uniqueUrls.slice(0, 4);
 
   if (displayImages.length === 0) {
     return null;

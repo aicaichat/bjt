@@ -1,0 +1,854 @@
+/**
+ * Machines 页面 - Figma 精确匹配 CSS
+ * 来源: Figma Dev Mode - Node 1699:2614
+ * 基准视口: 1920px
+ * 对齐标准: 像素级精确
+ */
+
+/* ========================================
+   设计令牌 - 直接来自 Figma
+   ======================================== */
+:root {
+  /* Figma 颜色 */
+  --figma-primary: #012583;
+  --figma-text-primary: rgba(0, 0, 0, 0.85);
+  --figma-text-secondary: rgba(0, 0, 0, 0.65);
+  --figma-bg-page: #F1F5F9;
+  --figma-bg-card: #FFFFFF;
+  --figma-border: #DEDEDE;
+  --figma-link: #2A7DFA;
+  --figma-bubble-bg: #D9DFED;
+  --figma-bubble-border: #C4DCFF;
+  --figma-stock-bg: #EFF7FF;
+  --figma-in-stock: #05A126;
+  --figma-out-of-stock: #FF0101;
+
+  /* Figma 字体 */
+  --figma-font: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  --figma-font-size-base: 16px;
+  --figma-font-size-lg: 18px;
+  --figma-font-size-xl: 20px;
+  --figma-font-weight-normal: 400;
+  --figma-font-weight-bold: 700;
+  --figma-line-height: 19px;
+
+  /* Figma 尺寸 */
+  --figma-sidebar-width: 303px;
+  --figma-content-width: 1617px;
+  --figma-card-width: 1537px;
+  --figma-card-height: 280px;
+  --figma-gallery-width: 288px;
+  --figma-main-width: 864px;
+  --figma-actions-width: 321px;
+  --figma-border-radius: 8px;
+  --figma-border-radius-sm: 4px;
+}
+
+/* ========================================
+   页面布局 - Frame 529
+   ======================================== */
+.figma-exact-page {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 1617px;
+  min-height: 1638px;
+  background: var(--figma-bg-page);
+}
+
+/* 顶部工具栏 - Frame 1016 */
+.figma-exact-toolbar {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 16px 90px 16px 0px;
+  gap: 16px;
+  width: 1617px;
+  height: 68px;
+  background: var(--figma-bg-card);
+  box-shadow: 0px 0.5px 0px rgba(0, 0, 0, 0.25);
+}
+
+/* 面包屑栏 - Frame 982 */
+.figma-exact-breadcrumb {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px 0px 0px 48px;
+  width: 1617px;
+  height: 60px;
+  background: var(--figma-primary);
+}
+
+.figma-exact-breadcrumb-item {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  gap: 10px;
+  width: 212px;
+  height: 43px;
+  border-radius: 8px;
+}
+
+.figma-exact-breadcrumb-item span {
+  width: 192px;
+  height: 23px;
+  font-family: var(--figma-font);
+  font-style: normal;
+  font-weight: var(--figma-font-weight-normal);
+  font-size: var(--figma-font-size-xl);
+  line-height: 23px;
+  text-align: center;
+  color: #FFFFFF;
+}
+
+/* 主内容区 - Frame 3 */
+.figma-exact-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 16px 40px;
+  gap: 24px;
+  width: 1617px;
+  min-height: 1455px;
+  background: var(--figma-bg-page);
+}
+
+/* ========================================
+   机器卡片 - Frame 471/469
+   ======================================== */
+.figma-exact-machine-card {
+  display: flex;
+  flex-direction: row;
+  width: 1537px;
+  height: 280px;
+  background: var(--figma-bg-card);
+  box-shadow: 0px 0.5px 0px rgba(0, 0, 0, 0.25);
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* 卡片行 */
+.figma-exact-machine-card__row {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+}
+
+/* 图片区 - Frame 205 */
+.figma-exact-card-gallery {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 8px;
+  width: 288px;
+  height: 212px;
+  background: var(--figma-bg-card);
+  flex-shrink: 0;
+}
+
+.figma-exact-thumbnail-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 4px;
+  width: 68px;
+  height: 212px;
+}
+
+.figma-exact-thumbnail {
+  box-sizing: border-box;
+  width: 68px;
+  height: 68px;
+  border: 1px solid var(--figma-border);
+  border-radius: 8px;
+  background: var(--figma-bg-card);
+}
+
+.figma-exact-main-image {
+  box-sizing: border-box;
+  width: 212px;
+  height: 212px;
+  border: 1px solid var(--figma-border);
+  border-radius: 8px;
+  background: var(--figma-bg-card);
+}
+
+/* 主内容区 - Frame 487 */
+.figma-exact-card-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 16px 24px;
+  gap: 24px;
+  width: 864px;
+  height: 240px;
+  flex-shrink: 0;
+}
+
+/* 卡片标题区 - Frame 983 */
+.figma-exact-card-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0px 0px 16px;
+  gap: 156px;
+  width: 864px;
+  height: 47px;
+  background: var(--figma-bg-card);
+  box-shadow: 0px 0.5px 0px rgba(0, 0, 0, 0.25);
+}
+
+/* 机器名称 */
+.figma-exact-machine-name {
+  width: 162px;
+  height: 21px;
+  font-family: var(--figma-font);
+  font-style: normal;
+  font-weight: var(--figma-font-weight-bold);
+  font-size: var(--figma-font-size-lg);
+  line-height: 21px;
+  color: var(--figma-text-primary);
+}
+
+/* PN 标签 */
+.figma-exact-pn-badge {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 6px 12px;
+  gap: 10px;
+  width: 127px;
+  height: 31px;
+  background: var(--figma-bubble-bg);
+  border-radius: 8px;
+}
+
+.figma-exact-pn-badge span {
+  width: 103px;
+  height: 19px;
+  font-family: var(--figma-font);
+  font-style: normal;
+  font-weight: var(--figma-font-weight-normal);
+  font-size: var(--figma-font-size-base);
+  line-height: 19px;
+  text-align: center;
+  color: var(--figma-text-primary);
+}
+
+/* 显示配件链接 */
+.figma-exact-link-accessories {
+  width: 195px;
+  height: 19px;
+  font-family: var(--figma-font);
+  font-style: normal;
+  font-weight: var(--figma-font-weight-normal);
+  font-size: var(--figma-font-size-base);
+  line-height: 19px;
+  text-align: center;
+  color: var(--figma-link);
+  text-decoration: none;
+}
+
+.figma-exact-link-accessories:hover {
+  text-decoration: underline;
+}
+
+/* 机器详情 - Frame 831 */
+.figma-exact-machine-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px 0px 16px;
+  gap: 8px;
+  width: 864px;
+  height: 85px;
+  background: var(--figma-bg-card);
+  box-shadow: 0px 0.5px 0px rgba(0, 0, 0, 0.25);
+}
+
+/* Item 行 */
+.figma-exact-item-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 0px;
+  width: 864px;
+  height: 19px;
+}
+
+.figma-exact-item-label {
+  width: 36px;
+  height: 19px;
+  font-family: var(--figma-font);
+  font-style: normal;
+  font-weight: var(--figma-font-weight-normal);
+  font-size: var(--figma-font-size-base);
+  line-height: 19px;
+  color: var(--figma-text-primary);
+}
+
+.figma-exact-item-value {
+  width: 383px;
+  height: 19px;
+  font-family: var(--figma-font);
+  font-style: normal;
+  font-weight: var(--figma-font-weight-normal);
+  font-size: var(--figma-font-size-base);
+  line-height: 19px;
+  color: var(--figma-text-secondary);
+}
+
+/* 规格信息行 */
+.figma-exact-spec-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px;
+  gap: 24px;
+  width: 434px;
+  height: 42px;
+}
+
+.figma-exact-spec-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 4px;
+  width: 205px;
+  height: 42px;
+}
+
+.figma-exact-spec-label {
+  width: 112px;
+  height: 19px;
+  font-family: var(--figma-font);
+  font-style: normal;
+  font-weight: var(--figma-font-weight-normal);
+  font-size: var(--figma-font-size-base);
+  line-height: 19px;
+  color: var(--figma-text-primary);
+}
+
+.figma-exact-spec-value {
+  width: 93px;
+  height: 19px;
+  font-family: var(--figma-font);
+  font-style: normal;
+  font-weight: var(--figma-font-weight-normal);
+  font-size: var(--figma-font-size-base);
+  line-height: 19px;
+  color: var(--figma-text-secondary);
+}
+
+/* More Info 气泡按钮 */
+.figma-exact-moreinfo-btn {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 6px 12px;
+  gap: 8px;
+  width: 135px;
+  height: 36px;
+  background: var(--figma-bubble-bg);
+  border: 1px solid var(--figma-bubble-border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.figma-exact-moreinfo-btn span {
+  width: 79px;
+  height: 21px;
+  font-family: var(--figma-font);
+  font-style: normal;
+  font-weight: var(--figma-font-weight-bold);
+  font-size: var(--figma-font-size-lg);
+  line-height: 21px;
+  color: var(--figma-primary);
+}
+
+/* 详情链接 */
+.figma-exact-detail-link {
+  width: 202px;
+  height: 19px;
+  font-family: var(--figma-font);
+  font-style: normal;
+  font-weight: var(--figma-font-weight-normal);
+  font-size: var(--figma-font-size-base);
+  line-height: 19px;
+  color: var(--figma-link);
+  text-decoration: none;
+}
+
+.figma-exact-detail-link:hover {
+  text-decoration: underline;
+}
+
+/* 操作区 - Frame 1017 */
+.figma-exact-card-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0px;
+  gap: 24px;
+  width: 321px;
+  height: 254px;
+  background: var(--figma-bg-card);
+  flex-shrink: 0;
+}
+
+.figma-exact-stock-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 16px 10px;
+  gap: 16px;
+  margin: 0 auto;
+  width: 321px;
+  height: 186px;
+  background: var(--figma-stock-bg);
+  border-radius: 8px;
+}
+
+.figma-exact-stock-title {
+  width: 301px;
+  height: 21px;
+  font-family: var(--figma-font);
+  font-style: normal;
+  font-weight: var(--figma-font-weight-normal);
+  font-size: var(--figma-font-size-lg);
+  line-height: 21px;
+  color: var(--figma-text-secondary);
+}
+
+.figma-exact-stock-total {
+  width: 281px;
+  height: 21px;
+  font-family: var(--figma-font);
+  font-style: normal;
+  font-weight: var(--figma-font-weight-normal);
+  font-size: var(--figma-font-size-lg);
+  line-height: 21px;
+  text-align: center;
+  color: var(--figma-text-primary);
+}
+
+/* 库存地区标签 */
+.figma-exact-stock-tag {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 5px 20px;
+  gap: 10px;
+  width: 145.5px;
+  height: 26px;
+  background: var(--figma-bg-card);
+  border-radius: 4px;
+}
+
+.figma-exact-stock-tag span {
+  width: 53px;
+  height: 16px;
+  font-family: 'Arial', sans-serif;
+  font-style: normal;
+  font-weight: var(--figma-font-weight-normal);
+  font-size: 14px;
+  line-height: 16px;
+  text-align: center;
+}
+
+.figma-exact-stock-tag.in-stock span {
+  color: var(--figma-in-stock);
+}
+
+.figma-exact-stock-tag.out-of-stock span {
+  color: var(--figma-out-of-stock);
+}
+
+/* 数量选择器 */
+.figma-exact-qty-selector {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px;
+  margin: 0 auto;
+  width: 108px;
+  height: 32px;
+}
+
+.figma-exact-qty-btn {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0px;
+  width: 32px;
+  height: 32px;
+  background: var(--figma-bg-card);
+  border: 1px solid var(--figma-border);
+  cursor: pointer;
+}
+
+.figma-exact-qty-btn.minus {
+  border-radius: 4px 0px 0px 4px;
+  margin: 0px -1px;
+}
+
+.figma-exact-qty-btn.plus {
+  border-radius: 0px 4px 4px 0px;
+}
+
+.figma-exact-qty-btn span {
+  width: 32px;
+  height: 19px;
+  font-family: var(--figma-font);
+  font-style: normal;
+  font-weight: var(--figma-font-weight-normal);
+  font-size: var(--figma-font-size-base);
+  line-height: 19px;
+  text-align: center;
+  color: var(--figma-text-secondary);
+}
+
+.figma-exact-qty-input {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0px;
+  width: 46px;
+  height: 32px;
+  background: var(--figma-bg-card);
+  border: 1px solid var(--figma-border);
+  margin: 0px -1px;
+  text-align: center;
+  font-family: var(--figma-font);
+  font-size: var(--figma-font-size-base);
+}
+
+.figma-exact-qty-input span {
+  width: 46px;
+  height: 19px;
+  font-family: var(--figma-font);
+  font-style: normal;
+  font-weight: var(--figma-font-weight-normal);
+  font-size: var(--figma-font-size-base);
+  line-height: 19px;
+  text-align: center;
+  color: var(--figma-text-primary);
+}
+
+/* 加入购物车按钮 */
+.figma-exact-add-to-cart-btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 12px;
+  gap: 12px;
+  margin: 0 auto;
+  width: 138px;
+  height: 44px;
+  background: var(--figma-primary);
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.figma-exact-add-to-cart-btn span {
+  width: 82px;
+  height: 19px;
+  font-family: var(--figma-font);
+  font-style: normal;
+  font-weight: var(--figma-font-weight-bold);
+  font-size: var(--figma-font-size-base);
+  line-height: 19px;
+  color: #FFFFFF;
+}
+
+/* ========================================
+   分页 - Frame 575
+   ======================================== */
+.figma-exact-pagination {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 0px;
+  gap: 10px;
+  width: 734px;
+  height: 40px;
+}
+
+.figma-exact-page-btn {
+  width: 40px;
+  height: 40px;
+  background: var(--figma-bg-card);
+  border: 1px solid var(--figma-border);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.figma-exact-page-btn.active {
+  background: var(--figma-primary);
+  border: 1px solid var(--figma-border);
+}
+
+.figma-exact-page-btn.prev,
+.figma-exact-page-btn.next {
+  width: 86px;
+  height: 40px;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F1F1F1 100%);
+  border: 1px solid var(--figma-border);
+  border-radius: 4px;
+}
+
+.figma-exact-page-btn span {
+  font-family: var(--figma-font);
+  font-style: normal;
+  font-weight: var(--figma-font-weight-normal);
+  font-size: var(--figma-font-size-base);
+  line-height: 19px;
+  text-align: center;
+  color: var(--figma-text-primary);
+}
+
+.figma-exact-page-btn.active span {
+  color: #FFFFFF;
+}
+
+/* ========================================
+   配件卡片 - 特殊处理
+   ======================================== */
+.figma-exact-accessory-card {
+  display: flex;
+  flex-direction: row;
+  width: 1537px;
+  min-height: 240px;
+  background: var(--figma-bg-card);
+  border: 1px solid var(--figma-border);
+  border-radius: 8px;
+  box-shadow: 0px 0.5px 0px rgba(0, 0, 0, 0.25);
+  box-sizing: border-box;
+}
+
+.figma-exact-accessory-card__gallery {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+  gap: 12px;
+  width: 288px;
+  flex-shrink: 0;
+}
+
+.figma-exact-accessory-card__image {
+  width: 212px;
+  height: 212px;
+  border: 1px solid var(--figma-border);
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.figma-exact-accessory-card__select {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 8px 16px;
+  gap: 8px;
+  height: 32px;
+  background: var(--figma-bg-page);
+  border: 1px solid var(--figma-border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.figma-exact-accessory-card__main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 16px 24px;
+  gap: 12px;
+  width: 864px;
+  flex: 1;
+  border-left: 1px solid var(--figma-border);
+  border-right: 1px solid var(--figma-border);
+}
+
+.figma-exact-accessory-card__pn {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  height: 28px;
+  background: var(--figma-bubble-bg);
+  border-radius: 6px;
+  font-family: var(--figma-font);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--figma-text-primary);
+}
+
+.figma-exact-accessory-card__title {
+  font-family: var(--figma-font);
+  font-style: normal;
+  font-weight: var(--figma-font-weight-bold);
+  font-size: var(--figma-font-size-lg);
+  line-height: 21px;
+  color: var(--figma-text-primary);
+}
+
+.figma-exact-accessory-card__specs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.figma-exact-accessory-card__spec-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+}
+
+.figma-exact-accessory-card__spec-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.figma-exact-accessory-card__spec-label {
+  font-family: var(--figma-font);
+  font-size: var(--figma-font-size-base);
+  font-weight: var(--figma-font-weight-normal);
+  color: var(--figma-text-primary);
+}
+
+.figma-exact-accessory-card__spec-value {
+  font-family: var(--figma-font);
+  font-size: var(--figma-font-size-base);
+  font-weight: var(--figma-font-weight-normal);
+  color: var(--figma-text-secondary);
+}
+
+.figma-exact-accessory-card__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+  gap: 16px;
+  width: 321px;
+  flex-shrink: 0;
+}
+
+/* ========================================
+   搜索框和工具栏元素
+   ======================================== */
+.figma-exact-search-box {
+  box-sizing: border-box;
+  width: 271px;
+  height: 32px;
+  background: var(--figma-bg-card);
+  border: 1px solid var(--figma-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-family: var(--figma-font);
+  font-size: 14px;
+}
+
+.figma-exact-cart-btn {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 4px 8px;
+  gap: 3px;
+  width: 74px;
+  height: 32px;
+  border: 0.8px solid #B2B2B2;
+  border-radius: 6px;
+  background: var(--figma-bg-card);
+  cursor: pointer;
+}
+
+.figma-exact-lang-btn {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 4px 8px;
+  gap: 3px;
+  width: 95px;
+  height: 32px;
+  border: 0.8px solid #BFBCBC;
+  border-radius: 6px;
+  background: var(--figma-bg-card);
+  cursor: pointer;
+}
+
+/* ========================================
+   筛选区 - Frame 458
+   ======================================== */
+.figma-exact-filter-area {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 16px 20px;
+  gap: 20px;
+  width: 1537px;
+  height: 115px;
+  background: var(--figma-bg-card);
+}
+
+.figma-exact-filter-title {
+  width: 1497px;
+  height: 23px;
+  font-family: var(--figma-font);
+  font-style: normal;
+  font-weight: var(--figma-font-weight-bold);
+  font-size: var(--figma-font-size-xl);
+  line-height: 23px;
+  color: var(--figma-text-primary);
+}
+
+.figma-exact-select {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  gap: 38px;
+  width: 208px;
+  height: 40px;
+  background: var(--figma-bg-card);
+  border: 1px solid var(--figma-border);
+  border-radius: 4px;
+}
+
+.figma-exact-select span {
+  width: 67px;
+  height: 16px;
+  font-family: var(--figma-font);
+  font-style: normal;
+  font-weight: var(--figma-font-weight-normal);
+  font-size: 14px;
+  line-height: 16px;
+  text-align: center;
+  color: var(--figma-text-primary);
+}

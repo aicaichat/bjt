@@ -2,10 +2,16 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './styles/figma-design-tokens.css'
+import './styles/figma-tokens-login.css'
+import './styles/figma-tokens-home.css'
 import './styles/figma-tokens-machine-selection.css'
+import './styles/figma-tokens-consumables.css'
 import './index.css'
 /** 须在 Tailwind(index) 之后加载，否则 utilities 与 .machine-gallery 会覆盖选型卡片图库尺寸 */
 import './styles/machine-selection-figma.css'
+/** Consumables 与 Cart Figma 对齐样式（须在 machine-selection-figma.css 之后加载） */
+import './styles/consumables-figma.css'
+import './styles/cart-figma.css'
 import './i18n' // Import i18n configuration
 import { safeRender } from './utils/renderUtils'
 import { cacheManager } from './utils/cacheManager'

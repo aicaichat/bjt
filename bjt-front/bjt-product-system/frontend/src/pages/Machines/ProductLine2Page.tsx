@@ -53,6 +53,8 @@ interface FlattenedAccessory extends MachineAccessory {
 
 import './Machines.css';
 import './accessibility.css';
+// Figma 像素级精确覆盖层
+import '../../styles/figma-exact/machines-exact-override.css';
 
 const { Option } = Select;
 
@@ -1607,12 +1609,17 @@ const ProductLine2Page: React.FC = () => {
         ? getMachineName(product as MachinePart) 
         : getAccessoryName(product as MachineAccessory);
         
-      // 2. 在handleAddToCart成功后触发动画
-      // 获取购物车icon元素
-      const cartIcon = document.querySelector('.anticon-shopping-cart') || document.querySelector('.shopping-cart-icon');
+      // 2. 加入购物车飞入动画：起点为当前「加入购物车」按钮，终点为顶栏或悬浮购物车图标
+      const dataProductTypeAttr = productType === 'machine' ? 'machines' : 'accessories';
+      const startEl = document.querySelector(
+        `[data-add-to-cart-anchor="${String(product.id)}"][data-product-type="${dataProductTypeAttr}"]`
+      ) as HTMLElement | null;
+      const cartIcon =
+        (document.querySelector('.anticon-shopping-cart') ||
+          document.querySelector('.shopping-cart-icon')) as HTMLElement | null;
       setCartAnimation({
         isActive: true,
-        startElement: null, // 可根据实际传递按钮ref
+        startElement: startEl,
         targetElement: cartIcon,
         productImage: product.image_url || DEFAULT_IMAGE,
         productName: productType === 'machine' ? getMachineName(product as MachinePart) : getAccessoryName(product as MachineAccessory)
@@ -2205,14 +2212,6 @@ const ProductLine2Page: React.FC = () => {
 
               <div className="ms-figma-machine-card__col-actions ms-figma-machine-card__actions">
                 <div className="ms-figma-purchase-rail">
-                <div className="mb-4">
-                  <div className="font-medium text-sm text-gray-600 mb-1">{t('tableHeaders.price') || 'Price'}:</div>
-                  <div className="ms-figma-price-value mb-2">
-                    {getCurrencySymbol(userRegion)}
-                    {formatPrice(machine.prices?.[0]?.tiers?.[0]?.base_price || 0)}
-                  </div>
-                </div>
-
                 {isSales && (
                   <div className="mb-4 ms-figma-stock-panel">
                     <div className="ms-figma-stock-heading">{t('figma.stockStatus')}</div>
@@ -3754,7 +3753,14 @@ const ProductLine2Page: React.FC = () => {
         targetElement={cartAnimation.targetElement}
         productImage={cartAnimation.productImage}
         productName={cartAnimation.productName}
-        onComplete={() => setCartAnimation({ ...cartAnimation, isActive: false })}
+        onComplete={() =>
+          setCartAnimation((prev) => ({
+            ...prev,
+            isActive: false,
+            startElement: null,
+            targetElement: null
+          }))
+        }
       />
     </div>
   );

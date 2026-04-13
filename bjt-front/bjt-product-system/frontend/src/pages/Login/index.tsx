@@ -1,25 +1,17 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, message, Typography, Row, Col, Card, Switch, Badge, Tag } from 'antd';
-import { UserOutlined, LockOutlined, CrownOutlined, ShoppingCartOutlined, TeamOutlined } from '@ant-design/icons';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import './Login.css';
-const logo = '/images/logo-1.webp';
-import { authService } from '../../services/auth';
-import testAuthFlow from '../../utils/authTest';
 import { useTranslation } from 'react-i18next';
 
-const { Title, Paragraph } = Typography;
-
-interface TestAccount {
-  username: string;
-  password: string;
-  role: string;
-  description: string;
-}
+/** 前台登录专用品牌图（Locked Air / LOCKED PAPER），见 public/images/login-logo-locked-air.png */
+const logo = '/images/login-logo-locked-air.png';
 
 const Login: React.FC = () => {
-  const [form] = Form.useForm();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<{ username?: string; password?: string }>({});
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const navigate = useNavigate();
@@ -27,149 +19,162 @@ const Login: React.FC = () => {
   const { login } = useAuth();
   const { t } = useTranslation('login');
 
-  const handleSubmit = async (values: { username: string; password: string; remember?: boolean }) => {
-    console.log('🔐 [Login] Attempting login with:', values);
-    console.log('🔐 [Login] Current environment:', {
-      VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
-      VITE_USE_MOCK_DATA: import.meta.env.VITE_USE_MOCK_DATA
+  const clearFieldError = (field: 'username' | 'password') => {
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
     });
-    
-    setLoading(true);
+  };
+
+  const validate = (): boolean => {
+    const next: { username?: string; password?: string } = {};
+    if (!username.trim()) {
+      next.username = t('validation.usernameRequired');
+    }
+    if (!password) {
+      next.password = t('validation.passwordRequired');
+    }
+    setFieldErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setErrorMsg('');
-    
+    if (!validate()) {
+      return;
+    }
+
+    setLoading(true);
     try {
-      console.log('🔐 [Login] Calling auth service login...');
-      const user = await login(values.username, values.password);
-      console.log('✅ [Login] Login successful:', user);
-      
-      // 验证token是否正确保存
-      const savedToken = localStorage.getItem('auth_token');
-      const savedUser = localStorage.getItem('user');
-      console.log('🔐 [Login] Post-login verification:', {
-        hasSavedToken: !!savedToken,
-        tokenLength: savedToken?.length,
-        tokenPreview: savedToken ? savedToken.substring(0, 15) + '...' : 'none',
-        hasSavedUser: !!savedUser,
-        userObject: user
-      });
-      
-      // 解析跳转目标：既支持对象形式({pathname:"/xxx"})，也支持直接字符串形式("/xxx")
-      const stateFrom = (location.state as any)?.from;
+      await login(username.trim(), password);
+
+      const stateFrom = (location.state as { from?: string | { pathname?: string } })?.from;
       const redirectPath =
-        // 1) location.state.from 可以是对象或字符串
         (typeof stateFrom === 'string' ? stateFrom : stateFrom?.pathname) ||
-        // 其次检查查询参数中的 redirect 字段（手动调用 /login?redirect=/target ）
         new URLSearchParams(location.search).get('redirect') ||
-        // 默认回退到机器页面
         '/machines';
 
       navigate(redirectPath, { replace: true });
-    } catch (error: any) {
-      console.error('❌ [Login] Login failed:', error);
-      setErrorMsg(error.message || '登录失败，请检查用户名和密码');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getRoleIcon = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return <CrownOutlined />;
-      case 'sales':
-        return <ShoppingCartOutlined />;
-      case 'customer':
-      case 'partner':
-        return <TeamOutlined />;
-      default:
-        return <UserOutlined />;
-    }
-  };
-
-  const onFinish = async (values: { username: string; password: string }) => {
-    setLoading(true);
-    try {
-      const response = await authService.login(values.username, values.password);
-      if (response.success) {
-        message.success('登录成功');
-        navigate('/');
-      } else {
-        message.error(response.message || '登录失败');
-      }
-    } catch (error: any) {
-      message.error(error.message || '登录失败');
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : t('messages.error.invalidCredentials');
+      setErrorMsg(message || t('messages.error.invalidCredentials'));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="login-page">
-      <div className="login-container">
-        <img src={logo} alt="BJT Logo" className="logo" />
-        <Title level={2} className="login-title">{t('pageTitle')}</Title>
-        <Paragraph className="login-subtitle">
-          {t('signInToAccessYourAccount')}
-        </Paragraph>
-
-        {errorMsg && (
-          <div className="login-error">
-            {errorMsg}
+    <div className="login-page login-page--figma">
+      <div className="login-page__backdrop">
+        <div className="login-container">
+          <div className="login-brand">
+            <img src={logo} alt="Locked Air — Inflatable Protective Packaging Solutions" className="logo" />
+            <h1 className="login-title">{t('pageTitle')}</h1>
+            <span className="login-subtitle--sr-only">{t('signInToAccessYourAccount')}</span>
           </div>
-        )}
 
-        <Form
-          form={form}
-          name="login"
-          onFinish={handleSubmit}
-          layout="vertical"
-          initialValues={{ remember: true }}
-          className="login-form"
-        >
-          <Form.Item
-            name="username"
-            rules={[
-              { required: true, message: 'Please input your Username!' },
-            ]}
-          >
-            <Input prefix={<UserOutlined />} placeholder={t('username')} size="large" />
-          </Form.Item>
-          <Form.Item
-            name="password"
-            rules={[{ required: true, message: 'Please input your Password!' }]}
-          >
-            <Input.Password
-              prefix={<LockOutlined />}
-              placeholder={t('password')}
-              size="large"
-            />
-          </Form.Item>
+          {errorMsg ? <div className="login-error" role="alert">{errorMsg}</div> : null}
 
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              size="large"
-              block
-              loading={loading}
-              className="login-button"
-            >
-              {t('login')}
-            </Button>
-          </Form.Item>
-          
-          <Form.Item>
-            <div style={{ textAlign: 'center', marginTop: '16px' }}>
-              <span style={{ color: '#666' }}>{t('register.title')}</span>
-              <Link to="/register" style={{ marginLeft: '8px', color: '#1890ff' }}>
-                {t('register.link')}
-              </Link>
+          <form className="login-form" onSubmit={handleSubmit} noValidate>
+            <div className="login-form__fields">
+              <div className="login-field">
+                <label className="login-field__label" htmlFor="login-username">
+                  {t('username')}
+                </label>
+                <input
+                  id="login-username"
+                  name="username"
+                  type="text"
+                  className="login-input"
+                  autoComplete="username"
+                  placeholder={t('username')}
+                  value={username}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    clearFieldError('username');
+                  }}
+                  disabled={loading}
+                />
+                {fieldErrors.username ? (
+                  <p className="login-field__hint login-field__hint--error">{fieldErrors.username}</p>
+                ) : null}
+              </div>
+
+              <div className="login-field">
+                <label className="login-field__label" htmlFor="login-password">
+                  {t('password')}
+                </label>
+                <div className="login-input-shell">
+                  <input
+                    id="login-password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    className="login-input login-input--embedded"
+                    autoComplete="current-password"
+                    placeholder={t('password')}
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      clearFieldError('password');
+                    }}
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    className="login-password-toggle"
+                    onClick={() => setShowPassword((v) => !v)}
+                    disabled={loading}
+                    aria-label={showPassword ? t('passwordHide') : t('passwordShow')}
+                  >
+                    {showPassword ? <EyeVisibleIcon /> : <EyeHiddenIcon />}
+                  </button>
+                </div>
+                {fieldErrors.password ? (
+                  <p className="login-field__hint login-field__hint--error">{fieldErrors.password}</p>
+                ) : null}
+              </div>
             </div>
-          </Form.Item>
-        </Form>
+
+            <div className="login-form__submit">
+              <button type="submit" className="login-button" disabled={loading}>
+                {loading ? t('messages.loading') : t('login')}
+              </button>
+            </div>
+          </form>
+
+          <div className="login-register-footer">
+            <span>{t('register.title')}</span>
+            <Link to="/register">{t('register.link')}</Link>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
-export default Login; 
+function EyeHiddenIcon() {
+  return (
+    <svg className="login-password-toggle__icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden>
+      <path
+        fill="currentColor"
+        d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.37 1.83l2.98 2.98c1.62-1.38 2.9-3.16 3.65-5.19C21.27 7.11 17 4 12 4c-1.27 0-2.49.22-3.64.63l1.51 1.51C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78 3.15 3.15.02-.16c0-1.66-1.34-3-3-3-.17 0-.34.01-.51.03z"
+      />
+    </svg>
+  );
+}
+
+function EyeVisibleIcon() {
+  return (
+    <svg className="login-password-toggle__icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden>
+      <path
+        fill="currentColor"
+        d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-5-7.5-10-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"
+      />
+    </svg>
+  );
+}
+
+export default Login;

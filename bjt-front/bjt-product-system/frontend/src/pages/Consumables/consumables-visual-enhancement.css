@@ -2,8 +2,8 @@
    耗材页面视觉优化 - 简单有效的样式增强
    =================================================================== */
 
-/* 页面整体优化 */
-.consumables-page {
+/* 页面整体优化（勿作用 consumables-page--figma：Figma 稿为固定浅灰画布，且须避免与下方 dark 媒体查询抢 !important） */
+.consumables-page:not(.consumables-page--figma) {
   background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%) !important;
   min-height: 100vh;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
@@ -351,9 +351,9 @@
   }
 }
 
-/* 深色模式支持 */
+/* 深色模式支持（Figma 耗材页保持稿面浅底，见 consumables-figma.css） */
 @media (prefers-color-scheme: dark) {
-  .consumables-page {
+  .consumables-page:not(.consumables-page--figma) {
     background: linear-gradient(135deg, #111827 0%, #1f2937 100%) !important;
   }
   

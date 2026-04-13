@@ -1,0 +1,68 @@
+---
+description: 严格按唯一信源实现样式；严格对齐页优先原生 DOM 不用 Ant 画稿面；Home H1–H13、登录 L1–L8（原生）、耗材 C1–C12、机器选型 M1–M12、壳层 S1–S6；子选择器须匹配真实 DOM；布局变量同源
+globs:
+  - frontend/**/*.css
+  - frontend/src/pages/**/*
+  - frontend/src/components/layout/**/*
+  - frontend/src/admin/**/*.tsx
+  - frontend/src/figma-tokens/**/*
+  - docs/visual-upgrade/**/*
+  - .cursor/skills/css-figma-strict-implementation/**/*
+alwaysApply: false
+---
+
+# CSS / Figma — 严格按信源实现
+
+Agent Skill：`.cursor/skills/css-figma-strict-implementation/SKILL.md`。
+
+- **严格对齐页**：正在按 Figma 对齐的页面 **优先不用 Ant** 实现可见稿面；见 Skill「组件策略」。
+- **Home**：`reference-home-full-alignment.md`（H1–H13）；Dev CSS **必须**入库 `sources/home-figma-dev-export-*.css` + `home-figma-user-dev-css.md`。
+- **前台登录**：`reference-login-full-alignment.md`（L1–L8）；**原生表单**；Dev CSS **必须**入库 `sources/login-figma-dev-export-*.css` + `login-figma-user-dev-css.md`；域 token `figma-tokens-login.css`。
+- **耗材**：`reference-consumables-full-alignment.md`（C1–C12）；Dev CSS **必须**入库 `sources/consumables-figma-dev-export-*.css` + `consumables-figma-user-dev-css.md`；优先原生 + token。
+- **机器选型**：`reference-machine-selection-full-alignment.md`（M1–M12）；Dev CSS **必须**入库 `sources/machine-selection-figma-dev-export-*.css` + `machine-selection-figma-user-dev-css.md`；**宽度/gutter 链**须符合 `.cursor/rules/figma-machine-selection-layout.mdc`。
+- **壳层 / 侧栏 / 顶栏**：`reference-shell-sidebar-checklist.md`（S1–S6）；复盘与防再犯 **`docs/visual-upgrade/session-retrospective-sidebar-shell.md`**；改 `MainLayout` / `Sidebar` / `figma-front-shell` / `sidebar-figma` 时遵守 Skill「前台壳层、顶栏与侧栏」小节。
+
+**数值**均只来自粘贴的 CSS（或用户指定仓库内原文路径）。详见 Skill「CSS 原文必须入库」。
+
+在修改前台样式、Figma 对齐页面或 `figma-tokens-*.css` / `src/figma-tokens/*.json` 时，按下列流程执行；**禁止**用「常见组件默认值」或记忆里的尺寸替代用户/稿中的数字。
+
+**布局**：**PC 宽屏**主布局须 **绝对定位 + 固定宽高**（与 Figma 一致）；**移动端**（如 `max-width: 1024px` 的 `@media`）**不强制** absolute，用流式/栈叠。偏移与尺寸进 token。详见 Skill「项目布局约定（当前）」。
+
+**全页所有元素**：须基于页面 TSX 与 **Home H1–H13 / 登录 L1–L8 / 耗材 C1–C12 / 选型 M1–M12** 交付 **覆盖表**。**数值**仅来自 CSS；未覆盖块列「待补」。交付含 **覆盖表 + 映射表 + token 审计**（严格对齐页含 **Ant 保留/移除说明**）。
+
+## 1. 唯一信源（必须先明确）
+
+用户未写明时，**先问一句**：本次以何为准？
+
+- 其粘贴的 **Dev Mode / Inspect 全文**；
+- 仓库内 **指定文件路径**（Home：`home-figma-user-dev-css.md`；登录：`login-figma-user-dev-css.md`；选型：`machine-selection-figma-user-dev-css.md`；或 `sources/*.css` 原文）；
+- **Figma 节点 URL** + 用户粘贴或截图的尺寸。
+
+若多份信源冲突，列出 **差异表**（信源值 | 当前代码值 | 路径），**待用户确认后再改**。
+
+## 2. 硬规则
+
+1. **间距、圆角、字号、行高、字重、宽高、flex、position、inset、z-index** 须能从信源推导（含绝对定位）；信源未写的，回复中写「信源未提供」，**不得编造**；可沿用已有 `var(--*)` 名但不擅自改数值。
+2. **实现顺序**：先更新 **domain token**（如 `figma-tokens-home.css`、`figma-tokens-login.css`、`figma-tokens-machine-selection.css`）及对应 `*.json`（若项目要求同步）→ 再改页面/组件 CSS。页面选择器下 **禁止新增裸数字**（仅 `var(--*)` 与合法 `calc()`）。
+3. **帧 / 组件映射**：在关键块写简短注释，例如 `/* Figma Frame 740 → .section-content */`，便于审查。
+4. **全局 / legacy 覆盖**：检查同路由的 `*.override.css`、全局 `index.css`、`header-layout-fix.css` 等；若会盖掉 Figma 页，用 **更高特异性** 或 **`.figma-front`** / **`.home-page:not(.home-page--figma)` / `.*--figma`** 等限定，避免非目标页面被破坏。
+5. **范围**：用户只提某一帧（如 Frame 740）时，**同卡内其它子节点**（标题条、按钮、图区）若用户也贴了规格，须一并进 token + 样式；未贴的不要顺带「优化」。
+6. **子选择器与 DOM**：`A > B` 须与 DevTools 中 **A 的直接子节点**一致；侧栏等为 `nav → ul → li` 时 **禁止** `nav > li`。
+7. **布局变量同源**：侧栏宽、顶栏 offset/高度等使用 **`--bjt-sidebar-*`、`--ff-site-header-height`** 等同源 token，禁止多文件各写互不一致的固定像素。
+
+## 3. 交付前自检（须在回复中逐项说明）
+
+- [ ] Home 粘贴 CSS：`sources/home-figma-dev-export-*.css` + md 索引已更新  
+- [ ] 前台登录粘贴 CSS：`sources/login-figma-dev-export-*.css` + `login-figma-user-dev-css.md` 已更新  
+- [ ] 耗材粘贴 CSS：`sources/consumables-figma-dev-export-*.css` + `consumables-figma-user-dev-css.md` 已更新  
+- [ ] 机器选型粘贴 CSS：`sources/machine-selection-figma-dev-export-*.css` + `machine-selection-figma-user-dev-css.md` 已更新  
+- [ ] 全页块覆盖表完整（TSX + Home H1–H13 / 登录 L1–L8 / 耗材 C1–C12 / 选型 M1–M12）  
+- [ ] 信源中的数字均在 token 或选择器中有对应项；待补块无臆造 px  
+- [ ] PC 与移动端布局策略一致：宽屏 absolute，窄屏 `@media` 内流式覆写  
+- [ ] 无与信源冲突且未标注的遗留注释  
+- [ ] 已跑通项目约定构建命令（如 `npm run build` / `build:skip-check`）
+- [ ] （若涉及 **MainLayout / Sidebar / figma-front-shell / sidebar-figma**）**S1–S6** 覆盖表已给出；选择器与 DOM 已核对
+
+## 4. 用户粘贴模版
+
+见 Skill **「用户粘贴模版」**（含 **登录**、**耗材**、**机器选型** 段）。@ Skill + 写明 **【页面】** +「**以下 CSS 为唯一信源**」+ `css` 围栏；Home 对照 H1–H13，登录 L1–L8，耗材 C1–C12，选型 M1–M12。

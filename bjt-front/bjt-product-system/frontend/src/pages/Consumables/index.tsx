@@ -885,6 +885,9 @@ const ConsumableTooltipContent: React.FC<ConsumableTooltipContentProps> = ({
   );
 };
 
+/** 稿 Frame 205：左侧为辅图缩略，不含主图；最多 2 张（与 Dev 摘录一致） */
+const FIGMA_CONSUMABLE_ALT_THUMB_MAX = 2;
+
 // 新增：标准化产品项展示组件
 interface StandardConsumableItemProps {
   item: ConsumableProduct;
@@ -976,11 +979,8 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
     return sum + getRegionInventory(item, regionKey.toString());
   }, 0);
 
-  const overallStockStatus = getStockStatus(totalStock);
   const stockStatus = totalStock > 10 ? 'high' : totalStock > 0 ? 'low' : 'out';
-  const stockColor = stockStatus === 'high' ? 'text-green-600' : stockStatus === 'low' ? 'text-yellow-600' : 'text-red-600';
-  const stockBg = stockStatus === 'high' ? 'bg-green-50' : stockStatus === 'low' ? 'bg-yellow-50' : 'bg-red-50';
-  
+
   // 计算最优价格
   const bestPrice = item.pricing?.reduce((min, pricing) => {
     const quantity = parseInt(pricing.range.replace(/[^0-9]/g, '') || '1') || 1;
@@ -988,28 +988,87 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
     return priceValue > 0 && priceValue < min ? priceValue : min;
   }, Infinity) || 0;
 
+  const mainImageSrc = cleanImageUrl(getLocalizedValue(item, 'image_url'));
+  const packageImageSrc = item.package_image_url
+    ? cleanImageUrl(String(item.package_image_url))
+    : '';
+  const altThumbCandidates = [packageImageSrc].filter(
+    (u) => Boolean(u && u !== mainImageSrc)
+  );
+  const figmaThumbSources = Array.from(new Set(altThumbCandidates)).slice(
+    0,
+    FIGMA_CONSUMABLE_ALT_THUMB_MAX
+  );
+  /* 稿面 Frame 205：左侧始终显示 3 个 68×68 缩略槽位，不足时用占位填充 */
+  const thumbSlots = Array.from({ length: 3 }, (_, i) => figmaThumbSources[i] || null);
+
+  const [activeHeroSrc, setActiveHeroSrc] = React.useState(mainImageSrc);
+  React.useEffect(() => {
+    setActiveHeroSrc(mainImageSrc);
+  }, [item.id, mainImageSrc]);
+
+  const openMainZoom = () =>
+    onImageClick(activeHeroSrc, getLocalizedValue(item, 'name'));
+
   return (
-    <div className="consumable-item">
-      {/* 库存状态标签 */}
-      <div className={`stock-status-badge ${stockStatus === 'high' ? 'high-stock' : stockStatus === 'low' ? 'low-stock' : 'out-stock'}`}>
-        {stockStatus === 'high' ? String(t('stockStatus.sufficient') || '库存充足') : 
-         stockStatus === 'low' ? String(t('stockStatus.low') || '库存紧张') : 
-         String(t('stockStatus.out') || '暂时缺货')}
-      </div>
+    <div className="consumable-item consumable-item--figma">
+      {/* 非销售账号无右侧库存块时保留角标；销售账号在右侧已有库存明细，避免重复与错位 */}
+      {!isSales && (
+        <div
+          className={`stock-status-badge ${stockStatus === 'high' ? 'high-stock' : stockStatus === 'low' ? 'low-stock' : 'out-stock'}`}
+        >
+          {stockStatus === 'high'
+            ? String(t('stockStatus.sufficient') || '库存充足')
+            : stockStatus === 'low'
+              ? String(t('stockStatus.low') || '库存紧张')
+              : String(t('stockStatus.out') || '暂时缺货')}
+        </div>
+      )}
 
       <div className="product-card-content">
+        <div className="cons-figma-product-row-grid">
+        </div>
         <div className="product-layout">
-          {/* 产品图片区域 */}
+          {/* Frame 205：68 缩略图列 + 8 gap + 212 主图（信源 consumables-figma-dev-export 2026-04-13） */}
           <div className="product-image-section">
-            <div className="image-container">
-              <img 
-                src={cleanImageUrl(getLocalizedValue(item, 'image_url'))} 
-                alt={getLocalizedValue(item, 'name')} 
-                onError={handleImageError}
-                onClick={() => onImageClick(getLocalizedValue(item, 'image_url'), getLocalizedValue(item, 'name'))}
-                style={{ cursor: 'pointer' }}
-                title="点击放大图片"
-              />
+            <div className="cons-figma-product-gallery">
+              {/* 稿面：左侧始终 3 个 68×68 缩略槽位 */}
+              <div className="cons-figma-product-thumbs">
+                {thumbSlots.map((src, ti) => (
+                  src ? (
+                    <button
+                      key={`${item.id}-thumb-${ti}`}
+                      type="button"
+                      className={
+                        src === activeHeroSrc
+                          ? 'cons-figma-product-thumb cons-figma-product-thumb--active'
+                          : 'cons-figma-product-thumb'
+                      }
+                      onClick={() => setActiveHeroSrc(src)}
+                      aria-label={String(t('ui.zoomImage') || 'View image')}
+                      aria-pressed={src === activeHeroSrc}
+                    >
+                      <img src={src} alt="" onError={handleImageError} />
+                    </button>
+                  ) : (
+                    <div
+                      key={`${item.id}-thumb-placeholder-${ti}`}
+                      className="cons-figma-product-thumb cons-figma-product-thumb--placeholder"
+                      aria-hidden="true"
+                    />
+                  )
+                ))}
+              </div>
+              <div className="image-container cons-figma-product-hero">
+                <img
+                  src={activeHeroSrc}
+                  alt={getLocalizedValue(item, 'name')}
+                  onError={handleImageError}
+                  onClick={openMainZoom}
+                  style={{ cursor: 'pointer' }}
+                  title={String(t('ui.clickToZoom') || '点击放大图片')}
+                />
+              </div>
             </div>
             <div className="product-code-badge">
               {getLocalizedValue(item, 'code')}
@@ -1018,39 +1077,44 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
 
           {/* 产品信息区域 */}
           <div className="product-info-section">
-            <div className="product-title">
-              {/* 产品名称（根据语言） */}
-              <h3 className="product-name">
-                {(() => {
-                  // 优先显示当前语言的标题/名称，其次回退英文/中文，最后回退型号
-                  const langZh = i18n.language.startsWith('zh');
-                  const itm: any = item;
-                  const name = langZh ? itm.name_zh : itm.name_en;
-                  return (name && String(name).trim() !== '') ? name : getLocalizedValue(item, 'model');
-                })()}
-              </h3>
+            <div className="product-title cons-figma-product-title-block">
+              <div className="cons-figma-product-heading-row">
+                <h3 className="product-name">
+                  {(() => {
+                    const langZh = i18n.language.startsWith('zh');
+                    const itm: any = item;
+                    const name = langZh ? itm.name_zh : itm.name_en;
+                    return name && String(name).trim() !== '' ? name : getLocalizedValue(item, 'model');
+                  })()}
+                </h3>
+                {item.part_number ? (
+                  <div className="cons-figma-pn-chip" title={item.part_number}>
+                    {item.part_number}
+                  </div>
+                ) : null}
+              </div>
 
-              {/* 型号信息 - 与适用机型相同格式，自动单位切换 & 符号替换 */}
-              {shouldShowField(item, 'model') && (
-                <div className="model-info" style={{ marginBottom: 4 }}>
-                  <span className="label">{getFieldLabel('model')}:</span>
-                  <span className="value" style={{ fontWeight: 600, color: '#374151', marginLeft: 4 }}>
-                    {String(getLocalizedValue(item, 'model')).replace(/\*/g, '×')}
-                  </span>
+              <div className="cons-figma-model-pn-row">
+                <div className="cons-figma-model-pn-row__model">
+                  {shouldShowField(item, 'model') && (
+                    <div className="model-info">
+                      <span className="label">{getFieldLabel('model')}:</span>
+                      <span className="value">
+                        {String(getLocalizedValue(item, 'model')).replace(/\*/g, '×')}
+                      </span>
+                    </div>
+                  )}
                 </div>
-              )}
-              
-              {/* 适用机型信息 */}
+              </div>
+
               {shouldShowField(item, 'app_model') && (
                 <div className="compatibility-info">
                   <span className="label">{getFieldLabel('app_model')}:</span>
                   <span className="value">{getLocalizedValue(item, 'app_model')}</span>
                 </div>
               )}
-              
-              <div className="product-id">
-                {/* {getFieldLabel('id')}: {getLocalizedValue(item, 'id')} */}
-              </div>
+
+              <div className="product-id">{/* id 占位 */}</div>
             </div>
 
             {/* 规格展示卡片 */}
@@ -1089,7 +1153,7 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
                 
                 {/* 规格字段 */}
                 {fieldsToDisplay.includes('spec') && shouldShowField(item, 'spec') && (
-                  <div className="spec-badge">
+                  <div className="spec-badge spec-badge--full-row">
                     <div className="spec-label">{getFieldLabel('spec')}</div>
                     <div className="spec-value">{getLocalizedValue(item, 'spec')}</div>
                   </div>
@@ -1111,32 +1175,6 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
                   </div>
                 )}
               </div>
-            </div>
-
-            {/* 操作按钮区域 */}
-            <div className="product-actions">
-              <Tooltip
-                title={<ConsumableTooltipContent item={item} userRegion={userRegion} />}
-                placement="topRight"
-                classNames={{ tooltip: "consumables-custom-tooltip" }}
-                color="white"
-                arrow={false}
-                trigger="hover"
-                destroyOnHidden={false}
-                mouseEnterDelay={0.1}
-                mouseLeaveDelay={0.1}
-                styles={{
-                  root: {
-                    maxWidth: 'min(600px, 90vw)',
-                    zIndex: 10000
-                  }
-                }}
-              >
-                <button className="tooltip-trigger-btn">
-                  <InfoCircleOutlined className="action-icon" />
-                  {String(t('ui.viewDetailedSpecs') || '查看详细规格')}
-                </button>
-              </Tooltip>
             </div>
           </div>
 
@@ -1191,18 +1229,16 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
                     {String(t('ui.totalStock') || '总库存')}: <span className="stock-number">{totalStock}</span>
                   </div>
                   {/* 按区域显示库存（与机器页面保持一致） */}
-                  <div className="region-stock-tags" style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                  <div className="cons-figma-region-stock">
                     {(Object.keys(REGIONS) as Array<keyof typeof REGIONS>).map((regionKey) => {
                       const regionStock = getRegionInventory(item, regionKey.toString());
                       const regionStockStatus = getStockStatus(regionStock);
                       return (
-                        <span 
+                        <span
                           key={`${item.id}-inventory-${regionKey}`}
-                          className={`inline-block px-2 py-1 text-xs rounded-full border ${
-                            regionStockStatus.color === 'green' ? 'bg-green-50 text-green-700 border-green-200' :
-                            regionStockStatus.color === 'orange' ? 'bg-orange-50 text-orange-700 border-orange-200' :
-                            'bg-red-50 text-red-700 border-red-200'
-                          }`}
+                          className={
+                            `cons-figma-region-stock__tag cons-figma-region-stock__tag--${regionStockStatus.color}`
+                          }
                         >
                           {i18n.language.startsWith('zh') ? REGIONS[regionKey].nameCn : REGIONS[regionKey].nameEn}: {regionStock}
                         </span>
@@ -1216,28 +1252,30 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
             {/* 购买操作 */}
             <div className="purchase-actions">
               <div className="quantity-selector">
-                <div className="flex items-center gap-0 border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm">
-                  <button 
+                <div className="cons-figma-qty-stepper" role="group" aria-label={String(t('ui.quantity') || 'Quantity')}>
+                  <button
+                    type="button"
                     onClick={() => onQuantityChange(item.id, Math.max(1, (quantities[item.id] || 1) - 1))}
                     disabled={(quantities[item.id] || 1) <= 1}
-                    className="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-600 border-r border-gray-300 hover:bg-blue-50 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                    className="cons-figma-qty-stepper__btn cons-figma-qty-stepper__btn--minus"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
                     </svg>
                   </button>
-                  <input 
-                    type="number" 
-                    min="1" 
-                    value={quantities[item.id] || 1} 
-                    onChange={(e) => onQuantityChange(item.id, parseInt(e.target.value) || 1)}
-                    className="w-20 text-center border-0 py-1 text-sm focus:ring-0 focus:outline-none bg-white text-gray-900"
+                  <input
+                    type="number"
+                    min={1}
+                    value={quantities[item.id] || 1}
+                    onChange={(e) => onQuantityChange(item.id, parseInt(e.target.value, 10) || 1)}
+                    className="cons-figma-qty-stepper__input"
                   />
-                  <button 
+                  <button
+                    type="button"
                     onClick={() => onQuantityChange(item.id, (quantities[item.id] || 1) + 1)}
-                    className="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-600 border-l border-gray-300 hover:bg-blue-50 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                    className="cons-figma-qty-stepper__btn cons-figma-qty-stepper__btn--plus"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v12m6-6H6" />
                     </svg>
                   </button>
@@ -1269,6 +1307,34 @@ const StandardConsumableItem: React.FC<StandardConsumableItemProps> = ({
 
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Frame 297 末块：整行底部居中，与稿面一致 */}
+        <div className="cons-figma-product-more-row">
+          <div className="cons-figma-product-more-row__inner">
+            <Tooltip
+              title={<ConsumableTooltipContent item={item} userRegion={userRegion} />}
+              placement="topRight"
+              classNames={{ tooltip: "consumables-custom-tooltip" }}
+              color="white"
+              arrow={false}
+              trigger="hover"
+              destroyOnHidden={false}
+              mouseEnterDelay={0.1}
+              mouseLeaveDelay={0.1}
+              styles={{
+                root: {
+                  maxWidth: 'min(600px, 90vw)',
+                  zIndex: 10000
+                }
+              }}
+            >
+              <button type="button" className="tooltip-trigger-btn">
+                <InfoCircleOutlined className="action-icon" />
+                <span className="tooltip-btn-text">{String(t('ui.viewDetailedSpecs') || 'View Detailed Specifications')}</span>
+              </button>
+            </Tooltip>
           </div>
         </div>
       </div>
@@ -1399,6 +1465,8 @@ interface SmartFilterSelectProps {
   showCount?: boolean;
   disabled?: boolean;
   totalCount?: number; // 新增：用于"全部"选项的正确计数
+  /** Figma 行内标题已在外层展示时隐藏内置 label */
+  hideLabel?: boolean;
 }
 
 const SmartFilterSelect: React.FC<SmartFilterSelectProps> = ({
@@ -1409,7 +1477,8 @@ const SmartFilterSelect: React.FC<SmartFilterSelectProps> = ({
   placeholder = '请选择',
   showCount = true,
   disabled = false,
-  totalCount // 新增参数
+  totalCount, // 新增参数
+  hideLabel = false,
 }) => {
   const { t } = useTranslation(['consumables', 'common']);
   
@@ -1439,8 +1508,8 @@ const SmartFilterSelect: React.FC<SmartFilterSelectProps> = ({
   };
   
   return (
-    <div className="smart-filter-select">
-      <label className="block text-sm font-medium text-gray-700 mb-2">{title}</label>
+    <div className="smart-filter-select cons-figma-smart-select">
+      {!hideLabel && <label className="cons-figma-field-label">{title}</label>}
       <Select
         value={value}
         onChange={onChange}
@@ -3415,66 +3484,59 @@ const ConsumablesPage: React.FC = () => {
       </Modal>
 
       {/* 原有页面内容 */}
-      <div className="consumables-page min-h-screen bg-gray-50 text-gray-900">
+      <div className="consumables-page consumables-page--figma">
         {/* SQL Mock服务状态组件 */}
         <MockServiceStatus position="top-right" compact={true} hidden={true} />
         
-        <div className="container">
-          {/* 现代化页面标题 */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                  {String(t('title') || '耗材产品')}
-                </h1>
-                <p className="text-lg text-gray-600">
-                  {String(t('subtitle') || '选择适合您设备的高品质耗材')}
-                </p>
-              </div>
-              <div className="flex items-center space-x-4">
-                <div className="text-right text-sm text-gray-500">
-                  <div>{String(t('ui.totalProducts', { count: totalItems }) || `总计 ${totalItems} 款产品`)}</div>
-                  <div>{String(t('ui.pageInfo', { current: currentPage, total: totalPages }) || `第 ${currentPage} / ${totalPages} 页`)}</div>
-                </div>
-                <Button
-                  type="primary"
-                  icon={<ShoppingCartOutlined />}
-                  onClick={toggleCartModal}
-                  className="h-12 px-6 text-base font-medium shadow-lg hover:shadow-xl transition-all duration-300"
-                  ref={cartButtonRef}
-                >
-                  {String(t('button.cart') || '查看购物车')}
-                </Button>
-              </div>
+        <div className="cons-figma-inner">
+          {/* Figma Frame 63 / 62 / 61 — 标题与购物车 */}
+          <header className="cons-figma-hero">
+            <div className="cons-figma-hero__titles">
+              <h1 className="cons-figma-hero__title">
+                {String(t('title') || 'Consumable Products')}
+              </h1>
+              <p className="cons-figma-hero__lead">
+                {String(t('subtitle') || 'Choose high-quality consumables for your devices')}
+              </p>
             </div>
-          </div>
-
-          {/* 现代化筛选器设计 */}
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 mb-8 overflow-hidden fade-in">
-            {/* 筛选器标题栏 */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center pulse">
-                    <FilterOutlined className="text-white text-sm" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">{String(t('ui.smartFilter') || '智能筛选')}</h3>
-                    <p className="text-sm text-gray-600">{String(t('ui.smartFilterDescription') || '精确找到您需要的耗材产品')}</p>
-                  </div>
+            <div className="cons-figma-hero__aside">
+              <div className="cons-figma-hero__stats">
+                <div className="cons-figma-hero__stat-line">
+                  {String(t('ui.totalProducts', { count: totalItems }) || `Total ${totalItems} products`)}
                 </div>
-                <Button 
-                  type="text" 
-                  icon={<ReloadOutlined />} 
-                  onClick={handleResetFilters}
-                  className="flex items-center text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 hover:scale-105"
-                >
-                  {String(t('ui.resetFilters') || '重置筛选')}
-                </Button>
+                <div className="cons-figma-hero__stat-line">
+                  {String(t('ui.pageInfo', { current: currentPage, total: totalPages }) || `Page ${currentPage}/${totalPages}`)}
+                </div>
               </div>
+              <button
+                type="button"
+                className="cons-figma-view-cart"
+                onClick={toggleCartModal}
+                ref={cartButtonRef}
+              >
+                <ShoppingCartOutlined aria-hidden />
+                {String(t('button.cart') || 'View Cart')}
+              </button>
+            </div>
+          </header>
+
+          {/* Figma Frame 221 + 21 — 筛选白卡片 */}
+          <section className="cons-figma-filter-shell" aria-label={String(t('ui.smartFilter') || 'Smart filter')}>
+            <div className="cons-figma-smart-top">
+              <div className="cons-figma-smart-top__icon" aria-hidden>
+                <FilterOutlined />
+              </div>
+              <div className="cons-figma-smart-top__text">
+                <h3>{String(t('ui.smartFilter') || 'Smart Filter')}</h3>
+                <p>{String(t('ui.smartFilterDescription') || 'Find exactly what you need')}</p>
+              </div>
+              <button type="button" className="cons-figma-reset-btn" onClick={handleResetFilters}>
+                <ReloadOutlined />
+                {String(t('ui.resetFilters') || 'Reset Filters')}
+              </button>
             </div>
 
-            <div className="p-6 space-y-8">
+            <div className="cons-figma-filter-body">
               {/* 筛选面包屑 */}
               <FilterBreadcrumb
                 filters={{
@@ -3490,43 +3552,37 @@ const ConsumablesPage: React.FC = () => {
                 onClearAll={handleSmartResetFilters}
               />
 
-              {/* 第一行：机器型号筛选 */}
-              <div className="bg-gray-50 rounded-xl p-5 slide-up">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center pulse">
-                    <span className="text-white text-xs font-bold">1</span>
-                  </div>
-                  <h4 className="text-base font-semibold text-gray-800">{String(t('ui.selectDeviceModel') || '选择设备型号')}</h4>
-                  <Tooltip title={String(t('ui.deviceModelTooltip') || '选择您的设备型号以显示兼容的耗材')}>
-                    <InfoCircleOutlined className="text-gray-400 hover:text-blue-500 cursor-help transition-colors duration-200" />
+              {/* Frame 175 — Select Device Model */}
+              <div className="cons-figma-model-row">
+                <div className="cons-figma-model-row__label">
+                  <span>{String(t('ui.selectDeviceModel') || 'Select Device Model')}</span>
+                  <Tooltip title={String(t('ui.deviceModelTooltip') || '')}>
+                    <InfoCircleOutlined className="cons-figma-info-icon" />
                   </Tooltip>
                 </div>
                 <SmartFilterSelect
-                  title={String(t('filter.model') || '设备型号')}
-                  value={selectedModel} 
+                  title={String(t('filter.model') || 'Model')}
+                  value={selectedModel}
                   options={smartFilterOptions.models}
                   onChange={handleModelChange}
-                  placeholder={String(t('ui.selectDeviceModelPlaceholder') || '请选择设备型号')}
+                  placeholder={String(t('ui.selectDeviceModelPlaceholder') || 'All')}
                   showCount={smartFilterConfig.showCount}
                   totalCount={allConsumables.length}
+                  hideLabel
                 />
               </div>
 
-              {/* 第二行：产品形状筛选 */}
-              <div className="slide-up" style={{ animationDelay: '0.1s' }}>
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center pulse">
-                    <span className="text-white text-xs font-bold">2</span>
-                  </div>
-                  <h4 className="text-base font-semibold text-gray-800">{String(t('ui.selectProductShape') || '选择产品形状')}</h4>
-                  <Tooltip title={String(t('ui.productShapeTooltip') || '不同形状的耗材适用于不同的包装需求')}>
-                    <InfoCircleOutlined className="text-gray-400 hover:text-blue-500 cursor-help transition-colors duration-200" />
+              {/* Frame 207 — Select Film Type */}
+              <div className="cons-figma-shape-section">
+                <div className="cons-figma-shape-section__head">
+                  <h4>{String(t('ui.selectFilmType') || 'Select Film Type')}</h4>
+                  <Tooltip title={String(t('ui.productShapeTooltip') || '')}>
+                    <InfoCircleOutlined className="cons-figma-info-icon" />
                   </Tooltip>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
-                  {/* 全部选项 */}
+                <div className="cons-figma-shape-grid">
                   <div className="relative">
-                    <input 
+                    <input
                       type="radio"
                       id="shape-all"
                       name="shape"
@@ -3534,44 +3590,21 @@ const ConsumablesPage: React.FC = () => {
                       onChange={() => handleShapeChange('all')}
                       className="sr-only"
                     />
-                    <label 
-                      htmlFor="shape-all" 
-                      className={`
-                        block p-5 rounded-xl border-2 cursor-pointer transition-all duration-300 text-center
-                        ${selectedShape === 'all' 
-                          ? 'border-blue-500 bg-blue-50 shadow-lg scale-105' 
-                          : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md hover:bg-blue-25'
-                        }
-                      `}
-                    >
-                      <div className="mb-4 flex justify-center">
-                        <div className="h-28 w-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-sm font-medium">
-                          {String(t('filter.all') || '全部')}
-                        </div>
+                    <label htmlFor="shape-all" className="cons-figma-shape-tile">
+                      <div className="cons-figma-shape-thumb-wrap">
+                        <span className="cons-figma-shape-all-ph">{String(t('filter.all') || 'All')}</span>
                       </div>
-                      <div className={`
-                        text-base font-medium transition-colors duration-200 flex flex-col items-center
-                        ${selectedShape === 'all' ? 'text-blue-700' : 'text-gray-700'}
-                      `}>
-                        <span>{String(t('ui.allShapes') || '全部形状')}</span>
+                      <div className="cons-figma-shape-caption">
+                        <span>{String(t('ui.allShapes') || 'All Film Types')}</span>
                         {smartFilterConfig.showCount && (
-                          <span className="text-xs mt-1 text-blue-500">
-                            ({allConsumables.length})
-                          </span>
+                          <span className="cons-figma-shape-count">({allConsumables.length})</span>
                         )}
                       </div>
-                      {selectedShape === 'all' && (
-                        <div className="absolute -top-1 -right-1 w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center">
-                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                      )}
                     </label>
                   </div>
                   {smartFilterOptions.shapes.map((shape, index) => (
                     <div key={`shape-${shape.id}-${index}`} className="relative">
-                      <input 
+                      <input
                         type="radio"
                         id={`shape-${shape.id}`}
                         name="shape"
@@ -3580,244 +3613,180 @@ const ConsumablesPage: React.FC = () => {
                         className="sr-only"
                         disabled={shape.disabled}
                       />
-                      <label 
-                        htmlFor={`shape-${shape.id}`} 
-                        className={`
-                          block p-5 rounded-xl border-2 cursor-pointer transition-all duration-300 text-center
-                          ${shape.disabled ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}
-                          ${selectedShape === shape.id 
-                            ? 'border-blue-500 bg-blue-50 shadow-lg scale-105' 
-                            : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md hover:bg-blue-25'
-                          }
-                        `}
+                      <label
+                        htmlFor={`shape-${shape.id}`}
+                        className={shape.disabled ? 'cons-figma-shape-tile cons-figma-shape-tile--disabled' : 'cons-figma-shape-tile'}
                       >
-                        <div className="mb-4 flex justify-center">
+                        <div className="cons-figma-shape-thumb-wrap">
                           <img
-                            src={(() => {
-                              // 🔥 修复：Shape筛选器应该显示基础图片（image_url）便于快速识别
-                              const debugImageSrc = shape.originalData?.image_url || shapePlaceholderImage;
-                              // 🔥 添加缓存清除参数
-                              const cacheBusterSrc = debugImageSrc + '?v=' + Date.now();
-                              console.log(`🖼️ [Shape渲染实时] ${shape.name}:`, {
-                                即将使用的图片: debugImageSrc,
-                                带缓存清除的图片: cacheBusterSrc,
-                                image_url: shape.originalData?.image_url,
-                                image_url2: shape.originalData?.image_url2,
-                                完整originalData: shape.originalData
-                              });
-                              return cacheBusterSrc;
-                            })()}
+                            src={shape.originalData?.image_url || shapePlaceholderImage}
                             alt={shape.name}
-                            className="h-28 w-32 object-contain"
+                            className="cons-figma-shape-img"
                             id={`shape-image-${shape.id}`}
-                            data-shape-id={shape.id}
-                            data-image-type="basic"
-                            data-original-url={shape.originalData?.image_url}
-                            onLoad={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              console.log(`✅ [Shape渲染] ${shape.name} 图片加载成功！基础图正确显示`);
-                              console.log(`🔧 [DOM验证] 元素ID: ${target.id}, 实际src: ${target.src}`);
-                              console.log(`🔧 [DOM验证] 元素位置:`, target.getBoundingClientRect());
-                              // 🔥 强制高亮显示加载成功的图片
-                              target.style.border = '2px solid green';
-                              setTimeout(() => {
-                                target.style.border = '';
-                              }, 2000);
-                            }}
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
-                              console.error(`❌ [Shape渲染] ${shape.name} 图片加载失败:`, target.src);
-                              console.error('❌ [Shape渲染] 尝试加载备用图片...');
                               if (!target.src.includes('placeholder')) {
                                 target.src = shapePlaceholderImage;
                               }
                             }}
                           />
                         </div>
-                        <div className={`
-                          text-base font-medium transition-colors duration-200 flex flex-col items-center
-                          ${selectedShape === shape.id ? 'text-blue-700' : 'text-gray-700'}
-                          ${shape.disabled ? 'text-gray-400' : ''}
-                        `}>
+                        <div className="cons-figma-shape-caption">
                           <span className={shape.disabled ? 'line-through' : ''}>
-                            {i18n.language.startsWith('zh') 
+                            {i18n.language.startsWith('zh')
                               ? (shape.originalData?.name_zh || shape.name)
-                              : (shape.originalData?.name_en || shape.name)
-                            }
+                              : (shape.originalData?.name_en || shape.name)}
                           </span>
                           {smartFilterConfig.showCount && (
-                            <span className={`text-xs mt-1 ${shape.disabled ? 'text-gray-300' : 'text-blue-500'}`}>
-                              ({shape.count})
-                            </span>
+                            <span className="cons-figma-shape-count">({shape.count})</span>
                           )}
                         </div>
-                        {selectedShape === shape.id && !shape.disabled && (
-                          <div className="absolute -top-1 -right-1 w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center">
-                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          </div>
-                        )}
                       </label>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* 第三行：材质和规格筛选 */}
-              <div className="bg-gray-50 rounded-xl p-5 slide-up" style={{ animationDelay: '0.2s' }}>
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center pulse">
-                    <span className="text-white text-xs font-bold">3</span>
-                  </div>
-                  <h4 className="text-base font-semibold text-gray-800">{String(t('ui.materialAndSpecs') || '材质与规格筛选')}</h4>
-                </div>
-
-                {/* 材质选择器 */}
-                <div className="mb-6">
-                  <h5 className="text-sm font-medium text-gray-700 mb-3">{String(t('ui.materialType') || '材质类型')}</h5>
-                  <div className="flex flex-wrap gap-2">
-                    <button 
-                      className={`
-                        material-btn px-4 py-2 rounded-lg border transition-all duration-200 font-medium text-sm relative overflow-hidden flex items-center
-                        ${selectedMaterial === 'all' 
-                          ? 'bg-purple-500 text-white border-purple-500 shadow-md scale-105' 
-                          : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400 hover:bg-purple-50 hover:shadow-sm hover:scale-105'
+              {/* Frame 244 白底；左 Frame 271（287 材质 + 245 尺寸）；右 Frame 170 图示 */}
+              <div className="cons-figma-spec-block">
+                <div className="cons-figma-spec-main">
+                  <div className="cons-figma-material-panel">
+                    <h4 className="cons-figma-material-sub">
+                      {String(t('ui.selectMaterialType') || 'Select Material Type')}
+                    </h4>
+                    <div className="cons-figma-material-matrix">
+                      <button
+                        type="button"
+                        className={
+                          selectedMaterial === 'all'
+                            ? 'cons-figma-material-btn cons-figma-material-btn--active cons-figma-material-btn--full'
+                            : 'cons-figma-material-btn cons-figma-material-btn--full'
                         }
-                      `}
-                      onClick={() => handleMaterialChange('all')}
-                    >
-                      <span>{String(t('ui.allMaterials') || '全部材质')}</span>
-                      {smartFilterConfig.showCount && (
-                        <span className="ml-2 text-xs">
-                          ({allConsumables.length})
-                        </span>
-                      )}
-                    </button>
-                    {smartFilterOptions.materials.map((material, index) => (
-                      <button 
-                        key={`material-${material.id}-${index}`}
-                        className={`
-                          material-btn px-4 py-2 rounded-lg border transition-all duration-200 font-medium text-sm relative overflow-hidden flex items-center
-                          ${material.disabled ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''}
-                          ${selectedMaterial === material.id 
-                            ? 'bg-purple-500 text-white border-purple-500 shadow-md active scale-105' 
-                            : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400 hover:bg-purple-50 hover:shadow-sm hover:scale-105'
-                          }
-                        `}
-                        onClick={() => !material.disabled && handleMaterialChange(material.id)}
-                        style={{ animationDelay: `${index * 0.05}s` }}
-                        disabled={material.disabled}
+                        onClick={() => handleMaterialChange('all')}
                       >
-                        <span className={material.disabled ? 'line-through' : ''}>{material.name}</span>
-                        {smartFilterConfig.showCount && (
-                          <span className={`ml-2 text-xs ${material.disabled ? 'text-gray-300' : ''}`}>
-                            ({material.count})
-                          </span>
-                        )}
+                        <span>{String(t('ui.allMaterials') || 'All')}</span>
+                        {smartFilterConfig.showCount && <span> ({allConsumables.length})</span>}
                       </button>
-                    ))}
+                      {smartFilterOptions.materials.map((material, index) => (
+                        <button
+                          type="button"
+                          key={`material-${material.id}-${index}`}
+                          className={
+                            material.disabled
+                              ? 'cons-figma-material-btn cons-figma-material-btn--disabled'
+                              : selectedMaterial === material.id
+                                ? 'cons-figma-material-btn cons-figma-material-btn--active'
+                                : 'cons-figma-material-btn'
+                          }
+                          onClick={() => !material.disabled && handleMaterialChange(material.id)}
+                          disabled={material.disabled}
+                        >
+                          <span className={material.disabled ? 'line-through' : ''}>{material.name}</span>
+                          {smartFilterConfig.showCount && <span> ({material.count})</span>}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
 
-                {/* 尺寸筛选器 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <SmartFilterSelect
-                      title={isPaperMaterial(selectedMaterial) ? `${String(t('ui.weight') || '重量')} ${isImperialUnit ? '(#)' : '(gsm)'}` : `${String(t('ui.thickness') || '厚度')} ${isImperialUnit ? '(mil)' : '(μm)'}`}
+                  <div className="cons-figma-dimensions-panel">
+                    <h4 className="cons-figma-dimensions-sub">
+                      {String(t('ui.selectDimensions', 'Select Dimensions'))}
+                    </h4>
+                    <div className="cons-figma-dimensions__selects">
+                      <SmartFilterSelect
+                        title={isPaperMaterial(selectedMaterial) ? `${String(t('ui.weight') || 'Weight')} ${isImperialUnit ? '(#)' : '(gsm)'}` : `${String(t('ui.thickness') || 'Thickness')} ${isImperialUnit ? '(mil)' : '(μm)'}`}
                         value={isPaperMaterial(selectedMaterial) ? selectedWeight : selectedThickness}
-                      options={isPaperMaterial(selectedMaterial) ? smartFilterOptions.weights : smartFilterOptions.thicknesses}
+                        options={isPaperMaterial(selectedMaterial) ? smartFilterOptions.weights : smartFilterOptions.thicknesses}
                         onChange={isPaperMaterial(selectedMaterial) ? handleWeightChange : handleThicknessChange}
-                        placeholder={isPaperMaterial(selectedMaterial) ? String(t('ui.selectWeight') || '选择重量') : String(t('ui.selectThickness') || '选择厚度')}
-                      showCount={smartFilterConfig.showCount}
-                      totalCount={allConsumables.length}
-                    />
-                    
-                    <SmartFilterSelect
-                      title={`${String(t('filter.width') || '宽度')} ${isImperialUnit ? '(inch)' : '(cm)'}`}
+                        placeholder={String(t('filter.all') || 'All')}
+                        showCount={smartFilterConfig.showCount}
+                        totalCount={allConsumables.length}
+                      />
+                      <SmartFilterSelect
+                        title={`${String(t('filter.width') || 'Width')} ${isImperialUnit ? '(inch)' : '(cm)'}`}
                         value={selectedWidth}
-                      options={smartFilterOptions.widths}
+                        options={smartFilterOptions.widths}
                         onChange={handleWidthChange}
-                        placeholder={String(t('ui.selectWidth') || '选择宽度')}
-                      showCount={smartFilterConfig.showCount}
-                      totalCount={allConsumables.length}
-                    />
-                    
-                    <SmartFilterSelect
-                      title={`${String(t('filter.length') || '长度')} ${isImperialUnit ? '(inch)' : '(cm)'}`}
+                        placeholder={String(t('filter.all') || 'All')}
+                        showCount={smartFilterConfig.showCount}
+                        totalCount={allConsumables.length}
+                      />
+                      <SmartFilterSelect
+                        title={`${String(t('filter.length') || 'Length')} ${isImperialUnit ? '(inch)' : '(cm)'}`}
                         value={selectedLength}
-                      options={smartFilterOptions.lengths}
+                        options={smartFilterOptions.lengths}
                         onChange={handleLengthChange}
-                        placeholder={String(t('ui.selectLength') || '选择长度')}
-                      showCount={smartFilterConfig.showCount}
-                      totalCount={allConsumables.length}
-                    />
-                  </div>
-                  
-                  {/* 尺寸指导图片 */}
-                  <div className="flex flex-col items-center justify-center">
-                    <div className="text-sm font-medium text-gray-700 mb-3">{String(t('ui.dimensionGuide') || '尺寸指导图')}</div>
-                    <div className="w-full h-48 bg-white rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
-                      <img 
-                        src={currentDimensionImage} 
-                        alt={String(t('ui.dimensionGuideAlt') || '产品尺寸指导')}
-                        className="max-w-full max-h-full object-contain"
+                        placeholder={String(t('filter.all') || 'All')}
+                        showCount={smartFilterConfig.showCount}
+                        totalCount={allConsumables.length}
                       />
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* 产品列表容器 */}
-          <div className="products-container">
-            {renderConsumablesTable()}
-            
-            {/* 翻页组件 */}
-            {totalPages > 1 && (
-              <div className="flex justify-center mt-8">
-                <div className="flex items-center space-x-2 bg-white rounded-xl shadow-md border border-gray-200 p-2">
-                  <button 
-                    className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    {String(t('ui.previousPage') || '上一页')}
-                  </button>
-                  
-                  <div className="flex items-center space-x-1">
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      const page = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
-                      if (page < 1 || page > totalPages) return null;
-                      
-                      return (
-                        <button
-                          key={`page-${page}`}
-                          className={`
-                            w-10 h-10 text-sm font-medium rounded-lg transition-all duration-200
-                            ${currentPage === page 
-                              ? 'bg-blue-500 text-white shadow-md' 
-                              : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
-                            }
-                          `}
-                          onClick={() => setCurrentPage(page)}
-                        >
-                          {page}
-                        </button>
-                      );
-                    }).filter(Boolean)}
+
+                <div className="cons-figma-dimension-guide">
+                  <div className="cons-figma-dimension-guide__title">
+                    {String(t('ui.dimensionGuide') || 'Dimension Guide')}
                   </div>
-                  
-                  <button 
-                    className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                    disabled={currentPage === totalPages}
-                  >
-                    {String(t('ui.nextPage') || '下一页')}
-                  </button>
+                  <div className="cons-figma-dimension-guide__frame">
+                    <img
+                      src={currentDimensionImage}
+                      alt={String(t('ui.dimensionGuideAlt') || '')}
+                    />
+                  </div>
                 </div>
               </div>
+            </div>
+          </section>
+          
+          {/* Figma Frame 389 — 结果列表 */}
+          <div className="cons-figma-results products-container">
+            <div className="cons-figma-results__head">
+              <h3>{String(t('ui.results') || 'Results')}</h3>
+            </div>
+            <div className="cons-figma-results__list">
+              {renderConsumablesTable()}
+            </div>
+            
+            {totalPages > 1 && (
+              <nav className="cons-figma-pagination" aria-label="Pagination">
+                <button
+                  type="button"
+                  className="cons-figma-pagination__nav"
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                >
+                  {String(t('ui.previousPage') || '上一页')}
+                </button>
+                <div className="cons-figma-pagination__nums">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const page = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                    if (page < 1 || page > totalPages) return null;
+                    return (
+                      <button
+                        key={`page-${page}`}
+                        type="button"
+                        className={
+                          currentPage === page
+                            ? 'cons-figma-pagination__num cons-figma-pagination__num--active'
+                            : 'cons-figma-pagination__num'
+                        }
+                        onClick={() => setCurrentPage(page)}
+                      >
+                        {page}
+                      </button>
+                    );
+                  }).filter(Boolean)}
+                </div>
+                <button
+                  type="button"
+                  className="cons-figma-pagination__nav"
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  {String(t('ui.nextPage') || '下一页')}
+                </button>
+              </nav>
             )}
           </div>
         </div>

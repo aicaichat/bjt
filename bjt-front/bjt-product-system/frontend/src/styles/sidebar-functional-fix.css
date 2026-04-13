@@ -334,15 +334,15 @@ html, body {
 }
 
 /* ========== 头部工具栏 ========== */
+/* 勿写裸 header{}：会误伤页面内语义化 <header>（如耗材 cons-figma-hero），被当成 fixed 顶栏叠在侧栏上 */
 .site-header,
-.main-header,
-header {
+.main-header {
   position: fixed !important;
   top: 0 !important;
   left: 300px !important;
   right: 0 !important;
   width: calc(100% - 300px) !important;
-  height: 72px !important;
+  height: 60px !important;
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
   border-bottom: 1px solid #e2e8f0 !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
@@ -360,12 +360,13 @@ header {
 }
 
 /* ========== 主内容区域 ========== */
-main.flex-1,
+/* 勿作用于 .figma-front-main：侧栏 fixed 不占位，须由 figma-front-shell 用 --bjt-sidebar-width(303px) 统一 margin/width */
+main.flex-1:not(.figma-front-main),
 .main-content {
   flex: 1 !important;
   margin-left: 300px !important;
-  margin-top: 72px !important;
-  min-height: calc(100vh - 72px) !important;
+  margin-top: 60px !important;
+  min-height: calc(100vh - 60px) !important;
   padding: 32px !important;
   background: linear-gradient(135deg, #f8fafc 0%, #f5f7fa 100%) !important;
   transition: all 0.3s ease !important;
@@ -373,7 +374,7 @@ main.flex-1,
   overflow-x: hidden !important;
 }
 
-.sidebar.collapsed ~ main.flex-1,
+.sidebar.collapsed ~ main.flex-1:not(.figma-front-main),
 .sidebar.collapsed ~ .main-content {
   margin-left: 80px !important;
   width: calc(100% - 80px) !important;
@@ -430,7 +431,7 @@ main.flex-1,
     width: calc(100% - var(--bjt-sidebar-width, 303px)) !important;
   }
   
-  main.flex-1,
+  main.flex-1:not(.figma-front-main),
   .main-content {
     margin-left: var(--bjt-sidebar-width, 303px) !important;
     width: calc(100% - var(--bjt-sidebar-width, 303px)) !important;
@@ -457,7 +458,7 @@ main.flex-1,
     padding: 0 20px !important;
   }
   
-  main.flex-1,
+  main.flex-1:not(.figma-front-main),
   .main-content {
     margin-left: 0 !important;
     margin-top: 64px !important;

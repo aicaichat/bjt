@@ -15,7 +15,7 @@ services:
           - frontend.local
     volumes:
       - ../../frontend:/app
-      - /app/node_modules
+      # node_modules使用镜像内的，不挂载宿主机
     environment:
       - NODE_ENV=development
       - DOCKER_ENV=true

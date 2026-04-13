@@ -28,13 +28,17 @@
 /*
  * Frame 471：机器卡片根节点
  * 稿面值: 1537×280, #FFFFFF, box-shadow, position: relative(给absolute子元素做参照)
+ * 行高 280 固定（height/min-height/max-height 一致），不可随内容增高。
+ * 右栏 Frame 913/1017 购物车区另见下：仅内容高度、顶对齐，禁止撑满 280。
  * 使用绝对定位布局：图库 left:0, 中间 left:304, 右栏 right:0
  */
 .machines-page.ms-product-line-layout .ms-figma-machine-card.ms-figma-machine-card--air {
   display: block !important;
   position: relative !important;
   width: 1537px !important;
-  height: 280px !important;
+  height: var(--ff-ms-air-row-height, 280px) !important;
+  min-height: var(--ff-ms-air-row-height, 280px) !important;
+  max-height: var(--ff-ms-air-row-height, 280px) !important;
   background: #ffffff !important;
   box-shadow: 0px 0.5px 0px rgba(0, 0, 0, 0.25) !important;
   border: none !important;
@@ -74,13 +78,19 @@
   box-sizing: border-box !important;
 }
 
-/* Frame 913 / 471：右栏在行内绝对定位；列底通栏 #EFF7FF（与 token --ff-ms-air-stock-bg） */
+/* Frame 913 / 471：右栏购物车 — 行框仍固定 280，本栏不撑满 280，仅内容高 + top:0 顶对齐 */
 .machines-page.ms-product-line-layout .ms-figma-machine-card.ms-figma-machine-card--air .ms-figma-machine-card__row > .ms-figma-machine-card__col-actions {
   position: absolute !important;
   right: 0 !important;
   top: 0 !important;
   width: 321px !important;
-  height: 280px !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: var(--ff-ms-air-row-height, 280px) !important;
+  /* 关键：勿让 flex 行 align-items:stretch 把绝对定位右栏在交叉轴上拉到 280，否则 rail 被拉高、库存与加购行被 space-between 式拉开 */
+  align-self: flex-start !important;
+  justify-content: flex-start !important;
+  align-content: flex-start !important;
   background: var(--ff-ms-air-stock-bg, #eff7ff) !important;
   box-sizing: border-box !important;
 }
@@ -96,7 +106,8 @@
     min-height: 0 !important;
     max-height: 100% !important;
     overflow: hidden !important;
-    align-items: stretch !important;
+    /* stretch 会使绝对定位子项在侧轴获得行高(280)，右栏购物车被拉高 → 栏内出现大块竖向空白 */
+    align-items: flex-start !important;
     box-sizing: border-box !important;
   }
 
@@ -132,6 +143,8 @@
     max-width: 321px !important;
     min-height: 0 !important;
     max-height: 100% !important;
+    align-self: flex-start !important;
+    justify-content: flex-start !important;
     box-sizing: border-box !important;
     overflow-x: hidden !important;
     overflow-y: auto !important;
@@ -218,6 +231,8 @@
   border-radius: 8px !important;
   width: 100% !important;
   box-sizing: border-box !important;
+  flex-grow: 0 !important;
+  flex-shrink: 0 !important;
 }
 
 /* 卡片行 */
@@ -466,7 +481,16 @@
   flex-direction: column !important;
   justify-content: flex-start !important;
   align-items: stretch !important;
-  gap: var(--ff-ms-air-rail-inner-gap) !important;
+  align-content: flex-start !important;
+  flex-grow: 0 !important;
+  flex-shrink: 0 !important;
+  flex-basis: auto !important;
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  /* 与 Frame 1017 一致；勿让 gap 回落到未定义变量 */
+  gap: var(--ff-ms-air-rail-inner-gap, var(--ff-ms-air-row-inner-gap, 24px)) !important;
+  row-gap: var(--ff-ms-air-rail-inner-gap, var(--ff-ms-air-row-inner-gap, 24px)) !important;
   padding: 0 !important;
   background: transparent !important;
   width: 100% !important;
@@ -544,7 +568,13 @@
   flex-wrap: wrap !important;
   justify-content: space-between !important;
   align-items: center !important;
-  gap: var(--ff-ms-air-purchase-actions-gap-row) var(--ff-ms-air-purchase-actions-gap-col) !important;
+  align-content: flex-start !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  flex-grow: 0 !important;
+  flex-shrink: 0 !important;
+  gap: var(--ff-ms-air-purchase-actions-gap-row, var(--ff-ms-air-row-inner-gap, 24px))
+    var(--ff-ms-air-purchase-actions-gap-col, 75px) !important;
   min-height: var(--ff-ms-air-purchase-actions-min-height) !important;
   width: 100% !important;
   box-sizing: border-box !important;

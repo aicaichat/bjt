@@ -380,7 +380,7 @@ header {
   left: 300px !important;
   right: 0 !important;
   width: calc(100% - 300px) !important;
-  height: 72px !important;
+  height: 60px !important;
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
   border-bottom: 1px solid #e2e8f0 !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
@@ -403,8 +403,8 @@ main.flex-1,
 .main-content {
   flex: 1 !important;
   margin-left: 300px !important;
-  margin-top: 72px !important;
-  min-height: calc(100vh - 72px) !important;
+  margin-top: 60px !important;
+  min-height: calc(100vh - 60px) !important;
   padding: 32px !important;
   background: linear-gradient(135deg, #f8fafc 0%, #f5f7fa 100%) !important;
   transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1) !important;

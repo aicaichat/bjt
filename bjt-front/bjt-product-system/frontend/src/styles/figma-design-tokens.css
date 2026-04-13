@@ -1,8 +1,9 @@
 /**
  * 前台 Figma 全局令牌（Home + 侧栏 + 顶栏 + 主栏）
+ * 设计令牌流程：docs/visual-upgrade/figma-variables-tokens-best-practices.md
  * - 主页根/side nav/顶栏条：#FFFFFF
- * - 主内容画布（Frame 3）：#F5F7FA（与高保真选型叠图一致；旧 Dev 曾为 #F1F5F9）
- * - 主色调：#00338D（旧 Dev #012583；见 docs/screenshots/machine-selection-figma-reference-layout.png）
+ * - 主内容画布（Frame 3）：#F1F5F9（Figma Dev Mode 值）
+ * - 主色调：#012583（来自 Figma MCP 2026-04-12）
  * 须在 main.tsx 中先于 index.css、sidebar-functional-fix 等加载。
  */
 :root {
@@ -11,9 +12,9 @@
   /* 与 Home 最外层 / 侧栏同源 */
   --ff-app-bg: #ffffff;
   /* 顶栏下主滚动区（Figma Frame 3） */
-  --ff-content-canvas-bg: #f5f7fa;
+  --ff-content-canvas-bg: #f1f5f9;
   /* 兼容旧引用：等同主画布 */
-  --ff-page-bg: #f5f7fa;
+  --ff-page-bg: #f1f5f9;
   /* Figma Frame 529（主内容列 auto layout）：区块间距与列底内边距 */
   --ff-main-stack-gap: 24px;
   --ff-main-column-pad-bottom: 24px;
@@ -25,15 +26,15 @@
   --ff-text-muted: rgba(0, 0, 0, 0.65);
   --ff-toolbar-text: #333333;
   /* 主色调 — 导航高亮、区块头、线框按钮描边 */
-  --ff-accent: #00338d;
+  --ff-accent: #012583;
   --ff-accent-mid: #002a70;
-  --ff-accent-dark: #002a70;
-  --ff-nav-top: #00338d;
-  --ff-nav-bottom: #002244;
+  --ff-accent-dark: #001f4d;
+  --ff-nav-top: #012583;
+  --ff-nav-bottom: #001f4d;
   --ff-tint-blue: #e8eef9;
   /* 顶栏主导航「药丸」选中底（选型 Figma 库存浅蓝） */
   --ff-nav-pill-bg: #ebf3ff;
-  --ff-focus-ring: rgba(0, 51, 141, 0.18);
+  --ff-focus-ring: rgba(1, 37, 131, 0.18);
   --ff-header-shadow: rgba(15, 36, 64, 0.06);
   /* 顶栏下分割线 0.5px rgba(0,0,0,0.25) */
   --ff-header-divider: rgba(0, 0, 0, 0.25);
@@ -42,11 +43,17 @@
   --ff-btn-primary-hover: #002a70;
   --ff-font: 'Roboto', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', Arial,
     sans-serif;
-  /* 与 --ff-accent #00338d 同源，供 rgba(var(--ff-accent-rgb), α) 使用 */
-  --ff-accent-rgb: 0, 51, 141;
-  /* 与 header-layout-fix .site-header height 一致 */
-  --ff-site-header-height: 72px;
+  /* 与 --ff-accent #012583 同源，供 rgba(var(--ff-accent-rgb), α) 使用 */
+  --ff-accent-rgb: 1, 37, 131;
+  /* Frame 1015 顶栏条高度（用户粘贴 Dev CSS） */
+  --ff-site-header-height: 68px;
   /*
+   * 叠层：figma-front-shell 固定顶栏 z-index:10000；选型 Frame 982 面包屑 .ms-breadcrumb-bar--figma 为 9990；
+   * Ant Design Dropdown 默认浮层约 1050，会落在面包屑之下。顶栏内下拉须高于顶栏，故用 :root 变量（portal 挂 body 仍可解析）。
+   */
+  --ff-z-header-dropdown: 10050;
+  /*
+   * Home 页专用尺寸见 figma-tokens-home.css（--ff-home-*），与 src/figma-tokens/home.json 同步。
    * 纸垫/气垫「主机列表单卡」尺寸已迁至 figma-tokens-machine-selection.css（--ff-ms-card-*），
    * 并在该文件中保留 --ff-paper-machine-card-* 别名。请勿在此重复定义以免分叉。
    */

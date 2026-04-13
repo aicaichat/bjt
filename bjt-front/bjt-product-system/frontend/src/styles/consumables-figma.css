@@ -1,0 +1,1741 @@
+/**
+ * Consumables /consumables — Figma 严格对齐（Frame 3 起主内容）
+ * 信源：docs/visual-upgrade/sources/consumables-figma-dev-export-2026-04-13.css
+ * 令牌：figma-tokens-consumables.css
+ * 命名空间：.consumables-page--figma
+ */
+
+/* ------------------------------------------------------------------------- */
+/* C1 页面根：Frame 264 主列内画布 Frame 3                                 */
+/* ------------------------------------------------------------------------- */
+.consumables-page.consumables-page--figma {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--cons-column-max-width);
+  align-self: stretch;
+  min-width: 0;
+  margin: 0;
+  padding: var(--cons-page-pad-y) var(--cons-page-gutter-x);
+  /* 固定顶栏占位：与 Home .home-page--figma 一致，避免标题/副标题被 Frame 1015 遮挡 */
+  padding-top: calc(var(--ff-site-header-height) + var(--cons-page-pad-y));
+  background: var(--cons-canvas-bg);
+  min-height: 100%;
+  font-family: var(--cons-font-ui);
+  color: var(--cons-text-title);
+}
+
+.consumables-page.consumables-page--figma .cons-figma-inner {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--cons-stack-gap);
+}
+
+/* 系统深色偏好下仍用稿面画布色，避免其它耗材样式在晚加载样式里用 !important 盖掉 */
+@media (prefers-color-scheme: dark) {
+  .consumables-page.consumables-page--figma {
+    background: var(--cons-canvas-bg) !important;
+  }
+}
+
+/* ------------------------------------------------------------------------- */
+/* C2 标题行 Frame 63 / 62 / 61                                             */
+/* ------------------------------------------------------------------------- */
+.consumables-page.consumables-page--figma .cons-figma-hero {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 8px;
+  gap: 32px;
+  width: 100%;
+  max-width: var(--cons-inner-width);
+  min-height: 55px;
+  box-sizing: border-box;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-hero__titles {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  flex: 0 1 auto;
+  min-width: 0;
+  margin: 0;
+  max-width: 760.5px;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-hero__title {
+  margin: 0;
+  width: 100%;
+  font-family: var(--cons-font-ui);
+  font-style: normal;
+  font-weight: var(--cons-h1-weight);
+  font-size: var(--cons-h1-size);
+  line-height: var(--cons-h1-lh);
+  color: var(--cons-text-title);
+}
+
+.consumables-page.consumables-page--figma .cons-figma-hero__lead {
+  margin: 0;
+  width: 100%;
+  font-family: var(--cons-font-subtitle);
+  font-style: normal;
+  font-weight: 400;
+  font-size: var(--cons-lead-size);
+  line-height: var(--cons-lead-lh);
+  color: var(--cons-text-sub);
+}
+
+.consumables-page.consumables-page--figma .cons-figma-hero__aside {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 13px;
+  flex: 0 0 auto;
+  margin: 0;
+  max-width: 760.5px;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-hero__stats {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 5px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-hero__stat-line {
+  width: 100%;
+  font-family: var(--cons-font-ui);
+  font-weight: 400;
+  font-size: var(--cons-body-size);
+  line-height: var(--cons-body-lh);
+  text-align: right;
+  color: var(--cons-text-title);
+}
+
+.consumables-page.consumables-page--figma .cons-figma-view-cart {
+  box-sizing: border-box;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  gap: 10px;
+  width: var(--cons-view-cart-w);
+  height: var(--cons-view-cart-h);
+  background: var(--cons-primary);
+  border: none;
+  border-radius: var(--cons-radius-md);
+  cursor: pointer;
+  font-family: var(--cons-font-subtitle);
+  font-style: normal;
+  font-weight: 700;
+  font-size: var(--cons-view-cart-font-size);
+  line-height: var(--cons-view-cart-lh);
+  color: #ffffff;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-view-cart:hover {
+  filter: brightness(0.92);
+}
+
+.consumables-page.consumables-page--figma .cons-figma-view-cart svg {
+  width: 20px;
+  height: 20px;
+  color: #ffffff;
+}
+
+/* ------------------------------------------------------------------------- */
+/* C4–C5 筛选外壳 Frame 221（唯一信源）：column center padding:0 0 24px gap:24；1537；background:#FFFFFF */
+/* Frame 21 顶条仍为浅蓝 tint；221 以内筛选块与外壳同色 #FFFFFF，不另铺 Frame 3 灰底 */
+/* ------------------------------------------------------------------------- */
+.consumables-page.consumables-page--figma .cons-figma-filter-shell {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  align-self: stretch;
+  padding: 0 0 24px;
+  gap: var(--cons-stack-gap);
+  width: 100%;
+  max-width: var(--cons-inner-width);
+  /* 稿面 Frame 221 与 Frame 389 白区一致：纯白 + 顶底细分隔，便于在 Frame 3 灰底上读出「一张白卡片」 */
+  background: #ffffff;
+  border-radius: var(--cons-radius-md);
+  box-shadow: 0 0.5px 0 rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-smart-top {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 16px 8px;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--cons-smart-filter-tint);
+  flex: 0 0 auto;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-smart-top__icon {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 1px;
+  gap: 10px;
+  width: var(--cons-filter-icon-circle);
+  height: var(--cons-filter-icon-circle);
+  background: var(--cons-primary);
+  border-radius: 24px;
+  flex: 0 0 auto;
+  color: #ffffff;
+  font-size: 16px;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-smart-top__text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-smart-top__text h3 {
+  margin: 0;
+  width: 100%;
+  font-family: var(--cons-font-ui);
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 23px;
+  color: var(--cons-text-title);
+}
+
+.consumables-page.consumables-page--figma .cons-figma-smart-top__text p {
+  margin: 0;
+  width: 100%;
+  font-family: var(--cons-font-ui);
+  font-weight: 400;
+  font-size: var(--cons-body-size);
+  line-height: var(--cons-body-lh);
+  color: var(--cons-text-sub);
+}
+
+.consumables-page.consumables-page--figma .cons-figma-reset-btn {
+  box-sizing: border-box;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 5px;
+  gap: 11px;
+  min-width: 126px;
+  min-height: 29px;
+  border: none;
+  border-radius: var(--cons-radius-sm);
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--cons-font-ui);
+  font-weight: 400;
+  font-size: var(--cons-body-size);
+  line-height: var(--cons-body-lh);
+  color: var(--cons-text-title);
+  flex: 0 0 auto;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-field-label {
+  display: block;
+  margin-bottom: 8px;
+  font-family: Arial, sans-serif;
+  font-size: var(--cons-caption-size);
+  line-height: var(--cons-caption-lh);
+  font-weight: 400;
+  color: #000000;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-filter-body {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0 var(--cons-inset-pad-x);
+  gap: var(--cons-stack-gap);
+  width: 100%;
+}
+
+/* ------------------------------------------------------------------------- */
+/* 型号行 Frame 175（#F1F5F9，8px 圆角，位于 Frame 221 白卡内）               */
+/* ------------------------------------------------------------------------- */
+.consumables-page.consumables-page--figma .cons-figma-model-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: var(--cons-model-row-pad-y) 12px;
+  gap: var(--cons-model-row-gap);
+  width: 100%;
+  max-width: var(--cons-filter-row-inner);
+  box-sizing: border-box;
+  background: var(--cons-canvas-bg);
+  border-radius: 8px;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-model-row__label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 11px;
+  flex: 0 0 auto;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-model-row__label span {
+  font-family: var(--cons-font-ui);
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 23px;
+  color: var(--cons-text-title);
+}
+
+.consumables-page.consumables-page--figma .cons-figma-model-row__label .cons-figma-info-icon {
+  font-size: 24px;
+  color: var(--cons-text-sub);
+}
+
+.consumables-page.consumables-page--figma .cons-figma-model-row .smart-filter-select {
+  flex: 0 0 auto;
+  width: var(--cons-select-w-model);
+}
+
+/* ------------------------------------------------------------------------- */
+/* Ant Select → Frame 391                                                    */
+/* ------------------------------------------------------------------------- */
+.consumables-page.consumables-page--figma .smart-filter-select > label {
+  display: block;
+  margin-bottom: 8px;
+  font-family: Arial, sans-serif;
+  font-size: var(--cons-caption-size);
+  line-height: var(--cons-caption-lh);
+  font-weight: 400;
+  color: #000000;
+}
+
+.consumables-page.consumables-page--figma .ant-select .ant-select-selector,
+.consumables-page.consumables-page--figma .ant-select-single .ant-select-selector {
+  box-sizing: border-box !important;
+  min-height: var(--cons-select-h) !important;
+  height: var(--cons-select-h) !important;
+  padding: 8px !important;
+  border: 1px solid var(--cons-line-border) !important;
+  border-radius: var(--cons-radius-sm) !important;
+  background: var(--cons-surface) !important;
+  font-family: var(--cons-font-ui) !important;
+  font-size: var(--cons-caption-size) !important;
+  line-height: var(--cons-caption-lh) !important;
+}
+
+.consumables-page.consumables-page--figma .ant-select-single.ant-select-show-arrow .ant-select-selection-item,
+.consumables-page.consumables-page--figma .ant-select-single .ant-select-selection-placeholder {
+  line-height: calc(var(--cons-select-h) - 18px) !important;
+  color: var(--cons-text-title) !important;
+}
+
+.consumables-page.consumables-page--figma .ant-select-arrow {
+  color: var(--cons-text-muted-gray) !important;
+}
+
+/* ------------------------------------------------------------------------- */
+/* 膜类型 / 形状选择区 Frame 207（#F1F5F9，位于 Frame 221 白卡内）            */
+/* ------------------------------------------------------------------------- */
+.consumables-page.consumables-page--figma .cons-figma-shape-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 16px 0;
+  gap: 8px;
+  width: 100%;
+  max-width: var(--cons-filter-row-inner);
+  box-sizing: border-box;
+  background: var(--cons-canvas-bg);
+  border-radius: 0;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-shape-section__head {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0 12px;
+  gap: 6px;
+  width: 100%;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-info-icon {
+  font-size: 24px;
+  color: var(--cons-text-sub);
+}
+
+.consumables-page.consumables-page--figma .cons-figma-shape-section__head h4 {
+  margin: 0;
+  font-family: var(--cons-font-ui);
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 23px;
+  text-align: center;
+  color: var(--cons-text-title);
+}
+
+.consumables-page.consumables-page--figma .cons-figma-shape-grid {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  padding: 0 10px;
+  gap: 30px; /* Frame 569 */
+  width: 100%;
+  overflow-x: auto;
+  box-sizing: border-box;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-shape-grid > .relative {
+  flex: 0 0 auto;
+  width: 208px;
+  min-height: 220px;
+  position: relative;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-shape-tile {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 208px;
+  min-height: 220px;
+  margin: 0;
+  padding: 0 0 10px;
+  border-radius: var(--cons-radius-md);
+  background: var(--cons-film-tile-bg);
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-shape-tile--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-shape-grid input.sr-only:checked + .cons-figma-shape-tile {
+  border-color: var(--cons-primary);
+  background: var(--cons-primary);
+  box-shadow: none;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-shape-grid input.sr-only:checked + .cons-figma-shape-tile .cons-figma-shape-thumb-wrap {
+  background: transparent;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-shape-grid input.sr-only:checked + .cons-figma-shape-tile .cons-figma-shape-caption,
+.consumables-page.consumables-page--figma .cons-figma-shape-grid input.sr-only:checked + .cons-figma-shape-tile .cons-figma-shape-count {
+  color: #ffffff;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-shape-grid input.sr-only:checked + .cons-figma-shape-tile .cons-figma-shape-caption span:first-child {
+  font-weight: 700;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-shape-thumb-wrap {
+  width: 204px;
+  height: 213px;
+  margin-top: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--cons-radius-md);
+  overflow: hidden;
+  background: var(--cons-film-tile-bg);
+}
+
+.consumables-page.consumables-page--figma .cons-figma-shape-all-ph {
+  font-family: var(--cons-font-ui);
+  font-size: var(--cons-body-size);
+  line-height: var(--cons-body-lh);
+  color: var(--cons-text-muted-gray);
+}
+
+.consumables-page.consumables-page--figma .cons-figma-shape-img {
+  max-width: 100%;
+  max-height: 156px;
+  object-fit: contain;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-shape-caption {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-family: var(--cons-font-ui);
+  font-weight: 400;
+  font-size: var(--cons-body-size);
+  line-height: var(--cons-body-lh);
+  text-align: center;
+  color: var(--cons-text-title);
+}
+
+.consumables-page.consumables-page--figma .cons-figma-shape-count {
+  font-size: 12px;
+  line-height: 14px;
+  color: var(--cons-text-muted-gray);
+}
+
+/* ------------------------------------------------------------------------- */
+/* Frame 244 白底：左 Frame 271 + 右 Frame 170                                  */
+/* ------------------------------------------------------------------------- */
+.consumables-page.consumables-page--figma .cons-figma-spec-block {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0;
+  width: 100%;
+  max-width: var(--cons-filter-row-inner);
+  padding: 0;
+  box-sizing: border-box;
+  background: #ffffff;
+  border-radius: 0;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-spec-main {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 24px; /* Frame 271 */
+  padding: 0 16px 0 0; /* Frame 271 右内边距 */
+  box-sizing: border-box;
+}
+
+/* Frame 287 */
+.consumables-page.consumables-page--figma .cons-figma-material-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+  padding: 16px;
+  box-sizing: border-box;
+  background: var(--cons-canvas-bg);
+  border-radius: 0;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-material-sub {
+  margin: 0;
+  width: 100%;
+  font-family: var(--cons-font-ui);
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 23px;
+  text-align: center; /* Frame 238 */
+  color: var(--cons-text-title);
+}
+
+.consumables-page.consumables-page--figma .cons-figma-material-matrix {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 0;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-material-btn--full {
+  grid-column: 1 / -1;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-material-btn--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-material-btn {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  gap: 10px;
+  width: 100%;
+  min-height: 36px;
+  border-radius: var(--cons-radius-sm);
+  border: 1px solid var(--cons-border-soft);
+  background: var(--cons-film-tile-bg);
+  font-family: var(--cons-font-ui);
+  font-size: var(--cons-caption-size);
+  line-height: var(--cons-caption-lh);
+  text-align: center;
+  color: var(--cons-text-title);
+  cursor: pointer;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-material-btn--active {
+  background: var(--cons-primary);
+  border-color: var(--cons-primary);
+  color: #ffffff;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-material-btn--white {
+  background: var(--cons-surface);
+}
+
+/* Frame 245 / 239 + Frame 217 三列下拉 */
+.consumables-page.consumables-page--figma .cons-figma-dimensions-panel {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--cons-canvas-bg);
+  padding: 0;
+}
+
+/* Frame 237 */
+.consumables-page.consumables-page--figma .cons-figma-dimensions-sub {
+  margin: 0;
+  width: 100%;
+  padding: 0 0 0 12px;
+  box-sizing: border-box;
+  font-family: var(--cons-font-ui);
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 23px;
+  color: var(--cons-text-title);
+}
+
+.consumables-page.consumables-page--figma .cons-figma-dimensions-panel .cons-figma-dimensions__selects {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  width: 100%;
+  padding: 8px 12px 16px; /* Frame 239 gap 8 below title + Frame 217 */
+  box-sizing: border-box;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-dimensions__selects .smart-filter-select {
+  flex: 1 1 288px;
+  width: var(--cons-select-w-dim);
+  max-width: 100%;
+  min-width: 0;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-dimension-guide {
+  flex: 0 0 569px;
+  width: 569px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1200px) {
+  .consumables-page.consumables-page--figma .cons-figma-spec-block {
+    flex-direction: column;
+  }
+
+  .consumables-page.consumables-page--figma .cons-figma-spec-main {
+    padding-right: 0;
+    width: 100%;
+  }
+
+  .consumables-page.consumables-page--figma .cons-figma-dimension-guide {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+}
+
+.consumables-page.consumables-page--figma .cons-figma-dimension-guide__title {
+  font-family: var(--cons-font-ui);
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 23px;
+  color: #000000;
+  margin: 0 0 11px 0;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-dimension-guide__frame {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 569px;
+  height: 371px;
+  border: 1px solid var(--cons-border-soft);
+  border-radius: var(--cons-radius-sm);
+  background: var(--cons-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-dimension-guide__frame img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* ------------------------------------------------------------------------- */
+/* C6–C7 结果区 Frame 259 + 列表                                             */
+/* ------------------------------------------------------------------------- */
+/* Frame 389：column + flex-start + padding 0 + gap 16 + 1537 内宽 + #FFF */
+.consumables-page.consumables-page--figma .cons-figma-results {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--cons-frame-389-gap);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--cons-inner-width);
+  margin: 0;
+  padding: 0;
+  background: var(--cons-frame-389-bg);
+}
+
+.consumables-page.consumables-page--figma .cons-figma-results__head {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 10px;
+  gap: 10px;
+  width: 100%;
+  max-width: 100%;
+  align-self: stretch;
+  box-sizing: border-box;
+  background: var(--cons-smart-filter-tint);
+}
+
+.consumables-page.consumables-page--figma .cons-figma-results__head h3 {
+  margin: 0;
+  font-family: var(--cons-font-ui);
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 23px;
+  text-align: center;
+  color: #000000;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-results__list {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  align-self: stretch;
+  box-sizing: border-box;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-results__list > .space-y-6 {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 0;
+}
+
+/* 去掉 Tailwind space-y-6 的纵向 margin，间距仅保留稿面每行 box-shadow 分割线 */
+.consumables-page.consumables-page--figma .cons-figma-results__list > .space-y-6 > * {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* 膜页面组件在 Frame 389 列表内：flex 子项与 Dev 一致 */
+.consumables-page.consumables-page--figma
+  .cons-figma-results__list
+  > .space-y-6
+  > .consumable-item.consumable-item--figma {
+  flex: none;
+  order: 0;
+  align-self: stretch;
+  flex-grow: 0;
+}
+
+.consumables-page.consumables-page--figma .products-container {
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* ------------------------------------------------------------------------- */
+/* 产品行：.consumable-item--figma（稿「膜页面组件」）                        */
+/* ------------------------------------------------------------------------- */
+.consumables-page.consumables-page--figma .consumable-item.consumable-item--figma {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--cons-inner-width);
+  min-height: var(--cons-product-row-h);
+  background: #ffffff;
+  box-shadow: 0px 0.5px 0px rgba(0, 0, 0, 0.25);
+  margin: 0;
+  border: none;
+  border-radius: 0;
+}
+
+/* 角标： consumable-item 未套用 consumable-product-card SCSS，须自行 absolute，否则落在文档流左上角 */
+.consumables-page.consumables-page--figma .consumable-item--figma .stock-status-badge {
+  position: absolute;
+  top: 16px;
+  right: 24px;
+  z-index: 5;
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-family: var(--cons-font-ui);
+  color: #ffffff;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .stock-status-badge.high-stock {
+  background: rgba(16, 185, 129, 0.95);
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .stock-status-badge.low-stock {
+  background: rgba(245, 158, 11, 0.95);
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .stock-status-badge.out-stock {
+  background: rgba(239, 68, 68, 0.95);
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .product-card-content {
+  padding: var(--cons-product-content-pad-t) var(--cons-product-content-pad-x)
+    var(--cons-product-content-pad-b);
+  box-sizing: border-box;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-product-row-grid {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .product-layout {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .product-image-section {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--cons-product-gallery-gap);
+  max-width: 100%;
+  margin-right: var(--cons-product-gap-gallery-info);
+}
+
+/* Frame 205：竖向 3 个 68px 缩略 + 8px gap + 212px 主图 = 288 总宽 */
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-product-gallery {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
+  width: 288px;
+  max-width: 100%;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+/* 左侧竖向 3 个 68px 缩略图 */
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-product-thumbs {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 0 0 68px;
+  width: 68px;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-product-thumb {
+  box-sizing: border-box;
+  width: 68px;
+  height: 68px;
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--cons-line-border);
+  border-radius: var(--cons-radius-md);
+  background: var(--cons-surface);
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-product-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-product-thumb:focus-visible {
+  outline: 2px solid var(--cons-primary);
+  outline-offset: 2px;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-product-thumb--active {
+  border-color: var(--cons-primary);
+  box-shadow: inset 0 0 0 1px var(--cons-primary);
+}
+
+/* 稿面：空槽位用灰色占位 */
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-product-thumb--placeholder {
+  background: var(--cons-film-tile-bg);
+  border: 1px solid var(--cons-line-border);
+  cursor: default;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .image-container {
+  width: var(--cons-product-hero);
+  height: var(--cons-product-hero);
+  padding: 0;
+  border: 1px solid var(--cons-line-border);
+  border-radius: var(--cons-radius-md);
+  background: var(--cons-film-tile-bg);
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .image-container.cons-figma-product-hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .image-container:hover {
+  transform: none;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .product-code-badge {
+  display: none;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .product-info-section {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+  margin-right: var(--cons-product-gap-info-price);
+  display: flex;
+  flex-direction: column;
+  gap: var(--cons-product-info-stack-gap);
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-product-title-block {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px; /* Frame 1030 */
+  box-shadow: var(--cons-divider-bottom);
+  padding-bottom: 12px; /* Frame 1031 */
+  margin: 0;
+}
+
+/* 标题与 PN 气泡同一行（稿面 Frame 1031 与截图：料号靠文案区右上） */
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-product-heading-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-product-heading-row .product-name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-model-pn-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+  margin-top: 0;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-model-pn-row__model {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-model-pn-row__model .model-info {
+  margin-bottom: 0;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-pn-chip {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 31px;
+  padding: 6px 12px;
+  background: var(--cons-chip-bg);
+  border-radius: var(--cons-radius-md);
+  font-family: var(--cons-font-ui);
+  font-weight: 400;
+  font-size: var(--cons-body-size);
+  line-height: var(--cons-body-lh);
+  color: var(--cons-primary);
+  max-width: 42%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .product-name {
+  font-family: var(--cons-font-ui);
+  font-weight: 700;
+  font-size: var(--cons-body-size);
+  line-height: var(--cons-body-lh);
+  color: var(--cons-text-title);
+  margin: 0;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .model-info,
+.consumables-page.consumables-page--figma .consumable-item--figma .compatibility-info {
+  font-family: var(--cons-font-ui);
+  font-size: var(--cons-body-size);
+  line-height: var(--cons-body-lh);
+  color: var(--cons-text-title);
+  margin: 0;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .model-info .label,
+.consumables-page.consumables-page--figma .consumable-item--figma .compatibility-info .label {
+  margin-right: 4px;
+  color: var(--cons-text-title);
+  font-weight: 400;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .model-info .value,
+.consumables-page.consumables-page--figma .consumable-item--figma .compatibility-info .value {
+  color: var(--cons-text-sub);
+  font-weight: 400;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .compatibility-info {
+  margin-top: 0;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .product-id:empty {
+  display: none;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .specs-showcase {
+  background: transparent;
+  border: none;
+  padding: 0 0 16px;
+  margin: 0;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--cons-product-meta-inner-gap);
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .specs-title {
+  display: none;
+}
+
+/* 稿面：规格竖向列表（Material: / Shape: / Spec.） */
+.consumables-page.consumables-page--figma .consumable-item--figma .specs-grid {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .spec-badge {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--cons-font-ui);
+  font-size: 14px;
+  line-height: 19px;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .spec-label {
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .spec-label::after {
+  content: ':';
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .spec-value {
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .spec-badge {
+  background: transparent;
+  border: none;
+  padding: 0;
+  text-align: left;
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 6px;
+  flex: 0 1 auto;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .spec-label {
+  font-family: var(--cons-font-ui);
+  font-size: var(--cons-body-size);
+  line-height: var(--cons-body-lh);
+  color: var(--cons-text-strong);
+  text-transform: none;
+  letter-spacing: normal;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .spec-label::after {
+  content: ':';
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .spec-value {
+  font-family: var(--cons-font-ui);
+  font-size: var(--cons-body-size);
+  line-height: var(--cons-body-lh);
+  color: var(--cons-text-sub);
+  font-weight: 400;
+  min-width: 0;
+  word-break: break-word;
+}
+
+/* 稿面 Spec. 独占一行（Frame 536） */
+.consumables-page.consumables-page--figma .consumable-item--figma .spec-badge--full-row {
+  flex: 0 0 auto;
+  width: 100%;
+  align-items: flex-start;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .spec-badge--full-row .spec-value {
+  flex: 1 1 auto;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-product-more-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  padding-top: 16px;
+  border-top: 0.5px solid rgba(0, 0, 0, 0.25);
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-product-more-row__gutter {
+  display: none;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-product-more-row__content {
+  display: none;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-product-more-row__inner {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  width: auto;
+  box-sizing: border-box;
+}
+
+/* 避免复用全局 .product-actions（如 Machines.css 的 align-items:center 会把按钮撑满行并居中） */
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-product-more-actions {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  width: auto;
+}
+
+/* 稿面 More Info 按钮：#D9DFED 背景、#C4DCFF 边框、8px 圆角、18px 蓝字 */
+.consumables-page.consumables-page--figma .consumable-item--figma .tooltip-trigger-btn {
+  box-sizing: border-box;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  gap: 8px;
+  width: auto;
+  max-width: 100%;
+  min-width: 200px;
+  min-height: 36px;
+  background: #D9DFED;
+  border: 1px solid #C4DCFF;
+  border-radius: 8px;
+  font-family: var(--cons-font-ui);
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 21px;
+  color: #012583;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .tooltip-trigger-btn:hover {
+  filter: brightness(0.97);
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .tooltip-trigger-btn .action-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .tooltip-btn-text {
+  white-space: nowrap;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .price-purchase-section {
+  flex: 0 0 var(--cons-product-price-col-w);
+  width: var(--cons-product-price-col-w);
+  min-width: min(var(--cons-product-price-col-w), 100%);
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-qty-stepper {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  width: 100%;
+  max-width: 100%;
+  border: 1px solid var(--cons-line-border);
+  border-radius: var(--cons-radius-md);
+  overflow: hidden;
+  background: var(--cons-surface);
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-qty-stepper__btn {
+  box-sizing: border-box;
+  width: 32px;
+  min-height: 32px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: #f8fafc;
+  color: #4b5563;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-qty-stepper__btn:hover:not(:disabled) {
+  background: rgba(1, 37, 131, 0.06);
+  color: var(--cons-primary);
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-qty-stepper__btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-qty-stepper__btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-qty-stepper__btn--minus {
+  border-right: 1px solid var(--cons-line-border);
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-qty-stepper__btn--plus {
+  border-left: 1px solid var(--cons-line-border);
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-qty-stepper__input {
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 48px;
+  min-height: 32px;
+  margin: 0;
+  padding: 4px 6px;
+  border: none;
+  text-align: center;
+  font-family: var(--cons-font-ui);
+  font-size: var(--cons-caption-size);
+  line-height: var(--cons-caption-lh);
+  color: var(--cons-text-title);
+  background: var(--cons-surface);
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-qty-stepper__input:focus {
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--cons-primary);
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .price-display {
+  background: transparent;
+  border: none;
+  text-align: left;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* 稿面 "STARTING PRICE" 实际是首行小字，非大写加粗 */
+.consumables-page.consumables-page--figma .consumable-item--figma .price-label {
+  font-family: var(--cons-font-ui);
+  font-size: 14px;
+  line-height: 16px;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.65);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .price-value {
+  font-family: var(--cons-font-ui);
+  font-size: 24px;
+  line-height: 28px;
+  font-weight: 700;
+  color: #012583;
+  margin: 0;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .price-note {
+  font-family: var(--cons-font-ui);
+  font-size: 14px;
+  line-height: 16px;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.65);
+  margin: 0;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .price-tiers {
+  box-sizing: border-box;
+  max-height: 120px;
+  margin: 0;
+  padding: 8px 10px;
+  overflow-y: auto;
+  border-radius: var(--cons-radius-sm);
+  border: 1px solid var(--cons-line-border);
+  background: var(--cons-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .price-tiers .tiers-title {
+  font-family: var(--cons-font-ui);
+  font-size: var(--cons-caption-size);
+  line-height: var(--cons-caption-lh);
+  font-weight: 600;
+  color: var(--cons-text-title);
+  margin: 0 0 4px 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--cons-line-border);
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .price-tiers .tier-item {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--cons-font-ui);
+  font-size: var(--cons-caption-size);
+  line-height: var(--cons-caption-lh);
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .price-tiers .tier-range {
+  color: var(--cons-text-muted-gray);
+  font-weight: 400;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .price-tiers .tier-price {
+  color: var(--cons-primary);
+  font-weight: 700;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .price-tiers .more-tiers {
+  text-align: center;
+  font-size: var(--cons-caption-size);
+  color: var(--cons-primary);
+  margin: 0;
+  padding: 4px 0 0;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .stock-info {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--cons-radius-md);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .stock-info.high-stock {
+  background: rgba(16, 185, 129, 0.06);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .stock-info.low-stock {
+  background: rgba(245, 158, 11, 0.06);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .stock-info.out-stock {
+  background: rgba(244, 114, 182, 0.12);
+  border-color: rgba(244, 114, 182, 0.45);
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .stock-info .stock-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px 0;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .stock-info .stock-label {
+  font-family: var(--cons-font-ui);
+  font-size: var(--cons-caption-size);
+  line-height: var(--cons-caption-lh);
+  color: var(--cons-text-title);
+  font-weight: 400;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .stock-info .stock-status-text {
+  font-family: var(--cons-font-ui);
+  font-size: var(--cons-caption-size);
+  line-height: var(--cons-caption-lh);
+  font-weight: 700;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .stock-info.out-stock .stock-status-text {
+  color: #dc2626;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .stock-info.high-stock .stock-status-text {
+  color: #059669;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .stock-info.low-stock .stock-status-text {
+  color: #d97706;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .stock-info .stock-details {
+  text-align: left;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .stock-info .total-stock {
+  font-family: var(--cons-font-ui);
+  font-size: var(--cons-caption-size);
+  line-height: var(--cons-caption-lh);
+  color: var(--cons-text-title);
+  margin: 0;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .stock-info .stock-number {
+  font-weight: 600;
+  color: var(--cons-text-title);
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-region-stock {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: var(--cons-product-meta-inner-gap);
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-region-stock__tag {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: var(--cons-radius-sm);
+  font-family: var(--cons-font-ui);
+  font-size: var(--cons-caption-size);
+  line-height: var(--cons-caption-lh);
+  border: 1px solid transparent;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-region-stock__tag--green {
+  background: rgba(16, 185, 129, 0.1);
+  color: #047857;
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-region-stock__tag--orange {
+  background: rgba(245, 158, 11, 0.1);
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-region-stock__tag--red {
+  background: rgba(239, 68, 68, 0.1);
+  color: #b91c1c;
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .purchase-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .purchase-actions .quantity-selector {
+  width: 100%;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .purchase-actions .action-buttons {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* SmartAddToCart 常为 Ant Button — 尽量贴近主按钮 */
+/* 购物车按钮：稿面 #012583 背景、白色字、圆角 8 */
+.consumables-page.consumables-page--figma .consumable-item--figma .add-to-cart-btn,
+.consumables-page.consumables-page--figma .consumable-item--figma button.add-to-cart-btn {
+  width: 100%;
+  height: 40px;
+  background: #012583;
+  border: 1px solid #012583;
+  border-radius: 8px;
+  font-family: var(--cons-font-ui);
+  font-weight: 700;
+  font-size: 14px;
+  color: #ffffff;
+}
+
+.consumables-page.consumables-page--figma .consumable-item--figma .add-to-cart-btn:hover,
+.consumables-page.consumables-page--figma .consumable-item--figma button.add-to-cart-btn:hover {
+  background: #0f2d7a;
+  border-color: #0f2d7a;
+}
+
+/* ------------------------------------------------------------------------- */
+/* C12 分页                                                                  */
+/* ------------------------------------------------------------------------- */
+.consumables-page.consumables-page--figma .cons-figma-pagination {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  gap: var(--cons-page-num-gap);
+  width: 100%;
+  max-width: 100%;
+  align-self: stretch;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-pagination__nav {
+  box-sizing: border-box;
+  width: var(--cons-page-btn-w);
+  height: var(--cons-page-btn-h);
+  background: linear-gradient(180deg, #ffffff 0%, #f1f1f1 100%);
+  border: 1px solid var(--cons-line-border);
+  border-radius: var(--cons-radius-sm);
+  font-family: var(--cons-font-ui);
+  font-size: var(--cons-body-size);
+  line-height: var(--cons-body-lh);
+  text-align: center;
+  color: var(--cons-text-title);
+  cursor: pointer;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-pagination__nav:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-pagination__nums {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-pagination__num {
+  box-sizing: border-box;
+  width: var(--cons-page-num-size);
+  height: var(--cons-page-num-size);
+  background: var(--cons-surface);
+  border: 1px solid var(--cons-line-border);
+  border-radius: var(--cons-radius-xs);
+  font-family: var(--cons-font-ui);
+  font-size: var(--cons-body-size);
+  line-height: var(--cons-body-lh);
+  text-align: center;
+  color: var(--cons-text-title);
+  cursor: pointer;
+  padding: 0;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-pagination__num--active {
+  background: var(--cons-primary);
+  color: #ffffff;
+  border-color: var(--cons-line-border);
+}
+
+.consumables-page.consumables-page--figma .cons-figma-pagination__ellipsis {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 3px;
+  width: 18px;
+  justify-content: center;
+}
+
+.consumables-page.consumables-page--figma .cons-figma-pagination__ellipsis span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--cons-text-muted-gray);
+}
+
+/* 面包屑 FilterBreadcrumb */
+.consumables-page.consumables-page--figma .filter-breadcrumb {
+  background: var(--cons-chip-bg);
+  border: 1px solid var(--cons-chip-border);
+  border-radius: var(--cons-radius-md);
+}
+
+.consumables-page.consumables-page--figma .filter-breadcrumb .ant-btn {
+  font-size: var(--cons-caption-size);
+}
+
+/* ------------------------------------------------------------------------- */
+/* 加载 / 空状态（C10）                                                      */
+/* ------------------------------------------------------------------------- */
+.consumables-page.consumables-page--figma .cons-figma-state-panel {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--cons-inner-width);
+  padding: 48px 24px;
+  background: var(--cons-surface);
+  text-align: center;
+  border-radius: var(--cons-radius-md);
+}
+
+/* ------------------------------------------------------------------------- */
+/* 移动端：取消固定栅格最小宽                                                */
+/* ------------------------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .consumables-page.consumables-page--figma {
+    padding: 16px;
+  }
+
+  .consumables-page.consumables-page--figma .cons-figma-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .consumables-page.consumables-page--figma .cons-figma-hero__aside {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .consumables-page.consumables-page--figma .cons-figma-hero__stat-line {
+    text-align: left;
+  }
+
+  .consumables-page.consumables-page--figma .cons-figma-material-matrix {
+    grid-template-columns: 1fr;
+  }
+
+  .consumables-page.consumables-page--figma .consumable-item--figma .product-layout {
+    display: flex;
+    flex-direction: column;
+    gap: var(--cons-product-gap-gallery-info);
+  }
+
+  .consumables-page.consumables-page--figma .consumable-item--figma .product-image-section {
+    grid-column: auto;
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 0;
+  }
+
+  .consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-product-gallery {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-product-thumbs {
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: auto;
+    max-width: 100%;
+  }
+
+  .consumables-page.consumables-page--figma .consumable-item--figma .product-info-section {
+    grid-column: auto;
+    margin-right: 0;
+    margin-bottom: 0;
+  }
+
+  .consumables-page.consumables-page--figma .consumable-item--figma .price-purchase-section {
+    grid-column: auto;
+    align-self: stretch;
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+  }
+
+  .consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-product-more-row__gutter {
+    display: none;
+  }
+
+  .consumables-page.consumables-page--figma .consumable-item--figma .cons-figma-product-more-row {
+    padding-top: 16px;
+  }
+}

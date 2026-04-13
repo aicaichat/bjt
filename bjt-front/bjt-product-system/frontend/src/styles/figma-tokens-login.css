@@ -1,0 +1,137 @@
+/**
+ * 前台商城登录 /login — 域令牌
+ * 信源：docs/visual-upgrade/sources/login-figma-dev-export-2026-04-12.css
+ * 加载顺序：figma-design-tokens.css 之后（main.tsx）
+ */
+:root {
+  /* L1 — 登陆页面根 */
+  --ff-login-shell-max-width: 1920px;
+  --ff-login-shell-min-width: 1440px;
+  --ff-login-shell-min-height: 1000px;
+  --ff-login-shell-design-height: 1081px;
+  --ff-login-shell-bg: #ffffff;
+
+  /* Frame 1282 — 背景区 */
+  --ff-login-backdrop-pad-top: 228px;
+  --ff-login-backdrop-pad-right: 453px;
+  --ff-login-backdrop-pad-bottom: 271px;
+  --ff-login-backdrop-pad-left: 454px;
+  --ff-login-backdrop-gap: 10px;
+  --ff-login-backdrop-min-height: 1081px;
+  /* 稿：url(微信图片_20181207152621-1.jpg) → 见 login-figma-user-dev-css.md 放置说明 */
+  --ff-login-backdrop-bg-image: url('/images/login-bg-figma.jpg');
+
+  /* L2 — 登陆卡片 */
+  --ff-login-card-width: 595px;
+  --ff-login-card-height: 582px;
+  --ff-login-card-pad-y: 48px;
+  --ff-login-card-pad-x: 0px;
+  --ff-login-card-gap: 48px;
+  --ff-login-card-bg: #ffffff;
+  --ff-login-card-border: 1px solid #dedede;
+  --ff-login-card-radius: 8px;
+
+  /* L3 — Logo（Air-Paper 376×43） */
+  --ff-login-logo-width: 376px;
+  --ff-login-logo-height: 43px;
+
+  /* L4 — 主标题（稿：Log in to your account） */
+  --ff-login-title-width: 500px;
+  --ff-login-title-min-height: 47px;
+  --ff-login-title-size: 36px;
+  --ff-login-title-line-height: 42px;
+  --ff-login-title-weight: 700;
+  --ff-login-title-color: rgba(0, 0, 0, 0.85);
+
+  /* L3 品牌列 Frame 1242 */
+  --ff-login-brand-width: 500px;
+  --ff-login-brand-height: 114px;
+  --ff-login-brand-gap: 24px;
+
+  /* L6 — 表单列 Frame 1243 */
+  --ff-login-form-stack-width: 500px;
+  --ff-login-form-stack-height: 235px;
+  --ff-login-form-field-gap: 24px;
+  --ff-login-label-input-gap: 8px;
+
+  /* 标签 Email/Phone、Password */
+  --ff-login-label-size: 16px;
+  --ff-login-label-line-height: 19px;
+  --ff-login-label-weight: 400;
+  --ff-login-label-color: rgba(0, 0, 0, 0.85);
+
+  /* 输入框 Frame 661 */
+  --ff-login-input-width: 500px;
+  --ff-login-input-height: 45px;
+  --ff-login-input-pad-x: 10px;
+  --ff-login-input-gap: 10px;
+  --ff-login-input-bg: #ffffff;
+  --ff-login-input-border: 1px solid #012583;
+  --ff-login-input-radius: 8px;
+
+  /* 占位符 */
+  --ff-login-input-placeholder-size: 14px;
+  --ff-login-input-placeholder-line-height: 16px;
+  --ff-login-input-placeholder-color: #b0b0b0;
+
+  /* L7 — 主按钮 Frame 520 */
+  --ff-login-button-width: 500px;
+  --ff-login-button-height: 43px;
+  --ff-login-button-pad: 10px;
+  --ff-login-button-gap: 10px;
+  --ff-login-button-bg: #012583;
+  --ff-login-button-border: 1px solid #dedede;
+  --ff-login-button-radius: 8px;
+  --ff-login-button-font-size: 20px;
+  --ff-login-button-line-height: 23px;
+  --ff-login-button-font-weight: 700;
+  --ff-login-button-text-color: #ffffff;
+
+  /* L8 — Frame 1240 */
+  --ff-login-footer-width: 500px;
+  --ff-login-footer-height: 41px;
+  --ff-login-footer-pad: 10px;
+  --ff-login-footer-gap: 16px;
+  --ff-login-footer-text-size: 18px;
+  --ff-login-footer-text-line-height: 21px;
+  --ff-login-footer-text-weight: 400;
+  --ff-login-footer-muted: rgba(0, 0, 0, 0.85);
+  --ff-login-footer-link: #2a7dfa;
+
+  /* L5 — 错误条：信源未提供样式，沿用语义色（非稿面像素） */
+  --ff-login-error-bg: #fff2f0;
+  --ff-login-error-border: #ffccc7;
+  --ff-login-error-radius: 4px;
+  --ff-login-error-text: #f5222d;
+  --ff-login-error-pad: 10px;
+  --ff-login-error-margin-bottom: 16px;
+}
+
+@media (max-width: 1024px) {
+  :root {
+    /* 移动端：取消 PC 固定 min-width / 稿面高度 */
+    --ff-login-shell-min-width: 0px;
+    --ff-login-backdrop-min-height: 0px;
+    --ff-login-backdrop-pad-top: 48px;
+    --ff-login-backdrop-pad-right: 24px;
+    --ff-login-backdrop-pad-bottom: 48px;
+    --ff-login-backdrop-pad-left: 24px;
+    --ff-login-card-width: 100%;
+    --ff-login-card-height: auto;
+    --ff-login-input-width: 100%;
+    --ff-login-button-width: 100%;
+    --ff-login-brand-width: 100%;
+    --ff-login-form-stack-width: 100%;
+    --ff-login-footer-width: 100%;
+    --ff-login-title-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --ff-login-backdrop-pad-top: 24px;
+    --ff-login-backdrop-pad-right: 16px;
+    --ff-login-backdrop-pad-bottom: 24px;
+    --ff-login-backdrop-pad-left: 16px;
+  }
+}

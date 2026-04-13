@@ -2063,7 +2063,10 @@ const ProductLine1Page: React.FC = () => {
             style={{
               position: 'relative',
               width: 1537,
+              /* Frame 471：行高 280 固定；右栏购物车不撑满此行高，见 machines-exact-override */
               height: 280,
+              minHeight: 280,
+              maxHeight: 280,
               background: '#ffffff',
               boxShadow: '0px 0.5px 0px rgba(0,0,0,0.25)',
               marginBottom: 0
@@ -2334,7 +2337,7 @@ const ProductLine1Page: React.FC = () => {
               {/* Column 3: Stock + Actions（列表右栏不展示单价，避免 ¥0 占位） */}
               <div
                 className="ms-figma-machine-card__col-actions ms-figma-machine-card__actions"
-                style={{ position: 'absolute', right: 0, top: 0, width: 321, height: 280 }}
+                style={{ position: 'absolute', right: 0, top: 0, width: 321 }}
               >
                 <div className="ms-figma-purchase-rail">
                 {isSales && (

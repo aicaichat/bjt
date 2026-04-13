@@ -6,5 +6,7 @@
   "messages": "[オブジェクトオブジェクト]",
   "social": "[オブジェクトオブジェクト]",
   "register": "[オブジェクトオブジェクト]",
-  "resetPassword": "[オブジェクトオブジェクト]"
+  "resetPassword": "[オブジェクトオブジェクト]",
+  "passwordShow": "パスワードを表示",
+  "passwordHide": "パスワードを非表示"
 }

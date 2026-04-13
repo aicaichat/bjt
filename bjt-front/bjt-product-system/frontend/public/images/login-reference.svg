@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1920 1081" width="1920" height="1081" role="img" aria-label="Login page reference">
+  <title>Login background and logo</title>
+  <desc>Background: login-bg-figma.jpg. Logo: logo-1.webp. Same folder. Add JPG from Figma export if missing.</desc>
+  <image xlink:href="login-bg-figma.jpg" href="login-bg-figma.jpg" x="0" y="0" width="1920" height="1081" preserveAspectRatio="xMidYMid slice"/>
+  <rect x="663" y="228" width="595" height="582" rx="8" ry="8" fill="#ffffff" stroke="#dedede" stroke-width="1"/>
+  <image xlink:href="logo-1.webp" href="logo-1.webp" x="711" y="276" width="376" height="43" preserveAspectRatio="xMidYMid meet"/>
+</svg>

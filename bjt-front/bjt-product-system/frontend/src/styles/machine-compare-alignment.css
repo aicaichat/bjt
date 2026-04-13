@@ -9,7 +9,7 @@
   --mc-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
-/* 尺寸默认仅非 Figma 产品线页；`.ms-product-line-layout` 在 machine-selection-figma 中设 1440×606 */
+/* 尺寸默认仅非 Figma 产品线页；`.ms-product-line-layout` 在 machine-selection-figma 中设 1537 列宽与对比高 */
 .machines-page:not(.ms-product-line-layout) {
   --mc-container-max-width: 1200px;
   --mc-image-max-width: 1200px;

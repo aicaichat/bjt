@@ -16,19 +16,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   headerProps,
   className = '',
 }) => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  // 检测设备类型
+  // 检测设备类型（窄屏仍用抽屉侧栏 + mobile-menu-toggle，与桌面全宽侧栏分离）
   useEffect(() => {
     const checkMobile = () => {
-      const mobile = window.innerWidth <= 768;
-      setIsMobile(mobile);
-      if (mobile) {
-        setSidebarCollapsed(true);
-      }
+      setIsMobile(window.innerWidth <= 768);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -40,14 +36,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     // 这里可以添加搜索逻辑
   };
 
-  /** 与左侧 Menu、顶栏 `figma-front-shell`、页面内固定条同源 */
+  /** 与左侧侧栏、顶栏 `figma-front-shell`、主列 `ml-[--bjt-sidebar-effective-width]` 同源 */
   const figmaLayoutStyle = useMemo(() => {
-    const w = isMobile
-      ? '0px'
-      : sidebarCollapsed
+    if (isMobile) {
+      return { '--bjt-sidebar-effective-width': '0px' } as React.CSSProperties;
+    }
+    return {
+      '--bjt-sidebar-effective-width': sidebarCollapsed
         ? 'var(--bjt-sidebar-collapsed-width)'
-        : 'var(--bjt-sidebar-width)';
-    return { '--bjt-sidebar-effective-width': w } as React.CSSProperties;
+        : 'var(--bjt-sidebar-width)',
+    } as React.CSSProperties;
   }, [isMobile, sidebarCollapsed]);
 
   return (
@@ -65,14 +63,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({
       <div className="flex flex-1">
         {/* Sidebar - 包含Logo和导航菜单，置顶显示 */}
         <Sidebar
-          collapsed={sidebarCollapsed}
+          collapsed={!isMobile && sidebarCollapsed}
           onCollapsedChange={setSidebarCollapsed}
         />
         
         {/* Main Content：margin 与 --bjt-sidebar-effective-width 一致 */}
-        <main className="figma-front-main flex-1 transition-all duration-300 ml-[var(--bjt-sidebar-effective-width)]">
+        <main className="figma-front-main flex-1 ml-[var(--bjt-sidebar-effective-width)]">
           <div className="figma-front-main__inner min-h-full flex flex-col">
-            <div className="flex-grow w-full min-w-0">
+            {/* flex-col + min-h-0：子页面根节点可用 flex:1 在竖直方向铺满 main（对齐 Figma Frame 529 flex-grow:1） */}
+            <div className="flex flex-col flex-grow w-full min-h-0 min-w-0">
               {children}
             </div>
           </div>

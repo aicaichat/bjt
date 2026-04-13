@@ -1,0 +1,165 @@
+/**
+ * Home 页 — Figma 专用令牌
+ * 信源：用户粘贴 Dev CSS — 全文见 docs/visual-upgrade/sources/home-figma-dev-export-2026-04-12.css
+ * 索引说明：docs/visual-upgrade/home-figma-user-dev-css.md
+ * 与 src/figma-tokens/home.json 含义一致；改稿时同步 JSON。
+ */
+:root {
+  /* ========== H1：壳层 + Frame 3（主滚动区内边距） ========== */
+  --ff-home-shell-pad-x: 0px;
+  --ff-home-header-below-gap: 0px;
+  --ff-home-frame3-pad-y: 16px;
+  --ff-home-frame3-pad-x: 40px;
+  /* 用户粘贴 Home Dev CSS（2026-04-12）；若与选型页摘录 24px 不一致，以你最新粘贴为准 */
+  --ff-home-stack-gap: 32px;
+  --ff-home-main-max-width: 1617px;
+  /* Frame 3 稿高 1570px（非 Frame 529 总高 1638；529 = 1015 68 + Frame3 1570） */
+  --ff-home-main-min-height-lg: 1570px;
+
+  /* ========== H3：产品线卡外壳（Frame 745 / 743 / 744） ========== */
+  --ff-home-card-bg: #ffffff;
+  --ff-home-card-radius: 0px;
+  --ff-home-card-shadow: none;
+  --ff-home-card-shadow-hover: none;
+  --ff-home-card-pad-y: 40px;
+  --ff-home-card-pad-x: 40px;
+  --ff-home-card-column-gap: 16px;
+
+  /* ========== H4：海军标题条（Frame 738） ========== */
+  --ff-home-section-header-pad-y: 0px;
+  --ff-home-section-header-pad-x: 16px;
+  --ff-home-section-header-gap: 10px;
+  --ff-home-section-header-min-height: 68px;
+  --ff-home-bar-bg: #012583;
+  --ff-home-bar-text: #ffffff;
+  --ff-home-section-title-size: 24px;
+  --ff-home-section-title-line: 28px;
+  --ff-home-section-title-weight: 700;
+  --ff-home-section-title-tracking: 0;
+  --ff-home-section-header-radius: 8px;
+
+  /* ========== H5：Frame 740（默认产品线 1 / 纸垫 3：align center） ========== */
+  --ff-home-frame-740-width: 1457px;
+  --ff-home-frame-740-min-height: 303px;
+  --ff-home-frame-740-align-items: center;
+  --ff-home-link-outer-max-width: 286px;
+  --ff-home-link-label-max-width: 262px;
+  --ff-home-section-content-pad-y: 0px;
+  --ff-home-section-content-pad-x: 0px;
+  --ff-home-section-content-gap: 32px;
+
+  /* ========== H6：左侧文案列（Frame 739） ========== */
+  --ff-home-section-text-gap: 74px;
+  --ff-home-section-text-max-width: 875px;
+
+  /* ========== H7：描述（Frame 594） ========== */
+  --ff-home-desc-size: 16px;
+  --ff-home-desc-line: 19px;
+  --ff-home-desc-weight: 400;
+  --ff-home-desc-color: rgba(0, 0, 0, 0.65);
+  --ff-home-desc-min-height: 57px;
+
+  /* ========== H8：链接栈容器（Frame 595） ========== */
+  --ff-home-link-stack-gap: 20px;
+  --ff-home-link-stack-pad-x: 80px;
+  --ff-home-link-stack-min-height: 130px;
+
+  /* ========== H9/H10：Frame 805 轮廓按钮 ========== */
+  --ff-home-link-min-height: 45px;
+  --ff-home-link-pad-y: 12px;
+  --ff-home-link-pad-x: 12px;
+  --ff-home-link-radius: 8px;
+  --ff-home-link-font-size: 18px;
+  --ff-home-link-line: 21px;
+  --ff-home-link-font-weight: 400;
+  --ff-home-link-text-gap: 10px;
+
+  /* ========== H11 ========== */
+  --ff-home-external-icon-ml: 4px;
+
+  /* ========== H12：右侧图区（Frame 593 / 2322）默认 = 产品线 1 尺寸 ========== */
+  --ff-home-image-col-width: 550px;
+  --ff-home-image-wrap-pad: 0px;
+  --ff-home-image-column-gap: 10px;
+  --ff-home-image-wrap-bg: #ffffff;
+  --ff-home-image-wrap-radius: 0px;
+  --ff-home-image-min-height: 305px;
+  --ff-home-image-max-height: 305px;
+  --ff-home-image-img-max-height: 305px;
+  --ff-home-image-img-radius: 8px;
+
+  /* ========== H13：分页 — 粘贴 CSS 无分页帧；与 Frame 805 / 链接栈共用 token（无新 px） ========== */
+  --ff-home-pagination-margin-top: var(--ff-home-link-stack-gap);
+  --ff-home-pagination-gap: var(--ff-home-link-stack-gap);
+  --ff-home-pagination-btn-min-width: var(--ff-home-link-min-height);
+  --ff-home-pagination-btn-height: var(--ff-home-link-min-height);
+  --ff-home-pagination-btn-pad-x: var(--ff-home-link-pad-x);
+  --ff-home-pagination-btn-radius: var(--ff-home-link-radius);
+  --ff-home-pagination-font-size: var(--ff-home-link-font-size);
+  --ff-home-pagination-font-weight: var(--ff-home-link-font-weight);
+}
+
+/* 产品线 2 = Paper（Figma Frame 744）：Frame 740 height 329、align center；描述 57；图 329 */
+.home-page.home-page--figma .product-section[data-product-line='2'] {
+  --ff-home-frame-740-min-height: 329px;
+  --ff-home-frame-740-align-items: center;
+  --ff-home-desc-min-height: 57px;
+  --ff-home-image-min-height: 329px;
+  --ff-home-image-max-height: 329px;
+  --ff-home-image-img-max-height: 329px;
+}
+
+/* 产品线 3 = Water tape（Figma Frame 743）：Frame 740 height 318、align flex-start；描述 19；图 318 */
+.home-page.home-page--figma .product-section[data-product-line='3'] {
+  --ff-home-frame-740-min-height: 318px;
+  --ff-home-frame-740-align-items: flex-start;
+  --ff-home-desc-min-height: 19px;
+  --ff-home-image-min-height: 318px;
+  --ff-home-image-max-height: 318px;
+  --ff-home-image-img-max-height: 318px;
+}
+
+@media (max-width: 1024px) {
+  :root {
+    --ff-home-frame3-pad-y: 16px;
+    --ff-home-frame3-pad-x: 16px;
+    --ff-home-stack-gap: 24px;
+    --ff-home-section-text-gap: 24px;
+    --ff-home-link-stack-pad-x: 16px;
+    --ff-home-link-stack-min-height: 0px;
+    --ff-home-section-content-gap: 24px;
+    --ff-home-image-col-width: 100%;
+    --ff-home-desc-min-height: 0px;
+  }
+
+  .home-page.home-page--figma .product-section[data-product-line='2'],
+  .home-page.home-page--figma .product-section[data-product-line='3'] {
+    --ff-home-frame-740-min-height: 0px;
+    --ff-home-image-min-height: 200px;
+    --ff-home-image-max-height: 360px;
+    --ff-home-image-img-max-height: 320px;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --ff-home-frame3-pad-y: 12px;
+    --ff-home-frame3-pad-x: 12px;
+    --ff-home-card-pad-y: 20px;
+    --ff-home-card-pad-x: 16px;
+    --ff-home-section-header-min-height: 56px;
+    --ff-home-section-title-size: 18px;
+    --ff-home-section-title-line: 22px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --ff-home-frame3-pad-x: 12px;
+    --ff-home-section-title-size: 16px;
+    --ff-home-section-title-line: 20px;
+    --ff-home-link-font-size: 16px;
+    --ff-home-link-line: 19px;
+    --ff-home-link-min-height: 44px;
+  }
+}

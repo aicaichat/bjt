@@ -263,7 +263,7 @@ const CartPage: React.FC = () => {
   };
 
   return (
-    <div className="cart-page">
+    <div className="cart-page cart-page--figma">
       <div className="page-header">
         <Title level={2}>
           <Space>

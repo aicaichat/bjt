@@ -1,0 +1,2730 @@
+/* 侧面导航栏 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px 0px 13px;
+gap: 24px;
+
+width: 303px;
+height: 853px;
+
+background: #FFFFFF;
+/* 分割线-右 */
+box-shadow: inset -0.5px 0px 0px rgba(0, 0, 0, 0.16);
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Frame 86 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+padding: 0px 24px;
+gap: 20px;
+
+width: 303px;
+height: 109px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 0;
+
+/* Frame 153 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px;
+gap: 10px;
+
+width: 255px;
+height: 109px;
+
+background: #FFFFFF;
+box-shadow: inset 0px -0.5px 0px rgba(0, 0, 0, 0.16);
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 0;
+
+/* Frame 87 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+padding: 10px 50px;
+gap: 10px;
+
+width: 255px;
+height: 109px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 0;
+
+/* 图标logo-合竖版 1 */
+
+width: 177px;
+height: 28.26px;
+
+background: url(图标logo-合竖版.png);
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Frame 574 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px 10px;
+
+width: 303px;
+height: 707px;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+/* 一级导航栏 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 0px 0px 0px 10px;
+gap: 5px;
+
+width: 279px;
+height: 55px;
+
+background: #FFFFFF;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Frame */
+
+width: 18px;
+height: 18px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Vector */
+
+position: absolute;
+width: 18px;
+height: 16px;
+left: calc(50% - 18px/2);
+top: calc(50% - 16px/2 - 0.5px);
+
+/* 标题文本字体颜色 */
+background: rgba(0, 0, 0, 0.85);
+
+/* Frame 573 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 0px;
+gap: 5px;
+
+width: 44px;
+height: 19px;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+/* Home */
+
+width: 44px;
+height: 19px;
+
+/* 正文按钮字体 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 19px;
+/* identical to box height */
+
+/* 标题文本字体颜色 */
+color: rgba(0, 0, 0, 0.85);
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Frame */
+
+display: none;
+width: 14px;
+height: 14px;
+
+transform: rotate(-180deg);
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+/* Component 251 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: flex-start;
+padding: 0px;
+
+width: 283px;
+height: 55px;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+align-self: stretch;
+flex-grow: 0;
+
+/* Component 243 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 0px 0px 0px 10px;
+gap: 5px;
+
+width: 279px;
+height: 55px;
+
+background: #FFFFFF;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Frame */
+
+width: 18px;
+height: 18px;
+
+transform: matrix(-1, 0, 0, 1, 0, 0);
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Vector */
+
+position: absolute;
+left: -0.06%;
+right: 0%;
+top: 0%;
+bottom: -0.01%;
+
+background: #000000;
+transform: matrix(-1, 0, 0, 1, 0, 0);
+
+/* Vector */
+
+position: absolute;
+left: 8.75%;
+right: 9.81%;
+top: 9.23%;
+bottom: 2.01%;
+
+/* 标题文本字体颜色 */
+background: rgba(0, 0, 0, 0.85);
+transform: matrix(-1, 0, 0, 1, 0, 0);
+
+/* Vector */
+
+position: absolute;
+left: 1.61%;
+right: 88.36%;
+top: 9.83%;
+bottom: 0.97%;
+
+background: #FFFFFF;
+transform: matrix(-1, 0, 0, 1, 0, 0);
+
+/* Vector */
+
+position: absolute;
+left: 87.12%;
+right: 1.87%;
+top: 8.36%;
+bottom: 1.04%;
+
+background: #FFFFFF;
+transform: matrix(-1, 0, 0, 1, 0, 0);
+
+/* Vector */
+
+position: absolute;
+left: 1.76%;
+right: 2.86%;
+top: 1.17%;
+bottom: 88.03%;
+
+background: #FFFFFF;
+transform: matrix(-1, 0, 0, 1, 0, 0);
+
+/* Vector */
+
+position: absolute;
+left: 15.01%;
+right: 63.86%;
+top: 15.84%;
+bottom: 76.3%;
+
+background: #FFFFFF;
+transform: matrix(-1, 0, 0, 1, 0, 0);
+
+/* Vector */
+
+position: absolute;
+left: 62.1%;
+right: 16.33%;
+top: 14.71%;
+bottom: 77.21%;
+
+background: #FFFFFF;
+transform: matrix(-1, 0, 0, 1, 0, 0);
+
+/* Vector */
+
+position: absolute;
+left: 16.29%;
+right: 65.29%;
+top: 83.72%;
+bottom: 8.26%;
+
+background: #FFFFFF;
+transform: matrix(-1, 0, 0, 1, 0, 0);
+
+/* Vector */
+
+position: absolute;
+left: 66.09%;
+right: 14.54%;
+top: 88.7%;
+bottom: 7.48%;
+
+background: #FFFFFF;
+transform: matrix(-1, 0, 0, 1, 0, 0);
+
+/* Frame 573 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 0px;
+gap: 5px;
+
+width: 155px;
+height: 19px;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+/* Air cushion system */
+
+width: 136px;
+height: 19px;
+
+/* 正文按钮字体 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 19px;
+/* identical to box height */
+
+/* 标题文本字体颜色 */
+color: rgba(0, 0, 0, 0.85);
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Frame */
+
+width: 14px;
+height: 14px;
+
+transform: rotate(-180deg);
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+/* Vector */
+
+position: absolute;
+left: 8.8%;
+right: 42.14%;
+top: 25.47%;
+bottom: -8.8%;
+
+background: #000000;
+transform: rotate(90deg);
+
+/* Component 171 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px;
+gap: 10px;
+
+width: 279px;
+height: 55px;
+
+/* Inside auto layout */
+flex: none;
+order: 2;
+flex-grow: 0;
+
+/* Component 157 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 0px 0px 0px 10px;
+gap: 5px;
+
+width: 279px;
+height: 55px;
+
+background: #FFFFFF;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 0;
+
+/* Frame */
+
+width: 18px;
+height: 18px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Group */
+
+position: absolute;
+left: 13.51%;
+right: 13.51%;
+top: 8.33%;
+bottom: 0.77%;
+
+/* Vector */
+
+position: absolute;
+left: 50.32%;
+right: 46.2%;
+top: 96.43%;
+bottom: 0.77%;
+
+/* Vector */
+
+position: absolute;
+left: 13.51%;
+right: 13.51%;
+top: 8.33%;
+bottom: 8.33%;
+
+/* 标题文本字体颜色 */
+background: rgba(0, 0, 0, 0.85);
+
+/* Frame 573 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 0px;
+gap: 5px;
+
+width: 199px;
+height: 19px;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+/* Paper cushioning system */
+
+width: 180px;
+height: 19px;
+
+/* 正文按钮字体 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 19px;
+/* identical to box height */
+
+/* 标题文本字体颜色 */
+color: rgba(0, 0, 0, 0.85);
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Frame */
+
+width: 14px;
+height: 14px;
+
+transform: rotate(-180deg);
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+/* Vector */
+
+position: absolute;
+left: 8.8%;
+right: 42.14%;
+top: 25.47%;
+bottom: -8.8%;
+
+background: #000000;
+transform: rotate(90deg);
+
+/* Component 172 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px;
+
+width: 279px;
+height: 201px;
+
+/* Inside auto layout */
+flex: none;
+order: 3;
+flex-grow: 0;
+
+/* Component 160 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 0px 0px 0px 10px;
+gap: 5px;
+
+width: 279px;
+height: 55px;
+
+background: #FFFFFF;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 0;
+
+/* format_color_fill */
+
+width: 18px;
+height: 18px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* icon */
+
+position: absolute;
+left: 8.33%;
+right: 8.33%;
+top: 0%;
+bottom: 0%;
+
+/* 主色调 */
+background: #012583;
+
+/* Frame 573 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 0px;
+gap: 5px;
+
+width: 229px;
+height: 19px;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+/* Water-Activated Tape System  */
+
+width: 210px;
+height: 19px;
+
+/* 正文按钮字体 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 19px;
+/* identical to box height */
+
+/* 主色调 */
+color: #012583;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Frame */
+
+width: 14px;
+height: 14px;
+
+transform: matrix(-1, 0, 0, 1, 0, 0);
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+/* Vector */
+
+position: absolute;
+left: 8.8%;
+right: 42.14%;
+top: 25.47%;
+bottom: -8.8%;
+
+/* 主色调 */
+background: #012583;
+transform: matrix(0, -1, -1, 0, 0, 0);
+
+/* 二级导航 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 10px 8px 10px 27px;
+gap: 10px;
+
+width: 279px;
+height: 56px;
+
+/* 白色 */
+background: #FFFFFF;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+align-self: stretch;
+flex-grow: 0;
+
+/* Machine & Accessory */
+
+width: 244px;
+height: 38px;
+
+/* 正文按钮字体 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 19px;
+
+/* 副标题字体-颜色 */
+color: rgba(0, 0, 0, 0.65);
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 1;
+
+/* 二级导航 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 10px 8px 10px 27px;
+gap: 10px;
+
+width: 279px;
+height: 45px;
+
+/* 白色 */
+background: #FFFFFF;
+
+/* Inside auto layout */
+flex: none;
+order: 2;
+align-self: stretch;
+flex-grow: 0;
+
+/* Machine & Accessory */
+
+width: 244px;
+height: 19px;
+
+/* 正文按钮字体 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 19px;
+/* identical to box height */
+
+/* 副标题字体-颜色 */
+color: rgba(0, 0, 0, 0.65);
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 1;
+
+/* 二级导航 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 10px 8px 10px 27px;
+gap: 10px;
+
+width: 279px;
+height: 45px;
+
+/* 白色 */
+background: #FFFFFF;
+
+/* Inside auto layout */
+flex: none;
+order: 3;
+align-self: stretch;
+flex-grow: 0;
+
+/* Machine & Accessory */
+
+width: 244px;
+height: 19px;
+
+/* 正文按钮字体 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 19px;
+/* identical to box height */
+
+/* 副标题字体-颜色 */
+color: rgba(0, 0, 0, 0.65);
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 1;
+
+/* Component 255 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: flex-start;
+padding: 0px;
+
+width: 279px;
+height: 51px;
+
+/* Inside auto layout */
+flex: none;
+order: 4;
+flex-grow: 0;
+
+/* Frame 1222 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: flex-start;
+padding: 16px 0px 16px 10px;
+gap: 5px;
+
+width: 279px;
+height: 51px;
+
+/* 白色 */
+background: #FFFFFF;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Frame */
+
+width: 18px;
+height: 18px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Vector */
+
+position: absolute;
+left: 9.38%;
+right: 9.38%;
+top: 9.38%;
+bottom: 9.38%;
+
+background: #000000;
+
+/* Air Column Bag Series */
+
+width: 159px;
+height: 19px;
+
+/* 正文按钮字体 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 19px;
+/* identical to box height */
+
+/* 标题文本字体颜色 */
+color: rgba(0, 0, 0, 0.85);
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+/* Component 179 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px;
+
+width: 279px;
+height: 235px;
+
+/* Inside auto layout */
+flex: none;
+order: 5;
+flex-grow: 0;
+
+/* Component 175 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 0px 0px 0px 10px;
+gap: 5px;
+
+width: 279px;
+height: 55px;
+
+background: #FFFFFF;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 0;
+
+/* error */
+
+width: 18px;
+height: 18px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* icon */
+
+position: absolute;
+left: 8.33%;
+right: 8.33%;
+top: 8.33%;
+bottom: 8.33%;
+
+/* 主色调 */
+background: #012583;
+
+/* Frame 573 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 0px;
+gap: 5px;
+
+width: 76px;
+height: 19px;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+/* Support */
+
+width: 57px;
+height: 19px;
+
+/* 正文按钮字体 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 19px;
+/* identical to box height */
+
+/* 主色调 */
+color: #012583;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Frame */
+
+width: 14px;
+height: 14px;
+
+transform: matrix(-1, 0, 0, 1, 0, 0);
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+/* Vector */
+
+position: absolute;
+left: 8.8%;
+right: 42.14%;
+top: 25.47%;
+bottom: -8.8%;
+
+/* 主色调 */
+background: #012583;
+transform: matrix(0, -1, -1, 0, 0, 0);
+
+/* 二级导航 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 10px 8px 10px 27px;
+gap: 10px;
+
+width: 279px;
+height: 45px;
+
+/* 白色 */
+background: #FFFFFF;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+align-self: stretch;
+flex-grow: 0;
+
+/* Machine & Accessory */
+
+width: 132px;
+height: 19px;
+
+/* 正文按钮字体 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 19px;
+/* identical to box height */
+
+/* 副标题字体-颜色 */
+color: rgba(0, 0, 0, 0.65);
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* 二级导航 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 10px 8px 10px 27px;
+gap: 10px;
+
+width: 279px;
+height: 45px;
+
+/* 白色 */
+background: #FFFFFF;
+
+/* Inside auto layout */
+flex: none;
+order: 2;
+align-self: stretch;
+flex-grow: 0;
+
+/* Machine & Accessory */
+
+width: 149px;
+height: 19px;
+
+/* 正文按钮字体 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 19px;
+/* identical to box height */
+
+/* 副标题字体-颜色 */
+color: rgba(0, 0, 0, 0.65);
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* 二级导航 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 10px 8px 10px 27px;
+gap: 10px;
+
+width: 279px;
+height: 45px;
+
+/* 白色 */
+background: #FFFFFF;
+
+/* Inside auto layout */
+flex: none;
+order: 3;
+align-self: stretch;
+flex-grow: 0;
+
+/* Machine & Accessory */
+
+width: 29px;
+height: 19px;
+
+/* 正文按钮字体 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 19px;
+/* identical to box height */
+
+/* 副标题字体-颜色 */
+color: rgba(0, 0, 0, 0.65);
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* 二级导航 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 10px 8px 10px 27px;
+gap: 10px;
+
+width: 279px;
+height: 45px;
+
+/* 白色 */
+background: #FFFFFF;
+
+/* Inside auto layout */
+flex: none;
+order: 4;
+align-self: stretch;
+flex-grow: 0;
+
+/* Machine & Accessory */
+
+width: 84px;
+height: 19px;
+
+/* 正文按钮字体 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 19px;
+/* identical to box height */
+
+/* 副标题字体-颜色 */
+color: rgba(0, 0, 0, 0.65);
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Component 169 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 0px 0px 0px 10px;
+gap: 5px;
+
+width: 279px;
+height: 55px;
+
+background: #FFFFFF;
+
+/* Inside auto layout */
+flex: none;
+order: 6;
+flex-grow: 0;
+
+/* account_circle */
+
+width: 18px;
+height: 18px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* icon */
+
+position: absolute;
+left: 8.33%;
+right: 8.33%;
+top: 8.33%;
+bottom: 8.33%;
+
+/* 标题文本字体颜色 */
+background: rgba(0, 0, 0, 0.85);
+
+/* Frame 573 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 0px;
+gap: 5px;
+
+width: 79px;
+height: 19px;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+/* Contact Us */
+
+width: 79px;
+height: 19px;
+
+/* 正文按钮字体 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 19px;
+/* identical to box height */
+
+/* 标题文本字体颜色 */
+color: rgba(0, 0, 0, 0.85);
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Frame */
+
+display: none;
+width: 14px;
+height: 14px;
+
+transform: rotate(-180deg);
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+/* Frame 529 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px;
+
+width: 1617px;
+height: 1638px;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+align-self: stretch;
+flex-grow: 1;
+
+/* Frame 1015 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+justify-content: flex-end;
+align-items: center;
+padding: 16px 90px 16px 0px;
+gap: 16px;
+
+width: 1617px;
+height: 68px;
+
+/* 白色 */
+background: #FFFFFF;
+/* 分割线-下 */
+box-shadow: 0px 0.5px 0px rgba(0, 0, 0, 0.25);
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 0;
+
+/* Frame 522 */
+
+box-sizing: border-box;
+
+width: 271px;
+height: 32px;
+
+background: #FFFFFF;
+/* 线框颜色 */
+border: 1px solid #DEDEDE;
+border-radius: 8px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Frame */
+
+position: absolute;
+width: 24px;
+height: 24px;
+left: 5px;
+top: 4px;
+
+/* Vector */
+
+position: absolute;
+left: 8.33%;
+right: 12.25%;
+top: 8.33%;
+bottom: 12.24%;
+
+background: #000000;
+
+/* 搜索产品 */
+
+position: absolute;
+width: 64px;
+height: 19px;
+left: 29px;
+top: 7px;
+
+/* 正文按钮字体 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 19px;
+/* identical to box height */
+text-align: center;
+
+/* 线框颜色 */
+color: #DEDEDE;
+
+/* Frame 17 */
+
+box-sizing: border-box;
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 4px 8px;
+gap: 3px;
+
+width: 74px;
+height: 32px;
+
+border: 0.8px solid #B2B2B2;
+border-radius: 6px;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+/* Frame */
+
+width: 24px;
+height: 24px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Vector */
+
+box-sizing: border-box;
+
+position: absolute;
+left: 4.17%;
+right: 12.5%;
+top: 8.33%;
+bottom: 8.33%;
+
+/* 顶部按钮标题颜色 */
+background: #333333;
+/* 顶部按钮标题颜色 */
+border: 40px solid #333333;
+
+/* Cart */
+
+width: 31px;
+height: 19px;
+
+/* 正文按钮字体 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 19px;
+/* identical to box height */
+
+/* 顶部按钮标题颜色 */
+color: #333333;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+/* Frame 18 */
+
+box-sizing: border-box;
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 4px 8px;
+gap: 3px;
+
+width: 95px;
+height: 32px;
+
+border: 0.8px solid #BFBCBC;
+border-radius: 6px;
+
+/* Inside auto layout */
+flex: none;
+order: 2;
+flex-grow: 0;
+
+/* Frame */
+
+width: 24px;
+height: 24px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Vector */
+
+position: absolute;
+left: 9.38%;
+right: 9.38%;
+top: 9.38%;
+bottom: 9.38%;
+
+/* 顶部按钮标题颜色 */
+border: 1.5px solid #333333;
+
+/* Vector */
+
+position: absolute;
+left: 27.99%;
+right: 27.99%;
+top: 9.38%;
+bottom: 9.38%;
+
+/* 顶部按钮标题颜色 */
+border: 1.5px solid #333333;
+
+/* Vector */
+
+position: absolute;
+left: 22.92%;
+right: 22.92%;
+top: 23.7%;
+bottom: 23.7%;
+
+/* 顶部按钮标题颜色 */
+border: 1.5px solid #333333;
+
+/* Vector */
+
+position: absolute;
+left: 9.38%;
+right: 9.38%;
+top: 9.38%;
+bottom: 9.38%;
+
+/* 顶部按钮标题颜色 */
+border: 1.5px solid #333333;
+
+/* English */
+
+width: 52px;
+height: 19px;
+
+/* 正文按钮字体 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 19px;
+/* identical to box height */
+
+/* 顶部按钮标题颜色 */
+color: #333333;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+/* Component 251 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: flex-start;
+padding: 0px;
+
+width: 36px;
+height: 36px;
+
+/* Inside auto layout */
+flex: none;
+order: 3;
+flex-grow: 0;
+
+/* Frame 844 */
+
+box-sizing: border-box;
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 4px;
+gap: 10px;
+
+width: 36px;
+height: 36px;
+
+/* 白色 */
+background: #FFFFFF;
+/* 线框颜色 */
+border: 1px solid #DEDEDE;
+border-radius: 18px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* person */
+
+width: 28px;
+height: 28px;
+
+border-radius: 26px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* icon */
+
+position: absolute;
+left: 16.67%;
+right: 16.67%;
+top: 16.67%;
+bottom: 16.67%;
+
+/* M3/sys/light/on-surface */
+background: #1D1B20;
+
+/* Frame 3 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 16px 40px;
+gap: 32px;
+
+width: 1617px;
+height: 1570px;
+
+background: #F1F5F9;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+align-self: stretch;
+flex-grow: 0;
+
+/* Frame 745 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 40px;
+gap: 16px;
+
+width: 1537px;
+height: 467px;
+
+/* 白色 */
+background: #FFFFFF;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 0;
+
+/* Frame 738 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 0px 16px;
+gap: 10px;
+
+width: 1457px;
+height: 68px;
+
+/* 主色调 */
+background: #012583;
+border-radius: 8px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 0;
+
+/* Air Cushioning System */
+
+width: 247px;
+height: 28px;
+
+/* 大标题字体 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 700;
+font-size: 24px;
+line-height: 28px;
+
+/* 白色 */
+color: #FFFFFF;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Frame 740 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 0px;
+gap: 32px;
+
+width: 1457px;
+height: 303px;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+align-self: stretch;
+flex-grow: 0;
+
+/* Frame 739 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px;
+gap: 74px;
+
+width: 875px;
+height: 305px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 1;
+
+/* Frame 594 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: center;
+padding: 0px;
+gap: 10px;
+
+width: 875px;
+height: 57px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 0;
+
+/* Lockedair focuses on packaging solutions. We have many different types of air cushioning system. We also have many options for air cushioning machines and void filling systems to meet your needs. You can find air cushioning films like air pillow bags and cushions in various thicknesses, sizes, and configurations. */
+
+width: 875px;
+height: 57px;
+
+/* 正文按钮字体 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 19px;
+
+/* 副标题字体-颜色 */
+color: rgba(0, 0, 0, 0.65);
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 1;
+
+/* Frame 595 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+justify-content: flex-end;
+align-items: center;
+padding: 0px 80px;
+gap: 20px;
+
+width: 875px;
+height: 130px;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+align-self: stretch;
+flex-grow: 0;
+
+/* Component 236 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: flex-start;
+padding: 0px;
+
+width: 286px;
+height: 45px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Frame 805 */
+
+box-sizing: border-box;
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: center;
+padding: 12px;
+gap: 10px;
+
+width: 286px;
+height: 45px;
+
+/* 白色 */
+background: #FFFFFF;
+/* 主色调 */
+border: 1px solid #012583;
+border-radius: 8px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Air Cushion Machine */
+
+width: 262px;
+height: 21px;
+
+/* 正文大标题 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 18px;
+line-height: 21px;
+/* identical to box height */
+text-align: center;
+
+/* 主色调 */
+color: #012583;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Component 235 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: flex-start;
+padding: 0px;
+
+width: 286px;
+height: 45px;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+/* Frame 805 */
+
+box-sizing: border-box;
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: center;
+padding: 12px;
+gap: 10px;
+
+width: 286px;
+height: 45px;
+
+/* 白色 */
+background: #FFFFFF;
+/* 主色调 */
+border: 1px solid #012583;
+border-radius: 8px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Air Cushion Machine */
+
+width: 262px;
+height: 21px;
+
+/* 正文大标题 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 18px;
+line-height: 21px;
+/* identical to box height */
+text-align: center;
+
+/* 主色调 */
+color: #012583;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Component 237 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: flex-start;
+padding: 0px;
+
+width: 286px;
+height: 45px;
+
+/* Inside auto layout */
+flex: none;
+order: 2;
+flex-grow: 0;
+
+/* Frame 805 */
+
+box-sizing: border-box;
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: center;
+padding: 12px;
+gap: 10px;
+
+width: 286px;
+height: 45px;
+
+/* 白色 */
+background: #FFFFFF;
+/* 主色调 */
+border: 1px solid #012583;
+border-radius: 8px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Air Cushion Machine */
+
+width: 262px;
+height: 21px;
+
+/* 正文大标题 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 18px;
+line-height: 21px;
+/* identical to box height */
+text-align: center;
+
+/* 主色调 */
+color: #012583;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Frame 593 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px;
+gap: 10px;
+
+width: 550px;
+height: 305px;
+
+background: #FFFFFF;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+/*  2322 */
+
+width: 550px;
+height: 305px;
+
+background: url(微信图片_20181207152621-1.jpg);
+border-radius: 8px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 1;
+
+/* Frame 743 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 40px;
+gap: 16px;
+
+width: 1537px;
+height: 514px;
+
+/* 白色 */
+background: #FFFFFF;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+align-self: stretch;
+flex-grow: 0;
+
+/* Frame 738 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 0px 16px;
+gap: 10px;
+
+width: 1457px;
+height: 68px;
+
+/* 主色调 */
+background: #012583;
+border-radius: 8px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 0;
+
+/* Water Activated Tape Dispenser */
+
+width: 344px;
+height: 28px;
+
+/* 大标题字体 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 700;
+font-size: 24px;
+line-height: 28px;
+
+/* 白色 */
+color: #FFFFFF;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Frame 740 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: flex-start;
+padding: 0px;
+gap: 32px;
+
+width: 1457px;
+height: 318px;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+align-self: stretch;
+flex-grow: 0;
+
+/* Frame 739 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px;
+gap: 74px;
+
+width: 875px;
+height: 318px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 1;
+
+/* Frame 594 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: center;
+padding: 0px;
+gap: 10px;
+
+width: 875px;
+height: 19px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 0;
+
+/* Professional box sealing equipment to improve packaging eficiency and security. */
+
+width: 875px;
+height: 19px;
+
+/* 正文按钮字体 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 19px;
+/* identical to box height */
+
+/* 副标题字体-颜色 */
+color: rgba(0, 0, 0, 0.65);
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 1;
+
+/* Frame 595 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+justify-content: flex-end;
+align-items: center;
+padding: 0px 80px;
+gap: 20px;
+
+width: 875px;
+height: 130px;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+align-self: stretch;
+flex-grow: 0;
+
+/* Component 236 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: flex-start;
+padding: 0px;
+
+width: 286px;
+height: 45px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Frame 805 */
+
+box-sizing: border-box;
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: center;
+padding: 12px;
+gap: 10px;
+
+width: 286px;
+height: 45px;
+
+/* 白色 */
+background: #FFFFFF;
+/* 主色调 */
+border: 1px solid #012583;
+border-radius: 8px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Air Cushion Machine */
+
+width: 262px;
+height: 21px;
+
+/* 正文大标题 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 18px;
+line-height: 21px;
+/* identical to box height */
+text-align: center;
+
+/* 主色调 */
+color: #012583;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Component 235 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: flex-start;
+padding: 0px;
+
+width: 286px;
+height: 45px;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+/* Frame 805 */
+
+box-sizing: border-box;
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: center;
+padding: 12px;
+gap: 10px;
+
+width: 286px;
+height: 45px;
+
+/* 白色 */
+background: #FFFFFF;
+/* 主色调 */
+border: 1px solid #012583;
+border-radius: 8px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Air Cushion Machine */
+
+width: 262px;
+height: 21px;
+
+/* 正文大标题 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 18px;
+line-height: 21px;
+/* identical to box height */
+text-align: center;
+
+/* 主色调 */
+color: #012583;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Component 237 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: flex-start;
+padding: 0px;
+
+width: 286px;
+height: 45px;
+
+/* Inside auto layout */
+flex: none;
+order: 2;
+flex-grow: 0;
+
+/* Frame 805 */
+
+box-sizing: border-box;
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: center;
+padding: 12px;
+gap: 10px;
+
+width: 286px;
+height: 45px;
+
+/* 白色 */
+background: #FFFFFF;
+/* 主色调 */
+border: 1px solid #012583;
+border-radius: 8px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Air Cushion Machine */
+
+width: 262px;
+height: 21px;
+
+/* 正文大标题 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 18px;
+line-height: 21px;
+/* identical to box height */
+text-align: center;
+
+/* 主色调 */
+color: #012583;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Frame 593 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px;
+gap: 10px;
+
+width: 550px;
+height: 318px;
+
+background: #FFFFFF;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+/*  2322 */
+
+width: 550px;
+height: 318px;
+
+background: url(图层 10-5.png), rgba(0, 0, 0, 0.05);
+border-radius: 8px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 1;
+
+/* Frame 744 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 40px;
+gap: 16px;
+
+width: 1537px;
+height: 493px;
+
+/* 白色 */
+background: #FFFFFF;
+
+/* Inside auto layout */
+flex: none;
+order: 2;
+align-self: stretch;
+flex-grow: 0;
+
+/* Frame 738 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 0px 16px;
+gap: 10px;
+
+width: 1457px;
+height: 68px;
+
+/* 主色调 */
+background: #012583;
+border-radius: 8px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 0;
+
+/* Paper Cushioning System */
+
+width: 279px;
+height: 28px;
+
+/* 大标题字体 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 700;
+font-size: 24px;
+line-height: 28px;
+
+/* 白色 */
+color: #FFFFFF;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Frame 740 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 0px;
+gap: 32px;
+
+width: 1457px;
+height: 329px;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+align-self: stretch;
+flex-grow: 0;
+
+/* Frame 739 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px;
+gap: 74px;
+
+width: 875px;
+height: 329px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 1;
+
+/* Frame 594 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: center;
+padding: 0px;
+gap: 10px;
+
+width: 875px;
+height: 57px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 0;
+
+/* Lockedair focuses on packaging solutions. We have many different types of air cushioning system. We also have many options for air cushioning machines and void filling systems to meet your needs. You can find air cushioning films like air pillow bags and cushions in various thicknesses, sizes, and configurations. */
+
+width: 875px;
+height: 57px;
+
+/* 正文按钮字体 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 19px;
+
+/* 副标题字体-颜色 */
+color: rgba(0, 0, 0, 0.65);
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 1;
+
+/* Frame 595 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+justify-content: flex-end;
+align-items: center;
+padding: 0px 80px;
+gap: 20px;
+
+width: 875px;
+height: 130px;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+align-self: stretch;
+flex-grow: 0;
+
+/* Component 236 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: flex-start;
+padding: 0px;
+
+width: 286px;
+height: 45px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Frame 805 */
+
+box-sizing: border-box;
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: center;
+padding: 12px;
+gap: 10px;
+
+width: 286px;
+height: 45px;
+
+/* 白色 */
+background: #FFFFFF;
+/* 主色调 */
+border: 1px solid #012583;
+border-radius: 8px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Air Cushion Machine */
+
+width: 262px;
+height: 21px;
+
+/* 正文大标题 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 18px;
+line-height: 21px;
+/* identical to box height */
+text-align: center;
+
+/* 主色调 */
+color: #012583;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Component 235 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: flex-start;
+padding: 0px;
+
+width: 286px;
+height: 45px;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+/* Frame 805 */
+
+box-sizing: border-box;
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: center;
+padding: 12px;
+gap: 10px;
+
+width: 286px;
+height: 45px;
+
+/* 白色 */
+background: #FFFFFF;
+/* 主色调 */
+border: 1px solid #012583;
+border-radius: 8px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Air Cushion Machine */
+
+width: 262px;
+height: 21px;
+
+/* 正文大标题 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 18px;
+line-height: 21px;
+/* identical to box height */
+text-align: center;
+
+/* 主色调 */
+color: #012583;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Component 237 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: flex-start;
+padding: 0px;
+
+width: 286px;
+height: 45px;
+
+/* Inside auto layout */
+flex: none;
+order: 2;
+flex-grow: 0;
+
+/* Frame 805 */
+
+box-sizing: border-box;
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: center;
+padding: 12px;
+gap: 10px;
+
+width: 286px;
+height: 45px;
+
+/* 白色 */
+background: #FFFFFF;
+/* 主色调 */
+border: 1px solid #012583;
+border-radius: 8px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Air Cushion Machine */
+
+width: 262px;
+height: 21px;
+
+/* 正文大标题 */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 18px;
+line-height: 21px;
+/* identical to box height */
+text-align: center;
+
+/* 主色调 */
+color: #012583;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+/* Frame 593 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px;
+gap: 10px;
+
+width: 550px;
+height: 329px;
+
+background: #FFFFFF;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+/*  2322 */
+
+width: 550px;
+height: 329px;
+
+background: url(DSC03350.jpg);
+border-radius: 8px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 1;

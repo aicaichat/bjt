@@ -1,0 +1,279 @@
+/**
+ * Admin 后台 — Figma 基础对齐
+ * 使用与前台相同的 --ff-* 设计令牌，保持视觉一致性
+ * 命名空间: .admin-layout--figma
+ */
+
+.admin-layout--figma {
+  /* 继承全局 Figma 令牌 */
+  --admin-bg: var(--ff-content-canvas-bg, #f5f7fa);
+  --admin-surface: var(--ff-surface, #ffffff);
+  --admin-border: var(--ff-border, #e5e7eb);
+  --admin-accent: var(--ff-accent, #00338d);
+  --admin-accent-hover: var(--ff-btn-primary-hover, #002a70);
+  --admin-text: var(--ff-text, rgba(0, 0, 0, 0.85));
+  --admin-text-muted: var(--ff-text-muted, rgba(0, 0, 0, 0.65));
+  --admin-tint: var(--ff-tint-blue, #e8eef9);
+  --admin-radius: 12px;
+  --admin-radius-sm: 8px;
+  --admin-shadow: 0 2px 12px rgba(15, 36, 64, 0.06);
+
+  /* Header 高度与前台一致 */
+  --admin-header-height: var(--ff-site-header-height, 60px);
+  --admin-sidebar-width: 260px;
+}
+
+/* 后台布局 */
+.admin-layout--figma .admin-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: var(--admin-bg);
+  font-family: var(--ff-font, 'Roboto', sans-serif);
+}
+
+.admin-layout--figma .admin-main-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* 侧边栏 */
+.admin-layout--figma .admin-sidebar {
+  width: var(--admin-sidebar-width);
+  background: var(--admin-surface);
+  border-right: 1px solid var(--admin-border);
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-layout--figma .admin-sidebar-header {
+  height: var(--admin-header-height);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.admin-layout--figma .admin-sidebar-menu {
+  flex: 1;
+  padding: 16px 12px;
+  overflow-y: auto;
+}
+
+.admin-layout--figma .admin-sidebar-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 4px;
+  border-radius: var(--admin-radius-sm);
+  color: var(--admin-text);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.admin-layout--figma .admin-sidebar-item:hover {
+  background: var(--admin-tint);
+  color: var(--admin-accent);
+}
+
+.admin-layout--figma .admin-sidebar-item.active {
+  background: var(--admin-accent);
+  color: #ffffff;
+}
+
+/* 顶部导航 */
+.admin-layout--figma .admin-header {
+  height: var(--admin-header-height);
+  background: var(--admin-surface);
+  border-bottom: 1px solid var(--admin-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+}
+
+/* 主内容区 */
+.admin-layout--figma .admin-content {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+  background-color: var(--admin-bg);
+}
+
+.admin-layout--figma .admin-page-card {
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  box-shadow: var(--admin-shadow);
+  padding: 24px;
+}
+
+/* 按钮样式 */
+.admin-layout--figma .admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: var(--admin-radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: none;
+}
+
+.admin-layout--figma .admin-btn-primary {
+  background: var(--admin-accent);
+  color: #ffffff;
+}
+
+.admin-layout--figma .admin-btn-primary:hover {
+  background: var(--admin-accent-hover);
+}
+
+.admin-layout--figma .admin-btn-secondary {
+  background: var(--admin-surface);
+  color: var(--admin-text);
+  border: 1px solid var(--admin-border);
+}
+
+.admin-layout--figma .admin-btn-secondary:hover {
+  background: var(--admin-tint);
+  border-color: var(--admin-accent);
+  color: var(--admin-accent);
+}
+
+/* 表格样式 */
+.admin-layout--figma .admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-layout--figma .admin-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--admin-text-muted);
+  border-bottom: 1px solid var(--admin-border);
+  background: var(--admin-bg);
+}
+
+.admin-layout--figma .admin-table td {
+  padding: 16px;
+  border-bottom: 1px solid var(--admin-border);
+  color: var(--admin-text);
+}
+
+.admin-layout--figma .admin-table tr:hover td {
+  background: var(--admin-tint);
+}
+
+/* 表单样式 */
+.admin-layout--figma .admin-form-group {
+  margin-bottom: 20px;
+}
+
+.admin-layout--figma .admin-form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--admin-text);
+}
+
+.admin-layout--figma .admin-form-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-sm);
+  font-size: 14px;
+  transition: border-color 0.15s ease;
+}
+
+.admin-layout--figma .admin-form-input:focus {
+  outline: none;
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--ff-focus-ring, rgba(0, 51, 141, 0.18));
+}
+
+/* 分页 */
+.admin-layout--figma .admin-pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.admin-layout--figma .admin-pagination button {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 12px;
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-sm);
+  color: var(--admin-text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.admin-layout--figma .admin-pagination button:hover:not(:disabled) {
+  border-color: var(--admin-accent);
+  color: var(--admin-accent);
+}
+
+.admin-layout--figma .admin-pagination button.active {
+  background: var(--admin-accent);
+  border-color: var(--admin-accent);
+  color: #ffffff;
+}
+
+/* 状态标签 */
+.admin-layout--figma .admin-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 999px;
+}
+
+.admin-layout--figma .admin-tag-success {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.admin-layout--figma .admin-tag-warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.admin-layout--figma .admin-tag-error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .admin-layout--figma .admin-sidebar {
+    position: fixed;
+    left: -100%;
+    top: 0;
+    bottom: 0;
+    z-index: 1000;
+    transition: left 0.3s ease;
+  }
+
+  .admin-layout--figma .admin-sidebar.open {
+    left: 0;
+  }
+
+  .admin-layout--figma .admin-content {
+    padding: 16px;
+  }
+
+  .admin-layout--figma .admin-page-card {
+    padding: 16px;
+  }
+}

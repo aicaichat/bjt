@@ -41,6 +41,8 @@ export const SmartAddToCartButton: React.FC<SmartAddToCartButtonProps> = ({
       onClick={handleClick}
       disabled={disabled}
       className={`add-to-cart-btn ${className}`}
+      type="button"
+      data-add-to-cart-anchor={product?.id != null ? String(product.id) : undefined}
       data-product-type={productType}
       data-enhanced={FEATURE_FLAGS.CART_FIELD_ENHANCEMENT ? 'true' : 'false'}
       title={enhancedProduct?._unitContext ? 
@@ -72,9 +74,12 @@ export const AddToCartButton: React.FC<SmartAddToCartButtonProps> = (props) => {
     // 回退到基础按钮
     return (
       <button 
+        type="button"
         onClick={() => props.onAddToCart(props.product)}
         disabled={props.disabled}
         className={`add-to-cart-btn ${props.className || ''}`}
+        data-add-to-cart-anchor={props.product?.id != null ? String(props.product.id) : undefined}
+        data-product-type={props.productType}
       >
         {props.children || '添加到购物车'}
       </button>

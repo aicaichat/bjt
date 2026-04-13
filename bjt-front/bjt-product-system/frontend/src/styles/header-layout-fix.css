@@ -7,7 +7,7 @@
   top: 0 !important;
   left: 300px !important;
   width: calc(100% - 300px) !important;
-  height: 72px !important;
+  height: 60px !important;
   background: rgba(255, 255, 255, 0.95) !important;
   backdrop-filter: blur(20px) !important;
   border-bottom: 1px solid #e2e8f0 !important;

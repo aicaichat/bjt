@@ -250,6 +250,7 @@ const Header = ({
             menu={{ items: languageMenuItems }}
             trigger={['click']}
             placement="bottomRight"
+            overlayStyle={{ zIndex: 'var(--ff-z-header-dropdown)' }}
           >
             <Button
               type="text"
@@ -267,6 +268,7 @@ const Header = ({
               menu={{ items: userMenuItems }}
               trigger={['click']}
               placement="bottomRight"
+              overlayStyle={{ zIndex: 'var(--ff-z-header-dropdown)' }}
             >
               <Button type="text" className="user-info header-toolbar-btn shrink-0">
                 <div className="user-avatar">

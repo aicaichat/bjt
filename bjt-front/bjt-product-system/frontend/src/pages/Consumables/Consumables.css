@@ -2609,7 +2609,7 @@
     --consumable-secondary-900: #fafaf9;
   }
   
-  .consumables-page {
+  .consumables-page:not(.consumables-page--figma) {
     background: linear-gradient(135deg, var(--consumable-secondary-50) 0%, #0f172a 100%);
   }
   

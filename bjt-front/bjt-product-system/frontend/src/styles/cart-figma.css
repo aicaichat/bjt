@@ -1,0 +1,331 @@
+/**
+ * Cart 购物车页面 — Figma 对齐层
+ * 与 machine-selection-figma.css 同源规则，使用 --ff-* 设计令牌
+ * 命名空间: .cart-page--figma
+ */
+
+.cart-page.cart-page--figma {
+  /* 继承全局 Figma 令牌 */
+  --cart-bg: var(--ff-content-canvas-bg, #f5f7fa);
+  --cart-surface: var(--ff-surface, #ffffff);
+  --cart-border: var(--ff-border, #e5e7eb);
+  --cart-border-muted: var(--ff-border-muted, #dedede);
+  --cart-accent: var(--ff-accent, #00338d);
+  --cart-accent-hover: var(--ff-btn-primary-hover, #002a70);
+  --cart-text: var(--ff-text, rgba(0, 0, 0, 0.85));
+  --cart-text-muted: var(--ff-text-muted, rgba(0, 0, 0, 0.65));
+  --cart-tint: var(--ff-tint-blue, #e8eef9);
+  --cart-radius: 12px;
+  --cart-radius-sm: 8px;
+  --cart-shadow: 0 2px 12px rgba(15, 36, 64, 0.06);
+  --cart-shadow-hover: 0 4px 14px rgba(15, 36, 64, 0.08);
+
+  /* 布局 */
+  max-width: var(--ff-ms-content-max-width, 1617px);
+  margin: 0 auto;
+  padding: var(--ff-ms-page-gutter, 40px);
+  background-color: var(--cart-bg);
+  min-height: calc(100vh - var(--ff-site-header-height, 60px));
+  font-family: var(--ff-font, 'Roboto', sans-serif);
+  box-sizing: border-box;
+}
+
+/* 页面标题 */
+.cart-page.cart-page--figma .cart-header {
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.cart-page.cart-page--figma .cart-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--cart-text);
+  margin-bottom: 8px;
+}
+
+.cart-page.cart-page--figma .cart-header p {
+  font-size: 14px;
+  color: var(--cart-text-muted);
+}
+
+/* 购物车内容区 - 两列布局 */
+.cart-page.cart-page--figma .cart-content {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .cart-page.cart-page--figma .cart-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 购物车列表卡片 */
+.cart-page.cart-page--figma .cart-items-container {
+  background: var(--cart-surface);
+  border: 1px solid var(--cart-border);
+  border-radius: var(--cart-radius);
+  box-shadow: var(--cart-shadow);
+  padding: 24px;
+}
+
+/* 汇总卡片 - 右侧固定 */
+.cart-page.cart-page--figma .cart-summary {
+  position: sticky;
+  top: calc(var(--ff-site-header-height, 60px) + 24px);
+  background: var(--cart-surface);
+  border: 1px solid var(--cart-border);
+  border-radius: var(--cart-radius);
+  box-shadow: var(--cart-shadow);
+  padding: 24px;
+}
+
+.cart-page.cart-page--figma .cart-summary h4 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cart-text);
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--cart-border);
+}
+
+/* 汇总行 */
+.cart-page.cart-page--figma .summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: var(--cart-text-muted);
+}
+
+.cart-page.cart-page--figma .summary-row.total {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 2px solid var(--cart-border);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--cart-accent);
+}
+
+/* 购物车控制栏 */
+.cart-page.cart-page--figma .cart-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--cart-border);
+  margin-bottom: 20px;
+}
+
+/* 空购物车状态 */
+.cart-page.cart-page--figma .cart-empty {
+  text-align: center;
+  padding: 80px 40px;
+  background: var(--cart-surface);
+  border-radius: var(--cart-radius);
+  border: 1px solid var(--cart-border);
+}
+
+.cart-page.cart-page--figma .empty-icon {
+  font-size: 64px;
+  margin-bottom: 24px;
+  color: var(--cart-border-muted);
+}
+
+.cart-page.cart-page--figma .cart-empty p {
+  font-size: 16px;
+  color: var(--cart-text-muted);
+  margin-bottom: 24px;
+}
+
+/* 按钮样式 - 主色 */
+.cart-page.cart-page--figma .cart-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  background: var(--cart-accent);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--cart-radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cart-page.cart-page--figma .cart-btn-primary:hover {
+  background: var(--cart-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 51, 141, 0.25);
+}
+
+/* 次要按钮 */
+.cart-page.cart-page--figma .cart-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  background: var(--cart-surface);
+  color: var(--cart-text);
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid var(--cart-border);
+  border-radius: var(--cart-radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cart-page.cart-page--figma .cart-btn-secondary:hover {
+  background: var(--cart-tint);
+  border-color: var(--cart-accent);
+  color: var(--cart-accent);
+}
+
+/* 购物车商品项 */
+.cart-page.cart-page--figma .cart-item {
+  display: flex;
+  gap: 16px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--cart-border);
+}
+
+.cart-page.cart-page--figma .cart-item:last-child {
+  border-bottom: none;
+}
+
+.cart-page.cart-page--figma .cart-item-image {
+  width: 100px;
+  height: 100px;
+  background: var(--cart-bg);
+  border: 1px solid var(--cart-border);
+  border-radius: var(--cart-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.cart-page.cart-page--figma .cart-item-image img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.cart-page.cart-page--figma .cart-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.cart-page.cart-page--figma .cart-item-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--cart-text);
+  margin-bottom: 4px;
+}
+
+.cart-page.cart-page--figma .cart-item-meta {
+  font-size: 13px;
+  color: var(--cart-text-muted);
+  margin-bottom: 8px;
+}
+
+.cart-page.cart-page--figma .cart-item-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cart-accent);
+}
+
+/* 数量选择器 */
+.cart-page.cart-page--figma .qty-stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--cart-border);
+  border-radius: var(--cart-radius-sm);
+  overflow: hidden;
+}
+
+.cart-page.cart-page--figma .qty-stepper button {
+  width: 32px;
+  height: 32px;
+  background: var(--cart-surface);
+  border: none;
+  color: var(--cart-text);
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.cart-page.cart-page--figma .qty-stepper button:hover {
+  background: var(--cart-tint);
+  color: var(--cart-accent);
+}
+
+.cart-page.cart-page--figma .qty-stepper input {
+  width: 48px;
+  height: 32px;
+  border: none;
+  border-left: 1px solid var(--cart-border);
+  border-right: 1px solid var(--cart-border);
+  text-align: center;
+  font-size: 14px;
+  color: var(--cart-text);
+}
+
+/* 删除按钮 */
+.cart-page.cart-page--figma .cart-item-remove {
+  color: var(--cart-text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  transition: color 0.15s ease;
+}
+
+.cart-page.cart-page--figma .cart-item-remove:hover {
+  color: #ef4444;
+}
+
+/* 选中状态 */
+.cart-page.cart-page--figma .cart-item-checkbox {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--cart-border);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cart-page.cart-page--figma .cart-item-checkbox:checked {
+  background: var(--cart-accent);
+  border-color: var(--cart-accent);
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .cart-page.cart-page--figma {
+    padding: 16px;
+  }
+
+  .cart-page.cart-page--figma .cart-content {
+    grid-template-columns: 1fr;
+  }
+
+  .cart-page.cart-page--figma .cart-summary {
+    position: static;
+    order: -1;
+    margin-bottom: 16px;
+  }
+
+  .cart-page.cart-page--figma .cart-item {
+    flex-wrap: wrap;
+  }
+
+  .cart-page.cart-page--figma .cart-item-image {
+    width: 80px;
+    height: 80px;
+  }
+}
